@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+  <class>ImageQuizzer</class>
+  <widget class="qMRMLWidget" name="ImageQuizzer">
+    <property name="geometry">
+        <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>485</width>
+            <height>790</height>
+        </rect>
+    </property>
+    <property name="windowTitle">
+        <string>Form</string>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_6">
+        <item>
+            <widget class="QGroupBox" name="GroupBox1">
+                <property name="title">
+                    <string>Assessment</string>
+                </property>
+                <property name="contentsFrameShape">
+                    <enum>QFrame::StyledPanel</enum>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_11">
+                    <item>
+                        <widget class="QRadioButton" name="rbtnRecurrence">
+                            <property name="text">
+                                <string>Recurrence</string>
+                            </property>
+                        </widget>
+                    </item>
+                    <item>
+                        <widget class="QRadioButton" name="rbtnNoRecurrence">
+                            <property name="text">
+                                <string>No Recurrence</string>
+                            </property>
+                            <property name="checked">
+                                <bool>true</bool>
+                            </property>
+                        </widget>
+                    </item>
+                </layout>
+            </widget>
+        </item>
+    </layout>
+    <layout class="QVBoxLayout" name="verticalLayout_46">
+        <item>
+            <widget class="QGroupBox" name="GroupBox1">
+                <property name="title">
+                    <string>Certainty Level</string>
+                </property>
+                <property name="contentsFrameShape">
+                    <enum>QFrame::StyledPanel</enum>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_41">
+                    <item>
+                        <widget class="QRadioButton" name="rbtnRecurrence">
+                            <property name="text">
+                                <string>None</string>
+                            </property>
+                        </widget>
+                    </item>
+                    <item>
+                        <widget class="QRadioButton" name="rbtnNoRecurrence">
+                            <property name="text">
+                                <string>Somewhat</string>
+                            </property>
+                            <property name="checked">
+                                <bool>true</bool>
+                            </property>
+                        </widget>
+                    </item>
+                    <item>
+                        <widget class="QRadioButton" name="rbtnNoRecurrence">
+                            <property name="text">
+                                <string>Moderately</string>
+                            </property>
+                            <property name="checked">
+                                <bool>true</bool>
+                            </property>
+                        </widget>
+                    </item>
+                    <item>
+                        <widget class="QRadioButton" name="rbtnNoRecurrence">
+                            <property name="text">
+                                <string>Very</string>
+                            </property>
+                            <property name="checked">
+                                <bool>true</bool>
+                            </property>
+                        </widget>
+                    </item>
+                    <item>
+                        <widget class="QRadioButton" name="rbtnNoRecurrence">
+                            <property name="text">
+                                <string>Completely</string>
+                            </property>
+                            <property name="checked">
+                                <bool>true</bool>
+                            </property>
+                        </widget>
+                    </item>
+                </layout>
+            </widget>
+        </item>
+    </layout>
+    <layout class="QVBoxLayout" name="verticalLayout_16">
+        <item>
+            <widget class="QGroupBox" name="GroupBox2">
+                <property name="title">
+                    <string>Treatment Options</string>
+                </property>
+                <property name="contentsFrameShape">
+                    <enum>QFrame::StyledPanel</enum>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_1">
+                    <item>
+                        <widget class="QRadioButton" name="rbtnBox2Btn10">
+                            <property name="text">
+                                <string>Ongoing CT Followup</string>
+                            </property>
+                            <!--<item>
+                                <widget class="QGroupBox" name="NestedGroupBox1">
+                                    <property name="title">
+                                        <string>Time Interval</string>
+                                    </property>
+                                    <property name="contentsFrameShape">
+                                        <enum>QFrame::StyledPanel</enum>
+                                    </property>
+                                    <layout class="QVBoxLayout" name="verticalLayout_31">
+                                        <item>
+                                            <widget class="QRadioButton" name="rbtnBox22">
+                                                <property name="text">
+                                                    <string>Short</string>
+                                                </property>
+                                                <property name="checked">
+                                                    <bool>true</bool>
+                                                </property>                                                
+                                            </widget>
+                                        </item>
+                                    </layout>
+                                </widget>
+                            </item>-->
+                        </widget>
+                    </item>
+                    <item>
+                        <widget class="QRadioButton" name="rbtnBox2Btn1">
+                            <property name="text">
+                                <string>PET</string>
+                            </property>
+                        </widget>
+                    </item>
+                    <item>
+                        <widget class="QRadioButton" name="rbtnBox2Btn2">
+                            <property name="text">
+                                <string>Biopsy</string>
+                            </property>
+                            <property name="checked">
+                                <bool>true</bool>
+                            </property>
+                        </widget>
+                    </item>
+                    <item>
+                        <widget class="QRadioButton" name="rbtnBox2Btn3">
+                            <property name="text">
+                                <string>Immediate Salvage</string>
+                            </property>
+                        </widget>
+                    </item>
+                </layout>
+            </widget>
+        </item>
+    </layout>
+  </widget>
+</ui>
