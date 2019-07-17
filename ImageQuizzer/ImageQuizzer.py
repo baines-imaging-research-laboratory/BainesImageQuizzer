@@ -3,6 +3,7 @@ import unittest
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 import logging
+import mistletoe
 
 #
 # ImageQuizzer
@@ -61,21 +62,73 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         
         #  -----------------------------------------------------------------------------------
-        #                        UI setup
+        #                        UI setup through .md file
         #  -----------------------------------------------------------------------------------
-        loader = qt.QUiLoader()
+#         loader = qt.QUiLoader()
+#         moduleName = 'ImageQuizzer'
+#         scriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
+#         scriptedModulesPath = os.path.dirname(scriptedModulesPath)
+#         path = os.path.join(scriptedModulesPath, 'Resources', 'UI', '%s.ui' %moduleName)
+#         print ("path", path)
+#           
+#         qfile = qt.QFile(path)
+#         qfile.open(qt.QFile.ReadOnly)
+#         uiWidget = loader.load(qfile, self.parent)
+#         self.layout = self.parent.layout()
+#         # self.layout.addWidget(uiWidget)
+        
         moduleName = 'ImageQuizzer'
         scriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
         scriptedModulesPath = os.path.dirname(scriptedModulesPath)
-        path = os.path.join(scriptedModulesPath, 'Resources', 'UI', '%s.ui' %moduleName)
+        path = os.path.join(scriptedModulesPath, 'Resources', 'UI', '%s.md' %moduleName)
         print ("path", path)
-         
-        qfile = qt.QFile(path)
-        qfile.open(qt.QFile.ReadOnly)
-        uiWidget = loader.load(qfile, self.parent)
-        self.layout = self.parent.layout()
-        # self.layout.addWidget(uiWidget)
-         
+
+        with open(path, 'r') as fin:
+            docHtml = mistletoe.markdown(fin)
+
+        print(docHtml)
+
+        displayWidget = qt.QTextEdit()
+        displayWidget.setText(docHtml)
+        displayWidget.show()
+
+        mdWidgetLayout = qt.QVBoxLayout()
+        mdWidget = qt.QWidget()
+        mdWidget.setLayout(mdWidgetLayout)
+        quizTitle = qt.QLabel('Baines Image Quizzer')
+        mdWidgetLayout.addWidget(quizTitle)
+        
+
+        
+
+        doc = vtk.vtkXMLUtilities.ReadElementFromString("<root>"+docHtml+"</root>")
+        question = {}
+        questions = []
+        for index0 in range(doc.GetNumberOfNestedElements()):
+            element0 = doc.GetNestedElement(index0)
+            if element0.GetName() == 'h1':
+                # Found a new question
+                # Save old question first
+                if question:
+                    questions.append(question)
+                    mdWidgetLayout.addWidget(grpBox)
+                question = {}
+                question['title'] = element0.GetCharacterData()
+                question['answers'] = []
+                grpBox = qt.QGroupBox()
+                grpBox.setTitle(element0.GetCharacterData())
+                grpBoxLayout = qt.QVBoxLayout()
+                grpBox.setLayout(grpBoxLayout)
+            if element0.GetName() == 'ul':
+                # Found a new answer list
+                for index1 in range(element0.GetNumberOfNestedElements()):
+                    element1 = element0.GetNestedElement(index1)
+                    question['answers'].append(element1.GetCharacterData())
+                    rbtn = qt.QRadioButton(element1.GetCharacterData())
+                    grpBoxLayout.addWidget(rbtn)
+        
+        print(questions)
+
         #splitter
         splitter = qt.QSplitter()
         
@@ -137,7 +190,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.inputFrame.layout().addWidget(self.inputSelector)
         
         #add quizz
-        leftLayout.addWidget(uiWidget)
+        leftLayout.addWidget(mdWidget)
         
         
             # Next button
@@ -179,7 +232,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def changeView(self,volToDisplay):
-        print 'changeView: ',volToDisplay.GetName()
+        print ('changeView: ',volToDisplay.GetName())
         # Change the views to the selected volume
         ijkToRAS = vtk.vtkMatrix4x4()
         volToDisplay.GetIJKToRASMatrix(ijkToRAS)
