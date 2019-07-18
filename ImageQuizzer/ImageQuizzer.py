@@ -64,19 +64,9 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         #  -----------------------------------------------------------------------------------
         #                        UI setup through .md file
         #  -----------------------------------------------------------------------------------
-#         loader = qt.QUiLoader()
-#         moduleName = 'ImageQuizzer'
-#         scriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
-#         scriptedModulesPath = os.path.dirname(scriptedModulesPath)
-#         path = os.path.join(scriptedModulesPath, 'Resources', 'UI', '%s.ui' %moduleName)
-#         print ("path", path)
-#           
-#         qfile = qt.QFile(path)
-#         qfile.open(qt.QFile.ReadOnly)
-#         uiWidget = loader.load(qfile, self.parent)
-#         self.layout = self.parent.layout()
-#         # self.layout.addWidget(uiWidget)
         
+        #-------------------------------------------
+        # load quiz
         moduleName = 'ImageQuizzer'
         scriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
         scriptedModulesPath = os.path.dirname(scriptedModulesPath)
@@ -92,15 +82,75 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         displayWidget.setText(docHtml)
         displayWidget.show()
 
-        mdWidgetLayout = qt.QVBoxLayout()
-        mdWidget = qt.QWidget()
-        mdWidget.setLayout(mdWidgetLayout)
+
+        #-------------------------------------------
+        # load patient studies
+        studyBrowserFileName = "ImageQuizzerStudyBrowser"
+        scriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
+        scriptedModulesPath = os.path.dirname(scriptedModulesPath)
+        path = os.path.join(scriptedModulesPath, 'Resources', 'UI', '%s.md' %studyBrowserFileName)
+        print ("path", path)
+
+        with open(path, 'r') as fin:
+            docHtmlStudies = mistletoe.markdown(fin)
+
+        print(docHtmlStudies)
+
+        displayStudiesWidget = qt.QTextEdit()
+        displayStudiesWidget.setText(docHtmlStudies)
+        displayStudiesWidget.show()
+        
+        # build study browser Widget
+        mdBrowserWidgetLayout = qt.QVBoxLayout()
+        mdBrowserWidget = qt.QWidget()
+        mdBrowserWidget.setLayout(mdBrowserWidgetLayout)
+        browserTitle = qt.QLabel('Image Quizzer Patients')
+        mdBrowserWidgetLayout.addWidget(browserTitle)
+
+#         # parse md study browser file
+#         doc = vtk.vtkXMLUtilities.ReadElementFromString("<root>"+docHtmlStudies+"</root>")
+#         patients = {}
+#         series = []
+#         for index0 in range(doc.GetNumberOfNestedElements()):
+#             element0 = doc.GetNestedElement(index0)
+#             if element0.GetName() == 'h1':
+#                 # Found a new patient
+#                 # Save old patient first
+#                 if patients:
+#                     patients.append(series)
+#    #                 mdQuizWidgetLayout.addWidget(grpBox)
+#                 series = {}
+#                 series['Patient Name'] = element0.GetCharacterData()
+#                 series['path'] = []
+# #                 grpBox = qt.QGroupBox()
+# #                 grpBox.setTitle(element0.GetCharacterData())
+# #                 grpBoxLayout = qt.QVBoxLayout()
+# #                 grpBox.setLayout(grpBoxLayout)
+#             if element0.GetName() == 'ul':
+#                 # Found a new answer list
+#                 for index1 in range(element0.GetNumberOfNestedElements()):
+#                     element1 = element0.GetNestedElement(index1)
+#                     series['path'].append(element1.GetCharacterData())
+# #                     rbtn = qt.QRadioButton(element1.GetCharacterData())
+# #                     grpBoxLayout.addWidget(rbtn)
+#         
+#         print(patients)
+
+
+
+
+
+        #-------------------------------------------
+        # build quiz Widget
+        mdQuizWidgetLayout = qt.QVBoxLayout()
+        mdQuizWidget = qt.QWidget()
+        mdQuizWidget.setLayout(mdQuizWidgetLayout)
         quizTitle = qt.QLabel('Baines Image Quizzer')
-        mdWidgetLayout.addWidget(quizTitle)
+        mdQuizWidgetLayout.addWidget(quizTitle)
         
 
         
-
+        # parse md quiz file
         doc = vtk.vtkXMLUtilities.ReadElementFromString("<root>"+docHtml+"</root>")
         question = {}
         questions = []
@@ -111,7 +161,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                 # Save old question first
                 if question:
                     questions.append(question)
-                    mdWidgetLayout.addWidget(grpBox)
+                    mdQuizWidgetLayout.addWidget(grpBox)
                 question = {}
                 question['title'] = element0.GetCharacterData()
                 question['answers'] = []
@@ -129,6 +179,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         print(questions)
 
+        #-------------------------------------------
         #splitter
         splitter = qt.QSplitter()
         
@@ -154,46 +205,43 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         leftLayout = qt.QVBoxLayout()
         leftWidget.setLayout(leftLayout)
          
-        # Data buttons setup
-        self.buttons = qt.QFrame()
-        self.buttons.setLayout( qt.QHBoxLayout() )
-        leftLayout.addWidget(self.buttons)
-        self.addDataButton = qt.QPushButton("Add Data")
-        self.buttons.layout().addWidget(self.addDataButton)
-        self.addDataButton.connect("clicked()",slicer.app.ioManager().openAddDataDialog)
-        self.loadDCMButton = qt.QPushButton("Load DCM")
-        self.buttons.layout().addWidget(self.loadDCMButton)
-        #  self.loadDCMButton.connect("clicked()",slicer.app.ioManager().openLoadDicomVolumeDialog)
         
         
+        #-------------------------------------------
         # Collapsible button
         self.sampleCollapsibleButton = ctk.ctkCollapsibleButton()
-        self.sampleCollapsibleButton.text = "Patient Studies"
+        self.sampleCollapsibleButton.text = "Image Quizzer Components"
         leftLayout.addWidget(self.sampleCollapsibleButton)
         
         
         # Layout within the sample collapsible button
         self.sampleFormLayout = qt.QFormLayout(self.sampleCollapsibleButton)
         
+        #-------------------------------------------
+        # setup the tab widget
+        leftTabWidget = qt.QTabWidget()
+        tabQuiz = qt.QWidget()
+        tabStudyBrowser = qt.QWidget()
+        leftTabWidget.addTab(tabQuiz,"Quiz")
+        leftTabWidget.addTab(slicer.modules.segmenteditor.widgetRepresentation(),"Segment Editor")
+        leftTabWidget.addTab(tabStudyBrowser,"Study List")
         
-        # the volume selectors
-        self.inputFrame = qt.QFrame(self.sampleCollapsibleButton)
-        self.inputFrame.setLayout(qt.QHBoxLayout())
-        self.sampleFormLayout.addWidget(self.inputFrame)
-        self.inputSelector = qt.QLabel("Studies: ", self.inputFrame)
-        self.inputFrame.layout().addWidget(self.inputSelector)
-        self.inputSelector = slicer.qMRMLNodeComboBox(self.inputFrame)
-        self.inputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
-        self.inputSelector.addEnabled = False
-        self.inputSelector.removeEnabled = False
-        self.inputSelector.setMRMLScene( slicer.mrmlScene )
-        self.inputFrame.layout().addWidget(self.inputSelector)
+        tabQuizLayout = qt.QVBoxLayout()
+        tabQuiz.setLayout(tabQuizLayout)
+        tabQuizLayout.addWidget(mdQuizWidget)
+        
+        tabStudyBrowserLayout = qt.QVBoxLayout()
+        tabStudyBrowser.setLayout(tabStudyBrowserLayout)
+#        tabStudyBrowserLayout.addWidget()
+        
         
         #add quizz
-        leftLayout.addWidget(mdWidget)
+#        leftLayout.addWidget(mdWidget)
+        leftLayout.addWidget(leftTabWidget)
         
         
-            # Next button
+        #-------------------------------------------
+        # Next button
         self.nextButton = qt.QPushButton("Next")
         self.nextButton.toolTip = "Display next in series."
         self.nextButton.enabled = True
