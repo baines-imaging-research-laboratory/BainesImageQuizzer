@@ -4,6 +4,9 @@ import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 import logging
 import mistletoe
+#import hashlib
+import urllib
+# 
 
 #
 # ImageQuizzer
@@ -107,34 +110,41 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         browserTitle = qt.QLabel('Image Quizzer Patients')
         mdBrowserWidgetLayout.addWidget(browserTitle)
 
-#         # parse md study browser file
-#         doc = vtk.vtkXMLUtilities.ReadElementFromString("<root>"+docHtmlStudies+"</root>")
-#         patients = {}
-#         series = []
-#         for index0 in range(doc.GetNumberOfNestedElements()):
-#             element0 = doc.GetNestedElement(index0)
-#             if element0.GetName() == 'h1':
-#                 # Found a new patient
-#                 # Save old patient first
-#                 if patients:
-#                     patients.append(series)
-#    #                 mdQuizWidgetLayout.addWidget(grpBox)
-#                 series = {}
-#                 series['Patient Name'] = element0.GetCharacterData()
-#                 series['path'] = []
-# #                 grpBox = qt.QGroupBox()
-# #                 grpBox.setTitle(element0.GetCharacterData())
-# #                 grpBoxLayout = qt.QVBoxLayout()
-# #                 grpBox.setLayout(grpBoxLayout)
-#             if element0.GetName() == 'ul':
-#                 # Found a new answer list
-#                 for index1 in range(element0.GetNumberOfNestedElements()):
-#                     element1 = element0.GetNestedElement(index1)
-#                     series['path'].append(element1.GetCharacterData())
-# #                     rbtn = qt.QRadioButton(element1.GetCharacterData())
-# #                     grpBoxLayout.addWidget(rbtn)
-#         
-#         print(patients)
+        # parse md study browser file
+        doc = vtk.vtkXMLUtilities.ReadElementFromString("<root>"+docHtmlStudies+"</root>")
+        patients = {}
+        series = []
+        for index0 in range(doc.GetNumberOfNestedElements()):
+            element0 = doc.GetNestedElement(index0)
+            if element0.GetName() == 'h1':
+                # Found a new patient
+                # Save old patient first
+                if patients:
+                    patients.append(series)
+                series = {}
+                series['Patient Name'] = element0.GetCharacterData()
+                series['imagePath'] = []
+                lbl = qt.QLabel(element0.GetCharacterData())
+                mdBrowserWidgetLayout.addWidget(lbl)
+            if element0.GetName() == 'ul':
+                # Found a new answer list
+                for index1 in range(element0.GetNumberOfNestedElements()):
+                    element1 = element0.GetNestedElement(index1)
+                    if element1.GetName() == 'li':
+                        for index2 in range(element1.GetNumberOfNestedElements()):
+                            element2 = element1.GetNestedElement(index2)
+                            if element2.GetName() == 'a':
+                                impath = element2.GetAttribute('href')
+                                series['imagePath'].append(impath)
+                                lbl = qt.QLabel(impath)
+                                mdBrowserWidgetLayout.addWidget(lbl)
+         
+        print(patients)
+        
+        print(impath)
+        strpath = urllib.request.unquote(impath)
+        print(strpath)
+        slicer.util.loadVolume(strpath)
 
 
 
@@ -223,7 +233,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         tabQuiz = qt.QWidget()
         tabStudyBrowser = qt.QWidget()
         leftTabWidget.addTab(tabQuiz,"Quiz")
-        leftTabWidget.addTab(slicer.modules.segmenteditor.widgetRepresentation(),"Segment Editor")
+#        leftTabWidget.addTab(slicer.modules.segmenteditor.widgetRepresentation(),"Segment Editor")
         leftTabWidget.addTab(tabStudyBrowser,"Study List")
         
         tabQuizLayout = qt.QVBoxLayout()
@@ -232,7 +242,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         tabStudyBrowserLayout = qt.QVBoxLayout()
         tabStudyBrowser.setLayout(tabStudyBrowserLayout)
-#        tabStudyBrowserLayout.addWidget()
+        tabStudyBrowserLayout.addWidget(mdBrowserWidget)
         
         
         #add quizz
@@ -256,7 +266,9 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         #-------------------------------------------
         # combine left and right layouts 
-        self.layout.addWidget(splitter)
+#        self.layout.addWidget(splitter)
+        
+        self.layout.addWidget(leftWidget)
      
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onNextButtonClicked(self):
@@ -316,3 +328,10 @@ class ImageQuizzerLogic(ScriptedLoadableModuleLogic):
 #  def __init__(self):
 #    super(ImageQuizzerSlicelet,self).__init__(ImageQuizzerWidget)
  
+ 
+# testing md5 hash
+#         text = 'D:\BainesWork\ShareableData\SlicerData\Day2_CT.nrrd'
+#         textUtf8 = text.encode("utf-8")
+#         hash = hashlib.md5(textUtf8)
+#         hexa = hash.hexdigest()
+#         print(hexa)

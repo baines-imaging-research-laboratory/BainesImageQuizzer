@@ -1,0 +1,12 @@
+
+\.project
+
+\.pydevproject
+
+*.pyc
+
+ImageQuizzer/__pycache__/
+
+ImageQuizzer/ImageQuizzer\.templateOrig
+
+QuizProgress\.JPG
