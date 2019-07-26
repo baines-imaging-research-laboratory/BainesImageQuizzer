@@ -73,7 +73,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         moduleName = 'ImageQuizzer'
         scriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
         scriptedModulesPath = os.path.dirname(scriptedModulesPath)
-        path = os.path.join(scriptedModulesPath, 'Resources', 'UI', '%s.md' %moduleName)
+        path = os.path.join(scriptedModulesPath, 'Resources', 'MD', '%s.md' %moduleName)
         print ("path", path)
 
         with open(path, 'r') as fin:
@@ -91,7 +91,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         studyBrowserFileName = "ImageQuizzerStudyBrowser"
         scriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
         scriptedModulesPath = os.path.dirname(scriptedModulesPath)
-        path = os.path.join(scriptedModulesPath, 'Resources', 'UI', '%s.md' %studyBrowserFileName)
+        path = os.path.join(scriptedModulesPath, 'Resources', 'MD', '%s.md' %studyBrowserFileName)
         print ("path", path)
 
         with open(path, 'r') as fin:
