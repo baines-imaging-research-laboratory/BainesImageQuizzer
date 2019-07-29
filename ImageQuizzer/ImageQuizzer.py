@@ -6,6 +6,8 @@ import logging
 import mistletoe
 #import hashlib
 import urllib
+from pkg_resources import _set_parent_ns
+from pathlib import _PathParents
 # 
 
 #
@@ -22,17 +24,13 @@ class ImageQuizzer(ScriptedLoadableModule):
     self.parent.title = "ImageQuizzer" # TODO make this more human readable by adding spaces
     self.parent.categories = ["Baines Custom Modules"]
     self.parent.dependencies = []
-    self.parent.contributors = ["Carol Johnson (Baines Imaging Research Laboratory)"] # replace with "Firstname Lastname (Organization)"
-    self.parent.helpText = """
-This is an example of scripted loadable module bundled in an extension.
-It performs a simple thresholding on the input volume and optionally captures a screenshot.
-AND it runs a quiz!!!
-"""
+    self.parent.contributors = ["Carol Johnson (Software Developer - Baines Imaging Laboratory)"] # replace with "Firstname Lastname (Organization)"
+    self.parent.helpText = """ This scripted loadable module displays a quiz to be answered based on images shown."""
     self.parent.helpText += self.getDefaultModuleDocumentationLink()
-    self.parent.acknowledgementText = """
-This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-and Steve Pieper, Isomics, Inc. and was partially funded by NIH grant 3P41RR013218-12S1.
-""" # replace with organization, grant and thanks.
+    self.parent.acknowledgementText = """ Baines Imaging Research Laboratory. 
+    Principal Investigator: Dr. Aaron Ward.
+    """
+    
 
 #
 # ImageQuizzerWidget
@@ -62,7 +60,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         print ("-------ImageQuizzer Widget SetUp--------")
         
-        
+        slicer.util.setMenuBarsVisible(True)
+        slicer.util.setToolbarsVisible(False)
         
         #  -----------------------------------------------------------------------------------
         #                        UI setup through .md files
@@ -136,7 +135,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                             if element2.GetName() == 'a':
                                 impath = element2.GetAttribute('href')
                                 series['imagePath'].append(impath)
-#                                 lbl = qt.QLabel(impath)
                                 lblText = "  - " + element2.GetCharacterData()
                                 lbl = qt.QLabel(lblText)
                                 mdBrowserWidgetLayout.addWidget(lbl)
@@ -147,8 +145,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         strpath = urllib.request.unquote(impath)
         print(strpath)
         slicer.util.loadVolume(strpath)
-
-
 
 
 
@@ -215,7 +211,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         tabQuiz = qt.QWidget()
         tabStudyBrowser = qt.QWidget()
         leftTabWidget.addTab(tabQuiz,"Quiz")
-#        leftTabWidget.addTab(slicer.modules.segmenteditor.widgetRepresentation(),"Segment Editor")
+        leftTabWidget.addTab(slicer.modules.segmenteditor.widgetRepresentation(),"Segment Editor")
         leftTabWidget.addTab(tabStudyBrowser,"Study List")
         
         tabQuizLayout = qt.QVBoxLayout()

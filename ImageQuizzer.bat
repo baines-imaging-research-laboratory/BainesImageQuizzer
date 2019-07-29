@@ -1,4 +1,4 @@
-set SLICER_LAUNCHER="C:\Users\Carol\AppData\Local\NA-MIC\Slicer 4.11.0-2019-07-19\Slicer.exe"
+set SLICER_LAUNCHER="C:\Users\cjohnson\AppData\Local\NA-MIC\Slicer 4.11.0-2019-07-19\Slicer.exe"
 
 # launch ImageQuizzer module as a slicelet
 #%SLICER_LAUNCHER%  --no-main-window  --show-python-interactor --python-code "slicer.modules.imagequizzer.widgetRepresentation().show()"
