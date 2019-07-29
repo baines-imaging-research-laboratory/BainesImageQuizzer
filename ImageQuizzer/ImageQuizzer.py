@@ -65,7 +65,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         
         #  -----------------------------------------------------------------------------------
-        #                        UI setup through .md file
+        #                        UI setup through .md files
         #  -----------------------------------------------------------------------------------
         
         #-------------------------------------------
@@ -136,7 +136,9 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                             if element2.GetName() == 'a':
                                 impath = element2.GetAttribute('href')
                                 series['imagePath'].append(impath)
-                                lbl = qt.QLabel(impath)
+#                                 lbl = qt.QLabel(impath)
+                                lblText = "  - " + element2.GetCharacterData()
+                                lbl = qt.QLabel(lblText)
                                 mdBrowserWidgetLayout.addWidget(lbl)
          
         print(patients)
@@ -190,28 +192,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         print(questions)
 
         #-------------------------------------------
-        #splitter
-        splitter = qt.QSplitter()
-        
+        # set up quiz widget
         leftWidget = qt.QWidget()
-        rightWidget = qt.QWidget()
-        
-        splitter.addWidget(leftWidget)
-        splitter.addWidget(rightWidget)
-         
-             
-        #-------------------------------------------
-        #right layout for 2d/3d viewer
-        sceneWidget = slicer.qMRMLLayoutWidget()
-        sceneWidget.setMRMLScene(slicer.mrmlScene)
-        sceneWidget.setLayout(0)
-        
-        rightLayout = qt.QVBoxLayout()
-        rightWidget.setLayout(rightLayout)
-        rightLayout.addWidget(sceneWidget)
-        
-        #-------------------------------------------
-        #   #left layout for quizz
         leftLayout = qt.QVBoxLayout()
         leftWidget.setLayout(leftLayout)
          
@@ -245,8 +227,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         tabStudyBrowserLayout.addWidget(mdBrowserWidget)
         
         
-        #add quizz
-#        leftLayout.addWidget(mdWidget)
+        #add quiz
         leftLayout.addWidget(leftTabWidget)
         
         
@@ -264,9 +245,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.backButton.enabled = True
         leftLayout.addWidget(self.backButton)
         
-        #-------------------------------------------
-        # combine left and right layouts 
-#        self.layout.addWidget(splitter)
         
         self.layout.addWidget(leftWidget)
      
