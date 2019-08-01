@@ -6,5 +6,5 @@
 - [Series 1](D:\Users\cjohnson\Work\Resources\ShareableData\RegistrationDemos\FromSlicer\NRR-CTgLiverAblation\MR.nrrd)
 
 # Patient 3
-- [Series 1]("D:\Users\cjohnson\Work\Resources\Slicer\SlicerWork\CsabaPinter-SlicerRtDemo_RSNA2012\SlicerRtDemo_RSNA2012\EclipseEntComputedDay2Data\2 ENT IMRT Day2.nrrd")
+- [Series 1](D:\Users\cjohnson\Work\Resources\Slicer\SlicerWork\CsabaPinter-SlicerRtDemo_RSNA2012\SlicerRtDemo_RSNA2012\EclipseEntComputedDay2Data\2_ENT_IMRT_Day2.nrrd)
 

@@ -48,6 +48,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         #                                   Global Variables
         # ------------------------------------------------------------------------------------
         #self.logic = ImageQuizzerLogic(self)
+        self.qtQuizProgressWidget = qt.QTextEdit()
         # -------------------------------------------------------------------------------------
         # Interaction with 3D Scene
         #self.interactionNode = slicer.mrmlScene.GetNodeByID("vtkMRMLInteractionNodeSingleton")
@@ -94,12 +95,12 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         print ("path", path)
 
         with open(path, 'r') as fin:
-            docHtmlStudies = mistletoe.markdown(fin)
+            self.docHtmlStudies = mistletoe.markdown(fin)
 
-        print(docHtmlStudies)
+        print(self.docHtmlStudies)
 
         displayStudiesWidget = qt.QTextEdit()
-        displayStudiesWidget.setText(docHtmlStudies)
+        displayStudiesWidget.setText(self.docHtmlStudies)
         displayStudiesWidget.show()
         
         # build study browser Widget
@@ -110,7 +111,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         mdBrowserWidgetLayout.addWidget(browserTitle)
 
         # parse md study browser file
-        doc = vtk.vtkXMLUtilities.ReadElementFromString("<root>"+docHtmlStudies+"</root>")
+        doc = vtk.vtkXMLUtilities.ReadElementFromString("<root>"+self.docHtmlStudies+"</root>")
         patients = {}
         series = []
         for index0 in range(doc.GetNumberOfNestedElements()):
@@ -241,10 +242,28 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.backButton.enabled = True
         leftLayout.addWidget(self.backButton)
         
+        # Status button
+        self.btnShowQuizProgress = qt.QPushButton("Show Quiz Progress")
+        self.btnShowQuizProgress.toolTip = "Display status of images."
+        self.btnShowQuizProgress.enabled = True
+        leftLayout.addWidget(self.btnShowQuizProgress)
+        
         
         self.layout.addWidget(leftWidget)
-     
+
+        #-------------------------------------------
+        # Connections
+        #-------------------------------------------
+        self.btnShowQuizProgress.connect('clicked(bool)', self.onShowQuizProgressClicked)
+        
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    def onShowQuizProgressClicked(self):
+        self.qtQuizProgressWidget.setText(self.docHtmlStudies)
+        self.qtQuizProgressWidget.show()
+
+    
     def onNextButtonClicked(self):
 ##    print("Next volume ...")
 ##    #Confirm that the user has selected a node
