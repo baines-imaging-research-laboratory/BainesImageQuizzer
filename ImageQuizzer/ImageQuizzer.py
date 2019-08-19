@@ -5,9 +5,10 @@ from slicer.ScriptedLoadableModule import *
 import logging
 import mistletoe
 #import hashlib
-import urllib
+import urllib.request # import submodule directly
 from pkg_resources import _set_parent_ns
 from pathlib import _PathParents
+from Question import *
 # 
 
 #
@@ -157,7 +158,14 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         quizTitle = qt.QLabel('Baines Image Quizzer')
         mdQuizWidgetLayout.addWidget(quizTitle)
         
-
+        # -----------
+        # test creating a radio button object through the abstract Question Class
+        # ready for further development
+        optList = ['Injury','Recurrence']
+        desc = 'Assessment'
+        rq = RadioQuestion(optList, desc)
+        rq.buildQuestion()
+        # -----------
         
         # parse md quiz file
         doc = vtk.vtkXMLUtilities.ReadElementFromString("<root>"+docHtml+"</root>")
@@ -203,8 +211,11 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         leftLayout.addWidget(self.sampleCollapsibleButton)
         
         
-        # Layout within the sample collapsible button
+        # Layout within the sample collapsible button - form needs a frame
         self.sampleFormLayout = qt.QFormLayout(self.sampleCollapsibleButton)
+        self.quizFrame = qt.QFrame(self.sampleCollapsibleButton)
+        self.quizFrame.setLayout(qt.QVBoxLayout())
+        self.sampleFormLayout.addWidget(self.quizFrame)
         
         #-------------------------------------------
         # setup the tab widget
@@ -225,7 +236,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         
         #add quiz
-        leftLayout.addWidget(leftTabWidget)
+        self.quizFrame.layout().addWidget(leftTabWidget)
         
         
         #-------------------------------------------
@@ -247,7 +258,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.btnShowQuizProgress.toolTip = "Display status of images."
         self.btnShowQuizProgress.enabled = True
         leftLayout.addWidget(self.btnShowQuizProgress)
-        
         
         self.layout.addWidget(leftWidget)
 
