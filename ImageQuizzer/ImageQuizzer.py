@@ -3,8 +3,8 @@ import unittest
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 import logging
+
 import mistletoe
-#import hashlib
 import urllib.request # import submodule directly
 from pkg_resources import _set_parent_ns
 from pathlib import _PathParents
@@ -322,14 +322,47 @@ class ImageQuizzerLogic(ScriptedLoadableModuleLogic):
 
  
  
- 
- 
-#class ImageQuizzerSlicelet(Slicelet):
-#  """ Creates the interface when module is run as a stand alone gui app.
-#  """
- 
-#  def __init__(self):
-#    super(ImageQuizzerSlicelet,self).__init__(ImageQuizzerWidget)
+#-----------------------------------------------------------------------------------------------
+#
+# I can't get this working yet ... I want to load and run all tests in the Testing subdirectory
+#
+# from TestQuestion import *
+# from ImageQuizzer.Testing.Python.TestQuestion.TestQuestion import *
+#
+class ImageQuizzerTest(ScriptedLoadableModuleTest):
+    """
+    This is the test case for your scripted module.
+    Uses ScriptedLoadableModuleTest base class, available at:
+    https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
+    """
+     
+    def setUp(self):
+        """ Do whatever is needed to reset the state - typically a scene clear will be enough.
+        """
+        slicer.mrmlScene.Clear(0)
+#         self.tqt = TestQuestionTest()
+         
+    def runTest(self):
+        """Run as few or as many tests as needed here.
+        """
+        self.setUp()
+        self.test_ImageQuizzer1()
+#         self.tqt.runTest()
+#         
+# 
+    def test_ImageQuizzer1(self):
+        """ Ideally you should have several levels of tests.  At the lowest level
+        tests should exercise the functionality of the logic with different inputs
+        (both valid and invalid).  At higher levels your tests should emulate the
+        way the user would interact with your code and confirm that it still works
+        the way you intended.
+        One of the most important features of the tests is that it should alert other
+        developers when their changes will have an impact on the behavior of your
+        module.  For example, if a developer removes a feature that you depend on,
+        your test should break so they know that the feature is needed.
+        """
+         
+        self.delayDisplay('WARNING: THIS UNITTEST IS UNDER DEVELOPMENT - SEE TESTCASES')
  
  
 # testing md5 hash

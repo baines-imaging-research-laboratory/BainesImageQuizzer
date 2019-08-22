@@ -4,7 +4,8 @@ import PythonQt
 import os
 import unittest
 import vtk, qt, ctk, slicer
-
+import sys
+import warnings
 
 #-----------------------------------------------
 
@@ -22,17 +23,25 @@ class RadioQuestion(Question):
     def __init__(self, options, description):
         self.options = options
         self.description = description
+        self.className = type(self).__name__
         
     def buildQuestion(self):
-        print('add radio buttons')
+        self.fnName = sys._getframe().f_code.co_name
+        print('add radio buttons to group box')
         print(self.options)
         length = len(self.options)
+        if length < 1 :
+#             print('Warning : No options were given. No Group Box will be created')
+            sWarningMsg = self.className + ':' + self.fnName + ':' + 'NoOptionsAvailable'
+#             warnings.warn( 'For Testing:' + sWarningMsg )
+            warnings.warn( sWarningMsg )
+            return False
         i = 0
         while i < length:
             element1 = self.options[i]
             i = i + 1
 
-
+        return True
         
 #-----------------------------------------------
 
