@@ -11,61 +11,73 @@ import warnings
 
 class Question(ABC):
     
-#     def __init__(self, color='black'):
-#         self.color = color
-
     @abstractmethod        
     def buildQuestion(self): pass
+    
+    def createGroupBox(self, sTitle):
+        # create group box widget to which each subclass can add elements
+        self.qGrpBox = qt.QGroupBox()
+        self.qGrpBox.setTitle(sTitle)
+        self.qGrpBoxLayout = qt.QVBoxLayout()
+        self.qGrpBox.setLayout(self.qGrpBoxLayout)
+        return self.qGrpBox
+
     
 #-----------------------------------------------
 
 class RadioQuestion(Question):
-    def __init__(self, options, description):
-        self.options = options
-        self.description = description
-        self.className = type(self).__name__
+    
+    def __init__(self, lOptions, sGrpBoxTitle):
+        self.lOptions = lOptions
+        self.sGrpBoxTitle = sGrpBoxTitle
+        self.sClassName = type(self).__name__
         
     def buildQuestion(self):
-        self.fnName = sys._getframe().f_code.co_name
-        print('add radio buttons to group box')
-        print(self.options)
-        length = len(self.options)
+        self.sFnName = sys._getframe().f_code.co_name
+        qGrpBox = self.createGroupBox(self.sGrpBoxTitle)
+        
+        print(self.lOptions)
+        length = len(self.lOptions)
         if length < 1 :
-#             print('Warning : No options were given. No Group Box will be created')
-            sWarningMsg = self.className + ':' + self.fnName + ':' + 'NoOptionsAvailable'
+            sLabel = 'Warning : No options were given. Group Box is empty'
+            qlabel = qt.QLabel(sLabel)
+            self.qGrpBoxLayout.addWidget(qlabel)
+            sWarningMsg = self.sClassName + ':' + self.sFnName + ':' + 'NoOptionsAvailable'
 #             warnings.warn( 'For Testing:' + sWarningMsg )
             warnings.warn( sWarningMsg )
-            return False
+            return False, qGrpBox
         i = 0
         while i < length:
-            element1 = self.options[i]
+            element1 = self.lOptions[i]
+            qRadioBtn = qt.QRadioButton(element1)
+            self.qGrpBoxLayout.addWidget(qRadioBtn)
             i = i + 1
 
-        return True
+        return True, qGrpBox
         
 #-----------------------------------------------
 
-class RadioQuestionTest():
-    """
-    This is the test case for building a radio button question box
-    """
-    
-    def setUp(self):
-#         slicer.mrmlScene.Clear(0)
-        print('Perform setup - clear scene')
-        
-    def runTest(self):
-        self.setUp()
-        self.test_buildRadioQuestion()
-        
-    def test_1(self):
-        """
-        Test valid entry
-        """
-        optList = ['Injury','Recurrence']
-        desc = 'Assessment'
-        rq = RadioQuestion(optList, desc)
-        rq.buildQuestion()
+# class RadioQuestionTest():
+#     """
+#     This is the test case for building a radio button question box
+#     """
+#     
+#     def setUp(self):
+# #         slicer.mrmlScene.Clear(0)
+#         print('Perform setup - clear scene')
+#         
+#     def runTest(self):
+#         self.setUp()
+#         self.test_buildRadioQuestion()
+#         
+#     def test_1(self):
+#         """
+#         Test valid entry
+#         """
+#         optList = ['Injury','Recurrence']
+#         desc = 'Assessment'
+#         rq = RadioQuestion(optList, desc)
+#         rq.buildQuestion()
 
                
 #-----------------------------------------------

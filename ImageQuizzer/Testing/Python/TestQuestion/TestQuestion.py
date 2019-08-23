@@ -7,6 +7,7 @@ from Question import *
 import sys
 import warnings
 import numpy as np
+from pathlib import Path
 import imp
 
 #
@@ -48,17 +49,17 @@ class TestQuestionWidget(ScriptedLoadableModuleWidget):
         # Instantiate and connect widgets ...
         
         # Collapsible button
-        dummyCollapsibleButton = ctk.ctkCollapsibleButton()
-        dummyCollapsibleButton.text = "A collapsible button"
-        self.layout.addWidget(dummyCollapsibleButton)
+        testingCollapsibleButton = ctk.ctkCollapsibleButton()
+        testingCollapsibleButton.text = "Testing Layout"
+        self.layout.addWidget(testingCollapsibleButton)
         
-        # Layout within the dummy collapsible button
-        dummyFormLayout = qt.QFormLayout(dummyCollapsibleButton)
+        # Layout within the collapsible button
+        self.testFormLayout = qt.QFormLayout(testingCollapsibleButton)
         
-        # HelloWorld button
+        # Start test button
         startTestButton = qt.QPushButton("Start Tests Question Class")
         startTestButton.toolTip = "start unit tests for Question class."
-        dummyFormLayout.addWidget(startTestButton)
+        self.testFormLayout.addWidget(startTestButton)
         startTestButton.connect('clicked(bool)', self.onStartTestButtonClicked)
         
         # Add vertical spacer
@@ -68,26 +69,26 @@ class TestQuestionWidget(ScriptedLoadableModuleWidget):
         self.startTestButton = startTestButton
 
         # reload class being tested
+        #    This reloads the scripts for testing which are not handled by the 'Reload' button
         self.reloadClassForTest()
         
     def reloadClassForTest(self):
         # TODO: Fix so that you don't have to 'Reload' twice for this to take affect
-        #       Get project name and path from system
-        #
 
         # function to force reload of scripts that are not 'loadable' in Slicer
-
-        self.projectName = "ImageQuizzer"
-        mod = "Question"
-        self.projectPath = 'D:\\Users\\cjohnson\\Work\\Projects\\SlicerEclipseProjects\\ImageQuizzerProject\\ImageQuizzer'
-        self.sourceFile = self.projectPath + '\\Question.py'
-        fp = open(self.sourceFile, "r")
-        globals()[mod] = imp.load_module("Question", fp, self.sourceFile, ('.py', 'r', imp.PY_SOURCE))
+        sModule = "Question"
+        sScriptName = sModule + '.py'
+        # Test files are located in .\Testing\Python\TestModule\xxx.py - i.e. up 4 levels to root
+        sProjectPath = Path(__file__).parent.parent.parent.parent
+        print ('**** : ' + str(sProjectPath))
+        sSourceFile = str(sProjectPath) + '\\' + sScriptName
+        fp = open(sSourceFile, "r")
+        globals()[sModule] = imp.load_module(sModule, fp, sSourceFile, ('.py', 'r', imp.PY_SOURCE))
         fp.close()
 
     def onStartTestButtonClicked(self):
-        tqt = TestQuestionTest()
-        tqt.runTest()
+        oTestQuestion = TestQuestionTest()
+        oTestQuestion.runTest(self.testFormLayout)
         print("Test Complete !")
 
 
@@ -102,14 +103,15 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         """ Do whatever is needed to reset the state - typically a scene clear will be enough.
         """
         slicer.mrmlScene.Clear(0)
-        self.optList = ['Injury','Recurrence']
-        self.desc = 'Assessment'
-        self.className = type(self).__name__
+        self.lOptions = ['Injury','Recurrence']
+        self.sGroupTitle = 'Assessment'
+        self.sClassName = type(self).__name__
         
 
-    def DisplayResults(self, results):
+    def DisplayTestResults(self, results):
+        # print the boolean results for each test
         self.results = results
-        print('--- Test Results ' + ' --------- ' + self.className + ' functions -----')
+        print('--- Test Results ' + ' --------- ' + self.sClassName + ' functions -----')
         for i in range(len(results)):
             sFname, success = results[i]
             if success:
@@ -118,15 +120,21 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
                 sDisplay = "!$!#!@#!@$%! Test Failed!! : "
             print(sDisplay, i+1, sFname)
             
-
-    def runTest(self):
+    def AddWidgetToTestFormLayout(self, grpBoxWidget):
+        # display the resulting widget on the Test layout for visual test
+        self.gbWidget = grpBoxWidget
+        self.testFormLayout.addWidget(self.gbWidget)
+        
+    def runTest(self, layout):
         """Run as few or as many tests as needed here.
         """
         self.setUp()
-        results = []
-        results.append(self.test_NoErrors())
-        results.append(self.test_NoOptions())
-        self.DisplayResults(results)
+        tupResults = []
+        self.testFormLayout = layout
+        tupResults.append(self.test_NoErrors())
+        tupResults.append(self.test_NoOptionsWarning())
+        self.DisplayTestResults(tupResults)
+        
 
     def test_NoErrors(self):
         """ Class is called with no errors encountered
@@ -134,36 +142,31 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         bTestResult = False
         self.fnName = sys._getframe().f_code.co_name
         
-        self.rq = RadioQuestion(self.optList, self.desc)
-        bTestResult = self.rq.buildQuestion()
-#         if not(self.assertTrue(1, 2)) :
-#             success = False
-#         if self.returnCode:
-#             success = True
+        self.rq = RadioQuestion(self.lOptions, self.sGroupTitle + ' ...Test No Errors')
+        bTestResult, qGrpBox = self.rq.buildQuestion()
+        self.AddWidgetToTestFormLayout(qGrpBox)
         
-        result = self.fnName, bTestResult
-        return result
+        tupResult = self.fnName, bTestResult
+        return tupResult
     
-    def test_NoOptions(self):
+    def test_NoOptionsWarning(self):
         """ Test warning when no options are given """
         bTestResult = False
         self.fnName = sys._getframe().f_code.co_name
         
-        self.optList = []
-        self.rq = RadioQuestion(self.optList, self.desc)
+        self.lOptions = []
+        self.rq = RadioQuestion(self.lOptions, self.sGroupTitle + ' ...Test No Options')
         sExpWarning = 'RadioQuestion:buildQuestion:NoOptionsAvailable'
 #         self.assertWarns(sExpWarning, self.rq.buildQuestion())
         with warnings.catch_warnings (record=True) as w:
             warnings.simplefilter("always")
-            bFnResult = self.rq.buildQuestion() 
+            bFnResult, qGrpBox = self.rq.buildQuestion() 
             if bFnResult == False:
                 if len(w) > 0:
                     print(str(w[0].message))
                     if sExpWarning == str(w[0].message):
                         bTestResult = True
-#             self.assertGreater( len(w), 0)
-#             self.assertEqual( sExpWarning, str(w[0].message))
-#             success = True
+                        self.AddWidgetToTestFormLayout(qGrpBox)
         
-        result = self.fnName, bTestResult
-        return result
+        tupResult = self.fnName, bTestResult
+        return tupResult
