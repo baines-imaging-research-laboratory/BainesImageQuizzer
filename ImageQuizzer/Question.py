@@ -11,6 +11,11 @@ import warnings
 
 class Question(ABC):
     
+    def __init__(self):
+        self.sClassName = 'undefinedClassName'
+        self.sFnName = 'undefinedFunctionName'
+
+    
     @abstractmethod        
     def buildQuestion(self): pass
     
@@ -22,10 +27,23 @@ class Question(ABC):
         self.qGrpBox.setLayout(self.qGrpBoxLayout)
         return self.qGrpBox
 
-    
+    def displayGroupBoxEmpty(self):
+        # check if group box was already created
+        
+        sLabel = 'Warning : No options were given. Group Box is empty'
+        sWarningMsg = self.sClassName + ':' + self.sFnName + ':' + 'NoOptionsAvailable'
+        qlabel = qt.QLabel(sLabel)
+        self.qGrpBoxLayout.addWidget(qlabel)
+#             warnings.warn( 'For Testing:' + sWarningMsg )
+        warnings.warn( sWarningMsg )
+        
 #-----------------------------------------------
 
 class RadioQuestion(Question):
+    # Create a group box and add radio buttons based on the options provided
+    # Inputs : lOptions - list of labels for each radio button
+    # Outputs: exitCode - boolean describing whether function exited successfully
+    #          qGrpBox  - group box widget holding radio buttons
     
     def __init__(self, lOptions, sGrpBoxTitle):
         self.lOptions = lOptions
@@ -34,18 +52,14 @@ class RadioQuestion(Question):
         
     def buildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
-        qGrpBox = self.createGroupBox(self.sGrpBoxTitle)
+        self.createGroupBox(self.sGrpBoxTitle)
         
         print(self.lOptions)
         length = len(self.lOptions)
         if length < 1 :
-            sLabel = 'Warning : No options were given. Group Box is empty'
-            qlabel = qt.QLabel(sLabel)
-            self.qGrpBoxLayout.addWidget(qlabel)
-            sWarningMsg = self.sClassName + ':' + self.sFnName + ':' + 'NoOptionsAvailable'
-#             warnings.warn( 'For Testing:' + sWarningMsg )
-            warnings.warn( sWarningMsg )
-            return False, qGrpBox
+            self.displayGroupBoxEmpty()
+            return False, self.qGrpBox
+        
         i = 0
         while i < length:
             element1 = self.lOptions[i]
@@ -53,38 +67,73 @@ class RadioQuestion(Question):
             self.qGrpBoxLayout.addWidget(qRadioBtn)
             i = i + 1
 
-        return True, qGrpBox
+        return True, self.qGrpBox
         
 #-----------------------------------------------
 
-# class RadioQuestionTest():
-#     """
-#     This is the test case for building a radio button question box
-#     """
-#     
-#     def setUp(self):
-# #         slicer.mrmlScene.Clear(0)
-#         print('Perform setup - clear scene')
-#         
-#     def runTest(self):
-#         self.setUp()
-#         self.test_buildRadioQuestion()
-#         
-#     def test_1(self):
-#         """
-#         Test valid entry
-#         """
-#         optList = ['Injury','Recurrence']
-#         desc = 'Assessment'
-#         rq = RadioQuestion(optList, desc)
-#         rq.buildQuestion()
-
-               
-#-----------------------------------------------
+class CheckBoxQuestion(Question):
+    # Create a group box and add check boxes based on the options provided
+    # Inputs : lOptions - list of options for each check box
+    # Outputs: exitCode - boolean describing whether function exited successfully
+    #          qGrpBox  - group box widget holding check boxes
+    
+    def __init__(self, lOptions, sGrpBoxTitle):
+        self.lOptions = lOptions
+        self.sGrpBoxTitle = sGrpBoxTitle
+        self.sClassName = type(self).__name__
         
-# optList = ['Injury','Recurrence']
-# desc = 'Assessment'
-# rq = RadioQuestion(optList, desc)
-# rq.buildQuestion()
+    def buildQuestion(self):
+        self.sFnName = sys._getframe().f_code.co_name
+        self.createGroupBox(self.sGrpBoxTitle)
+        
+        print(self.lOptions)
+        length = len(self.lOptions)
+        if length < 1 :
+            self.displayGroupBoxEmpty()
+            return False, self.qGrpBox
+        
+        i = 0
+        while i < length:
+            element1 = self.lOptions[i]
+            qChkBox = qt.QCheckBox(element1)
+            self.qGrpBoxLayout.addWidget(qChkBox)
+            i = i + 1
 
-print('Finished')
+        return True, self.qGrpBox
+        
+class TextQuestion(Question):
+    # Create a group box and add radio buttons based on the options provided
+    # Inputs : lOptions - list of labels for each 
+    # Outputs: exitCode - boolean describing whether function exited successfully
+    #          qGrpBox  - group box widget holding text edit boxes
+    
+    def __init__(self, lOptions, sGrpBoxTitle):
+        self.lOptions = lOptions
+        self.sGrpBoxTitle = sGrpBoxTitle
+        self.sClassName = type(self).__name__
+        
+    def buildQuestion(self):
+        self.sFnName = sys._getframe().f_code.co_name
+
+        # add grid layout to group box
+        self.createGroupBox(self.sGrpBoxTitle)
+        newLayout = qt.QGridLayout()
+        self.qGrpBoxLayout.addLayout(newLayout)
+       
+        print(self.lOptions)
+        length = len(self.lOptions)
+        if length < 1 :
+            self.displayGroupBoxEmpty()
+            return False, self.qGrpBox
+
+        i = 0
+        while i < length:
+            element1 = self.lOptions[i]
+            qLineEdit = qt.QLineEdit()
+            qLabel = qt.QLabel(element1)
+            newLayout.addWidget(qLabel, i, 0)
+            newLayout.addWidget(qLineEdit, i, 1)
+            i = i + 1
+
+        return True, self.qGrpBox
+        

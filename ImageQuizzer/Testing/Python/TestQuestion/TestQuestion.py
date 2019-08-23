@@ -103,8 +103,6 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         """ Do whatever is needed to reset the state - typically a scene clear will be enough.
         """
         slicer.mrmlScene.Clear(0)
-        self.lOptions = ['Injury','Recurrence']
-        self.sGroupTitle = 'Assessment'
         self.sClassName = type(self).__name__
         
 
@@ -131,19 +129,53 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         self.setUp()
         tupResults = []
         self.testFormLayout = layout
-        tupResults.append(self.test_NoErrors())
+        tupResults.append(self.test_NoErrors_RadioButtons())
+        tupResults.append(self.test_NoErrors_CheckBoxes())
+        tupResults.append(self.test_NoErrors_TextQuestion())
         tupResults.append(self.test_NoOptionsWarning())
         self.DisplayTestResults(tupResults)
         
 
-    def test_NoErrors(self):
+    def test_NoErrors_RadioButtons(self):
         """ Class is called with no errors encountered
         """
+        self.lOptions = ['Injury','Recurrence']
+        self.sGroupTitle = 'Assessment'
         bTestResult = False
         self.fnName = sys._getframe().f_code.co_name
         
-        self.rq = RadioQuestion(self.lOptions, self.sGroupTitle + ' ...Test No Errors')
+        self.rq = RadioQuestion(self.lOptions, self.sGroupTitle + ' ...Test No Errors for Radio Buttons')
         bTestResult, qGrpBox = self.rq.buildQuestion()
+        self.AddWidgetToTestFormLayout(qGrpBox)
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    def test_NoErrors_CheckBoxes(self):
+        """ Class is called with no errors encountered
+        """
+        self.sGroupTitle = 'High Risk Factors'
+        self.lOptions = ['Enlarging Opacity','Bulging Margin', 'Sequential Enlargement']
+        bTestResult = False
+        self.fnName = sys._getframe().f_code.co_name
+        
+        self.cb = CheckBoxQuestion(self.lOptions, self.sGroupTitle + ' ...Test No Errors for Check Boxes')
+        bTestResult, qGrpBox = self.cb.buildQuestion()
+        self.AddWidgetToTestFormLayout(qGrpBox)
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+    
+    def test_NoErrors_TextQuestion(self):
+        """ Class is called with no errors encountered
+        """
+        self.sGroupTitle = 'Physician Notes'
+        self.sNotes = ['Enter patient observations:','Describe next steps:']
+        bTestResult = False
+        self.fnName = sys._getframe().f_code.co_name
+        
+        self.textQuestion = TextQuestion(self.sNotes, self.sGroupTitle + ' ...Test No Errors for Line Edits')
+        bTestResult, qGrpBox = self.textQuestion.buildQuestion()
         self.AddWidgetToTestFormLayout(qGrpBox)
         
         tupResult = self.fnName, bTestResult
@@ -151,10 +183,11 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
     
     def test_NoOptionsWarning(self):
         """ Test warning when no options are given """
+        self.lOptions = []
+        self.sGroupTitle = 'Assessment'
         bTestResult = False
         self.fnName = sys._getframe().f_code.co_name
         
-        self.lOptions = []
         self.rq = RadioQuestion(self.lOptions, self.sGroupTitle + ' ...Test No Options')
         sExpWarning = 'RadioQuestion:buildQuestion:NoOptionsAvailable'
 #         self.assertWarns(sExpWarning, self.rq.buildQuestion())
