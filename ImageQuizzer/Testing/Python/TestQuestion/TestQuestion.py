@@ -10,6 +10,7 @@ import numpy as np
 from pathlib import Path
 import imp
 
+
 #
 # TestQuestion
 #
@@ -104,6 +105,7 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         """
         slicer.mrmlScene.Clear(0)
         self.sClassName = type(self).__name__
+        self.lClassNames = ['RadioQuestion', 'CheckBoxQuestion','TextQuestion']
         
 
     def DisplayTestResults(self, results):
@@ -125,6 +127,7 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         
     def runTest(self, layout):
         """Run as few or as many tests as needed here.
+           Argument layout allows for display of widgets 
         """
         self.setUp()
         tupResults = []
@@ -182,24 +185,44 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         return tupResult
     
     def test_NoOptionsWarning(self):
-        """ Test warning when no options are given """
+        """ Test warning when no options are given.
+            Test for each class in the list of classes defined in constructor.
+        """
         self.lOptions = []
-        self.sGroupTitle = 'Assessment'
-        bTestResult = False
+        self.sGroupTitle = 'Test No Options'
         self.fnName = sys._getframe().f_code.co_name
         
-        self.rq = RadioQuestion(self.lOptions, self.sGroupTitle + ' ...Test No Options')
-        sExpWarning = 'RadioQuestion:buildQuestion:NoOptionsAvailable'
-#         self.assertWarns(sExpWarning, self.rq.buildQuestion())
-        with warnings.catch_warnings (record=True) as w:
-            warnings.simplefilter("always")
-            bFnResult, qGrpBox = self.rq.buildQuestion() 
-            if bFnResult == False:
-                if len(w) > 0:
-                    print(str(w[0].message))
-                    if sExpWarning == str(w[0].message):
-                        bTestResult = True
-                        self.AddWidgetToTestFormLayout(qGrpBox)
-        
+        bTestResult = False
+        i = 0
+        while i < len(self.lClassNames):
+            self.question = None
+            if self.lClassNames[i] == 'RadioQuestion':
+                self.question = RadioQuestion(self.lOptions, self.sGroupTitle + '...' + self.lClassNames[i])
+            elif self.lClassNames[i] == 'CheckBoxQuestion':
+                self.question = CheckBoxQuestion(self.lOptions, self.sGroupTitle + '...' + self.lClassNames[i])
+            elif self.lClassNames[i] == 'TextQuestion':
+                self.question = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lClassNames[i])
+            else:
+                print('TESTING ERROR : Unknown Class ... Update list of class names for testing')
+
+            if self.question != None:
+                sExpWarning = self.lClassNames[i] + ':buildQuestion:NoOptionsAvailable'
+                with warnings.catch_warnings (record=True) as w:
+                    warnings.simplefilter("always")
+                    bFnResult, qGrpBox = self.question.buildQuestion() 
+                    if bFnResult == False:   # error was encountered - check the warning msg
+                        if len(w) > 0:
+                            print(str(w[0].message))
+                            if sExpWarning == str(w[0].message):
+                                if i > 0:   # consider previous result - test fails if any loop fails
+                                    bTestResult = True & bTestResult 
+                                else:
+                                    bTestResult = True
+                                self.AddWidgetToTestFormLayout(qGrpBox)
+                            else:
+                                bTestResult = False
+            i = i + 1
+            
         tupResult = self.fnName, bTestResult
         return tupResult
+            

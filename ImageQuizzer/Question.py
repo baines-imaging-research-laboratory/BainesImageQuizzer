@@ -10,6 +10,8 @@ import warnings
 #-----------------------------------------------
 
 class Question(ABC):
+    """ Inherits from ABC - Abstract Base Class
+    """
     
     def __init__(self):
         self.sClassName = 'undefinedClassName'
@@ -36,7 +38,7 @@ class Question(ABC):
         self.qGrpBoxLayout.addWidget(qlabel)
 #             warnings.warn( 'For Testing:' + sWarningMsg )
         warnings.warn( sWarningMsg )
-        
+
 #-----------------------------------------------
 
 class RadioQuestion(Question):
@@ -49,7 +51,7 @@ class RadioQuestion(Question):
         self.lOptions = lOptions
         self.sGrpBoxTitle = sGrpBoxTitle
         self.sClassName = type(self).__name__
-        
+       
     def buildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
         self.createGroupBox(self.sGrpBoxTitle)
@@ -81,7 +83,7 @@ class CheckBoxQuestion(Question):
         self.lOptions = lOptions
         self.sGrpBoxTitle = sGrpBoxTitle
         self.sClassName = type(self).__name__
-        
+       
     def buildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
         self.createGroupBox(self.sGrpBoxTitle)
