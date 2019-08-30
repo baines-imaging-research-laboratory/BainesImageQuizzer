@@ -49,20 +49,29 @@ class TestQuestionWidget(ScriptedLoadableModuleWidget):
         ScriptedLoadableModuleWidget.setup(self)
         # Instantiate and connect widgets ...
         
-        # Collapsible button
-        testingCollapsibleButton = ctk.ctkCollapsibleButton()
-        testingCollapsibleButton.text = "Testing Layout"
-        self.layout.addWidget(testingCollapsibleButton)
-        
-        # Layout within the collapsible button
-        self.testFormLayout = qt.QFormLayout(testingCollapsibleButton)
-        
         # Start test button
         startTestButton = qt.QPushButton("Start Tests Question Class")
         startTestButton.toolTip = "start unit tests for Question class."
-        self.testFormLayout.addWidget(startTestButton)
+#         self.testFormLayout.addWidget(startTestButton)
+        self.layout.addWidget(startTestButton)
         startTestButton.connect('clicked(bool)', self.onStartTestButtonClicked)
+
+        # Collapsible button
+        testQuestionCollapsibleButton = ctk.ctkCollapsibleButton()
+        testQuestionCollapsibleButton.text = "Testing Question Layout"
+        self.layout.addWidget(testQuestionCollapsibleButton)
         
+        
+        
+        # Collapsible button
+        testQuestionSetCollapsibleButton = ctk.ctkCollapsibleButton()
+        testQuestionSetCollapsibleButton.text = "Testing Question Set Layout"
+        self.layout.addWidget(testQuestionSetCollapsibleButton)
+        
+        # Layout within the collapsible buttons
+        self.groupsLayout = qt.QFormLayout(testQuestionCollapsibleButton)
+        self.questionSetLayout = qt.QFormLayout(testQuestionSetCollapsibleButton)
+
         # Add vertical spacer
         self.layout.addStretch(1)
         
@@ -89,7 +98,7 @@ class TestQuestionWidget(ScriptedLoadableModuleWidget):
 
     def onStartTestButtonClicked(self):
         oTestQuestion = TestQuestionTest()
-        oTestQuestion.runTest(self.testFormLayout)
+        oTestQuestion.runTest(self.groupsLayout, self.questionSetLayout)
         print("Test Complete !")
 
 
@@ -120,22 +129,27 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
                 sDisplay = "!$!#!@#!@$%! Test Failed!! : "
             print(sDisplay, i+1, sFname)
             
-    def AddWidgetToTestFormLayout(self, grpBoxWidget):
+    def AddWidgetToTestFormLayout(self, grpBoxWidget, testFormLayout):
         # display the resulting widget on the Test layout for visual test
+        self.testFormLayout = testFormLayout
         self.gbWidget = grpBoxWidget
         self.testFormLayout.addWidget(self.gbWidget)
         
-    def runTest(self, layout):
-        """Run as few or as many tests as needed here.
-           Argument layout allows for display of widgets 
+    def runTest(self, groupsLayout, questionSetLayout):
+        """TODO: for this function to be automatically started with the '
+            Reload and Test button in Slicer, there cannot be an extra argument here.
+            I have the argument 'layout' to be able to display widgets as part of my testing. 
         """
         self.setUp()
         tupResults = []
-        self.testFormLayout = layout
+#         self.testFormLayout = layout
+        self.groupsLayout = groupsLayout
+        self.questionSetLayout = questionSetLayout
         tupResults.append(self.test_NoErrors_RadioButtons())
         tupResults.append(self.test_NoErrors_CheckBoxes())
         tupResults.append(self.test_NoErrors_TextQuestion())
         tupResults.append(self.test_NoOptionsWarning())
+        tupResults.append(self.test_QuestionSetTest())
         self.DisplayTestResults(tupResults)
         
 
@@ -149,7 +163,7 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         
         self.rq = RadioQuestion(self.lOptions, self.sGroupTitle + ' ...Test No Errors for Radio Buttons')
         bTestResult, qGrpBox = self.rq.buildQuestion()
-        self.AddWidgetToTestFormLayout(qGrpBox)
+        self.AddWidgetToTestFormLayout(qGrpBox, self.groupsLayout)
         
         tupResult = self.fnName, bTestResult
         return tupResult
@@ -164,7 +178,7 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         
         self.cb = CheckBoxQuestion(self.lOptions, self.sGroupTitle + ' ...Test No Errors for Check Boxes')
         bTestResult, qGrpBox = self.cb.buildQuestion()
-        self.AddWidgetToTestFormLayout(qGrpBox)
+        self.AddWidgetToTestFormLayout(qGrpBox, self.groupsLayout)
         
         tupResult = self.fnName, bTestResult
         return tupResult
@@ -179,7 +193,7 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         
         self.textQuestion = TextQuestion(self.sNotes, self.sGroupTitle + ' ...Test No Errors for Line Edits')
         bTestResult, qGrpBox = self.textQuestion.buildQuestion()
-        self.AddWidgetToTestFormLayout(qGrpBox)
+        self.AddWidgetToTestFormLayout(qGrpBox, self.groupsLayout)
         
         tupResult = self.fnName, bTestResult
         return tupResult
@@ -218,7 +232,7 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
                                     bTestResult = True & bTestResult 
                                 else:
                                     bTestResult = True
-                                self.AddWidgetToTestFormLayout(qGrpBox)
+                                self.AddWidgetToTestFormLayout(qGrpBox, self.groupsLayout)
                             else:
                                 bTestResult = False
             i = i + 1
@@ -226,3 +240,53 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         tupResult = self.fnName, bTestResult
         return tupResult
             
+    def test_QuestionSetTest(self):
+        """ Test building a form given a list of questions.
+        """
+        self.fnName = sys._getframe().f_code.co_name
+        
+        bTestResult = False
+        
+        # initialize
+        ltupQuestionSet = []
+        sID = 'QS 1.0'
+        sQuestionSetTitle = 'Test Baines Image Quizzer Title'
+        self.oQuestionSet = QuestionSet(sID, sQuestionSetTitle )
+        
+        lsQuestionOptions = ['rbtn1', 'rbtn2', 'rbtn3']
+        sQuestionType = 'Radio'
+        sQuestionDescriptor = 'Title for radio button group'
+        tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
+        ltupQuestionSet.append(tupQuestionGroup)
+        
+        lsQuestionOptions = ['box1', 'box2', 'box3']
+        sQuestionType = 'Checkbox'
+        sQuestionDescriptor = 'Title for checkbox group'
+        tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
+        ltupQuestionSet.append(tupQuestionGroup)
+
+        lsQuestionOptions = ['text label1', 'text label2']
+        sQuestionType = 'Text'
+        sQuestionDescriptor = 'Title for line edit text group'
+        tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
+        ltupQuestionSet.append(tupQuestionGroup)
+        
+
+        lsQuestionOptions = ['option1']
+        sQuestionType = 'Invalid'
+        sQuestionDescriptor = 'Title invalid group'
+        tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
+        ltupQuestionSet.append(tupQuestionGroup)
+
+        bTestResult = True
+        
+        
+        
+        bItemResult, qQuizWidget = self.oQuestionSet.buildQuestionSetForm(ltupQuestionSet)
+ 
+        self.AddWidgetToTestFormLayout(qQuizWidget, self.questionSetLayout)
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+        
