@@ -114,7 +114,7 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         """
         slicer.mrmlScene.Clear(0)
         self.sClassName = type(self).__name__
-        self.lClassNames = ['RadioQuestion', 'CheckBoxQuestion','TextQuestion']
+        self.lClassNames = ['RadioQuestion', 'CheckBoxQuestion','TextQuestion', 'InvalidType']
         
 
     def DisplayTestResults(self, results):
@@ -145,12 +145,52 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
 #         self.testFormLayout = layout
         self.groupsLayout = groupsLayout
         self.questionSetLayout = questionSetLayout
-        tupResults.append(self.test_NoErrors_RadioButtons())
-        tupResults.append(self.test_NoErrors_CheckBoxes())
-        tupResults.append(self.test_NoErrors_TextQuestion())
+        tupResults.append(self.test_NoErrors_BuildQuestionWidget())
+#         tupResults.append(self.test_NoErrors_RadioButtons())
+#         tupResults.append(self.test_NoErrors_CheckBoxes())
+#         tupResults.append(self.test_NoErrors_TextQuestion())
         tupResults.append(self.test_NoOptionsWarning())
-        tupResults.append(self.test_QuestionSetTest())
+        tupResults.append(self.test_NoErrors_QuestionSetTest())
+        tupResults.append(self.test_Error_QuestionSetTest())
         self.DisplayTestResults(tupResults)
+        
+
+    def test_NoErrors_BuildQuestionWidget(self):
+        """ Test for each question type with no errors encountered
+        """
+        self.lOptions = ['Opt1','Opt2']
+        self.sGroupTitle = 'Group Title'
+        bTestResult = False
+        self.fnName = sys._getframe().f_code.co_name
+        
+        
+        self.questionType = None
+        bTestResultTF = False
+        i = 0
+        while i < len(self.lClassNames):
+            if self.lClassNames[i] == 'RadioQuestion':
+                self.questionType = RadioQuestion(self.lOptions, self.sGroupTitle + '...' + self.lClassNames[i])
+            elif self.lClassNames[i] == 'CheckBoxQuestion':
+                self.questionType = CheckBoxQuestion(self.lOptions, self.sGroupTitle + '...' + self.lClassNames[i])
+            elif self.lClassNames[i] == 'TextQuestion':
+                self.questionType = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lClassNames[i])
+            else:
+                print('TESTING CASE ERROR : Unknown Class ... Update list of class names for testing')
+#                 self.questionType = LabelWarningBox('Invalid question type', 'WARNING- See administrator')
+                self.questionType = None
+                bTestResultTF = True
+                
+            if self.questionType != None:
+                bTestResult, qWidgetBox = self.questionType.buildQuestion()
+                self.AddWidgetToTestFormLayout(qWidgetBox, self.groupsLayout)
+                bTestResultTF = True
+
+            i = i + 1
+            
+        tupResult = self.fnName, bTestResultTF
+        return tupResult
+        
+        
         
 
     def test_NoErrors_RadioButtons(self):
@@ -206,46 +246,47 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         self.sGroupTitle = 'Test No Options'
         self.fnName = sys._getframe().f_code.co_name
         
-        bTestResult = False
+        bTestResultTF = False
         i = 0
         while i < len(self.lClassNames):
-            self.question = None
             if self.lClassNames[i] == 'RadioQuestion':
-                self.question = RadioQuestion(self.lOptions, self.sGroupTitle + '...' + self.lClassNames[i])
+                self.questionType = RadioQuestion(self.lOptions, self.sGroupTitle + '...' + self.lClassNames[i])
             elif self.lClassNames[i] == 'CheckBoxQuestion':
-                self.question = CheckBoxQuestion(self.lOptions, self.sGroupTitle + '...' + self.lClassNames[i])
+                self.questionType = CheckBoxQuestion(self.lOptions, self.sGroupTitle + '...' + self.lClassNames[i])
             elif self.lClassNames[i] == 'TextQuestion':
-                self.question = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lClassNames[i])
+                self.questionType = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lClassNames[i])
             else:
                 print('TESTING ERROR : Unknown Class ... Update list of class names for testing')
+                self.questionType = None 
+                bTestResultTF = True
 
-            if self.question != None:
+            if self.questionType != None:
                 sExpWarning = self.lClassNames[i] + ':buildQuestion:NoOptionsAvailable'
                 with warnings.catch_warnings (record=True) as w:
                     warnings.simplefilter("always")
-                    bFnResult, qGrpBox = self.question.buildQuestion() 
-                    if bFnResult == False:   # error was encountered - check the warning msg
+                    bFnResultSuccess, qGrpBox = self.questionType.buildQuestion() 
+                    if bFnResultSuccess == False:   # error was encountered - check the warning msg
                         if len(w) > 0:
                             print(str(w[0].message))
                             if sExpWarning == str(w[0].message):
                                 if i > 0:   # consider previous result - test fails if any loop fails
-                                    bTestResult = True & bTestResult 
+                                    bTestResultTF = True & bTestResultTF 
                                 else:
-                                    bTestResult = True
+                                    bTestResultTF = True
                                 self.AddWidgetToTestFormLayout(qGrpBox, self.groupsLayout)
                             else:
-                                bTestResult = False
+                                bTestResultTF = False
             i = i + 1
             
-        tupResult = self.fnName, bTestResult
+        tupResult = self.fnName, bTestResultTF
         return tupResult
             
-    def test_QuestionSetTest(self):
+    def test_NoErrors_QuestionSetTest(self):
         """ Test building a form given a list of questions.
         """
         self.fnName = sys._getframe().f_code.co_name
         
-        bTestResult = False
+        bTestResultTF = True
         
         # initialize
         ltupQuestionSet = []
@@ -272,21 +313,45 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         ltupQuestionSet.append(tupQuestionGroup)
         
 
+        bTestResultTF, qQuizWidget = self.oQuestionSet.buildQuestionSetForm(ltupQuestionSet)
+ 
+        self.AddWidgetToTestFormLayout(qQuizWidget, self.questionSetLayout)
+        
+        tupResult = self.fnName, bTestResultTF
+        return tupResult
+    
+    def test_Error_QuestionSetTest(self):
+        """ Test building a form given a list of questions.
+        """
+        self.fnName = sys._getframe().f_code.co_name
+        
+        bBuildSetSuccess = True
+        
+        # initialize
+        ltupQuestionSet = []
+        sID = 'QS 1.0'
+        sQuestionSetTitle = 'Test Baines Image Quizzer Title'
+        self.oQuestionSet = QuestionSet(sID, sQuestionSetTitle )
+        
         lsQuestionOptions = ['option1']
         sQuestionType = 'Invalid'
         sQuestionDescriptor = 'Title invalid group'
         tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
         ltupQuestionSet.append(tupQuestionGroup)
 
-        bTestResult = True
+        lsQuestionOptions = ['rbtn1', 'rbtn2', 'rbtn3']
+        sQuestionType = 'Radio'
+        sQuestionDescriptor = 'Title for radio button group'
+        tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
+        ltupQuestionSet.append(tupQuestionGroup)
+
+        bBuildSetSuccess, qQuizWidget = self.oQuestionSet.buildQuestionSetForm(ltupQuestionSet)
+
+        if bBuildSetSuccess == False:
+            bTestResultTF = True # we expected an error
         
         
-        
-        bItemResult, qQuizWidget = self.oQuestionSet.buildQuestionSetForm(ltupQuestionSet)
- 
-        self.AddWidgetToTestFormLayout(qQuizWidget, self.questionSetLayout)
-        
-        
-        tupResult = self.fnName, bTestResult
+        tupResult = self.fnName, bTestResultTF
         return tupResult
+
         

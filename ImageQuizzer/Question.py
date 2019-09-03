@@ -39,7 +39,25 @@ class Question(ABC):
         warnings.warn( sWarningMsg )
 
 #-----------------------------------------------
+# class LabelWarningBox(Question):
+#     # Class to produce a box with a label
+#     # Special use case: To display a warning
+#     def __init__(self, sLabelText, sGrpBoxTitle):
+#         self.sGrpBoxTitle = sGrpBoxTitle
+#         self.sLabelText = sLabelText
+#         self.sClassName = type(self).__name__
+# 
+#     
+#     def buildQuestion(self):
+#         # This is a special case where a warning msg will appear in a box
+#         # with a label
+#         self.sFnName = sys._getframe().f_code.co_name
+#         self.createGroupBox(self.sGrpBoxTitle)
+#         qlabel = qt.QLabel(self.sLabelText)
+#         self.qGrpBoxLayout.addWidget(qlabel)
+#         return True, self.qGrpBox
 
+#-----------------------------------------------
 class RadioQuestion(Question):
     # Create a group box and add radio buttons based on the options provided
     # Inputs : lOptions - list of labels for each radio button
