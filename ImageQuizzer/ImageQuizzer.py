@@ -160,11 +160,16 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         # -----------
         # test creating a radio button object through the abstract Question Class
+        # display the group box in the layout.
         # ready for further development
         optList = ['Injury','Recurrence']
         desc = 'Assessment'
         rq = RadioQuestion(optList, desc)
-        rq.buildQuestion()
+        (rqSuccess, rqGrpBox) = rq.buildQuestion()
+ 
+        mdQuizWidgetLayout.addWidget(rqGrpBox)
+
+        
         # -----------
         
         # parse md quiz file

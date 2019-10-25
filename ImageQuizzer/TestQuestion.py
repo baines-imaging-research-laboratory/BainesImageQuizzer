@@ -83,7 +83,7 @@ class TestQuestionWidget(ScriptedLoadableModuleWidget):
         self.reloadClassForTest()
         
     def reloadClassForTest(self):
-        # TODO: Fix so that you don't have to 'Reload' twice for this to take affect
+        # TODO: Fix so that you don't have to 'Reload' twice for this to take effect
 
         # function to force reload of scripts that are not 'loadable' in Slicer
         sModule = "Question"

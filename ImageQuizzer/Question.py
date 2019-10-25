@@ -27,6 +27,8 @@ class Question(ABC):
         self.qGrpBox.setTitle(sTitle)
         self.qGrpBoxLayout = qt.QVBoxLayout()
         self.qGrpBox.setLayout(self.qGrpBoxLayout)
+        
+        return self.qGrpBox
 
     def displayGroupBoxEmpty(self):
         # check if group box was already created
@@ -58,6 +60,7 @@ class Question(ABC):
 #         return True, self.qGrpBox
 
 #-----------------------------------------------
+
 class RadioQuestion(Question):
     # Create a group box and add radio buttons based on the options provided
     # Inputs : lOptions - list of labels for each radio button
@@ -118,6 +121,8 @@ class CheckBoxQuestion(Question):
 
         return True, self.qGrpBox
         
+#-----------------------------------------------
+
 class TextQuestion(Question):
     # Create a group box and add radio buttons based on the options provided
     # Inputs : lOptions - list of labels for each 
