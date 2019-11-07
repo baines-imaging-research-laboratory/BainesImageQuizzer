@@ -1,4 +1,4 @@
-# Patent 1
+# Patient 1
 - [Planning CT](D:\Users\cjohnson\Work\Resources\ShareableData\RegistrationDemos\FromSlicer\NRR-CTgLiverAblation\CTp.nrrd)
 - [Followup 1](D:\Users\cjohnson\Work\Resources\ShareableData\RegistrationDemos\FromSlicer\NRR-CTgLiverAblation\CTg.nrrd)
 
