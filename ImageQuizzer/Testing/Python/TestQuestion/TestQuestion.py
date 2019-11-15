@@ -149,6 +149,7 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_NoErrors_RadioButtons())
         tupResults.append(self.test_NoErrors_CheckBoxes())
         tupResults.append(self.test_NoErrors_TextQuestion())
+        tupResults.append(self.test_NoErrors_InfoBox())
         tupResults.append(self.test_NoOptionsWarning())
         tupResults.append(self.test_NoErrors_QuestionSetTest())
         tupResults.append(self.test_Error_QuestionSetTest())
@@ -177,6 +178,8 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
                 self.questionType = CheckBoxQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
             elif self.lsClassNames[i] == 'TextQuestion':
                 self.questionType = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
+            elif self.lsClassNames[i] == 'InfoBox':
+                self.questionType = InfoBox(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
             else:
                 sMsg = 'TEST FOR FAIL - UNKNOWN CLASS: "'+ self.lsClassNames[i] + '"' 
                 print(sMsg)
@@ -195,7 +198,7 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         return tupResult
         
         
-        
+    #-----------------------------------------------
 
     def test_NoErrors_RadioButtons(self):
         """ Class is called with no errors encountered
@@ -212,6 +215,8 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         tupResult = self.fnName, bTestResult
         return tupResult
 
+    #-----------------------------------------------
+
     def test_NoErrors_CheckBoxes(self):
         """ Class is called with no errors encountered
         """
@@ -227,6 +232,8 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         tupResult = self.fnName, bTestResult
         return tupResult
     
+    #-----------------------------------------------
+
     def test_NoErrors_TextQuestion(self):
         """ Class is called with no errors encountered
         """
@@ -242,6 +249,25 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         tupResult = self.fnName, bTestResult
         return tupResult
     
+    #-----------------------------------------------
+
+    def test_NoErrors_InfoBox(self):
+        """ Class is called with no errors encountered
+        """
+        self.sGroupTitle = 'Welcome Notes'
+        self.sNotes = ['Welcome to Image Quizzer','Following are instructions for the next question set']
+        bTestResult = False
+        self.fnName = sys._getframe().f_code.co_name
+        
+        self.infoBox = InfoBox(self.sNotes, self.sGroupTitle + ' ...Test no errors for information boxes')
+        bTestResult, qGrpBox = self.infoBox.buildQuestion()
+        self.AddWidgetToTestFormLayout(qGrpBox, self.groupsLayout)
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+    
+    #-----------------------------------------------
+
     def test_NoOptionsWarning(self):
         """ Test warning when no options are given.
             Test for each class in the list of classes defined in constructor.
@@ -286,6 +312,8 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         tupResult = self.fnName, bTestResultTF
         return tupResult
             
+    #-----------------------------------------------
+
     def test_NoErrors_QuestionSetTest(self):
         """ Test building a form given a list of questions.
         """
@@ -318,6 +346,12 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         ltupQuestionSet.append(tupQuestionGroup)
         
 
+        lsQuestionOptions = ['infobox label1', ' ', 'infobox label2']
+        sQuestionType = 'InfoBox'
+        sQuestionDescriptor = 'Title for information label group - including spacer'
+        tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
+        ltupQuestionSet.append(tupQuestionGroup)
+
         bTestResultTF, qQuizWidget = self.oQuestionSet.buildQuestionSetForm(ltupQuestionSet)
  
         self.AddWidgetToTestFormLayout(qQuizWidget, self.questionSetLayout)
@@ -325,6 +359,8 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         tupResult = self.fnName, bTestResultTF
         return tupResult
     
+    #-----------------------------------------------
+
     def test_Error_QuestionSetTest(self):
         """ Test building a form given a list of questions.
         """

@@ -124,8 +124,8 @@ class CheckBoxQuestion(Question):
 #-----------------------------------------------
 
 class TextQuestion(Question):
-    # Create a group box and add radio buttons based on the options provided
-    # Inputs : lOptions - list of labels for each 
+    # Create a group box and add a text box that allows the user to enter text
+    # Inputs : lOptions - list of labels for each box 
     # Outputs: exitCode - boolean describing whether function exited successfully
     #          qGrpBox  - group box widget holding text edit boxes
     
@@ -154,6 +154,42 @@ class TextQuestion(Question):
             qLabel = qt.QLabel(element1)
             newLayout.addWidget(qLabel, i, 0)
             newLayout.addWidget(qLineEdit, i, 1)
+            i = i + 1
+
+        return True, self.qGrpBox
+        
+#-----------------------------------------------
+
+class InfoBox(Question):
+    # Create a group box and add a label holding information
+    # There are no responses from the user to catch
+    # Inputs : lOptions - list of labels to go in this label box
+    # Outputs: exitCode - boolean describing whether function exited successfully
+    #          qGrpBox  - group box widget holding text edit boxes
+    
+    def __init__(self, lOptions, sGrpBoxTitle):
+        self.lOptions = lOptions
+        self.sGrpBoxTitle = sGrpBoxTitle
+        self.sClassName = type(self).__name__
+        
+    def buildQuestion(self):
+        self.sFnName = sys._getframe().f_code.co_name
+
+        # add grid layout to group box
+        self.createGroupBox(self.sGrpBoxTitle)
+        newLayout = qt.QGridLayout()
+        self.qGrpBoxLayout.addLayout(newLayout)
+       
+        length = len(self.lOptions)
+        if length < 1 :
+            self.displayGroupBoxEmpty()
+            return False, self.qGrpBox
+
+        i = 0
+        while i < length:
+            element1 = self.lOptions[i]
+            qLabel = qt.QLabel(element1)
+            newLayout.addWidget(qLabel, i, 0)
             i = i + 1
 
         return True, self.qGrpBox
@@ -204,6 +240,8 @@ class QuestionSet():
                 self.question = CheckBoxQuestion(lsQuestionOptions, sQuestionDescriptor)
             elif (sQuestionType == 'Text'):
                 self.question = TextQuestion(lsQuestionOptions, sQuestionDescriptor)
+            elif (sQuestionType == 'InfoBox'):
+                self.question = InfoBox(lsQuestionOptions, sQuestionDescriptor)
             else:
                 sLabel = 'Warning : Contact Administrator - Invalid question    '
                 sWarningMsg = self.sClassName + ':' + self.sFnName + ':' + 'UnrecogizedQuestionType'
