@@ -97,9 +97,10 @@ class TestQuestionWidget(ScriptedLoadableModuleWidget):
         fp.close()
 
     def onStartTestButtonClicked(self):
+        print("\n************ Unittesting for class Question ************\n")
         oTestQuestion = TestQuestionTest()
         oTestQuestion.runTest(self.groupsLayout, self.questionSetLayout)
-        print("Test Complete !")
+        print("\n************ Test Complete ************\n")
 
 
 class TestQuestionTest(ScriptedLoadableModuleTest):
@@ -114,7 +115,7 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         """
         slicer.mrmlScene.Clear(0)
         self.sClassName = type(self).__name__
-        self.lsClassNames = ['RadioQuestion', 'CheckBoxQuestion','TextQuestion', 'InvalidType']
+        self.lsClassNames = ['RadioQuestion', 'CheckBoxQuestion','TextQuestion', 'InfoBox', 'InvalidType']
         
 
     def DisplayTestResults(self, results):
@@ -162,14 +163,14 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
     def test_NoErrors_BuildQuestionWidget(self):
         """ Test for each question type with no errors encountered
         """
+
+        # initialize
         self.lOptions = ['Opt1','Opt2']
         self.sGroupTitle = 'Group Title'
-        bTestResult = False
         self.fnName = sys._getframe().f_code.co_name
-        
-        
         self.questionType = None
         bTestResultTF = False
+        
         i = 0
         while i < len(self.lsClassNames):
             if self.lsClassNames[i] == 'RadioQuestion':
@@ -181,13 +182,20 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
             elif self.lsClassNames[i] == 'InfoBox':
                 self.questionType = InfoBox(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
             else:
-                sMsg = 'TEST FOR FAIL - UNKNOWN CLASS: "'+ self.lsClassNames[i] + '"' 
-                print(sMsg)
-#                 self.questionType = LabelWarningBox('Invalid question type', 'WARNING- See administrator')
+#  TODO ??               self.questionType = LabelWarningBox('Invalid question type', 'WARNING- See administrator')
                 self.questionType = None
-                bTestResultTF = True
+                if (self.lsClassNames[i] == 'InvalidType'):
+                    # If here, the test was successful. We specifically tried to trap the 'InvalidType'
+                    bTestResultTF = True
+                else:
+                    # If here, test failed. The class did not get picked up in the valid types above
+                    sMsg = 'Test for unknown class. Test passes if following string = InvalidType ----->\n ----> UNKNOWN CLASS: "'+ self.lsClassNames[i] + '"' 
+                    print(sMsg)
+                    bTestResultTF = False
+                    break
                 
             if self.questionType != None:
+                # Question type was constructed - try to create a widget
                 bTestResult, qWidgetBox = self.questionType.buildQuestion()
                 self.AddWidgetToTestFormLayout(qWidgetBox, self.groupsLayout)
                 bTestResultTF = True
@@ -272,11 +280,14 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
         """ Test warning when no options are given.
             Test for each class in the list of classes defined in constructor.
         """
+
+        # initialize
         self.lOptions = []
         self.sGroupTitle = 'Test No Options'
         self.fnName = sys._getframe().f_code.co_name
-        
+        self.questionType = None       
         bTestResultTF = False
+        
         i = 0
         while i < len(self.lsClassNames):
             if self.lsClassNames[i] == 'RadioQuestion':
@@ -285,11 +296,19 @@ class TestQuestionTest(ScriptedLoadableModuleTest):
                 self.questionType = CheckBoxQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
             elif self.lsClassNames[i] == 'TextQuestion':
                 self.questionType = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
+            elif self.lsClassNames[i] == 'InfoBox':
+                self.questionType = InfoBox(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
             else:
-                sMsg = 'TEST FOR FAIL - UNKNOWN CLASS: "'+ self.lsClassNames[i] + '"' 
-                print(sMsg)
+                    # If here, the test was successful. We specifically tried to trap the 'InvalidType'
                 self.questionType = None 
-                bTestResultTF = True
+                if (self.lsClassNames[i] == 'InvalidType'):
+                    bTestResultTF = True
+                else:
+                    # If here, test failed. The class did not get picked up in the valid types above
+                    sMsg = 'Test for unknown class. Test passes if following string = InvalidType ----->\n ----> UNKNOWN CLASS: "'+ self.lsClassNames[i] + '"' 
+                    print(sMsg)
+                    bTestResultTF = False
+                    break
 
             if self.questionType != None:
                 sExpWarning = self.lsClassNames[i] + ':buildQuestion:NoOptionsAvailable'

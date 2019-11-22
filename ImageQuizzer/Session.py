@@ -10,17 +10,17 @@ import xml
 
 class Session:
     
-#     def __init__(self, parent=None):
-#         self.sClassName = type(self).__name__
-#         self.parent = parent
-#         print('Constructor for Session')
+    def __init__(self, parent=None):
+        self.sClassName = type(self).__name__
+        self.parent = parent
+        print('Constructor for Session')
 
 #     def __init__(self, parent):
 #         print('Constructor for Session - parent')
 
   
-    def __init__(self):
-        print('Constructor for Session - no parent')
+#     def __init__(self):
+#         print('Constructor for Session - no parent')
 
     #------------------------------------------- 
     def readPresentationInstructions(self):

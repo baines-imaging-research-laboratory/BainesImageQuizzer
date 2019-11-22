@@ -94,9 +94,10 @@ class TestTargetItemWidget(ScriptedLoadableModuleWidget):
         fp.close()
 
     def onStartTestButtonClicked(self):
+        print("\n************ Unittesting for class Page ************\n")
         oTestTargetItem = TestTargetItemTest()
         oTestTargetItem.runTest(self.groupsLayout)
-        print("Test Complete !")
+        print("\n************ Test Complete ************\n")
 
 
 class TestTargetItemTest(ScriptedLoadableModuleTest):

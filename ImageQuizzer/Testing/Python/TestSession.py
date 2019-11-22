@@ -82,6 +82,7 @@ class TestSessionLogic(ScriptedLoadableModuleLogic):
     def __init__(self):
         ScriptedLoadableModuleLogic.__init__(self)
         self.sClassName = type(self).__name__
+        print("\n************ Unittesting for class Session ************\n")
 
     #------------------------------------------- 
     def DisplayTestResults(self, tupResults):
@@ -101,6 +102,7 @@ class TestSessionLogic(ScriptedLoadableModuleLogic):
         else:
             print("No results to report")
 
+        print("\n************ Test Complete ************\n")
 
 
 # ------------------------------------------------------------------------------
@@ -139,7 +141,6 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         logic = TestSessionLogic()
 
         tupResults = []
-
         tupResults.append(self.test_NoErrors_BuildSession())
 
         

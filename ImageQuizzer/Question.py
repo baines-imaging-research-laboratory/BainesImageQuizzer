@@ -33,11 +33,10 @@ class Question(ABC):
     def displayGroupBoxEmpty(self):
         # check if group box was already created
         
-        sLabel = 'Warning : No options were given. Group Box is empty'
-        sWarningMsg = self.sClassName + ':' + self.sFnName + ':' + 'NoOptionsAvailable'
+        sLabel = 'Warning : No options were given. Group Box is empty - Contact Administrator'
+        sWarningMsg = self.sClassName + ':' + self.sFnName + ':' + 'NoOptionsAvailable - Contact Administrator'
         qlabel = qt.QLabel(sLabel)
         self.qGrpBoxLayout.addWidget(qlabel)
-#             warnings.warn( 'For Testing:' + sWarningMsg )
         warnings.warn( sWarningMsg )
 
 #-----------------------------------------------
@@ -244,12 +243,13 @@ class QuestionSet():
                 self.question = InfoBox(lsQuestionOptions, sQuestionDescriptor)
             else:
                 sLabel = 'Warning : Contact Administrator - Invalid question    '
-                sWarningMsg = self.sClassName + ':' + self.sFnName + ':' + 'UnrecogizedQuestionType'
+                sWarningMsg = self.sClassName + ':' + self.sFnName + ':' + 'UnrecognizedQuestionType - Contact Administrator'
                 qlabel = qt.QLabel(sLabel + sWarningMsg)
                 qGrpBox = qt.QGroupBox()
                 qGrpBoxLayout = qt.QVBoxLayout()
                 qGrpBox.setLayout(qGrpBoxLayout)
                 qGrpBoxLayout.addWidget(qlabel)
+                # TODO .... is the warnings.warn failing??? 
                 warnings.warn( sWarningMsg )
                 self.qQuizWidgetLayout.addWidget(qGrpBox)
                 bQuestionTypeGood = False
