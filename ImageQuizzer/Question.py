@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 
 import PythonQt
 import os
-import unittest
 import vtk, qt, ctk, slicer
 import sys
 import warnings

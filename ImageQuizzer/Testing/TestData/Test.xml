@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<Session>
-	<Targets>
-		<Target name="Patient1" descriptor="PlanningCT" format="nrrd" type="series">
+<PageSet>
+	<Pages>
+		<Page name="Patient1" descriptor="PlanningCT" format="nrrd" type="series">
 			<path>"D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\ManualRegistrationExample_fixed.nrrd"</path>
 			<QuestionSet>
 				<id>"QS-Intro"</id>
@@ -13,8 +13,8 @@
 					</QuestionText>
 				</Question>
 			</QuestionSet>
-		</Target>
-		<Target name="Patient1" descriptor="Follow-up 1" format="nrrd" type="series">
+		</Page>
+		<Page name="Patient1" descriptor="Follow-up 1" format="nrrd" type="series">
 			<path>"D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\ManualRegistrationExample_moving.nii"</path>
 			<QuestionSet>
 				<id>"QS-Observation"</id>
@@ -36,6 +36,6 @@
 					</QuestionText>
 				</Question>
 			</QuestionSet>
-		</Target>
-	</Targets>
-</Session>
+		</Page>
+	</Pages>
+</PageSet>
