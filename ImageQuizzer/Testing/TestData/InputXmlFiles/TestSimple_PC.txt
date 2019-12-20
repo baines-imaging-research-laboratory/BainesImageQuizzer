@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Session>
+	<Page name="Patient1" descriptor="PlanningCT" format="nrrd">
+		<Image type="Series" descriptor="Fixed Volume" destination="All" path=""D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\ManualRegistrationExample_fixed.nrrd"/>
+		<QuestionSet>
+			<id>"QS-Intro"</id>
+			<Question>
+				<Type>"InfoBox"</Type>
+				<descriptor>"Introduction"</descriptor>
+				<QuestionText>
+					<Option>"Lots of text describing something"</Option>
+				</QuestionText>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page name="Patient1" descriptor="Follow-up 1" format="nrrd">
+		<Image type="Series" descriptor="Moving Volume" destination="All" path=""D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\ManualRegistrationExample_moving.nrrd"/>
+		<QuestionSet>
+			<id>"QS-Observation"</id>
+			<Question>
+				<Type>"Radio"</Type>
+				<descriptor>"Assessment"</descriptor>
+				<QuestionText>
+					<Option>"Injury"</Option>
+					<Option>"Recurrence"</Option>
+				</QuestionText>
+			</Question>
+			<Question>
+				<descriptor>"Confidence"</descriptor>
+				<Type>"Radio"</Type>
+				<QuestionText>
+					<Option>"Yes"</Option>
+					<Option>"Maybe"</Option>
+					<Option>"No"</Option>
+				</QuestionText>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page name="Patient2" descriptor="Mixed Displays" format="nrrd">
+		<Image type="Series" descriptor="Moving Volume" destination="Red" path="D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\ManualRegistrationExample_moving.nrrd"/>
+		<Image type="Series" descriptor="Moving Volume" destination="Green" path="D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\ManualRegistrationExample_moving.nrrd"/>
+		<Image type="Series" descriptor="Moving Volume" destination="Blue" path="D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Case00.mhd"/>
+		<Image type="LabelMap" descriptor="Segmentation" destination="Blue" path="D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Case00_Seg.mhd"/>
+		<QuestionSet>
+			<id>"QS-Observation"</id>
+			<Question>
+				<Type>"Radio"</Type>
+				<descriptor>"Assessment"</descriptor>
+				<QuestionText>
+					<Option>"Injury"</Option>
+					<Option>"Recurrence"</Option>
+				</QuestionText>
+			</Question>
+			<Question>
+				<descriptor>"Confidence"</descriptor>
+				<Type>"Radio"</Type>
+				<QuestionText>
+					<Option>"Yes"</Option>
+					<Option>"Maybe"</Option>
+					<Option>"No"</Option>
+				</QuestionText>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>
