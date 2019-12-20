@@ -1,27 +1,24 @@
-import os
-import unittest
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
-import logging
 from Session import *
+from TestingStatus import *
 
-import numpy as np
-
+import os
 import sys
-import warnings
-from pathlib import Path
-import imp
 
 
-
-# ------------------------------------------------------------------------------
+##########################################################################
+#
 # TestSession
 #
+##########################################################################
 
 class TestSession(ScriptedLoadableModule):
     """Uses ScriptedLoadableModule base class, available at:
     https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
     """
+
+    #------------------------------------------- 
 
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
@@ -30,32 +27,21 @@ class TestSession(ScriptedLoadableModule):
         self.parent.dependencies = []
         self.parent.contributors = ["Carol Johnson (Baines Imaging Research Laboratories)"] 
         self.parent.helpText = """
-        This is an example of scripted loadable module bundled in an extension.
-        It performs a simple thresholding on the input volume and optionally captures a screenshot.
+        This tests building a session - reading in instructions how the session will be run 
+        through an xml file.
         """
         self.parent.helpText += self.getDefaultModuleDocumentationLink()
         self.parent.acknowledgementText = """
-        This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-        and Steve Pieper, Isomics, Inc. and was partially funded by NIH grant 3P41RR013218-12S1.
-        """ # replace with organization, grant and thanks.
-
-        try:
-            slicer.selfTests
-        except AttributeError:
-            slicer.selfTests = {}
-        slicer.selfTests['TestSession'] = self.runTest
+        This file was originally developed by Carol Johnson of the Baines Imaging Research Laboratories, 
+        under the supervision of Dr. Aaron Ward
+        """ 
 
 
-    #------------------------------------------- 
-    def runTest(self, msec=100, **kwargs):
-        tester = TestSessionTest()
-        tester.runTest()
-        
-
-
-# ------------------------------------------------------------------------------
-# TestSessionWidget
+##########################################################################
 #
+# TestQuestionSet_ModuleWidget
+#
+##########################################################################
 
 class TestSessionWidget(ScriptedLoadableModuleWidget):
     """Uses ScriptedLoadableModuleWidget base class, available at:
@@ -66,11 +52,14 @@ class TestSessionWidget(ScriptedLoadableModuleWidget):
     def setup(self):
         self.developerMode = True
         ScriptedLoadableModuleWidget.setup(self)
-        
 
-# ------------------------------------------------------------------------------
-# TestSessionLogic
+
+##########################################################################
 #
+# TestSession_ModuleLogic
+#
+##########################################################################
+
 class TestSessionLogic(ScriptedLoadableModuleLogic):
     """This class should implement all the actual
     computation done by your module.  The interface
@@ -83,31 +72,15 @@ class TestSessionLogic(ScriptedLoadableModuleLogic):
         ScriptedLoadableModuleLogic.__init__(self)
         self.sClassName = type(self).__name__
         print("\n************ Unittesting for class Session ************\n")
-
-    #------------------------------------------- 
-    def DisplayTestResults(self, tupResults):
-        
-        if (len(tupResults) > 0):
-            # print the boolean results for each test
-            self.tupResults = tupResults
-            print('--- Test Results ' + ' --------- ' + self.sClassName + ' functions -----')
-            for i in range(len(tupResults)):
-                success = False   # assume fail
-                sFname, success = tupResults[i]
-                if success == True:
-                    sDisplay = "Ahh....... test passed.    : "
-                else:
-                    sDisplay = "!$!*^&#!@$%! Test Failed!! : "
-                print(sDisplay, i+1, sFname)
-        else:
-            print("No results to report")
-
-        print("\n************ Test Complete ************\n")
+        self.sessionTestStatus = TestingStatus()
 
 
-# ------------------------------------------------------------------------------
-# TestSessionTest
+##########################################################################
 #
+# TestSession_ModuleTest
+#
+##########################################################################
+
 class TestSessionTest(ScriptedLoadableModuleTest):
     """
     This is the test case for your scripted module.
@@ -116,6 +89,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
     """
 
     #------------------------------------------- 
+
     def setUp(self):
         """ Do whatever is needed to reset the state - typically a scene clear will be enough.
         """
@@ -128,10 +102,9 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         scriptedModulesPath = os.path.dirname(scriptedModulesPath)
         self.testDataPath = os.path.join(scriptedModulesPath, 'Testing', 'TestData')
 
-        
-
        
     #------------------------------------------- 
+
     def runTest(self ):
         """TODO: for this function to be automatically started with the 
             'Reload and Test' button in Slicer, there cannot be an extra argument here.
@@ -144,12 +117,11 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_NoErrors_BuildSession())
 
         
-        logic.DisplayTestResults(tupResults)
+        logic.sessionTestStatus.DisplayTestResults(tupResults)
  
 
-    
-
     #------------------------------------------- 
+
     def test_NoErrors_BuildSession(self):
         bTestResult = False
         self.fnName = sys._getframe().f_code.co_name
@@ -159,6 +131,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         tupResult = self.fnName, bTestResult
         return tupResult
 
+    #------------------------------------------- 
 
 ##########################################################################################
 #                      Launching from main (Reload and Test button)
