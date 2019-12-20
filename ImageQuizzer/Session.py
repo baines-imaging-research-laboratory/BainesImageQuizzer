@@ -33,7 +33,8 @@ class Session:
         #
         # open xml file and load into a document
         from xml.dom import minidom
-        mydoc = minidom.parse('D:\\Users\\cjohnson\\Work\\Projects\\SlicerEclipseProjects\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\items.xml')
+#         mydoc = minidom.parse('D:\\Users\\cjohnson\\Work\\Projects\\SlicerEclipseProjects\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\items.xml')
+        mydoc = minidom.parse('D:\\BainesWork\\Slicer\\SlicerProjectWeek2019\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\items.xml')
         
         items = mydoc.getElementsByTagName('item')
         
@@ -56,7 +57,8 @@ class Session:
             print(elem.firstChild.data)
 
         
-        mydoc2 = minidom.parse('D:\\Users\\cjohnson\\Work\\Projects\\SlicerEclipseProjects\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\Test1.xml')
+#         mydoc2 = minidom.parse('D:\\Users\\cjohnson\\Work\\Projects\\SlicerEclipseProjects\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\Test1.xml')
+        mydoc2 = minidom.parse('D:\\BainesWork\\Slicer\\SlicerProjectWeek2019\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\Test1.xml')
         targets = mydoc2.getElementsByTagName('Target')
         print ('\n*******\nTarget attributes:')
         print(targets[1].attributes['name'].value)
