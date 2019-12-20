@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<PageSet>
+	<Pages>
+		<Page name="Patient1" descriptor="PlanningCT" format="nrrd" type="series">
+			<Paths>
+				<Path>
+					<Link>"D:\\BainesWork\\Slicer\\SlicerProjectWeek2019\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\ManualRegistrationExample_fixed.nrrd"</Link>
+					<Type>"Series"</Type>
+					<Descriptor>"Fixed Registration"</Descriptor>
+					<Destination>"All"</Destination>
+				</Path>
+			</Paths>
+			<QuestionSet>
+				<id>"QS-Intro"</id>
+				<Question>
+					<Type>"InfoBox"</Type>
+					<descriptor>"Introduction"</descriptor>
+					<QuestionText>
+						<Option>"Lots of text describing something"</Option>
+					</QuestionText>
+				</Question>
+			</QuestionSet>
+		</Page>
+		<Page name="Patient1" descriptor="Follow-up 1" format="nrrd" type="series">
+			<Paths>
+				<Path>
+					<Link>"D:\\BainesWork\\Slicer\\SlicerProjectWeek2019\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\ManualRegistrationExample_moving.nrrd"</Link>
+					<Type>"Series"</Type>
+					<Descriptor>"Moving Registration"</Descriptor>
+					<Destination>"All"</Destination>
+				</Path>
+			</Paths>
+			<QuestionSet>
+				<id>"QS-Observation"</id>
+				<Question>
+					<Type>"Radio"</Type>
+					<descriptor>"Assessment"</descriptor>
+					<QuestionText>
+						<Option>"Injury"</Option>
+						<Option>"Recurrence"</Option>
+					</QuestionText>
+				</Question>
+				<Question>
+					<descriptor>"Confidence"</descriptor>
+					<Type>"Radio"</Type>
+					<QuestionText>
+						<Option>"Yes"</Option>
+						<Option>"Maybe"</Option>
+						<Option>"No"</Option>
+					</QuestionText>
+				</Question>
+			</QuestionSet>
+		</Page>
+		<Page name="Patient2" descriptor="Mixed Displays" format="nrrd" type="series">
+			<Paths>
+				<Path>
+					<Link>"D:\\BainesWork\\Slicer\\SlicerProjectWeek2019\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\ManualRegistrationExample_moving.nrrd"</Link>
+					<Type>"Series"</Type>
+					<Descriptor>"Moving Registration"</Descriptor>
+					<Destination>"Red"</Destination>
+				</Path>
+				<Path>
+					<Link>"D:\\BainesWork\\Slicer\\SlicerProjectWeek2019\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\ManualRegistrationExample_fixed.nrrd"</Link>
+					<Type>"nrrd"</Type>
+					<Descriptor>"Fixed Registration"</Descriptor>
+					<Destination>"Blue"</Destination>
+				</Path>
+				<Path>
+					<Link>"D:\\BainesWork\\Slicer\\SlicerProjectWeek2019\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\Case00.mhd"</Link>
+					<Type>"Series"</Type>
+					<Descriptor>"Head"</Descriptor>
+					<Destination>"Green"</Destination>
+				</Path>
+				<Path>
+					<Link>"D:\\BainesWork\\Slicer\\SlicerProjectWeek2019\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\Case00_Seg.mhd"</Link>
+					<Type>"LabelMap"</Type>
+					<Descriptor>"Head Seg"</Descriptor>
+					<Destination>"Green"</Destination>
+				</Path>
+			</Paths>
+			<QuestionSet>
+				<id>"QS-Observation"</id>
+				<Question>
+					<Type>"Radio"</Type>
+					<descriptor>"Assessment"</descriptor>
+					<QuestionText>
+						<Option>"Injury"</Option>
+						<Option>"Recurrence"</Option>
+					</QuestionText>
+				</Question>
+				<Question>
+					<descriptor>"Confidence"</descriptor>
+					<Type>"Radio"</Type>
+					<QuestionText>
+						<Option>"Yes"</Option>
+						<Option>"Maybe"</Option>
+						<Option>"No"</Option>
+					</QuestionText>
+				</Question>
+			</QuestionSet>
+		</Page>
+	</Pages>
+</PageSet>
