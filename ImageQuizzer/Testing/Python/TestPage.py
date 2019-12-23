@@ -1,6 +1,6 @@
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
-from TargetItem import *
+from Page import *
 from TestingStatus import *
 
 import os
@@ -9,11 +9,11 @@ import sys
 
 ##########################################################################
 #
-# TestTargetItem
+# TestPage
 #
 ##########################################################################
 
-class TestTargetItem(ScriptedLoadableModule):
+class TestPage(ScriptedLoadableModule):
     """Uses ScriptedLoadableModule base class, available at:
     https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
     """
@@ -22,7 +22,7 @@ class TestTargetItem(ScriptedLoadableModule):
 
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
-        self.parent.title = "Test Target Item" 
+        self.parent.title = "Test Page" 
         self.parent.categories = ["Testing.ImageQuizzer"]
         self.parent.dependencies = []
         self.parent.contributors = ["Carol Johnson (Baines Imaging Research Laboratories)"] 
@@ -43,7 +43,7 @@ class TestTargetItem(ScriptedLoadableModule):
 #
 ##########################################################################
 
-class TestTargetItemWidget(ScriptedLoadableModuleWidget):
+class TestPageWidget(ScriptedLoadableModuleWidget):
     """Uses ScriptedLoadableModuleWidget base class, available at:
     https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
     """
@@ -56,11 +56,11 @@ class TestTargetItemWidget(ScriptedLoadableModuleWidget):
 
 ##########################################################################
 #
-# TestTargetItem_ModuleLogic
+# TestPage_ModuleLogic
 #
 ##########################################################################
 
-class TestTargetItemLogic(ScriptedLoadableModuleLogic):
+class TestPageLogic(ScriptedLoadableModuleLogic):
     """This class should implement all the actual
     computation done by your module.  The interface
     should be such that other python code can import
@@ -71,17 +71,17 @@ class TestTargetItemLogic(ScriptedLoadableModuleLogic):
     def __init__(self):
         ScriptedLoadableModuleLogic.__init__(self)
         self.sClassName = type(self).__name__
-        print("\n************ Unittesting for class Target Item ************\n")
+        print("\n************ Unittesting for class Page ************\n")
         self.sessionTestStatus = TestingStatus()
 
 
 ##########################################################################
 #
-# TestTargetItem_ModuleTest
+# TestPage_ModuleTest
 #
 ##########################################################################
 
-class TestTargetItemTest(ScriptedLoadableModuleTest):
+class TestPageTest(ScriptedLoadableModuleTest):
     """
     This is the test case for your scripted module.
     Uses ScriptedLoadableModuleTest base class, available at:
@@ -111,7 +111,7 @@ class TestTargetItemTest(ScriptedLoadableModuleTest):
             I have the argument 'layout' to be able to display widgets as part of my testing. 
         """
         self.setUp()
-        logic = TestTargetItemLogic()
+        logic = TestPageLogic()
 
         tupResults = []
         tupResults.append(self.test_NoErrors_LoadNrrd())
@@ -139,9 +139,9 @@ class TestTargetItemTest(ScriptedLoadableModuleTest):
         strpath = os.path.join(self.testDataPath, sTestDataSubfolder, '%s.nrrd' % sInputFileName)
         dictProperties = {}
         
-        self.oTarget = DataVolume()
-#        bTestResult = self.oTarget.loadTarget(strpath, dictProperties)
-        oNodeVolume = self.oTarget.loadTarget(strpath, dictProperties)
+        self.oImage = DataVolume()
+#        bTestResult = self.oImage.loadImage(strpath, dictProperties)
+        oNodeVolume = self.oImage.loadImage(strpath, dictProperties)
         if (oNodeVolume.GetClassName() == 'vtkMRMLScalarVolumeNode') \
             & (oNodeVolume.GetName() == sInputFileName):
             bTestResult = True
@@ -167,8 +167,8 @@ class TestTargetItemTest(ScriptedLoadableModuleTest):
         strpath = os.path.join(self.testDataPath, sTestDataSubfolder, '%s.nii' %sInputFileName)
         dictProperties = {}
 
-        self.oTarget = DataVolume()
-        oNodeVolume = self.oTarget.loadTarget(strpath, dictProperties)
+        self.oImage = DataVolume()
+        oNodeVolume = self.oImage.loadImage(strpath, dictProperties)
         if (oNodeVolume.GetClassName() == 'vtkMRMLScalarVolumeNode') \
             & (oNodeVolume.GetName() == sInputFileName):
             bTestResult = True
@@ -191,8 +191,8 @@ class TestTargetItemTest(ScriptedLoadableModuleTest):
         strpath = os.path.join(self.testDataPath, sTestDataSubfolder, '%s.mhd' %sInputFileName)
         dictProperties = {}
         
-        self.oTarget = DataVolume()
-        oNodeVolume = self.oTarget.loadTarget(strpath, dictProperties)
+        self.oImage = DataVolume()
+        oNodeVolume = self.oImage.loadImage(strpath, dictProperties)
         if (oNodeVolume.GetClassName() == 'vtkMRMLScalarVolumeNode') \
             & (oNodeVolume.GetName() == sInputFileName):
             bTestResult = True
@@ -214,8 +214,8 @@ class TestTargetItemTest(ScriptedLoadableModuleTest):
         strpath = os.path.join(self.testDataPath, sTestDataSubfolder, '%s.mhd' %sInputFileName)
         dictProperties = {"labelmap" : True}
         
-        self.oTarget = DataVolume()
-        oNodeVolume = self.oTarget.loadTarget(strpath, dictProperties)
+        self.oImage = DataVolume()
+        oNodeVolume = self.oImage.loadImage(strpath, dictProperties)
         if (oNodeVolume.GetClassName() == 'vtkMRMLLabelMapVolumeNode') \
             & (oNodeVolume.GetName() == sInputFileName):
             bTestResult = True
@@ -235,8 +235,8 @@ class TestTargetItemTest(ScriptedLoadableModuleTest):
         strpath = os.path.join(self.testDataPath, 'NonExistent.mhd')
         dictProperties = {}
         
-        self.oTarget = DataVolume()
-        oNodeVolume = self.oTarget.loadTarget(strpath, dictProperties)
+        self.oImage = DataVolume()
+        oNodeVolume = self.oImage.loadImage(strpath, dictProperties)
         if ~oNodeVolume:
             bTestResult = True
         else:
@@ -252,7 +252,7 @@ class TestTargetItemTest(ScriptedLoadableModuleTest):
 
 def main(self):
     try:
-        logic = TestTargetItemLogic()
+        logic = TestPageLogic()
         logic.runTest()
         
     except Exception as e:

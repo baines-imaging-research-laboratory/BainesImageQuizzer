@@ -11,7 +11,7 @@ import warnings
 
 #-----------------------------------------------
 
-class TargetItem(ABC):
+class Page(ABC):
     """ Inherits from ABC - Abstract Base Class
     """
     
@@ -21,14 +21,14 @@ class TargetItem(ABC):
 
     
     @abstractmethod        
-    def loadTarget(self, sTargetPath, dictProperties): pass
+    def loadImage(self, sTargetPath, dictProperties): pass
     
-    def displayTarget(self, sTargetPath):
-        print('Displaying Target Item')
+    def displayImage(self, sTargetPath):
+        print('Displaying Page')
         slicer.util.loadVolume(sTargetPath)
 
     
-class Contour(TargetItem):
+class Contour(Page):
     # Create a group box and add radio buttons based on the options provided
     # Inputs : lOptions - list of labels for each radio button
     # Outputs: exitCode - boolean describing whether function exited successfully
@@ -38,27 +38,27 @@ class Contour(TargetItem):
         self.sClassName = type(self).__name__
         self.tupContourPoints = []
        
-    def loadTarget(self, sTargetPath, dictProperties):
+    def loadImage(self, sImagePath, dictProperties):
         self.sFnName = sys._getframe().f_code.co_name
-        print('Loading target specific for Contour')
+        print('Loading image:  Contour')
         return True
 
 #-----------------------------------------------
 
-class DataVolume(TargetItem):
+class DataVolume(Page):
     
     def __init__(self):
         self.sClassName = type(self).__name__
        
-    def loadTarget(self, sTargetPath, dictProperties):
+    def loadImage(self, sImagePath, dictProperties):
         self.sFnName = sys._getframe().f_code.co_name
 
         try:
-            oNodeLoadedVolume = slicer.util.loadVolume(sTargetPath, dictProperties)
+            oNodeLoadedVolume = slicer.util.loadVolume(sImagePath, dictProperties)
             return oNodeLoadedVolume
         except:
             print(self.sFnName , ': ' ,sys.exc_info()[0],\
                   '\n   *** ERROR - Either the file does not exist or there was a load error.\n   *** File: ',\
-                  sTargetPath)
+                  sImagePath)
             return False
             
