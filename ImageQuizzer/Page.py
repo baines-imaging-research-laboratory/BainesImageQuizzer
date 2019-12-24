@@ -28,6 +28,8 @@ class Page(ABC):
         slicer.util.loadVolume(sTargetPath)
 
     
+#-----------------------------------------------
+
 class Contour(Page):
     # Create a group box and add radio buttons based on the options provided
     # Inputs : lOptions - list of labels for each radio button
