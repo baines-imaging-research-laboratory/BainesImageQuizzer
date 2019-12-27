@@ -113,7 +113,9 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_InvalidRootNode())
         tupResults.append(self.test_ParsingError())
         # TODO: tupResults.append(self.test_InvalidNodeType())
-        tupResults.append(self.test_GetPageAttributes())
+        tupResults.append(self.test_GetNumChildren())
+        tupResults.append(self.test_GetListOfNodeAttributes())
+        tupResults.append(self.test_GetAttributes())
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
  
@@ -126,12 +128,12 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
          
   
         # test simple items xml file - confirm root name
-        sRootName = 'data'
+        sRootName = 'rootNode'
         sXmlFile = 'items.xml'
         sXmlPath = os.path.join(self.testDataPath, sXmlFile)
   
           
-        [bTestResult, xRootNode] = self.oIOXml.openXml(sXmlPath,'data')
+        [bTestResult, xRootNode] = self.oIOXml.openXml(sXmlPath,'rootNode')
         if (self.oIOXml.getNodeName(xRootNode) == sRootName):
             bTestResult = bTestResult * True
         else:
@@ -152,7 +154,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         try:
             bTestResult = True
             with self.assertRaises(Exception):
-                self.oIOXml.openXml(sXmlPath,'data')
+                self.oIOXml.openXml(sXmlPath,'rootNode')
         except:
             bTestResult = False # there should have been an exception
     
@@ -188,7 +190,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         try:
             bTestResult = True
             with self.assertRaises(Exception):
-                self.oIOXml.openXml(sXmlPath,'data')
+                self.oIOXml.openXml(sXmlPath,'rootNode')
         except:
             bTestResult = False # there should have been an exception
     
@@ -206,47 +208,109 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         try:
             bTestResult = True
             with self.assertRaises(Exception):
-                self.oIOXml.openXml(sXmlPath,'data')
+                self.oIOXml.openXml(sXmlPath,'rootNode')
         except:
             bTestResult = False # there should have been an exception
     
         tupResult = self.fnName, bTestResult
         return tupResult
          
-    #------------------------------------------- 
+    #-------------------------------------------
     
-    def test_GetPageAttributes(self):
+    def test_GetNumChildren(self):
         self.fnName = sys._getframe().f_code.co_name
-
-        sXmlFile = 'TestSimple_PC.xml'
+        sXmlFile = 'items.xml'
         sXmlPath = os.path.join(self.testDataPath, sXmlFile)
         
-        # See Parsing with minidom Mouse vs Python
-        # http://www.blog.pythonlibrary.org/2010/11/12/python-parsing-xml-with-minidom/
+        [bOpenResult, xRootNode] = self.oIOXml.openXml(sXmlPath,'rootNode')
+            
+        bTestResult = True
         
-        [bOpenResult, xRootNode] = self.oIOXml.openXml(sXmlPath,'Session')
-#         xPages =  xRootNode.getElementsByTagName('Page')[0]
-#         for(name, value) in xPages.attributes.items():
-#             print('name: %s ..... alue: %s' % (name, value))
-            
-        listImages = []
-        pages = xRootNode.getElementsByTagName('Page')
-        for page in pages:
-            imageObj = page.getElementsByTagName("Image")[0]
-            listImages.append(imageObj)
-            
-        for image in listImages:
-            (name, value) = image.attributes.items()[0]
-            print('name: %s ..... value: %s' % (name, value))
-            
-#             nodes = image.childNodes
-#             for node in nodes:
-#                 for (name, value) in node.attribute.items():
-#                     print('name: %s ..... value: %s' % (name, value))
+        xDataNode = xRootNode.getElementsByTagName('data')[0]
+        
+        dExpectedNumChildren = 3
+        dNumChildren = self.oIOXml.getNumChildren(xDataNode,'infoGroup')
+        if (dNumChildren == dExpectedNumChildren):
+            bTestResult = bTestResult * True
+        else:
+            bTestResult = bTestResult * False
+        
+        dExpectedNumChildren = 1
+        dNumChildren = self.oIOXml.getNumChildren(xDataNode,'soloTag')
+        if (dNumChildren == dExpectedNumChildren):
+            bTestResult = bTestResult * True
+        else:
+            bTestResult = bTestResult * False
 
+
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #-------------------------------------------
+    
+    def test_GetListOfNodeAttributes(self):
+        self.fnName = sys._getframe().f_code.co_name
         
+        sXmlFile = 'items.xml'
+        sXmlPath = os.path.join(self.testDataPath, sXmlFile)
         
-        bTestResult = True        
+        [bOpenResult, xRootNode] = self.oIOXml.openXml(sXmlPath,'rootNode')
+            
+        
+        import operator
+        bTestResult = True
+
+        xNode = xRootNode.getElementsByTagName('data')[1]
+        listOfAttributes = self.oIOXml.getListOfNodeAttributes(xNode)
+        sExpectedNames = ['id', 'descriptor']
+        sExpectedValues = ['002', 'TestData Page2' ]
+        for i in range(0,len(listOfAttributes)):
+            sName = list(map(operator.itemgetter(0), listOfAttributes))[i]
+            sValue = list(map(operator.itemgetter(1), listOfAttributes))[i]
+#             print('Node Attributes ... name: {x} .... value: {y}'.format(x=sName, y=sValue) )
+            if (sName == sExpectedNames[i]):
+                bTestResult = True * bTestResult
+            else:
+                bTestResult = False * bTestResult
+            if (sValue == sExpectedValues[i]):
+                bTestResult = True * bTestResult
+            else:
+                bTestResult = False * bTestResult
+                
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #-------------------------------------------
+    
+    def test_GetAttributes(self):
+        self.fnName = sys._getframe().f_code.co_name
+
+        sXmlFile = 'items.xml'
+        sXmlPath = os.path.join(self.testDataPath, sXmlFile)
+        
+        [bOpenResult, xRootNode] = self.oIOXml.openXml(sXmlPath,'rootNode')
+            
+        bTestResult = True
+
+        xNode1 = xRootNode.getElementsByTagName('data')[1]
+        sValue = self.oIOXml.getValueOfNodeAttribute(xNode1, 'descriptor')
+#         print('returned sValue {x}'.format(x=sValue))
+        if (sValue == 'TestData Page2'):
+            bTestResult = bTestResult * True
+        else:
+            bTestResult = bTestResult * False
+            
+        xNode0 = xRootNode.getElementsByTagName('data')[0]
+        xSoloNode = xNode0.getElementsByTagName('soloTag')[0]
+        sValue = self.oIOXml.getValueOfNodeAttribute(xSoloNode, 'path')
+#         print('returned sValue {x}'.format(x=sValue))
+        if (sValue == 'C:\Documents'):
+            bTestResult = bTestResult * True
+        else:
+            bTestResult = bTestResult * False
+            
+        
         tupResult = self.fnName, bTestResult
         return tupResult
         
@@ -267,3 +331,38 @@ def main(self):
 
 if __name__ == "__main__":
     main()
+    
+
+
+#######################################################
+#                TESTING
+#######################################################
+    
+        # See Parsing with minidom Mouse vs Python
+        # http://www.blog.pythonlibrary.org/2010/11/12/python-parsing-xml-with-minidom/
+        
+#         listChildren = []
+#         dataChildren = xRootNode.getElementsByTagName('data')
+#         numObjs = dataChildren.length
+#         numAttributes = xRootNode.getElementsByTagName('data')[0].attributes.length
+#         print('Num of children %d' % numObjs)
+#         for i in range(0,numAttributes):
+#             (name, value) = xRootNode.getElementsByTagName('data')[0].attributes.items()[i]
+#             print('name: %s ..... value: %s' % (name, value))
+# 
+#         for index in range(0,numObjs):
+#             dataNode = xRootNode.getElementsByTagName('data')[index]
+#             infoObj = dataNode.getElementsByTagName("soloTag")
+#             print(infoObj.length)
+#             for childIndex in range(0, infoObj.length):
+#                 (name, value) = dataNode.getElementsByTagName("infoGroup")[childIndex].attributes.items()[0]
+#                 print('name: %s ..... value: %s' % (name, value))
+#          
+# 
+# 
+#         print('***************************')
+#         xParentNode = xRootNode.getElementsByTagName('data')[0]
+#         sChildTagName = 'soloTag'
+#         self.oIOXml.getListOfAttributes(xParentNode, sChildTagName)
+# 
+

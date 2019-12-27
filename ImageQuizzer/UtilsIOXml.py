@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+# from abc import ABC, abstractmethod
 import os, sys
 import warnings
 
@@ -7,22 +7,16 @@ import xml.dom.minidom
 
 #-----------------------------------------------
 
-class UtilsIOXml(ABC):
-    """ Inherits from ABC - Abstract Base Class
-    """
+class UtilsIOXml:
     
-    def __init__(self):
+    def __init__(self, parent=None):
         self.sClassName = 'undefinedClassName'
         self.sFnName = 'undefinedFunctionName'
+        self.parent = parent
         
     
-#     @abstractmethod        
-#     def getAttributes(self, xCurrentNode): pass
-# 
-#     @abstractmethod        
-#     def getChildElement(self, xCurrentNode, sChildName ): pass
-    
-    
+    #-------------------------------------------
+
     def openXml(self, sXmlPath, sRootNodeName):
         # given a path, open the xml document
         
@@ -53,6 +47,8 @@ class UtilsIOXml(ABC):
         return bSuccess, xNode
 
     
+    #-------------------------------------------
+
     def getNodeName(self, xNode):
 
         # check for correct type of node  
@@ -63,13 +59,47 @@ class UtilsIOXml(ABC):
 
         return sNodeName
                 
-    def getNumChildren(self, xNode, sChildTagName):
+    #-------------------------------------------
+
+    def getNumChildren(self, xParentNode, sChildTagName):
         # given an xml node, return the number of children with the specified tagname
         
-        xNodeChild = xNode.getElementsByTagName(sChildTagName)
-#         for xChild in xNodeChild:
-            
+        iNumChildren = xParentNode.getElementsByTagName(sChildTagName).length
         
+        return iNumChildren
+
+#     #-------------------------------------------
+# 
+#     def getListOfChildAttributes(self, xParentNode, sChildTagName):
+#         # given the parent node and the name of the child node of interest,
+#         #    return the list of name,value pairs of the attributes
+#          
+#         iNumAttributes = xParentNode.getElementsByTagName(sChildTagName)[0].attributes.length
+#         
+#         for i in range(0,iNumAttributes):
+#             (name, value) = xParentNode.getElementsByTagName(sChildTagName)[0].attributes.items()[i]
+#             print('name: %s ..... value: %s' % (name, value))
+#         
+
+    #-------------------------------------------
+
+    def getListOfNodeAttributes(self, xNode):
+        # given a node, return a list of all its attributes
+        listOfAttributes = []
+        for index in range(0,xNode.attributes.length):
+            (name, value) = xNode.attributes.items()[index]
+            tupAttribute = name, value
+            listOfAttributes.append(tupAttribute)
+            
+        return listOfAttributes
+        
+    #-------------------------------------------
+
+    def getValueOfNodeAttribute(self, xNode, sAttributeName):
+        # given a node and an attribute name, get the value
+        sAttributeValue = xNode.getAttribute(sAttributeName)
+        
+        return sAttributeValue
 
 #-----------------------------------------------
 class IOXmlImageNode(UtilsIOXml):
