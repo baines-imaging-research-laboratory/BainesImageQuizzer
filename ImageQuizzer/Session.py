@@ -10,11 +10,11 @@ import xml
 
 class Session:
     
-    def __init__(self, parent=None):
+    def __init__(self, xmlFilename, parent=None):
         self.sClassName = type(self).__name__
         self.parent = parent
         print('Constructor for Session')
-
+        print(xmlFilename)
 #     def __init__(self, parent):
 #         print('Constructor for Session - parent')
 

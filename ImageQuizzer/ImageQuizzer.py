@@ -3,7 +3,7 @@ import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 from Session import *
 # 
-import mistletoe
+
 #
 # ImageQuizzer
 #
@@ -34,6 +34,35 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
     """Uses ScriptedLoadableModuleWidget base class, available at:
     https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
     """
+    
+    def __init__(self, parent):
+        ScriptedLoadableModuleWidget.__init__(self,parent)
+
+        # create the widget for user login
+        self.qUserLoginLayout = qt.QVBoxLayout()
+        self.qUserLoginWidget = qt.QWidget()
+        self.qUserLoginWidget.setLayout(self.qUserLoginLayout)
+        qUserStudyWidgetTitle = qt.QLabel('Baines Image Quizzer - User Login')
+        self.qUserLoginLayout.addWidget(qUserStudyWidgetTitle)
+        
+        self.filenameLabel = qt.QLabel('Quiz Filename')
+        self.qUserLoginLayout.addWidget(self.filenameLabel)
+        
+        # Get study button
+        # File Picker
+        self.btnGetUserStudy = qt.QPushButton("Select Quiz")
+        self.btnGetUserStudy.setEnabled(True)
+        self.btnGetUserStudy.toolTip = "Select Quiz xml file for launch "
+        self.btnGetUserStudy.connect('clicked(bool)', self.onApplyOpenFile)
+        self.qUserLoginLayout.addWidget(self.btnGetUserStudy)
+        
+        # Launch study button (not enabled until study is picked)
+        self.btnLaunchStudy = qt.QPushButton("Launch Quiz")
+        self.btnLaunchStudy.setEnabled(False)
+        self.btnLaunchStudy.connect('clicked(bool)', self.onApplyLaunchQuiz)
+        self.qUserLoginLayout.addWidget(self.btnLaunchStudy)
+        
+        
 
     def setup(self):
         ScriptedLoadableModuleWidget.setup(self)
@@ -68,12 +97,11 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         path = os.path.join(scriptedModulesPath, 'Resources', 'MD', '%s.md' %moduleName)
         print ("path", path)
 
-
         #-------------------------------------------
         # set up quiz widget
-        leftWidget = qt.QWidget()
+        self.leftWidget = qt.QWidget()
         leftLayout = qt.QVBoxLayout()
-        leftWidget.setLayout(leftLayout)
+        self.leftWidget.setLayout(leftLayout)
          
         
         
@@ -85,168 +113,15 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
 
         
-        qUserStudyLayout = qt.QVBoxLayout()
-        qUserStudyWidget = qt.QWidget()
-        qUserStudyWidget.setLayout(qUserStudyLayout)
-        qUserStudyWidgetTitle = qt.QLabel('Baines Image Quizzer - User Login')
-        qUserStudyLayout.addWidget(qUserStudyWidgetTitle)
-        lbl = qt.QLabel('Testing Label')
-        qUserStudyLayout.addWidget(lbl)
         
-        # Get study button
-        # File Picker
-        btnGetUserStudy = qt.QPushButton("Open File For Bulk Processing")
-        btnGetUserStudy.toolTip = "Select bulk processing file"
-        btnGetUserStudy.connect('clicked(bool)', self.onApplyOpenFile)
-        qUserStudyLayout.addWidget(btnGetUserStudy)
-        
-        qUserStudyWidget.show()
-
-
-
-#         displayWidget = qt.QTextEdit()
-#         displayWidget.setText(docHtml)
-#         displayWidget.show()
-# 
-# 
-        #-------------------------------------------
-        # load patient studies
-        studyBrowserFileName = "ImageQuizzerStudyBrowser"
-        scriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
-        scriptedModulesPath = os.path.dirname(scriptedModulesPath)
-        path = os.path.join(scriptedModulesPath, 'Resources', 'MD', '%s.md' %studyBrowserFileName)
-        print ("path", path)
  
-        with open(path, 'r') as fin:
-            self.docHtmlStudies = mistletoe.markdown(fin)
- 
-        print(self.docHtmlStudies)
- 
-        displayStudiesWidget = qt.QTextEdit()
-        displayStudiesWidget.setText(self.docHtmlStudies)
-        displayStudiesWidget.show()
-         
-        # build study browser Widget
-        mdBrowserWidgetLayout = qt.QVBoxLayout()
-        mdBrowserWidget = qt.QWidget()
-        mdBrowserWidget.setLayout(mdBrowserWidgetLayout)
-        browserTitle = qt.QLabel('Image Quizzer Patients')
-        mdBrowserWidgetLayout.addWidget(browserTitle)
- 
-        # parse md study browser file
-        doc = vtk.vtkXMLUtilities.ReadElementFromString("<root>"+self.docHtmlStudies+"</root>")
-        patients = {}
-        series = []
-        for index0 in range(doc.GetNumberOfNestedElements()):
-            element0 = doc.GetNestedElement(index0)
-            if element0.GetName() == 'h1':
-                # Found a new patient
-                # Save old patient first
-                if patients:
-                    patients.append(series)
-                series = {}
-                series['Patient Name'] = element0.GetCharacterData()
-                series['imagePath'] = []
-                lbl = qt.QLabel(element0.GetCharacterData())
-                mdBrowserWidgetLayout.addWidget(lbl)
-            if element0.GetName() == 'ul':
-                # Found a new answer list
-                for index1 in range(element0.GetNumberOfNestedElements()):
-                    element1 = element0.GetNestedElement(index1)
-                    if element1.GetName() == 'li':
-                        for index2 in range(element1.GetNumberOfNestedElements()):
-                            element2 = element1.GetNestedElement(index2)
-                            if element2.GetName() == 'a':
-                                impath = element2.GetAttribute('href')
-                                series['imagePath'].append(impath)
-                                lblText = "  - " + element2.GetCharacterData()
-                                lbl = qt.QLabel(lblText)
-                                mdBrowserWidgetLayout.addWidget(lbl)
-           
-#         print(patients)
-#         
-#         print(impath)
-#         strpath = urllib.request.unquote(impath)
-#         print(strpath)
-#         slicer.util.loadVolume(strpath)
-# 
-# 
-# 
-#         #-------------------------------------------
-#         # build quiz Widget
-#         mdQuizWidgetLayout = qt.QVBoxLayout()
-#         mdQuizWidget = qt.QWidget()
-#         mdQuizWidget.setLayout(mdQuizWidgetLayout)
-#         quizTitle = qt.QLabel('Baines Image Quizzer')
-#         mdQuizWidgetLayout.addWidget(quizTitle)
-#         
-#         # -----------
-#         # test creating a radio button object through the abstract Question Class
-#         # display the group box in the layout.
-#         # ready for further development
-#         optList = ['Injury','Recurrence']
-#         desc = 'Assessment'
-#         rq = RadioQuestion(optList, desc)
-#         (rqSuccess, rqGrpBox) = rq.buildQuestion()
-#  
-#         mdQuizWidgetLayout.addWidget(rqGrpBox)
-# 
-#         
-#         # -----------
-#         
-#         # parse md quiz file
-#         doc = vtk.vtkXMLUtilities.ReadElementFromString("<root>"+docHtml+"</root>")
-#         question = {}
-#         questions = []
-#         for index0 in range(doc.GetNumberOfNestedElements()):
-#             element0 = doc.GetNestedElement(index0)
-#             if element0.GetName() == 'h1':
-#                 # Found a new question
-#                 # Save old question first
-#                 if question:
-#                     questions.append(question)
-#                     mdQuizWidgetLayout.addWidget(grpBox)
-#                 question = {}
-#                 question['title'] = element0.GetCharacterData()
-#                 question['answers'] = []
-#                 grpBox = qt.QGroupBox()
-#                 grpBox.setTitle(element0.GetCharacterData())
-#                 grpBoxLayout = qt.QVBoxLayout()
-#                 grpBox.setLayout(grpBoxLayout)
-#             if element0.GetName() == 'ul':
-#                 # Found a new answer list
-#                 for index1 in range(element0.GetNumberOfNestedElements()):
-#                     element1 = element0.GetNestedElement(index1)
-#                     question['answers'].append(element1.GetCharacterData())
-#                     rbtn = qt.QRadioButton(element1.GetCharacterData())
-#                     grpBoxLayout.addWidget(rbtn)
-#         
-#         print(questions)
 
-#         #-------------------------------------------
-#         # set up quiz widget
-#         leftWidget = qt.QWidget()
-#         leftLayout = qt.QVBoxLayout()
-#         leftWidget.setLayout(leftLayout)
-#          
-#         
-#         
-#         #-------------------------------------------
-#         # Collapsible button
-#         self.sampleCollapsibleButton = ctk.ctkCollapsibleButton()
-#         self.sampleCollapsibleButton.text = "Image Quizzer Components"
-#         leftLayout.addWidget(self.sampleCollapsibleButton)
-#         
         
         # Layout within the sample collapsible button - form needs a frame
         self.sampleFormLayout = qt.QFormLayout(self.sampleCollapsibleButton)
         self.quizFrame = qt.QFrame(self.sampleCollapsibleButton)
         self.quizFrame.setLayout(qt.QVBoxLayout())
         self.sampleFormLayout.addWidget(self.quizFrame)
-        
-        self.filenameLabel = qt.QLabel()
-#         self.filenameLabel.setText(self.inputFileName)
-        self.quizFrame.layout().addWidget(self.filenameLabel)
 
 #         #-------------------------------------------
 #         # setup the tab widget
@@ -291,7 +166,11 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.btnShowQuizProgress.enabled = True
         leftLayout.addWidget(self.btnShowQuizProgress)
         
-        self.layout.addWidget(leftWidget)
+        self.layout.addWidget(self.leftWidget)
+        
+        self.qUserLoginWidget.show()
+
+
 
         #-------------------------------------------
         # Connections
@@ -302,6 +181,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
     def onApplyOpenFile(self):
+        self.btnLaunchStudy.setEnabled(False)
         self.bulkInputFileDialog = ctk.ctkFileDialog(slicer.util.mainWindow())
         self.bulkInputFileDialog.setWindowModality(1)
         self.bulkInputFileDialog.setWindowTitle("Select File For Bulk Processing")
@@ -312,7 +192,14 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
     def onFileSelected(self,inputFile):
         self.filenameLabel.setText(inputFile)
+        self.btnLaunchStudy.setEnabled(True)
+        self.qUserLoginWidget.show()
+        self.qUserLoginWidget.activateWindow()
         return inputFile
+
+    def onApplyLaunchQuiz(self):
+        self.leftWidget.activateWindow()
+        self.oSession = Session(self.filenameLabel.text)
 
     def onShowQuizProgressClicked(self):
         print('show progress')
