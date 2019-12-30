@@ -10,18 +10,22 @@ import xml
 
 class Session:
     
-    def __init__(self, xmlFilename, parent=None):
+    def __init__(self, xmlFilename, sUsername, parent=None):
         self.sClassName = type(self).__name__
         self.parent = parent
         print('Constructor for Session')
-        print(xmlFilename)
-#     def __init__(self, parent):
-#         print('Constructor for Session - parent')
-
-  
-#     def __init__(self):
-#         print('Constructor for Session - no parent')
-
+        self.xmlFilename = xmlFilename
+        self.sUsername = sUsername
+        
+        self.SetupXmlForSession()
+        
+    def SetupXmlForSession(self):
+        print(self.xmlFilename)
+        print(self.sUsername)
+        
+        # create and add user-timestamp node
+        
+        
     #------------------------------------------- 
     def readPresentationInstructions(self):
         #

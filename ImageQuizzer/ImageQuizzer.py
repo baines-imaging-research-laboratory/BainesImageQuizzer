@@ -2,11 +2,14 @@ import os
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 from Session import *
+from _warnings import filters
 # 
 
+##########################################################################################
 #
-# ImageQuizzer
+#                                ImageQuizzer
 #
+##########################################################################################
 
 class ImageQuizzer(ScriptedLoadableModule):
   """Uses ScriptedLoadableModule base class, available at:
@@ -15,7 +18,7 @@ class ImageQuizzer(ScriptedLoadableModule):
 
   def __init__(self, parent):
     ScriptedLoadableModule.__init__(self, parent)
-    self.parent.title = "ImageQuizzer" # TODO make this more human readable by adding spaces
+    self.parent.title = "Image Quizzer" # TODO make this more human readable by adding spaces
     self.parent.categories = ["Baines Custom Modules"]
     self.parent.dependencies = []
     self.parent.contributors = ["Carol Johnson (Software Developer - Baines Imaging Laboratory)"] # replace with "Firstname Lastname (Organization)"
@@ -26,9 +29,12 @@ class ImageQuizzer(ScriptedLoadableModule):
     """
     
 
+##########################################################################
 #
 # ImageQuizzerWidget
 #
+##########################################################################
+
 
 class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
     """Uses ScriptedLoadableModuleWidget base class, available at:
@@ -37,24 +43,39 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
     
     def __init__(self, parent):
         ScriptedLoadableModuleWidget.__init__(self,parent)
+        
+        self.BuildUserLoginWidget()
 
+    def BuildUserLoginWidget(self):
+        
         # create the widget for user login
+        # This is run in the constructor so that the widget remains in scope
         self.qUserLoginLayout = qt.QVBoxLayout()
         self.qUserLoginWidget = qt.QWidget()
         self.qUserLoginWidget.setLayout(self.qUserLoginLayout)
         qUserStudyWidgetTitle = qt.QLabel('Baines Image Quizzer - User Login')
         self.qUserLoginLayout.addWidget(qUserStudyWidgetTitle)
         
-        self.filenameLabel = qt.QLabel('Quiz Filename')
-        self.qUserLoginLayout.addWidget(self.filenameLabel)
+        self.qLineUserName = qt.QLineEdit()
+        self.qLineUserName.setPlaceholderText('Enter user name')
+        self.qUserLoginLayout.addWidget(self.qLineUserName)
         
-        # Get study button
+        # Add vertical spacer
+        self.qUserLoginLayout.addSpacing(20)
+        
+       # Get study button
         # File Picker
         self.btnGetUserStudy = qt.QPushButton("Select Quiz")
         self.btnGetUserStudy.setEnabled(True)
         self.btnGetUserStudy.toolTip = "Select Quiz xml file for launch "
         self.btnGetUserStudy.connect('clicked(bool)', self.onApplyOpenFile)
         self.qUserLoginLayout.addWidget(self.btnGetUserStudy)
+
+        self.filenameLabel = qt.QLabel('Selected quiz filename')
+        self.qUserLoginLayout.addWidget(self.filenameLabel)
+        
+        # Add vertical spacer
+        self.qUserLoginLayout.addSpacing(20)
         
         # Launch study button (not enabled until study is picked)
         self.btnLaunchStudy = qt.QPushButton("Launch Quiz")
@@ -85,8 +106,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         print ("-------ImageQuizzer Widget SetUp--------")
         
         slicer.util.setMenuBarsVisible(True)
-#         slicer.util.setToolbarsVisible(False)
-        slicer.util.setToolbarsVisible(True)
+#         slicer.util.setToolbarsVisible(False) # for live runs
+        slicer.util.setToolbarsVisible(True) # while developing
         
         
         #-------------------------------------------
@@ -94,7 +115,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
         scriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
         scriptedModulesPath = os.path.dirname(scriptedModulesPath)
-        path = os.path.join(scriptedModulesPath, 'Resources', 'MD', '%s.md' %moduleName)
+        path = os.path.join(scriptedModulesPath, 'Resources', 'XML', '%s.xml' %moduleName)
         print ("path", path)
 
         #-------------------------------------------
@@ -182,13 +203,20 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
     
     def onApplyOpenFile(self):
         self.btnLaunchStudy.setEnabled(False)
-        self.bulkInputFileDialog = ctk.ctkFileDialog(slicer.util.mainWindow())
-        self.bulkInputFileDialog.setWindowModality(1)
-        self.bulkInputFileDialog.setWindowTitle("Select File For Bulk Processing")
-        self.bulkInputFileDialog.defaultSuffix = "xml"
-        self.bulkInputFileDialog.setNameFilter(" (*.xml)")
-        self.bulkInputFileDialog.connect("fileSelected(QString)", self.onFileSelected)
-        self.bulkInputFileDialog.open()
+#         self.quizInputFileDialog = ctk.ctkFileDialog(slicer.util.mainWindow())
+#         self.quizInputFileDialog.setWindowModality(1)
+#         self.quizInputFileDialog.setWindowTitle("Baines Image Quizzer : Select Quiz ")
+#         self.quizInputFileDialog.defaultSuffix = "xml"
+#         self.quizInputFileDialog.setNameFilter(" (*.xml)")
+#         self.quizInputFileDialog.connect("fileSelected(QString)", self.onFileSelected)
+#         self.quizInputFileDialog.open()
+
+        self.quizInputFileDialog = qt.QFileDialog()
+        self.quizInputFileDialog.setDirectory("D:\\Users\\cjohnson\\Temp")
+#         self.quizInputFileDialog.connect("fileSelected(QString)", self.onFileSelected)
+        f = self.quizInputFileDialog.getOpenFileName(self.qUserLoginWidget, "Open File", "D:\\Users\\cjohnson\\Temp", "XML files (*.xml)" )
+        self.onFileSelected(f)
+        
 
     def onFileSelected(self,inputFile):
         self.filenameLabel.setText(inputFile)
@@ -199,7 +227,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
     def onApplyLaunchQuiz(self):
         self.leftWidget.activateWindow()
-        self.oSession = Session(self.filenameLabel.text)
+        self.oSession = Session(self.filenameLabel.text, self.qLineUserName.text)
 
     def onShowQuizProgressClicked(self):
         print('show progress')
@@ -239,6 +267,12 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
     
 
 
+
+##########################################################################
+#
+# ImageQuizzerLogic
+#
+##########################################################################
 
 class ImageQuizzerLogic(ScriptedLoadableModuleLogic):
     """This class should implement all the actual
