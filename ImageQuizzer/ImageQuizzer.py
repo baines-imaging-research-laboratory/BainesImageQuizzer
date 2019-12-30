@@ -1,18 +1,9 @@
 import os
-import unittest
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
-import logging
-
-import mistletoe
-import urllib.request # import submodule directly
-from pkg_resources import _set_parent_ns
-from pathlib import _PathParents
-from Question import *
-from Page import *
 from Session import *
 # 
-
+import mistletoe
 #
 # ImageQuizzer
 #
@@ -65,30 +56,59 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         print ("-------ImageQuizzer Widget SetUp--------")
         
         slicer.util.setMenuBarsVisible(True)
-        slicer.util.setToolbarsVisible(False)
+#         slicer.util.setToolbarsVisible(False)
+        slicer.util.setToolbarsVisible(True)
         
-        #  -----------------------------------------------------------------------------------
-        #                        UI setup through .md files
-        #  -----------------------------------------------------------------------------------
         
         #-------------------------------------------
-        # load quiz
         moduleName = 'ImageQuizzer'
+
         scriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
         scriptedModulesPath = os.path.dirname(scriptedModulesPath)
         path = os.path.join(scriptedModulesPath, 'Resources', 'MD', '%s.md' %moduleName)
         print ("path", path)
 
-        with open(path, 'r') as fin:
-            docHtml = mistletoe.markdown(fin)
 
-        print(docHtml)
+        #-------------------------------------------
+        # set up quiz widget
+        leftWidget = qt.QWidget()
+        leftLayout = qt.QVBoxLayout()
+        leftWidget.setLayout(leftLayout)
+         
+        
+        
+        #-------------------------------------------
+        # Collapsible button
+        self.sampleCollapsibleButton = ctk.ctkCollapsibleButton()
+        self.sampleCollapsibleButton.text = "Image Quizzer Components"
+        leftLayout.addWidget(self.sampleCollapsibleButton)
+        
 
-        displayWidget = qt.QTextEdit()
-        displayWidget.setText(docHtml)
-        displayWidget.show()
+        
+        qUserStudyLayout = qt.QVBoxLayout()
+        qUserStudyWidget = qt.QWidget()
+        qUserStudyWidget.setLayout(qUserStudyLayout)
+        qUserStudyWidgetTitle = qt.QLabel('Baines Image Quizzer - User Login')
+        qUserStudyLayout.addWidget(qUserStudyWidgetTitle)
+        lbl = qt.QLabel('Testing Label')
+        qUserStudyLayout.addWidget(lbl)
+        
+        # Get study button
+        # File Picker
+        btnGetUserStudy = qt.QPushButton("Open File For Bulk Processing")
+        btnGetUserStudy.toolTip = "Select bulk processing file"
+        btnGetUserStudy.connect('clicked(bool)', self.onApplyOpenFile)
+        qUserStudyLayout.addWidget(btnGetUserStudy)
+        
+        qUserStudyWidget.show()
 
 
+
+#         displayWidget = qt.QTextEdit()
+#         displayWidget.setText(docHtml)
+#         displayWidget.show()
+# 
+# 
         #-------------------------------------------
         # load patient studies
         studyBrowserFileName = "ImageQuizzerStudyBrowser"
@@ -96,23 +116,23 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         scriptedModulesPath = os.path.dirname(scriptedModulesPath)
         path = os.path.join(scriptedModulesPath, 'Resources', 'MD', '%s.md' %studyBrowserFileName)
         print ("path", path)
-
+ 
         with open(path, 'r') as fin:
             self.docHtmlStudies = mistletoe.markdown(fin)
-
+ 
         print(self.docHtmlStudies)
-
+ 
         displayStudiesWidget = qt.QTextEdit()
         displayStudiesWidget.setText(self.docHtmlStudies)
         displayStudiesWidget.show()
-        
+         
         # build study browser Widget
         mdBrowserWidgetLayout = qt.QVBoxLayout()
         mdBrowserWidget = qt.QWidget()
         mdBrowserWidget.setLayout(mdBrowserWidgetLayout)
         browserTitle = qt.QLabel('Image Quizzer Patients')
         mdBrowserWidgetLayout.addWidget(browserTitle)
-
+ 
         # parse md study browser file
         doc = vtk.vtkXMLUtilities.ReadElementFromString("<root>"+self.docHtmlStudies+"</root>")
         patients = {}
@@ -142,81 +162,81 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                                 lblText = "  - " + element2.GetCharacterData()
                                 lbl = qt.QLabel(lblText)
                                 mdBrowserWidgetLayout.addWidget(lbl)
-         
-        print(patients)
-        
-        print(impath)
-        strpath = urllib.request.unquote(impath)
-        print(strpath)
-        slicer.util.loadVolume(strpath)
+           
+#         print(patients)
+#         
+#         print(impath)
+#         strpath = urllib.request.unquote(impath)
+#         print(strpath)
+#         slicer.util.loadVolume(strpath)
+# 
+# 
+# 
+#         #-------------------------------------------
+#         # build quiz Widget
+#         mdQuizWidgetLayout = qt.QVBoxLayout()
+#         mdQuizWidget = qt.QWidget()
+#         mdQuizWidget.setLayout(mdQuizWidgetLayout)
+#         quizTitle = qt.QLabel('Baines Image Quizzer')
+#         mdQuizWidgetLayout.addWidget(quizTitle)
+#         
+#         # -----------
+#         # test creating a radio button object through the abstract Question Class
+#         # display the group box in the layout.
+#         # ready for further development
+#         optList = ['Injury','Recurrence']
+#         desc = 'Assessment'
+#         rq = RadioQuestion(optList, desc)
+#         (rqSuccess, rqGrpBox) = rq.buildQuestion()
+#  
+#         mdQuizWidgetLayout.addWidget(rqGrpBox)
+# 
+#         
+#         # -----------
+#         
+#         # parse md quiz file
+#         doc = vtk.vtkXMLUtilities.ReadElementFromString("<root>"+docHtml+"</root>")
+#         question = {}
+#         questions = []
+#         for index0 in range(doc.GetNumberOfNestedElements()):
+#             element0 = doc.GetNestedElement(index0)
+#             if element0.GetName() == 'h1':
+#                 # Found a new question
+#                 # Save old question first
+#                 if question:
+#                     questions.append(question)
+#                     mdQuizWidgetLayout.addWidget(grpBox)
+#                 question = {}
+#                 question['title'] = element0.GetCharacterData()
+#                 question['answers'] = []
+#                 grpBox = qt.QGroupBox()
+#                 grpBox.setTitle(element0.GetCharacterData())
+#                 grpBoxLayout = qt.QVBoxLayout()
+#                 grpBox.setLayout(grpBoxLayout)
+#             if element0.GetName() == 'ul':
+#                 # Found a new answer list
+#                 for index1 in range(element0.GetNumberOfNestedElements()):
+#                     element1 = element0.GetNestedElement(index1)
+#                     question['answers'].append(element1.GetCharacterData())
+#                     rbtn = qt.QRadioButton(element1.GetCharacterData())
+#                     grpBoxLayout.addWidget(rbtn)
+#         
+#         print(questions)
 
-
-
-        #-------------------------------------------
-        # build quiz Widget
-        mdQuizWidgetLayout = qt.QVBoxLayout()
-        mdQuizWidget = qt.QWidget()
-        mdQuizWidget.setLayout(mdQuizWidgetLayout)
-        quizTitle = qt.QLabel('Baines Image Quizzer')
-        mdQuizWidgetLayout.addWidget(quizTitle)
-        
-        # -----------
-        # test creating a radio button object through the abstract Question Class
-        # display the group box in the layout.
-        # ready for further development
-        optList = ['Injury','Recurrence']
-        desc = 'Assessment'
-        rq = RadioQuestion(optList, desc)
-        (rqSuccess, rqGrpBox) = rq.buildQuestion()
- 
-        mdQuizWidgetLayout.addWidget(rqGrpBox)
-
-        
-        # -----------
-        
-        # parse md quiz file
-        doc = vtk.vtkXMLUtilities.ReadElementFromString("<root>"+docHtml+"</root>")
-        question = {}
-        questions = []
-        for index0 in range(doc.GetNumberOfNestedElements()):
-            element0 = doc.GetNestedElement(index0)
-            if element0.GetName() == 'h1':
-                # Found a new question
-                # Save old question first
-                if question:
-                    questions.append(question)
-                    mdQuizWidgetLayout.addWidget(grpBox)
-                question = {}
-                question['title'] = element0.GetCharacterData()
-                question['answers'] = []
-                grpBox = qt.QGroupBox()
-                grpBox.setTitle(element0.GetCharacterData())
-                grpBoxLayout = qt.QVBoxLayout()
-                grpBox.setLayout(grpBoxLayout)
-            if element0.GetName() == 'ul':
-                # Found a new answer list
-                for index1 in range(element0.GetNumberOfNestedElements()):
-                    element1 = element0.GetNestedElement(index1)
-                    question['answers'].append(element1.GetCharacterData())
-                    rbtn = qt.QRadioButton(element1.GetCharacterData())
-                    grpBoxLayout.addWidget(rbtn)
-        
-        print(questions)
-
-        #-------------------------------------------
-        # set up quiz widget
-        leftWidget = qt.QWidget()
-        leftLayout = qt.QVBoxLayout()
-        leftWidget.setLayout(leftLayout)
-         
-        
-        
-        #-------------------------------------------
-        # Collapsible button
-        self.sampleCollapsibleButton = ctk.ctkCollapsibleButton()
-        self.sampleCollapsibleButton.text = "Image Quizzer Components"
-        leftLayout.addWidget(self.sampleCollapsibleButton)
-        
+#         #-------------------------------------------
+#         # set up quiz widget
+#         leftWidget = qt.QWidget()
+#         leftLayout = qt.QVBoxLayout()
+#         leftWidget.setLayout(leftLayout)
+#          
+#         
+#         
+#         #-------------------------------------------
+#         # Collapsible button
+#         self.sampleCollapsibleButton = ctk.ctkCollapsibleButton()
+#         self.sampleCollapsibleButton.text = "Image Quizzer Components"
+#         leftLayout.addWidget(self.sampleCollapsibleButton)
+#         
         
         # Layout within the sample collapsible button - form needs a frame
         self.sampleFormLayout = qt.QFormLayout(self.sampleCollapsibleButton)
@@ -224,26 +244,31 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.quizFrame.setLayout(qt.QVBoxLayout())
         self.sampleFormLayout.addWidget(self.quizFrame)
         
-        #-------------------------------------------
-        # setup the tab widget
-        leftTabWidget = qt.QTabWidget()
-        tabQuiz = qt.QWidget()
-        tabStudyBrowser = qt.QWidget()
-        leftTabWidget.addTab(tabQuiz,"Quiz")
-        leftTabWidget.addTab(slicer.modules.segmenteditor.widgetRepresentation(),"Segment Editor")
-        leftTabWidget.addTab(tabStudyBrowser,"Study List")
+        self.filenameLabel = qt.QLabel()
+#         self.filenameLabel.setText(self.inputFileName)
+        self.quizFrame.layout().addWidget(self.filenameLabel)
+
+#         #-------------------------------------------
+#         # setup the tab widget
+#         leftTabWidget = qt.QTabWidget()
+#         tabQuiz = qt.QWidget()
+#         tabStudyBrowser = qt.QWidget()
+#         leftTabWidget.addTab(tabQuiz,"Quiz")
+#         leftTabWidget.addTab(slicer.modules.segmenteditor.widgetRepresentation(),"Segment Editor")
+#         leftTabWidget.addTab(tabStudyBrowser,"Study List")
+#         
+#         tabQuizLayout = qt.QVBoxLayout()
+#         tabQuiz.setLayout(tabQuizLayout)
+#         tabQuizLayout.addWidget(mdQuizWidget)
+#         
+#         tabStudyBrowserLayout = qt.QVBoxLayout()
+#         tabStudyBrowser.setLayout(tabStudyBrowserLayout)
+#         tabStudyBrowserLayout.addWidget(mdBrowserWidget)
+#         
+#         
+#         #add quiz
+#         self.quizFrame.layout().addWidget(leftTabWidget)
         
-        tabQuizLayout = qt.QVBoxLayout()
-        tabQuiz.setLayout(tabQuizLayout)
-        tabQuizLayout.addWidget(mdQuizWidget)
-        
-        tabStudyBrowserLayout = qt.QVBoxLayout()
-        tabStudyBrowser.setLayout(tabStudyBrowserLayout)
-        tabStudyBrowserLayout.addWidget(mdBrowserWidget)
-        
-        
-        #add quiz
-        self.quizFrame.layout().addWidget(leftTabWidget)
         
         
         #-------------------------------------------
@@ -276,40 +301,54 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
+    def onApplyOpenFile(self):
+        self.bulkInputFileDialog = ctk.ctkFileDialog(slicer.util.mainWindow())
+        self.bulkInputFileDialog.setWindowModality(1)
+        self.bulkInputFileDialog.setWindowTitle("Select File For Bulk Processing")
+        self.bulkInputFileDialog.defaultSuffix = "xml"
+        self.bulkInputFileDialog.setNameFilter(" (*.xml)")
+        self.bulkInputFileDialog.connect("fileSelected(QString)", self.onFileSelected)
+        self.bulkInputFileDialog.open()
+
+    def onFileSelected(self,inputFile):
+        self.filenameLabel.setText(inputFile)
+        return inputFile
+
     def onShowQuizProgressClicked(self):
-        self.qtQuizProgressWidget.setText(self.docHtmlStudies)
-        self.qtQuizProgressWidget.show()
+        print('show progress')
+#         self.qtQuizProgressWidget.setText(self.docHtmlStudies)
+#         self.qtQuizProgressWidget.show()
 
     
     def onNextButtonClicked(self):
-##    print("Next volume ...")
+        print("Next volume ...")
 ##    #Confirm that the user has selected a node
 ##    inputVolume = self.inputSelector.currentNode()
 ##    self.inputValidation(inputVolume)
  
-        scene = slicer.mrmlScene
-        nNodes = scene.GetNumberOfNodes()
-        #   qt.QMessageBox.information(slicer.util.mainWindow(),'NextVolume ...',nNodes)
-        
-        nNodes = scene.GetNumberOfNodesByClass('vtkMRMLScalarVolumeNode')
-        n = scene.GetNthNodeByClass(0,'vtkMRMLScalarVolumeNode')
-        # qt.QMessageBox.information(slicer.util.mainWindow(),'NextVolume ...',nNodes)
-        for idx in range(nNodes):
-            node = scene.GetNthNodeByClass(idx,'vtkMRMLScalarVolumeNode')
-        name = node.GetName()
-        #  qt.QMessageBox.information(slicer.util.mainWindow(),'NextVolume ...',name)
-        self.changeView(node)
+#         scene = slicer.mrmlScene
+#         nNodes = scene.GetNumberOfNodes()
+#         #   qt.QMessageBox.information(slicer.util.mainWindow(),'NextVolume ...',nNodes)
+#         
+#         nNodes = scene.GetNumberOfNodesByClass('vtkMRMLScalarVolumeNode')
+#         n = scene.GetNthNodeByClass(0,'vtkMRMLScalarVolumeNode')
+#         # qt.QMessageBox.information(slicer.util.mainWindow(),'NextVolume ...',nNodes)
+#         for idx in range(nNodes):
+#             node = scene.GetNthNodeByClass(idx,'vtkMRMLScalarVolumeNode')
+#         name = node.GetName()
+#         #  qt.QMessageBox.information(slicer.util.mainWindow(),'NextVolume ...',name)
+#         self.changeView(node)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def changeView(self,volToDisplay):
         print ('changeView: ',volToDisplay.GetName())
-        # Change the views to the selected volume
-        ijkToRAS = vtk.vtkMatrix4x4()
-        volToDisplay.GetIJKToRASMatrix(ijkToRAS)
-        selectionNode = slicer.app.applicationLogic().GetSelectionNode()
-        selectionNode.SetReferenceActiveVolumeID(volToDisplay.GetID())
-        slicer.app.applicationLogic().PropagateVolumeSelection(0)
-        slicer.util.delayDisplay(volToDisplay.GetName())
+#         # Change the views to the selected volume
+#         ijkToRAS = vtk.vtkMatrix4x4()
+#         volToDisplay.GetIJKToRASMatrix(ijkToRAS)
+#         selectionNode = slicer.app.applicationLogic().GetSelectionNode()
+#         selectionNode.SetReferenceActiveVolumeID(volToDisplay.GetID())
+#         slicer.app.applicationLogic().PropagateVolumeSelection(0)
+#         slicer.util.delayDisplay(volToDisplay.GetName())
     
 
 
@@ -329,52 +368,3 @@ class ImageQuizzerLogic(ScriptedLoadableModuleLogic):
 
  
  
-#-----------------------------------------------------------------------------------------------
-#
-# I can't get this working yet ... I want to load and run all tests in the Testing subdirectory
-#
-# from TestQuestion import *
-# from ImageQuizzer.Testing.Python.TestQuestion.TestQuestion import *
-#
-class ImageQuizzerTest(ScriptedLoadableModuleTest):
-    """
-    This is the test case for your scripted module.
-    Uses ScriptedLoadableModuleTest base class, available at:
-    https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
-    """
-     
-    def setUp(self):
-        """ Do whatever is needed to reset the state - typically a scene clear will be enough.
-        """
-        slicer.mrmlScene.Clear(0)
-#         self.tqt = TestQuestionTest()
-         
-    def runTest(self):
-        """Run as few or as many tests as needed here.
-        """
-        self.setUp()
-        self.test_ImageQuizzer1()
-#         self.tqt.runTest()
-#         
-# 
-    def test_ImageQuizzer1(self):
-        """ Ideally you should have several levels of tests.  At the lowest level
-        tests should exercise the functionality of the logic with different inputs
-        (both valid and invalid).  At higher levels your tests should emulate the
-        way the user would interact with your code and confirm that it still works
-        the way you intended.
-        One of the most important features of the tests is that it should alert other
-        developers when their changes will have an impact on the behavior of your
-        module.  For example, if a developer removes a feature that you depend on,
-        your test should break so they know that the feature is needed.
-        """
-         
-        self.delayDisplay('WARNING: THIS UNITTEST IS UNDER DEVELOPMENT - SEE TESTCASES')
- 
- 
-# testing md5 hash
-#         text = 'D:\BainesWork\ShareableData\SlicerData\Day2_CT.nrrd'
-#         textUtf8 = text.encode("utf-8")
-#         hash = hashlib.md5(textUtf8)
-#         hexa = hash.hexdigest()
-#         print(hexa)
