@@ -17,7 +17,7 @@ class UtilsIOXml:
     
     #-------------------------------------------
 
-    def openXml(self, sXmlPath, sRootNodeName):
+    def OpenXml(self, sXmlPath, sRootNodeName):
         # given a path, open the xml document
         
         # initialize a document node
@@ -30,7 +30,7 @@ class UtilsIOXml:
                 xNode = xDoc.documentElement
                    
                 # check for expected root node
-                sNodeName = self.getNodeName(xNode)
+                sNodeName = self.GetNodeName(xNode)
                 if sNodeName == sRootNodeName:
                     bSuccess = True
 
@@ -49,7 +49,7 @@ class UtilsIOXml:
     
     #-------------------------------------------
 
-    def getNodeName(self, xNode):
+    def GetNodeName(self, xNode):
 
         # check for correct type of node  
         if xNode.nodeType == xml.dom.Node.ELEMENT_NODE:
@@ -61,7 +61,7 @@ class UtilsIOXml:
                 
     #-------------------------------------------
 
-    def getNumChildren(self, xParentNode, sChildTagName):
+    def GetNumChildren(self, xParentNode, sChildTagName):
         # given an xml node, return the number of children with the specified tagname
         
         iNumChildren = xParentNode.getElementsByTagName(sChildTagName).length
@@ -83,7 +83,7 @@ class UtilsIOXml:
 
     #-------------------------------------------
 
-    def getListOfNodeAttributes(self, xNode):
+    def GetListOfNodeAttributes(self, xNode):
         # given a node, return a list of all its attributes
         listOfAttributes = []
         for index in range(0,xNode.attributes.length):
@@ -95,7 +95,7 @@ class UtilsIOXml:
         
     #-------------------------------------------
 
-    def getValueOfNodeAttribute(self, xNode, sAttributeName):
+    def GetValueOfNodeAttribute(self, xNode, sAttributeName):
         # given a node and an attribute name, get the value
         sAttributeValue = xNode.getAttribute(sAttributeName)
         
@@ -110,7 +110,7 @@ class IOXmlImageNode(UtilsIOXml):
         self.destination = 'All'
         self.path = ''
         
-    def getAttributes(self,xCurrentNode):
+    def GetAttributes(self,xCurrentNode):
         print('Element Name: %s' % xCurrentNode.nodeName)
         for(name, value) in xCurrentNode.attributes.items():
             print('name: %s value: %s' % (name, value))

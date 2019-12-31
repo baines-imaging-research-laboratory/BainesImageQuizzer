@@ -6,6 +6,7 @@ from TestingStatus import *
 import os
 import sys
 
+from pip._vendor.distlib._backport.shutil import copyfile
 
 ##########################################################################
 #
@@ -48,6 +49,7 @@ class TestSessionWidget(ScriptedLoadableModuleWidget):
     https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
     """
 
+
     #------------------------------------------- 
     def setup(self):
         self.developerMode = True
@@ -88,6 +90,20 @@ class TestSessionTest(ScriptedLoadableModuleTest):
     https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
     """
 
+    def __init__(self):
+        
+        moduleName = 'ImageQuizzer'
+
+        self.ScriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
+        self.ScriptedModulesPath = os.path.dirname(self.ScriptedModulesPath)
+        self.sXmlTestDataPath = os.path.join(self.ScriptedModulesPath, 'Testing', 'TestData', 'InputXmlFiles')
+        self.sUsersBasePath = os.path.join(self.ScriptedModulesPath, 'Users','Tests')
+        
+        # check that a Test folder exists - if not, create it
+        if not os.path.exists(self.sUsersBasePath):
+            os.makedirs(self.sUsersBasePath)
+        
+        
     #------------------------------------------- 
 
     def setUp(self):
@@ -96,11 +112,15 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         slicer.mrmlScene.Clear(0)
         self.sClassName = type(self).__name__
 
-        # define path for test data
-        moduleName = 'ImageQuizzer'
-        scriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
-        scriptedModulesPath = os.path.dirname(scriptedModulesPath)
-        self.testDataPath = os.path.join(scriptedModulesPath, 'Testing', 'TestData')
+#         # define path for test data
+#         moduleName = 'ImageQuizzer'
+#         scriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
+#         scriptedModulesPath = os.path.dirname(scriptedModulesPath)
+#         self.testDataPath = os.path.join(scriptedModulesPath, 'Testing', 'TestData')
+
+        # create Test folder in User area
+        # clear previous tests
+        # copy testing file into 
 
        
     #------------------------------------------- 
@@ -123,11 +143,24 @@ class TestSessionTest(ScriptedLoadableModuleTest):
     #------------------------------------------- 
 
     def test_NoErrors_BuildSession(self):
-        bTestResult = False
+        bTestResult = True
         self.fnName = sys._getframe().f_code.co_name
         
-        self.oSession = Session()
-        bTestResult = self.oSession.readPresentationInstructions()
+        # copy test file to user area
+        sTestFilename = 'TestSimple_PC.xml'
+        sUserName = 'Tests'
+        sTestPath = os.path.join(self.sXmlTestDataPath, sTestFilename)
+        sNewPath = os.path.join(self.sUsersBasePath, sTestFilename)
+        
+        print(sTestPath)
+        print(sNewPath)
+        
+        copyfile(sTestPath, sNewPath)
+        
+        self.oSession = Session() 
+        self.oSession.RunSetup(sNewPath, sUserName)
+
+#         bTestResult = self.oSession.readPresentationInstructions()
         tupResult = self.fnName, bTestResult
         return tupResult
 
