@@ -18,10 +18,10 @@ class Session:
         print('Constructor for Session')
         
 
-    def RunSetup(self, xmlFilename, sUsername):
-        self.xmlFilename = xmlFilename
+    def RunSetup(self, sXmlFilename, sUsername):
+        self.sXmlFilename = sXmlFilename
         self.sUsername = sUsername
-        print(self.xmlFilename)
+        print(self.sXmlFilename)
         print(self.sUsername)
         
         # TODO: create and add user-timestamp node
@@ -31,9 +31,9 @@ class Session:
         self.oIOXml = UtilsIOXml()
         self.msgBox = qt.QMessageBox()
         # open xml and check for root node
-#         xmlQuizDoc = minidom.parse(self.xmlFilename)
+#         xmlQuizDoc = minidom.parse(self.sXmlFilename)
         
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self.xmlFilename,'Session')
+        bSuccess, xRootNode = self.oIOXml.OpenXml(self.sXmlFilename,'Session')
         if not bSuccess:
             self.msgBox.critical(0,"ERROR", "Not a valid quiz - Root node name was not 'Session'")
         else:
@@ -42,7 +42,15 @@ class Session:
             iNumPages = self.oIOXml.GetNumChildren(xRootNode, 'Page')
             print('Number of Pages %s' % iNumPages)
         
+            
+            # get Page nodes
+            xPages = self.oIOXml.GetChildren(xRootNode, 'Page')
+            
             # for each 'outstanding' page
+            for xPageNode in xPages:
+                sName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'name')
+                sDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'descriptor')
+                print(sName, '    ' , sDescriptor)
             #     - create page object - with page node as variable
         
         
@@ -59,7 +67,7 @@ class Session:
 #         #
 #         # open xml file and load into a document
 # #         mydoc = minidom.parse('D:\\Users\\cjohnson\\Work\\Projects\\SlicerEclipseProjects\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\InputXmlFiles\\items.xml')
-#         mydoc = minidom.parse(self.xmlFilename)
+#         mydoc = minidom.parse(self.sXmlFilename)
 # #        mydoc = minidom.parse('D:\\BainesWork\\Slicer\\SlicerProjectWeek2019\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\InputXmlFiles\\items.xml')
 #         
 #         items = mydoc.getElementsByTagName('infoPiece')

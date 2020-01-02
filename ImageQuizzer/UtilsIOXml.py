@@ -68,6 +68,15 @@ class UtilsIOXml:
         
         return iNumChildren
 
+    #-------------------------------------------
+
+    def GetChildren(self, xParentNode, sChildTagName):
+        # given an xml node, return the child nodes with the specified tagname
+        
+        xmlChildren = xParentNode.getElementsByTagName(sChildTagName)
+        
+        return xmlChildren
+
 #     #-------------------------------------------
 # 
 #     def getListOfChildAttributes(self, xParentNode, sChildTagName):
