@@ -1,6 +1,6 @@
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
-from Page import *
+from Image import *
 from TestingStatus import *
 
 import os
@@ -9,11 +9,11 @@ import sys
 
 ##########################################################################
 #
-# TestPage
+# TestImage
 #
 ##########################################################################
 
-class TestPage(ScriptedLoadableModule):
+class TestImage(ScriptedLoadableModule):
     """Uses ScriptedLoadableModule base class, available at:
     https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
     """
@@ -22,7 +22,7 @@ class TestPage(ScriptedLoadableModule):
 
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
-        self.parent.title = "Test Page" 
+        self.parent.title = "Test Image" 
         self.parent.categories = ["Testing.ImageQuizzer"]
         self.parent.dependencies = []
         self.parent.contributors = ["Carol Johnson (Baines Imaging Research Laboratories)"] 
@@ -43,7 +43,7 @@ class TestPage(ScriptedLoadableModule):
 #
 ##########################################################################
 
-class TestPageWidget(ScriptedLoadableModuleWidget):
+class TestImageWidget(ScriptedLoadableModuleWidget):
     """Uses ScriptedLoadableModuleWidget base class, available at:
     https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
     """
@@ -56,11 +56,11 @@ class TestPageWidget(ScriptedLoadableModuleWidget):
 
 ##########################################################################
 #
-# TestPage_ModuleLogic
+# TestImage_ModuleLogic
 #
 ##########################################################################
 
-class TestPageLogic(ScriptedLoadableModuleLogic):
+class TestImageLogic(ScriptedLoadableModuleLogic):
     """This class should implement all the actual
     computation done by your module.  The interface
     should be such that other python code can import
@@ -71,17 +71,17 @@ class TestPageLogic(ScriptedLoadableModuleLogic):
     def __init__(self):
         ScriptedLoadableModuleLogic.__init__(self)
         self.sClassName = type(self).__name__
-        print("\n************ Unittesting for class Page ************\n")
+        print("\n************ Unittesting for class Image ************\n")
         self.sessionTestStatus = TestingStatus()
 
 
 ##########################################################################
 #
-# TestPage_ModuleTest
+# TestImage_ModuleTest
 #
 ##########################################################################
 
-class TestPageTest(ScriptedLoadableModuleTest):
+class TestImageTest(ScriptedLoadableModuleTest):
     """
     This is the test case for your scripted module.
     Uses ScriptedLoadableModuleTest base class, available at:
@@ -111,7 +111,7 @@ class TestPageTest(ScriptedLoadableModuleTest):
             I have the argument 'layout' to be able to display widgets as part of my testing. 
         """
         self.setUp()
-        logic = TestPageLogic()
+        logic = TestImageLogic()
 
         tupResults = []
         tupResults.append(self.test_NoErrors_LoadNrrd())
@@ -252,7 +252,7 @@ class TestPageTest(ScriptedLoadableModuleTest):
 
 def main(self):
     try:
-        logic = TestPageLogic()
+        logic = TestImageLogic()
         logic.runTest()
         
     except Exception as e:
