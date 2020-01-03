@@ -110,6 +110,27 @@ class UtilsIOXml:
         
         return sAttributeValue
 
+    #-------------------------------------------
+
+    def GetDataInNode(self, xNode):
+        # given a node get the value
+        
+        print('~~~~~GETTING DATA~~~~~~')
+        dataNode = xNode
+        infoObj = dataNode.getElementsByTagName("Option")
+        print(infoObj.length)
+
+
+        childNodes = dataNode.childNodes
+        for node in childNodes:
+            if node.nodeType == node.TEXT_NODE:
+                print(node.data)
+            else:
+                print('i need help')
+            
+            
+        return 'help'
+    
 #-----------------------------------------------
 class IOXmlImageNode(UtilsIOXml):
     

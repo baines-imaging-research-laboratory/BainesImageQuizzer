@@ -2,35 +2,23 @@
 <Session>
 	<Page name="Patient1" descriptor="PlanningCT">
 		<Image type="Series" descriptor="Fixed Volume" destination="All" format="nrrd" path="D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\ManualRegistrationExample_fixed.nrrd"/>
-		<QuestionSet id="QS-Intro">
-			<Question>
-				<Type>"InfoBox"</Type>
-				<descriptor>"Introduction"</descriptor>
-				<QuestionText>
-					<Option>"Lots of text describing something"</Option>
-				</QuestionText>
+		<QuestionSet id="QS-Intro" title="Introduction to Quiz">
+			<Question type="InfoBox" descriptor="Introduction">
+				<Option>Lots of text describing something</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
 	<Page name="Patient1" descriptor="Follow-up 1">
 		<Image type="Series" descriptor="Moving Volume" destination="All" format="nrrd" path="D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\ManualRegistrationExample_moving.nrrd"/>
-		<QuestionSet id="QS-Observation">
-			<Question>
-				<Type>"Radio"</Type>
-				<descriptor>"Assessment"</descriptor>
-				<QuestionText>
-					<Option>"Injury"</Option>
-					<Option>"Recurrence"</Option>
-				</QuestionText>
+		<QuestionSet id="QS-Observation" title="What is your Assessment">
+			<Question type="Radio" descriptor="Assessment">
+				<Option>"Injury"</Option>
+				<Option>"Recurrence"</Option>
 			</Question>
-			<Question>
-				<descriptor>"Confidence"</descriptor>
-				<Type>"Radio"</Type>
-				<QuestionText>
-					<Option>"Yes"</Option>
-					<Option>"Maybe"</Option>
-					<Option>"No"</Option>
-				</QuestionText>
+			<Question type="Radio" descriptor="Confidence">
+				<Option>"Yes"</Option>
+				<Option>"Maybe"</Option>
+				<Option>"No"</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
@@ -39,23 +27,15 @@
 		<Image type="Series" descriptor="Moving Volume" destination="Green" format="nrrd" path="D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\ManualRegistrationExample_moving.nrrd"/>
 		<Image type="Series" descriptor="Moving Volume" destination="Blue" format="mhd" path="D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Case00.mhd"/>
 		<Image type="LabelMap" descriptor="Segmentation" destination="Blue" format="mhd" path="D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Case00_Seg.mhd"/>
-		<QuestionSet id="QS-Observation">
-			<Question>
-				<Type>"Radio"</Type>
-				<descriptor>"Assessment"</descriptor>
-				<QuestionText>
-					<Option>"Injury"</Option>
-					<Option>"Recurrence"</Option>
-				</QuestionText>
+		<QuestionSet id="QS-Observation" title="Describe assessment and confidence">
+			<Question type="Radio"  descriptor="Assessment">
+				<Option>"Injury"</Option>
+				<Option>"Recurrence"</Option>
 			</Question>
-			<Question>
-				<descriptor>"Confidence"</descriptor>
-				<Type>"Radio"</Type>
-				<QuestionText>
-					<Option>"Yes"</Option>
-					<Option>"Maybe"</Option>
-					<Option>"No"</Option>
-				</QuestionText>
+			<Question type="Radio" descriptor="Confidence">
+				<Option>"Yes"</Option>
+				<Option>"Maybe"</Option>
+				<Option>"No"</Option>
 			</Question>
 		</QuestionSet>
 	</Page>

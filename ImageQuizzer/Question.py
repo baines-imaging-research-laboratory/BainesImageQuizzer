@@ -5,6 +5,7 @@ import os
 import vtk, qt, ctk, slicer
 import sys
 import warnings
+from UtilsIOXml import *
 
 #-----------------------------------------------
 
@@ -18,9 +19,9 @@ class Question(ABC):
 
     
     @abstractmethod        
-    def buildQuestion(self): pass
+    def BuildQuestion(self): pass
     
-    def createGroupBox(self, sTitle):
+    def CreateGroupBox(self, sTitle):
         # create group box widget to which each subclass can add elements
         self.qGrpBox = qt.QGroupBox()
         self.qGrpBox.setTitle(sTitle)
@@ -29,7 +30,7 @@ class Question(ABC):
         
         return self.qGrpBox
 
-    def displayGroupBoxEmpty(self):
+    def DisplayGroupBoxEmpty(self):
         # check if group box was already created
         
         sLabel = 'Warning : No options were given. Group Box is empty - Contact Administrator'
@@ -48,7 +49,7 @@ class Question(ABC):
 #         self.sClassName = type(self).__name__
 # 
 #     
-#     def buildQuestion(self):
+#     def BuildQuestion(self):
 #         # This is a special case where a warning msg will appear in a box
 #         # with a label
 #         self.sFnName = sys._getframe().f_code.co_name
@@ -70,13 +71,13 @@ class RadioQuestion(Question):
         self.sGrpBoxTitle = sGrpBoxTitle
         self.sClassName = type(self).__name__
        
-    def buildQuestion(self):
+    def BuildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
-        self.createGroupBox(self.sGrpBoxTitle)
+        self.CreateGroupBox(self.sGrpBoxTitle)
         
         length = len(self.lOptions)
         if length < 1 :
-            self.displayGroupBoxEmpty()
+            self.DisplayGroupBoxEmpty()
             return False, self.qGrpBox
         
         i = 0
@@ -101,13 +102,13 @@ class CheckBoxQuestion(Question):
         self.sGrpBoxTitle = sGrpBoxTitle
         self.sClassName = type(self).__name__
        
-    def buildQuestion(self):
+    def BuildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
-        self.createGroupBox(self.sGrpBoxTitle)
+        self.CreateGroupBox(self.sGrpBoxTitle)
         
         length = len(self.lOptions)
         if length < 1 :
-            self.displayGroupBoxEmpty()
+            self.DisplayGroupBoxEmpty()
             return False, self.qGrpBox
         
         i = 0
@@ -132,17 +133,17 @@ class TextQuestion(Question):
         self.sGrpBoxTitle = sGrpBoxTitle
         self.sClassName = type(self).__name__
         
-    def buildQuestion(self):
+    def BuildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
 
         # add grid layout to group box
-        self.createGroupBox(self.sGrpBoxTitle)
+        self.CreateGroupBox(self.sGrpBoxTitle)
         newLayout = qt.QGridLayout()
         self.qGrpBoxLayout.addLayout(newLayout)
        
         length = len(self.lOptions)
         if length < 1 :
-            self.displayGroupBoxEmpty()
+            self.DisplayGroupBoxEmpty()
             return False, self.qGrpBox
 
         i = 0
@@ -170,17 +171,17 @@ class InfoBox(Question):
         self.sGrpBoxTitle = sGrpBoxTitle
         self.sClassName = type(self).__name__
         
-    def buildQuestion(self):
+    def BuildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
 
         # add grid layout to group box
-        self.createGroupBox(self.sGrpBoxTitle)
+        self.CreateGroupBox(self.sGrpBoxTitle)
         newLayout = qt.QGridLayout()
         self.qGrpBoxLayout.addLayout(newLayout)
        
         length = len(self.lOptions)
         if length < 1 :
-            self.displayGroupBoxEmpty()
+            self.DisplayGroupBoxEmpty()
             return False, self.qGrpBox
 
         i = 0
@@ -198,21 +199,61 @@ class QuestionSet():
     """ Class to hold array of all questions that were built into group boxes on the form
     """
     
-    def __init__(self, id, descriptor):
+    def __init__(self):
         self.sClassName = type(self).__name__
-        self.id = id
-        self.descriptor = descriptor
+        self.id = ''
+        self.title = ''
         self.overwritableResponsesYN = False
         
-    def createForm(self):
-        # create group box widget to which each subclass can add elements
-        self.qQuizWidget = qt.QWidget()
-        self.qQuizWidgetLayout = qt.QVBoxLayout()
-        self.qQuizWidget.setLayout(self.qQuizWidgetLayout)
-        self.qQuizTitle = qt.QLabel(self.descriptor)
-        self.qQuizWidgetLayout.addWidget(self.qQuizTitle)
         
-    def buildQuestionSetForm(self, ltupQuestionSet):
+        
+    def ExtractQuestionsFromXML(self, xNodeQuestionSet):
+        # given the xml question set node, extract the questions and set up
+        # the list of tuples for building the question set form
+        
+        oIOXml = UtilsIOXml()
+        ltupQuestionSet = []
+        sNodeName = oIOXml.GetNodeName(xNodeQuestionSet)
+        if not (sNodeName == "QuestionSet"):
+            raise Exception("Invalid XML node. Expecting 'QuestionSet', node name was: %s" % sNodeName)
+        else:
+            # for each child named 'Question' extract labels and options
+            iNumQuestions = oIOXml.GetNumChildren(xNodeQuestionSet, "Question")
+            print('Num Questions : %d' % iNumQuestions)
+            
+            self.id = oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'id')
+            self.title = oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'title')
+            
+            xQuestions = oIOXml.GetChildren(xNodeQuestionSet, 'Question')
+            
+            for xNodeQuestion in xQuestions:
+                sQuestionType = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'type')
+                print('type : %s' % sQuestionType)
+                sQuestionDescriptor = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'descriptor')
+                print('descriptor : %s' % sQuestionDescriptor)
+               
+                # get options for each question
+                lsQuestionOptions = []
+                
+                sResult = oIOXml.GetDataInNode(xNodeQuestion)
+#                 xOptions = oIOXml.GetChildren(xNodeQuestion, 'Option')
+#                 for xNodeOption in xOptions:
+#                     sValue = oIOXml.GetValueOfNode(xNodeOption)
+#                     lsQuestionOptions.append(sValue)
+                
+                
+                
+            
+            
+            
+                tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
+                ltupQuestionSet.append(tupQuestionGroup)
+        
+
+        
+        return ltupQuestionSet
+        
+    def BuildQuestionSetForm(self, ltupQuestionSet):
         # for each item in the list of Questions
         #    - parse the tuple into question items:
         #        0: question type (string)
@@ -222,7 +263,7 @@ class QuestionSet():
         #    - add to layout
         self.sFnName = sys._getframe().f_code.co_name
         bBuildSuccess = True
-        self.createForm()
+        self.CreateGroupBoxWidget()
         self.ltupQuestionSet = ltupQuestionSet
         
         for i in range(len(self.ltupQuestionSet)):
@@ -255,7 +296,7 @@ class QuestionSet():
                 bBuildSuccess = False
 
             if bQuestionTypeGood:
-                bItemSuccess, qWidget = self.question.buildQuestion()
+                bItemSuccess, qWidget = self.question.BuildQuestion()
                 if bItemSuccess :
                     self.qQuizWidgetLayout.addWidget(qWidget)
 
@@ -263,3 +304,13 @@ class QuestionSet():
                 bBuildSuccess = bBuildSuccess & bItemSuccess
                 
         return bBuildSuccess, self.qQuizWidget
+    
+    def CreateGroupBoxWidget(self):
+        # create group box widget to which each subclass can add elements
+        self.qQuizWidget = qt.QWidget()
+        self.qQuizWidgetLayout = qt.QVBoxLayout()
+        self.qQuizWidget.setLayout(self.qQuizWidgetLayout)
+        self.qQuizTitle = qt.QLabel(self.descriptor)
+        self.qQuizWidgetLayout.addWidget(self.qQuizTitle)
+        
+    

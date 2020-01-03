@@ -35,11 +35,11 @@ class Page:
         # get Question Set nodes
         xQuestionSets = self.oIOXml.GetChildren(xPageNode, 'QuestionSet')
         iNumQuestionSets = self.oIOXml.GetNumChildren(xPageNode, 'QuestionSet')
-        # for each 'outstanding' page
-        for xQuestionSetNode in xQuestionSets:
+        # for each 'outstanding' page (questions not yet answered)
+        for xNodeQuestionSet in xQuestionSets:
         #     - create page object - with page node as variable
             oQuestionSet = QuestionSet()
-            oQuestionSet.CreateForm()
+            oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
         
         # get Images
         
