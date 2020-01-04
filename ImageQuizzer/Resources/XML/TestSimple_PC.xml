@@ -12,13 +12,13 @@
 		<Image type="Series" descriptor="Moving Volume" destination="All" format="nrrd" path="D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\ManualRegistrationExample_moving.nrrd"/>
 		<QuestionSet id="QS-Observation" title="What is your Assessment">
 			<Question type="Radio" descriptor="Assessment">
-				<Option>"Injury"</Option>
-				<Option>"Recurrence"</Option>
+				<Option>Injury</Option>
+				<Option>Recurrence</Option>
 			</Question>
 			<Question type="Radio" descriptor="Confidence">
-				<Option>"Yes"</Option>
-				<Option>"Maybe"</Option>
-				<Option>"No"</Option>
+				<Option>Yes</Option>
+				<Option>Maybe</Option>
+				<Option>No</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
@@ -29,13 +29,13 @@
 		<Image type="LabelMap" descriptor="Segmentation" destination="Blue" format="mhd" path="D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Case00_Seg.mhd"/>
 		<QuestionSet id="QS-Observation" title="Describe assessment and confidence">
 			<Question type="Radio"  descriptor="Assessment">
-				<Option>"Injury"</Option>
-				<Option>"Recurrence"</Option>
+				<Option>Injury</Option>
+				<Option>Recurrence</Option>
 			</Question>
 			<Question type="Radio" descriptor="Confidence">
-				<Option>"Yes"</Option>
-				<Option>"Maybe"</Option>
-				<Option>"No"</Option>
+				<Option>Yes</Option>
+				<Option>Maybe</Option>
+				<Option>No</Option>
 			</Question>
 		</QuestionSet>
 	</Page>

@@ -77,18 +77,14 @@ class UtilsIOXml:
         
         return xmlChildren
 
-#     #-------------------------------------------
-# 
-#     def getListOfChildAttributes(self, xParentNode, sChildTagName):
-#         # given the parent node and the name of the child node of interest,
-#         #    return the list of name,value pairs of the attributes
-#          
-#         iNumAttributes = xParentNode.getElementsByTagName(sChildTagName)[0].attributes.length
-#         
-#         for i in range(0,iNumAttributes):
-#             (name, value) = xParentNode.getElementsByTagName(sChildTagName)[0].attributes.items()[i]
-#             print('name: %s ..... value: %s' % (name, value))
-#         
+    #-------------------------------------------
+
+    def GetNthChild(self, xParentNode, sChildTagName, iIndex):
+        # given an xml node, return the nth child node with the specified tagname
+        
+        xmlChildNode = xParentNode.getElementsByTagName(sChildTagName)[iIndex]
+        
+        return xmlChildNode
 
     #-------------------------------------------
 
@@ -115,21 +111,35 @@ class UtilsIOXml:
     def GetDataInNode(self, xNode):
         # given a node get the value
         
-        print('~~~~~GETTING DATA~~~~~~')
-        dataNode = xNode
-        infoObj = dataNode.getElementsByTagName("Option")
-        print(infoObj.length)
+        xData = 'Empty'
+        
+#         name = self.GetNodeName(xNode)
+#         print('???? NAME ????: %s' % name)
+# 
+#         infoObj = xNode.getElementsByTagName("Option")
+#         
+#         for i in range(0,infoObj.length):
+#             optNode = self.GetNthChild(xNode, 'Option', i)
+# 
+#             nodes = optNode.childNodes
+#             for node in nodes:
+#                 if node.nodeType == node.TEXT_NODE:
+#                     xData = node.data
+#                     print(xData)
+#                 else:
+#                     print('invalid data node  check xml schema' )
 
 
-        childNodes = dataNode.childNodes
-        for node in childNodes:
+        nodes = xNode.childNodes
+        for node in nodes:
             if node.nodeType == node.TEXT_NODE:
-                print(node.data)
+                xData =node.data
+                print(xData)
             else:
-                print('i need help')
+                print('invalid data node  check xml schema' )
+             
             
-            
-        return 'help'
+        return xData
     
 #-----------------------------------------------
 class IOXmlImageNode(UtilsIOXml):
@@ -154,6 +164,19 @@ class IOXmlImageNode(UtilsIOXml):
                 self.path = value
                 
  
+#     #-------------------------------------------
+# 
+#     def getListOfChildAttributes(self, xParentNode, sChildTagName):
+#         # given the parent node and the name of the child node of interest,
+#         #    return the list of name,value pairs of the attributes
+#          
+#         iNumAttributes = xParentNode.getElementsByTagName(sChildTagName)[0].attributes.length
+#         
+#         for i in range(0,iNumAttributes):
+#             (name, value) = xParentNode.getElementsByTagName(sChildTagName)[0].attributes.items()[i]
+#             print('name: %s ..... value: %s' % (name, value))
+#         
+
         
 
         

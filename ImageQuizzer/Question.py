@@ -235,11 +235,16 @@ class QuestionSet():
                 # get options for each question
                 lsQuestionOptions = []
                 
-                sResult = oIOXml.GetDataInNode(xNodeQuestion)
-#                 xOptions = oIOXml.GetChildren(xNodeQuestion, 'Option')
+                xOptions = oIOXml.GetChildren(xNodeQuestion, 'Option')
+
 #                 for xNodeOption in xOptions:
-#                     sValue = oIOXml.GetValueOfNode(xNodeOption)
-#                     lsQuestionOptions.append(sValue)
+#                     sValue = oIOXml.GetDataInNode(xNodeQuestion)
+
+                for iIndex in range(0,xOptions.length):
+                    
+                    xNodeOption = oIOXml.GetNthChild(xNodeQuestion, 'Option', iIndex)
+                    sValue = oIOXml.GetDataInNode(xNodeOption)
+                    lsQuestionOptions.append(sValue)
                 
                 
                 
@@ -248,6 +253,9 @@ class QuestionSet():
             
                 tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
                 ltupQuestionSet.append(tupQuestionGroup)
+                
+                
+#                 self.BuildQuestionSetForm(ltupQuestionSet)
         
 
         
