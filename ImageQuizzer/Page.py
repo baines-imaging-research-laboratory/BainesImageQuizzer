@@ -21,8 +21,9 @@ class Page:
         self.descriptor = ''
         
 
-    def RunSetup(self, xPageNode):
+    def RunSetup(self, xPageNode, quizLayout):
 
+        self.quizLayout = quizLayout
         self.oIOXml = UtilsIOXml()
 
         # get name and descriptor
@@ -39,7 +40,9 @@ class Page:
         for xNodeQuestionSet in xQuestionSets:
         #     - create page object - with page node as variable
             oQuestionSet = QuestionSet()
-            oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
+            ltupQuestionSet = oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
+            bTestResultTF, qQuizWidget =oQuestionSet.BuildQuestionSetForm(ltupQuestionSet)
+            self.quizLayout.addWidget(qQuizWidget)
         
         # get Images
         

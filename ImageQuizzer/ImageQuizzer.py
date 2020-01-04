@@ -138,8 +138,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         #-------------------------------------------
         # set up quiz widget
         self.leftWidget = qt.QWidget()
-        leftLayout = qt.QVBoxLayout()
-        self.leftWidget.setLayout(leftLayout)
+        self.leftLayout = qt.QVBoxLayout()
+        self.leftWidget.setLayout(self.leftLayout)
          
         
         
@@ -147,7 +147,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         # Collapsible button
         self.sampleCollapsibleButton = ctk.ctkCollapsibleButton()
         self.sampleCollapsibleButton.text = "Image Quizzer Components"
-        leftLayout.addWidget(self.sampleCollapsibleButton)
+        self.leftLayout.addWidget(self.sampleCollapsibleButton)
         
 
         
@@ -189,20 +189,20 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.nextButton = qt.QPushButton("Next")
         self.nextButton.toolTip = "Display next in series."
         self.nextButton.enabled = True
-        leftLayout.addWidget(self.nextButton)
+        self.leftLayout.addWidget(self.nextButton)
         self.nextButton.connect('clicked(bool)',self.onNextButtonClicked)
         
         # Back button
         self.backButton = qt.QPushButton("Back")
         self.backButton.toolTip = "Display previous series."
         self.backButton.enabled = True
-        leftLayout.addWidget(self.backButton)
+        self.leftLayout.addWidget(self.backButton)
         
         # Status button
         self.btnShowQuizProgress = qt.QPushButton("Show Quiz Progress")
         self.btnShowQuizProgress.toolTip = "Display status of images."
         self.btnShowQuizProgress.enabled = True
-        leftLayout.addWidget(self.btnShowQuizProgress)
+        self.leftLayout.addWidget(self.btnShowQuizProgress)
         
         self.layout.addWidget(self.leftWidget)
         
@@ -252,7 +252,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                 # start the session
                 self.leftWidget.activateWindow()
                 self.oSession = Session()
-                self.oSession.RunSetup(self.qLblQuizFilename.text, self.qLineUserName.text)
+                self.oSession.RunSetup(self.qLblQuizFilename.text, self.qLineUserName.text, self.leftLayout)
 #                 self.oSession = Session(self.qLblQuizFilename.text, self.qLineUserName.text)
 
     def SetupUserQuizFolder(self):

@@ -255,7 +255,7 @@ class QuestionSet():
                 ltupQuestionSet.append(tupQuestionGroup)
                 
                 
-#                 self.BuildQuestionSetForm(ltupQuestionSet)
+#                 bTestResultTF, qQuizWidget =self.BuildQuestionSetForm(ltupQuestionSet)
         
 
         
@@ -318,7 +318,7 @@ class QuestionSet():
         self.qQuizWidget = qt.QWidget()
         self.qQuizWidgetLayout = qt.QVBoxLayout()
         self.qQuizWidget.setLayout(self.qQuizWidgetLayout)
-        self.qQuizTitle = qt.QLabel(self.descriptor)
+        self.qQuizTitle = qt.QLabel(self.title)
         self.qQuizWidgetLayout.addWidget(self.qQuizTitle)
         
     

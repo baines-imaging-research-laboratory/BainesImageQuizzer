@@ -19,9 +19,10 @@ class Session:
         print('Constructor for Session')
         
 
-    def RunSetup(self, sXmlFilename, sUsername):
+    def RunSetup(self, sXmlFilename, sUsername, quizLayout):
         self.sXmlFilename = sXmlFilename
         self.sUsername = sUsername
+        self.quizLayout = quizLayout
         print(self.sXmlFilename)
         print(self.sUsername)
         
@@ -51,7 +52,7 @@ class Session:
             for xPageNode in xPages:
             #     - create page object - with page node as variable
                 oPage = Page()
-                oPage.RunSetup(xPageNode)
+                oPage.RunSetup(xPageNode, self.quizLayout)
                 
         
         
