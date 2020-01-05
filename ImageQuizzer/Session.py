@@ -54,6 +54,18 @@ class Session:
                 oPage = Page()
                 oPage.RunSetup(xPageNode, self.quizLayout)
                 
+            # Next button
+            self.nextButton = qt.QPushButton("Next Page - new images and question sets")
+            self.nextButton.toolTip = "Display next in series."
+            self.nextButton.enabled = True
+            self.quizLayout.addWidget(self.nextButton)
+#             self.nextButton.connect('clicked(bool)',self.onNextButtonClicked)
+            
+            # Back button
+            self.backButton = qt.QPushButton("Back")
+            self.backButton.toolTip = "Display previous series."
+            self.backButton.enabled = True
+            self.quizLayout.addWidget(self.backButton)
         
         
 #-----------------------------------------------

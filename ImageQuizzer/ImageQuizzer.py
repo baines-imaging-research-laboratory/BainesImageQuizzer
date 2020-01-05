@@ -146,13 +146,9 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         #-------------------------------------------
         # Collapsible button
         self.sampleCollapsibleButton = ctk.ctkCollapsibleButton()
-        self.sampleCollapsibleButton.text = "Image Quizzer Components"
+        self.sampleCollapsibleButton.text = "Baines Image Quizzer"
         self.leftLayout.addWidget(self.sampleCollapsibleButton)
         
-
-        
-        
- 
 
         
         # Layout within the sample collapsible button - form needs a frame
@@ -184,19 +180,19 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         
         
-        #-------------------------------------------
-        # Next button
-        self.nextButton = qt.QPushButton("Next")
-        self.nextButton.toolTip = "Display next in series."
-        self.nextButton.enabled = True
-        self.leftLayout.addWidget(self.nextButton)
-        self.nextButton.connect('clicked(bool)',self.onNextButtonClicked)
-        
-        # Back button
-        self.backButton = qt.QPushButton("Back")
-        self.backButton.toolTip = "Display previous series."
-        self.backButton.enabled = True
-        self.leftLayout.addWidget(self.backButton)
+#         #-------------------------------------------
+#         # Next button
+#         self.nextButton = qt.QPushButton("Next")
+#         self.nextButton.toolTip = "Display next in series."
+#         self.nextButton.enabled = True
+#         self.leftLayout.addWidget(self.nextButton)
+#         self.nextButton.connect('clicked(bool)',self.onNextButtonClicked)
+#         
+#         # Back button
+#         self.backButton = qt.QPushButton("Back")
+#         self.backButton.toolTip = "Display previous series."
+#         self.backButton.enabled = True
+#         self.leftLayout.addWidget(self.backButton)
         
         # Status button
         self.btnShowQuizProgress = qt.QPushButton("Show Quiz Progress")
@@ -252,7 +248,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                 # start the session
                 self.leftWidget.activateWindow()
                 self.oSession = Session()
-                self.oSession.RunSetup(self.qLblQuizFilename.text, self.qLineUserName.text, self.leftLayout)
+                self.oSession.RunSetup(self.qLblQuizFilename.text, self.qLineUserName.text, self.sampleFormLayout)
 #                 self.oSession = Session(self.qLblQuizFilename.text, self.qLineUserName.text)
 
     def SetupUserQuizFolder(self):

@@ -36,60 +36,34 @@ class Page:
         # get Question Set nodes
         xQuestionSets = self.oIOXml.GetChildren(xPageNode, 'QuestionSet')
         iNumQuestionSets = self.oIOXml.GetNumChildren(xPageNode, 'QuestionSet')
+
         # for each 'outstanding' page (questions not yet answered)
+
+        # display Images
+
+        # display Question set
+        # get number of question sets
+        
+        # display one set with next / back / save buttons
         for xNodeQuestionSet in xQuestionSets:
-        #     - create page object - with page node as variable
+
             oQuestionSet = QuestionSet()
             ltupQuestionSet = oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
             bTestResultTF, qQuizWidget =oQuestionSet.BuildQuestionSetForm(ltupQuestionSet)
             self.quizLayout.addWidget(qQuizWidget)
         
-        # get Images
+            # Next button
+            self.nextButton = qt.QPushButton("Next Question Set - same images")
+            self.nextButton.toolTip = "Display next in series."
+            self.nextButton.enabled = True
+            self.quizLayout.addWidget(self.nextButton)
+#             self.nextButton.connect('clicked(bool)',self.onNextButtonClicked)
+            
+            # Back button
+            self.backButton = qt.QPushButton("Back")
+            self.backButton.toolTip = "Display previous series."
+            self.backButton.enabled = True
+            self.quizLayout.addWidget(self.backButton)
         
         
         
-    #------------------------------------------- 
-#     def readPresentationInstructions(self):
-#         #
-#         # This function reads in the set of instructions defining the flow of the quiz.
-#         # i.e. What target to display and what question set goes with it.
-#         #
-#         print("Read in quiz flow instructions for the session")
-# 
-#         #
-#         # open xml file and load into a document
-# #         mydoc = minidom.parse('D:\\Users\\cjohnson\\Work\\Projects\\SlicerEclipseProjects\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\InputXmlFiles\\items.xml')
-#         mydoc = minidom.parse(self.sXmlFilename)
-# #        mydoc = minidom.parse('D:\\BainesWork\\Slicer\\SlicerProjectWeek2019\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\InputXmlFiles\\items.xml')
-#         
-#         items = mydoc.getElementsByTagName('infoPiece')
-#         
-#         print('Item 2 attribute:')
-#         print(items[1].attributes['descriptor'].value)
-# 
-#         # all item attributes
-#         print('\nAll attributes:')
-#         for elem in items:
-#             print(elem.attributes['descriptor'].value)
-#         
-#         # one specific item's data
-#         print('\nItem #2 data:')
-#         print(items[1].firstChild.data)
-#         print(items[1].childNodes[0].data)
-#         
-#         # all items data
-#         print('\nAll item data:')
-#         for elem in items:
-#             print(elem.firstChild.data)
-# 
-#         
-# #         mydoc2 = minidom.parse('D:\\Users\\cjohnson\\Work\\Projects\\SlicerEclipseProjects\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\InputXmlFiles\\Test1.xml')
-# # #         mydoc2 = minidom.parse('D:\\BainesWork\\Slicer\\SlicerProjectWeek2019\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\InputXmlFiles\\Test1.xml')
-# #         targets = mydoc2.getElementsByTagName('Target')
-# #         print ('\n*******\nTarget attributes:')
-# #         print(targets[1].attributes['name'].value)
-# #         print(targets[1].attributes['descriptor'].value)
-# #         print(targets[0].attributes['name'].value)
-# #         print(targets[0].attributes['descriptor'].value)
-#         
-#         return True

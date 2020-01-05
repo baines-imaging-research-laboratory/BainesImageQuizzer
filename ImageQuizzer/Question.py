@@ -255,8 +255,6 @@ class QuestionSet():
                 ltupQuestionSet.append(tupQuestionGroup)
                 
                 
-#                 bTestResultTF, qQuizWidget =self.BuildQuestionSetForm(ltupQuestionSet)
-        
 
         
         return ltupQuestionSet
