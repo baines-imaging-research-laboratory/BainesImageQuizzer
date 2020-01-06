@@ -275,9 +275,9 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                 msgBox.critical(0,"ERROR","Quiz file is not readable")
                 return False
             else:
-                msgBox = qt.QMessageBox()
-                msgBox.setText('Quiz file exists in user folder - new results will be appended')
-                msgBox.exec()
+#                 msgBox = qt.QMessageBox()
+#                 msgBox.setText('Quiz file exists in user folder - new results will be appended')
+#                 msgBox.exec()
                 return True
         
     

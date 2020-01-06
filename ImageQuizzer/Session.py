@@ -73,6 +73,12 @@ class Session:
         # given a question set node, extract the information from the xml document
         # and add the widget to the layout
         
+        # first clear any previous widgets (except push buttons)
+        for i in reversed(range(self.quizLayout.count())):
+#             x = self.quizLayout.itemAt(i).widget()
+#             if not(isinstance(x, qt.QPushButton)):
+            self.quizLayout.itemAt(i).widget().setParent(None)
+
         oPage = Page()
         oPage.RunSetup(xNodePage, self.quizLayout)
         

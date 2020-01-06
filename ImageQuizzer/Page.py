@@ -29,12 +29,17 @@ class Page:
         self.btnNextQuestionSet.connect('clicked(bool)', self.onNextQuestionSetClicked)
 
         # Back button
-#         self.btnPreviousQuestionSet = qt.QPushButton("Back")
-#         self.btnPreviousQuestionSet.toolTip = "Display previous question set."
-#         self.btnPreviousQuestionSet.enabled = False
-#         self.btnNextQuestionSet.hide()
-#         self.quizLayout.addWidget(self.btnPreviousQuestionSet)
+        self.btnPreviousQuestionSet = qt.QPushButton("Back")
+        self.btnPreviousQuestionSet.toolTip = "Display previous question set."
+        self.btnPreviousQuestionSet.enabled = False
+        self.btnPreviousQuestionSet.connect('clicked(bool)', self.onPreviousQuestionSetClicked)
 
+        # Save button
+        self.btnSaveQuestionSet = qt.QPushButton("Save")
+        self.btnSaveQuestionSet.toolTip = "Save Question Set responses."
+        self.btnSaveQuestionSet.enabled = False
+        self.btnSaveQuestionSet.connect('clicked(bool)', self.onSaveQuestionSetClicked)
+        
 
     #-----------------------------------------------
 
@@ -43,32 +48,29 @@ class Page:
         self.quizLayout = quizLayout
         self.oIOXml = UtilsIOXml()
 
+
         # get name and descriptor
         sName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'name')
         sDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'descriptor')
         print(sName, '    ' , sDescriptor)
 
-        # get Question Sets
-
-        # get Question Set nodes
-        self.xQuestionSets = self.oIOXml.GetChildren(xPageNode, 'QuestionSet')
+        self.quizLayout.addWidget(self.btnNextQuestionSet)
+        self.quizLayout.addWidget(self.btnPreviousQuestionSet)
+        self.quizLayout.addWidget(self.btnSaveQuestionSet)
 
         # for each 'outstanding' page (questions not yet answered)
 
         # display Images
 
-        # display Question set
-        # get number of question sets
-        
-        # display one set with next / back / save buttons
+
+        # get Question Set nodes and number of sets
+        self.xQuestionSets = self.oIOXml.GetChildren(xPageNode, 'QuestionSet')
         self.iNumQuestionSets = self.oIOXml.GetNumChildren(xPageNode, 'QuestionSet')
+
         
-        
-        print('~~~~~Question Set ID~~~~~')
-        print(self.oIOXml.GetValueOfNodeAttribute(self.xQuestionSets[self.iQuestionSetIndex],'id'))
-        
-        # first clear any previous widgets from the layout
         self.DisplayQuestionSet(self.xQuestionSets[self.iQuestionSetIndex])
+
+        # enable buttons
         self.EnableQuestionSetButtons()
         
             
@@ -79,9 +81,11 @@ class Page:
         # given a question set node, extract the information from the xml document
         # and add the widget to the layout
         
-        # first clear any previous widgets
+        # first clear any previous widgets (except push buttons)
             for i in reversed(range(self.quizLayout.count())):
-                self.quizLayout.itemAt(i).widget().setParent(None)
+                x = self.quizLayout.itemAt(i).widget()
+                if not(isinstance(x, qt.QPushButton)):
+                    self.quizLayout.itemAt(i).widget().setParent(None)
 
             oQuestionSet = QuestionSet()
             ltupQuestionSet = oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
@@ -92,10 +96,35 @@ class Page:
 
     def EnableQuestionSetButtons(self):
         # using the question set index display/enable the relevant buttons
+        
+        print('---Question Set Number %s' % self.iQuestionSetIndex)
+        # Case : only one Question set
+        if (self.iQuestionSetIndex == 0 and self.iNumQuestionSets == 1):
+            self.btnNextQuestionSet.enabled = False
+            self.btnPreviousQuestionSet.enabled = False
+            self.btnSaveQuestionSet.enabled = True
+        else:
+            # Case : first Question Set and more to follow
+            if (self.iQuestionSetIndex == 0 and self.iNumQuestionSets > 1):
+                self.btnNextQuestionSet.enabled = True
+                self.btnPreviousQuestionSet.enabled = False
+                self.btnSaveQuestionSet.enabled = False
+            else:
+                # Case : last Question Set with a number of previous sets
+                if (self.iQuestionSetIndex == self.iNumQuestionSets - 1 and self.iNumQuestionSets > 1):
+                    self.btnNextQuestionSet.enabled = False
+                    self.btnPreviousQuestionSet.enabled = True
+                    self.btnSaveQuestionSet.enabled = True
+                else:
+                    # Case : middle of number of question sets
+                    if (self.iQuestionSetIndex > 0 and self.iQuestionSetIndex < self.iNumQuestionSets):
+                        self.btnNextQuestionSet.enabled = True
+                        self.btnPreviousQuestionSet.enabled = True
+                        self.btnSaveQuestionSet.enabled = False
+                        
+        
+        
          
-        self.btnNextQuestionSet.enabled = True
-#        self.btnNextQuestionSet.setvisible(True)
-        self.quizLayout.addWidget(self.btnNextQuestionSet)
 
     #-----------------------------------------------
 
@@ -105,14 +134,51 @@ class Page:
 
         # increase the question set index
         self.iQuestionSetIndex = self.iQuestionSetIndex + 1
-        print('---Question Set Number %s' % self.iQuestionSetIndex)
+        
 
-        # display next set of questions
-        if (self.iQuestionSetIndex < self.iNumQuestionSets):
+#         # display next set of questions
+#         if (self.iQuestionSetIndex < self.iNumQuestionSets):
+#             self.btnPreviousQuestionSet.enabled = True
+#             self.DisplayQuestionSet(self.xQuestionSets[self.iQuestionSetIndex])
+#             self.EnableQuestionSetButtons()
+#         else:
+#             self.btnNextQuestionSet.enabled = False
+
+        self.EnableQuestionSetButtons()
+        if (self.iQuestionSetIndex < self.iNumQuestionSets - 1):
             self.DisplayQuestionSet(self.xQuestionSets[self.iQuestionSetIndex])
-            self.EnableQuestionSetButtons()
-        else:
-            self.btnNextQuestionSet.enabled = False
+        
+    #-----------------------------------------------
 
+    def onPreviousQuestionSetClicked(self):
+
+        # enable buttons dependent on case
+
+        # decrease the question set index
+        self.iQuestionSetIndex = self.iQuestionSetIndex - 1
+
+#         # display previous set of questions
+#         if (self.iQuestionSetIndex >= 0):
+#             self.btnNextQuestionSet.enabled = True
+#             self.DisplayQuestionSet(self.xQuestionSets[self.iQuestionSetIndex])
+#             self.EnableQuestionSetButtons()
+#         else:
+#             self.btnPreviousQuestionSetQuestionSet.enabled = False
+
+        self.EnableQuestionSetButtons()
+        if (self.iQuestionSetIndex >= 0):
+            self.DisplayQuestionSet(self.xQuestionSets[self.iQuestionSetIndex])
+
+
+    #-----------------------------------------------
+
+    def onSaveQuestionSetClicked(self):
+
+        print('---Saving Question Set responses')
+        #TODO: perform save ???
+        
+        # clear widget for Next Page
+        for i in reversed(range(self.quizLayout.count())):
+            self.quizLayout.itemAt(i).widget().setParent(None)
 
 
