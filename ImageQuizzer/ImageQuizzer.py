@@ -248,7 +248,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                 # start the session
                 self.leftWidget.activateWindow()
                 self.oSession = Session()
-                self.oSession.RunSetup(self.qLblQuizFilename.text, self.qLineUserName.text, self.sampleFormLayout)
+                self.oSession.RunSetup(self.qLblQuizFilename.text, self.qLineUserName.text,self.leftLayout, self.sampleFormLayout)
 #                 self.oSession = Session(self.qLblQuizFilename.text, self.qLineUserName.text)
 
     def SetupUserQuizFolder(self):
