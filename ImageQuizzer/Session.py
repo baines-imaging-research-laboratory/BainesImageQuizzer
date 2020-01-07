@@ -27,6 +27,12 @@ class Session:
         self.btnNextPage.enabled = True
         self.btnNextPage.connect('clicked(bool)',self.onNextPageButtonClicked)
         
+        # Back button
+        self.btnPreviousPage = qt.QPushButton("Previous Page")
+        self.btnPreviousPage.toolTip = "Display previous page."
+        self.btnPreviousPage.enabled = True
+        self.btnPreviousPage.connect('clicked(bool)',self.onPreviousPageButtonClicked)
+
 
     def RunSetup(self, sXmlFilename, sUsername, mainLayout, quizLayout):
         self.sXmlFilename = sXmlFilename
@@ -49,6 +55,9 @@ class Session:
             self.msgBox.critical(0,"ERROR", "Not a valid quiz - Root node name was not 'Session'")
         else:
         
+            self.mainLayout.addWidget(self.btnNextPage)
+            self.mainLayout.addWidget(self.btnPreviousPage)
+
             # get # of 'Pages'
             self.iNumPages = self.oIOXml.GetNumChildren(xRootNode, 'Page')
             print('Number of Pages %s' % self.iNumPages)
@@ -57,15 +66,12 @@ class Session:
             # get Page nodes
             self.xPages = self.oIOXml.GetChildren(xRootNode, 'Page')
             xNodePage = self.oIOXml.GetNthChild(xRootNode, 'Page', self.iPageIndex)
+           
+        
             self.DisplayPage(xNodePage)
             self.EnablePageButtons()
             
             
-#             # Back button
-#             self.backButton = qt.QPushButton("Previous Page")
-#             self.backButton.toolTip = "Display previous page."
-#             self.backButton.enabled = True
-#             self.quizLayout.addWidget(self.backButton)
 
     #-----------------------------------------------
 
@@ -75,9 +81,9 @@ class Session:
         
         # first clear any previous widgets (except push buttons)
         for i in reversed(range(self.quizLayout.count())):
-#             x = self.quizLayout.itemAt(i).widget()
-#             if not(isinstance(x, qt.QPushButton)):
-            self.quizLayout.itemAt(i).widget().setParent(None)
+            x = self.quizLayout.itemAt(i).widget()
+            if not(isinstance(x, qt.QPushButton)):
+                self.quizLayout.itemAt(i).widget().setParent(None)
 
         oPage = Page()
         oPage.RunSetup(xNodePage, self.quizLayout)
@@ -87,29 +93,73 @@ class Session:
     def EnablePageButtons(self):
         # using the question set index display/enable the relevant buttons
          
-        self.btnNextPage.enabled = True
-#        self.btnNextQuestionSet.setvisible(True)
-        self.mainLayout.addWidget(self.btnNextPage)
+
+
+        print('---Page Number %s' % self.iPageIndex)
+        # Case : only one Page
+        if (self.iPageIndex == 0 and self.iNumPages == 1):
+            self.btnNextPage.enabled = False
+            self.btnPreviousPage.enabled = False
+#             self.btnSavePage.enabled = True
+        else:
+            # Case : first Page and more to follow
+            if (self.iPageIndex == 0 and self.iNumPages > 1):
+                self.btnNextPage.enabled = True
+                self.btnPreviousPage.enabled = False
+#                 self.btnSavePage.enabled = False
+            else:
+                # Case : last Page with a number of previous sets
+                if (self.iPageIndex == self.iNumPages - 1 and self.iNumPages > 1):
+                    self.btnNextPage.enabled = False
+                    self.btnPreviousPage.enabled = True
+#                     self.btnSavePage.enabled = True
+                else:
+                    # Case : middle of number of pages
+                    if (self.iPageIndex > 0 and self.iPageIndex < self.iNumPages):
+                        self.btnNextPage.enabled = True
+                        self.btnPreviousPage.enabled = True
+#                         self.btnSavePage.enabled = False
+                        
+
+
 
     #-----------------------------------------------
 
     def onNextPageButtonClicked(self):
 
-        # enable buttons dependent on case
-
         # increase the question set index
         self.iPageIndex = self.iPageIndex + 1
-        print('---Page Number %s' % self.iPageIndex)
 
-        # display next set of questions
+#         # display next set of questions
+#         if (self.iPageIndex < self.iNumPages):
+#             self.DisplayPage(self.xPages[self.iPageIndex])
+#             self.EnablePageButtons()
+#         else:
+#             self.btnNextPage.enabled = False
+
+
+        # enable buttons dependent on case
+        self.EnablePageButtons()
+
+        # display the page
         if (self.iPageIndex < self.iNumPages):
             self.DisplayPage(self.xPages[self.iPageIndex])
-            self.EnablePageButtons()
-        else:
-            self.btnNextPage.enabled = False
+        
 
 
+    #-----------------------------------------------
 
+    def onPreviousPageButtonClicked(self):
+
+        # decrease the question set index
+        self.iPageIndex = self.iPageIndex - 1
+
+        # enable buttons dependent on case
+        self.EnablePageButtons()
+
+        # display the page
+        if (self.iPageIndex >= 0):
+            self.DisplayPage(self.xPages[self.iPageIndex])
 
 
 

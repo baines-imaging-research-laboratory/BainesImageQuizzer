@@ -145,7 +145,7 @@ class Page:
 #             self.btnNextQuestionSet.enabled = False
 
         self.EnableQuestionSetButtons()
-        if (self.iQuestionSetIndex < self.iNumQuestionSets - 1):
+        if (self.iQuestionSetIndex < self.iNumQuestionSets):
             self.DisplayQuestionSet(self.xQuestionSets[self.iQuestionSetIndex])
         
     #-----------------------------------------------
