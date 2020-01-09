@@ -81,9 +81,9 @@ class Session:
         
         # first clear any previous widgets (except push buttons)
         for i in reversed(range(self.quizLayout.count())):
-            x = self.quizLayout.itemAt(i).widget()
-            if not(isinstance(x, qt.QPushButton)):
-                self.quizLayout.itemAt(i).widget().setParent(None)
+#             x = self.quizLayout.itemAt(i).widget()
+#             if not(isinstance(x, qt.QPushButton)):
+            self.quizLayout.itemAt(i).widget().setParent(None)
 
         oPage = Page()
         oPage.RunSetup(xNodePage, self.quizLayout)
