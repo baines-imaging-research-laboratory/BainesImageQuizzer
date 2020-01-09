@@ -5,6 +5,7 @@ import sys
 import unittest
 from UtilsIOXml import *
 from Question import *
+from Image import *
 
 import xml
 from xml.dom import minidom
@@ -61,6 +62,11 @@ class Page:
         # for each 'outstanding' page (questions not yet answered)
 
         # display Images
+        self.xImages = self.oIOXml.GetChildren(xPageNode, 'Image')
+        self.iNumImages = self.oIOXml.GetNumChildren(xPageNode, 'Image')
+        print('**** NUMBER OF IMAGES %s' % self.iNumImages) 
+        
+        self.BuildImageDisplay(self.xImages)
 
 
         # get Question Set nodes and number of sets
@@ -74,6 +80,52 @@ class Page:
         self.EnableQuestionSetButtons()
         
             
+        
+    #-----------------------------------------------
+
+    def BuildImageDisplay(self, xImages):
+        
+        oIOXml = UtilsIOXml()
+
+        # for each image
+        for i in range(len(xImages)):
+
+            dictProperties = {}
+
+            # Extract image attributes
+            sImageType = oIOXml.GetValueOfNodeAttribute(xImages[i], 'type')
+            sImageFormat = oIOXml.GetValueOfNodeAttribute(xImages[i], 'format')
+            sImageDestination = oIOXml.GetValueOfNodeAttribute(xImages[i], 'destination')
+            sImagePath = oIOXml.GetValueOfNodeAttribute(xImages[i], 'path')
+            print('    *** type: %s' % sImageType)
+            print('    *** format: %s' % sImageFormat)
+            print('    *** destination: %s' % sImageDestination)
+            print('    *** path: %s' % sImagePath)
+            
+            if (sImageType == 'Series'):
+                
+                oImage = DataVolume()
+                oImage.loadImage(sImagePath, dictProperties)
+                
+                
+                
+            else:
+                if (sImageType == 'Labelmap'):
+                    dictProperties = {"labelmap" : True}
+                    
+                    self.oImage = DataVolume()
+                    self.oImage.loadImage(sImagePath, dictProperties)
+                    
+                    
+                else:
+                    msgBox = qt.QMessageBox()
+                    msgBox.critical(0,"ERROR","Undefined image type")
+                    
+                
+                
+        # 
+        
+        
         
     #-----------------------------------------------
 
