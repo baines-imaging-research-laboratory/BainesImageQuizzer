@@ -28,10 +28,10 @@
 		</QuestionSet>
 	</Page>
 	<Page name="Patient2" descriptor="Mixed Displays">
-		<Image type="Series" descriptor="Moving Volume" destination="Red" format="nrrd" path="D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nrrd"/>
+		<Image type="Series" descriptor="Moving Volume" destination="Red" format="nrrd" path="D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd"/>
 		<Image type="Series" descriptor="Moving Volume" destination="Green" format="nrrd" path="D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nrrd"/>
-		<Image type="Series" descriptor="Moving Volume" destination="Blue" format="mhd" path="D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Prostate\Case00.mhd"/>
-		<Image type="Labelmap" descriptor="Segmentation" destination="Blue" format="mhd" path="D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Prostate\Case00_segmentation.mhd"/>
+		<Image type="Series" descriptor="Moving Volume" destination="Yellow" format="mhd" path="D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Prostate\Case00.mhd"/>
+		<Image type="Labelmap" descriptor="Segmentation" destination="Yellow" format="mhd" path="D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Prostate\Case00_segmentation.mhd"/>
 		<QuestionSet id="QS-Observation" title="Describe assessment and confidence">
 			<Question type="Radio"  descriptor="Assessment">
 				<Option>Injury</Option>

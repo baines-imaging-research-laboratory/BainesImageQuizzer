@@ -9,6 +9,7 @@ from Image import *
 
 import xml
 from xml.dom import minidom
+import ssl
 
 #-----------------------------------------------
 
@@ -102,31 +103,75 @@ class Page:
             print('    *** destination: %s' % sImageDestination)
             print('    *** path: %s' % sImagePath)
             
+            
+
             if (sImageType == 'Series'):
                 
                 oImage = DataVolume()
-                oImage.loadImage(sImagePath, dictProperties)
+#                 oImage.loadImage(self.sImagePath, dictProperties)
+                if not (sImageDestination == 'All'):
+                    slNode = slicer.util.loadVolume(sImagePath, {'show':False})
+                else:
+                    slNode = slicer.util.loadVolume(sImagePath)
                 
-                
-                
+
+            
             else:
                 if (sImageType == 'Labelmap'):
                     dictProperties = {"labelmap" : True}
                     
-                    self.oImage = DataVolume()
-                    self.oImage.loadImage(sImagePath, dictProperties)
+#                     self.oImage = DataVolume()
+#                     self.oImage.loadImage(sImagePath, dictProperties)
+                    slNode = slicer.util.loadLabelVolume(sImagePath, dictProperties)
                     
                     
                 else:
                     msgBox = qt.QMessageBox()
                     msgBox.critical(0,"ERROR","Undefined image type")
                     
+                    
+#             if not (sImageDestination == 'All'):
+#                 # get name of last scalar volume node loaded
+#                 iIndexLastNode = slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLScalarVolumeNode') - 1
+#                  
+#                 slNode = slicer.mrmlScene.GetNthNodeByClass(iIndexLastNode, 'vtkMRMLScalarVolumeNode')
+#                 sSlicerNodeName = slNode.GetName()
+#                  
+#                 self.AssignImageToViewWindow(sSlicerNodeName, sImageDestination)    
+            
+
+            if not (sImageDestination == 'All'):
+                if not (slNode.GetClassName() == 'vtkMRMLLabelMapVolumeNode'):
+
+                    self.AssignImageToViewWindow(slNode.GetName(), sImageDestination)    
+
                 
-                
-        # 
-        
-        
-        
+#         for i in range(len(xImages)):
+# 
+#             dictProperties = {}
+# 
+#             # Extract image attributes
+#             sImageType = oIOXml.GetValueOfNodeAttribute(xImages[i], 'type')
+#             sImageFormat = oIOXml.GetValueOfNodeAttribute(xImages[i], 'format')
+#             sImageDestination = oIOXml.GetValueOfNodeAttribute(xImages[i], 'destination')
+#             sImagePath = oIOXml.GetValueOfNodeAttribute(xImages[i], 'path')
+#             if (sImageType == 'Series'):
+#                 if not (sImageDestination == 'All'):
+#                     self.AssignImageToViewWindow(slNode.GetName(), sImageDestination)    
+#          
+         
+         
+    #-----------------------------------------------
+ 
+    def AssignImageToViewWindow(self, sSlicerNodeName, sImageDestination):
+        print('         - Node name   : %s' % sSlicerNodeName)
+        print('         - Destination : %s' % sImageDestination)
+ 
+        slWindowLogic = slicer.app.layoutManager().sliceWidget(sImageDestination).sliceLogic()
+        slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
+        slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
+         
+
     #-----------------------------------------------
 
     def DisplayQuestionSet(self, xNodeQuestionSet):    
