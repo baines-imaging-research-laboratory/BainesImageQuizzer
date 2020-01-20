@@ -142,35 +142,13 @@ class UtilsIOXml:
             
         return xData
     
-#-----------------------------------------------
-class IOXmlImageNode(UtilsIOXml):
-    
-    def __init__(self):
-        self.type = ''
-        self.descriptor  = ''
-        self.destination = 'All'
-        self.path = ''
-        
-    def GetAttributes(self,xCurrentNode):
-        print('Element Name: %s' % xCurrentNode.nodeName)
-        for(name, value) in xCurrentNode.attributes.items():
-            print('name: %s value: %s' % (name, value))
-            if name == 'type':
-                self.type = value
-            if name == 'descriptor':
-                self.descriptor = value
-            if name == 'destination':
-                self.destination = value
-            if name == 'path':
-                self.path = value
-                
- 
+
 
 #-----------------------------------------------
-class QuizzerMessages:
+class Utilities:
     
-    def __init__(self):
-        pass
+    def __init__(self, parent=None):
+        self.parent = parent
     
     def DisplayError(self,sErrorMsg):
         self.msgBox = qt.QMessageBox()

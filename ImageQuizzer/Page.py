@@ -3,7 +3,8 @@ import os
 import vtk, qt, ctk, slicer
 import sys
 import unittest
-from UtilsIOXml import *
+# from UtilsIOXml import *
+from Utilities import *
 from Question import *
 from Image import *
 
@@ -23,6 +24,8 @@ class Page:
         self.descriptor = ''
         self.iQuestionSetIndex = 0
         self.iNumQuestionSets = 0
+        
+        self.ltupViewNodes = []
         
         # Next button
         self.btnNextQuestionSet = qt.QPushButton("Next Question Set - same images")
@@ -65,18 +68,21 @@ class Page:
         # display Images
         self.xImages = self.oIOXml.GetChildren(xPageNode, 'Image')
         self.iNumImages = self.oIOXml.GetNumChildren(xPageNode, 'Image')
-        print('**** NUMBER OF IMAGES %s' % self.iNumImages) 
         
-        self.BuildViewNodes(self.xImages)
-#         if len(self.xImages) > 1:
-#             # clear images
-#             self.AssignViewToNone('Red')
-#             self.AssignViewToNone('Yellow')
-#             self.AssignViewToNone('Green')
-#             self.AssignImageToViewWindow('Case00', 'Red','Volume','Axial') 
-#             self.AssignImageToViewWindow('Case00_segmentation', 'Red','Labelmap','Axial')
-#             self.AssignImageToViewWindow('ManualRegistrationExample_moving_1', 'Yellow','Volume','Sagittal') 
-#             self.AssignImageToViewWindow('ManualRegistrationExample_fixed_1', 'Green','Volume','Sagittal')
+        self.ltupViewNodes = self.BuildViewNodes(self.xImages)
+        
+        
+        if len(self.ltupViewNodes) > 0:
+            # clear images
+            self.AssignViewToNone('Red')
+            self.AssignViewToNone('Yellow')
+            self.AssignViewToNone('Green')
+
+            for i in range(len(self.ltupViewNodes)):
+                
+                # get node details
+                slNode, sImageDestination, sOrientation, sViewLayer = self.ltupViewNodes[i]
+                self.AssignNodesToView(slNode.GetName(), sImageDestination, sViewLayer, sOrientation)
 
 
         # get Question Set nodes and number of sets
@@ -96,9 +102,10 @@ class Page:
     def BuildViewNodes(self, xImages):
         
         oIOXml = UtilsIOXml()
-        oQuizzerMsg = QuizzerMessages()
+        oQuizzerUtils = Utilities()
+        lValidVolumeFormats = ['nrrd','nii','mhd']
         
-        ltupViewNodes = []
+#         ltupViewNodes = []
 
         # for each image
         for i in range(len(xImages)):
@@ -106,108 +113,93 @@ class Page:
             dictProperties = {}
 
             # Extract image attributes
-            sImageType = oIOXml.GetValueOfNodeAttribute(xImages[i], 'type')
+            sVolumeFormat = oIOXml.GetValueOfNodeAttribute(xImages[i], 'format')
             sImageDestination = oIOXml.GetValueOfNodeAttribute(xImages[i], 'destination')
             sOrientation = oIOXml.GetValueOfNodeAttribute(xImages[i], 'orientation')
+            sNodeName = oIOXml.GetValueOfNodeAttribute(xImages[i], 'descriptor')
+            
+            
+            # Extract type of image being loaded
+            xImageTypeNodes = oIOXml.GetChildren(xImages[i], 'Type')
+            
+            if len(xImageTypeNodes) > 1:
+                sWarningMsg = 'There can only be one type of image - using first definition'
+                oQuizzerUtils.DisplayWarning(sWarningMsg) 
+                
+            sImageType = oIOXml.GetDataInNode(xImageTypeNodes[0])
             
             # Extract path element
             xPathNodes = oIOXml.GetChildren(xImages[i], 'Path')
 
             if len(xPathNodes) > 1:
                 sWarningMsg = 'There can only be one path per image - using first defined path'
-                oQuizzerMsg.DisplayWarning( sWarningMsg )
+                oQuizzerUtils.DisplayWarning( sWarningMsg )
 
             sImagePath = oIOXml.GetDataInNode(xPathNodes[0])
             
+            # Extract destination layer (foreground, background, label)
             xLayerNodes = oIOXml.GetChildren(xImages[i], 'Layer')
             if len(xLayerNodes) > 1:
                 sWarningMsg = 'There can only be one layer per image - using first defined layer'
-                oQuizzerMsg.DisplayWarning(sWarningMsg)
+                oQuizzerUtils.DisplayWarning(sWarningMsg)
 
             sViewLayer = oIOXml.GetDataInNode(xLayerNodes[0])
             
             
-#             print('    *** type: %s' % sImageType)
-#             print('    *** format: %s' % sImageFormat)
-#             print('    *** destination: %s' % sImageDestination)
-#             print('    *** path: %s' % sImagePath)
-#             sImagePath = oIOXml.GetValueOfNodeAttribute(xImages[i], 'path')
-#             sImageFormat = oIOXml.GetValueOfNodeAttribute(xImages[i], 'format')
+            # Load images - check if already loaded (node exists)
             
-            
-
-            if (sImageType == 'Volume'):
+            bLoadSuccess = True
+            if (sVolumeFormat == 'dicom'):
+                print('******Loading Dicom **********')
+                bLoadSuccess = False
                 
-#                     slNode = slicer.util.loadVolume(sImagePath, {'show':False})
-                    slNode = slicer.util.loadVolume(sImagePath)
-#                     print(' NODE NAME %s:' %slNode.GetName())
-            
-            else:
-                if (sImageType == 'Labelmap'):
-#                     dictProperties = {'labelmap' : True, 'show':False}
-                    dictProperties = {'labelmap' : True}
-                    
-                    slNode = slicer.util.loadLabelVolume(sImagePath, dictProperties)
-                    
-                    
+            elif (sVolumeFormat in lValidVolumeFormats):
+
+                if (sImageType == 'Volume'):
+                    if not (self.CheckForNodeExists(sNodeName, 'vtkMRMLScalarVolumeNode')):
+                        slNode = slicer.util.loadVolume(sImagePath, {'show': False, 'name': sNodeName})
+                
+                elif (sImageType == 'Labelmap'):
+                
+                    dictProperties = {'labelmap' : True, 'show': False, 'name': sNodeName}
+                    if not (self.CheckForNodeExists(sNodeName, 'vtkMRMLLabelMapVolumeNode')):
+                        slNode = slicer.util.loadLabelVolume(sImagePath, dictProperties)
+                        
                 else:
-                    msgBox = qt.QMessageBox()
-                    msgBox.critical(0,"ERROR","Undefined image type")
+                    sErrorMsg = ('Undefined image type: %s' % sImageType)
+                    oQuizzerUtils.DisplayError(sErrorMsg)
+                    bLoadSuccess = False
+                        
+                        
+            else:
+                sErrorMsg = ('Undefined volume format : %s' % sVolumeFormat)
+                oQuizzerUtils.DisplayError(sErrorMsg)
+                bLoadSuccess = False
 
-
-            tupViewNode = [slNode, sImageDestination, sOrientation, sViewLayer]
-            ltupViewNodes.append(tupViewNode)
+            if bLoadSuccess:
+                tupViewNode = [slNode, sImageDestination, sOrientation, sViewLayer]
+                self.ltupViewNodes.append(tupViewNode)
     
-        return ltupViewNodes
+        return self.ltupViewNodes
                     
                     
-#             if not (sImageDestination == ''):
-#                 # get name of last scalar volume node loaded
-#                 iIndexLastNode = slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLScalarVolumeNode') - 1
-#                  
-#                 slNode = slicer.mrmlScene.GetNthNodeByClass(iIndexLastNode, 'vtkMRMLScalarVolumeNode')
-#                 sSlicerNodeName = slNode.GetName()
-#                  
-#                 self.AssignImageToViewWindow(sSlicerNodeName, sImageDestination)    
-            
-
-#             if not (sImageDestination == ''):
-#                 if not (slNode.GetClassName() == 'vtkMRMLLabelMapVolumeNode'):
-# 
-#                     self.AssignImageToViewWindow(slNode.GetName(), sImageDestination)    
-
-                
-#         for i in range(len(xImages)):
-# 
-#             dictProperties = {}
-# 
-#             # Extract image attributes
-#             sImageType = oIOXml.GetValueOfNodeAttribute(xImages[i], 'type')
-#             sImageFormat = oIOXml.GetValueOfNodeAttribute(xImages[i], 'format')
-#             sImageDestination = oIOXml.GetValueOfNodeAttribute(xImages[i], 'destination')
-#             sImagePath = oIOXml.GetValueOfNodeAttribute(xImages[i], 'path')
-#             if (sImageType == 'Volume'):
-#                 if not (sImageDestination == ''):
-#                     self.AssignImageToViewWindow(slNode.GetName(), sImageDestination)    
-#          
-         
          
     #-----------------------------------------------
     #         Manage Views
     #-----------------------------------------------
  
-    def AssignImageToViewWindow(self, sSlicerNodeName, sImageDestination, sNodeType, sOrientation):
-        print('         - Node name   : %s' % sSlicerNodeName)
-        print('         - Destination : %s' % sImageDestination)
+    def AssignNodesToView(self, sSlicerNodeName, sImageDestination, sNodeLayer, sOrientation):
  
         slWidget = slicer.app.layoutManager().sliceWidget(sImageDestination)
         slWindowLogic = slWidget.sliceLogic()
         slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
-        if sNodeType == 'ScalarVolume':
+        if sNodeLayer == 'Background':
             slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
             slWidget.setSliceOrientation(sOrientation)
+        elif sNodeLayer == 'Foreground':
+            slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
         else:
-            if sNodeType == 'Labelmap':
+            if sNodeLayer == 'Label':
                 slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
         
          
@@ -221,6 +213,29 @@ class Page:
         slCompNode = slLogic.GetSliceCompositeNode()
         slCompNode.SetBackgroundVolumeID('None')
         
+
+    #-----------------------------------------------
+
+    def CheckForNodeExists(self, sNodeName, sNodeClass):
+        # a node does not have to be loaded if it already exists
+        
+        
+        # initialize
+        bNodeExists = False
+        slNode = []
+        
+        # check for nodes by name and check it's the proper class
+        try:
+            slNode = slicer.mrmlScene.GetFirstNodeByName(sNodeName)
+            if (slNode.GetClassName() == sNodeClass) :
+                bNodeExists = True
+        except:
+            bNodeExists = False
+        
+        return bNodeExists
+    
+    
+    
     #-----------------------------------------------
     #         Manage Questions
     #-----------------------------------------------

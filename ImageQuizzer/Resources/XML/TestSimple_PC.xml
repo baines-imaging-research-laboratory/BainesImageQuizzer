@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <Session>
 	<Page name="Patient1" descriptor="PlanningCT">
-		<Image type="Volume" descriptor="Fixed Volume" destination="Red" orientation="Axial">
-			<Format>nrrd</Format>
-			<Layer>Background</Layer>
+		<Image format="nrrd" descriptor="Fixed Volume" destination="Red" orientation="Axial">
+			<Type>Volume</Type>
 			<Layer>Foreground</Layer>
-			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
-		</Image>
-		<Image type="Volume" descriptor="Fixed Volume" destination="Yellow" orientation="Sagittal">
-			<Format>nrrd</Format>
 			<Layer>Background</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-		<Image type="Volume" descriptor="Fixed Volume" destination="Green" orientation="Coronal">
-			<Format>nrrd</Format>
+		<Image format="nrrd" descriptor="Fixed Volume" destination="Yellow" orientation="Sagittal">
+			<Type>Volume</Type>
+			<Layer>Background</Layer>
+			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+		</Image>
+		<Image format="nrrd" descriptor="Fixed Volume" destination="Green" orientation="Coronal">
+			<Type>Volume</Type>
 			<Layer>Background</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
@@ -29,18 +29,18 @@
 		</QuestionSet>
 	</Page>
 	<Page name="Patient1" descriptor="Follow-up 1">
-		<Image type="Volume" descriptor="Moving Volume" destination="Red" orientation="Axial">
-			<Format>nrrd</Format>
+		<Image format="nrrd" descriptor="Moving Volume" destination="Red" orientation="Axial">
+			<Type>Volume</Type>
 			<Layer>Background</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<Image type="Volume" descriptor="Moving Volume" destination="Yellow" orientation="Sagittal">
-			<Format>nrrd</Format>
+		<Image format="nrrd" descriptor="Moving Volume" destination="Yellow" orientation="Sagittal">
+			<Type>Volume</Type>
 			<Layer>Background</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<Image type="Volume" descriptor="Moving Volume" destination="Green" orientation="Coronal">
-			<Format>nrrd</Format>
+		<Image format="nrrd" descriptor="Moving Volume" destination="Green" orientation="Coronal">
+			<Type>Volume</Type>
 			<Layer>Background</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
@@ -57,23 +57,23 @@
 		</QuestionSet>
 	</Page>
 	<Page name="Patient2" descriptor="Mixed Displays">
-		<Image type="Volume" descriptor="Moving Volume" destination="Red" orientation="Axial">
-			<Format>nrrd</Format>
+		<Image format="nrrd" descriptor="Brain CT" destination="Red" orientation="Axial">
+			<Type>Volume</Type>
 			<Layer>Background</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-		<Image type="Volume" descriptor="Moving Volume" destination="Green" orientation="Axial">
-			<Format>nrrd</Format>
+		<Image format="nrrd" descriptor="Brain MR" destination="Green" orientation="Axial">
+			<Type>Volume</Type>
 			<Layer>Background</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<Image type="Volume" descriptor="Moving Volume" destination="Yellow" orientation="Axial" >
-			<Format>mhd</Format>
+		<Image format="mhd" descriptor="Case00Prostate" destination="Yellow" orientation="Axial" >
+			<Type>Volume</Type>
 			<Layer>Background</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Prostate\Case00.mhd</Path>
 		</Image>
-		<Image type="Labelmap" descriptor="Segmentation" destination="Yellow" orientation="Axial">
-			<Format>mhd</Format>
+		<Image format="mhd" descriptor="Case00Prostate Segmentation" destination="Yellow" orientation="Axial">
+			<Type>Labelmap</Type>
 			<Layer>Label</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Prostate\Case00_segmentation.mhd</Path>
 		</Image>

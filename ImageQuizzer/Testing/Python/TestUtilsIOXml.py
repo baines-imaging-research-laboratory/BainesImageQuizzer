@@ -1,7 +1,8 @@
 import os, sys
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
-from UtilsIOXml import *
+# from UtilsIOXml import *
+from Utilities import *
 from TestingStatus import *
 
 import xml

@@ -3,7 +3,8 @@ import os
 import vtk, qt, ctk, slicer
 import sys
 import unittest
-from UtilsIOXml import *
+# from UtilsIOXml import *
+from Utilities import *
 from Page import *
 
 import xml
