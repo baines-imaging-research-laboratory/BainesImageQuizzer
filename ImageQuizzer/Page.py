@@ -67,17 +67,16 @@ class Page:
         self.iNumImages = self.oIOXml.GetNumChildren(xPageNode, 'Image')
         print('**** NUMBER OF IMAGES %s' % self.iNumImages) 
         
-        self.BuildImageDisplay(self.xImages)
-        if len(self.xImages) > 1:
-            # clear images
+        self.BuildViewNodes(self.xImages)
+#         if len(self.xImages) > 1:
+#             # clear images
 #             self.AssignViewToNone('Red')
 #             self.AssignViewToNone('Yellow')
 #             self.AssignViewToNone('Green')
-            self.AssignImageToViewWindow('Case00', 'Red','Series','Axial') 
-            self.AssignImageToViewWindow('Case00_segmentation', 'Red','Labelmap','Axial')
-            self.AssignImageToViewWindow('ManualRegistrationExample_moving_1', 'Yellow','Series','Sagittal') 
-            self.AssignImageToViewWindow('ManualRegistrationExample_fixed_1', 'Green','Series','Sagittal') 
-         
+#             self.AssignImageToViewWindow('Case00', 'Red','Volume','Axial') 
+#             self.AssignImageToViewWindow('Case00_segmentation', 'Red','Labelmap','Axial')
+#             self.AssignImageToViewWindow('ManualRegistrationExample_moving_1', 'Yellow','Volume','Sagittal') 
+#             self.AssignImageToViewWindow('ManualRegistrationExample_fixed_1', 'Green','Volume','Sagittal')
 
 
         # get Question Set nodes and number of sets
@@ -94,9 +93,12 @@ class Page:
         
     #-----------------------------------------------
 
-    def BuildImageDisplay(self, xImages):
+    def BuildViewNodes(self, xImages):
         
         oIOXml = UtilsIOXml()
+        oQuizzerMsg = QuizzerMessages()
+        
+        ltupViewNodes = []
 
         # for each image
         for i in range(len(xImages)):
@@ -105,42 +107,58 @@ class Page:
 
             # Extract image attributes
             sImageType = oIOXml.GetValueOfNodeAttribute(xImages[i], 'type')
-            sImageFormat = oIOXml.GetValueOfNodeAttribute(xImages[i], 'format')
             sImageDestination = oIOXml.GetValueOfNodeAttribute(xImages[i], 'destination')
-            sImagePath = oIOXml.GetValueOfNodeAttribute(xImages[i], 'path')
             sOrientation = oIOXml.GetValueOfNodeAttribute(xImages[i], 'orientation')
+            
+            # Extract path element
+            xPathNodes = oIOXml.GetChildren(xImages[i], 'Path')
+
+            if len(xPathNodes) > 1:
+                sWarningMsg = 'There can only be one path per image - using first defined path'
+                oQuizzerMsg.DisplayWarning( sWarningMsg )
+
+            sImagePath = oIOXml.GetDataInNode(xPathNodes[0])
+            
+            xLayerNodes = oIOXml.GetChildren(xImages[i], 'Layer')
+            if len(xLayerNodes) > 1:
+                sWarningMsg = 'There can only be one layer per image - using first defined layer'
+                oQuizzerMsg.DisplayWarning(sWarningMsg)
+
+            sViewLayer = oIOXml.GetDataInNode(xLayerNodes[0])
+            
+            
 #             print('    *** type: %s' % sImageType)
 #             print('    *** format: %s' % sImageFormat)
 #             print('    *** destination: %s' % sImageDestination)
 #             print('    *** path: %s' % sImagePath)
+#             sImagePath = oIOXml.GetValueOfNodeAttribute(xImages[i], 'path')
+#             sImageFormat = oIOXml.GetValueOfNodeAttribute(xImages[i], 'format')
             
             
 
-            if (sImageType == 'Series'):
+            if (sImageType == 'Volume'):
                 
-                oImage = DataVolume()
-#                 oImage.loadImage(self.sImagePath, dictProperties)
-                if not (sImageDestination == ''):
-                    slNode = slicer.util.loadVolume(sImagePath, {'show':False})
-                    print(' NODE NAME %s:' %slNode.GetName())
-                else:
+#                     slNode = slicer.util.loadVolume(sImagePath, {'show':False})
                     slNode = slicer.util.loadVolume(sImagePath)
-                    print(' NODE NAME %s:' %slNode.GetName())
-                
-
+#                     print(' NODE NAME %s:' %slNode.GetName())
             
             else:
                 if (sImageType == 'Labelmap'):
-                    dictProperties = {'labelmap' : True, 'show':False}
+#                     dictProperties = {'labelmap' : True, 'show':False}
+                    dictProperties = {'labelmap' : True}
                     
-#                     self.oImage = DataVolume()
-#                     self.oImage.loadImage(sImagePath, dictProperties)
                     slNode = slicer.util.loadLabelVolume(sImagePath, dictProperties)
                     
                     
                 else:
                     msgBox = qt.QMessageBox()
                     msgBox.critical(0,"ERROR","Undefined image type")
+
+
+            tupViewNode = [slNode, sImageDestination, sOrientation, sViewLayer]
+            ltupViewNodes.append(tupViewNode)
+    
+        return ltupViewNodes
                     
                     
 #             if not (sImageDestination == ''):
@@ -168,30 +186,43 @@ class Page:
 #             sImageFormat = oIOXml.GetValueOfNodeAttribute(xImages[i], 'format')
 #             sImageDestination = oIOXml.GetValueOfNodeAttribute(xImages[i], 'destination')
 #             sImagePath = oIOXml.GetValueOfNodeAttribute(xImages[i], 'path')
-#             if (sImageType == 'Series'):
+#             if (sImageType == 'Volume'):
 #                 if not (sImageDestination == ''):
 #                     self.AssignImageToViewWindow(slNode.GetName(), sImageDestination)    
 #          
          
          
     #-----------------------------------------------
+    #         Manage Views
+    #-----------------------------------------------
  
-    def AssignImageToViewWindow(self, sSlicerNodeName, sImageDestination, sImageType, sOrientation):
+    def AssignImageToViewWindow(self, sSlicerNodeName, sImageDestination, sNodeType, sOrientation):
         print('         - Node name   : %s' % sSlicerNodeName)
         print('         - Destination : %s' % sImageDestination)
  
         slWidget = slicer.app.layoutManager().sliceWidget(sImageDestination)
         slWindowLogic = slWidget.sliceLogic()
         slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
-        if sImageType == 'Series':
+        if sNodeType == 'ScalarVolume':
             slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
             slWidget.setSliceOrientation(sOrientation)
         else:
-            if sImageType == 'Labelmap':
+            if sNodeType == 'Labelmap':
                 slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
         
          
 
+    #-----------------------------------------------
+    
+    def AssignViewToNone(self, sScreenColor):
+        
+        slWidget = slicer.app.layoutManager().sliceWidget(sScreenColor)
+        slLogic = slWidget.sliceLogic()
+        slCompNode = slLogic.GetSliceCompositeNode()
+        slCompNode.SetBackgroundVolumeID('None')
+        
+    #-----------------------------------------------
+    #         Manage Questions
     #-----------------------------------------------
 
     def DisplayQuestionSet(self, xNodeQuestionSet):    
@@ -209,6 +240,8 @@ class Page:
             bTestResultTF, qQuizWidget = oQuestionSet.BuildQuestionSetForm(ltupQuestionSet)
             self.quizLayout.addWidget(qQuizWidget)
         
+    #-----------------------------------------------
+    #         Manage Buttons
     #-----------------------------------------------
 
     def EnableQuestionSetButtons(self):
@@ -243,15 +276,6 @@ class Page:
         
          
 
-    #-----------------------------------------------
-    
-    def AssignViewToNone(self, sScreenColor):
-        
-        slWidget = slicer.app.layoutManager().sliceWidget(sScreenColor)
-        slLogic = slWidget.sliceLogic()
-        slCompNode = slLogic.GetSliceCompositeNode()
-        slCompNode.SetBackgroundVolumeID('None')
-        
     #-----------------------------------------------
 
     def onNextQuestionSetClicked(self):

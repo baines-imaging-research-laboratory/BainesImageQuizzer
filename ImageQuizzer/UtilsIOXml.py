@@ -1,6 +1,7 @@
 # from abc import ABC, abstractmethod
 import os, sys
 import warnings
+import vtk, qt, ctk, slicer
 
 import xml.dom.minidom
 
@@ -164,21 +165,18 @@ class IOXmlImageNode(UtilsIOXml):
                 self.path = value
                 
  
-#     #-------------------------------------------
-# 
-#     def getListOfChildAttributes(self, xParentNode, sChildTagName):
-#         # given the parent node and the name of the child node of interest,
-#         #    return the list of name,value pairs of the attributes
-#          
-#         iNumAttributes = xParentNode.getElementsByTagName(sChildTagName)[0].attributes.length
-#         
-#         for i in range(0,iNumAttributes):
-#             (name, value) = xParentNode.getElementsByTagName(sChildTagName)[0].attributes.items()[i]
-#             print('name: %s ..... value: %s' % (name, value))
-#         
 
-        
-
-        
+#-----------------------------------------------
+class QuizzerMessages:
     
+    def __init__(self):
+        pass
+    
+    def DisplayError(self,sErrorMsg):
+        self.msgBox = qt.QMessageBox()
+        self.msgBox.critical(slicer.util.mainWindow(),"ERROR",sErrorMsg)
         
+    def DisplayWarning(self,sWarningMsg):
+        self.msgBox = qt.QMessageBox()
+        self.msgBox.warning(slicer.util.mainWindow(), 'Warning', sWarningMsg)
+
