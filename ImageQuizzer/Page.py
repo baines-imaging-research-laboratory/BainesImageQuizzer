@@ -6,7 +6,6 @@ import unittest
 # from UtilsIOXml import *
 from Utilities import *
 from Question import *
-from Image import *
 
 import xml
 from xml.dom import minidom
@@ -19,12 +18,12 @@ class Page:
     def __init__(self,  parent=None):
         self.sClassName = type(self).__name__
         self.parent = parent
-        print('Constructor for Page')
-        self.name = ''
-        self.descriptor = ''
+        self.sPageName = ''
+        self.sPageDescriptor = ''
         self.iQuestionSetIndex = 0
         self.iNumQuestionSets = 0
         
+        self.lValidVolumeFormats = ['nrrd','nii','mhd']
         self.ltupViewNodes = []
         
         # Next button
@@ -52,12 +51,12 @@ class Page:
 
         self.quizLayout = quizLayout
         self.oIOXml = UtilsIOXml()
+        self.oQuizzerUtils = Utilities()
 
 
         # get name and descriptor
-        sName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'name')
-        sDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'descriptor')
-        print(sName, '    ' , sDescriptor)
+        self.sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'name')
+        self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'descriptor')
 
         self.quizLayout.addWidget(self.btnNextQuestionSet)
         self.quizLayout.addWidget(self.btnPreviousQuestionSet)
@@ -98,85 +97,66 @@ class Page:
             
         
     #-----------------------------------------------
+    #         Manage Data Input
+    #-----------------------------------------------
 
     def BuildViewNodes(self, xImages):
         
-        oIOXml = UtilsIOXml()
-        oQuizzerUtils = Utilities()
-        lValidVolumeFormats = ['nrrd','nii','mhd']
-        
-#         ltupViewNodes = []
-
         # for each image
         for i in range(len(xImages)):
 
-            dictProperties = {}
 
             # Extract image attributes
-            sVolumeFormat = oIOXml.GetValueOfNodeAttribute(xImages[i], 'format')
-            sImageDestination = oIOXml.GetValueOfNodeAttribute(xImages[i], 'destination')
-            sOrientation = oIOXml.GetValueOfNodeAttribute(xImages[i], 'orientation')
-            sNodeName = oIOXml.GetValueOfNodeAttribute(xImages[i], 'descriptor')
-            
+            sVolumeFormat = self.oIOXml.GetValueOfNodeAttribute(xImages[i], 'format')
+            sImageDestination = self.oIOXml.GetValueOfNodeAttribute(xImages[i], 'destination')
+            sOrientation = self.oIOXml.GetValueOfNodeAttribute(xImages[i], 'orientation')
+            sNodeDescriptor = self.oIOXml.GetValueOfNodeAttribute(xImages[i], 'descriptor')
+            self.sNodeName = self.sPageName + '_' + self.sPageDescriptor + '_' + sNodeDescriptor
             
             # Extract type of image being loaded
-            xImageTypeNodes = oIOXml.GetChildren(xImages[i], 'Type')
+            xImageTypeNodes = self.oIOXml.GetChildren(xImages[i], 'Type')
             
             if len(xImageTypeNodes) > 1:
                 sWarningMsg = 'There can only be one type of image - using first definition'
-                oQuizzerUtils.DisplayWarning(sWarningMsg) 
+                self.oQuizzerUtils.DisplayWarning(sWarningMsg) 
                 
-            sImageType = oIOXml.GetDataInNode(xImageTypeNodes[0])
+            self.sImageType = self.oIOXml.GetDataInNode(xImageTypeNodes[0])
             
             # Extract path element
-            xPathNodes = oIOXml.GetChildren(xImages[i], 'Path')
+            xPathNodes = self.oIOXml.GetChildren(xImages[i], 'Path')
 
             if len(xPathNodes) > 1:
                 sWarningMsg = 'There can only be one path per image - using first defined path'
-                oQuizzerUtils.DisplayWarning( sWarningMsg )
+                self.oQuizzerUtils.DisplayWarning( sWarningMsg )
 
-            sImagePath = oIOXml.GetDataInNode(xPathNodes[0])
+            self.sImagePath = self.oIOXml.GetDataInNode(xPathNodes[0])
             
             # Extract destination layer (foreground, background, label)
-            xLayerNodes = oIOXml.GetChildren(xImages[i], 'Layer')
+            xLayerNodes = self.oIOXml.GetChildren(xImages[i], 'Layer')
             if len(xLayerNodes) > 1:
                 sWarningMsg = 'There can only be one layer per image - using first defined layer'
-                oQuizzerUtils.DisplayWarning(sWarningMsg)
+                self.oQuizzerUtils.DisplayWarning(sWarningMsg)
 
-            sViewLayer = oIOXml.GetDataInNode(xLayerNodes[0])
+            sViewLayer = self.oIOXml.GetDataInNode(xLayerNodes[0])
             
             
-            # Load images - check if already loaded (node exists)
+            # Load images 
             
             bLoadSuccess = True
             if (sVolumeFormat == 'dicom'):
                 print('******Loading Dicom **********')
                 bLoadSuccess = False
                 
-            elif (sVolumeFormat in lValidVolumeFormats):
+            elif (sVolumeFormat in self.lValidVolumeFormats):
+                bLoadSuccess, slNode = self.LoadDataVolume(self.sNodeName, self.sImageType, self.sImagePath)
 
-                if (sImageType == 'Volume'):
-                    if not (self.CheckForNodeExists(sNodeName, 'vtkMRMLScalarVolumeNode')):
-                        slNode = slicer.util.loadVolume(sImagePath, {'show': False, 'name': sNodeName})
-                
-                elif (sImageType == 'Labelmap'):
-                
-                    dictProperties = {'labelmap' : True, 'show': False, 'name': sNodeName}
-                    if not (self.CheckForNodeExists(sNodeName, 'vtkMRMLLabelMapVolumeNode')):
-                        slNode = slicer.util.loadLabelVolume(sImagePath, dictProperties)
-                        
-                else:
-                    sErrorMsg = ('Undefined image type: %s' % sImageType)
-                    oQuizzerUtils.DisplayError(sErrorMsg)
-                    bLoadSuccess = False
-                        
                         
             else:
                 sErrorMsg = ('Undefined volume format : %s' % sVolumeFormat)
-                oQuizzerUtils.DisplayError(sErrorMsg)
+                self.oQuizzerUtils.DisplayError(sErrorMsg)
                 bLoadSuccess = False
 
-            if bLoadSuccess:
+            if bLoadSuccess and (slNode is not None):
                 tupViewNode = [slNode, sImageDestination, sOrientation, sViewLayer]
                 self.ltupViewNodes.append(tupViewNode)
     
@@ -184,6 +164,52 @@ class Page:
                     
                     
          
+    #-----------------------------------------------
+
+    def LoadDataVolume(self, sNodeName, sImageType, sImagePath):
+        
+        # Load a 3D data volume file - check if already loaded (node exists)
+        
+        dictProperties = {}
+        bNodeExists = False
+        slNode = None
+
+
+        try:
+                    
+            bLoadSuccess = True
+            if (sImageType == 'Volume'):
+                
+                bNodeExists, slNode = self.CheckForNodeExists(sNodeName, 'vtkMRMLScalarVolumeNode')
+                if not (bNodeExists):
+                    slNode = slicer.util.loadVolume(sImagePath, {'show': False, 'name': sNodeName})
+                else: # make sure a node exists
+                    if bNodeExists and (slNode is None):
+                        bLoadSuccess = False
+            
+            elif (sImageType == 'Labelmap'):
+                
+                bNodeExists, slNode = self.CheckForNodeExists(sNodeName, 'vtkMRMLLabelMapVolumeNode')
+                dictProperties = {'labelmap' : True, 'show': False, 'name': sNodeName}
+                if not (bNodeExists):
+                    slNode = slicer.util.loadLabelVolume(sImagePath, dictProperties)
+                else: # make sure a node exists
+                    if bNodeExists and (slNode is None):
+                        bLoadSuccess = False
+                    
+            else:
+                
+                sErrorMsg = ('Undefined image type: %s' % sImageType)
+                self.oQuizzerUtils.DisplayError(sErrorMsg)
+                bLoadSuccess = False
+                
+        except:
+            
+            bLoadSuccess = False
+        
+        
+        return bLoadSuccess, slNode
+    
     #-----------------------------------------------
     #         Manage Views
     #-----------------------------------------------
@@ -212,6 +238,8 @@ class Page:
         slLogic = slWidget.sliceLogic()
         slCompNode = slLogic.GetSliceCompositeNode()
         slCompNode.SetBackgroundVolumeID('None')
+        slCompNode.SetForegroundVolumeID('None')
+        slCompNode.SetLabelVolumeID('None')
         
 
     #-----------------------------------------------
@@ -222,7 +250,7 @@ class Page:
         
         # initialize
         bNodeExists = False
-        slNode = []
+        slNode = None
         
         # check for nodes by name and check it's the proper class
         try:
@@ -232,7 +260,7 @@ class Page:
         except:
             bNodeExists = False
         
-        return bNodeExists
+        return bNodeExists, slNode
     
     
     

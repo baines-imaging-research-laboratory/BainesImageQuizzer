@@ -3,7 +3,6 @@
 	<Page name="Patient1" descriptor="PlanningCT">
 		<Image format="nrrd" descriptor="Fixed Volume" destination="Red" orientation="Axial">
 			<Type>Volume</Type>
-			<Layer>Foreground</Layer>
 			<Layer>Background</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
@@ -59,6 +58,7 @@
 	<Page name="Patient2" descriptor="Mixed Displays">
 		<Image format="nrrd" descriptor="Brain CT" destination="Red" orientation="Axial">
 			<Type>Volume</Type>
+			<Layer>Foreground</Layer>
 			<Layer>Background</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>

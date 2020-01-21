@@ -36,7 +36,7 @@ class QuestionSet():
         else:
             # for each child named 'Question' extract labels and options
             iNumQuestions = oIOXml.GetNumChildren(xNodeQuestionSet, "Question")
-            print('Num Questions : %d' % iNumQuestions)
+#             print('Num Questions : %d' % iNumQuestions)
             
             self.id = oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'id')
             self.title = oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'title')
@@ -45,9 +45,9 @@ class QuestionSet():
             
             for xNodeQuestion in xQuestions:
                 sQuestionType = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'type')
-                print('type : %s' % sQuestionType)
+#                 print('type : %s' % sQuestionType)
                 sQuestionDescriptor = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'descriptor')
-                print('descriptor : %s' % sQuestionDescriptor)
+#                 print('descriptor : %s' % sQuestionDescriptor)
                
                 # get options for each question
                 lsQuestionOptions = []
