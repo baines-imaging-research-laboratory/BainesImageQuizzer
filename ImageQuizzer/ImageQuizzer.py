@@ -138,21 +138,17 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         #-------------------------------------------
         # set up quiz widget
         self.leftWidget = qt.QWidget()
-        leftLayout = qt.QVBoxLayout()
-        self.leftWidget.setLayout(leftLayout)
+        self.leftLayout = qt.QVBoxLayout()
+        self.leftWidget.setLayout(self.leftLayout)
          
         
         
         #-------------------------------------------
         # Collapsible button
         self.sampleCollapsibleButton = ctk.ctkCollapsibleButton()
-        self.sampleCollapsibleButton.text = "Image Quizzer Components"
-        leftLayout.addWidget(self.sampleCollapsibleButton)
+        self.sampleCollapsibleButton.text = "Baines Image Quizzer"
+        self.leftLayout.addWidget(self.sampleCollapsibleButton)
         
-
-        
-        
- 
 
         
         # Layout within the sample collapsible button - form needs a frame
@@ -184,25 +180,25 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         
         
-        #-------------------------------------------
-        # Next button
-        self.nextButton = qt.QPushButton("Next")
-        self.nextButton.toolTip = "Display next in series."
-        self.nextButton.enabled = True
-        leftLayout.addWidget(self.nextButton)
-        self.nextButton.connect('clicked(bool)',self.onNextButtonClicked)
-        
-        # Back button
-        self.backButton = qt.QPushButton("Back")
-        self.backButton.toolTip = "Display previous series."
-        self.backButton.enabled = True
-        leftLayout.addWidget(self.backButton)
+#         #-------------------------------------------
+#         # Next button
+#         self.nextButton = qt.QPushButton("Next")
+#         self.nextButton.toolTip = "Display next in series."
+#         self.nextButton.enabled = True
+#         self.leftLayout.addWidget(self.nextButton)
+#         self.nextButton.connect('clicked(bool)',self.onNextButtonClicked)
+#         
+#         # Back button
+#         self.backButton = qt.QPushButton("Back")
+#         self.backButton.toolTip = "Display previous series."
+#         self.backButton.enabled = True
+#         self.leftLayout.addWidget(self.backButton)
         
         # Status button
         self.btnShowQuizProgress = qt.QPushButton("Show Quiz Progress")
         self.btnShowQuizProgress.toolTip = "Display status of images."
         self.btnShowQuizProgress.enabled = True
-        leftLayout.addWidget(self.btnShowQuizProgress)
+        self.leftLayout.addWidget(self.btnShowQuizProgress)
         
         self.layout.addWidget(self.leftWidget)
         
@@ -252,7 +248,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                 # start the session
                 self.leftWidget.activateWindow()
                 self.oSession = Session()
-                self.oSession.RunSetup(self.qLblQuizFilename.text, self.qLineUserName.text)
+                self.oSession.RunSetup(self.qLblQuizFilename.text, self.qLineUserName.text,self.leftLayout, self.sampleFormLayout)
 #                 self.oSession = Session(self.qLblQuizFilename.text, self.qLineUserName.text)
 
     def SetupUserQuizFolder(self):
@@ -279,9 +275,9 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                 msgBox.critical(0,"ERROR","Quiz file is not readable")
                 return False
             else:
-                msgBox = qt.QMessageBox()
-                msgBox.setText('Quiz file exists in user folder - new results will be appended')
-                msgBox.exec()
+#                 msgBox = qt.QMessageBox()
+#                 msgBox.setText('Quiz file exists in user folder - new results will be appended')
+#                 msgBox.exec()
                 return True
         
     

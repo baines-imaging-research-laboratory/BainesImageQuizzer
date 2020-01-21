@@ -2,6 +2,7 @@ import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 from Question import *
 from TestingStatus import *
+import sys
 
 
 ##########################################################################
@@ -180,7 +181,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
                 
             if self.questionType != None:
                 # Question type was constructed - try to create a widget
-                bTestResult, qWidgetBox = self.questionType.buildQuestion()
+                bTestResult, qWidgetBox = self.questionType.BuildQuestion()
                 slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qWidgetBox)
                 bTestResultTF = True
 
@@ -200,7 +201,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         self.fnName = sys._getframe().f_code.co_name
         
         self.rq = RadioQuestion(self.lOptions, self.sGroupTitle + ' ...Test No Errors for Radio Buttons')
-        bTestResult, qGrpBox = self.rq.buildQuestion()
+        bTestResult, qGrpBox = self.rq.BuildQuestion()
         slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
         
         tupResult = self.fnName, bTestResult
@@ -217,7 +218,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         self.fnName = sys._getframe().f_code.co_name
         
         self.cb = CheckBoxQuestion(self.lOptions, self.sGroupTitle + ' ...Test No Errors for Check Boxes')
-        bTestResult, qGrpBox = self.cb.buildQuestion()
+        bTestResult, qGrpBox = self.cb.BuildQuestion()
         slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
         
         tupResult = self.fnName, bTestResult
@@ -234,7 +235,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         self.fnName = sys._getframe().f_code.co_name
         
         self.textQuestion = TextQuestion(self.sNotes, self.sGroupTitle + ' ...Test No Errors for Line Edits')
-        bTestResult, qGrpBox = self.textQuestion.buildQuestion()
+        bTestResult, qGrpBox = self.textQuestion.BuildQuestion()
         slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
         
         tupResult = self.fnName, bTestResult
@@ -251,7 +252,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         self.fnName = sys._getframe().f_code.co_name
         
         self.infoBox = InfoBox(self.sNotes, self.sGroupTitle + ' ...Test no errors for information boxes')
-        bTestResult, qGrpBox = self.infoBox.buildQuestion()
+        bTestResult, qGrpBox = self.infoBox.BuildQuestion()
         slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
         
         tupResult = self.fnName, bTestResult
@@ -297,7 +298,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
                 sExpWarning = self.lsClassNames[i] + ':buildQuestion:NoOptionsAvailable'
                 with warnings.catch_warnings (record=True) as w:
                     warnings.simplefilter("always")
-                    bFnResultSuccess, qGrpBox = self.questionType.buildQuestion() 
+                    bFnResultSuccess, qGrpBox = self.questionType.BuildQuestion() 
                     if bFnResultSuccess == False:   # error was encountered - check the warning msg
                         if len(w) > 0:
                             print(str(w[0].message))
@@ -327,7 +328,8 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         ltupQuestionSet = []
         sID = 'QS 1.0'
         sQuestionSetTitle = 'Test Baines Image Quizzer Title'
-        self.oQuestionSet = QuestionSet(sID, sQuestionSetTitle )
+#         self.oQuestionSet = QuestionSet(sID, sQuestionSetTitle )
+        self.oQuestionSet = QuestionSet()
         
         lsQuestionOptions = ['rbtn1', 'rbtn2', 'rbtn3']
         sQuestionType = 'Radio'
@@ -354,7 +356,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
         ltupQuestionSet.append(tupQuestionGroup)
 
-        bTestResultTF, qQuizWidget = self.oQuestionSet.buildQuestionSetForm(ltupQuestionSet)
+        bTestResultTF, qQuizWidget = self.oQuestionSet.BuildQuestionSetForm(ltupQuestionSet)
  
         slicer.modules.TestQuestionSetWidget.questionSetLayout.addWidget(qQuizWidget)
         
@@ -374,7 +376,8 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         ltupQuestionSet = []
         sID = 'QS 1.0'
         sQuestionSetTitle = 'Test Baines Image Quizzer Title'
-        self.oQuestionSet = QuestionSet(sID, sQuestionSetTitle )
+#         self.oQuestionSet = QuestionSet(sID, sQuestionSetTitle )
+        self.oQuestionSet = QuestionSet()
         
         lsQuestionOptions = ['option1']
         sQuestionType = 'Invalid'
@@ -388,7 +391,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
         ltupQuestionSet.append(tupQuestionGroup)
 
-        bBuildSetSuccess, qQuizWidget = self.oQuestionSet.buildQuestionSetForm(ltupQuestionSet)
+        bBuildSetSuccess, qQuizWidget = self.oQuestionSet.BuildQuestionSetForm(ltupQuestionSet)
 
         if bBuildSetSuccess == False:
             bTestResultTF = True # we expected an error

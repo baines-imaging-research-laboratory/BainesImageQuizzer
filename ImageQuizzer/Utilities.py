@@ -1,6 +1,7 @@
 # from abc import ABC, abstractmethod
 import os, sys
 import warnings
+import vtk, qt, ctk, slicer
 
 import xml.dom.minidom
 
@@ -77,18 +78,14 @@ class UtilsIOXml:
         
         return xmlChildren
 
-#     #-------------------------------------------
-# 
-#     def getListOfChildAttributes(self, xParentNode, sChildTagName):
-#         # given the parent node and the name of the child node of interest,
-#         #    return the list of name,value pairs of the attributes
-#          
-#         iNumAttributes = xParentNode.getElementsByTagName(sChildTagName)[0].attributes.length
-#         
-#         for i in range(0,iNumAttributes):
-#             (name, value) = xParentNode.getElementsByTagName(sChildTagName)[0].attributes.items()[i]
-#             print('name: %s ..... value: %s' % (name, value))
-#         
+    #-------------------------------------------
+
+    def GetNthChild(self, xParentNode, sChildTagName, iIndex):
+        # given an xml node, return the nth child node with the specified tagname
+        
+        xmlChildNode = xParentNode.getElementsByTagName(sChildTagName)[iIndex]
+        
+        return xmlChildNode
 
     #-------------------------------------------
 
@@ -110,31 +107,54 @@ class UtilsIOXml:
         
         return sAttributeValue
 
-#-----------------------------------------------
-class IOXmlImageNode(UtilsIOXml):
-    
-    def __init__(self):
-        self.type = ''
-        self.descriptor  = ''
-        self.destination = 'All'
-        self.path = ''
-        
-    def GetAttributes(self,xCurrentNode):
-        print('Element Name: %s' % xCurrentNode.nodeName)
-        for(name, value) in xCurrentNode.attributes.items():
-            print('name: %s value: %s' % (name, value))
-            if name == 'type':
-                self.type = value
-            if name == 'descriptor':
-                self.descriptor = value
-            if name == 'destination':
-                self.destination = value
-            if name == 'path':
-                self.path = value
-                
- 
-        
+    #-------------------------------------------
 
+    def GetDataInNode(self, xNode):
+        # given a node get the value
         
+        xData = 'Empty'
+        
+#         name = self.GetNodeName(xNode)
+#         print('???? NAME ????: %s' % name)
+# 
+#         infoObj = xNode.getElementsByTagName("Option")
+#         
+#         for i in range(0,infoObj.length):
+#             optNode = self.GetNthChild(xNode, 'Option', i)
+# 
+#             nodes = optNode.childNodes
+#             for node in nodes:
+#                 if node.nodeType == node.TEXT_NODE:
+#                     xData = node.data
+#                     print(xData)
+#                 else:
+#                     print('invalid data node  check xml schema' )
+
+
+        nodes = xNode.childNodes
+        for node in nodes:
+            if node.nodeType == node.TEXT_NODE:
+                xData =node.data
+                print(xData)
+            else:
+                print('invalid data node  check xml schema' )
+             
+            
+        return xData
     
+
+
+#-----------------------------------------------
+class Utilities:
+    
+    def __init__(self, parent=None):
+        self.parent = parent
+    
+    def DisplayError(self,sErrorMsg):
+        self.msgBox = qt.QMessageBox()
+        self.msgBox.critical(slicer.util.mainWindow(),"ERROR",sErrorMsg)
         
+    def DisplayWarning(self,sWarningMsg):
+        self.msgBox = qt.QMessageBox()
+        self.msgBox.warning(slicer.util.mainWindow(), 'Warning', sWarningMsg)
+
