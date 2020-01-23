@@ -153,6 +153,8 @@ class Utilities:
     def DisplayError(self,sErrorMsg):
         self.msgBox = qt.QMessageBox()
         self.msgBox.critical(slicer.util.mainWindow(),"ERROR",sErrorMsg)
+        exit()
+
         
     def DisplayWarning(self,sWarningMsg):
         self.msgBox = qt.QMessageBox()

@@ -3,9 +3,11 @@ import os
 import vtk, qt, ctk, slicer
 import sys
 import unittest
-# from UtilsIOXml import *
+
 from Utilities import *
 from Question import *
+
+from DICOMLib import DICOMUtils
 
 import xml
 from xml.dom import minidom
@@ -108,12 +110,14 @@ class Page:
 
             # Extract image attributes
             sVolumeFormat = self.oIOXml.GetValueOfNodeAttribute(xImages[i], 'format')
+            sNodeDescriptor = self.oIOXml.GetValueOfNodeAttribute(xImages[i], 'descriptor')
             sImageDestination = self.oIOXml.GetValueOfNodeAttribute(xImages[i], 'destination')
             sOrientation = self.oIOXml.GetValueOfNodeAttribute(xImages[i], 'orientation')
-            sNodeDescriptor = self.oIOXml.GetValueOfNodeAttribute(xImages[i], 'descriptor')
             self.sNodeName = self.sPageName + '_' + self.sPageDescriptor + '_' + sNodeDescriptor
+
             
             # Extract type of image being loaded
+
             xImageTypeNodes = self.oIOXml.GetChildren(xImages[i], 'Type')
             
             if len(xImageTypeNodes) > 1:
@@ -122,7 +126,9 @@ class Page:
                 
             self.sImageType = self.oIOXml.GetDataInNode(xImageTypeNodes[0])
             
+
             # Extract path element
+            
             xPathNodes = self.oIOXml.GetChildren(xImages[i], 'Path')
 
             if len(xPathNodes) > 1:
@@ -131,7 +137,9 @@ class Page:
 
             self.sImagePath = self.oIOXml.GetDataInNode(xPathNodes[0])
             
+
             # Extract destination layer (foreground, background, label)
+
             xLayerNodes = self.oIOXml.GetChildren(xImages[i], 'Layer')
             if len(xLayerNodes) > 1:
                 sWarningMsg = 'There can only be one layer per image - using first defined layer'
@@ -144,8 +152,7 @@ class Page:
             
             bLoadSuccess = True
             if (sVolumeFormat == 'dicom'):
-                print('******Loading Dicom **********')
-                bLoadSuccess = False
+                bLoadSuccess, slNode = self.LoadDicomVolume(self.sImagePath)
                 
             elif (sVolumeFormat in self.lValidVolumeFormats):
                 bLoadSuccess, slNode = self.LoadDataVolume(self.sNodeName, self.sImageType, self.sImagePath)
@@ -211,6 +218,59 @@ class Page:
         return bLoadSuccess, slNode
     
     #-----------------------------------------------
+
+    def LoadDicomVolume(self, sDicomSeriesDir):
+        slNode = None
+        bLoadSuccess = False
+
+        # db for storing imported dicom files
+#         self.dicomDatabaseDir = 'D:\\Users\\cjohnson\\Work\\Projects\\SlicerEclipseProjects\\ImageQuizzerExtras\\CtkDicomDatabase'
+        self.dicomURL = 'file:\\\\\\D:\\Users\\cjohnson\\Work\\Projects\\SlicerEclipseProjects\\ImageQuizzerExtras\\TinyRT.zip'
+       
+        sPatientName = 'TinyPatient'
+        
+        if (slicer.dicomDatabase.isOpen):
+            bPatientFoundInDB = False
+            patients = slicer.dicomDatabase.patients()
+            for patientUID in patients:
+                    currentName = slicer.dicomDatabase.nameForPatient(patientUID)
+                    if currentName == sPatientName:
+                        bPatientFoundInDB = True
+
+            if not bPatientFoundInDB:
+                DICOMUtils.importDicom(sDicomSeriesDir)
+
+            
+            # get loaded scalar volume nodes to see if patient already exists
+            bPatientAlreadyLoaded = False
+            
+            lNodeCollection = slicer.mrmlScene.GetNodesByClass('vtkMRMLScalarVolumNode')
+            lNodeCollection.UnRegister(None)
+            
+            iNumNodes = slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLScalarVolumeNode')
+            for idx in range(iNumNodes):
+                slTempNode = slicer.mrmlScene.GetNthNodeByClass(idx,'vtkMRMLScalarVolumeNode')
+                sTempNodeName = slTempNode.GetName()
+                print(sTempNodeName)
+                if sTempNodeName == sPatientName:
+                    bPatientAlreadyLoaded = True
+            
+#             for node in lNodeCollection:
+#                 name = node.GetNodeName(node)
+#                 if name == sPatientName:
+#                     bPatientAlreadyLoaded = True
+
+            if not bPatientAlreadyLoaded:
+                DICOMUtils.loadPatient(None, sPatientName, None)
+        
+        else:
+            sErrorMsg = ('Slicer Database is not open')
+            self.oQuizzerUtils.DisplayError(sErrorMsg)
+        
+
+        return bLoadSuccess, slNode
+    
+    #-----------------------------------------------
     #         Manage Views
     #-----------------------------------------------
  
@@ -224,9 +284,10 @@ class Page:
             slWidget.setSliceOrientation(sOrientation)
         elif sNodeLayer == 'Foreground':
             slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
-        else:
-            if sNodeLayer == 'Label':
-                slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
+            slWidget.setSliceOrientation(sOrientation)
+        elif sNodeLayer == 'Label':
+            slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
+#             slWidget.setSliceOrientation(sOrientation)
         
          
 
