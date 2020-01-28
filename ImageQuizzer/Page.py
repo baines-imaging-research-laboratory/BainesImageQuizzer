@@ -3,13 +3,16 @@ import os
 import vtk, qt, ctk, slicer
 import sys
 import unittest
-# from UtilsIOXml import *
+
 from Utilities import *
 from Question import *
+
+from DICOMLib import DICOMUtils
 
 import xml
 from xml.dom import minidom
 import ssl
+from DICOMLib.DICOMUtils import loadPatientByUID
 
 #-----------------------------------------------
 
@@ -97,7 +100,7 @@ class Page:
             
         
     #-----------------------------------------------
-    #         Manage Data Input
+    #         Manage Data Loading
     #-----------------------------------------------
 
     def BuildViewNodes(self, xImages):
@@ -108,12 +111,14 @@ class Page:
 
             # Extract image attributes
             sVolumeFormat = self.oIOXml.GetValueOfNodeAttribute(xImages[i], 'format')
+            sNodeDescriptor = self.oIOXml.GetValueOfNodeAttribute(xImages[i], 'descriptor')
             sImageDestination = self.oIOXml.GetValueOfNodeAttribute(xImages[i], 'destination')
             sOrientation = self.oIOXml.GetValueOfNodeAttribute(xImages[i], 'orientation')
-            sNodeDescriptor = self.oIOXml.GetValueOfNodeAttribute(xImages[i], 'descriptor')
             self.sNodeName = self.sPageName + '_' + self.sPageDescriptor + '_' + sNodeDescriptor
+
             
             # Extract type of image being loaded
+
             xImageTypeNodes = self.oIOXml.GetChildren(xImages[i], 'Type')
             
             if len(xImageTypeNodes) > 1:
@@ -122,7 +127,9 @@ class Page:
                 
             self.sImageType = self.oIOXml.GetDataInNode(xImageTypeNodes[0])
             
+
             # Extract path element
+            
             xPathNodes = self.oIOXml.GetChildren(xImages[i], 'Path')
 
             if len(xPathNodes) > 1:
@@ -131,7 +138,9 @@ class Page:
 
             self.sImagePath = self.oIOXml.GetDataInNode(xPathNodes[0])
             
+
             # Extract destination layer (foreground, background, label)
+
             xLayerNodes = self.oIOXml.GetChildren(xImages[i], 'Layer')
             if len(xLayerNodes) > 1:
                 sWarningMsg = 'There can only be one layer per image - using first defined layer'
@@ -144,9 +153,8 @@ class Page:
             
             bLoadSuccess = True
             if (sVolumeFormat == 'dicom'):
-                print('******Loading Dicom **********')
-                bLoadSuccess = False
-                
+                bLoadSuccess, slNode = self.LoadDicomVolume(self.sImagePath, self.sImageType)                
+
             elif (sVolumeFormat in self.lValidVolumeFormats):
                 bLoadSuccess, slNode = self.LoadDataVolume(self.sNodeName, self.sImageType, self.sImagePath)
 
@@ -211,6 +219,65 @@ class Page:
         return bLoadSuccess, slNode
     
     #-----------------------------------------------
+
+    def LoadDicomVolume(self, sDicomFilePath, sImageType):
+        slNode = None
+        bLoadSuccess = False
+
+        # first check if patient/series was already imported into the database
+        
+        database = slicer.dicomDatabase
+        if (database.isOpen):
+            bSeriesFoundInDB = False   # initialize
+            
+            lAllSeriesUIDs = DICOMUtils.allSeriesUIDsInDatabase(database)
+            tags = {}
+            tags['patientName'] = "0010,0010"
+            tags['patientID'] = "0010,0020"
+            tags['seriesUID'] = "0020,000E"
+            
+            self.sSeriesUIDToLoad = database.fileValue(sDicomFilePath, tags['seriesUID'])
+            self.sPatientName = database.fileValue(sDicomFilePath , tags['patientName'])
+            self.sPatientID = database.fileValue(sDicomFilePath , tags['patientID'])
+            self.sExpectedSubjectHierarchyName = self.sPatientName + ' (' + self.sPatientID + ')'
+            print(' ~~~ Subject Hierarchy expected name : %s' % self.sExpectedSubjectHierarchyName)
+            
+            sHead_Tail = os.path.split(sDicomFilePath)
+            sDicomSeriesDir = sHead_Tail[0]
+            
+            
+            for sImportedSeries in lAllSeriesUIDs:
+                if sImportedSeries == self.sSeriesUIDToLoad:
+                    bSeriesFoundInDB = True
+                
+            if not bSeriesFoundInDB:  # import all series in user specified directory
+                DICOMUtils.importDicom(sDicomSeriesDir)
+
+
+            
+            # check subject hierarchy to see if volume already exists
+            bVolumeAlreadyLoaded = False
+            
+            
+            slSubjectHierarchyNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+            slNodeId = slSubjectHierarchyNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(),self.sSeriesUIDToLoad)
+            if slNodeId > 0:
+                bVolumeAlreadyLoaded = True
+            else:
+                DICOMUtils.loadSeriesByUID([self.sSeriesUIDToLoad])
+                slNodeId = slSubjectHierarchyNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(),self.sSeriesUIDToLoad)
+            
+            slNode = slSubjectHierarchyNode.GetItemDataNode(slNodeId)
+            bLoadSuccess = True
+        
+        else:
+            sErrorMsg = ('Slicer Database is not open')
+            self.oQuizzerUtils.DisplayError(sErrorMsg)
+        
+
+        return bLoadSuccess, slNode
+    
+    #-----------------------------------------------
     #         Manage Views
     #-----------------------------------------------
  
@@ -224,9 +291,9 @@ class Page:
             slWidget.setSliceOrientation(sOrientation)
         elif sNodeLayer == 'Foreground':
             slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
-        else:
-            if sNodeLayer == 'Label':
-                slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
+            slWidget.setSliceOrientation(sOrientation)
+        elif sNodeLayer == 'Label':
+            slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
         
          
 
@@ -261,7 +328,6 @@ class Page:
             bNodeExists = False
         
         return bNodeExists, slNode
-    
     
     
     #-----------------------------------------------
