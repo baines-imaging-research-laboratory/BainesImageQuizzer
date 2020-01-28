@@ -61,10 +61,10 @@
 			<Layer>Foreground</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-		<Image format="nrrd" descriptor="Brain MR" destination="Green" orientation="Axial">
-			<Type>Volume</Type>
-			<Layer>Foreground</Layer>
-			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nrrd</Path>
+		<Image format="dicom" descriptor="CTSeries" destination="Green" orientation="Axial">
+			<Type>Series</Type>
+			<Layer>Background</Layer>
+			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image format="mhd" descriptor="Case00Prostate" destination="Yellow" orientation="Axial" >
 			<Type>Volume</Type>
@@ -75,6 +75,11 @@
 			<Type>Labelmap</Type>
 			<Layer>Label</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Prostate\Case00_segmentation.mhd</Path>
+		</Image>
+		<Image format="dicom" descriptor="Segmentation" destination="Green" orientation="Axial">
+			<Type>RTStruct</Type>
+			<Layer>Segmentation</Layer>
+			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 		</Image>
 		<QuestionSet id="QS-Observation" title="Describe assessment and confidence">
 			<Question type="Radio"  descriptor="Assessment">

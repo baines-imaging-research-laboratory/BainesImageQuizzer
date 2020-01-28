@@ -12,6 +12,7 @@ from DICOMLib import DICOMUtils
 import xml
 from xml.dom import minidom
 import ssl
+from DICOMLib.DICOMUtils import loadPatientByUID
 
 #-----------------------------------------------
 
@@ -99,7 +100,7 @@ class Page:
             
         
     #-----------------------------------------------
-    #         Manage Data Input
+    #         Manage Data Loading
     #-----------------------------------------------
 
     def BuildViewNodes(self, xImages):
@@ -152,8 +153,8 @@ class Page:
             
             bLoadSuccess = True
             if (sVolumeFormat == 'dicom'):
-                bLoadSuccess, slNode = self.LoadDicomVolume(self.sImagePath)
-                
+                bLoadSuccess, slNode = self.LoadDicomVolume(self.sImagePath, self.sImageType)                
+
             elif (sVolumeFormat in self.lValidVolumeFormats):
                 bLoadSuccess, slNode = self.LoadDataVolume(self.sNodeName, self.sImageType, self.sImagePath)
 
@@ -219,49 +220,55 @@ class Page:
     
     #-----------------------------------------------
 
-    def LoadDicomVolume(self, sDicomSeriesDir):
+    def LoadDicomVolume(self, sDicomFilePath, sImageType):
         slNode = None
         bLoadSuccess = False
 
-        # db for storing imported dicom files
-#         self.dicomDatabaseDir = 'D:\\Users\\cjohnson\\Work\\Projects\\SlicerEclipseProjects\\ImageQuizzerExtras\\CtkDicomDatabase'
-        self.dicomURL = 'file:\\\\\\D:\\Users\\cjohnson\\Work\\Projects\\SlicerEclipseProjects\\ImageQuizzerExtras\\TinyRT.zip'
-       
-        sPatientName = 'TinyPatient'
+        # first check if patient/series was already imported into the database
         
-        if (slicer.dicomDatabase.isOpen):
-            bPatientFoundInDB = False
-            patients = slicer.dicomDatabase.patients()
-            for patientUID in patients:
-                    currentName = slicer.dicomDatabase.nameForPatient(patientUID)
-                    if currentName == sPatientName:
-                        bPatientFoundInDB = True
-
-            if not bPatientFoundInDB:
+        database = slicer.dicomDatabase
+        if (database.isOpen):
+            bSeriesFoundInDB = False   # initialize
+            
+            lAllSeriesUIDs = DICOMUtils.allSeriesUIDsInDatabase(database)
+            tags = {}
+            tags['patientName'] = "0010,0010"
+            tags['patientID'] = "0010,0020"
+            tags['seriesUID'] = "0020,000E"
+            
+            self.sSeriesUIDToLoad = database.fileValue(sDicomFilePath, tags['seriesUID'])
+            self.sPatientName = database.fileValue(sDicomFilePath , tags['patientName'])
+            self.sPatientID = database.fileValue(sDicomFilePath , tags['patientID'])
+            self.sExpectedSubjectHierarchyName = self.sPatientName + ' (' + self.sPatientID + ')'
+            print(' ~~~ Subject Hierarchy expected name : %s' % self.sExpectedSubjectHierarchyName)
+            
+            sHead_Tail = os.path.split(sDicomFilePath)
+            sDicomSeriesDir = sHead_Tail[0]
+            
+            
+            for sImportedSeries in lAllSeriesUIDs:
+                if sImportedSeries == self.sSeriesUIDToLoad:
+                    bSeriesFoundInDB = True
+                
+            if not bSeriesFoundInDB:  # import all series in user specified directory
                 DICOMUtils.importDicom(sDicomSeriesDir)
 
-            
-            # get loaded scalar volume nodes to see if patient already exists
-            bPatientAlreadyLoaded = False
-            
-            lNodeCollection = slicer.mrmlScene.GetNodesByClass('vtkMRMLScalarVolumNode')
-            lNodeCollection.UnRegister(None)
-            
-            iNumNodes = slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLScalarVolumeNode')
-            for idx in range(iNumNodes):
-                slTempNode = slicer.mrmlScene.GetNthNodeByClass(idx,'vtkMRMLScalarVolumeNode')
-                sTempNodeName = slTempNode.GetName()
-                print(sTempNodeName)
-                if sTempNodeName == sPatientName:
-                    bPatientAlreadyLoaded = True
-            
-#             for node in lNodeCollection:
-#                 name = node.GetNodeName(node)
-#                 if name == sPatientName:
-#                     bPatientAlreadyLoaded = True
 
-            if not bPatientAlreadyLoaded:
-                DICOMUtils.loadPatient(None, sPatientName, None)
+            
+            # check subject hierarchy to see if volume already exists
+            bVolumeAlreadyLoaded = False
+            
+            
+            slSubjectHierarchyNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+            slNodeId = slSubjectHierarchyNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(),self.sSeriesUIDToLoad)
+            if slNodeId > 0:
+                bVolumeAlreadyLoaded = True
+            else:
+                DICOMUtils.loadSeriesByUID([self.sSeriesUIDToLoad])
+                slNodeId = slSubjectHierarchyNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(),self.sSeriesUIDToLoad)
+            
+            slNode = slSubjectHierarchyNode.GetItemDataNode(slNodeId)
+            bLoadSuccess = True
         
         else:
             sErrorMsg = ('Slicer Database is not open')
@@ -287,7 +294,6 @@ class Page:
             slWidget.setSliceOrientation(sOrientation)
         elif sNodeLayer == 'Label':
             slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
-#             slWidget.setSliceOrientation(sOrientation)
         
          
 
@@ -322,7 +328,6 @@ class Page:
             bNodeExists = False
         
         return bNodeExists, slNode
-    
     
     
     #-----------------------------------------------
