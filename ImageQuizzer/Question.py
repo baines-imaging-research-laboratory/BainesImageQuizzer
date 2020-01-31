@@ -29,7 +29,7 @@ class QuestionSet():
         # the list of tuples for building the question set form
         
         oIOXml = UtilsIOXml()
-        ltupQuestionSet = []
+        ltupQuestions = []
         sNodeName = oIOXml.GetNodeName(xNodeQuestionSet)
         if not (sNodeName == "QuestionSet"):
             raise Exception("Invalid XML node. Expecting 'QuestionSet', node name was: %s" % sNodeName)
@@ -69,16 +69,16 @@ class QuestionSet():
             
             
                 tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
-                ltupQuestionSet.append(tupQuestionGroup)
+                ltupQuestions.append(tupQuestionGroup)
                 
                 
 
         
-        return ltupQuestionSet
+        return ltupQuestions
 
     #-----------------------------------------------
         
-    def BuildQuestionSetForm(self, ltupQuestionSet):
+    def BuildQuestionSetForm(self, ltupQuestions):
         # for each item in the list of Questions
         #    - parse the tuple into question items:
         #        0: question type (string)
@@ -89,10 +89,10 @@ class QuestionSet():
         self.sFnName = sys._getframe().f_code.co_name
         bBuildSuccess = True
         self.CreateGroupBoxWidget()
-        self.ltupQuestionSet = ltupQuestionSet
+        self.ltupQuestions = ltupQuestions
         
-        for i in range(len(self.ltupQuestionSet)):
-            tupQuestionItemInfo = self.ltupQuestionSet[i]
+        for i in range(len(self.ltupQuestions)):
+            tupQuestionItemInfo = self.ltupQuestions[i]
             sQuestionType = str(tupQuestionItemInfo[0])
             sQuestionDescriptor = str(tupQuestionItemInfo[1])
             lsQuestionOptions = tupQuestionItemInfo[2]

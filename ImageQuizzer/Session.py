@@ -6,6 +6,7 @@ import unittest
 # from UtilsIOXml import *
 from Utilities import *
 from Page import *
+from Question import *
 
 import xml
 from xml.dom import minidom
@@ -66,11 +67,28 @@ class Session:
             
             # get Page nodes
             self.xPages = self.oIOXml.GetChildren(xRootNode, 'Page')
+            
+            # Start with the first page
+            #     - let buttons manage subsequent pages using the page index    
             xNodePage = self.oIOXml.GetNthChild(xRootNode, 'Page', self.iPageIndex)
+
+            # Build Question sets
+            # get number of Question sets
+            self.iNumQuestionSets = self.oIOXml.GetNumChildren(xNodePage, 'QuestionSet')
+            lQuestionSets = []
+            #for each question set
+            for iQuestionSetIndex in range(self.iNumQuestionSets):
+                print('   *** Question set # %d' % iQuestionSetIndex)
+                xNodeQuestionSet = self.oIOXml.GetNthChild(xNodePage, 'QuestionSet', iQuestionSetIndex)
+                oQuestionSet = QuestionSet()
+                oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
+                #append to list
+                lQuestionSets.append(oQuestionSet)
+            
            
         
-            self.DisplayPage(xNodePage)
-            self.EnablePageButtons()
+#             self.DisplayPage(xNodePage)
+#             self.EnablePageButtons()
             
             
 
