@@ -5,7 +5,6 @@ import sys
 import unittest
 
 from Utilities import *
-from Question import *
 
 from DICOMLib import DICOMUtils
 
@@ -23,29 +22,9 @@ class Page:
         self.parent = parent
         self.sPageName = ''
         self.sPageDescriptor = ''
-        self.iQuestionSetIndex = 0
-        self.iNumQuestionSets = 0
         
         self.lValidVolumeFormats = ['nrrd','nii','mhd']
         self.ltupViewNodes = []
-        
-        # Next button
-        self.btnNextQuestionSet = qt.QPushButton("Next Question Set - same images")
-        self.btnNextQuestionSet.toolTip = "Display next question set."
-        self.btnNextQuestionSet.enabled = False
-        self.btnNextQuestionSet.connect('clicked(bool)', self.onNextQuestionSetClicked)
-
-        # Back button
-        self.btnPreviousQuestionSet = qt.QPushButton("Back")
-        self.btnPreviousQuestionSet.toolTip = "Display previous question set."
-        self.btnPreviousQuestionSet.enabled = False
-        self.btnPreviousQuestionSet.connect('clicked(bool)', self.onPreviousQuestionSetClicked)
-
-        # Save button
-        self.btnSaveQuestionSet = qt.QPushButton("Save")
-        self.btnSaveQuestionSet.toolTip = "Save Question Set responses."
-        self.btnSaveQuestionSet.enabled = False
-        self.btnSaveQuestionSet.connect('clicked(bool)', self.onSaveQuestionSetClicked)
         
 
     #-----------------------------------------------
@@ -60,12 +39,6 @@ class Page:
         # get name and descriptor
         self.sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'name')
         self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'descriptor')
-
-        self.quizLayout.addWidget(self.btnNextQuestionSet)
-        self.quizLayout.addWidget(self.btnPreviousQuestionSet)
-        self.quizLayout.addWidget(self.btnSaveQuestionSet)
-
-        # for each 'outstanding' page (questions not yet answered)
 
         # display Images
         self.xImages = self.oIOXml.GetChildren(xPageNode, 'Image')
@@ -87,18 +60,6 @@ class Page:
                 self.AssignNodesToView(slNode.GetName(), sImageDestination, sViewLayer, sOrientation)
 
 
-        # get Question Set nodes and number of sets
-        self.xQuestionSets = self.oIOXml.GetChildren(xPageNode, 'QuestionSet')
-        self.iNumQuestionSets = self.oIOXml.GetNumChildren(xPageNode, 'QuestionSet')
-
-        
-        self.DisplayQuestionSet(self.xQuestionSets[self.iQuestionSetIndex])
-
-        # enable buttons
-        self.EnableQuestionSetButtons()
-        
-            
-        
     #-----------------------------------------------
     #         Manage Data Loading
     #-----------------------------------------------

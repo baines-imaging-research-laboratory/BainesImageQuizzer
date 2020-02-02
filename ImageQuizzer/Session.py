@@ -5,8 +5,8 @@ import sys
 import unittest
 # from UtilsIOXml import *
 from Utilities import *
-from Page import *
 from Question import *
+from Page import *
 
 import xml
 from xml.dom import minidom
@@ -100,13 +100,6 @@ class Session:
         
 
     #-----------------------------------------------
-    
-    def EnableButtons(self):
-        self.btnNext.enabled = True
-        self.btnPrevious.enabled = True
-        self.btnSave.enabled = True
-
-    #-----------------------------------------------
 
     def DisplayPage(self):
         # extract page and question set indices from the current composite index
@@ -132,8 +125,16 @@ class Session:
             self.quizLayout.addWidget(qQuizWidget)
         
         
-        
+        oPage = Page()
+        oPage.RunSetup(xNodePage, qQuizWidget)
     
+    #-----------------------------------------------
+    
+    def EnableButtons(self):
+        self.btnNext.enabled = True
+        self.btnPrevious.enabled = True
+        self.btnSave.enabled = True
+
     #-----------------------------------------------
 
     def onNextButtonClicked(self):
