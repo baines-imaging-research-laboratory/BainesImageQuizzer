@@ -15,7 +15,7 @@ from DICOMLib.DICOMUtils import loadPatientByUID
 
 #-----------------------------------------------
 
-class Page:
+class ImageView:
     
     def __init__(self,  parent=None):
         self.sClassName = type(self).__name__

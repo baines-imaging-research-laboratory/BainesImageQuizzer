@@ -6,7 +6,7 @@ import unittest
 # from UtilsIOXml import *
 from Utilities import *
 from Question import *
-from Page import *
+from ImageView import *
 
 import xml
 from xml.dom import minidom
@@ -125,8 +125,8 @@ class Session:
             self.quizLayout.addWidget(qQuizWidget)
         
         
-        oPage = Page()
-        oPage.RunSetup(xNodePage, qQuizWidget)
+        oImageView = ImageView()
+        oImageView.RunSetup(xNodePage, qQuizWidget)
     
     #-----------------------------------------------
     
