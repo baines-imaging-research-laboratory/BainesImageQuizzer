@@ -21,6 +21,7 @@ class QuestionSet():
         self.id = ''
         self.title = ''
         self.overwritableResponsesYN = False
+        self.ltupQuestions = []
         
     #-----------------------------------------------
         
@@ -29,14 +30,12 @@ class QuestionSet():
         # the list of tuples for building the question set form
         
         oIOXml = UtilsIOXml()
-        ltupQuestionSet = []
         sNodeName = oIOXml.GetNodeName(xNodeQuestionSet)
         if not (sNodeName == "QuestionSet"):
             raise Exception("Invalid XML node. Expecting 'QuestionSet', node name was: %s" % sNodeName)
         else:
             # for each child named 'Question' extract labels and options
             iNumQuestions = oIOXml.GetNumChildren(xNodeQuestionSet, "Question")
-#             print('Num Questions : %d' % iNumQuestions)
             
             self.id = oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'id')
             self.title = oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'title')
@@ -45,40 +44,27 @@ class QuestionSet():
             
             for xNodeQuestion in xQuestions:
                 sQuestionType = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'type')
-#                 print('type : %s' % sQuestionType)
                 sQuestionDescriptor = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'descriptor')
-#                 print('descriptor : %s' % sQuestionDescriptor)
                
                 # get options for each question
                 lsQuestionOptions = []
                 
                 xOptions = oIOXml.GetChildren(xNodeQuestion, 'Option')
 
-#                 for xNodeOption in xOptions:
-#                     sValue = oIOXml.GetDataInNode(xNodeQuestion)
-
                 for iIndex in range(0,xOptions.length):
                     
-                    xNodeOption = oIOXml.GetNthChild(xNodeQuestion, 'Option', iIndex)
-                    sValue = oIOXml.GetDataInNode(xNodeOption)
+                    xQuestionOption = oIOXml.GetNthChild(xNodeQuestion, 'Option', iIndex)
+                    sValue = oIOXml.GetDataInNode(xQuestionOption)
                     lsQuestionOptions.append(sValue)
                 
-                
-                
-            
-            
             
                 tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
-                ltupQuestionSet.append(tupQuestionGroup)
+                self.ltupQuestions.append(tupQuestionGroup)
                 
-                
-
-        
-        return ltupQuestionSet
 
     #-----------------------------------------------
         
-    def BuildQuestionSetForm(self, ltupQuestionSet):
+    def BuildQuestionSetForm(self):
         # for each item in the list of Questions
         #    - parse the tuple into question items:
         #        0: question type (string)
@@ -89,10 +75,9 @@ class QuestionSet():
         self.sFnName = sys._getframe().f_code.co_name
         bBuildSuccess = True
         self.CreateGroupBoxWidget()
-        self.ltupQuestionSet = ltupQuestionSet
         
-        for i in range(len(self.ltupQuestionSet)):
-            tupQuestionItemInfo = self.ltupQuestionSet[i]
+        for i in range(len(self.ltupQuestions)):
+            tupQuestionItemInfo = self.ltupQuestions[i]
             sQuestionType = str(tupQuestionItemInfo[0])
             sQuestionDescriptor = str(tupQuestionItemInfo[1])
             lsQuestionOptions = tupQuestionItemInfo[2]

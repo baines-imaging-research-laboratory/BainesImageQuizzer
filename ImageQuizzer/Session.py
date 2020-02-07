@@ -5,7 +5,8 @@ import sys
 import unittest
 # from UtilsIOXml import *
 from Utilities import *
-from Page import *
+from Question import *
+from ImageView import *
 
 import xml
 from xml.dom import minidom
@@ -19,21 +20,37 @@ class Session:
         self.parent = parent
         print('Constructor for Session')
         
-        self.iPageIndex = 0
-        self.iNumPages = 0
+#         self.iPageIndex = 0
+#         self.iNumPages = 0
+#         self.iQuestionSetIndex = 0
+#         self.iNumQuestionSets = 0
+#         self.lQuestionSets = []
 
+        self.oIOXml = UtilsIOXml()
+        self.lCompositeIndices = []
+        self.iCompIndex = 0
+        self.xRootNode = None
+        
         # Next button
-        self.btnNextPage = qt.QPushButton("Next Page - new images and question sets")
-        self.btnNextPage.toolTip = "Display next page."
-        self.btnNextPage.enabled = True
-        self.btnNextPage.connect('clicked(bool)',self.onNextPageButtonClicked)
+        self.btnNext = qt.QPushButton("Next")
+        self.btnNext.toolTip = "Display next set of questions."
+        self.btnNext.enabled = True
+        self.btnNext.connect('clicked(bool)',self.onNextButtonClicked)
         
         # Back button
-        self.btnPreviousPage = qt.QPushButton("Previous Page")
-        self.btnPreviousPage.toolTip = "Display previous page."
-        self.btnPreviousPage.enabled = True
-        self.btnPreviousPage.connect('clicked(bool)',self.onPreviousPageButtonClicked)
+        self.btnPrevious = qt.QPushButton("Previous")
+        self.btnPrevious.toolTip = "Display previous set of questions."
+        self.btnPrevious.enabled = True
+        self.btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
 
+        # Save button
+        self.btnSave = qt.QPushButton("Save and Continue")
+        self.btnSave.toolTip = "Save responses."
+        self.btnSave.enabled = True
+        self.btnSave.connect('clicked(bool)',self.onSaveButtonClicked)
+
+
+    #-----------------------------------------------
 
     def RunSetup(self, sXmlFilename, sUsername, mainLayout, quizLayout):
         self.sXmlFilename = sXmlFilename
@@ -47,7 +64,6 @@ class Session:
         # TODO: determine study status based on recorded answers
         
         
-        self.oIOXml = UtilsIOXml()
         self.msgBox = qt.QMessageBox()
         # open xml and check for root node
         
@@ -55,30 +71,50 @@ class Session:
         if not bSuccess:
             self.msgBox.critical(0,"ERROR", "Not a valid quiz - Root node name was not 'Session'")
         else:
-        
-            self.mainLayout.addWidget(self.btnNextPage)
-            self.mainLayout.addWidget(self.btnPreviousPage)
+            self.xRootNode = xRootNode
+            self.mainLayout.addWidget(self.btnNext)
+            self.mainLayout.addWidget(self.btnPrevious)
+            self.mainLayout.addWidget(self.btnSave)
 
-            # get # of 'Pages'
-            self.iNumPages = self.oIOXml.GetNumChildren(xRootNode, 'Page')
-            print('Number of Pages %s' % self.iNumPages)
+            
+            self.BuildCompositeIndexList()
+            self.EnableButtons()
+            self.DisplayPage()
+
+            
+            
+    #-----------------------------------------------
+
+    def BuildCompositeIndexList(self):
+        # given the root of the xml document build composite list 
+        # of indexes for each page and the question sets within
+        oIOXml = UtilsIOXml()
         
+        # get Page nodes
+        xPages = oIOXml.GetChildren(self.xRootNode, 'Page')
+
+        for iPageIndex in range(len(xPages)):
+            # for each page - get number of question sets
+            xPageNode = oIOXml.GetNthChild(self.xRootNode, 'Page', iPageIndex)
+            xQuestionSets = oIOXml.GetChildren(xPageNode,'QuestionSet')
             
-            # get Page nodes
-            self.xPages = self.oIOXml.GetChildren(xRootNode, 'Page')
-            xNodePage = self.oIOXml.GetNthChild(xRootNode, 'Page', self.iPageIndex)
-           
+            for iQuestionSetIndex in range(len(xQuestionSets)):
+                self.lCompositeIndices.append([iPageIndex, iQuestionSetIndex])
         
-            self.DisplayPage(xNodePage)
-            self.EnablePageButtons()
-            
-            
 
     #-----------------------------------------------
 
-    def DisplayPage(self, xNodePage):    
-        # given a question set node, extract the information from the xml document
-        # and add the widget to the layout
+    def DisplayPage(self):
+        # extract page and question set indices from the current composite index
+        
+        iPageIndex = self.lCompositeIndices[self.iCompIndex][0]
+        iQuestionSetIndex = self.lCompositeIndices[self.iCompIndex][1]
+
+        xNodePage = self.oIOXml.GetNthChild(self.xRootNode, 'Page', iPageIndex)
+        xNodeQuestionSet = self.oIOXml.GetNthChild(xNodePage, 'QuestionSet', iQuestionSetIndex)
+        
+        oQuestionSet = QuestionSet()
+        oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
         
         # first clear any previous widgets (except push buttons)
         for i in reversed(range(self.quizLayout.count())):
@@ -86,85 +122,109 @@ class Session:
 #             if not(isinstance(x, qt.QPushButton)):
             self.quizLayout.itemAt(i).widget().setParent(None)
 
-        oPage = Page()
-        oPage.RunSetup(xNodePage, self.quizLayout)
         
+        bBuildSuccess, qQuizWidget = oQuestionSet.BuildQuestionSetForm()
+        if bBuildSuccess:
+            self.quizLayout.addWidget(qQuizWidget)
+        
+        
+        oImageView = ImageView()
+        oImageView.RunSetup(xNodePage, qQuizWidget)
+    
     #-----------------------------------------------
+    
+    def EnableButtons(self):
+        
+        
+#         # for debug
+#         self.btnNext.enabled = True
+#         self.btnPrevious.enabled = True
+#         self.btnSave.enabled = True
 
-    def EnablePageButtons(self):
-        # using the question set index display/enable the relevant buttons
-         
 
+        # beginning of quiz
+        if (self.iCompIndex == 0):
+            self.btnNext.enabled = True
+            self.btnPrevious.enabled = False
 
-        print('---Page Number %s' % self.iPageIndex)
-        # Case : only one Page
-        if (self.iPageIndex == 0 and self.iNumPages == 1):
-            self.btnNextPage.enabled = False
-            self.btnPreviousPage.enabled = False
-#             self.btnSavePage.enabled = True
+        # end of quiz
+        elif (self.iCompIndex == len(self.lCompositeIndices) - 1):
+            self.btnNext.enabled = False
+            self.btnPrevious.enabled = True
+
+        # somewhere in middle
         else:
-            # Case : first Page and more to follow
-            if (self.iPageIndex == 0 and self.iNumPages > 1):
-                self.btnNextPage.enabled = True
-                self.btnPreviousPage.enabled = False
-#                 self.btnSavePage.enabled = False
-            else:
-                # Case : last Page with a number of previous sets
-                if (self.iPageIndex == self.iNumPages - 1 and self.iNumPages > 1):
-                    self.btnNextPage.enabled = False
-                    self.btnPreviousPage.enabled = True
-#                     self.btnSavePage.enabled = True
-                else:
-                    # Case : middle of number of pages
-                    if (self.iPageIndex > 0 and self.iPageIndex < self.iNumPages):
-                        self.btnNextPage.enabled = True
-                        self.btnPreviousPage.enabled = True
-#                         self.btnSavePage.enabled = False
-                        
+            self.btnNext.enabled = True
+            self.btnPrevious.enabled = True
 
+        # assign the Save button depending on the number of question sets per page
+        #    note:    lCompositeIndices[i][0] is the page index
+        #            lCompositeIndices[i][1] is the question set index
+        # if the next page index different than current, it is the 
+        #  last question set and the save button is enabled
+        if (self.iCompIndex == len(self.lCompositeIndices) - 1):
+            self.btnSave.setText("Save and Finish")
+            self.btnSave.enabled = True
+
+        else:
+            self.btnSave.setText("Save and Continue")
+        
+            if not( self.lCompositeIndices[self.iCompIndex][0] == self.lCompositeIndices[self.iCompIndex + 1][0]):
+                self.btnSave.enabled = True
+                self.btnNext.enabled = False # not needed
+            else:
+                self.btnSave.enabled = False
+        
+           
+
+    #-----------------------------------------------
+
+    def onNextButtonClicked(self):
+
+        
+        self.iCompIndex = self.iCompIndex + 1
+        if self.iCompIndex > len(self.lCompositeIndices) -1:
+            # reset to last index
+            self.iCompIndex = len(self.lCompositeIndices) -1
+
+        self.EnableButtons()
+
+        self.DisplayPage()
+
+    #-----------------------------------------------
+
+    def onPreviousButtonClicked(self):
+
+
+        self.iCompIndex = self.iCompIndex - 1
+        if self.iCompIndex < 0:
+            # reset to beginning
+            self.iCompIndex = 0
+        
+        self.EnableButtons()
+        
+        self.DisplayPage()
 
 
     #-----------------------------------------------
 
-    def onNextPageButtonClicked(self):
+    def onSaveButtonClicked(self):
 
-        # increase the question set index
-        self.iPageIndex = self.iPageIndex + 1
+        print('---Saving responses')
+        #TODO: perform save ???
+        
+        self.iCompIndex = self.iCompIndex + 1
+        if self.iCompIndex > len(self.lCompositeIndices) -1:
+            # reset to last index
+            self.iCompIndex = len(self.lCompositeIndices) -1
 
-#         # display next set of questions
-#         if (self.iPageIndex < self.iNumPages):
-#             self.DisplayPage(self.xPages[self.iPageIndex])
-#             self.EnablePageButtons()
-#         else:
-#             self.btnNextPage.enabled = False
+        self.EnableButtons()
 
-
-        # enable buttons dependent on case
-        self.EnablePageButtons()
-
-        # display the page
-        if (self.iPageIndex < self.iNumPages):
-            self.DisplayPage(self.xPages[self.iPageIndex])
+        self.DisplayPage()
         
 
-
     #-----------------------------------------------
-
-    def onPreviousPageButtonClicked(self):
-
-        # decrease the question set index
-        self.iPageIndex = self.iPageIndex - 1
-
-        # enable buttons dependent on case
-        self.EnablePageButtons()
-
-        # display the page
-        if (self.iPageIndex >= 0):
-            self.DisplayPage(self.xPages[self.iPageIndex])
-
-
-
-#-----------------------------------------------
+    #-----------------------------------------------
 
 
 # functions:
