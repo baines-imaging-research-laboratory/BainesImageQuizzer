@@ -50,6 +50,8 @@ class Session:
         self.btnSave.connect('clicked(bool)',self.onSaveButtonClicked)
 
 
+    #-----------------------------------------------
+
     def RunSetup(self, sXmlFilename, sUsername, mainLayout, quizLayout):
         self.sXmlFilename = sXmlFilename
         self.sUsername = sUsername
@@ -173,73 +175,6 @@ class Session:
 
     #-----------------------------------------------
     #-----------------------------------------------
-# 
-#     def BuildQuestionSetList(self,xNodePage):
-#         # given a question set node, extract the information from the xml document
-#         # and add the widget to the layout
-# 
-#         # get number of Question sets
-#         self.iNumQuestionSets = self.oIOXml.GetNumChildren(xNodePage, 'QuestionSet')
-#         #for each question set
-#         for iIndex in range(self.iNumQuestionSets):
-#             print('   *** Question set # %d' % iIndex)
-#             xNodeQuestionSet = self.oIOXml.GetNthChild(xNodePage, 'QuestionSet', iIndex)
-#             oQuestionSet = QuestionSet()
-#             oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
-#             #append to list
-#             self.lQuestionSets.append(oQuestionSet)
-#         
-#         
-#     #-----------------------------------------------
-# 
-#     def DisplayQuestionSet(self):    
-#         
-#         # first clear any previous widgets (except push buttons)
-#         for i in reversed(range(self.quizLayout.count())):
-# #             x = self.quizLayout.itemAt(i).widget()
-# #             if not(isinstance(x, qt.QPushButton)):
-#             self.quizLayout.itemAt(i).widget().setParent(None)
-# 
-#         bBuildSuccess = False
-#         bBuildSuccess, qQuizWidget = self.lQuestionSets[self.iQuestionSetIndex].BuildQuestionSetForm()
-#         if bBuildSuccess:
-#             self.quizLayout.addWidget(qQuizWidget)
-# 
-# 
-# 
-#     #-----------------------------------------------
-# 
-#     def EnableQuestionSetButtons(self):
-#         # using the question set index display/enable the relevant buttons
-#          
-# 
-# 
-#         print('---Question Set Number %s' % self.iQuestionSetIndex)
-#         # Case : only one Question Set
-#         if (self.iQuestionSetIndex == 0 and self.iNumQuestionSets == 1):
-#             self.btnNext.enabled = False
-#             self.btnPrevious.enabled = False
-#             self.btnSave.enabled = True
-#         else:
-#             # Case : first Question Set and more to follow
-#             if (self.iQuestionSetIndex == 0 and self.iNumQuestionSets > 1):
-#                 self.btnNext.enabled = True
-#                 self.btnPrevious.enabled = False
-#                 self.btnSave.enabled = False
-#             else:
-#                 # Case : last Question Set with a number of previous sets
-#                 if (self.iQuestionSetIndex == self.iNumQuestionSets - 1 and self.iNumQuestionSets > 1):
-#                     self.btnNext.enabled = False
-#                     self.btnPrevious.enabled = True
-#                     self.btnSave.enabled = True
-#                 else:
-#                     # Case : middle of number of Question Sets
-#                     if (self.iQuestionSetIndex > 0 and self.iQuestionSetIndex < self.iNumQuestionSets):
-#                         self.btnNext.enabled = True
-#                         self.btnPrevious.enabled = True
-#                         self.btnSave.enabled = False
-#                         
-
 
 
 # functions:
