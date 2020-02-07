@@ -135,7 +135,7 @@ class UtilsIOXml:
         for node in nodes:
             if node.nodeType == node.TEXT_NODE:
                 xData =node.data
-                print(xData)
+#                 print(xData)
             else:
                 print('invalid data node  check xml schema' )
              

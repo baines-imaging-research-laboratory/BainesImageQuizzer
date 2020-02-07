@@ -44,7 +44,7 @@ class Session:
         self.btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
 
         # Save button
-        self.btnSave = qt.QPushButton("Save")
+        self.btnSave = qt.QPushButton("Save and Continue")
         self.btnSave.toolTip = "Save responses."
         self.btnSave.enabled = True
         self.btnSave.connect('clicked(bool)',self.onSaveButtonClicked)
@@ -74,6 +74,7 @@ class Session:
             self.xRootNode = xRootNode
             self.mainLayout.addWidget(self.btnNext)
             self.mainLayout.addWidget(self.btnPrevious)
+            self.mainLayout.addWidget(self.btnSave)
 
             
             self.BuildCompositeIndexList()
@@ -133,9 +134,48 @@ class Session:
     #-----------------------------------------------
     
     def EnableButtons(self):
-        self.btnNext.enabled = True
-        self.btnPrevious.enabled = True
-        self.btnSave.enabled = True
+        
+        
+#         # for debug
+#         self.btnNext.enabled = True
+#         self.btnPrevious.enabled = True
+#         self.btnSave.enabled = True
+
+
+        # beginning of quiz
+        if (self.iCompIndex == 0):
+            self.btnNext.enabled = True
+            self.btnPrevious.enabled = False
+
+        # end of quiz
+        elif (self.iCompIndex == len(self.lCompositeIndices) - 1):
+            self.btnNext.enabled = False
+            self.btnPrevious.enabled = True
+
+        # somewhere in middle
+        else:
+            self.btnNext.enabled = True
+            self.btnPrevious.enabled = True
+
+        # assign the Save button depending on the number of question sets per page
+        #    note:    lCompositeIndices[i][0] is the page index
+        #            lCompositeIndices[i][1] is the question set index
+        # if the next page index different than current, it is the 
+        #  last question set and the save button is enabled
+        if (self.iCompIndex == len(self.lCompositeIndices) - 1):
+            self.btnSave.setText("Save and Finish")
+            self.btnSave.enabled = True
+
+        else:
+            self.btnSave.setText("Save and Continue")
+        
+            if not( self.lCompositeIndices[self.iCompIndex][0] == self.lCompositeIndices[self.iCompIndex + 1][0]):
+                self.btnSave.enabled = True
+                self.btnNext.enabled = False # not needed
+            else:
+                self.btnSave.enabled = False
+        
+           
 
     #-----------------------------------------------
 
@@ -143,11 +183,13 @@ class Session:
 
         
         self.iCompIndex = self.iCompIndex + 1
+        if self.iCompIndex > len(self.lCompositeIndices) -1:
+            # reset to last index
+            self.iCompIndex = len(self.lCompositeIndices) -1
 
         self.EnableButtons()
 
-        if self.iCompIndex < len(self.lCompositeIndices):
-            self.DisplayPage()
+        self.DisplayPage()
 
     #-----------------------------------------------
 
@@ -155,11 +197,13 @@ class Session:
 
 
         self.iCompIndex = self.iCompIndex - 1
+        if self.iCompIndex < 0:
+            # reset to beginning
+            self.iCompIndex = 0
         
         self.EnableButtons()
         
-        if self.iCompIndex  >= 0:
-            self.DisplayPage()
+        self.DisplayPage()
 
 
     #-----------------------------------------------
@@ -169,9 +213,15 @@ class Session:
         print('---Saving responses')
         #TODO: perform save ???
         
-        # clear widget for Next Page
-        for i in reversed(range(self.quizLayout.count())):
-            self.quizLayout.itemAt(i).widget().setParent(None)
+        self.iCompIndex = self.iCompIndex + 1
+        if self.iCompIndex > len(self.lCompositeIndices) -1:
+            # reset to last index
+            self.iCompIndex = len(self.lCompositeIndices) -1
+
+        self.EnableButtons()
+
+        self.DisplayPage()
+        
 
     #-----------------------------------------------
     #-----------------------------------------------
