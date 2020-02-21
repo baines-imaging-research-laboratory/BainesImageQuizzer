@@ -76,12 +76,12 @@
 			<Layer>Label</Layer>
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Prostate\Case00_segmentation.mhd</Path>
 		</Image>
-		<QuestionSet id="QS-Observation" title="Describe assessment and confidence">
-			<Question type="Radio"  descriptor="Assessment">
-				<Option>Injury</Option>
-				<Option>Recurrence</Option>
+		<QuestionSet id="QS-Demo" title="Demo buttons">
+			<Question type="Checkbox"  descriptor="Demo Checks">
+				<Option>Check 1</Option>
+				<Option>Check 2</Option>
 			</Question>
-			<Question type="Radio" descriptor="Confidence">
+			<Question type="Radio" descriptor="Demo Radios">
 				<Option>Yes</Option>
 				<Option>Maybe</Option>
 				<Option>No</Option>

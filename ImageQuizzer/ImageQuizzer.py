@@ -3,6 +3,7 @@ import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 from Session import *
 from pip._vendor.distlib._backport.shutil import copyfile
+from slicer.util import findChild
 #
 
 ##########################################################################################
@@ -250,7 +251,14 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                 self.oSession = Session()
                 self.oSession.RunSetup(self.qLblQuizFilename.text, self.qLineUserName.text,self.leftLayout, self.sampleFormLayout)
 #                 self.oSession = Session(self.qLblQuizFilename.text, self.qLineUserName.text)
-
+                try:
+                    #provide as much room as possible for the quiz
+                    qDataProbeCollapsibleButton = slicer.util.mainWindow().findChild("QWidget","DataProbeCollapsibleWidget")
+                    qDataProbeCollapsibleButton.collapsed = True
+                    self.reloadCollapsibleButton.collapsed = True
+                except:
+                    pass
+                
     def SetupUserQuizFolder(self):
         # create user folder if it doesn't exist
         self.sUserFolder = os.path.join(self.sUsersBasePath, self.qLineUserName.text)
