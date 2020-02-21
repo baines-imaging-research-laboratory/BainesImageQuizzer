@@ -79,7 +79,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         # Add vertical spacer
         self.qUserLoginLayout.addSpacing(20)
         
-       # Get study button
+        # Get study button
         # File Picker
         self.btnGetUserStudy = qt.QPushButton("Select Quiz")
         self.btnGetUserStudy.setEnabled(True)
@@ -250,7 +250,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                 self.leftWidget.activateWindow()
                 self.oSession = Session()
                 self.oSession.RunSetup(self.qLblQuizFilename.text, self.qLineUserName.text,self.leftLayout, self.sampleFormLayout)
-#                 self.oSession = Session(self.qLblQuizFilename.text, self.qLineUserName.text)
                 try:
                     #provide as much room as possible for the quiz
                     qDataProbeCollapsibleButton = slicer.util.mainWindow().findChild("QWidget","DataProbeCollapsibleWidget")

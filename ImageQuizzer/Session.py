@@ -10,6 +10,7 @@ from ImageView import *
 
 import xml
 from xml.dom import minidom
+from slicer.util import EXIT_SUCCESS
 
 #-----------------------------------------------
 
@@ -43,11 +44,11 @@ class Session:
         self.btnPrevious.enabled = True
         self.btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
 
-        # Save button
-        self.btnSave = qt.QPushButton("Save and Continue")
-        self.btnSave.toolTip = "Save responses."
-        self.btnSave.enabled = True
-        self.btnSave.connect('clicked(bool)',self.onSaveButtonClicked)
+#         # Save button
+#         self.btnSave = qt.QPushButton("Save and Continue")
+#         self.btnSave.toolTip = "Save responses."
+#         self.btnSave.enabled = True
+#         self.btnSave.connect('clicked(bool)',self.onSaveButtonClicked)
 
 
     #-----------------------------------------------
@@ -74,7 +75,7 @@ class Session:
             self.xRootNode = xRootNode
             self.mainLayout.addWidget(self.btnNext)
             self.mainLayout.addWidget(self.btnPrevious)
-            self.mainLayout.addWidget(self.btnSave)
+#             self.mainLayout.addWidget(self.btnSave)
 
             
             self.BuildCompositeIndexList()
@@ -149,7 +150,8 @@ class Session:
 
         # end of quiz
         elif (self.iCompIndex == len(self.lCompositeIndices) - 1):
-            self.btnNext.enabled = False
+#             self.btnNext.enabled = False
+            self.btnNext.enabled = True
             self.btnPrevious.enabled = True
 
         # somewhere in middle
@@ -162,20 +164,28 @@ class Session:
         #            lCompositeIndices[i][1] is the question set index
         # if the next page index different than current, it is the 
         #  last question set and the save button is enabled
-        if (self.iCompIndex == len(self.lCompositeIndices) - 1):
-            self.btnSave.setText("Save and Finish")
-            self.btnSave.enabled = True
-
-        else:
-            self.btnSave.setText("Save and Continue")
-        
-            if not( self.lCompositeIndices[self.iCompIndex][0] == self.lCompositeIndices[self.iCompIndex + 1][0]):
-                self.btnSave.enabled = True
-                self.btnNext.enabled = False # not needed
-            else:
-                self.btnSave.enabled = False
+#         if (self.iCompIndex == len(self.lCompositeIndices) - 1):
+#             self.btnSave.setText("Save and Finish")
+#             self.btnSave.enabled = True
+# 
+#         else:
+#             self.btnSave.setText("Save and Continue")
+#         
+#             if not( self.lCompositeIndices[self.iCompIndex][0] == self.lCompositeIndices[self.iCompIndex + 1][0]):
+#                 self.btnSave.enabled = True
+#                 self.btnNext.enabled = False # not needed
+#             else:
+#                 self.btnSave.enabled = False
         
            
+        if (self.iCompIndex == len(self.lCompositeIndices) - 1):
+            self.btnNext.setText("Save and Finish")
+
+        else:
+            self.btnNext.setText("Next")
+        
+            if not( self.lCompositeIndices[self.iCompIndex][0] == self.lCompositeIndices[self.iCompIndex + 1][0]):
+                self.btnNext.setText("Save and Continue")
 
     #-----------------------------------------------
 
@@ -186,6 +196,7 @@ class Session:
         if self.iCompIndex > len(self.lCompositeIndices) -1:
             # reset to last index
             self.iCompIndex = len(self.lCompositeIndices) -1
+            self.RunExitWidget()
 
         self.EnableButtons()
 
@@ -207,21 +218,44 @@ class Session:
 
 
     #-----------------------------------------------
+    
+    def RunExitWidget(self):
+#         self.qUserExitLayout = qt.QVBoxLayout()
+#         self.qUserExitWidget = qt.QWidget()
+#         self.qUserExitWidget.setLayout(self.qUserExitLayout)
+#         qUserExitWidgetTitle = qt.QLabel('Baines Image Quizzer - Complete')
+#         self.qUserExitLayout.addWidget(qUserExitWidgetTitle)
+# 
+#         # Launch study button (not enabled until study is picked)
+#         self.btnExitQuiz = qt.QPushButton("Exit Quiz")
+#         self.btnExitQuiz.setEnabled(True)
+#         self.btnExitQuiz.connect('clicked(bool)', self.onApplyExitQuiz)
+#         self.qUserExitLayout.addWidget(self.btnExitQuiz)
 
-    def onSaveButtonClicked(self):
 
-        print('---Saving responses')
-        #TODO: perform save ???
-        
-        self.iCompIndex = self.iCompIndex + 1
-        if self.iCompIndex > len(self.lCompositeIndices) -1:
-            # reset to last index
-            self.iCompIndex = len(self.lCompositeIndices) -1
+        self.msgBox = qt.QMessageBox()
+        self.msgBox.setText("Quiz complete .... Exit")
+        ret = self.msgBox.exec()
+        slicer.util.exit(status=EXIT_SUCCESS)
 
-        self.EnableButtons()
 
-        self.DisplayPage()
-        
+#     def onApplyExitQuiz(self):
+#         slicer.util.exit(status=EXIT_SUCCESS)
+# 
+#     def onSaveButtonClicked(self):
+# 
+#         print('---Saving responses')
+#         #TODO: perform save ???
+#         
+#         self.iCompIndex = self.iCompIndex + 1
+#         if self.iCompIndex > len(self.lCompositeIndices) -1:
+#             # reset to last index
+#             self.iCompIndex = len(self.lCompositeIndices) -1
+# 
+#         self.EnableButtons()
+# 
+#         self.DisplayPage()
+#         
 
     #-----------------------------------------------
     #-----------------------------------------------
