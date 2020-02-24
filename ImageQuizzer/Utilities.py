@@ -6,7 +6,12 @@ import vtk, qt, ctk, slicer
 import xml.dom.minidom
 
 
-#-----------------------------------------------
+##########################################################################
+#
+#   class UtilsIOXml
+#
+##########################################################################
+
 
 class UtilsIOXml:
     
@@ -144,19 +149,34 @@ class UtilsIOXml:
     
 
 
-#-----------------------------------------------
+##########################################################################
+#
+#   class Utilities
+#
+##########################################################################
+
 class Utilities:
     
     def __init__(self, parent=None):
         self.parent = parent
-    
-    def DisplayError(self,sErrorMsg):
         self.msgBox = qt.QMessageBox()
+    
+    #-------------------------------------------
+
+    def DisplayError(self,sErrorMsg):
         self.msgBox.critical(slicer.util.mainWindow(),"ERROR",sErrorMsg)
         exit()
 
-        
+    #-------------------------------------------
+
     def DisplayWarning(self,sWarningMsg):
-        self.msgBox = qt.QMessageBox()
         self.msgBox.warning(slicer.util.mainWindow(), 'Warning', sWarningMsg)
+
+    #-------------------------------------------
+
+    def DisplayInfo(self, sTextMsg):
+        self.msgBox.information(slicer.util.mainWindow(), 'Information', sTextMsg)
+
+    #-------------------------------------------
+
 

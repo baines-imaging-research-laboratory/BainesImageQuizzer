@@ -109,14 +109,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         # ------------------------------------------------------------------------------------
         #                                   Global Variables
         # ------------------------------------------------------------------------------------
-        #self.logic = ImageQuizzerLogic(self)
         self.qtQuizProgressWidget = qt.QTextEdit()
-        # -------------------------------------------------------------------------------------
-        # Interaction with 3D Scene
-        #self.interactionNode = slicer.mrmlScene.GetNodeByID("vtkMRMLInteractionNodeSingleton")
-        #  -----------------------------------------------------------------------------------
-        #                        Surface Registration UI setup
-        #  -----------------------------------------------------------------------------------
+        #self.logic = ImageQuizzerLogic(self)
         
         
         
@@ -129,20 +123,20 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         
         #-------------------------------------------
-#         moduleName = 'ImageQuizzer'
-
-#         scriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
-#         scriptedModulesPath = os.path.dirname(scriptedModulesPath)
-#         path = os.path.join(scriptedModulesPath, 'Resources', 'XML', '%s.xml' %moduleName)
-#         print ("path", path)
-
-        #-------------------------------------------
         # set up quiz widget
         self.leftWidget = qt.QWidget()
         self.leftLayout = qt.QVBoxLayout()
         self.leftWidget.setLayout(self.leftLayout)
          
         
+        
+        # Status button
+        self.btnShowQuizProgress = qt.QPushButton("Show Quiz Progress")
+        self.btnShowQuizProgress.toolTip = "Display status of images."
+        self.btnShowQuizProgress.enabled = True
+        self.leftLayout.addWidget(self.btnShowQuizProgress)
+        
+
         
         #-------------------------------------------
         # Collapsible button
@@ -179,30 +173,9 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 #         #add quiz
 #         self.quizFrame.layout().addWidget(leftTabWidget)
         
-        
-        
-#         #-------------------------------------------
-#         # Next button
-#         self.nextButton = qt.QPushButton("Next")
-#         self.nextButton.toolTip = "Display next in series."
-#         self.nextButton.enabled = True
-#         self.leftLayout.addWidget(self.nextButton)
-#         self.nextButton.connect('clicked(bool)',self.onNextButtonClicked)
-#         
-#         # Back button
-#         self.backButton = qt.QPushButton("Back")
-#         self.backButton.toolTip = "Display previous series."
-#         self.backButton.enabled = True
-#         self.leftLayout.addWidget(self.backButton)
-        
-        # Status button
-        self.btnShowQuizProgress = qt.QPushButton("Show Quiz Progress")
-        self.btnShowQuizProgress.toolTip = "Display status of images."
-        self.btnShowQuizProgress.enabled = True
-        self.leftLayout.addWidget(self.btnShowQuizProgress)
-        
-        self.layout.addWidget(self.leftWidget)
-        
+        # add to Slicer main layout
+        self.layout.addWidget(self.leftWidget)                
+
         self.qUserLoginWidget.show()
 
 
@@ -258,6 +231,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                 except:
                     pass
                 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     def SetupUserQuizFolder(self):
         # create user folder if it doesn't exist
         self.sUserFolder = os.path.join(self.sUsersBasePath, self.qLineUserName.text)
@@ -300,36 +275,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 #         self.qtQuizProgressWidget.setText(self.docHtmlStudies)
 #         self.qtQuizProgressWidget.show()
 
-    
-    def onNextButtonClicked(self):
-        print("Next volume ...")
-##    #Confirm that the user has selected a node
-##    inputVolume = self.inputSelector.currentNode()
-##    self.inputValidation(inputVolume)
- 
-#         scene = slicer.mrmlScene
-#         nNodes = scene.GetNumberOfNodes()
-#         #   qt.QMessageBox.information(slicer.util.mainWindow(),'NextVolume ...',nNodes)
-#         
-#         nNodes = scene.GetNumberOfNodesByClass('vtkMRMLScalarVolumeNode')
-#         n = scene.GetNthNodeByClass(0,'vtkMRMLScalarVolumeNode')
-#         # qt.QMessageBox.information(slicer.util.mainWindow(),'NextVolume ...',nNodes)
-#         for idx in range(nNodes):
-#             node = scene.GetNthNodeByClass(idx,'vtkMRMLScalarVolumeNode')
-#         name = node.GetName()
-#         #  qt.QMessageBox.information(slicer.util.mainWindow(),'NextVolume ...',name)
-#         self.changeView(node)
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def changeView(self,volToDisplay):
-        print ('changeView: ',volToDisplay.GetName())
-#         # Change the views to the selected volume
-#         ijkToRAS = vtk.vtkMatrix4x4()
-#         volToDisplay.GetIJKToRASMatrix(ijkToRAS)
-#         selectionNode = slicer.app.applicationLogic().GetSelectionNode()
-#         selectionNode.SetReferenceActiveVolumeID(volToDisplay.GetID())
-#         slicer.app.applicationLogic().PropagateVolumeSelection(0)
-#         slicer.util.delayDisplay(volToDisplay.GetName())
     
 
 

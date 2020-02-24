@@ -33,7 +33,7 @@ class ImageView:
 
         self.quizLayout = quizLayout
         self.oIOXml = UtilsIOXml()
-        self.oQuizzerUtils = Utilities()
+        self.oUtils = Utilities()
 
 
         # get name and descriptor
@@ -73,9 +73,10 @@ class ImageView:
             # Extract image attributes
             sVolumeFormat = self.oIOXml.GetValueOfNodeAttribute(xImages[i], 'format')
             sNodeDescriptor = self.oIOXml.GetValueOfNodeAttribute(xImages[i], 'descriptor')
+            sImageType = self.oIOXml.GetValueOfNodeAttribute(xImages[i], 'type')
             sImageDestination = self.oIOXml.GetValueOfNodeAttribute(xImages[i], 'destination')
             sOrientation = self.oIOXml.GetValueOfNodeAttribute(xImages[i], 'orientation')
-            self.sNodeName = self.sPageName + '_' + self.sPageDescriptor + '_' + sNodeDescriptor
+            sNodeName = self.sPageName + '_' + self.sPageDescriptor + '_' + sNodeDescriptor
 
             
             # Extract type of image being loaded
@@ -84,9 +85,9 @@ class ImageView:
             
             if len(xImageTypeNodes) > 1:
                 sWarningMsg = 'There can only be one type of image - using first definition'
-                self.oQuizzerUtils.DisplayWarning(sWarningMsg) 
+                self.oUtils.DisplayWarning(sWarningMsg) 
                 
-            self.sImageType = self.oIOXml.GetDataInNode(xImageTypeNodes[0])
+#            self.sImageType = self.oIOXml.GetDataInNode(xImageTypeNodes[0])
             
 
             # Extract path element
@@ -95,9 +96,9 @@ class ImageView:
 
             if len(xPathNodes) > 1:
                 sWarningMsg = 'There can only be one path per image - using first defined path'
-                self.oQuizzerUtils.DisplayWarning( sWarningMsg )
+                self.oUtils.DisplayWarning( sWarningMsg )
 
-            self.sImagePath = self.oIOXml.GetDataInNode(xPathNodes[0])
+            sImagePath = self.oIOXml.GetDataInNode(xPathNodes[0])
             
 
             # Extract destination layer (foreground, background, label)
@@ -105,7 +106,7 @@ class ImageView:
             xLayerNodes = self.oIOXml.GetChildren(xImages[i], 'Layer')
             if len(xLayerNodes) > 1:
                 sWarningMsg = 'There can only be one layer per image - using first defined layer'
-                self.oQuizzerUtils.DisplayWarning(sWarningMsg)
+                self.oUtils.DisplayWarning(sWarningMsg)
 
             sViewLayer = self.oIOXml.GetDataInNode(xLayerNodes[0])
             
@@ -114,15 +115,15 @@ class ImageView:
             
             bLoadSuccess = True
             if (sVolumeFormat == 'dicom'):
-                bLoadSuccess, slNode = self.LoadDicomVolume(self.sImagePath, self.sImageType)                
+                bLoadSuccess, slNode = self.LoadDicomVolume(sImagePath, sImageType)                
 
             elif (sVolumeFormat in self.lValidVolumeFormats):
-                bLoadSuccess, slNode = self.LoadDataVolume(self.sNodeName, self.sImageType, self.sImagePath)
+                bLoadSuccess, slNode = self.LoadDataVolume(sNodeName, sImageType, sImagePath)
 
                         
             else:
                 sErrorMsg = ('Undefined volume format : %s' % sVolumeFormat)
-                self.oQuizzerUtils.DisplayError(sErrorMsg)
+                self.oUtils.DisplayError(sErrorMsg)
                 bLoadSuccess = False
 
             if bLoadSuccess and (slNode is not None):
@@ -169,7 +170,7 @@ class ImageView:
             else:
                 
                 sErrorMsg = ('Undefined image type: %s' % sImageType)
-                self.oQuizzerUtils.DisplayError(sErrorMsg)
+                self.oUtils.DisplayError(sErrorMsg)
                 bLoadSuccess = False
                 
         except:
@@ -197,18 +198,18 @@ class ImageView:
             tags['patientID'] = "0010,0020"
             tags['seriesUID'] = "0020,000E"
             
-            self.sSeriesUIDToLoad = database.fileValue(sDicomFilePath, tags['seriesUID'])
-            self.sPatientName = database.fileValue(sDicomFilePath , tags['patientName'])
-            self.sPatientID = database.fileValue(sDicomFilePath , tags['patientID'])
-            self.sExpectedSubjectHierarchyName = self.sPatientName + ' (' + self.sPatientID + ')'
-            print(' ~~~ Subject Hierarchy expected name : %s' % self.sExpectedSubjectHierarchyName)
+            sSeriesUIDToLoad = database.fileValue(sDicomFilePath, tags['seriesUID'])
+            sPatientName = database.fileValue(sDicomFilePath , tags['patientName'])
+            sPatientID = database.fileValue(sDicomFilePath , tags['patientID'])
+            sExpectedSubjectHierarchyName = sPatientName + ' (' + sPatientID + ')'
+#             print(' ~~~ Subject Hierarchy expected name : %s' % sExpectedSubjectHierarchyName)
             
             sHead_Tail = os.path.split(sDicomFilePath)
             sDicomSeriesDir = sHead_Tail[0]
             
             
             for sImportedSeries in lAllSeriesUIDs:
-                if sImportedSeries == self.sSeriesUIDToLoad:
+                if sImportedSeries == sSeriesUIDToLoad:
                     bSeriesFoundInDB = True
                 
             if not bSeriesFoundInDB:  # import all series in user specified directory
@@ -221,19 +222,19 @@ class ImageView:
             
             
             slSubjectHierarchyNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-            slNodeId = slSubjectHierarchyNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(),self.sSeriesUIDToLoad)
+            slNodeId = slSubjectHierarchyNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(),sSeriesUIDToLoad)
             if slNodeId > 0:
                 bVolumeAlreadyLoaded = True
             else:
-                DICOMUtils.loadSeriesByUID([self.sSeriesUIDToLoad])
-                slNodeId = slSubjectHierarchyNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(),self.sSeriesUIDToLoad)
+                DICOMUtils.loadSeriesByUID([sSeriesUIDToLoad])
+                slNodeId = slSubjectHierarchyNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(),sSeriesUIDToLoad)
             
             slNode = slSubjectHierarchyNode.GetItemDataNode(slNodeId)
             bLoadSuccess = True
         
         else:
             sErrorMsg = ('Slicer Database is not open')
-            self.oQuizzerUtils.DisplayError(sErrorMsg)
+            self.oUtils.DisplayError(sErrorMsg)
         
 
         return bLoadSuccess, slNode

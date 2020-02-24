@@ -21,13 +21,8 @@ class Session:
         self.parent = parent
         print('Constructor for Session')
         
-#         self.iPageIndex = 0
-#         self.iNumPages = 0
-#         self.iQuestionSetIndex = 0
-#         self.iNumQuestionSets = 0
-#         self.lQuestionSets = []
-
         self.oIOXml = UtilsIOXml()
+        self.oUtils = Utilities()
         self.lCompositeIndices = []
         self.iCompIndex = 0
         self.xRootNode = None
@@ -44,13 +39,6 @@ class Session:
         self.btnPrevious.enabled = True
         self.btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
 
-#         # Save button
-#         self.btnSave = qt.QPushButton("Save and Continue")
-#         self.btnSave.toolTip = "Save responses."
-#         self.btnSave.enabled = True
-#         self.btnSave.connect('clicked(bool)',self.onSaveButtonClicked)
-
-
     #-----------------------------------------------
 
     def RunSetup(self, sXmlFilename, sUsername, mainLayout, quizLayout):
@@ -65,18 +53,16 @@ class Session:
         # TODO: determine study status based on recorded answers
         
         
-        self.msgBox = qt.QMessageBox()
         # open xml and check for root node
-        
         bSuccess, xRootNode = self.oIOXml.OpenXml(self.sXmlFilename,'Session')
         if not bSuccess:
-            self.msgBox.critical(0,"ERROR", "Not a valid quiz - Root node name was not 'Session'")
+            sErrorMsg = "ERROR", "Not a valid quiz - Root node name was not 'Session'"
+            self.oUtils.DisplayError(sErrorMsg)
+
         else:
             self.xRootNode = xRootNode
             self.mainLayout.addWidget(self.btnNext)
             self.mainLayout.addWidget(self.btnPrevious)
-#             self.mainLayout.addWidget(self.btnSave)
-
             
             self.BuildCompositeIndexList()
             self.EnableButtons()
@@ -136,13 +122,6 @@ class Session:
     
     def EnableButtons(self):
         
-        
-#         # for debug
-#         self.btnNext.enabled = True
-#         self.btnPrevious.enabled = True
-#         self.btnSave.enabled = True
-
-
         # beginning of quiz
         if (self.iCompIndex == 0):
             self.btnNext.enabled = True
@@ -150,7 +129,6 @@ class Session:
 
         # end of quiz
         elif (self.iCompIndex == len(self.lCompositeIndices) - 1):
-#             self.btnNext.enabled = False
             self.btnNext.enabled = True
             self.btnPrevious.enabled = True
 
@@ -159,31 +137,15 @@ class Session:
             self.btnNext.enabled = True
             self.btnPrevious.enabled = True
 
-        # assign the Save button depending on the number of question sets per page
-        #    note:    lCompositeIndices[i][0] is the page index
-        #            lCompositeIndices[i][1] is the question set index
-        # if the next page index different than current, it is the 
-        #  last question set and the save button is enabled
-#         if (self.iCompIndex == len(self.lCompositeIndices) - 1):
-#             self.btnSave.setText("Save and Finish")
-#             self.btnSave.enabled = True
-# 
-#         else:
-#             self.btnSave.setText("Save and Continue")
-#         
-#             if not( self.lCompositeIndices[self.iCompIndex][0] == self.lCompositeIndices[self.iCompIndex + 1][0]):
-#                 self.btnSave.enabled = True
-#                 self.btnNext.enabled = False # not needed
-#             else:
-#                 self.btnSave.enabled = False
-        
-           
+        # assign button description           
         if (self.iCompIndex == len(self.lCompositeIndices) - 1):
+            # last question of last image view
             self.btnNext.setText("Save and Finish")
 
         else:
+            # assume multiple questions in the question set
             self.btnNext.setText("Next")
-        
+            # if last question in the question set - save answers and continue to next
             if not( self.lCompositeIndices[self.iCompIndex][0] == self.lCompositeIndices[self.iCompIndex + 1][0]):
                 self.btnNext.setText("Save and Continue")
 
@@ -193,10 +155,12 @@ class Session:
 
         
         self.iCompIndex = self.iCompIndex + 1
+        
         if self.iCompIndex > len(self.lCompositeIndices) -1:
-            # reset to last index
-            self.iCompIndex = len(self.lCompositeIndices) -1
-            self.RunExitWidget()
+            # the last question was answered - exit Slicer
+            self.oUtils.DisplayInfo("Quiz complete .... Exit")
+            slicer.util.exit(status=EXIT_SUCCESS)
+
 
         self.EnableButtons()
 
@@ -218,55 +182,6 @@ class Session:
 
 
     #-----------------------------------------------
-    
-    def RunExitWidget(self):
-#         self.qUserExitLayout = qt.QVBoxLayout()
-#         self.qUserExitWidget = qt.QWidget()
-#         self.qUserExitWidget.setLayout(self.qUserExitLayout)
-#         qUserExitWidgetTitle = qt.QLabel('Baines Image Quizzer - Complete')
-#         self.qUserExitLayout.addWidget(qUserExitWidgetTitle)
-# 
-#         # Launch study button (not enabled until study is picked)
-#         self.btnExitQuiz = qt.QPushButton("Exit Quiz")
-#         self.btnExitQuiz.setEnabled(True)
-#         self.btnExitQuiz.connect('clicked(bool)', self.onApplyExitQuiz)
-#         self.qUserExitLayout.addWidget(self.btnExitQuiz)
 
-
-        self.msgBox = qt.QMessageBox()
-        self.msgBox.setText("Quiz complete .... Exit")
-        ret = self.msgBox.exec()
-        slicer.util.exit(status=EXIT_SUCCESS)
-
-
-#     def onApplyExitQuiz(self):
-#         slicer.util.exit(status=EXIT_SUCCESS)
-# 
-#     def onSaveButtonClicked(self):
-# 
-#         print('---Saving responses')
-#         #TODO: perform save ???
-#         
-#         self.iCompIndex = self.iCompIndex + 1
-#         if self.iCompIndex > len(self.lCompositeIndices) -1:
-#             # reset to last index
-#             self.iCompIndex = len(self.lCompositeIndices) -1
-# 
-#         self.EnableButtons()
-# 
-#         self.DisplayPage()
-#         
-
-    #-----------------------------------------------
-    #-----------------------------------------------
-
-
-# functions:
-    # RunSession (not RunSetup?)
-    # Create XML for writing
-    # Process Page nodes
-    # Create Status report
-    # setup Tab Widget : Question set, Patient Info, Status
-    # End Session, close any open files
-    
+   
         
