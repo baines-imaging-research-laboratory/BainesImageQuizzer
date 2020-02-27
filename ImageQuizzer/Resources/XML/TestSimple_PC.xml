@@ -115,14 +115,29 @@
 		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Red" orientation="Axial">
 			<Layer>Segmentation</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<ROIs roiVisibilityCode="Select">
+				<ROI>Tumor_Contour</ROI>
+				<ROI>Body_Contour</ROI>
+			</ROIs>
 		</Image>
 		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Yellow" orientation="Sagittal">
 			<Layer>Segmentation</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<ROIs roiVisibilityCode="Select">
+				<ROI>Tumor_Contour</ROI>
+				<ROI>Body_Contour</ROI>
+			</ROIs>
 		</Image>
 		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Green" orientation="Coronal">
 			<Layer>Segmentation</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<ROIs roiVisibilityCode="Select">
+				<ROI>Tumor_Contour</ROI>
+				<ROI>Body_Contour</ROI>
+			</ROIs>
 		</Image>
 		<QuestionSet id="QS-Checkup" title="What's your progress">
 			<Question type="Radio" descriptor="Milestone checker">
