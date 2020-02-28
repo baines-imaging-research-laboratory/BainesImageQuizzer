@@ -81,19 +81,6 @@ class ImageView:
             sNodeName = self.sPageName + '_' + self.sPageDescriptor + '_' + sNodeDescriptor
 
             
-#             # Extract type of image being loaded
-# 
-#             xImageTypeNodes = self.oIOXml.GetChildren(xImages[indImage], 'Type')
-#             
-#             if len(xImageTypeNodes) > 1:
-#                 sWarningMsg = 'There can only be one type of image.'
-#                 sWarningMsg = sWarningMsg + ' \nThe first image type definition will be used.'
-#                 sWarningMsg = sWarningMsg + '\nPage name: ' + self.sPageName + 'Page description: ' + self.sPageDescriptor
-#                 self.oUtils.DisplayWarning(sWarningMsg) 
-                
-#            self.sImageType = self.oIOXml.GetDataInNode(xImageTypeNodes[0])
-            
-
             # Extract path element
             xPathNodes = self.oIOXml.GetChildren(xImages[indImage], 'Path')
 
@@ -115,42 +102,75 @@ class ImageView:
             sViewLayer = self.oIOXml.GetDataInNode(xLayerNodes[0])
 
 
-            # if image format/type is dicom/RTStruct, get the ROI elements
+            ##########################
+            #
+            # handle image load Dicom / Other Valid Formats
+            #
+            ##########################
             
-            # set defaults to no RTSTruct
+            # set defaults    
             sSeriesInstanceUID = ''
             sRoiVisibilityCode = 'Empty'
             lsRoiList = []
-            if (sVolumeFormat == 'dicom' and sImageType == 'RTStruct'):
+            bLoadSuccess = True
+            
+            if (sVolumeFormat == 'dicom'):
+                
                 # extract Series UID nodes
                 xSeriesUIDNodes = self.oIOXml.GetChildren(xImages[indImage], 'SeriesInstanceUID')
+                 
                 if len(xSeriesUIDNodes) > 1:
                     sWarningMsg = 'There can only be one SeriesInstanceUID element per image. \nThe first defined Series UID in the XML will be used.'
                     sWarningMsg = sWarningMsg + '    Page name: ' + self.sPageName + '   Page description: ' + self.sPageDescriptor
                     self.oUtils.DisplayWarning(sWarningMsg)
+                elif len(xSeriesUIDNodes) == 0:
+                    sErrorMsg = ('There was no Series UID .. THIS SHOULD NOT HAPPEN : %s' % sVolumeFormat)
+                    sErrorMsg = sErrorMsg + '    Page name: ' + self.sPageName + '   Page description: ' + self.sPageDescriptor
+                    self.oUtils.DisplayError(sErrorMsg)
+                else:
+                    sSeriesInstanceUID = self.oIOXml.GetDataInNode(xSeriesUIDNodes[0])
+                
+                # if dicom is a volume series - store reference UID
+                if (sImageType == 'Volume'):
+                    sReferenceSeriesUID = sSeriesInstanceUID
 
-                sSeriesInstanceUID = self.oIOXml.GetDataInNode(xSeriesUIDNodes[0])
-                sRoiVisibilityCode, lsRoiList = self.ReadROIElements(xImages[indImage])
-            
-            # Load images 
-            bLoadSuccess = True
-            if (sVolumeFormat == 'dicom'):
+                # for RTStruct, store segmentation Series UID and get list of ROIs
+                elif (sImageType == 'RTStruct'):
+                    # extract Series UID nodes
+                    xSeriesUIDNodes = self.oIOXml.GetChildren(xImages[indImage], 'SeriesInstanceUID')
+                    sRoiVisibilityCode, lsRoiList = self.ReadROIElements(xImages[indImage])
+                                        
+                else:
+                    bLoadSuccess = False
+                    sErrorMsg = ('Undefined dicom series type : %s' % sVolumeFormat)
+                    sErrorMsg = sErrorMsg + '    Page name: ' + self.sPageName + '   Page description: ' + self.sPageDescriptor
+                    self.oUtils.DisplayError(sErrorMsg)
+                    
+                
+                # load dicom
                 bLoadSuccess, slNode = self.LoadDicomVolume(sImagePath, sImageType)   
 
+
+            # handle other valid formats
             elif (sVolumeFormat in self.lValidVolumeFormats):
                 bLoadSuccess, slNode = self.LoadDataVolume(sNodeName, sImageType, sImagePath)
 
                         
+            # error - not a valid format                        
             else:
+                bLoadSuccess = False
                 sErrorMsg = ('Undefined volume format : %s' % sVolumeFormat)
                 self.oUtils.DisplayError(sErrorMsg)
-                bLoadSuccess = False
 
+
+            # after load, return image properties in list of tuples
             if bLoadSuccess and (slNode is not None):
                 tupViewNode =\
                  [slNode, sImageDestination, sOrientation, sViewLayer,\
                  sImageType, sSeriesInstanceUID, sRoiVisibilityCode, lsRoiList]
                 self.ltupViewNodes.append(tupViewNode)
+            
+            
     
         return self.ltupViewNodes
                     
@@ -216,10 +236,12 @@ class ImageView:
         slSegNode = slicer.mrmlScene.GetNodeByID(slSegNodeId)
         
         
-        
+        # all ROIs visible
         if (sRoiVisibilityCode == 'All'):
             for indSHList in range(len(lsSubjectHierarchyROINames)):
                 slSegNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],True)
+
+        # all ROIs hidden
         if (sRoiVisibilityCode == 'None'):
             for indSHList in range(len(lsSubjectHierarchyROINames)):
                 slSegNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],False)
