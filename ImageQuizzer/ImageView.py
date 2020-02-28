@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+
 import PythonQt
 import os
 import vtk, qt, ctk, slicer
@@ -12,8 +14,13 @@ import xml
 from xml.dom import minidom
 import ssl
 from DICOMLib.DICOMUtils import loadPatientByUID
+from vtkmodules.vtkCommonKitPython import vtkPassInputTypeAlgorithm
 
-#-----------------------------------------------
+##########################################################################
+#
+#   Class ImageView
+#
+##########################################################################
 
 class ImageView:
     
@@ -25,6 +32,7 @@ class ImageView:
         
         self.lValidVolumeFormats = ['nrrd','nii','mhd']
         self.ltupViewNodes = []
+        
         
 
     #-----------------------------------------------
@@ -68,6 +76,11 @@ class ImageView:
 
     def BuildViewNodes(self, xImages):
         
+
+        oImageViewItem1 = DicomVolumeDetail()
+        oImageViewItem2 = DataVolumeDetail()
+
+        
         # for each image
         for indImage in range(len(xImages)):
 
@@ -80,19 +93,11 @@ class ImageView:
             sOrientation = self.oIOXml.GetValueOfNodeAttribute(xImages[indImage], 'orientation')
             sNodeName = self.sPageName + '_' + self.sPageDescriptor + '_' + sNodeDescriptor
 
+            # load Image View Item object
+            oImageViewItem1.SetViewDestination(sImageDestination)
+            oImageViewItem2.SetViewOrientation(sOrientation)
             
-#             # Extract type of image being loaded
-# 
-#             xImageTypeNodes = self.oIOXml.GetChildren(xImages[indImage], 'Type')
-#             
-#             if len(xImageTypeNodes) > 1:
-#                 sWarningMsg = 'There can only be one type of image.'
-#                 sWarningMsg = sWarningMsg + ' \nThe first image type definition will be used.'
-#                 sWarningMsg = sWarningMsg + '\nPage name: ' + self.sPageName + 'Page description: ' + self.sPageDescriptor
-#                 self.oUtils.DisplayWarning(sWarningMsg) 
-                
-#            self.sImageType = self.oIOXml.GetDataInNode(xImageTypeNodes[0])
-            
+
 
             # Extract path element
             xPathNodes = self.oIOXml.GetChildren(xImages[indImage], 'Path')
@@ -135,7 +140,8 @@ class ImageView:
             # Load images 
             bLoadSuccess = True
             if (sVolumeFormat == 'dicom'):
-                bLoadSuccess, slNode = self.LoadDicomVolume(sImagePath, sImageType)   
+                bLoadSuccess, slNode = self.LoadDicomVolume(sImagePath, sImageType)
+
 
             elif (sVolumeFormat in self.lValidVolumeFormats):
                 bLoadSuccess, slNode = self.LoadDataVolume(sNodeName, sImageType, sImagePath)
@@ -147,10 +153,15 @@ class ImageView:
                 bLoadSuccess = False
 
             if bLoadSuccess and (slNode is not None):
+                
                 tupViewNode =\
                  [slNode, sImageDestination, sOrientation, sViewLayer,\
                  sImageType, sSeriesInstanceUID, sRoiVisibilityCode, lsRoiList]
                 self.ltupViewNodes.append(tupViewNode)
+                
+                if (sVolumeFormat == 'dicom') and (sImageType == 'RTStruct'):
+                    self.ConvertSegmentationToLabelmap(lsRoiList)
+
     
         return self.ltupViewNodes
                     
@@ -192,34 +203,48 @@ class ImageView:
     #-----------------------------------------------
 
     def SetRoiVisibility(self, sSeriesInstanceUID, sRoiVisibilityCode, lsUserSelectRoiList):
+        # in order to set visibility, you have to traverse Slicer's subject hierarchy
+        # accessing the segmentation node, its children (to get ROI names) and its data node
         
-        # in order to set visibility, get Slicer's subject hierarchy node (SHNode)
+        
+        # get Slicer's subject hierarchy node (SHNode)
+        
         slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
         
+        
         # get the item ID for the RTStruct through the Series Instance UID
+        
         slRTStructItemId = slSHNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(), sSeriesInstanceUID)
 
+
         # using slicers vtk Item Id for the RTStruct, get the ROI names (children)
+        
         slRTStructChildren = vtk.vtkIdList()    # initialize to ItemId type
         slSHNode.GetItemChildren(slRTStructItemId, slRTStructChildren) # populate children variable
         
+        
         # get ROI child Item ID and store the child (ROI) name
+        
         lsSubjectHierarchyROINames = []
         for indROI in range(slRTStructChildren.GetNumberOfIds()):
             slROIItemId = slRTStructChildren.GetId(indROI)
             sROIName = slSHNode.GetItemName(slROIItemId)
             lsSubjectHierarchyROINames.append(sROIName)
         
+        
         # get segmentation node name from data node
+        
         slSegDataNode = slSHNode.GetItemDataNode(slRTStructItemId)
         slSegNodeId = slSegDataNode.GetDisplayNodeID()
         slSegNode = slicer.mrmlScene.GetNodeByID(slSegNodeId)
         
         
+        # adjust visibility of each ROI as per user's request
         
         if (sRoiVisibilityCode == 'All'):
             for indSHList in range(len(lsSubjectHierarchyROINames)):
                 slSegNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],True)
+                
         if (sRoiVisibilityCode == 'None'):
             for indSHList in range(len(lsSubjectHierarchyROINames)):
                 slSegNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],False)
@@ -237,6 +262,21 @@ class ImageView:
                 slSegNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],False)
             for indUserList in range(len(lsUserSelectRoiList)):
                 slSegNode.SetSegmentVisibility(lsUserSelectRoiList[indUserList], True)
+        
+    #-----------------------------------------------
+
+    def ConvertSegmentationToLabelmap(self, lsRoiList):
+        
+        # To gain control of segment visibility in different view windows,
+        # the ROI's in the Segmentation layer are converted to label maps
+        
+        # add a label map node to the subject hierarchy
+        slLabelMapNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode')
+        
+        # get the segmentation node containing the ROI's to be converted
+        
+        
+        
         
     #-----------------------------------------------
 
@@ -397,3 +437,123 @@ class ImageView:
         return bNodeExists, slNode
     
     
+##########################################################################
+#
+#   Class ViewNodeDetail
+#
+##########################################################################
+
+class ViewNodeBaseClass(ABC):
+    """ Inherits from ABC - Abstract Base Class
+    """
+
+    def __init__(self,  parent=None):
+        self.sClassName = type(self).__name__
+        self.parent = parent
+    
+        self.oUtils = Utilities()
+
+        self.slNode = None
+        self.sVolumeFormat = ''
+        self.sDestination = ''
+        self.sOrientation = ''
+        self.sViewLayer = ''
+        self.ImageType = ''
+        
+        self.lValidViewLayers = ['Foreground', 'Background', 'Label']
+        self.lValidImageTypes = ['Volume', 'Labelmap', 'RTStruct']
+
+#     @property
+#     @abstractmethod
+#     def sDestination(self): pass
+# 
+#     @property
+#     @abstractmethod
+#     def sOrientation(self): pass
+
+    @abstractmethod        
+    def SetVolumeFormat(self): pass
+
+
+        
+    def SetViewDestination(self, sInput):
+        lValidDestinations = ['Red', 'Yellow', 'Green' ]
+        if (sInput in lValidDestinations):
+            self.sDestination = sInput
+        else:
+            sErrorMsg = ('Invalid image destination: %s' % sInput)
+            self.oUtils.DisplayError(sErrorMsg)
+        
+        
+    def SetViewOrientation(self, sInput):
+        lValidOrientations = ['Axial', 'Sagittal', 'Coronal']
+        if (sInput in lValidOrientations):
+            self.sOrientation = sInput
+        else:
+            sErrorMsg = ('Invalid image orientation: %s' % sInput)
+            self.oUtils.DisplayError(sErrorMsg)
+
+
+    def SetViewLayer(self, sInput):
+        if (sInput in self.lValidViewLayers):
+            self.sViewLayer = sInput
+        else:
+            sErrorMsg = ('Invalid viewing layer: %s' % sInput)
+            self.oUtils.DisplayError(sErrorMsg)
+
+        
+
+    
+    
+    def GetViewDestination(self):
+        return self.sDestination
+
+    
+    def GetViewOrientation(self):
+        return self.sOrientation
+        
+        
+##########################################################################
+#
+#   Class DataVolumeDetail
+#
+##########################################################################
+
+class DataVolumeDetail(ViewNodeBaseClass):
+    
+    
+    def __init__(self):
+        self.sClassName = type(self).__name__
+        self.lValidVolumeFormats = ['nrrd','nii','mhd']
+        
+        
+    def SetVolumeFormat(self, sInput):
+        if (sInput in self.lValidVolumeFormats):
+            self.sVolumeFormat = sInput
+        else:
+            sErrorMsg = ('Invalid data volume format: %s' % sInput)
+            self.oUtils.DisplayError(sErrorMsg)
+            
+
+##########################################################################
+#
+#   Class DicomVolumeDetail
+#
+##########################################################################
+
+class DicomVolumeDetail(ViewNodeBaseClass):
+    
+    
+    def __init__(self):
+        self.sClassName = type(self).__name__
+        self.lValidVolumeFormats = ['dicom']
+        
+        
+    def SetVolumeFormat(self, sInput):
+        if (sInput in self.lValidVolumeFormats):
+            self.sVolumeFormat = sInput
+        else:
+            sErrorMsg = ('Invalid data volume format: %s' % sInput)
+            self.oUtils.DisplayError(sErrorMsg)
+
+        
