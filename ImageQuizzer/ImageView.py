@@ -32,6 +32,7 @@ class ImageView:
         
         self.lValidVolumeFormats = ['nrrd','nii','mhd']
         self.ltupViewNodes = []
+        self.lViewNodes = []
         
         
 
@@ -52,22 +53,21 @@ class ImageView:
         self.xImages = self.oIOXml.GetChildren(xPageNode, 'Image')
         self.iNumImages = self.oIOXml.GetNumChildren(xPageNode, 'Image')
         
-        self.ltupViewNodes = self.BuildViewNodes(self.xImages)
+       
+        self.lViewNodes = self.BuildViewNodes(self.xImages)
         
         
-        if len(self.ltupViewNodes) > 0:
+        if len(self.lViewNodes) > 0:
             # clear images
             self.AssignViewToNone('Red')
             self.AssignViewToNone('Yellow')
             self.AssignViewToNone('Green')
 
-            for i in range(len(self.ltupViewNodes)):
+            for i in range(len(self.lViewNodes)):
+                self.AssignNodesToView(self.lViewNodes[i])
+#                 if not (self.lViewNodes[i].sRoiVisibilityCode == 'Empty'):
+#                     self.SetRoiVisibility( sSeriesInstanceUID, sRoiVisibilityCode, lsRoiList)
                 
-                # get node details
-                slNode, sImageDestination, sOrientation, sViewLayer, sImageType, sSeriesInstanceUID, sRoiVisibilityCode, lsRoiList = self.ltupViewNodes[i]
-                self.AssignNodesToView(slNode.GetName(), sImageDestination, sViewLayer, sOrientation)
-                if not (sRoiVisibilityCode == 'Empty'):
-                    self.SetRoiVisibility( sSeriesInstanceUID, sRoiVisibilityCode, lsRoiList)
 
 
     #-----------------------------------------------
@@ -77,128 +77,128 @@ class ImageView:
     def BuildViewNodes(self, xImages):
         
 
-        oImageViewItem1 = DicomVolumeDetail()
-        oImageViewItem2 = DataVolumeDetail()
-
-        
         # for each image
         for indImage in range(len(xImages)):
 
 
-            # Extract image attributes
+#             # Extract image attributes
             sVolumeFormat = self.oIOXml.GetValueOfNodeAttribute(xImages[indImage], 'format')
-            sNodeDescriptor = self.oIOXml.GetValueOfNodeAttribute(xImages[indImage], 'descriptor')
-            sImageType = self.oIOXml.GetValueOfNodeAttribute(xImages[indImage], 'type')
-            sImageDestination = self.oIOXml.GetValueOfNodeAttribute(xImages[indImage], 'destination')
-            sOrientation = self.oIOXml.GetValueOfNodeAttribute(xImages[indImage], 'orientation')
-            sNodeName = self.sPageName + '_' + self.sPageDescriptor + '_' + sNodeDescriptor
-
-            # load Image View Item object
-            oImageViewItem1.SetViewDestination(sImageDestination)
-            oImageViewItem2.SetViewOrientation(sOrientation)
             
-
-
-            # Extract path element
-            xPathNodes = self.oIOXml.GetChildren(xImages[indImage], 'Path')
-
-            if len(xPathNodes) > 1:
-                sWarningMsg = 'There can only be one path per image.  The first defined path will be used.'
-                sWarningMsg = sWarningMsg + '    Page name: ' + self.sPageName + '   Page description: ' + self.sPageDescriptor
-                self.oUtils.DisplayWarning( sWarningMsg )
-
-            sImagePath = self.oIOXml.GetDataInNode(xPathNodes[0])
-            
-
-            # Extract destination layer (foreground, background, label)
-            xLayerNodes = self.oIOXml.GetChildren(xImages[indImage], 'Layer')
-            if len(xLayerNodes) > 1:
-                sWarningMsg = 'There can only be one destination layer (foreground, background or label) per image. \nThe first defined destination in the XML will be used.'
-                sWarningMsg = sWarningMsg + '    Page name: ' + self.sPageName + '   Page description: ' + self.sPageDescriptor
-                self.oUtils.DisplayWarning(sWarningMsg)
-
-            sViewLayer = self.oIOXml.GetDataInNode(xLayerNodes[0])
-
-
-            # if image format/type is dicom/RTStruct, get the ROI elements
-            
-            # set defaults to no RTSTruct
-            sSeriesInstanceUID = ''
-            sRoiVisibilityCode = 'Empty'
-            lsRoiList = []
-            if (sVolumeFormat == 'dicom' and sImageType == 'RTStruct'):
-                # extract Series UID nodes
-                xSeriesUIDNodes = self.oIOXml.GetChildren(xImages[indImage], 'SeriesInstanceUID')
-                if len(xSeriesUIDNodes) > 1:
-                    sWarningMsg = 'There can only be one SeriesInstanceUID element per image. \nThe first defined Series UID in the XML will be used.'
-                    sWarningMsg = sWarningMsg + '    Page name: ' + self.sPageName + '   Page description: ' + self.sPageDescriptor
-                    self.oUtils.DisplayWarning(sWarningMsg)
-
-                sSeriesInstanceUID = self.oIOXml.GetDataInNode(xSeriesUIDNodes[0])
-                sRoiVisibilityCode, lsRoiList = self.ReadROIElements(xImages[indImage])
-            
-            # Load images 
-            bLoadSuccess = True
             if (sVolumeFormat == 'dicom'):
-                bLoadSuccess, slNode = self.LoadDicomVolume(sImagePath, sImageType)
-
-
-            elif (sVolumeFormat in self.lValidVolumeFormats):
-                bLoadSuccess, slNode = self.LoadDataVolume(sNodeName, sImageType, sImagePath)
-
-                        
+                oImageViewItem = DicomVolumeDetail(xImages[indImage])
             else:
-                sErrorMsg = ('Undefined volume format : %s' % sVolumeFormat)
-                self.oUtils.DisplayError(sErrorMsg)
-                bLoadSuccess = False
+                oImageViewItem = DataVolumeDetail(xImages[indImage])
+                
+            oImageViewItem.sNodeName = self.sPageName + '_' + self.sPageDescriptor + '_' + oImageViewItem.sNodeDescriptor
+            bLoadSuccess = oImageViewItem.LoadVolume()
+                
+                
+                
+                
+                
+                
+# 
+# 
+#             # if image format/type is dicom/RTStruct, get the ROI elements
+#             
+#             # set defaults to no RTSTruct
+#             sSeriesInstanceUID = ''
+#             sRoiVisibilityCode = 'Empty'
+#             lsRoiList = []
+#             if (sVolumeFormat == 'dicom' and sImageType == 'RTStruct'):
+#                 # extract Series UID nodes
+#                 xSeriesUIDNodes = self.oIOXml.GetChildren(xImages[indImage], 'SeriesInstanceUID')
+#                 if len(xSeriesUIDNodes) > 1:
+#                     sWarningMsg = 'There can only be one SeriesInstanceUID element per image. \nThe first defined Series UID in the XML will be used.'
+#                     sWarningMsg = sWarningMsg + '    Page name: ' + self.sPageName + '   Page description: ' + self.sPageDescriptor
+#                     self.oUtils.DisplayWarning(sWarningMsg)
+# 
+#                 sSeriesInstanceUID = self.oIOXml.GetDataInNode(xSeriesUIDNodes[0])
+#                 sRoiVisibilityCode, lsRoiList = self.ReadROIElements(xImages[indImage])
+#             
+#             # Load images 
+#             bLoadSuccess = True
+#             if (sVolumeFormat == 'dicom'):
+#                 bLoadSuccess, slNode = self.LoadDicomVolume(sImagePath, sImageType)
+# 
+# 
+#             elif (sVolumeFormat in self.lValidVolumeFormats):
+#                 bLoadSuccess, slNode = self.LoadDataVolume(sNodeName, sImageType, sImagePath)
+# 
+#                         
+#             else:
+#                 sErrorMsg = ('Undefined volume format : %s' % sVolumeFormat)
+#                 self.oUtils.DisplayError(sErrorMsg)
+#                 bLoadSuccess = False
+# 
+#             if bLoadSuccess and (slNode is not None):
+#                  
+#                 tupViewNode =\
+#                  [slNode, sImageDestination, sOrientation, sViewLayer,\
+#                  sImageType, sSeriesInstanceUID, sRoiVisibilityCode, lsRoiList]
+#                 self.ltupViewNodes.append(tupViewNode)
+#                  
+#                 if (sVolumeFormat == 'dicom') and (sImageType == 'RTStruct'):
+#                     self.ConvertSegmentationToLabelmap(lsRoiList)
 
-            if bLoadSuccess and (slNode is not None):
-                
-                tupViewNode =\
-                 [slNode, sImageDestination, sOrientation, sViewLayer,\
-                 sImageType, sSeriesInstanceUID, sRoiVisibilityCode, lsRoiList]
-                self.ltupViewNodes.append(tupViewNode)
-                
-                if (sVolumeFormat == 'dicom') and (sImageType == 'RTStruct'):
-                    self.ConvertSegmentationToLabelmap(lsRoiList)
+
+            if bLoadSuccess and (oImageViewItem.slNode is not None):
+                 
+                self.lViewNodes.append(oImageViewItem)
+                 
+#                 if (sVolumeFormat == 'dicom') and (sImageType == 'RTStruct'):
+#                     self.ConvertSegmentationToLabelmap(lsRoiList)
 
     
-        return self.ltupViewNodes
+        return self.lViewNodes
                     
                     
          
     #-----------------------------------------------
+    #         Manage Views
+    #-----------------------------------------------
+ 
+#    def AssignNodesToView(self, sSlicerNodeName, sImageDestination, sNodeLayer, sOrientation):
+#  
+#         slWidget = slicer.app.layoutManager().sliceWidget(sImageDestination)
+#         slWindowLogic = slWidget.sliceLogic()
+#         slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
+#         if sNodeLayer == 'Background':
+#             slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
+#             slWidget.setSliceOrientation(sOrientation)
+#         elif sNodeLayer == 'Foreground':
+#             slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
+#             slWidget.setSliceOrientation(sOrientation)
+#         elif sNodeLayer == 'Label':
+#             slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
+#         
+         
+    def AssignNodesToView(self, oViewNode):
+ 
+        slWidget = slicer.app.layoutManager().sliceWidget(oViewNode.sDestination)
+        slWindowLogic = slWidget.sliceLogic()
+        slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
+        if oViewNode.sViewLayer == 'Background':
+            slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
+            slWidget.setSliceOrientation(oViewNode.sOrientation)
+        elif oViewNode.sViewLayer == 'Foreground':
+            slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
+            slWidget.setSliceOrientation(oViewNode.sOrientation)
+        elif oViewNode.sViewLayer == 'Label':
+            slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
+        
+         
 
-    def ReadROIElements(self, xImage):
-        # if the Image type is RTStuct, XML holds a visibility code and (if applicable)
-        # a list of ROI names
-        # The visibility code is as follows: 
-        #    'All' : turn on visibility of all ROIs in RTStruct
-        #    'None': turn off visibility of all ROIs in RTStruct
-        #    'Ignore' : turn on all ROIs except the ones listed
-        #    'Select' : turn on visibility of only ROIs listed
+    #-----------------------------------------------
+    
+    def AssignViewToNone(self, sScreenColor):
         
-        # default - remains empty for All or None
-        lsRoiList = []
-        
-        # get XML ROIs element
-        xRoisNode = self.oIOXml.GetChildren(xImage, 'ROIs')
-        
-        # get visibility code from the attribute
-        sRoiVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(xRoisNode[0], 'roiVisibilityCode')
-
-        if (sRoiVisibilityCode == 'Select' or sRoiVisibilityCode == 'Ignore'):
-            
-            # get list of ROI children
-            xRoiChildren = self.oIOXml.GetChildren(xRoisNode[0], 'ROI')
-
-            for indRoi in range(len(xRoiChildren)):
-                sRoiName = self.oIOXml.GetDataInNode(xRoiChildren[indRoi])
-                lsRoiList.append(sRoiName)
-                
-                print('**** ROI :%s' % sRoiName)
-        
-        return sRoiVisibilityCode, lsRoiList
+        slWidget = slicer.app.layoutManager().sliceWidget(sScreenColor)
+        slLogic = slWidget.sliceLogic()
+        slCompNode = slLogic.GetSliceCompositeNode()
+        slCompNode.SetBackgroundVolumeID('None')
+        slCompNode.SetForegroundVolumeID('None')
+        slCompNode.SetLabelVolumeID('None')
         
     #-----------------------------------------------
 
@@ -278,42 +278,262 @@ class ImageView:
         
         
         
+    
+    
+    
+##########################################################################
+#
+#   Class ViewNodeBase
+#
+##########################################################################
+
+class ViewNodeBase(ABC):
+    """ Inherits from ABC - Abstract Base Class
+    """
+
+    def __init__(self,  parent=None):
+        self.sClassName = type(self).__name__
+        self.parent = parent
+    
+        self._slNode = None
+        self._sVolumeFormat = ''
+        self._sDestination = ''
+        self._sOrientation = ''
+        self._sViewLayer = ''
+        self._sImageType = ''
+        self._sImagePath = ''
+        self._sNodeName = ''
+        
+        #--------------------
+        # define getters and setters
+        #     use indirection - the setter calls an abstract method
+        #--------------------
+        
+        @property
+        def sImageType(self):
+            return self._sImageType
+        
+        @sImageType.setter
+        def sImageType(self, sInput):
+            self._sImageType_setter(sInput)
+            
+        @abstractmethod
+        def _sImageType_setter(self, sInput): pass
+ 
+        #--------------------
+         
+        @property
+        def sNodeName(self):
+            return self._sNodeName
+        
+        @sNodeName.setter
+        def sNodeName(self, sInput):
+            self._sNodeName_setter(sInput)
+            
+        @abstractmethod
+        def _sNodeName_setter(self, sInput): pass
+        
+        #--------------------
+
+        @property
+        def sImagePath(self):
+            return self._sImagePath
+        
+        @sImagePath.setter
+        def sImagePath(self, sInput):
+            self._sImagePath_setter(sInput)
+            
+        @abstractmethod
+        def _sImpagePath_setter(self, sInput): pass
+
+        #--------------------
+
+        @property
+        def sViewLayer(self):
+            return self._sViewLayer
+        
+        @sViewLayer.setter
+        def sViewLayer(self, sInput):
+            self._sViewLayer_setter(sInput)
+            
+        @abstractmethod
+        def _sViewLayer_setter(self, sInput): pass
+        
+        #--------------------
+
+        @property
+        def sOrientation(self):
+            return self._sOrientation
+        
+        @sOrientation.setter
+        def sOrientation(self, sInput):
+            self._sOrientation_setter(sInput)
+            
+        @abstractmethod
+        def _sOrientation_setter(self, sInput): pass
+
+        #--------------------
+
+        @property
+        def sDestination(self):
+            return self._sDestination
+        
+        @sDestination.setter
+        def sDestination(self, sInput):
+            self._sDestination_setter(sInput)
+            
+        @abstractmethod
+        def _sDestination_setter(self, sInput): pass
+
+        #--------------------
+
+        @property
+        def sVolumeFormat(self):
+            return self._sVolumeFormat
+        
+        @sVolumeFormat.setter
+        def sVolumeFormat(self, sInput):
+            self._sVolumeFormat_setter(sInput)
+            
+        @abstractmethod
+        def _sVolumeFormat_setter(self, sInput): pass
+        
+        #--------------------
+
+        @property
+        def slNode(self):
+            return self._slNode
+        
+        @slNode.setter
+        def slNode(self, sInput):
+            self._slNode_setter(sInput)
+            
+        @abstractmethod
+        def _slNode_setter(self, sInput): pass
+
+        #--------------------
+
+
+
+        
     #-----------------------------------------------
 
-    def LoadDataVolume(self, sNodeName, sImageType, sImagePath):
+    def ExtractImageAttributes(self):
+
+        self.sNodeDescriptor = self.oIOXml.GetValueOfNodeAttribute(self.xImage, 'descriptor')
+        self.sImageType = self.oIOXml.GetValueOfNodeAttribute(self.xImage, 'type')
+        self.sDestination = self.oIOXml.GetValueOfNodeAttribute(self.xImage, 'destination')
+        self.sOrientation = self.oIOXml.GetValueOfNodeAttribute(self.xImage, 'orientation')
+        self.sVolumeFormat = self.oIOXml.GetValueOfNodeAttribute(self.xImage, 'format')
+    
+    #-----------------------------------------------
+
+    def ExtractXMLNodeElements(self):
+        
+        # Extract path element
+        xPathNodes = self.oIOXml.GetChildren(self.xImage, 'Path')
+
+        if len(xPathNodes) > 1:
+            sWarningMsg = 'There can only be one path per image.  The first defined path will be used.'
+            sWarningMsg = sWarningMsg + '    Page name: ' + self.sPageName + '   Page description: ' + self.sPageDescriptor
+            self.oUtils.DisplayWarning( sWarningMsg )
+
+        self.sImagePath = self.oIOXml.GetDataInNode(xPathNodes[0])
+        
+        # Extract destination layer (foreground, background, label)
+        xLayerNodes = self.oIOXml.GetChildren(self.xImage, 'Layer')
+        if len(xLayerNodes) > 1:
+            sWarningMsg = 'There can only be one destination layer (foreground, background or label) per image. \nThe first defined destination in the XML will be used.'
+            sWarningMsg = sWarningMsg + '    Page name: ' + self.sPageName + '   Page description: ' + self.sPageDescriptor
+            self.oUtils.DisplayWarning(sWarningMsg)
+
+        self.sViewLayer = self.oIOXml.GetDataInNode(xLayerNodes[0])
+    
+    
+
+    #-----------------------------------------------
+
+    def CheckForNodeExists(self, sNodeClass):
+        # a node does not have to be loaded if it already exists
+        
+        
+        # initialize
+        bNodeExists = False
+        self.slNode = None
+        
+        # check for nodes by name and check it's the proper class
+        try:
+            self.slNode = slicer.mrmlScene.GetFirstNodeByName(self.sNodeName)
+            if (self.slNode.GetClassName() == sNodeClass) :
+                bNodeExists = True
+        except:
+            bNodeExists = False
+        
+        return bNodeExists
+    
+    
+##########################################################################
+#
+#   Class DataVolumeDetail
+#
+##########################################################################
+
+class DataVolumeDetail(ViewNodeBase):
+    
+    
+    def __init__(self, xImage):
+        self.sClassName = type(self).__name__
+        self.lValidVolumeFormats = ['nrrd','nii','mhd']
+        self.oIOXml = UtilsIOXml()
+        self.oUtils = Utilities()
+        self.xImage = xImage
+
+
+        self.ExtractImageAttributes()
+        self.ExtractXMLNodeElements()
+
+    def LoadVolume(self):
+        bLoadSuccess = self.LoadDataVolume()
+        return bLoadSuccess
+            
+
+
+    #-----------------------------------------------
+
+    def LoadDataVolume(self):
         
         # Load a 3D data volume file - check if already loaded (node exists)
         
         dictProperties = {}
         bNodeExists = False
-        slNode = None
+        self.slNode = None
 
 
         try:
                     
             bLoadSuccess = True
-            if (sImageType == 'Volume'):
+            if (self.sImageType == 'Volume'):
                 
-                bNodeExists, slNode = self.CheckForNodeExists(sNodeName, 'vtkMRMLScalarVolumeNode')
+                bNodeExists = self.CheckForNodeExists('vtkMRMLScalarVolumeNode')
                 if not (bNodeExists):
-                    slNode = slicer.util.loadVolume(sImagePath, {'show': False, 'name': sNodeName})
+                    self.slNode = slicer.util.loadVolume(self.sImagePath, {'show': False, 'name': self.sNodeName})
                 else: # make sure a node exists
-                    if bNodeExists and (slNode is None):
+                    if bNodeExists and (self.slNode is None):
                         bLoadSuccess = False
             
-            elif (sImageType == 'Labelmap'):
+            elif (self.sImageType == 'Labelmap'):
                 
-                bNodeExists, slNode = self.CheckForNodeExists(sNodeName, 'vtkMRMLLabelMapVolumeNode')
-                dictProperties = {'labelmap' : True, 'show': False, 'name': sNodeName}
+                bNodeExists = self.CheckForNodeExists( 'vtkMRMLLabelMapVolumeNode')
+                dictProperties = {'labelmap' : True, 'show': False, 'name': self.sNodeName}
                 if not (bNodeExists):
-                    slNode = slicer.util.loadLabelVolume(sImagePath, dictProperties)
+                    self.slNode = slicer.util.loadLabelVolume(self.sImagePath, dictProperties)
                 else: # make sure a node exists
-                    if bNodeExists and (slNode is None):
+                    if bNodeExists and (self.slNode is None):
                         bLoadSuccess = False
                     
             else:
                 
-                sErrorMsg = ('Undefined image type: %s' % sImageType)
+                sErrorMsg = ('Undefined image type: %s' % self.sImageType)
                 self.oUtils.DisplayError(sErrorMsg)
                 bLoadSuccess = False
                 
@@ -322,12 +542,87 @@ class ImageView:
             bLoadSuccess = False
         
         
-        return bLoadSuccess, slNode
+        return bLoadSuccess
     
+
+
+
+
+##########################################################################
+#
+#   Class DicomVolumeDetail
+#
+##########################################################################
+
+class DicomVolumeDetail(ViewNodeBase):
+    
+    
+    def __init__(self, xImage):
+        self.sClassName = type(self).__name__
+        self.lValidVolumeFormats = ['dicom']
+        self.oIOXml = UtilsIOXml()
+        self.oUtils = Utilities()
+        self.xImage = xImage
+        
+        self._sRoiVisibilityCode = ''
+
+        #--------------------
+        # define getters and setters
+        #     use indirection - the setter calls an abstract method
+        #--------------------
+        
+        @property
+        def sRoiVisibilityCode(self):
+            return self._sRoiVisibilityCode
+        
+        @sRoiVisibilityCode.setter
+        def sRoiVisibilityCode(self, sInput):
+            self._sRoiVisibilityCode_setter(sInput)
+            
+        @abstractmethod
+        def _sRoiVisibilityCode_setter(self, sInput): pass
+
+
+
+
+
+        self.ExtractImageAttributes()
+        self.ExtractXMLNodeElements()
+        self.ExtractROIElements()
+        
+        
+    def ExtractROIElements(self):
+        print('Getting ROI Stuff')
+        #             # set defaults to no RTSTruct
+        sSeriesInstanceUID = ''
+        self.sRoiVisibilityCode = 'Empty'
+        lsRoiList = []
+        if (self.sImageType == 'RTStruct'):
+            # extract Series UID nodes
+            xSeriesUIDNodes = self.oIOXml.GetChildren(self.xImage, 'SeriesInstanceUID')
+            if len(xSeriesUIDNodes) > 1:
+                sWarningMsg = 'There can only be one SeriesInstanceUID element per image. \nThe first defined Series UID in the XML will be used.'
+                sWarningMsg = sWarningMsg + '    Page name: ' + self.sPageName + '   Page description: ' + self.sPageDescriptor
+                self.oUtils.DisplayWarning(sWarningMsg)
+
+            sSeriesInstanceUID = self.oIOXml.GetDataInNode(xSeriesUIDNodes[0])
+            lsRoiList = self.ReadROIElements()
+        
+#         # Load images 
+#         bLoadSuccess = True
+#         if (sVolumeFormat == 'dicom'):
+#             bLoadSuccess, slNode = self.LoadDicomVolume(sImagePath, sImageType)
+
+        
+    def LoadVolume(self):
+            bLoadSuccess = self.LoadDicomVolume()
+            return bLoadSuccess
+        
+
     #-----------------------------------------------
 
-    def LoadDicomVolume(self, sDicomFilePath, sImageType):
-        slNode = None
+    def LoadDicomVolume(self):
+        self.slNode = None
         bLoadSuccess = False
 
         # first check if patient/series was already imported into the database
@@ -342,14 +637,14 @@ class ImageView:
             tags['patientID'] = "0010,0020"
             tags['seriesUID'] = "0020,000E"
             
-            sSeriesUIDToLoad = database.fileValue(sDicomFilePath, tags['seriesUID'])
-            sPatientName = database.fileValue(sDicomFilePath , tags['patientName'])
-            sPatientID = database.fileValue(sDicomFilePath , tags['patientID'])
+            sSeriesUIDToLoad = database.fileValue(self.sImagePath, tags['seriesUID'])
+            sPatientName = database.fileValue(self.sImagePath , tags['patientName'])
+            sPatientID = database.fileValue(self.sImagePath , tags['patientID'])
             sExpectedSubjectHierarchyName = sPatientName + ' (' + sPatientID + ')'
-#             print(' ~~~ Subject Hierarchy expected name : %s' % sExpectedSubjectHierarchyName)
+            print(' ~~~ Subject Hierarchy expected name : %s' % sExpectedSubjectHierarchyName)
             
             # get directory that stores the dicom series
-            sHead_Tail = os.path.split(sDicomFilePath)
+            sHead_Tail = os.path.split(self.sImagePath)
             sDicomSeriesDir = sHead_Tail[0]
             
             # check if already loaded into the database
@@ -374,7 +669,7 @@ class ImageView:
                 DICOMUtils.loadSeriesByUID([sSeriesUIDToLoad])
                 slNodeId = slSubjectHierarchyNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(),sSeriesUIDToLoad)
             
-            slNode = slSubjectHierarchyNode.GetItemDataNode(slNodeId)
+            self.slNode = slSubjectHierarchyNode.GetItemDataNode(slNodeId)
             bLoadSuccess = True
         
         else:
@@ -382,178 +677,40 @@ class ImageView:
             self.oUtils.DisplayError(sErrorMsg)
         
 
-        return bLoadSuccess, slNode
-    
-    #-----------------------------------------------
-    #         Manage Views
-    #-----------------------------------------------
- 
-    def AssignNodesToView(self, sSlicerNodeName, sImageDestination, sNodeLayer, sOrientation):
- 
-        slWidget = slicer.app.layoutManager().sliceWidget(sImageDestination)
-        slWindowLogic = slWidget.sliceLogic()
-        slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
-        if sNodeLayer == 'Background':
-            slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
-            slWidget.setSliceOrientation(sOrientation)
-        elif sNodeLayer == 'Foreground':
-            slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
-            slWidget.setSliceOrientation(sOrientation)
-        elif sNodeLayer == 'Label':
-            slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
-        
-         
-
-    #-----------------------------------------------
-    
-    def AssignViewToNone(self, sScreenColor):
-        
-        slWidget = slicer.app.layoutManager().sliceWidget(sScreenColor)
-        slLogic = slWidget.sliceLogic()
-        slCompNode = slLogic.GetSliceCompositeNode()
-        slCompNode.SetBackgroundVolumeID('None')
-        slCompNode.SetForegroundVolumeID('None')
-        slCompNode.SetLabelVolumeID('None')
-        
+        return bLoadSuccess
 
     #-----------------------------------------------
 
-    def CheckForNodeExists(self, sNodeName, sNodeClass):
-        # a node does not have to be loaded if it already exists
+    def ReadROIElements(self):
+        # if the Image type is RTStuct, XML holds a visibility code and (if applicable)
+        # a list of ROI names
+        # The visibility code is as follows: 
+        #    'All' : turn on visibility of all ROIs in RTStruct
+        #    'None': turn off visibility of all ROIs in RTStruct
+        #    'Ignore' : turn on all ROIs except the ones listed
+        #    'Select' : turn on visibility of only ROIs listed
         
+        # default - remains empty for All or None
+        lsRoiList = []
         
-        # initialize
-        bNodeExists = False
-        slNode = None
+        # get XML ROIs element
+        xRoisNode = self.oIOXml.GetChildren(self.xImage, 'ROIs')
         
-        # check for nodes by name and check it's the proper class
-        try:
-            slNode = slicer.mrmlScene.GetFirstNodeByName(sNodeName)
-            if (slNode.GetClassName() == sNodeClass) :
-                bNodeExists = True
-        except:
-            bNodeExists = False
-        
-        return bNodeExists, slNode
-    
-    
-##########################################################################
-#
-#   Class ViewNodeDetail
-#
-##########################################################################
+        # get visibility code from the attribute
+        self.sRoiVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(xRoisNode[0], 'roiVisibilityCode')
 
-class ViewNodeBaseClass(ABC):
-    """ Inherits from ABC - Abstract Base Class
-    """
-
-    def __init__(self,  parent=None):
-        self.sClassName = type(self).__name__
-        self.parent = parent
-    
-        self.oUtils = Utilities()
-
-        self.slNode = None
-        self.sVolumeFormat = ''
-        self.sDestination = ''
-        self.sOrientation = ''
-        self.sViewLayer = ''
-        self.ImageType = ''
-        
-        self.lValidViewLayers = ['Foreground', 'Background', 'Label']
-        self.lValidImageTypes = ['Volume', 'Labelmap', 'RTStruct']
-
-#     @property
-#     @abstractmethod
-#     def sDestination(self): pass
-# 
-#     @property
-#     @abstractmethod
-#     def sOrientation(self): pass
-
-    @abstractmethod        
-    def SetVolumeFormat(self): pass
-
-
-        
-    def SetViewDestination(self, sInput):
-        lValidDestinations = ['Red', 'Yellow', 'Green' ]
-        if (sInput in lValidDestinations):
-            self.sDestination = sInput
-        else:
-            sErrorMsg = ('Invalid image destination: %s' % sInput)
-            self.oUtils.DisplayError(sErrorMsg)
-        
-        
-    def SetViewOrientation(self, sInput):
-        lValidOrientations = ['Axial', 'Sagittal', 'Coronal']
-        if (sInput in lValidOrientations):
-            self.sOrientation = sInput
-        else:
-            sErrorMsg = ('Invalid image orientation: %s' % sInput)
-            self.oUtils.DisplayError(sErrorMsg)
-
-
-    def SetViewLayer(self, sInput):
-        if (sInput in self.lValidViewLayers):
-            self.sViewLayer = sInput
-        else:
-            sErrorMsg = ('Invalid viewing layer: %s' % sInput)
-            self.oUtils.DisplayError(sErrorMsg)
-
-        
-
-    
-    
-    def GetViewDestination(self):
-        return self.sDestination
-
-    
-    def GetViewOrientation(self):
-        return self.sOrientation
-        
-        
-##########################################################################
-#
-#   Class DataVolumeDetail
-#
-##########################################################################
-
-class DataVolumeDetail(ViewNodeBaseClass):
-    
-    
-    def __init__(self):
-        self.sClassName = type(self).__name__
-        self.lValidVolumeFormats = ['nrrd','nii','mhd']
-        
-        
-    def SetVolumeFormat(self, sInput):
-        if (sInput in self.lValidVolumeFormats):
-            self.sVolumeFormat = sInput
-        else:
-            sErrorMsg = ('Invalid data volume format: %s' % sInput)
-            self.oUtils.DisplayError(sErrorMsg)
+        if (self.sRoiVisibilityCode == 'Select' or self.sRoiVisibilityCode == 'Ignore'):
             
+            # get list of ROI children
+            xRoiChildren = self.oIOXml.GetChildren(xRoisNode[0], 'ROI')
 
-##########################################################################
-#
-#   Class DicomVolumeDetail
-#
-##########################################################################
-
-class DicomVolumeDetail(ViewNodeBaseClass):
-    
-    
-    def __init__(self):
-        self.sClassName = type(self).__name__
-        self.lValidVolumeFormats = ['dicom']
+            for indRoi in range(len(xRoiChildren)):
+                sRoiName = self.oIOXml.GetDataInNode(xRoiChildren[indRoi])
+                lsRoiList.append(sRoiName)
+                
+                print('**** ROI :%s' % sRoiName)
         
+        return lsRoiList
         
-    def SetVolumeFormat(self, sInput):
-        if (sInput in self.lValidVolumeFormats):
-            self.sVolumeFormat = sInput
-        else:
-            sErrorMsg = ('Invalid data volume format: %s' % sInput)
-            self.oUtils.DisplayError(sErrorMsg)
 
         
