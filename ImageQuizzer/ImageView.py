@@ -30,7 +30,7 @@ class ImageView:
         self.sPageName = ''
         self.sPageDescriptor = ''
         
-        self.lValidVolumeFormats = ['nrrd','nii','mhd']
+        self.lValidVolumeFormats = ['nrrd', 'nii', 'mhd', 'dicom']
         self.ltupViewNodes = []
         self.lViewNodes = []
         
@@ -81,15 +81,19 @@ class ImageView:
         for indImage in range(len(xImages)):
 
 
-#             # Extract image attributes
+            sPageID = self.sPageName + '_' + self.sPageDescriptor
+            # Extract volume attribute
             sVolumeFormat = self.oIOXml.GetValueOfNodeAttribute(xImages[indImage], 'format')
+            if not (sVolumeFormat in self.lValidVolumeFormats):
+                sErrorMsg = 'Invalid data format defined for patient in XML : '
+                sErrorMsg = sErrorMsg + sPageID
+                self.oUtils.DisplayError(sErrorMsg)
             
             if (sVolumeFormat == 'dicom'):
-                oImageViewItem = DicomVolumeDetail(xImages[indImage])
+                oImageViewItem = DicomVolumeDetail(xImages[indImage], sPageID)
             else:
-                oImageViewItem = DataVolumeDetail(xImages[indImage])
+                oImageViewItem = DataVolumeDetail(xImages[indImage], sPageID)
                 
-            oImageViewItem.sNodeName = self.sPageName + '_' + self.sPageDescriptor + '_' + oImageViewItem.sNodeDescriptor
             bLoadSuccess = oImageViewItem.LoadVolume()
                 
                 
@@ -158,20 +162,6 @@ class ImageView:
     #         Manage Views
     #-----------------------------------------------
  
-#    def AssignNodesToView(self, sSlicerNodeName, sImageDestination, sNodeLayer, sOrientation):
-#  
-#         slWidget = slicer.app.layoutManager().sliceWidget(sImageDestination)
-#         slWindowLogic = slWidget.sliceLogic()
-#         slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
-#         if sNodeLayer == 'Background':
-#             slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
-#             slWidget.setSliceOrientation(sOrientation)
-#         elif sNodeLayer == 'Foreground':
-#             slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
-#             slWidget.setSliceOrientation(sOrientation)
-#         elif sNodeLayer == 'Label':
-#             slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(sSlicerNodeName).GetID())
-#         
          
     def AssignNodesToView(self, oViewNode):
  
@@ -295,6 +285,9 @@ class ViewNodeBase(ABC):
         self.sClassName = type(self).__name__
         self.parent = parent
     
+#         self._sPageName = ''
+#         self._sPageDescriptor = ''
+        self._sPageID = ''
         self._slNode = None
         self._sVolumeFormat = ''
         self._sDestination = ''
@@ -304,86 +297,38 @@ class ViewNodeBase(ABC):
         self._sImagePath = ''
         self._sNodeName = ''
         
+        
+
         #--------------------
         # define getters and setters
         #     use indirection - the setter calls an abstract method
         #--------------------
         
-        @property
-        def sImageType(self):
-            return self._sImageType
-        
-        @sImageType.setter
-        def sImageType(self, sInput):
-            self._sImageType_setter(sInput)
-            
-        @abstractmethod
-        def _sImageType_setter(self, sInput): pass
- 
-        #--------------------
-         
-        @property
-        def sNodeName(self):
-            return self._sNodeName
-        
-        @sNodeName.setter
-        def sNodeName(self, sInput):
-            self._sNodeName_setter(sInput)
-            
-        @abstractmethod
-        def _sNodeName_setter(self, sInput): pass
-        
         #--------------------
 
         @property
-        def sImagePath(self):
-            return self._sImagePath
+        def sPageID(self):
+            return self._sPageID
         
-        @sImagePath.setter
-        def sImagePath(self, sInput):
-            self._sImagePath_setter(sInput)
+        @sPageID.setter
+        def sPageID(self, sInput):
+            self._sPageID_setter(sInput)
             
         @abstractmethod
-        def _sImpagePath_setter(self, sInput): pass
+        def _sPageID_setter(self, sInput): pass
 
         #--------------------
 
         @property
-        def sViewLayer(self):
-            return self._sViewLayer
+        def slNode(self):
+            return self._slNode
         
-        @sViewLayer.setter
-        def sViewLayer(self, sInput):
-            self._sViewLayer_setter(sInput)
+        @slNode.setter
+        def slNode(self, sInput):
+            self._slNode_setter(sInput)
             
         @abstractmethod
-        def _sViewLayer_setter(self, sInput): pass
-        
-        #--------------------
-
-        @property
-        def sOrientation(self):
-            return self._sOrientation
-        
-        @sOrientation.setter
-        def sOrientation(self, sInput):
-            self._sOrientation_setter(sInput)
-            
-        @abstractmethod
-        def _sOrientation_setter(self, sInput): pass
-
-        #--------------------
-
-        @property
-        def sDestination(self):
-            return self._sDestination
-        
-        @sDestination.setter
-        def sDestination(self, sInput):
-            self._sDestination_setter(sInput)
-            
-        @abstractmethod
-        def _sDestination_setter(self, sInput): pass
+        def _slNode_setter(self, sInput): pass
 
         #--------------------
 
@@ -401,18 +346,81 @@ class ViewNodeBase(ABC):
         #--------------------
 
         @property
-        def slNode(self):
-            return self._slNode
+        def sDestination(self):
+            return self._sDestination
         
-        @slNode.setter
-        def slNode(self, sInput):
-            self._slNode_setter(sInput)
+        @sDestination.setter
+        def sDestination(self, sInput):
+            self._sDestination_setter(sInput)
             
         @abstractmethod
-        def _slNode_setter(self, sInput): pass
+        def _sDestination_setter(self, sInput): pass
 
         #--------------------
 
+        @property
+        def sOrientation(self):
+            return self._sOrientation
+        
+        @sOrientation.setter
+        def sOrientation(self, sInput):
+            self._sOrientation_setter(sInput)
+            
+        @abstractmethod
+        def _sOrientation_setter(self, sInput): pass
+
+        #--------------------
+
+        @property
+        def sViewLayer(self):
+            return self._sViewLayer
+        
+        @sViewLayer.setter
+        def sViewLayer(self, sInput):
+            self._sViewLayer_setter(sInput)
+            
+        @abstractmethod
+        def _sViewLayer_setter(self, sInput): pass
+        
+        #--------------------
+
+        @property
+        def sImageType(self):
+            return self._sImageType
+        
+        @sImageType.setter
+        def sImageType(self, sInput):
+            self._sImageType_setter(sInput)
+            
+        @abstractmethod
+        def _sImageType_setter(self, sInput): pass
+ 
+        #--------------------
+
+        @property
+        def sImagePath(self):
+            return self._sImagePath
+        
+        @sImagePath.setter
+        def sImagePath(self, sInput):
+            self._sImagePath_setter(sInput)
+            
+        @abstractmethod
+        def _sImpagePath_setter(self, sInput): pass
+
+        #--------------------
+         
+        @property
+        def sNodeName(self):
+            return self._sNodeName
+        
+        @sNodeName.setter
+        def sNodeName(self, sInput):
+            self._sNodeName_setter(sInput)
+            
+        @abstractmethod
+        def _sNodeName_setter(self, sInput): pass
+        
 
 
         
@@ -426,6 +434,8 @@ class ViewNodeBase(ABC):
         self.sOrientation = self.oIOXml.GetValueOfNodeAttribute(self.xImage, 'orientation')
         self.sVolumeFormat = self.oIOXml.GetValueOfNodeAttribute(self.xImage, 'format')
     
+        self.sNodeName =  self.sPageID + '_' + self.sNodeDescriptor
+
     #-----------------------------------------------
 
     def ExtractXMLNodeElements(self):
@@ -434,8 +444,8 @@ class ViewNodeBase(ABC):
         xPathNodes = self.oIOXml.GetChildren(self.xImage, 'Path')
 
         if len(xPathNodes) > 1:
-            sWarningMsg = 'There can only be one path per image.  The first defined path will be used.'
-            sWarningMsg = sWarningMsg + '    Page name: ' + self.sPageName + '   Page description: ' + self.sPageDescriptor
+            sWarningMsg = 'There can only be one path per image.  The first defined path will be used.   '
+            sWarningMsg = sWarningMsg + self.sNodeName
             self.oUtils.DisplayWarning( sWarningMsg )
 
         self.sImagePath = self.oIOXml.GetDataInNode(xPathNodes[0])
@@ -443,8 +453,8 @@ class ViewNodeBase(ABC):
         # Extract destination layer (foreground, background, label)
         xLayerNodes = self.oIOXml.GetChildren(self.xImage, 'Layer')
         if len(xLayerNodes) > 1:
-            sWarningMsg = 'There can only be one destination layer (foreground, background or label) per image. \nThe first defined destination in the XML will be used.'
-            sWarningMsg = sWarningMsg + '    Page name: ' + self.sPageName + '   Page description: ' + self.sPageDescriptor
+            sWarningMsg = 'There can only be one destination layer (foreground, background or label) per image. \nThe first defined destination in the XML will be used.   '
+            sWarningMsg = sWarningMsg + self.sNodeName
             self.oUtils.DisplayWarning(sWarningMsg)
 
         self.sViewLayer = self.oIOXml.GetDataInNode(xLayerNodes[0])
@@ -481,16 +491,17 @@ class ViewNodeBase(ABC):
 class DataVolumeDetail(ViewNodeBase):
     
     
-    def __init__(self, xImage):
+    def __init__(self, xImage, sPageID):
         self.sClassName = type(self).__name__
-        self.lValidVolumeFormats = ['nrrd','nii','mhd']
         self.oIOXml = UtilsIOXml()
         self.oUtils = Utilities()
         self.xImage = xImage
+        self.sPageID = sPageID
 
 
         self.ExtractImageAttributes()
         self.ExtractXMLNodeElements()
+
 
     def LoadVolume(self):
         bLoadSuccess = self.LoadDataVolume()
@@ -557,12 +568,12 @@ class DataVolumeDetail(ViewNodeBase):
 class DicomVolumeDetail(ViewNodeBase):
     
     
-    def __init__(self, xImage):
+    def __init__(self, xImage, sPageID):
         self.sClassName = type(self).__name__
-        self.lValidVolumeFormats = ['dicom']
         self.oIOXml = UtilsIOXml()
         self.oUtils = Utilities()
         self.xImage = xImage
+        self.sPageID = sPageID
         
         self._sRoiVisibilityCode = ''
 
@@ -601,8 +612,8 @@ class DicomVolumeDetail(ViewNodeBase):
             # extract Series UID nodes
             xSeriesUIDNodes = self.oIOXml.GetChildren(self.xImage, 'SeriesInstanceUID')
             if len(xSeriesUIDNodes) > 1:
-                sWarningMsg = 'There can only be one SeriesInstanceUID element per image. \nThe first defined Series UID in the XML will be used.'
-                sWarningMsg = sWarningMsg + '    Page name: ' + self.sPageName + '   Page description: ' + self.sPageDescriptor
+                sWarningMsg = 'There can only be one SeriesInstanceUID element per image. \nThe first defined Series UID in the XML will be used.   '
+                sWarningMsg = sWarningMsg + self.sNodeName
                 self.oUtils.DisplayWarning(sWarningMsg)
 
             sSeriesInstanceUID = self.oIOXml.GetDataInNode(xSeriesUIDNodes[0])
