@@ -31,8 +31,7 @@ class ImageView:
         self.sPageDescriptor = ''
         
         self.lValidVolumeFormats = ['nrrd', 'nii', 'mhd', 'dicom']
-        self.ltupViewNodes = []
-        self.lViewNodes = []
+        self.loViewNodes = []
         
         
 
@@ -54,19 +53,17 @@ class ImageView:
         self.iNumImages = self.oIOXml.GetNumChildren(xPageNode, 'Image')
         
        
-        self.lViewNodes = self.BuildViewNodes(self.xImages)
+        self.loViewNodes = self.BuildViewNodes(self.xImages)
         
         
-        if len(self.lViewNodes) > 0:
+        if len(self.loViewNodes) > 0:
             # clear images
             self.AssignViewToNone('Red')
             self.AssignViewToNone('Yellow')
             self.AssignViewToNone('Green')
 
-            for i in range(len(self.lViewNodes)):
-                self.AssignNodesToView(self.lViewNodes[i])
-#                 if not (self.lViewNodes[i].sRoiVisibilityCode == 'Empty'):
-#                     self.SetRoiVisibility( sSeriesInstanceUID, sRoiVisibilityCode, lsRoiList)
+            for i in range(len(self.loViewNodes)):
+                self.AssignNodesToView(self.loViewNodes[i])
                 
 
 
@@ -76,7 +73,7 @@ class ImageView:
 
     def BuildViewNodes(self, xImages):
         
-
+        bLoadSuccess = False
         # for each image
         for indImage in range(len(xImages)):
 
@@ -97,64 +94,15 @@ class ImageView:
             bLoadSuccess = oImageViewItem.LoadVolume()
                 
                 
-                
-                
-                
-                
-# 
-# 
-#             # if image format/type is dicom/RTStruct, get the ROI elements
-#             
-#             # set defaults to no RTSTruct
-#             sSeriesInstanceUID = ''
-#             sRoiVisibilityCode = 'Empty'
-#             lsRoiList = []
-#             if (sVolumeFormat == 'dicom' and sImageType == 'RTStruct'):
-#                 # extract Series UID nodes
-#                 xSeriesUIDNodes = self.oIOXml.GetChildren(xImages[indImage], 'SeriesInstanceUID')
-#                 if len(xSeriesUIDNodes) > 1:
-#                     sWarningMsg = 'There can only be one SeriesInstanceUID element per image. \nThe first defined Series UID in the XML will be used.'
-#                     sWarningMsg = sWarningMsg + '    Page name: ' + self.sPageName + '   Page description: ' + self.sPageDescriptor
-#                     self.oUtils.DisplayWarning(sWarningMsg)
-# 
-#                 sSeriesInstanceUID = self.oIOXml.GetDataInNode(xSeriesUIDNodes[0])
-#                 sRoiVisibilityCode, lsRoiList = self.ReadROIElements(xImages[indImage])
-#             
-#             # Load images 
-#             bLoadSuccess = True
-#             if (sVolumeFormat == 'dicom'):
-#                 bLoadSuccess, slNode = self.LoadDicomVolume(sImagePath, sImageType)
-# 
-# 
-#             elif (sVolumeFormat in self.lValidVolumeFormats):
-#                 bLoadSuccess, slNode = self.LoadDataVolume(sNodeName, sImageType, sImagePath)
-# 
-#                         
-#             else:
-#                 sErrorMsg = ('Undefined volume format : %s' % sVolumeFormat)
-#                 self.oUtils.DisplayError(sErrorMsg)
-#                 bLoadSuccess = False
-# 
-#             if bLoadSuccess and (slNode is not None):
-#                  
-#                 tupViewNode =\
-#                  [slNode, sImageDestination, sOrientation, sViewLayer,\
-#                  sImageType, sSeriesInstanceUID, sRoiVisibilityCode, lsRoiList]
-#                 self.ltupViewNodes.append(tupViewNode)
-#                  
-#                 if (sVolumeFormat == 'dicom') and (sImageType == 'RTStruct'):
-#                     self.ConvertSegmentationToLabelmap(lsRoiList)
-
-
             if bLoadSuccess and (oImageViewItem.slNode is not None):
                  
-                self.lViewNodes.append(oImageViewItem)
+                self.loViewNodes.append(oImageViewItem)
                  
 #                 if (sVolumeFormat == 'dicom') and (sImageType == 'RTStruct'):
 #                     self.ConvertSegmentationToLabelmap(lsRoiList)
 
     
-        return self.lViewNodes
+        return self.loViewNodes
                     
                     
          
@@ -190,83 +138,6 @@ class ImageView:
         slCompNode.SetForegroundVolumeID('None')
         slCompNode.SetLabelVolumeID('None')
         
-    #-----------------------------------------------
-
-    def SetRoiVisibility(self, sSeriesInstanceUID, sRoiVisibilityCode, lsUserSelectRoiList):
-        # in order to set visibility, you have to traverse Slicer's subject hierarchy
-        # accessing the segmentation node, its children (to get ROI names) and its data node
-        
-        
-        # get Slicer's subject hierarchy node (SHNode)
-        
-        slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-        
-        
-        # get the item ID for the RTStruct through the Series Instance UID
-        
-        slRTStructItemId = slSHNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(), sSeriesInstanceUID)
-
-
-        # using slicers vtk Item Id for the RTStruct, get the ROI names (children)
-        
-        slRTStructChildren = vtk.vtkIdList()    # initialize to ItemId type
-        slSHNode.GetItemChildren(slRTStructItemId, slRTStructChildren) # populate children variable
-        
-        
-        # get ROI child Item ID and store the child (ROI) name
-        
-        lsSubjectHierarchyROINames = []
-        for indROI in range(slRTStructChildren.GetNumberOfIds()):
-            slROIItemId = slRTStructChildren.GetId(indROI)
-            sROIName = slSHNode.GetItemName(slROIItemId)
-            lsSubjectHierarchyROINames.append(sROIName)
-        
-        
-        # get segmentation node name from data node
-        
-        slSegDataNode = slSHNode.GetItemDataNode(slRTStructItemId)
-        slSegNodeId = slSegDataNode.GetDisplayNodeID()
-        slSegNode = slicer.mrmlScene.GetNodeByID(slSegNodeId)
-        
-        
-        # adjust visibility of each ROI as per user's request
-        
-        if (sRoiVisibilityCode == 'All'):
-            for indSHList in range(len(lsSubjectHierarchyROINames)):
-                slSegNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],True)
-                
-        if (sRoiVisibilityCode == 'None'):
-            for indSHList in range(len(lsSubjectHierarchyROINames)):
-                slSegNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],False)
-            
-        # turn ON all ROI's and then turn OFF user's list    
-        if (sRoiVisibilityCode == 'Ignore'):
-            for indSHList in range(len(lsSubjectHierarchyROINames)):
-                slSegNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],True)
-            for indUserList in range(len(lsUserSelectRoiList)):
-                slSegNode.SetSegmentVisibility(lsUserSelectRoiList[indUserList], False)
-
-        # turn OFF all ROI's and then turn ON user's list    
-        if (sRoiVisibilityCode == 'Select'):
-            for indSHList in range(len(lsSubjectHierarchyROINames)):
-                slSegNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],False)
-            for indUserList in range(len(lsUserSelectRoiList)):
-                slSegNode.SetSegmentVisibility(lsUserSelectRoiList[indUserList], True)
-        
-    #-----------------------------------------------
-
-    def ConvertSegmentationToLabelmap(self, lsRoiList):
-        
-        # To gain control of segment visibility in different view windows,
-        # the ROI's in the Segmentation layer are converted to label maps
-        
-        # add a label map node to the subject hierarchy
-        slLabelMapNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode')
-        
-        # get the segmentation node containing the ROI's to be converted
-        
-        
-        
         
     
     
@@ -285,8 +156,6 @@ class ViewNodeBase(ABC):
         self.sClassName = type(self).__name__
         self.parent = parent
     
-#         self._sPageName = ''
-#         self._sPageDescriptor = ''
         self._sPageID = ''
         self._slNode = None
         self._sVolumeFormat = ''
@@ -304,8 +173,6 @@ class ViewNodeBase(ABC):
         #     use indirection - the setter calls an abstract method
         #--------------------
         
-        #--------------------
-
         @property
         def sPageID(self):
             return self._sPageID
@@ -575,59 +442,47 @@ class DicomVolumeDetail(ViewNodeBase):
         self.xImage = xImage
         self.sPageID = sPageID
         
-        self._sRoiVisibilityCode = ''
+        self.sRoiVisibilityCode = 'Empty'
+        self.sVolumeReferenceSeriesUID = ''
+        self.sRTStructSeriesUID = ''
+        self.lsRoiList = []
+
 
         #--------------------
-        # define getters and setters
-        #     use indirection - the setter calls an abstract method
-        #--------------------
-        
-        @property
-        def sRoiVisibilityCode(self):
-            return self._sRoiVisibilityCode
-        
-        @sRoiVisibilityCode.setter
-        def sRoiVisibilityCode(self, sInput):
-            self._sRoiVisibilityCode_setter(sInput)
-            
-        @abstractmethod
-        def _sRoiVisibilityCode_setter(self, sInput): pass
-
-
-
-
 
         self.ExtractImageAttributes()
         self.ExtractXMLNodeElements()
-        self.ExtractROIElements()
+        self.ExtractDicomElements()
+        i = 1
         
+    #-----------------------------------------------
         
-    def ExtractROIElements(self):
-        print('Getting ROI Stuff')
-        #             # set defaults to no RTSTruct
-        sSeriesInstanceUID = ''
-        self.sRoiVisibilityCode = 'Empty'
-        lsRoiList = []
-        if (self.sImageType == 'RTStruct'):
-            # extract Series UID nodes
-            xSeriesUIDNodes = self.oIOXml.GetChildren(self.xImage, 'SeriesInstanceUID')
-            if len(xSeriesUIDNodes) > 1:
-                sWarningMsg = 'There can only be one SeriesInstanceUID element per image. \nThe first defined Series UID in the XML will be used.   '
-                sWarningMsg = sWarningMsg + self.sNodeName
-                self.oUtils.DisplayWarning(sWarningMsg)
+    def ExtractDicomElements(self):
 
-            sSeriesInstanceUID = self.oIOXml.GetDataInNode(xSeriesUIDNodes[0])
-            lsRoiList = self.ReadROIElements()
-        
-#         # Load images 
-#         bLoadSuccess = True
-#         if (sVolumeFormat == 'dicom'):
-#             bLoadSuccess, slNode = self.LoadDicomVolume(sImagePath, sImageType)
+        # extract Series UID nodes
+        xSeriesUIDNodes = self.oIOXml.GetChildren(self.xImage, 'SeriesInstanceUID')
+        if len(xSeriesUIDNodes) > 1:
+            sWarningMsg = 'There can only be one SeriesInstanceUID element per image. \nThe first defined Series UID in the XML will be used.   '
+            sWarningMsg = sWarningMsg + self.sNodeName
+            self.oUtils.DisplayWarning(sWarningMsg)
+        sSeriesInstanceUID = self.oIOXml.GetDataInNode(xSeriesUIDNodes[0])
 
+            
+        if (self.sImageType == 'Volume'):
+            self.sVolumeReferenceSeriesUID = sSeriesInstanceUID
+        elif (self.sImageType == 'RTStruct'):
+            self.sRTStructSeriesUID = sSeriesInstanceUID
+#             self.lsRoiList = self.ReadROIElements()
+            self.ReadROIElements()
+        
+
+    #-----------------------------------------------
         
     def LoadVolume(self):
-            bLoadSuccess = self.LoadDicomVolume()
-            return bLoadSuccess
+        bLoadSuccess = self.LoadDicomVolume()
+        if not (self.sRoiVisibilityCode == 'Empty'):
+            self.SetRoiVisibility( )
+        return bLoadSuccess
         
 
     #-----------------------------------------------
@@ -648,13 +503,17 @@ class DicomVolumeDetail(ViewNodeBase):
             tags['patientID'] = "0010,0020"
             tags['seriesUID'] = "0020,000E"
             
+            # using the path defined by the user to one of the files in the series,
+            # access dicom information stored in that series
+            
             sSeriesUIDToLoad = database.fileValue(self.sImagePath, tags['seriesUID'])
             sPatientName = database.fileValue(self.sImagePath , tags['patientName'])
             sPatientID = database.fileValue(self.sImagePath , tags['patientID'])
             sExpectedSubjectHierarchyName = sPatientName + ' (' + sPatientID + ')'
             print(' ~~~ Subject Hierarchy expected name : %s' % sExpectedSubjectHierarchyName)
+
             
-            # get directory that stores the dicom series
+            # extract directory that stores the dicom series from defined image path
             sHead_Tail = os.path.split(self.sImagePath)
             sDicomSeriesDir = sHead_Tail[0]
             
@@ -663,12 +522,14 @@ class DicomVolumeDetail(ViewNodeBase):
                 if sImportedSeries == sSeriesUIDToLoad:
                     bSeriesFoundInDB = True
                 
-            # if not already loaded, import from series directory    
+            # if not already loaded, import from series directory 
+            #  NOTE: if more than one series is located in this directory, 
+            #        all series will be imported
             if not bSeriesFoundInDB:
                 DICOMUtils.importDicom(sDicomSeriesDir)
 
 
-            # check subject hierarchy to see if volume already exists
+            # check subject hierarchy to see if volume already exists (loaded)
             bVolumeAlreadyLoaded = False
             
             
@@ -680,7 +541,10 @@ class DicomVolumeDetail(ViewNodeBase):
                 DICOMUtils.loadSeriesByUID([sSeriesUIDToLoad])
                 slNodeId = slSubjectHierarchyNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(),sSeriesUIDToLoad)
             
+
+            # update the class properties with the slicer node and node name 
             self.slNode = slSubjectHierarchyNode.GetItemDataNode(slNodeId)
+            self.sNodeName = self.slNode.GetName()
             bLoadSuccess = True
         
         else:
@@ -701,9 +565,6 @@ class DicomVolumeDetail(ViewNodeBase):
         #    'Ignore' : turn on all ROIs except the ones listed
         #    'Select' : turn on visibility of only ROIs listed
         
-        # default - remains empty for All or None
-        lsRoiList = []
-        
         # get XML ROIs element
         xRoisNode = self.oIOXml.GetChildren(self.xImage, 'ROIs')
         
@@ -717,11 +578,87 @@ class DicomVolumeDetail(ViewNodeBase):
 
             for indRoi in range(len(xRoiChildren)):
                 sRoiName = self.oIOXml.GetDataInNode(xRoiChildren[indRoi])
-                lsRoiList.append(sRoiName)
+                self.lsRoiList.append(sRoiName)
                 
-                print('**** ROI :%s' % sRoiName)
+#                 print('**** ROI :%s' % sRoiName)
         
-        return lsRoiList
+    #-----------------------------------------------
+
+    def SetRoiVisibility(self):
+        # in order to set visibility, you have to traverse Slicer's subject hierarchy
+        # accessing the segmentation node, its children (to get ROI names) and its data node
+        
+        
+        # get Slicer's subject hierarchy node (SHNode)
+        
+        slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+        
+        
+        # get the item ID for the RTStruct through the RTStruct Series Instance UID
+        
+        slRTStructItemId = slSHNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(), self.sRTStructSeriesUID)
+
+
+        # using slicers vtk Item Id for the RTStruct, get the ROI names (children)
+        
+        slRTStructChildren = vtk.vtkIdList()    # initialize to ItemId type
+        slSHNode.GetItemChildren(slRTStructItemId, slRTStructChildren) # populate children variable
+        
+        
+        # get ROI child Item ID and store the child (ROI) name
+        
+        lsSubjectHierarchyROINames = []
+        for indROI in range(slRTStructChildren.GetNumberOfIds()):
+            slROIItemId = slRTStructChildren.GetId(indROI)
+            sROIName = slSHNode.GetItemName(slROIItemId)
+            lsSubjectHierarchyROINames.append(sROIName)
+        
+        
+        # get segmentation node name from data node
+        
+        slSegDataNode = slSHNode.GetItemDataNode(slRTStructItemId)
+        slSegNodeId = slSegDataNode.GetDisplayNodeID()
+        slSegNode = slicer.mrmlScene.GetNodeByID(slSegNodeId)
+        
+        
+        # adjust visibility of each ROI as per user's request
+        
+        if (self.sRoiVisibilityCode == 'All'):
+            for indSHList in range(len(lsSubjectHierarchyROINames)):
+                slSegNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],True)
+                
+        if (self.sRoiVisibilityCode == 'None'):
+            for indSHList in range(len(lsSubjectHierarchyROINames)):
+                slSegNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],False)
+            
+        # turn ON all ROI's and then turn OFF user's list    
+        if (self.sRoiVisibilityCode == 'Ignore'):
+            for indSHList in range(len(lsSubjectHierarchyROINames)):
+                slSegNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],True)
+            for indUserList in range(len(self.lsRoiList)):
+                slSegNode.SetSegmentVisibility(self.lsRoiList[indUserList], False)
+
+        # turn OFF all ROI's and then turn ON user's list    
+        if (self.sRoiVisibilityCode == 'Select'):
+            for indSHList in range(len(lsSubjectHierarchyROINames)):
+                slSegNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],False)
+            for indUserList in range(len(self.lsRoiList)):
+                slSegNode.SetSegmentVisibility(self.lsRoiList[indUserList], True)
+        
+    #-----------------------------------------------
+
+    def ConvertSegmentationToLabelmap(self, lsRoiList):
+        
+        # To gain control of segment visibility in different view windows,
+        # the ROI's in the Segmentation layer are converted to label maps
+        
+        # add a label map node to the subject hierarchy
+        slLabelMapNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode')
+        
+        # get the segmentation node containing the ROI's to be converted
+        
+        
+        
         
 
         

@@ -46,8 +46,8 @@ class Session:
         self.sUsername = sUsername
         self.quizLayout = quizLayout
         self.mainLayout = mainLayout
-        print(self.sXmlFilename)
-        print(self.sUsername)
+#         print(self.sXmlFilename)
+#         print(self.sUsername)
         
         # TODO: create and add user-timestamp node
         # TODO: determine study status based on recorded answers
