@@ -106,22 +106,20 @@
 		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Red" orientation="Axial">
 			<Layer>Background</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
-			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
 		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Yellow" orientation="Sagittal">
 			<Layer>Background</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
-			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
 		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Green" orientation="Coronal">
 			<Layer>Background</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
-			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
 		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Red" orientation="Axial">
 			<Layer>Segmentation</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
-			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RTSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</RTSeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
 			<ROIs roiVisibilityCode="Select">
 				<ROI>Tumor_Contour</ROI>
 				<ROI>Body_Contour</ROI>
@@ -130,7 +128,8 @@
 		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Yellow" orientation="Sagittal">
 			<Layer>Segmentation</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
-			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RTSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</RTSeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
 			<ROIs roiVisibilityCode="Select">
 				<ROI>Tumor_Contour</ROI>
 				<ROI>Body_Contour</ROI>
@@ -139,7 +138,8 @@
 		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Green" orientation="Coronal">
 			<Layer>Segmentation</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
-			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RTSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</RTSeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
 			<ROIs roiVisibilityCode="Select">
 				<ROI>Tumor_Contour</ROI>
 				<ROI>Body_Contour</ROI>

@@ -158,7 +158,7 @@ class ViewNodeBase(ABC):
     
         self._sPageID = ''
         self._slNode = None
-        self._sVolumeFormat = ''
+#         self._sVolumeFormat = ''
         self._sDestination = ''
         self._sOrientation = ''
         self._sViewLayer = ''
@@ -197,19 +197,19 @@ class ViewNodeBase(ABC):
         @abstractmethod
         def _slNode_setter(self, sInput): pass
 
-        #--------------------
-
-        @property
-        def sVolumeFormat(self):
-            return self._sVolumeFormat
-        
-        @sVolumeFormat.setter
-        def sVolumeFormat(self, sInput):
-            self._sVolumeFormat_setter(sInput)
-            
-        @abstractmethod
-        def _sVolumeFormat_setter(self, sInput): pass
-        
+#         #--------------------
+# 
+#         @property
+#         def sVolumeFormat(self):
+#             return self._sVolumeFormat
+#         
+#         @sVolumeFormat.setter
+#         def sVolumeFormat(self, sInput):
+#             self._sVolumeFormat_setter(sInput)
+#             
+#         @abstractmethod
+#         def _sVolumeFormat_setter(self, sInput): pass
+#         
         #--------------------
 
         @property
@@ -299,7 +299,7 @@ class ViewNodeBase(ABC):
         self.sImageType = self.oIOXml.GetValueOfNodeAttribute(self.xImage, 'type')
         self.sDestination = self.oIOXml.GetValueOfNodeAttribute(self.xImage, 'destination')
         self.sOrientation = self.oIOXml.GetValueOfNodeAttribute(self.xImage, 'orientation')
-        self.sVolumeFormat = self.oIOXml.GetValueOfNodeAttribute(self.xImage, 'format')
+#         self.sVolumeFormat = self.oIOXml.GetValueOfNodeAttribute(self.xImage, 'format')
     
         self.sNodeName =  self.sPageID + '_' + self.sNodeDescriptor
 
@@ -369,6 +369,8 @@ class DataVolumeDetail(ViewNodeBase):
         self.ExtractImageAttributes()
         self.ExtractXMLNodeElements()
 
+
+    #-----------------------------------------------
 
     def LoadVolume(self):
         bLoadSuccess = self.LoadDataVolume()
@@ -453,25 +455,34 @@ class DicomVolumeDetail(ViewNodeBase):
         self.ExtractImageAttributes()
         self.ExtractXMLNodeElements()
         self.ExtractDicomElements()
-        i = 1
         
     #-----------------------------------------------
         
     def ExtractDicomElements(self):
 
-        # extract Series UID nodes
-        xSeriesUIDNodes = self.oIOXml.GetChildren(self.xImage, 'SeriesInstanceUID')
-        if len(xSeriesUIDNodes) > 1:
-            sWarningMsg = 'There can only be one SeriesInstanceUID element per image. \nThe first defined Series UID in the XML will be used.   '
-            sWarningMsg = sWarningMsg + self.sNodeName
-            self.oUtils.DisplayWarning(sWarningMsg)
-        sSeriesInstanceUID = self.oIOXml.GetDataInNode(xSeriesUIDNodes[0])
 
             
         if (self.sImageType == 'Volume'):
-            self.sVolumeReferenceSeriesUID = sSeriesInstanceUID
+            self.sVolumeReferenceSeriesUID = '1'
         elif (self.sImageType == 'RTStruct'):
-            self.sRTStructSeriesUID = sSeriesInstanceUID
+
+            # extract RT Series UID nodes
+            xRTSeriesUIDNodes = self.oIOXml.GetChildren(self.xImage, 'RTSeriesInstanceUID')
+            if len(xRTSeriesUIDNodes) > 1:
+                sWarningMsg = 'There can only be one RTStruct SeriesInstanceUID element per image. \nThe first defined Series UID in the XML will be used.   '
+                sWarningMsg = sWarningMsg + self.sNodeName
+                self.oUtils.DisplayWarning(sWarningMsg)
+            self.sRTStructSeriesUID = self.oIOXml.GetDataInNode(xRTSeriesUIDNodes[0])
+
+            # extract Reference Volume Series UID nodes
+            xRefSeriesUIDNodes = self.oIOXml.GetChildren(self.xImage, 'RefSeriesInstanceUID')
+            if len(xRefSeriesUIDNodes) > 1:
+                sWarningMsg = 'There can only be one Volume Reference SeriesInstanceUID element per image. \nThe first defined Series UID in the XML will be used.   '
+                sWarningMsg = sWarningMsg + self.sNodeName
+                self.oUtils.DisplayWarning(sWarningMsg)
+            self.sVolumeReferenceSeriesUID = self.oIOXml.GetDataInNode(xRefSeriesUIDNodes[0])
+
+            
 #             self.lsRoiList = self.ReadROIElements()
             self.ReadROIElements()
         
@@ -644,21 +655,54 @@ class DicomVolumeDetail(ViewNodeBase):
                 slSegNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],False)
             for indUserList in range(len(self.lsRoiList)):
                 slSegNode.SetSegmentVisibility(self.lsRoiList[indUserList], True)
+                
+
+
+        self.ConvertSegmentationToLabelmap(slSHNode, slSegDataNode, slRTStructChildren)
         
     #-----------------------------------------------
 
-    def ConvertSegmentationToLabelmap(self, lsRoiList):
+    def ConvertSegmentationToLabelmap(self, slSHNode, slSegDataNode, slRTStructChildren):
         
         # To gain control of segment visibility in different view windows,
         # the ROI's in the Segmentation layer are converted to label maps
         
-        # add a label map node to the subject hierarchy
-        slLabelMapNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode')
-        
-        # get the segmentation node containing the ROI's to be converted
-        
+#         # add a label map node to the subject hierarchy
+#         
+#         slLabelMapNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode')
         
         
+
+        # get volume reference node through the segmentation data node's image Geometry node reference
         
+        # get role and its node
+        sImageGeometryReferenceRole  = slSegDataNode.GetReferenceImageGeometryReferenceRole()
+        slImageGeometryReferenceNode = slSegDataNode.GetNodeReference(sImageGeometryReferenceRole)
+        
+        # get volume reference node ID from the Image Geometry Node
+        slVolumeReferenceNodeID = slImageGeometryReferenceNode.GetID()
+        # get volume reference node
+        slVolumeReferenceNode = slicer.mrmlScene.GetNodeByID(slVolumeReferenceNodeID)
+        
+        
+#         # using the label node, volume reference node and segmentation node, 
+#         #     convert the segmentation to a label map and rename it 
+#         slicer.modules.segmentations.logic().ExportVisibleSegmentsToLabelmapNode(slSegDataNode, slLabelMapNode, slVolumeReferenceNode)
+
+        # for each roi - export to label map node and rename
+        a = vtk.vtkStringArray()
+        for indROI in range(slRTStructChildren.GetNumberOfIds()):
+            slROIItemId = slRTStructChildren.GetId(indROI)
+            aItem = str(slROIItemId)
+            print(aItem)
+            a.InsertNextValue(aItem)
+            print(a.GetValue(indROI))
+            sROIName = slSHNode.GetItemName(slROIItemId)
+            print(sROIName)
+            slLabelMapNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode')
+#             slicer.modules.segmentations.logic().ExportSegmentsToLabelmapNode(\
+#                 slSegDataNode, slROIItemId, slLabelMapNode, slVolumeReferenceNode)
+            slicer.vtkSlicerSegmentationsModuleLogic.ExportSegmentsToLabelmapNode(\
+                slSegDataNode, a, slLabelMapNode, slVolumeReferenceNode)
 
         
