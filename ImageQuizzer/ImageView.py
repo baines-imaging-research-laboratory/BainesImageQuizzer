@@ -79,6 +79,7 @@ class ImageView:
 
 
             sPageID = self.sPageName + '_' + self.sPageDescriptor
+            
             # Extract volume attribute
             sVolumeFormat = self.oIOXml.GetValueOfNodeAttribute(xImages[indImage], 'format')
             if not (sVolumeFormat in self.lValidVolumeFormats):
@@ -98,8 +99,6 @@ class ImageView:
                  
                 self.loViewNodes.append(oImageViewItem)
                  
-#                 if (sVolumeFormat == 'dicom') and (sImageType == 'RTStruct'):
-#                     self.ConvertSegmentationToLabelmap(lsRoiList)
 
     
         return self.loViewNodes
@@ -158,7 +157,6 @@ class ViewNodeBase(ABC):
     
         self._sPageID = ''
         self._slNode = None
-#         self._sVolumeFormat = ''
         self._sDestination = ''
         self._sOrientation = ''
         self._sViewLayer = ''
@@ -197,19 +195,6 @@ class ViewNodeBase(ABC):
         @abstractmethod
         def _slNode_setter(self, sInput): pass
 
-#         #--------------------
-# 
-#         @property
-#         def sVolumeFormat(self):
-#             return self._sVolumeFormat
-#         
-#         @sVolumeFormat.setter
-#         def sVolumeFormat(self, sInput):
-#             self._sVolumeFormat_setter(sInput)
-#             
-#         @abstractmethod
-#         def _sVolumeFormat_setter(self, sInput): pass
-#         
         #--------------------
 
         @property
@@ -299,7 +284,6 @@ class ViewNodeBase(ABC):
         self.sImageType = self.oIOXml.GetValueOfNodeAttribute(self.xImage, 'type')
         self.sDestination = self.oIOXml.GetValueOfNodeAttribute(self.xImage, 'destination')
         self.sOrientation = self.oIOXml.GetValueOfNodeAttribute(self.xImage, 'orientation')
-#         self.sVolumeFormat = self.oIOXml.GetValueOfNodeAttribute(self.xImage, 'format')
     
         self.sNodeName =  self.sPageID + '_' + self.sNodeDescriptor
 
@@ -331,14 +315,14 @@ class ViewNodeBase(ABC):
     #-----------------------------------------------
 
     def CheckForNodeExists(self, sNodeClass):
-        # a node does not have to be loaded if it already exists
-        
+        # If a node already exists in the mrmlScene, it should not be loaded again
+        # This function checks to see if it has already been loaded
         
         # initialize
         bNodeExists = False
         self.slNode = None
         
-        # check for nodes by name and check it's the proper class
+        # check for nodes by name and check if it's the proper class
         try:
             self.slNode = slicer.mrmlScene.GetFirstNodeByName(self.sNodeName)
             if (self.slNode.GetClassName() == sNodeClass) :
@@ -447,6 +431,7 @@ class DicomVolumeDetail(ViewNodeBase):
         self.sRoiVisibilityCode = 'Empty'
         self.sVolumeReferenceSeriesUID = ''
         self.sRTStructSeriesUID = ''
+        self.sStudyInstanceUID = ''
         self.lsRoiList = []
 
 
@@ -513,6 +498,7 @@ class DicomVolumeDetail(ViewNodeBase):
             tags['patientName'] = "0010,0010"
             tags['patientID'] = "0010,0020"
             tags['seriesUID'] = "0020,000E"
+            tags['studyUID'] = "0020,000D"
             
             # using the path defined by the user to one of the files in the series,
             # access dicom information stored in that series
@@ -520,6 +506,8 @@ class DicomVolumeDetail(ViewNodeBase):
             sSeriesUIDToLoad = database.fileValue(self.sImagePath, tags['seriesUID'])
             sPatientName = database.fileValue(self.sImagePath , tags['patientName'])
             sPatientID = database.fileValue(self.sImagePath , tags['patientID'])
+
+            self.sStudyInstanceUID = database.fileValue(self.sImagePath, tags['studyUID'])
             sExpectedSubjectHierarchyName = sPatientName + ' (' + sPatientID + ')'
             print(' ~~~ Subject Hierarchy expected name : %s' % sExpectedSubjectHierarchyName)
 
@@ -556,6 +544,11 @@ class DicomVolumeDetail(ViewNodeBase):
             # update the class properties with the slicer node and node name 
             self.slNode = slSubjectHierarchyNode.GetItemDataNode(slNodeId)
             self.sNodeName = self.slNode.GetName()
+            
+            
+            # convert segmentation node ROIs into labelmaps
+            
+            
             bLoadSuccess = True
         
         else:
@@ -667,11 +660,6 @@ class DicomVolumeDetail(ViewNodeBase):
         # To gain control of segment visibility in different view windows,
         # the ROI's in the Segmentation layer are converted to label maps
         
-#         # add a label map node to the subject hierarchy
-#         
-#         slLabelMapNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode')
-        
-        
 
         # get volume reference node through the segmentation data node's image Geometry node reference
         
@@ -685,24 +673,65 @@ class DicomVolumeDetail(ViewNodeBase):
         slVolumeReferenceNode = slicer.mrmlScene.GetNodeByID(slVolumeReferenceNodeID)
         
         
-#         # using the label node, volume reference node and segmentation node, 
-#         #     convert the segmentation to a label map and rename it 
-#         slicer.modules.segmentations.logic().ExportVisibleSegmentsToLabelmapNode(slSegDataNode, slLabelMapNode, slVolumeReferenceNode)
+        # using the label node, volume reference node and segmentation node, 
+        #     convert the segmentation to a label map and rename it 
 
         # for each roi - export to label map node and rename
-        a = vtk.vtkStringArray()
         for indROI in range(slRTStructChildren.GetNumberOfIds()):
-            slROIItemId = slRTStructChildren.GetId(indROI)
-            aItem = str(slROIItemId)
-            print(aItem)
-            a.InsertNextValue(aItem)
-            print(a.GetValue(indROI))
-            sROIName = slSHNode.GetItemName(slROIItemId)
-            print(sROIName)
-            slLabelMapNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode')
-#             slicer.modules.segmentations.logic().ExportSegmentsToLabelmapNode(\
-#                 slSegDataNode, slROIItemId, slLabelMapNode, slVolumeReferenceNode)
-            slicer.vtkSlicerSegmentationsModuleLogic.ExportSegmentsToLabelmapNode(\
-                slSegDataNode, a, slLabelMapNode, slVolumeReferenceNode)
 
+            slROIItemId = slRTStructChildren.GetId(indROI)
+            sROIName = slSHNode.GetItemName(slROIItemId)
+
+            # before creating a label map node, 
+            #    check if one already exists within the dicom patient with this ROI name
+            
+            bLabelMapNodeExists = False
+            bLabelMapNodeExists = self.CheckForLabelMapNodeExists(sROIName)
+            
+
+            if not bLabelMapNodeExists:
+                lsSegmentationIDNames = vtk.vtkStringArray()
+                lsSegmentationIDNames.InsertNextValue(sROIName)
+            
+                slLabelMapNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode')
+                slicer.vtkSlicerSegmentationsModuleLogic.ExportSegmentsToLabelmapNode(\
+                    slSegDataNode, lsSegmentationIDNames, slLabelMapNode, slVolumeReferenceNode)
+                slLabelMapNode.SetName(sROIName)
+            
+
+    #-----------------------------------------------
+
+    def CheckForLabelMapNodeExists(self, sROIName):
+        
+        bNodeExists = False
+        
+        # get Slicer's subject hierarchy node (SHNode)
+        
+        slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+        
+        
+        # get the item ID for the Patient through the Study Series Instance UID
+        
+        slStudyItemID = slSHNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(), self.sStudyInstanceUID)
+
+
+        # using slicers vtk Item Id for the Volume, get the ROI names (children)
+        
+        slStudyChildren = vtk.vtkIdList()    # initialize to ItemId type
+        slSHNode.GetItemChildren(slStudyItemID, slStudyChildren) # populate children variable
+        
+        for indChild in range(slStudyChildren.GetNumberOfIds()):
+            # get id
+            slChildId = slStudyChildren.GetId(indChild)
+            # get datanode
+            slChildDataNode = slSHNode.GetItemDataNode(slChildId)
+            
+            #check if class name matches
+            if (slChildDataNode.GetClassName() == 'vtkMRMLLabelMapVolumeNode'):
+                # check if name matches
+                if (slChildDataNode.GetName() == sROIName):
+                    bNodeExists = True
+                    
+        
+        return bNodeExists
         
