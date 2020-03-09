@@ -147,135 +147,21 @@ class ImageView:
 #
 ##########################################################################
 
-class ViewNodeBase(ABC):
-    """ Inherits from ABC - Abstract Base Class
-    """
+class ViewNodeBase:
 
     def __init__(self,  parent=None):
         self.sClassName = type(self).__name__
         self.parent = parent
     
-        self._sPageID = ''
-        self._slNode = None
-        self._sDestination = ''
-        self._sOrientation = ''
-        self._sViewLayer = ''
-        self._sImageType = ''
-        self._sImagePath = ''
-        self._sNodeName = ''
-        
-        
+        self.sPageID = ''
+        self.slNode = None
+        self.sDestination = ''
+        self.sOrientation = ''
+        self.sViewLayer = ''
+        self.sImageType = ''
+        self.sImagePath = ''
+        self.sNodeName = ''
 
-        #--------------------
-        # define getters and setters
-        #     use indirection - the setter calls an abstract method
-        #--------------------
-        
-        @property
-        def sPageID(self):
-            return self._sPageID
-        
-        @sPageID.setter
-        def sPageID(self, sInput):
-            self._sPageID_setter(sInput)
-            
-        @abstractmethod
-        def _sPageID_setter(self, sInput): pass
-
-        #--------------------
-
-        @property
-        def slNode(self):
-            return self._slNode
-        
-        @slNode.setter
-        def slNode(self, sInput):
-            self._slNode_setter(sInput)
-            
-        @abstractmethod
-        def _slNode_setter(self, sInput): pass
-
-        #--------------------
-
-        @property
-        def sDestination(self):
-            return self._sDestination
-        
-        @sDestination.setter
-        def sDestination(self, sInput):
-            self._sDestination_setter(sInput)
-            
-        @abstractmethod
-        def _sDestination_setter(self, sInput): pass
-
-        #--------------------
-
-        @property
-        def sOrientation(self):
-            return self._sOrientation
-        
-        @sOrientation.setter
-        def sOrientation(self, sInput):
-            self._sOrientation_setter(sInput)
-            
-        @abstractmethod
-        def _sOrientation_setter(self, sInput): pass
-
-        #--------------------
-
-        @property
-        def sViewLayer(self):
-            return self._sViewLayer
-        
-        @sViewLayer.setter
-        def sViewLayer(self, sInput):
-            self._sViewLayer_setter(sInput)
-            
-        @abstractmethod
-        def _sViewLayer_setter(self, sInput): pass
-        
-        #--------------------
-
-        @property
-        def sImageType(self):
-            return self._sImageType
-        
-        @sImageType.setter
-        def sImageType(self, sInput):
-            self._sImageType_setter(sInput)
-            
-        @abstractmethod
-        def _sImageType_setter(self, sInput): pass
- 
-        #--------------------
-
-        @property
-        def sImagePath(self):
-            return self._sImagePath
-        
-        @sImagePath.setter
-        def sImagePath(self, sInput):
-            self._sImagePath_setter(sInput)
-            
-        @abstractmethod
-        def _sImpagePath_setter(self, sInput): pass
-
-        #--------------------
-         
-        @property
-        def sNodeName(self):
-            return self._sNodeName
-        
-        @sNodeName.setter
-        def sNodeName(self, sInput):
-            self._sNodeName_setter(sInput)
-            
-        @abstractmethod
-        def _sNodeName_setter(self, sInput): pass
-        
-
-
-        
     #-----------------------------------------------
 
     def ExtractImageAttributes(self):
@@ -476,7 +362,7 @@ class DicomVolumeDetail(ViewNodeBase):
         bLoadSuccess = self.LoadDicomVolume()
         if not (self.sRoiVisibilityCode == 'Empty'):
             self.SetSegmentRoiVisibility()
-            self.CreateLabelmapsAndSetRoiVisibility()
+#             self.CreateLabelmapsAndSetRoiVisibility()
         return bLoadSuccess
         
 
