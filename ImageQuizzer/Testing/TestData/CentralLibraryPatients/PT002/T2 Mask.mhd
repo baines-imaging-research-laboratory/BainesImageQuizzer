@@ -1,0 +1,13 @@
+ObjectType = Image
+NDims = 3
+BinaryData = True
+BinaryDataByteOrderMSB = False
+CompressedData = False
+TransformMatrix = 0.997673 -0.0383297 0.056381 0.0475312 0.98392 -0.172172 -0.0488751 0.174451 0.983452
+Offset = -115.545 -132.514 -54.8027
+CenterOfRotation = 0 0 0
+AnatomicalOrientation = RAI
+ElementSpacing = 0.4297 0.4297 6.49999
+DimSize = 512 512 22
+ElementType = MET_USHORT
+ElementDataFile = T2 Mask.raw
