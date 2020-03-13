@@ -325,6 +325,8 @@ class DicomVolumeDetail(ViewNodeBase):
 
         self.ExtractImageAttributes()
         self.ExtractXMLNodeElements()
+        
+        
         self.ExtractXMLDicomElements()
         
     #-----------------------------------------------
@@ -353,16 +355,23 @@ class DicomVolumeDetail(ViewNodeBase):
 
             
 #             self.lsRoiList = self.ReadROIElements()
-            self.ReadROIElements()
+            self.CreateROILabelMaps()
+            
+            
         
-
+    def CreateROILabelMaps(self):
+        
+        self.ReadXMLRoiElements()
+        self.GetAllRTStructROIs()
+        self.AdjustListToVisibleRoiSegmentsOnly()
+        self.ConvertVisibleRoiSegmentsToLabelMaps()
+        
     #-----------------------------------------------
         
     def LoadVolume(self):
         bLoadSuccess = self.LoadDicomVolume()
         if not (self.sRoiVisibilityCode == 'Empty'):
             self.SetSegmentRoiVisibility()
-#             self.CreateLabelmapsAndSetRoiVisibility()
         return bLoadSuccess
         
 
@@ -430,22 +439,20 @@ class DicomVolumeDetail(ViewNodeBase):
             self.slNode = slSubjectHierarchyNode.GetItemDataNode(slNodeId)
             self.sNodeName = self.slNode.GetName()
             
-            
-            # convert segmentation node ROIs into labelmaps
-            
-            
+                        
             bLoadSuccess = True
         
         else:
             sErrorMsg = ('Slicer Database is not open')
             self.oUtils.DisplayError(sErrorMsg)
+
         
 
         return bLoadSuccess
 
     #-----------------------------------------------
 
-    def ReadROIElements(self):
+    def ReadXMLRoiElements(self):
         # if the Image type is RTStuct, XML holds a visibility code and (if applicable)
         # a list of ROI names
         # The visibility code is as follows: 
@@ -540,7 +547,7 @@ class DicomVolumeDetail(ViewNodeBase):
         
     #-----------------------------------------------
 
-    def CreateLabelmapsAndSetRoiVisibility(self):
+    def ConvertROISegmentsToLabelMaps(self):
         # To gain control of segment visibility in different view windows,
         # the ROI's in the Segmentation layer are converted to label maps
 
@@ -567,7 +574,7 @@ class DicomVolumeDetail(ViewNodeBase):
         # using the label node, volume reference node and segmentation node, 
         #     convert the segmentation to a label map and rename it 
 
-        # for each roi - export to label map node and rename
+        # for each roi assigned to be visible - export to label map node and rename
         for indROI in range(oSubjectHierarchyItems.slRTStructChildren.GetNumberOfIds()):
 
             slROIItemId = oSubjectHierarchyItems.slRTStructChildren.GetId(indROI)
