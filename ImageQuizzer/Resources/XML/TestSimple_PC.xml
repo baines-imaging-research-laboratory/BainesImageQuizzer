@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <Session>
 	<Page name="Patient1" descriptor="PlanningCT">
-		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Red" orientation="Axial">
+		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Red">
 			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Yellow" orientation="Sagittal">
+		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Yellow">
 			<Layer>Background</Layer>
+			<Orientation>Sagittal</Orientation>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Green" orientation="Coronal">
+		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Green">
 			<Layer>Background</Layer>
+			<Orientation>Coronal</Orientation>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
 		<QuestionSet id="QS-Intro" title="Introduction to Quiz">
@@ -25,16 +28,19 @@
 		</QuestionSet>
 	</Page>
 	<Page name="Patient1" descriptor="Follow-up 1">
-		<Image format="nii" type="Volume" descriptor="Moving Volume" destination="Red" orientation="Axial">
+		<Image format="nii" type="Volume" descriptor="Moving Volume" destination="Red">
 			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nii</Path>
 		</Image>
-		<Image format="nii" type="Volume" descriptor="Moving Volume" destination="Yellow" orientation="Sagittal">
+		<Image format="nii" type="Volume" descriptor="Moving Volume" destination="Yellow">
 			<Layer>Background</Layer>
+			<Orientation>Sagittal</Orientation>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nii</Path>
 		</Image>
-		<Image format="nii" type="Volume" descriptor="Moving Volume" destination="Green" orientation="Coronal">
+		<Image format="nii" type="Volume" descriptor="Moving Volume" destination="Green">
 			<Layer>Background</Layer>
+			<Orientation>Coronal</Orientation>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nii</Path>
 		</Image>
 		<QuestionSet id="QS-Observation" title="What is your Assessment">
@@ -50,19 +56,22 @@
 		</QuestionSet>
 	</Page>
 	<Page name="Patient2" descriptor="Mixed Displays">
-		<Image format="nrrd" type="Volume"  descriptor="Brain CT" destination="Red" orientation="Axial">
+		<Image format="nrrd" type="Volume"  descriptor="Brain CT" destination="Red">
 			<Layer>Foreground</Layer>
+			<Orientation>Axial</Orientation>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="Brain MR" destination="Green" orientation="Axial">
+		<Image format="nrrd" type="Volume" descriptor="Brain MR" destination="Green">
 			<Layer>Foreground</Layer>
+			<Orientation>Axial</Orientation>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<Image format="mhd" type="Volume" descriptor="Case00Prostate" destination="Yellow" orientation="Axial" >
+		<Image format="mhd" type="Volume" descriptor="Case00Prostate" destination="Yellow">
 			<Layer>Foreground</Layer>
+			<Orientation>Axial</Orientation>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Prostate\Case00.mhd</Path>
 		</Image>
-		<Image format="mhd" type="Labelmap" descriptor="Case00Prostate Segmentation" destination="Yellow" orientation="Axial">
+		<Image format="mhd" type="Labelmap" descriptor="Case00Prostate Segmentation" destination="Yellow">
 			<Layer>Label</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Prostate\Case00_segmentation.mhd</Path>
 		</Image>
@@ -79,18 +88,21 @@
 		</QuestionSet>
 	</Page>
 	<Page name="TinyPatient" descriptor="DicomSeries">
-		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Red" orientation="Axial">
+		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Red">
 			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Yellow" orientation="Sagittal">
+		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Yellow">
 			<Layer>Background</Layer>
+			<Orientation>Sagittal</Orientation>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Green" orientation="Coronal">
+		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Green">
 			<Layer>Background</Layer>
+			<Orientation>Coronal</Orientation>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
@@ -103,42 +115,48 @@
 		</QuestionSet>
 	</Page>
 	<Page name="TinyPatient" descriptor="DicomSeries">
-		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Red" orientation="Axial">
+		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Red">
 			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Yellow" orientation="Sagittal">
+		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Yellow">
 			<Layer>Background</Layer>
+			<Orientation>Sagittal</Orientation>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Green" orientation="Coronal">
+		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Green">
 			<Layer>Background</Layer>
+			<Orientation>Coronal</Orientation>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Red" orientation="Axial">
+		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Red">
 			<Layer>Segmentation</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
-			<RTSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</RTSeriesInstanceUID>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
 			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
 			<ROIs roiVisibilityCode="Select">
 				<ROI>Tumor_Contour</ROI>
 				<ROI>Body_Contour</ROI>
 			</ROIs>
 		</Image>
-		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Yellow" orientation="Sagittal">
+		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Yellow">
 			<Layer>Segmentation</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
-			<RTSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</RTSeriesInstanceUID>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
 			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
 			<ROIs roiVisibilityCode="Select">
 				<ROI>Tumor_Contour</ROI>
 				<ROI>Body_Contour</ROI>
 			</ROIs>
 		</Image>
-		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Green" orientation="Coronal">
+		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Green">
 			<Layer>Segmentation</Layer>
 			<Path>D:\Users\cjohnson\Work\Projects\SlicerEclipseProjects\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
-			<RTSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</RTSeriesInstanceUID>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
 			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
 			<ROIs roiVisibilityCode="Select">
 				<ROI>Tumor_Contour</ROI>
