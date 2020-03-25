@@ -171,18 +171,18 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page name="TinyPatient" descriptor="DicomSeries">
+	<Page name="CL PT001" descriptor="DicomSeries">
 		<Image format="dicom" type="Volume" descriptor="T1W MR" destination="Red">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\000000.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7948263890.5300.3875531536.492</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="T1W MR" destination="Yellow">
+		<Image format="dicom" type="Volume" descriptor="T2W MR" destination="Yellow">
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\000000.dcm</Path>
-			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7948263890.5300.3875531536.492</SeriesInstanceUID>
+			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\000000.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7830722178.5575.6291913264.331</SeriesInstanceUID>
 		</Image>
 		<Image format="dicom" type="Volume" descriptor="T1W MR" destination="Green">
 			<Layer>Background</Layer>
@@ -197,17 +197,15 @@
 			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7948263890.5300.3875531536.492</RefSeriesInstanceUID>
 			<ROIs roiVisibilityCode="Select">
 				<ROI>1</ROI>
-				<ROI>2</ROI>
 			</ROIs>
 		</Image>
-		<Image format="dicom" type="RTStruct" descriptor="Seg T1W" destination="Yellow">
+		<Image format="dicom" type="RTStruct" descriptor="Seg T2W" destination="Yellow">
 			<Layer>Segmentation</Layer>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\RT Struct.dcm</Path>
-			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.4766362084.1716.2453053177.382</SeriesInstanceUID>
-			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7948263890.5300.3875531536.492</RefSeriesInstanceUID>
+			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\RT Struct.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7830722178.5575.6291913264.331</SeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.8006916558.3791.7149983690.261</RefSeriesInstanceUID>
 			<ROIs roiVisibilityCode="Select">
 				<ROI>1</ROI>
-				<ROI>2</ROI>
 			</ROIs>
 		</Image>
 		<Image format="dicom" type="RTStruct" descriptor="Seg T1W" destination="Green">
@@ -217,7 +215,6 @@
 			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7948263890.5300.3875531536.492</RefSeriesInstanceUID>
 			<ROIs roiVisibilityCode="Select">
 				<ROI>1</ROI>
-				<ROI>2</ROI>
 			</ROIs>
 		</Image>
 		<QuestionSet id="QS-Checkup" title="Your thoughts?">

@@ -394,19 +394,9 @@ class DicomVolumeDetail(ViewNodeBase):
             self.sVolumeReferenceSeriesUID = self.oIOXml.GetDataInNode(xRefSeriesUIDNodes[0])
 
             
-            self.LoadROISegments()
+            self.ReadXMLRoiElements()
             
             
-    #-----------------------------------------------
-        
-    def LoadROISegments(self):
-        
-        self.ReadXMLRoiElements()
-#         self.GetAllROIsFromRTStruct()
-#         self.AdjustListToVisibleROISegmentsOnly()
-#         self.ConvertVisibleROISegmentsToLabelMaps()
-
-    
     #-----------------------------------------------
         
     def LoadVolume(self):
@@ -526,6 +516,13 @@ class DicomVolumeDetail(ViewNodeBase):
         # in order to set visibility, you have to traverse Slicer's subject hierarchy
         # accessing the segmentation node, its children (to get ROI names) and its data node
         
+
+#         lsSubjectHierarchyROIs = self.GetAllROIsFromSubjectHierarchy()
+#         self.AdjustListToVisibleROISegmentsOnly()
+#         self.ConvertVisibleROISegmentsToLabelMaps()
+
+
+
         
         # get Slicer's subject hierarchy node (SHNode)
         
@@ -559,6 +556,16 @@ class DicomVolumeDetail(ViewNodeBase):
         slSegDisplayNode = slicer.mrmlScene.GetNodeByID(slSegDisplayNodeId)
         
         
+        # assign segmentation display node to the requested viewing window destination
+        if self.sDestination == 'Red':
+            sViewID = 'vtkMRMLSliceNodeRed'
+        if self.sDestination == 'Yellow':
+            sViewID = 'vtkMRMLSliceNodeYellow'
+        if self.sDestination == 'Green':
+            sViewID = 'vtkMRMLSliceNodeGreen'
+        slSegDisplayNode.SetViewNodeIDs([sViewID])
+        
+        
         # adjust visibility of each ROI as per user's request
         
         if (self.sRoiVisibilityCode == 'All'):
@@ -585,7 +592,6 @@ class DicomVolumeDetail(ViewNodeBase):
                 
 
 
-#         self.ConvertSegmentationToLabelmap(slSHNode, slSegDataNode, slRTStructChildren)
         
     #-----------------------------------------------
 
