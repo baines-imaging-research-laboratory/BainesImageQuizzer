@@ -182,7 +182,7 @@
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\000000.dcm</Path>
-			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7830722178.5575.6291913264.331</SeriesInstanceUID>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.8006916558.3791.7149983690.261</SeriesInstanceUID>
 		</Image>
 		<Image format="dicom" type="Volume" descriptor="T1W MR" destination="Green">
 			<Layer>Background</Layer>

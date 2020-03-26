@@ -52,14 +52,16 @@ class ImageView:
         self.xImages = self.oIOXml.GetChildren(xPageNode, 'Image')
         self.iNumImages = self.oIOXml.GetNumChildren(xPageNode, 'Image')
         
+        # clear views from previous page
+        self.ClearImagesAndSegmentations()
        
         self.loViewNodes = self.BuildViewNodes(self.xImages)
         
         
         if len(self.loViewNodes) > 0:
             
-            # clear views from previous page
-            self.ClearImagesAndSegmentations()
+#             # clear views from previous page
+#             self.ClearImagesAndSegmentations()
 
             # assign nodes for current page to views
             for i in range(len(self.loViewNodes)):
@@ -508,7 +510,6 @@ class DicomVolumeDetail(ViewNodeBase):
                 sRoiName = self.oIOXml.GetDataInNode(xRoiChildren[indRoi])
                 self.lsRoiList.append(sRoiName)
                 
-#                 print('**** ROI :%s' % sRoiName)
         
     #-----------------------------------------------
 
@@ -516,13 +517,6 @@ class DicomVolumeDetail(ViewNodeBase):
         # in order to set visibility, you have to traverse Slicer's subject hierarchy
         # accessing the segmentation node, its children (to get ROI names) and its data node
         
-
-#         lsSubjectHierarchyROIs = self.GetAllROIsFromSubjectHierarchy()
-#         self.AdjustListToVisibleROISegmentsOnly()
-#         self.ConvertVisibleROISegmentsToLabelMaps()
-
-
-
         
         # get Slicer's subject hierarchy node (SHNode)
         
@@ -557,13 +551,25 @@ class DicomVolumeDetail(ViewNodeBase):
         
         
         # assign segmentation display node to the requested viewing window destination
-        if self.sDestination == 'Red':
-            sViewID = 'vtkMRMLSliceNodeRed'
-        if self.sDestination == 'Yellow':
-            sViewID = 'vtkMRMLSliceNodeYellow'
-        if self.sDestination == 'Green':
-            sViewID = 'vtkMRMLSliceNodeGreen'
-        slSegDisplayNode.SetViewNodeIDs([sViewID])
+        lsViewIDs = []
+        
+        # get viewing window node ID (1st object of node)
+        slViewingNode = slicer.mrmlScene.GetNodesByName(self.sDestination)
+        oSlicerViewNodeItem = slViewingNode.GetItemAsObject(0)
+        sViewID = oSlicerViewNodeItem.GetID()
+
+        lsViewIDs.append(sViewID)
+        
+        # if this segmentation display node was already assigned to a window,
+        #    capture the previous assignment and append the new request
+        sPrevViewAssignments = slSegDisplayNode.GetViewNodeIDs()
+        if len(sPrevViewAssignments) > 0:
+            # convert the tuple into a string
+            sPrevViewAssignments = ''.join(sPrevViewAssignments)
+            lsViewIDs.append(sPrevViewAssignments)
+            
+        # assign all requested view destinations to the display node
+        slSegDisplayNode.SetViewNodeIDs(lsViewIDs)
         
         
         # adjust visibility of each ROI as per user's request
@@ -591,101 +597,6 @@ class DicomVolumeDetail(ViewNodeBase):
                 slSegDisplayNode.SetSegmentVisibility(self.lsRoiList[indUserList], True)
                 
 
-
-        
-    #-----------------------------------------------
-
-#     def ConvertROISegmentsToLabelMaps(self):
-#         # To gain control of segment visibility in different view windows,
-#         # the ROI's in the Segmentation layer are converted to label maps
-# 
-#         
-#         
-#         oSubjectHierarchyItems = SubjectHierarchyDetail()
-#         oSubjectHierarchyItems.TraverseSubjectHierarchy(self.sStudyInstanceUID, self.sSeriesInstanceUID)
-#         
-#         print('studyID: %s' % oSubjectHierarchyItems.slStudyItemID)
-#         print('segNodeID: %s' % oSubjectHierarchyItems.slSegDisplayNodeId)
-#     
-#         # get volume reference node through the segmentation data node's image Geometry node reference
-#         
-#         # get role and its node
-#         sImageGeometryReferenceRole  = oSubjectHierarchyItems.slSegDataNode.GetReferenceImageGeometryReferenceRole()
-#         slImageGeometryReferenceNode = oSubjectHierarchyItems.slSegDataNode.GetNodeReference(sImageGeometryReferenceRole)
-#         
-#         # get volume reference node ID from the Image Geometry Node
-#         slVolumeReferenceNodeID = slImageGeometryReferenceNode.GetID()
-#         # get volume reference node
-#         slVolumeReferenceNode = slicer.mrmlScene.GetNodeByID(slVolumeReferenceNodeID)
-#         
-# 
-#         # using the label node, volume reference node and segmentation node, 
-#         #     convert the segmentation to a label map and rename it 
-# 
-#         # for each roi assigned to be visible - export to label map node and rename
-#         for indROI in range(oSubjectHierarchyItems.slRTStructChildren.GetNumberOfIds()):
-# 
-#             slROIItemId = oSubjectHierarchyItems.slRTStructChildren.GetId(indROI)
-#             sROIName = oSubjectHierarchyItems.slSHNode.GetItemName(slROIItemId)
-# 
-#             # before creating a label map node, 
-#             #    check if one already exists within the dicom patient with this ROI name
-#             
-#             bLabelMapNodeExists = False
-#             bLabelMapNodeExists = self.CheckForLabelMapNodeExists(sROIName)
-#             
-# 
-#             lLabelMapNodes = []
-#             if not bLabelMapNodeExists:
-#                 lsSegmentationIDNames = vtk.vtkStringArray()
-#                 lsSegmentationIDNames.InsertNextValue(sROIName)
-#             
-#                 slLabelMapNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode')
-#                 slicer.vtkSlicerSegmentationsModuleLogic.ExportSegmentsToLabelmapNode(\
-#                     oSubjectHierarchyItems.slSegDataNode, lsSegmentationIDNames, slLabelMapNode, slVolumeReferenceNode)
-#                 slLabelMapNode.SetName(sROIName)
-#                 lLabelMapNodes.append(slLabelMapNode)
-#             
-#         
-#         # turn off the segmentation node visibility
-#         
-#         oSubjectHierarchyItems.slSegDataNode.setDisplayVisibility(False)
-#         
-#         # turn on ROI labelmap visibility
-#         
-#         
-#         # TODO: THESE HAVE TO BE ASSIGNED TO THE VIEW FIRST
-#         #     (REPLACE SEGMENTATION ELEMENTS IN IMAGEVIEW???)
-# 
-#         if (self.sRoiVisibilityCode == 'All'):
-#             for indSHList in range(len(oSubjectHierarchyItems.lsSubjectHierarchyROINames)):
-# #                 slSegDisplayNode.SetSegmentVisibility(oSubjectHierarchyItems.lsSubjectHierarchyROINames[indSHList],True)
-#                 lLabelMapNodes[indSHList].SetVisibility(True)
-#                 
-#         if (self.sRoiVisibilityCode == 'None'):
-#             for indSHList in range(len(oSubjectHierarchyItems.lsSubjectHierarchyROINames)):
-# #                 slSegDisplayNode.SetSegmentVisibility(oSubjectHierarchyItems.lsSubjectHierarchyROINames[indSHList],False)
-#                 lLabelMapNodes[indSHList].SetVisibility(False)
-#             
-#         # turn ON all ROI's and then turn OFF user's list    
-#         if (self.sRoiVisibilityCode == 'Ignore'):
-#             for indSHList in range(len(oSubjectHierarchyItems.lsSubjectHierarchyROINames)):
-# #                 slSegDisplayNode.SetSegmentVisibility(oSubjectHierarchyItems.lsSubjectHierarchyROINames[indSHList],True)
-#                 lLabelMapNodes[indSHList].SetVisibility(True)
-#             for indUserList in range(len(self.lsRoiList)):
-# #                 slSegDisplayNode.SetSegmentVisibility(self.lsRoiList[indUserList], False)
-#                 lLabelMapNodes[indUserList].SetVisibility(False)
-# 
-#         # turn OFF all ROI's and then turn ON user's list    
-#         if (self.sRoiVisibilityCode == 'Select'):
-#             for indSHList in range(len(oSubjectHierarchyItems.lsSubjectHierarchyROINames)):
-# #                 slSegDisplayNode.SetSegmentVisibility(oSubjectHierarchyItems.lsSubjectHierarchyROINames[indSHList],False)
-#                 lLabelMapNodes[indSHList].SetVisibility(False)
-#             for indUserList in range(len(self.lsRoiList)):
-# #                 slSegDisplayNode.SetSegmentVisibility(self.lsRoiList[indUserList], True)
-#                 lLabelMapNodes[indSHList].SetVisibility(True)
-# 
-#         
     
     #-----------------------------------------------
 
