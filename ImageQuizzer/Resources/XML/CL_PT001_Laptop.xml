@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <Session>
-	<Page name="CL PT001" descriptor="DicomSeries">
+	<Page name="CL PT001" descriptor="Multiparametric_MRI">
 		<Image format="dicom" type="Volume" descriptor="T1W MR" destination="Red">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -9,15 +9,14 @@
 		</Image>
 		<Image format="dicom" type="Volume" descriptor="T2W MR" destination="Yellow">
 			<Layer>Background</Layer>
-			<Orientation>Sagittal</Orientation>
+			<Orientation>Axial</Orientation>
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\000000.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.8006916558.3791.7149983690.261</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="T1W MR" destination="Green">
+		<Image format="nrrd" type="Volume" descriptor="DWI" destination="Green">
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\000000.dcm</Path>
-			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7948263890.5300.3875531536.492</SeriesInstanceUID>
+			<Orientation>Axial</Orientation>
+			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\BrainDWI\dwi.nrrd</Path>
 		</Image>
 		<Image format="dicom" type="RTStruct" descriptor="Seg T2W" destination="Yellow">
 			<Layer>Segmentation</Layer>
@@ -37,14 +36,9 @@
 				<ROI>1</ROI>
 			</ROIs>
 		</Image>
-		<Image format="dicom" type="RTStruct" descriptor="Seg T1W" destination="Green">
-			<Layer>Segmentation</Layer>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\RT Struct.dcm</Path>
-			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.4766362084.1716.2453053177.382</SeriesInstanceUID>
-			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7948263890.5300.3875531536.492</RefSeriesInstanceUID>
-			<ROIs roiVisibilityCode="Select">
-				<ROI>1</ROI>
-			</ROIs>
+		<Image format="nrrd" type="Labelmap" descriptor="" destination="Green">
+			<Layer>Label</Layer>
+			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\BrainDWI\Segment_1-label.nrrd</Path>
 		</Image>
 		<QuestionSet id="QS-Checkup" title="Your thoughts?">
 			<Question type="Radio" descriptor="Milestone checker">
