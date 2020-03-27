@@ -126,8 +126,10 @@ class ImageView:
         elif oViewNode.sViewLayer == 'Label':
             slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
         elif oViewNode.sViewLayer == 'Segmentation':
-            slSegDisplayNode = oViewNode.slNode.GetDisplayNode()
-            slSegDisplayNode.SetVisibility(True)
+#             slSegDisplayNode = oViewNode.slNode.GetDisplayNode()
+#             slSegDisplayNode.SetVisibility(True)
+            if not (oViewNode.sRoiVisibilityCode == 'Empty'):
+                self.SetSegmentRoiVisibility(oViewNode)
         
          
 
@@ -165,6 +167,92 @@ class ImageView:
             
             slSegDisplayNode.SetVisibility(False)
     
+    #-----------------------------------------------
+
+    def SetSegmentRoiVisibility(self,oViewNode):
+        # in order to set visibility, you have to traverse Slicer's subject hierarchy
+        # accessing the segmentation node, its children (to get ROI names) and its data node
+        
+        
+        # get Slicer's subject hierarchy node (SHNode)
+        
+        slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+        
+        
+        # get the item ID for the RTStruct through the RTStruct Series Instance UID
+        
+        slRTStructItemId = slSHNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(), oViewNode.sSeriesInstanceUID)
+
+
+        # using slicers vtk Item Id for the RTStruct, get the ROI names (children)
+        
+        slRTStructChildren = vtk.vtkIdList()    # initialize to ItemId type
+        slSHNode.GetItemChildren(slRTStructItemId, slRTStructChildren) # populate children variable
+        
+        
+        # get ROI child Item ID and store the child (ROI) name
+        
+        lsSubjectHierarchyROINames = []
+        for indROI in range(slRTStructChildren.GetNumberOfIds()):
+            slROIItemId = slRTStructChildren.GetId(indROI)
+            sROIName = slSHNode.GetItemName(slROIItemId)
+            lsSubjectHierarchyROINames.append(sROIName)
+        
+        
+        # get segmentation node name from data node
+        
+        slSegDataNode = slSHNode.GetItemDataNode(slRTStructItemId)
+        slSegDisplayNodeId = slSegDataNode.GetDisplayNodeID()
+        slSegDisplayNode = slicer.mrmlScene.GetNodeByID(slSegDisplayNodeId)
+        
+        
+        # assign segmentation display node to the requested viewing window destination
+        lsViewIDs = []
+        
+        # get viewing window node ID (1st object of node)
+        slViewingNode = slicer.mrmlScene.GetNodesByName(oViewNode.sDestination)
+        oSlicerViewNodeItem = slViewingNode.GetItemAsObject(0)
+        sViewID = oSlicerViewNodeItem.GetID()
+
+        lsViewIDs.append(sViewID)
+        
+        # if this segmentation display node was already assigned to a window,
+        #    capture the previous assignment and append the new request
+        sPrevViewAssignments = slSegDisplayNode.GetViewNodeIDs()
+        if len(sPrevViewAssignments) > 0:
+            # convert the tuple into a string
+            sPrevViewAssignments = ''.join(sPrevViewAssignments)
+            lsViewIDs.append(sPrevViewAssignments)
+            
+        # assign all requested view destinations to the display node
+        slSegDisplayNode.SetViewNodeIDs(lsViewIDs)
+        
+        
+        # adjust visibility of each ROI as per user's request
+        
+        if (oViewNode.sRoiVisibilityCode == 'All'):
+            for indSHList in range(len(lsSubjectHierarchyROINames)):
+                slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],True)
+                
+        if (oViewNode.sRoiVisibilityCode == 'None'):
+            for indSHList in range(len(lsSubjectHierarchyROINames)):
+                slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],False)
+            
+        # turn ON all ROI's and then turn OFF user's list    
+        if (oViewNode.sRoiVisibilityCode == 'Ignore'):
+            for indSHList in range(len(lsSubjectHierarchyROINames)):
+                slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],True)
+            for indUserList in range(len(oViewNode.lsRoiList)):
+                slSegDisplayNode.SetSegmentVisibility(oViewNode.lsRoiList[indUserList], False)
+
+        # turn OFF all ROI's and then turn ON user's list    
+        if (oViewNode.sRoiVisibilityCode == 'Select'):
+            for indSHList in range(len(lsSubjectHierarchyROINames)):
+                slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],False)
+            for indUserList in range(len(oViewNode.lsRoiList)):
+                slSegDisplayNode.SetSegmentVisibility(oViewNode.lsRoiList[indUserList], True)
+                
+
     
     
 ##########################################################################
@@ -403,8 +491,8 @@ class DicomVolumeDetail(ViewNodeBase):
         
     def LoadVolume(self):
         bLoadSuccess = self.LoadDicomVolume()
-        if not (self.sRoiVisibilityCode == 'Empty'):
-            self.SetSegmentRoiVisibility()
+#         if not (self.sRoiVisibilityCode == 'Empty'):
+#             self.SetSegmentRoiVisibility()
         return bLoadSuccess
         
 
@@ -511,91 +599,91 @@ class DicomVolumeDetail(ViewNodeBase):
                 self.lsRoiList.append(sRoiName)
                 
         
-    #-----------------------------------------------
-
-    def SetSegmentRoiVisibility(self):
-        # in order to set visibility, you have to traverse Slicer's subject hierarchy
-        # accessing the segmentation node, its children (to get ROI names) and its data node
-        
-        
-        # get Slicer's subject hierarchy node (SHNode)
-        
-        slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-        
-        
-        # get the item ID for the RTStruct through the RTStruct Series Instance UID
-        
-        slRTStructItemId = slSHNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(), self.sSeriesInstanceUID)
-
-
-        # using slicers vtk Item Id for the RTStruct, get the ROI names (children)
-        
-        slRTStructChildren = vtk.vtkIdList()    # initialize to ItemId type
-        slSHNode.GetItemChildren(slRTStructItemId, slRTStructChildren) # populate children variable
-        
-        
-        # get ROI child Item ID and store the child (ROI) name
-        
-        lsSubjectHierarchyROINames = []
-        for indROI in range(slRTStructChildren.GetNumberOfIds()):
-            slROIItemId = slRTStructChildren.GetId(indROI)
-            sROIName = slSHNode.GetItemName(slROIItemId)
-            lsSubjectHierarchyROINames.append(sROIName)
-        
-        
-        # get segmentation node name from data node
-        
-        slSegDataNode = slSHNode.GetItemDataNode(slRTStructItemId)
-        slSegDisplayNodeId = slSegDataNode.GetDisplayNodeID()
-        slSegDisplayNode = slicer.mrmlScene.GetNodeByID(slSegDisplayNodeId)
-        
-        
-        # assign segmentation display node to the requested viewing window destination
-        lsViewIDs = []
-        
-        # get viewing window node ID (1st object of node)
-        slViewingNode = slicer.mrmlScene.GetNodesByName(self.sDestination)
-        oSlicerViewNodeItem = slViewingNode.GetItemAsObject(0)
-        sViewID = oSlicerViewNodeItem.GetID()
-
-        lsViewIDs.append(sViewID)
-        
-        # if this segmentation display node was already assigned to a window,
-        #    capture the previous assignment and append the new request
-        sPrevViewAssignments = slSegDisplayNode.GetViewNodeIDs()
-        if len(sPrevViewAssignments) > 0:
-            # convert the tuple into a string
-            sPrevViewAssignments = ''.join(sPrevViewAssignments)
-            lsViewIDs.append(sPrevViewAssignments)
-            
-        # assign all requested view destinations to the display node
-        slSegDisplayNode.SetViewNodeIDs(lsViewIDs)
-        
-        
-        # adjust visibility of each ROI as per user's request
-        
-        if (self.sRoiVisibilityCode == 'All'):
-            for indSHList in range(len(lsSubjectHierarchyROINames)):
-                slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],True)
-                
-        if (self.sRoiVisibilityCode == 'None'):
-            for indSHList in range(len(lsSubjectHierarchyROINames)):
-                slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],False)
-            
-        # turn ON all ROI's and then turn OFF user's list    
-        if (self.sRoiVisibilityCode == 'Ignore'):
-            for indSHList in range(len(lsSubjectHierarchyROINames)):
-                slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],True)
-            for indUserList in range(len(self.lsRoiList)):
-                slSegDisplayNode.SetSegmentVisibility(self.lsRoiList[indUserList], False)
-
-        # turn OFF all ROI's and then turn ON user's list    
-        if (self.sRoiVisibilityCode == 'Select'):
-            for indSHList in range(len(lsSubjectHierarchyROINames)):
-                slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],False)
-            for indUserList in range(len(self.lsRoiList)):
-                slSegDisplayNode.SetSegmentVisibility(self.lsRoiList[indUserList], True)
-                
+#     #-----------------------------------------------
+# 
+#     def SetSegmentRoiVisibility(self):
+#         # in order to set visibility, you have to traverse Slicer's subject hierarchy
+#         # accessing the segmentation node, its children (to get ROI names) and its data node
+#         
+#         
+#         # get Slicer's subject hierarchy node (SHNode)
+#         
+#         slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+#         
+#         
+#         # get the item ID for the RTStruct through the RTStruct Series Instance UID
+#         
+#         slRTStructItemId = slSHNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(), self.sSeriesInstanceUID)
+# 
+# 
+#         # using slicers vtk Item Id for the RTStruct, get the ROI names (children)
+#         
+#         slRTStructChildren = vtk.vtkIdList()    # initialize to ItemId type
+#         slSHNode.GetItemChildren(slRTStructItemId, slRTStructChildren) # populate children variable
+#         
+#         
+#         # get ROI child Item ID and store the child (ROI) name
+#         
+#         lsSubjectHierarchyROINames = []
+#         for indROI in range(slRTStructChildren.GetNumberOfIds()):
+#             slROIItemId = slRTStructChildren.GetId(indROI)
+#             sROIName = slSHNode.GetItemName(slROIItemId)
+#             lsSubjectHierarchyROINames.append(sROIName)
+#         
+#         
+#         # get segmentation node name from data node
+#         
+#         slSegDataNode = slSHNode.GetItemDataNode(slRTStructItemId)
+#         slSegDisplayNodeId = slSegDataNode.GetDisplayNodeID()
+#         slSegDisplayNode = slicer.mrmlScene.GetNodeByID(slSegDisplayNodeId)
+#         
+#         
+#         # assign segmentation display node to the requested viewing window destination
+#         lsViewIDs = []
+#         
+#         # get viewing window node ID (1st object of node)
+#         slViewingNode = slicer.mrmlScene.GetNodesByName(self.sDestination)
+#         oSlicerViewNodeItem = slViewingNode.GetItemAsObject(0)
+#         sViewID = oSlicerViewNodeItem.GetID()
+# 
+#         lsViewIDs.append(sViewID)
+#         
+#         # if this segmentation display node was already assigned to a window,
+#         #    capture the previous assignment and append the new request
+#         sPrevViewAssignments = slSegDisplayNode.GetViewNodeIDs()
+#         if len(sPrevViewAssignments) > 0:
+#             # convert the tuple into a string
+#             sPrevViewAssignments = ''.join(sPrevViewAssignments)
+#             lsViewIDs.append(sPrevViewAssignments)
+#             
+#         # assign all requested view destinations to the display node
+#         slSegDisplayNode.SetViewNodeIDs(lsViewIDs)
+#         
+#         
+#         # adjust visibility of each ROI as per user's request
+#         
+#         if (self.sRoiVisibilityCode == 'All'):
+#             for indSHList in range(len(lsSubjectHierarchyROINames)):
+#                 slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],True)
+#                 
+#         if (self.sRoiVisibilityCode == 'None'):
+#             for indSHList in range(len(lsSubjectHierarchyROINames)):
+#                 slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],False)
+#             
+#         # turn ON all ROI's and then turn OFF user's list    
+#         if (self.sRoiVisibilityCode == 'Ignore'):
+#             for indSHList in range(len(lsSubjectHierarchyROINames)):
+#                 slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],True)
+#             for indUserList in range(len(self.lsRoiList)):
+#                 slSegDisplayNode.SetSegmentVisibility(self.lsRoiList[indUserList], False)
+# 
+#         # turn OFF all ROI's and then turn ON user's list    
+#         if (self.sRoiVisibilityCode == 'Select'):
+#             for indSHList in range(len(lsSubjectHierarchyROINames)):
+#                 slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],False)
+#             for indUserList in range(len(self.lsRoiList)):
+#                 slSegDisplayNode.SetSegmentVisibility(self.lsRoiList[indUserList], True)
+#                 
 
     
     #-----------------------------------------------
