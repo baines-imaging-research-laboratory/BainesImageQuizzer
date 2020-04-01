@@ -214,11 +214,18 @@ class ImageView:
         
         # if this segmentation display node was already assigned to a window,
         #    capture the previous assignment and append the new request
-        sPrevViewAssignments = slSegDisplayNode.GetViewNodeIDs()
-        if len(sPrevViewAssignments) > 0:
-            # convert the tuple into a string
-            sPrevViewAssignments = ''.join(sPrevViewAssignments)
-            lsViewIDs.append(sPrevViewAssignments)
+        tupPreviousViewAssignments = slSegDisplayNode.GetViewNodeIDs()
+        lsRemainingPreviousAssignments = []
+        if len(tupPreviousViewAssignments) > 0:
+#             # convert the tuple into a string
+#             sPrevViewAssignments = ''.join(sPreviousViewAssignments)
+
+            # extract first element of tuple and a list with the rest of the elements 
+            sFirstPreviousAssignment, *lsRemainingPreviousAssignments = tupPreviousViewAssignments
+            lsViewIDs.append(sFirstPreviousAssignment)
+            if len(lsRemainingPreviousAssignments) >0:
+                for indTupList in range(len(lsRemainingPreviousAssignments)):
+                    lsViewIDs.append(lsRemainingPreviousAssignments[indTupList])
             
         # assign all requested view destinations to the display node
         slSegDisplayNode.SetViewNodeIDs(lsViewIDs)
