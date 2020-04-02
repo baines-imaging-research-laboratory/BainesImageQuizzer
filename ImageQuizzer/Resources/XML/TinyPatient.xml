@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Session>
+	<Page name="TinyPatient" descriptor="DicomSeries">
+		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Red">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Yellow">
+			<Layer>Background</Layer>
+			<Orientation>Sagittal</Orientation>
+			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Green">
+			<Layer>Background</Layer>
+			<Orientation>Coronal</Orientation>
+			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Red">
+			<Layer>Segmentation</Layer>
+			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
+			<ROIs roiVisibilityCode="Select">
+				<ROI>Tumor_Contour</ROI>
+				<ROI>Body_Contour</ROI>
+			</ROIs>
+		</Image>
+		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Yellow">
+			<Layer>Segmentation</Layer>
+			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
+			<ROIs roiVisibilityCode="Select">
+				<ROI>Tumor_Contour</ROI>
+				<ROI>Body_Contour</ROI>
+			</ROIs>
+		</Image>
+		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Green">
+			<Layer>Segmentation</Layer>
+			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
+			<ROIs roiVisibilityCode="Select">
+				<ROI>Tumor_Contour</ROI>
+				<ROI>Body_Contour</ROI>
+			</ROIs>
+		</Image>
+		<QuestionSet id="QS-Checkup" title="What's your progress">
+			<Question type="Radio" descriptor="Milestone checker">
+				<Option>Cooking with gas.</Option>
+				<Option>On track.</Option>
+				<Option>Long way to go.</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>
