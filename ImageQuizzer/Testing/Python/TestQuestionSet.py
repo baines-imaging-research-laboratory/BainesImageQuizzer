@@ -356,7 +356,8 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
         ltupQuestionSet.append(tupQuestionGroup)
 
-        bTestResultTF, qQuizWidget = self.oQuestionSet.BuildQuestionSetForm(ltupQuestionSet)
+        self.oQuestionSet.ltupQuestions = ltupQuestionSet
+        bTestResultTF, qQuizWidget = self.oQuestionSet.BuildQuestionSetForm()
  
         slicer.modules.TestQuestionSetWidget.questionSetLayout.addWidget(qQuizWidget)
         
@@ -391,7 +392,8 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
         ltupQuestionSet.append(tupQuestionGroup)
 
-        bBuildSetSuccess, qQuizWidget = self.oQuestionSet.BuildQuestionSetForm(ltupQuestionSet)
+        self.oQuestionSet.ltupQuestions = ltupQuestionSet
+        bBuildSetSuccess, qQuizWidget = self.oQuestionSet.BuildQuestionSetForm()
 
         if bBuildSetSuccess == False:
             bTestResultTF = True # we expected an error
