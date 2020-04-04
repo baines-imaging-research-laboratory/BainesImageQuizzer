@@ -8,6 +8,18 @@ import xml.dom.minidom
 
 ##########################################################################
 #
+#   class Utilities
+#
+##########################################################################
+
+class Utilities:
+    
+    def __init__(self, parent=None):
+        self.parent = parent
+        
+        
+##########################################################################
+#
 #   class UtilsIOXml
 #
 ##########################################################################
@@ -151,11 +163,11 @@ class UtilsIOXml:
 
 ##########################################################################
 #
-#   class Utilities
+#   class UtilsMsgs
 #
 ##########################################################################
 
-class Utilities:
+class UtilsMsgs:
     
     def __init__(self, parent=None):
         self.parent = parent
@@ -179,4 +191,47 @@ class Utilities:
 
     #-------------------------------------------
 
+##########################################################################
+#
+#   class UtilsIO
+#
+##########################################################################
 
+class UtilsIO:
+    
+    def __init__(self, parent=None):
+        self.parent = parent
+        self.ScriptedModulesPath = ''
+        self.sResourcesPath = ''
+        self.sUsersBasePath = ''
+        self.sQuizFilename = ''
+        self.sQuizUsername = ''
+
+
+    #-------------------------------------------
+
+    def SetupModulePaths(self, sModuleName):
+        self.ScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
+        self.ScriptedModulesPath = os.path.dirname(self.ScriptedModulesPath)
+        self.sResourcesPath = os.path.join(self.ScriptedModulesPath, 'Resources', 'XML')
+        self.sUsersBasePath = os.path.join(self.ScriptedModulesPath, 'Users')
+        
+    #-------------------------------------------
+
+    def SetQuizFilename(self, sSelectedQuiz):
+        self.sQuizFilename = sSelectedQuiz
+        
+    #-------------------------------------------
+
+    def SetQuizUsername(self, sSelectedUser):
+        self.sQuizUsername = sSelectedUser
+        
+    #-------------------------------------------
+
+    def GetQuizFilename(self):
+        return self.sQuizFilename
+    
+    #-------------------------------------------
+
+    def GetQuizUsername(self):
+        return self.sQuizUsername

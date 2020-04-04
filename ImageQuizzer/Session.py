@@ -22,10 +22,14 @@ class Session:
         print('Constructor for Session')
         
         self.oIOXml = UtilsIOXml()
-        self.oUtils = Utilities()
         self.lCompositeIndices = []
         self.iCompIndex = 0
         self.xRootNode = None
+        
+        
+        self.oUtilsIO = None
+        self.oQuizWidgets = None
+        
         
         # Next button
         self.btnNext = qt.QPushButton("Next")
@@ -41,11 +45,39 @@ class Session:
 
     #-----------------------------------------------
 
-    def RunSetup(self, sXmlFilename, sUsername, mainLayout, quizLayout):
-        self.sXmlFilename = sXmlFilename
-        self.sUsername = sUsername
-        self.quizLayout = quizLayout
-        self.mainLayout = mainLayout
+#     def RunSetup(self, sXmlFilename, sUsername, mainLayout, quizLayout):
+#         self.sXmlFilename = sXmlFilename
+#         self.sUsername = sUsername
+#         self.quizLayout = quizLayout
+#         self.mainLayout = mainLayout
+# #         print(self.sXmlFilename)
+# #         print(self.sUsername)
+#         
+#         # TODO: create and add user-timestamp node
+#         # TODO: determine study status based on recorded answers
+#         
+#         
+#         # open xml and check for root node
+#         bSuccess, xRootNode = self.oIOXml.OpenXml(self.sXmlFilename,'Session')
+#         if not bSuccess:
+#             sErrorMsg = "ERROR", "Not a valid quiz - Root node name was not 'Session'"
+#             self.oUtilsMsgs.DisplayError(sErrorMsg)
+# 
+#         else:
+#             self.xRootNode = xRootNode
+#             self.mainLayout.addWidget(self.btnNext)
+#             self.mainLayout.addWidget(self.btnPrevious)
+#             
+#             self.BuildCompositeIndexList()
+#             self.EnableButtons()
+#             self.DisplayPage()
+
+
+    def RunSetup(self, oUtilsIO, oQuizWidgets):
+        self.sXmlFilename = oUtilsIO.GetQuizFilename()
+        self.sUsername = oUtilsIO.GetQuizFilename()
+        self.mainLayout = oQuizWidgets.GetSlicerLeftMainLayout()
+        self.quizLayout = oQuizWidgets.GetSlicerQuizLayout()
 #         print(self.sXmlFilename)
 #         print(self.sUsername)
         
@@ -57,7 +89,7 @@ class Session:
         bSuccess, xRootNode = self.oIOXml.OpenXml(self.sXmlFilename,'Session')
         if not bSuccess:
             sErrorMsg = "ERROR", "Not a valid quiz - Root node name was not 'Session'"
-            self.oUtils.DisplayError(sErrorMsg)
+            self.oUtilsMsgs.DisplayError(sErrorMsg)
 
         else:
             self.xRootNode = xRootNode
@@ -67,6 +99,7 @@ class Session:
             self.BuildCompositeIndexList()
             self.EnableButtons()
             self.DisplayPage()
+
 
             
             
@@ -158,7 +191,7 @@ class Session:
         
         if self.iCompIndex > len(self.lCompositeIndices) -1:
             # the last question was answered - exit Slicer
-            self.oUtils.DisplayInfo("Quiz complete .... Exit")
+            self.oUtilsMsgs.DisplayInfo("Quiz complete .... Exit")
             slicer.util.exit(status=EXIT_SUCCESS)
 
 
