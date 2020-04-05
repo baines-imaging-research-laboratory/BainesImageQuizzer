@@ -41,7 +41,7 @@ class ImageView:
 
         self.quizLayout = quizLayout
         self.oIOXml = UtilsIOXml()
-        self.oUtils = Utilities()
+        self.oUtilsMsgs = UtilsMsgs()
 
 
         # get name and descriptor
@@ -86,7 +86,7 @@ class ImageView:
             if not (sVolumeFormat in self.lValidVolumeFormats):
                 sErrorMsg = 'Invalid data format defined for patient in XML : '
                 sErrorMsg = sErrorMsg + sPageID
-                self.oUtils.DisplayError(sErrorMsg)
+                self.oUtilsMsgs.DisplayError(sErrorMsg)
             
             if (sVolumeFormat == 'dicom'):
                 oImageViewItem = DicomVolumeDetail(xImages[indImage], sPageID)
@@ -298,7 +298,7 @@ class ViewNodeBase:
         if len(xPathNodes) > 1:
             sWarningMsg = 'There can only be one path per image.  The first defined path will be used.   '
             sWarningMsg = sWarningMsg + self.sNodeName
-            self.oUtils.DisplayWarning( sWarningMsg )
+            self.oUtilsMsgs.DisplayWarning( sWarningMsg )
 
         self.sImagePath = self.oIOXml.GetDataInNode(xPathNodes[0])
         
@@ -307,7 +307,7 @@ class ViewNodeBase:
         if len(xLayerNodes) > 1:
             sWarningMsg = 'There can only be one destination layer (foreground, background or label) per image. \nThe first defined destination in the XML will be used.   '
             sWarningMsg = sWarningMsg + self.sNodeName
-            self.oUtils.DisplayWarning(sWarningMsg)
+            self.oUtilsMsgs.DisplayWarning(sWarningMsg)
 
         self.sViewLayer = self.oIOXml.GetDataInNode(xLayerNodes[0])
     
@@ -320,7 +320,7 @@ class ViewNodeBase:
             if len(xOrientationNodes) > 1:
                 sWarningMsg = 'There can only be one orientation (axial, sagittal, coronal) per image. \nThe first defined orientation in the XML will be used.   '
                 sWarningMsg = sWarningMsg + self.sNodeName
-                self.oUtils.DisplayWarning(sWarningMsg)
+                self.oUtilsMsgs.DisplayWarning(sWarningMsg)
     
             self.sOrientation = self.oIOXml.GetDataInNode(xOrientationNodes[0])
    
@@ -358,7 +358,7 @@ class DataVolumeDetail(ViewNodeBase):
     def __init__(self, xImage, sPageID):
         self.sClassName = type(self).__name__
         self.oIOXml = UtilsIOXml()
-        self.oUtils = Utilities()
+        self.oUtilsMsgs = UtilsMsgs()
         self.xImage = xImage
         self.sPageID = sPageID
 
@@ -412,7 +412,7 @@ class DataVolumeDetail(ViewNodeBase):
             else:
                 
                 sErrorMsg = ('Undefined image type: %s' % self.sImageType)
-                self.oUtils.DisplayError(sErrorMsg)
+                self.oUtilsMsgs.DisplayError(sErrorMsg)
                 bLoadSuccess = False
                 
         except:
@@ -438,7 +438,7 @@ class DicomVolumeDetail(ViewNodeBase):
     def __init__(self, xImage, sPageID):
         self.sClassName = type(self).__name__
         self.oIOXml = UtilsIOXml()
-        self.oUtils = Utilities()
+        self.oUtilsMsgs = Utilities()
         self.xImage = xImage
         self.sPageID = sPageID
         
@@ -470,7 +470,7 @@ class DicomVolumeDetail(ViewNodeBase):
         if len(xSeriesUIDNodes) > 1:
             sWarningMsg = 'There can only be one SeriesInstanceUID element per Dicom element. \nThe first defined SeriesInstanceUID in the XML will be used.   '
             sWarningMsg = sWarningMsg + self.sNodeName
-            self.oUtils.DisplayWarning(sWarningMsg)
+            self.oUtilsMsgs.DisplayWarning(sWarningMsg)
         self.sSeriesInstanceUID = self.oIOXml.GetDataInNode(xSeriesUIDNodes[0])
         
         
@@ -482,7 +482,7 @@ class DicomVolumeDetail(ViewNodeBase):
             if len(xRefSeriesUIDNodes) > 1:
                 sWarningMsg = 'There can only be one Volume Reference SeriesInstanceUID element per image. \nThe first defined Series UID in the XML will be used.   '
                 sWarningMsg = sWarningMsg + self.sNodeName
-                self.oUtils.DisplayWarning(sWarningMsg)
+                self.oUtilsMsgs.DisplayWarning(sWarningMsg)
             self.sVolumeReferenceSeriesUID = self.oIOXml.GetDataInNode(xRefSeriesUIDNodes[0])
 
             
@@ -567,7 +567,7 @@ class DicomVolumeDetail(ViewNodeBase):
         
         else:
             sErrorMsg = ('Slicer Database is not open')
-            self.oUtils.DisplayError(sErrorMsg)
+            self.oUtilsMsgs.DisplayError(sErrorMsg)
 
         
 
