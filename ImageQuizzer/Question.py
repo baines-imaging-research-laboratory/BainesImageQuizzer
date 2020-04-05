@@ -5,7 +5,7 @@ import os
 import vtk, qt, ctk, slicer
 import sys
 import warnings
-# from UtilsIOXml import *
+
 from Utilities import *
 
 #========================================================================================
