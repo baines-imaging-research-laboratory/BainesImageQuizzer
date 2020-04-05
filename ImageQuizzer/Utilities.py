@@ -219,7 +219,50 @@ class UtilsIO:
         self._sQuizUsername = ''
         self._sTestDataBasePath = ''
         self._sTestDataFilename = ''
+        self._sUserDir = ''
 
+    #-------------------------------------------
+    #        Getters / Setters
+    #-------------------------------------------
+
+    def SetQuizFilename(self, sSelectedQuiz):
+        self._sQuizFilename = sSelectedQuiz
+        
+    #----------
+    def SetQuizUsername(self, sSelectedUser):
+        self._sQuizUsername = sSelectedUser
+        
+    #----------
+    def SetTestDataFilename(self, sTestDataFilename):
+        self._sTestDataFilename = sTestDataFilename
+        
+    #----------
+    def GetQuizFilename(self):
+        return self._sQuizFilename
+    
+    #----------
+    def GetQuizUsername(self):
+        return self._sQuizUsername
+
+#     #----------
+#     def GetUsersBasePath(self):
+#         return self._sUsersBasePath
+    
+    #----------
+    def GetUsersDir(self):
+        return self._sUserDir
+    
+    #----------
+    def GetResourcesPath(self):
+        return self._sResourcesPath
+    
+    #----------
+    def GetTestDataFilename(self):
+        return self._sTestDataFilename
+
+
+    #-------------------------------------------
+    #        Functions
     #-------------------------------------------
 
     def SetupModulePaths(self, sModuleName):
@@ -231,40 +274,10 @@ class UtilsIO:
         
     #-------------------------------------------
 
-    def SetQuizFilename(self, sSelectedQuiz):
-        self._sQuizFilename = sSelectedQuiz
+    def SetupUserDir(self, sUsername):
+        _sUserDir = os.path.join(self._sUsersBasePath, sUsername)
+
+        # check that the user folder exists - if not, create it
+        if not os.path.exists(_sUserDir):
+            os.makedirs(_sUserDir)
         
-    #-------------------------------------------
-
-    def SetQuizUsername(self, sSelectedUser):
-        self._sQuizUsername = sSelectedUser
-        
-    #-------------------------------------------
-
-    def SetTestDataFilename(self, sTestDataFilename):
-        self._sTestDataFilename = sTestDataFilename
-        
-    #-------------------------------------------
-
-    def GetQuizFilename(self):
-        return self._sQuizFilename
-    
-    #-------------------------------------------
-
-    def GetQuizUsername(self):
-        return self._sQuizUsername
-
-    #-------------------------------------------
-
-    def GetUsersBasePath(self):
-        return self._sUsersBasePath
-    
-    #-------------------------------------------
-
-    def GetResourcesPath(self):
-        return self._sResourcesPath
-    
-    #-------------------------------------------
-
-    def GetTestDtataFilename(self):
-        return self._sTestDataFilename

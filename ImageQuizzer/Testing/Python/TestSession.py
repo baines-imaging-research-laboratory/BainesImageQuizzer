@@ -2,11 +2,11 @@ import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 from Session import *
 from TestingStatus import *
+from Utilities import *
 
 import os
 import sys
 
-from pip._vendor.distlib._backport.shutil import copyfile
 
 ##########################################################################
 #
@@ -92,16 +92,19 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
     def __init__(self):
         
-        moduleName = 'ImageQuizzer'
-
-        self.ScriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
-        self.ScriptedModulesPath = os.path.dirname(self.ScriptedModulesPath)
-        self.sXmlTestDataPath = os.path.join(self.ScriptedModulesPath, 'Testing', 'TestData', 'InputXmlFiles')
-        self.sUsersBasePath = os.path.join(self.ScriptedModulesPath, 'Users','Tests')
+        sModuleName = 'ImageQuizzer'
+        sUsername = 'Tests'
         
-        # check that a Test folder exists - if not, create it
-        if not os.path.exists(self.sUsersBasePath):
-            os.makedirs(self.sUsersBasePath)
+        oUtilsIO = UtilsIO()
+        oUtilsIO.SetupModulePaths(sModuleName)
+        oUtilsIO.SetQuizUsername(sUsername)
+        
+#         sUserBasePath = oUtilsIO.GetUsersBasePath()
+#         sUserDir = os.path.join(oUtilsIO.GetUsersBasePath(), sUsername)
+#         
+#         # check that a Test folder exists - if not, create it
+#         if not os.path.exists(sUserDir):
+#             os.makedirs(sUserDir)
         
         
     #------------------------------------------- 
@@ -146,19 +149,19 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         bTestResult = True
         self.fnName = sys._getframe().f_code.co_name
         
-        # copy test file to user area
-        sTestFilename = 'Test_Laptop.xml'
-        sUserName = 'Tests'
-        sTestPath = os.path.join(self.sXmlTestDataPath, sTestFilename)
-        sNewPath = os.path.join(self.sUsersBasePath, sTestFilename)
-        
-        print(sTestPath)
-        print(sNewPath)
-        
-        copyfile(sTestPath, sNewPath)
-        
-        self.oSession = Session() 
-        self.oSession.RunSetup(sNewPath, sUserName)
+#         # copy test file to user area
+#         sTestFilename = 'Test_Laptop.xml'
+#         sUserName = 'Tests'
+#         sTestPath = os.path.join(self.sXmlTestDataPath, sTestFilename)
+#         sNewPath = os.path.join(self.sUsersBasePath, sTestFilename)
+#         
+#         print(sTestPath)
+#         print(sNewPath)
+#         
+#         copyfile(sTestPath, sNewPath)
+#         
+#         self.oSession = Session() 
+#         self.oSession.RunSetup(sNewPath, sUserName)
 
 #         bTestResult = self.oSession.readPresentationInstructions()
         tupResult = self.fnName, bTestResult
