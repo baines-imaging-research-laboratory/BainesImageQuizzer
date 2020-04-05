@@ -3,10 +3,11 @@ import os
 import vtk, qt, ctk, slicer
 import sys
 import unittest
-# from UtilsIOXml import *
+
 from Utilities import *
 from Question import *
 from ImageView import *
+#from ImageQuizzer import *
 
 import xml
 from xml.dom import minidom
@@ -21,8 +22,9 @@ class Session:
         self.parent = parent
         print('Constructor for Session')
         
+        self.oUtilsMsgs = UtilsMsgs()
         self.oIOXml = UtilsIOXml()
-        self.lCompositeIndices = []
+        self.lPageQuestionCompositeIndices = []
         self.iCompIndex = 0
         self.xRootNode = None
         
@@ -45,39 +47,12 @@ class Session:
 
     #-----------------------------------------------
 
-#     def RunSetup(self, sXmlFilename, sUsername, mainLayout, quizLayout):
-#         self.sXmlFilename = sXmlFilename
-#         self.sUsername = sUsername
-#         self.quizLayout = quizLayout
-#         self.mainLayout = mainLayout
-# #         print(self.sXmlFilename)
-# #         print(self.sUsername)
-#         
-#         # TODO: create and add user-timestamp node
-#         # TODO: determine study status based on recorded answers
-#         
-#         
-#         # open xml and check for root node
-#         bSuccess, xRootNode = self.oIOXml.OpenXml(self.sXmlFilename,'Session')
-#         if not bSuccess:
-#             sErrorMsg = "ERROR", "Not a valid quiz - Root node name was not 'Session'"
-#             self.oUtilsMsgs.DisplayError(sErrorMsg)
-# 
-#         else:
-#             self.xRootNode = xRootNode
-#             self.mainLayout.addWidget(self.btnNext)
-#             self.mainLayout.addWidget(self.btnPrevious)
-#             
-#             self.BuildCompositeIndexList()
-#             self.EnableButtons()
-#             self.DisplayPage()
-
-
     def RunSetup(self, oUtilsIO, oQuizWidgets):
+
         self.sXmlFilename = oUtilsIO.GetQuizFilename()
         self.sUsername = oUtilsIO.GetQuizFilename()
-        self.mainLayout = oQuizWidgets.GetSlicerLeftMainLayout()
-        self.quizLayout = oQuizWidgets.GetSlicerQuizLayout()
+        self.slicerLeftMainLayout = oQuizWidgets.GetSlicerLeftMainLayout()
+        self.slicerQuizLayout = oQuizWidgets.GetSlicerQuizLayout()
 #         print(self.sXmlFilename)
 #         print(self.sUsername)
         
@@ -93,10 +68,10 @@ class Session:
 
         else:
             self.xRootNode = xRootNode
-            self.mainLayout.addWidget(self.btnNext)
-            self.mainLayout.addWidget(self.btnPrevious)
+            self.slicerLeftMainLayout.addWidget(self.btnNext)
+            self.slicerLeftMainLayout.addWidget(self.btnPrevious)
             
-            self.BuildCompositeIndexList()
+            self.BuildPageQuestionCompositeIndexList()
             self.EnableButtons()
             self.DisplayPage()
 
@@ -105,9 +80,13 @@ class Session:
             
     #-----------------------------------------------
 
-    def BuildCompositeIndexList(self):
+    def BuildPageQuestionCompositeIndexList(self):
+        
+        # This function collects the page and question set indices which
+        #    are used to coordinate the next and previous buttons
+        
         # given the root of the xml document build composite list 
-        # of indexes for each page and the question sets within
+        #     of indexes for each page and the question sets within
         oIOXml = UtilsIOXml()
         
         # get Page nodes
@@ -119,7 +98,7 @@ class Session:
             xQuestionSets = oIOXml.GetChildren(xPageNode,'QuestionSet')
             
             for iQuestionSetIndex in range(len(xQuestionSets)):
-                self.lCompositeIndices.append([iPageIndex, iQuestionSetIndex])
+                self.lPageQuestionCompositeIndices.append([iPageIndex, iQuestionSetIndex])
         
 
     #-----------------------------------------------
@@ -127,8 +106,8 @@ class Session:
     def DisplayPage(self):
         # extract page and question set indices from the current composite index
         
-        iPageIndex = self.lCompositeIndices[self.iCompIndex][0]
-        iQuestionSetIndex = self.lCompositeIndices[self.iCompIndex][1]
+        iPageIndex = self.lPageQuestionCompositeIndices[self.iCompIndex][0]
+        iQuestionSetIndex = self.lPageQuestionCompositeIndices[self.iCompIndex][1]
 
         xNodePage = self.oIOXml.GetNthChild(self.xRootNode, 'Page', iPageIndex)
         xNodeQuestionSet = self.oIOXml.GetNthChild(xNodePage, 'QuestionSet', iQuestionSetIndex)
@@ -137,15 +116,15 @@ class Session:
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
         
         # first clear any previous widgets (except push buttons)
-        for i in reversed(range(self.quizLayout.count())):
-#             x = self.quizLayout.itemAt(i).widget()
+        for i in reversed(range(self.slicerQuizLayout.count())):
+#             x = self.slicerQuizLayout.itemAt(i).widget()
 #             if not(isinstance(x, qt.QPushButton)):
-            self.quizLayout.itemAt(i).widget().setParent(None)
+            self.slicerQuizLayout.itemAt(i).widget().setParent(None)
 
         
         bBuildSuccess, qQuizWidget = oQuestionSet.BuildQuestionSetForm()
         if bBuildSuccess:
-            self.quizLayout.addWidget(qQuizWidget)
+            self.slicerQuizLayout.addWidget(qQuizWidget)
         
         
         oImageView = ImageView()
@@ -161,7 +140,7 @@ class Session:
             self.btnPrevious.enabled = False
 
         # end of quiz
-        elif (self.iCompIndex == len(self.lCompositeIndices) - 1):
+        elif (self.iCompIndex == len(self.lPageQuestionCompositeIndices) - 1):
             self.btnNext.enabled = True
             self.btnPrevious.enabled = True
 
@@ -171,7 +150,7 @@ class Session:
             self.btnPrevious.enabled = True
 
         # assign button description           
-        if (self.iCompIndex == len(self.lCompositeIndices) - 1):
+        if (self.iCompIndex == len(self.lPageQuestionCompositeIndices) - 1):
             # last question of last image view
             self.btnNext.setText("Save and Finish")
 
@@ -179,7 +158,7 @@ class Session:
             # assume multiple questions in the question set
             self.btnNext.setText("Next")
             # if last question in the question set - save answers and continue to next
-            if not( self.lCompositeIndices[self.iCompIndex][0] == self.lCompositeIndices[self.iCompIndex + 1][0]):
+            if not( self.lPageQuestionCompositeIndices[self.iCompIndex][0] == self.lPageQuestionCompositeIndices[self.iCompIndex + 1][0]):
                 self.btnNext.setText("Save and Continue")
 
     #-----------------------------------------------
@@ -189,7 +168,7 @@ class Session:
         
         self.iCompIndex = self.iCompIndex + 1
         
-        if self.iCompIndex > len(self.lCompositeIndices) -1:
+        if self.iCompIndex > len(self.lPageQuestionCompositeIndices) -1:
             # the last question was answered - exit Slicer
             self.oUtilsMsgs.DisplayInfo("Quiz complete .... Exit")
             slicer.util.exit(status=EXIT_SUCCESS)

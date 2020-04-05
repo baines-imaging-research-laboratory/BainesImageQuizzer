@@ -13,6 +13,9 @@ import xml.dom.minidom
 ##########################################################################
 
 class Utilities:
+    """ Class Utilities 
+        stub set up for importing all classes in the Utilities file
+    """
     
     def __init__(self, parent=None):
         self.parent = parent
@@ -26,6 +29,9 @@ class Utilities:
 
 
 class UtilsIOXml:
+    """ Class UtilsIOXml
+        to handle accessing nodes, children, attributes and data of XML files
+    """ 
     
     def __init__(self, parent=None):
         self.sClassName = 'undefinedClassName'
@@ -168,6 +174,9 @@ class UtilsIOXml:
 ##########################################################################
 
 class UtilsMsgs:
+    """ Class UtilsMsgs
+        create message box to handle displaying errors, warnings and general information
+    """
     
     def __init__(self, parent=None):
         self.parent = parent
@@ -198,40 +207,64 @@ class UtilsMsgs:
 ##########################################################################
 
 class UtilsIO:
+    """ Class UtilsIO
+        to set up path and filenames for the Image Quizzer module
+    """
     
     def __init__(self, parent=None):
         self.parent = parent
-        self.ScriptedModulesPath = ''
-        self.sResourcesPath = ''
-        self.sUsersBasePath = ''
-        self.sQuizFilename = ''
-        self.sQuizUsername = ''
-
+        self._sResourcesPath = ''
+        self._sUsersBasePath = ''
+        self._sQuizFilename = ''
+        self._sQuizUsername = ''
+        self._sTestDataBasePath = ''
+        self._sTestDataFilename = ''
 
     #-------------------------------------------
 
     def SetupModulePaths(self, sModuleName):
-        self.ScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
-        self.ScriptedModulesPath = os.path.dirname(self.ScriptedModulesPath)
-        self.sResourcesPath = os.path.join(self.ScriptedModulesPath, 'Resources', 'XML')
-        self.sUsersBasePath = os.path.join(self.ScriptedModulesPath, 'Users')
+        sScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
+        sScriptedModulesPath = os.path.dirname(sScriptedModulesPath)
+        self._sResourcesPath = os.path.join(sScriptedModulesPath, 'Resources', 'XML')
+        self._sUsersBasePath = os.path.join(sScriptedModulesPath, 'Users')
+        self._sTestDataBasePath  = os.path.join(sScriptedModulesPath, 'Testing', 'TestData')
         
     #-------------------------------------------
 
     def SetQuizFilename(self, sSelectedQuiz):
-        self.sQuizFilename = sSelectedQuiz
+        self._sQuizFilename = sSelectedQuiz
         
     #-------------------------------------------
 
     def SetQuizUsername(self, sSelectedUser):
-        self.sQuizUsername = sSelectedUser
+        self._sQuizUsername = sSelectedUser
+        
+    #-------------------------------------------
+
+    def SetTestDataFilename(self, sTestDataFilename):
+        self._sTestDataFilename = sTestDataFilename
         
     #-------------------------------------------
 
     def GetQuizFilename(self):
-        return self.sQuizFilename
+        return self._sQuizFilename
     
     #-------------------------------------------
 
     def GetQuizUsername(self):
-        return self.sQuizUsername
+        return self._sQuizUsername
+
+    #-------------------------------------------
+
+    def GetUsersBasePath(self):
+        return self._sUsersBasePath
+    
+    #-------------------------------------------
+
+    def GetResourcesPath(self):
+        return self._sResourcesPath
+    
+    #-------------------------------------------
+
+    def GetTestDtataFilename(self):
+        return self._sTestDataFilename
