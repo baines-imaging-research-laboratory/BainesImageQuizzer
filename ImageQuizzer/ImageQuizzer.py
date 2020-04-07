@@ -146,7 +146,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
  
         # get quiz filename
         self.quizInputFileDialog = qt.QFileDialog()
-        sSelectedQuiz = self.quizInputFileDialog.getOpenFileName(self.qUserLoginWidget, "Open File", self.oUtilsIO.GetResourcesPath(), "XML files (*.xml)" )
+        sSelectedQuiz = self.quizInputFileDialog.getOpenFileName(self.qUserLoginWidget, "Open File", self.oUtilsIO.GetXmlResourcesPath(), "XML files (*.xml)" )
  
         # check that file was selected
         if not sSelectedQuiz:
@@ -176,7 +176,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             self.oUtilsIO.SetQuizUsername(self.qLineUserName.text)
             
             # copy file from Resource into user folder
-            if self.SetupUserQuizFolder(): # success
+            if self.oUtilsIO.SetupUserQuizFolder(): # success
                 # start the session
                 self.slicerLeftWidget.activateWindow()
                 oSession = Session()
@@ -189,37 +189,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                 except:
                     pass
                 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    def SetupUserQuizFolder(self):
-        # create user folder if it doesn't exist
-        self.sUserFolder = os.path.join(self.oUtilsIO.GetUsersBasePath(), self.oUtilsIO.GetQuizUsername())
-        if not os.path.exists(self.sUserFolder):
-            os.makedirs(self.sUserFolder)
-            
-        # check if quiz file already exists in the user folder - if not, copy from Resources
-
-        # setup for new location
-        sPath, sFilename = os.path.split(self.oUtilsIO.GetQuizFilename())
-        sUserQuizFile = os.path.join(self.sUserFolder, sFilename)
-        if not os.path.isfile(sUserQuizFile):
-            # file not found, copy file from Resources to User folder
-            copyfile(self.qLblQuizFilename.text, sUserQuizFile)
-            return True
-
-        else:
-            # file exists - make sure it is readable
-            if not os.access(sUserQuizFile, os.R_OK):
-                # existing file is unreadable            
-                msgBox = qt.QMessageBox()
-                msgBox.critical(0,"ERROR","Quiz file is not readable")
-                return False
-            else:
-#                 msgBox = qt.QMessageBox()
-#                 msgBox.setText('Quiz file exists in user folder - new results will be appended')
-#                 msgBox.exec()
-                return True
-        
     
         
         

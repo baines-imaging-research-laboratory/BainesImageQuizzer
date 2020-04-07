@@ -213,7 +213,7 @@ class UtilsIO:
     
     def __init__(self, parent=None):
         self.parent = parent
-        self._sResourcesPath = ''
+        self._sXmlResourcesPath = ''
         self._sUsersBasePath = ''
         self._sQuizFilename = ''
         self._sQuizUsername = ''
@@ -244,17 +244,17 @@ class UtilsIO:
     def GetQuizUsername(self):
         return self._sQuizUsername
 
-#     #----------
-#     def GetUsersBasePath(self):
-#         return self._sUsersBasePath
+    #----------
+    def GetUsersBasePath(self):
+        return self._sUsersBasePath
     
     #----------
     def GetUsersDir(self):
         return self._sUserDir
     
     #----------
-    def GetResourcesPath(self):
-        return self._sResourcesPath
+    def GetXmlResourcesPath(self):
+        return self._sXmlResourcesPath
     
     #----------
     def GetTestDataFilename(self):
@@ -268,16 +268,50 @@ class UtilsIO:
     def SetupModulePaths(self, sModuleName):
         sScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
         sScriptedModulesPath = os.path.dirname(sScriptedModulesPath)
-        self._sResourcesPath = os.path.join(sScriptedModulesPath, 'Resources', 'XML')
+        self._sXmlResourcesPath = os.path.join(sScriptedModulesPath, 'Resources', 'XML')
         self._sUsersBasePath = os.path.join(sScriptedModulesPath, 'Users')
         self._sTestDataBasePath  = os.path.join(sScriptedModulesPath, 'Testing', 'TestData')
         
     #-------------------------------------------
 
-    def SetupUserDir(self, sUsername):
-        _sUserDir = os.path.join(self._sUsersBasePath, sUsername)
+    def SetupUserDir(self):
+        self._sUserDir = os.path.join(self._sUsersBasePath, self._sQuizUsername)
 
         # check that the user folder exists - if not, create it
-        if not os.path.exists(_sUserDir):
-            os.makedirs(_sUserDir)
+        if not os.path.exists(self._sUserDir):
+            os.makedirs(self._sUserDir)
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    def SetupUserQuizFolder(self):
+#         # create user folder if it doesn't exist
+#         self.sUserFolder = os.path.join(self.oUtilsIO.GetUsersBasePath(), self.oUtilsIO.GetQuizUsername())
+#         if not os.path.exists(self.sUserFolder):
+#             os.makedirs(self.sUserFolder)
+
+        self.SetupUserDir()
+            
+        # check if quiz file already exists in the user folder - if not, copy from Resources
+
+        # setup for new location
+        sPath, sFilename = os.path.split(self._sQuizFilename)
+        sUserQuizFile = os.path.join(self._sUserDir, sFilename)
+        if not os.path.isfile(sUserQuizFile):
+            # file not found, copy file from Resources to User folder
+            copyfile(self._sQuizFilename, sUserQuizFile)
+            return True
+
+        else:
+            # file exists - make sure it is readable
+            if not os.access(sUserQuizFile, os.R_OK):
+                # existing file is unreadable            
+                msgBox = qt.QMessageBox()
+                msgBox.critical(0,"ERROR","Quiz file is not readable")
+                return False
+            else:
+#                 msgBox = qt.QMessageBox()
+#                 msgBox.setText('Quiz file exists in user folder - new results will be appended')
+#                 msgBox.exec()
+                return True
+        
         

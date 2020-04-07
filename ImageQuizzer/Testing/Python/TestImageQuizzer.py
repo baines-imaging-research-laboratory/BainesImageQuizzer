@@ -2,6 +2,7 @@ import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 from ImageQuizzer import *
 from TestingStatus import *
+from Utilities import *
 
 import os
 import sys
@@ -112,15 +113,10 @@ class TestImageQuizzerTest(ScriptedLoadableModuleTest):
         slicer.mrmlScene.Clear(0)
         self.sClassName = type(self).__name__
 
-#         # define path for test data
-#         moduleName = 'ImageQuizzer'
-#         scriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
-#         scriptedModulesPath = os.path.dirname(scriptedModulesPath)
-#         self.testDataPath = os.path.join(scriptedModulesPath, 'Testing', 'TestData')
-
-        # create Test folder in User area
-        # clear previous tests
-        # copy testing file into 
+        self.oUtilsMsgs = UtilsMsgs()
+        sMsg = 'Under Construction'
+        self.oUtilsMsgs.DisplayWarning(sMsg)
+        
 
        
     #------------------------------------------- 
@@ -134,7 +130,7 @@ class TestImageQuizzerTest(ScriptedLoadableModuleTest):
         logic = TestImageQuizzerLogic()
 
         tupResults = []
-        tupResults.append(self.test_NoErrors_BuildSession())
+#         tupResults.append(self.test_NoErrors_BuildImageQuizzer())
 
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
@@ -146,19 +142,19 @@ class TestImageQuizzerTest(ScriptedLoadableModuleTest):
         bTestResult = True
         self.fnName = sys._getframe().f_code.co_name
         
-        # copy test file to user area
-        sTestFilename = 'TestSimple_Laptop.xml'
-        sUserName = 'Tests'
-        sTestPath = os.path.join(self.sXmlTestDataPath, sTestFilename)
-        sNewPath = os.path.join(self.sUsersBasePath, sTestFilename)
-        
-        print(sTestPath)
-        print(sNewPath)
-        
-        copyfile(sTestPath, sNewPath)
-        
-        self.oImageQuizzer = ImageQuizzer()
-        self.oImageQuizzer.setup()
+#         # copy test file to user area
+#         sTestFilename = 'Test_Laptop.xml'
+#         sUserName = 'Tests'
+#         sTestPath = os.path.join(self.sXmlTestDataPath, sTestFilename)
+#         sNewPath = os.path.join(self.sUsersBasePath, sTestFilename)
+#         
+#         print(sTestPath)
+#         print(sNewPath)
+#         
+#         copyfile(sTestPath, sNewPath)
+#         
+#         self.oImageQuizzer = ImageQuizzer()
+#         self.oImageQuizzer.setup()
 
 #         bTestResult = self.oSession.readPresentationInstructions()
         tupResult = self.fnName, bTestResult

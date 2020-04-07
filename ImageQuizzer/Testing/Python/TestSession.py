@@ -92,12 +92,9 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
     def __init__(self):
         
-        sModuleName = 'ImageQuizzer'
-        sUsername = 'Tests'
+        self.sModuleName = 'ImageQuizzer'
+        self.sUsername = 'Tests'
         
-        oUtilsIO = UtilsIO()
-        oUtilsIO.SetupModulePaths(sModuleName)
-        oUtilsIO.SetQuizUsername(sUsername)
         
 #         sUserBasePath = oUtilsIO.GetUsersBasePath()
 #         sUserDir = os.path.join(oUtilsIO.GetUsersBasePath(), sUsername)
@@ -115,11 +112,12 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         slicer.mrmlScene.Clear(0)
         self.sClassName = type(self).__name__
 
-#         # define path for test data
-#         moduleName = 'ImageQuizzer'
-#         scriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
-#         scriptedModulesPath = os.path.dirname(scriptedModulesPath)
-#         self.testDataPath = os.path.join(scriptedModulesPath, 'Testing', 'TestData')
+        oUtilsIO = UtilsIO()
+        oUtilsIO.SetupModulePaths(self.sModuleName)
+        oUtilsIO.SetQuizUsername(self.sUsername)
+        oUtilsIO.SetupUserDir()
+
+        
 
         # create Test folder in User area
         # clear previous tests
