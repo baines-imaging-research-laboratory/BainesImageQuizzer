@@ -115,7 +115,7 @@ class TestImageQuizzerTest(ScriptedLoadableModuleTest):
 
         self.oUtilsMsgs = UtilsMsgs()
         sMsg = 'Under Construction'
-        self.oUtilsMsgs.DisplayWarning(sMsg)
+        self.oUtilsMsgs.DisplayInfo(sMsg)
         
 
        

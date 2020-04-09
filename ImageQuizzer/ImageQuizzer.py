@@ -51,11 +51,12 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
         self.oUtilsMsgs = UtilsMsgs()
         self.oUtilsIO = UtilsIO()
-        self.oUtilsIO.SetupModulePaths(sModuleName)
+        self.oUtilsIO.SetupModuleDirs(sModuleName)
+        self.oUtilsIO.SetupUserDir()
         
-        # test that Users folder exists - if not, create it
-        if not os.path.exists(self.oUtilsIO.GetUsersBasePath()):
-            os.makedirs(self.oUtilsIO.GetUsersBasePath())
+#         # test that Users folder exists - if not, create it
+#         if not os.path.exists(self.oUtilsIO.GetUsersBaseDir()):
+#             os.makedirs(self.oUtilsIO.GetUsersBaseDir())
         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,7 +147,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
  
         # get quiz filename
         self.quizInputFileDialog = qt.QFileDialog()
-        sSelectedQuiz = self.quizInputFileDialog.getOpenFileName(self.qUserLoginWidget, "Open File", self.oUtilsIO.GetXmlResourcesPath(), "XML files (*.xml)" )
+        sSelectedQuiz = self.quizInputFileDialog.getOpenFileName(self.qUserLoginWidget, "Open File", self.oUtilsIO.GetXmlResourcesDir(), "XML files (*.xml)" )
  
         # check that file was selected
         if not sSelectedQuiz:
@@ -161,7 +162,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             self.qUserLoginWidget.show()
             self.qUserLoginWidget.activateWindow()
             
-            self.oUtilsIO.SetQuizFilename(sSelectedQuiz)
+            self.oUtilsIO.SetQuizPath(sSelectedQuiz)
          
  
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -176,7 +177,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             self.oUtilsIO.SetQuizUsername(self.qLineUserName.text)
             
             # copy file from Resource into user folder
-            if self.oUtilsIO.SetupUserQuizFolder(): # success
+            if self.oUtilsIO.PopulateUserQuizFolder(): # success
                 # start the session
                 self.slicerLeftWidget.activateWindow()
                 oSession = Session()

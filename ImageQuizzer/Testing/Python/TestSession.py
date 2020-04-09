@@ -113,7 +113,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         self.sClassName = type(self).__name__
 
         oUtilsIO = UtilsIO()
-        oUtilsIO.SetupModulePaths(self.sModuleName)
+        oUtilsIO.SetupModuleDirs(self.sModuleName)
         oUtilsIO.SetQuizUsername(self.sUsername)
         oUtilsIO.SetupUserDir()
 

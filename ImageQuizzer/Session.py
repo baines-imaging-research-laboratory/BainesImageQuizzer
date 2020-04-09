@@ -49,11 +49,11 @@ class Session:
 
     def RunSetup(self, oUtilsIO, oQuizWidgets):
 
-        self.sXmlFilename = oUtilsIO.GetQuizFilename()
-        self.sUsername = oUtilsIO.GetQuizFilename()
+        self.sXmlQuizPath = oUtilsIO.GetQuizPath()
+        self.sUsername = oUtilsIO.GetQuizUsername()
         self.slicerLeftMainLayout = oQuizWidgets.GetSlicerLeftMainLayout()
         self.slicerQuizLayout = oQuizWidgets.GetSlicerQuizLayout()
-#         print(self.sXmlFilename)
+#         print(self.sXmlQuizPath)
 #         print(self.sUsername)
         
         # TODO: create and add user-timestamp node
@@ -61,7 +61,7 @@ class Session:
         
         
         # open xml and check for root node
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self.sXmlFilename,'Session')
+        bSuccess, xRootNode = self.oIOXml.OpenXml(self.sXmlQuizPath,'Session')
         if not bSuccess:
             sErrorMsg = "ERROR", "Not a valid quiz - Root node name was not 'Session'"
             self.oUtilsMsgs.DisplayError(sErrorMsg)
