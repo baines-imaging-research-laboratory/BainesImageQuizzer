@@ -213,58 +213,102 @@ class UtilsIO:
     
     def __init__(self, parent=None):
         self.parent = parent
-        self._sResourcesPath = ''
-        self._sUsersBasePath = ''
-        self._sQuizFilename = ''
+        self._sXmlResourcesDir = ''
+        self._sUsersBaseDir = ''
+        self._sQuizPath = ''
         self._sQuizUsername = ''
-        self._sTestDataBasePath = ''
+        self._sTestDataBaseDir = ''
         self._sTestDataFilename = ''
+        self._sUserDir = ''
 
-    #-------------------------------------------
-
-    def SetupModulePaths(self, sModuleName):
-        sScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
-        sScriptedModulesPath = os.path.dirname(sScriptedModulesPath)
-        self._sResourcesPath = os.path.join(sScriptedModulesPath, 'Resources', 'XML')
-        self._sUsersBasePath = os.path.join(sScriptedModulesPath, 'Users')
-        self._sTestDataBasePath  = os.path.join(sScriptedModulesPath, 'Testing', 'TestData')
+    def setup(self):
+        self.oUtilsMsgs = UtilsMsgs()
         
     #-------------------------------------------
-
-    def SetQuizFilename(self, sSelectedQuiz):
-        self._sQuizFilename = sSelectedQuiz
-        
+    #        Getters / Setters
     #-------------------------------------------
 
+    def SetQuizPath(self, sSelectedQuiz):
+        self._sQuizPath = sSelectedQuiz
+        
+    #----------
     def SetQuizUsername(self, sSelectedUser):
         self._sQuizUsername = sSelectedUser
         
-    #-------------------------------------------
-
+    #----------
     def SetTestDataFilename(self, sTestDataFilename):
         self._sTestDataFilename = sTestDataFilename
         
-    #-------------------------------------------
-
-    def GetQuizFilename(self):
-        return self._sQuizFilename
+    #----------
+    def GetQuizPath(self):
+        return self._sQuizPath
     
-    #-------------------------------------------
-
+    #----------
     def GetQuizUsername(self):
         return self._sQuizUsername
 
-    #-------------------------------------------
-
-    def GetUsersBasePath(self):
-        return self._sUsersBasePath
+    #----------
+    def GetUsersBaseDir(self):
+        return self._sUsersBaseDir
     
-    #-------------------------------------------
-
-    def GetResourcesPath(self):
-        return self._sResourcesPath
+    #----------
+    def GetUserDir(self):
+        return self._sUserDir
     
-    #-------------------------------------------
-
-    def GetTestDtataFilename(self):
+    #----------
+    def GetXmlResourcesDir(self):
+        return self._sXmlResourcesDir
+    
+    #----------
+    def GetTestDataFilename(self):
         return self._sTestDataFilename
+
+
+    #-------------------------------------------
+    #        Functions
+    #-------------------------------------------
+
+    def SetupModuleDirs(self, sModuleName):
+        sScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
+        sScriptedModulesPath = os.path.dirname(sScriptedModulesPath)
+        self._sXmlResourcesDir = os.path.join(sScriptedModulesPath, 'Resources', 'XML')
+        self._sUsersBaseDir = os.path.join(sScriptedModulesPath, 'Users')
+        self._sTestDataBaseDir  = os.path.join(sScriptedModulesPath, 'Testing', 'TestData')
+        
+    #-------------------------------------------
+
+    def SetupUserDir(self):
+        self._sUserDir = os.path.join(self._sUsersBaseDir, self._sQuizUsername)
+
+        # check that the user folder exists - if not, create it
+        if not os.path.exists(self._sUserDir):
+            os.makedirs(self._sUserDir)
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    def PopulateUserQuizFolder(self):
+#         # create user folder if it doesn't exist
+
+        self.SetupUserDir()
+            
+        # check if quiz file already exists in the user folder - if not, copy from Resources
+
+        # setup for new location
+        sPath, sFilename = os.path.split(self._sQuizPath)
+        sUserQuizPath = os.path.join(self._sUserDir, sFilename)
+        if not os.path.isfile(sUserQuizPath):
+            # file not found, copy file from Resources to User folder
+            copyfile(self._sQuizPath, sUserQuizPath)
+            return True
+
+        else:
+            # file exists - make sure it is readable
+            if not os.access(sUserQuizPath, os.R_OK):
+                # existing file is unreadable
+                sErrorMsg = 'Quiz file is not readable'
+                self.oUtilsMsgs.DisplayWarning(sErrorMsg)     
+                return False
+            else:
+                return True
+        
+        

@@ -1,20 +1,21 @@
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
-from Session import *
+from ImageQuizzer import *
 from TestingStatus import *
 from Utilities import *
 
 import os
 import sys
 
+from pip._vendor.distlib._backport.shutil import copyfile
 
 ##########################################################################
 #
-# TestSession
+# TestImageQuizzer
 #
 ##########################################################################
 
-class TestSession(ScriptedLoadableModule):
+class TestImageQuizzer(ScriptedLoadableModule):
     """Uses ScriptedLoadableModule base class, available at:
     https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
     """
@@ -23,7 +24,7 @@ class TestSession(ScriptedLoadableModule):
 
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
-        self.parent.title = "Test Session" 
+        self.parent.title = "Test ImageQuizzer" 
         self.parent.categories = ["Testing.ImageQuizzer"]
         self.parent.dependencies = []
         self.parent.contributors = ["Carol Johnson (Baines Imaging Research Laboratories)"] 
@@ -44,7 +45,7 @@ class TestSession(ScriptedLoadableModule):
 #
 ##########################################################################
 
-class TestSessionWidget(ScriptedLoadableModuleWidget):
+class TestImageQuizzerWidget(ScriptedLoadableModuleWidget):
     """Uses ScriptedLoadableModuleWidget base class, available at:
     https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
     """
@@ -58,11 +59,11 @@ class TestSessionWidget(ScriptedLoadableModuleWidget):
 
 ##########################################################################
 #
-# TestSession_ModuleLogic
+# TestImageQuizzer_ModuleLogic
 #
 ##########################################################################
 
-class TestSessionLogic(ScriptedLoadableModuleLogic):
+class TestImageQuizzerLogic(ScriptedLoadableModuleLogic):
     """This class should implement all the actual
     computation done by your module.  The interface
     should be such that other python code can import
@@ -73,17 +74,17 @@ class TestSessionLogic(ScriptedLoadableModuleLogic):
     def __init__(self):
         ScriptedLoadableModuleLogic.__init__(self)
         self.sClassName = type(self).__name__
-        print("\n************ Unittesting for class Session ************\n")
+        print("\n************ Unittesting for class ImageQuizzer ************\n")
         self.sessionTestStatus = TestingStatus()
 
 
 ##########################################################################
 #
-# TestSession_ModuleTest
+# TestImageQuizzer_ModuleTest
 #
 ##########################################################################
 
-class TestSessionTest(ScriptedLoadableModuleTest):
+class TestImageQuizzerTest(ScriptedLoadableModuleTest):
     """
     This is the test case for your scripted module.
     Uses ScriptedLoadableModuleTest base class, available at:
@@ -92,16 +93,16 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
     def __init__(self):
         
-        self.sModuleName = 'ImageQuizzer'
-        self.sUsername = 'Tests'
+        moduleName = 'ImageQuizzer'
+
+        self.ScriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
+        self.ScriptedModulesPath = os.path.dirname(self.ScriptedModulesPath)
+        self.sXmlTestDataPath = os.path.join(self.ScriptedModulesPath, 'Testing', 'TestData', 'InputXmlFiles')
+        self.sUsersBasePath = os.path.join(self.ScriptedModulesPath, 'Users','Tests')
         
-        
-#         sUserBasePath = oUtilsIO.GetUsersBasePath()
-#         sUserDir = os.path.join(oUtilsIO.GetUsersBasePath(), sUsername)
-#         
-#         # check that a Test folder exists - if not, create it
-#         if not os.path.exists(sUserDir):
-#             os.makedirs(sUserDir)
+        # check that a Test folder exists - if not, create it
+        if not os.path.exists(self.sUsersBasePath):
+            os.makedirs(self.sUsersBasePath)
         
         
     #------------------------------------------- 
@@ -112,16 +113,10 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         slicer.mrmlScene.Clear(0)
         self.sClassName = type(self).__name__
 
-        oUtilsIO = UtilsIO()
-        oUtilsIO.SetupModuleDirs(self.sModuleName)
-        oUtilsIO.SetQuizUsername(self.sUsername)
-        oUtilsIO.SetupUserDir()
-
+        self.oUtilsMsgs = UtilsMsgs()
+        sMsg = 'Under Construction'
+        self.oUtilsMsgs.DisplayInfo(sMsg)
         
-
-        # create Test folder in User area
-        # clear previous tests
-        # copy testing file into 
 
        
     #------------------------------------------- 
@@ -132,10 +127,10 @@ class TestSessionTest(ScriptedLoadableModuleTest):
             I have the argument 'layout' to be able to display widgets as part of my testing. 
         """
         self.setUp()
-        logic = TestSessionLogic()
+        logic = TestImageQuizzerLogic()
 
         tupResults = []
-        tupResults.append(self.test_NoErrors_BuildSession())
+#         tupResults.append(self.test_NoErrors_BuildImageQuizzer())
 
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
@@ -143,7 +138,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
     #------------------------------------------- 
 
-    def test_NoErrors_BuildSession(self):
+    def test_NoErrors_BuildImageQuizzer(self):
         bTestResult = True
         self.fnName = sys._getframe().f_code.co_name
         
@@ -158,8 +153,8 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 #         
 #         copyfile(sTestPath, sNewPath)
 #         
-#         self.oSession = Session() 
-#         self.oSession.RunSetup(sNewPath, sUserName)
+#         self.oImageQuizzer = ImageQuizzer()
+#         self.oImageQuizzer.setup()
 
 #         bTestResult = self.oSession.readPresentationInstructions()
         tupResult = self.fnName, bTestResult
@@ -173,7 +168,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
 def main(self):
     try:
-        logic = TestSessionLogic()
+        logic = TestImageQuizzerLogic()
         logic.runTest()
         
     except Exception as e:
