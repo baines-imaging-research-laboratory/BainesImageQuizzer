@@ -93,11 +93,11 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         slicer.mrmlScene.Clear(0)
         self.sClassName = type(self).__name__
 
-        # define path for test data
-        moduleName = 'ImageQuizzer'
-        scriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
-        scriptedModulesPath = os.path.dirname(scriptedModulesPath)
-        self.testDataPath = os.path.join(scriptedModulesPath, 'Testing', 'TestData', 'InputXmlFiles')
+        sModuleName = 'ImageQuizzer'
+        oUtilsIO = UtilsIO()
+        oUtilsIO.SetupModuleDirs(sModuleName)
+#         # define path for test data
+        self.testDataDir = os.path.join(oUtilsIO.GetTestDataBaseDir(), 'Test_UtilsIOXml')
         self.oIOXml = UtilsIOXml()
 
        
@@ -113,7 +113,6 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_NoXmlFileFound())
         tupResults.append(self.test_InvalidRootNode())
         tupResults.append(self.test_ParsingError())
-        # TODO: tupResults.append(self.test_InvalidNodeType())
         tupResults.append(self.test_GetNumChildren())
         tupResults.append(self.test_GetListOfNodeAttributes())
         tupResults.append(self.test_GetAttributes())
@@ -130,8 +129,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
   
         # test simple items xml file - confirm root name
         sRootName = 'rootNode'
-        sXmlFile = 'items.xml'
-        sXmlPath = os.path.join(self.testDataPath, sXmlFile)
+        sXmlFile = 'UtilsIOXml_Test-items.xml'
+        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
   
           
         [bTestResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
@@ -150,12 +149,18 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         self.fnName = sys._getframe().f_code.co_name
       
         sXmlFile = 'ThisFileDoesNotExist.xml'
-        sXmlPath = os.path.join(self.testDataPath, sXmlFile)
+        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
    
         try:
-            bTestResult = True
-            with self.assertRaises(Exception):
+            bTestResult = False
+
+            with self.assertRaises(Exception) as context:
                 self.oIOXml.OpenXml(sXmlPath,'rootNode')
+
+            sMsg = context.exception.args[0]
+            if sMsg.find("XML file does not exist")>=0:
+                bTestResult = True
+
         except:
             bTestResult = False # there should have been an exception
     
@@ -167,13 +172,21 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
     def test_InvalidRootNode(self):
         self.fnName = sys._getframe().f_code.co_name
       
-        sXmlFile = 'items.xml'
-        sXmlPath = os.path.join(self.testDataPath, sXmlFile)
+        sXmlFile = 'UtilsIOXml_Test-items.xml'
+        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
    
         try:
-            bTestResult = True
-            with self.assertRaises(Exception):
+            bTestResult = False
+
+            with self.assertRaises(TypeError) as context:
                 self.oIOXml.OpenXml(sXmlPath,'Session')
+
+            print('Here 1')
+            sMsg = context.exception.args[0]
+            if sMsg.find("Invalid XML root node")>=0:
+                bTestResult = True
+                print('Here 2')
+
         except:
             bTestResult = False # there should have been an exception
     
@@ -181,47 +194,35 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         return tupResult
          
     #------------------------------------------- 
-
+ 
     def test_ParsingError(self):
         self.fnName = sys._getframe().f_code.co_name
-      
-        sXmlFile = 'invalidParsingError.xml'
-        sXmlPath = os.path.join(self.testDataPath, sXmlFile)
-   
-        try:
-            bTestResult = True
-            with self.assertRaises(Exception):
-                self.oIOXml.OpenXml(sXmlPath,'rootNode')
-        except:
-            bTestResult = False # there should have been an exception
+       
+        sXmlFile = 'UtilsIOXml_Test-invalidParsingError.xml'
+        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
     
-        tupResult = self.fnName, bTestResult
-        return tupResult
-         
-    #------------------------------------------- 
+        try:
+            bTestResult = False
 
-    def test_InvalidNodeType(self):
-        self.fnName = sys._getframe().f_code.co_name
-      
-        sXmlFile = 'invalidParsingError.xml'
-        sXmlPath = os.path.join(self.testDataPath, sXmlFile)
-   
-        try:
-            bTestResult = True
-            with self.assertRaises(Exception):
+            with self.assertRaises(Exception) as context:
                 self.oIOXml.OpenXml(sXmlPath,'rootNode')
+
+            sMsg = context.exception.args[0]
+            if sMsg.find("Parsing XML file error")>=0:
+                bTestResult = True
+        
         except:
-            bTestResult = False # there should have been an exception
-    
+            bTestResult = False # there should have been a parsing exception
+     
         tupResult = self.fnName, bTestResult
         return tupResult
-         
+          
     #-------------------------------------------
     
     def test_GetNumChildren(self):
         self.fnName = sys._getframe().f_code.co_name
-        sXmlFile = 'items.xml'
-        sXmlPath = os.path.join(self.testDataPath, sXmlFile)
+        sXmlFile = 'UtilsIOXml_Test-items.xml'
+        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
         
         [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
             
@@ -252,8 +253,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
     def test_GetListOfNodeAttributes(self):
         self.fnName = sys._getframe().f_code.co_name
         
-        sXmlFile = 'items.xml'
-        sXmlPath = os.path.join(self.testDataPath, sXmlFile)
+        sXmlFile = 'UtilsIOXml_Test-items.xml'
+        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
         
         [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
             
@@ -287,8 +288,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
     def test_GetAttributes(self):
         self.fnName = sys._getframe().f_code.co_name
 
-        sXmlFile = 'items.xml'
-        sXmlPath = os.path.join(self.testDataPath, sXmlFile)
+        sXmlFile = 'UtilsIOXml_Test-items.xml'
+        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
         
         [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
             

@@ -60,7 +60,11 @@ class UtilsIOXml:
 
                 else:
                     bSuccess = False
-                    raise Exception('Invalid XML root node: %s' % sXmlPath)
+                    raise TypeError('Invalid XML root node: %s' % sXmlPath)
+
+            except TypeError:
+                raise
+
             except:
                 raise Exception('Parsing XML file error: %s' % sXmlPath)
                 
@@ -262,6 +266,10 @@ class UtilsIO:
     #----------
     def GetTestDataFilename(self):
         return self._sTestDataFilename
+
+    #----------
+    def GetTestDataBaseDir(self):
+        return self._sTestDataBaseDir
 
 
     #-------------------------------------------
