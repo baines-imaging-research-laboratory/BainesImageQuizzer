@@ -54,18 +54,19 @@ class UtilsIOXml:
                 xNode = xDoc.documentElement
                    
                 # check for expected root node
-                sNodeName = self.GetNodeName(xNode)
+                sNodeName = self.GetElementNodeName(xNode)
                 if sNodeName == sRootNodeName:
                     bSuccess = True
-
+ 
                 else:
                     bSuccess = False
-                    raise TypeError('Invalid XML root node: %s' % sXmlPath)
+                    raise NameError('Invalid XML root node: %s' % sXmlPath)
 
-            except TypeError:
+            except NameError:
                 raise
 
             except:
+                bSuccess = False
                 raise Exception('Parsing XML file error: %s' % sXmlPath)
                 
         else:
@@ -77,13 +78,13 @@ class UtilsIOXml:
     
     #-------------------------------------------
 
-    def GetNodeName(self, xNode):
+    def GetElementNodeName(self, xNode):
 
         # check for correct type of node  
         if xNode.nodeType == xml.dom.Node.ELEMENT_NODE:
             sNodeName = xNode.nodeName
         else:
-            raise Exception('Invalid XML node type')
+            raise TypeError('Invalid XML node type: should be Element type of node')
 
         return sNodeName
                 
@@ -141,7 +142,7 @@ class UtilsIOXml:
         
         xData = 'Empty'
         
-#         name = self.GetNodeName(xNode)
+#         name = self.GetElementNodeName(xNode)
 #         print('???? NAME ????: %s' % name)
 # 
 #         infoObj = xNode.getElementsByTagName("Option")

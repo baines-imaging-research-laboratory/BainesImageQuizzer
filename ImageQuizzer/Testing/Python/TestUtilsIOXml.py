@@ -116,6 +116,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_GetNumChildren())
         tupResults.append(self.test_GetListOfNodeAttributes())
         tupResults.append(self.test_GetAttributes())
+        tupResults.append(self.test_GetElementNodeName())
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
  
@@ -134,7 +135,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
   
           
         [bTestResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
-        if (self.oIOXml.GetNodeName(xRootNode) == sRootName):
+        if (self.oIOXml.GetElementNodeName(xRootNode) == sRootName):
             bTestResult = bTestResult * True
         else:
             bTestResult = False
@@ -158,7 +159,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
                 self.oIOXml.OpenXml(sXmlPath,'rootNode')
 
             sMsg = context.exception.args[0]
-            if sMsg.find("XML file does not exist")>=0:
+            if sMsg.find('XML file does not exist')>=0:
                 bTestResult = True
 
         except:
@@ -178,14 +179,12 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         try:
             bTestResult = False
 
-            with self.assertRaises(TypeError) as context:
+            with self.assertRaises(NameError) as context:
                 self.oIOXml.OpenXml(sXmlPath,'Session')
 
-            print('Here 1')
             sMsg = context.exception.args[0]
-            if sMsg.find("Invalid XML root node")>=0:
+            if sMsg.find('Invalid XML root node')>=0:
                 bTestResult = True
-                print('Here 2')
 
         except:
             bTestResult = False # there should have been an exception
@@ -208,7 +207,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
                 self.oIOXml.OpenXml(sXmlPath,'rootNode')
 
             sMsg = context.exception.args[0]
-            if sMsg.find("Parsing XML file error")>=0:
+            if sMsg.find('Parsing XML file error')>=0:
                 bTestResult = True
         
         except:
@@ -217,6 +216,41 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         tupResult = self.fnName, bTestResult
         return tupResult
           
+    #-------------------------------------------
+    
+    def test_GetElementNodeName(self):
+        # this test sends in an 'Attribute' type of node to see if the
+        # function raises the exception that it is not an 'Element' type of node
+        
+        self.fnName = sys._getframe().f_code.co_name
+        
+        sXmlFile = 'UtilsIOXml_Test-items.xml'
+        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
+        
+        bSuccess, xRootNode = self.oIOXml.OpenXml(sXmlPath,'rootNode')
+
+        # get an attribute node to test the 'invalid element node'
+        xElementNode = self.oIOXml.GetNthChild(xRootNode,'data',0)
+        xAttributeNode = xElementNode.getAttributeNode('id')
+ 
+        
+        try:
+            bTestResult = False
+
+            with self.assertRaises(TypeError) as context:
+                self.oIOXml.GetElementNodeName(xAttributeNode)
+
+            sMsg = context.exception.args[0]
+            if sMsg.find('Invalid XML node type: should be Element type of node')>=0:
+                bTestResult = True
+
+        except:
+            bTestResult = False # there should have been an exception
+    
+        tupResult = self.fnName, bTestResult
+        return tupResult
+         
+        
     #-------------------------------------------
     
     def test_GetNumChildren(self):
@@ -266,14 +300,17 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         listOfAttributes = self.oIOXml.GetListOfNodeAttributes(xNode)
         sExpectedNames = ['id', 'descriptor']
         sExpectedValues = ['002', 'TestData Page2' ]
+
         for i in range(0,len(listOfAttributes)):
             sName = list(map(operator.itemgetter(0), listOfAttributes))[i]
             sValue = list(map(operator.itemgetter(1), listOfAttributes))[i]
 #             print('Node Attributes ... name: {x} .... value: {y}'.format(x=sName, y=sValue) )
+
             if (sName == sExpectedNames[i]):
                 bTestResult = True * bTestResult
             else:
                 bTestResult = False * bTestResult
+
             if (sValue == sExpectedValues[i]):
                 bTestResult = True * bTestResult
             else:
@@ -298,6 +335,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         xNode1 = xRootNode.getElementsByTagName('data')[1]
         sValue = self.oIOXml.GetValueOfNodeAttribute(xNode1, 'descriptor')
 #         print('returned sValue {x}'.format(x=sValue))
+
         if (sValue == 'TestData Page2'):
             bTestResult = bTestResult * True
         else:
@@ -307,6 +345,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         xSoloNode = xNode0.getElementsByTagName('soloTag')[0]
         sValue = self.oIOXml.GetValueOfNodeAttribute(xSoloNode, 'path')
 #         print('returned sValue {x}'.format(x=sValue))
+
         if (sValue == 'C:\Documents'):
             bTestResult = bTestResult * True
         else:
