@@ -117,6 +117,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_GetListOfNodeAttributes())
         tupResults.append(self.test_GetAttributes())
         tupResults.append(self.test_GetElementNodeName())
+        tupResults.append(self.test_AccessChildren())
+        tupResults.append(self.test_GetDataInNode())
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
  
@@ -195,6 +197,9 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
     #------------------------------------------- 
  
     def test_ParsingError(self):
+        
+        # this test sends in an xml file with a misnamed ending element tagname
+        
         self.fnName = sys._getframe().f_code.co_name
        
         sXmlFile = 'UtilsIOXml_Test-invalidParsingError.xml'
@@ -219,6 +224,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
     #-------------------------------------------
     
     def test_GetElementNodeName(self):
+        
         # this test sends in an 'Attribute' type of node to see if the
         # function raises the exception that it is not an 'Element' type of node
         
@@ -254,6 +260,9 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
     #-------------------------------------------
     
     def test_GetNumChildren(self):
+
+        # this test checks how many children belong to different element nodes in the test file
+        
         self.fnName = sys._getframe().f_code.co_name
         sXmlFile = 'UtilsIOXml_Test-items.xml'
         sXmlPath = os.path.join(self.testDataDir, sXmlFile)
@@ -284,7 +293,74 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
     #-------------------------------------------
     
+    def test_AccessChildren(self):
+
+        # this test accessing the children of the first 'data' node
+        # This tests the functions:
+        #     GetChildren
+        #     GetNthChild
+        #     GetNumChildren
+        #     GetValueOfNodeAttribute
+        
+        self.fnName = sys._getframe().f_code.co_name
+        sXmlFile = 'UtilsIOXml_Test-items.xml'
+        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
+        
+        [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
+            
+        bTestResult = True
+        
+        xDataNode = xRootNode.getElementsByTagName('data')[0]
+        
+        sExpectedDescriptors = ['First Child Page1', 'Second Child Page1', 'Third Child Page1']
+        dExpectedNumChildren = 3
+        
+        dNumChildren = self.oIOXml.GetNumChildren(xDataNode,'infoGroup')
+
+        # ensure we have a node with the expected number of children
+        if (dNumChildren == dExpectedNumChildren):
+            
+            # Test 1: Get All children and then loop through children to see
+            #    if the 2nd child has the proper descriptor
+
+            xAllInfoGroupNodes = self.oIOXml.GetChildren(xDataNode, 'infoGroup')
+            for iNode in range( 0,dNumChildren-1 ):
+
+                xInfoGroupChildNode = xAllInfoGroupNodes.item(iNode)
+                sDescriptor = self.oIOXml.GetValueOfNodeAttribute(xInfoGroupChildNode,'descriptor')
+
+                if sDescriptor == sExpectedDescriptors[iNode]:
+                    bTestResult = bTestResult * True
+                else:
+                    bTestResult = bTestResult * False
+            
+            
+            # Test 2: Access the second child directly
+
+            # access the 2nd child (0 indexed) and check that it has the expected descriptor
+            xSecondChildNode = self.oIOXml.GetNthChild(xDataNode, 'infoGroup', 1)
+            
+            sSecondChildDescriptor = self.oIOXml.GetValueOfNodeAttribute(xSecondChildNode,'descriptor')
+            if (sSecondChildDescriptor == sExpectedDescriptors[1]) :
+            
+                bTestResult = bTestResult * True
+            else:
+                bTestResult = bTestResult * False
+
+        else:
+            # number of children accessed was not as expected
+            bTestResult = bTestResult * False
+
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #-------------------------------------------
+    
     def test_GetListOfNodeAttributes(self):
+        
+        # this test gathers the attributes of an element node to confirm 
+        # the attribute names (not the value of the attribute) match the expected values 
+        
         self.fnName = sys._getframe().f_code.co_name
         
         sXmlFile = 'UtilsIOXml_Test-items.xml'
@@ -323,6 +399,10 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
     #-------------------------------------------
     
     def test_GetAttributes(self):
+
+        # this test gathers the attributes of an element node to confirm 
+        # the attribute values match the expected values 
+
         self.fnName = sys._getframe().f_code.co_name
 
         sXmlFile = 'UtilsIOXml_Test-items.xml'
@@ -352,6 +432,45 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
             bTestResult = bTestResult * False
             
         
+        tupResult = self.fnName, bTestResult
+        return tupResult
+        
+    #-------------------------------------------
+    
+    def test_GetDataInNode(self):
+
+        # this test checks the function to extract the data value from an element node
+
+        self.fnName = sys._getframe().f_code.co_name
+
+        sXmlFile = 'UtilsIOXml_Test-items.xml'
+        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
+        
+        [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
+            
+        bTestResult = True
+
+        # from the test file, access the data in the following node ( 0 indexing)
+        #    data node # 2
+        #        infoGroup node # 1
+        #            infoPiece node #2
+        #                data = 'item2uvw'
+
+        sExpectedData = 'item2uvw'
+        
+        xDataNode2 = self.oIOXml.GetNthChild(xRootNode,'data', 1)
+        xInfoGroup1 = self.oIOXml.GetNthChild(xDataNode2, 'infoGroup', 0)
+        xInfoPiece2 = self.oIOXml.GetNthChild(xInfoGroup1, 'infoPiece', 1)
+        
+        xStoredData = self.oIOXml.GetDataInNode(xInfoPiece2)
+        
+        if xStoredData == sExpectedData :
+            bTestResult = True
+        else:
+            bTestResult = False
+
+
+
         tupResult = self.fnName, bTestResult
         return tupResult
         

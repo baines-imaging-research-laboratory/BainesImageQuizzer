@@ -142,23 +142,6 @@ class UtilsIOXml:
         
         xData = 'Empty'
         
-#         name = self.GetElementNodeName(xNode)
-#         print('???? NAME ????: %s' % name)
-# 
-#         infoObj = xNode.getElementsByTagName("Option")
-#         
-#         for i in range(0,infoObj.length):
-#             optNode = self.GetNthChild(xNode, 'Option', i)
-# 
-#             nodes = optNode.childNodes
-#             for node in nodes:
-#                 if node.nodeType == node.TEXT_NODE:
-#                     xData = node.data
-#                     print(xData)
-#                 else:
-#                     print('invalid data node  check xml schema' )
-
-
         nodes = xNode.childNodes
         for node in nodes:
             if node.nodeType == node.TEXT_NODE:
