@@ -158,10 +158,20 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         [bOpenResult, self.xRootNode] = self.oIOXml.OpenXml(sTestPath, 'Session')
         self.oSession.SetRootNode(self.xRootNode)
         
-        self.lPageQuestionCompositeIndices = []
+        lExpectedCompositeIndices = []
+        lExpectedCompositeIndices.append([0,0])
+        lExpectedCompositeIndices.append([0,1])
+        lExpectedCompositeIndices.append([1,0])
+        lExpectedCompositeIndices.append([2,0])
         
         
         self.oSession.BuildPageQuestionCompositeIndexList()
+        lCompositeIndicesResult = self.oSession.GetCompositeIndicesList()
+        
+        if lCompositeIndicesResult == lExpectedCompositeIndices :
+            bTestResult = True
+        else:
+            bTestResult = False
 
 #         bTestResult = self.oSession.readPresentationInstructions()
         tupResult = self.fnName, bTestResult
