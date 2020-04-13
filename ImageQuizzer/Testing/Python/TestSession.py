@@ -4,6 +4,8 @@ from Session import *
 from TestingStatus import *
 from Utilities import *
 
+import xml.dom.minidom
+
 import os
 import sys
 
@@ -117,7 +119,9 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         oUtilsIO.SetQuizUsername(self.sUsername)
         oUtilsIO.SetupUserDir()
 
-        
+#         # define path for test data
+        self.sTestDataDir = os.path.join(oUtilsIO.GetTestDataBaseDir(), 'Test_Session')
+        self.oIOXml = UtilsIOXml()
 
         # create Test folder in User area
         # clear previous tests
@@ -135,7 +139,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         logic = TestSessionLogic()
 
         tupResults = []
-        tupResults.append(self.test_NoErrors_BuildSession())
+        tupResults.append(self.test_BuildPageQuestionCompositeIndexList())
 
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
@@ -143,23 +147,21 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
     #------------------------------------------- 
 
-    def test_NoErrors_BuildSession(self):
+    def test_BuildPageQuestionCompositeIndexList(self):
         bTestResult = True
         self.fnName = sys._getframe().f_code.co_name
         
-#         # copy test file to user area
-#         sTestFilename = 'Test_Laptop.xml'
-#         sUserName = 'Tests'
-#         sTestPath = os.path.join(self.sXmlTestDataPath, sTestFilename)
-#         sNewPath = os.path.join(self.sUsersBasePath, sTestFilename)
-#         
-#         print(sTestPath)
-#         print(sNewPath)
-#         
-#         copyfile(sTestPath, sNewPath)
-#         
-#         self.oSession = Session() 
-#         self.oSession.RunSetup(sNewPath, sUserName)
+        self.oSession = Session()
+        # copy test file to user area
+        sTestFilename = 'Test_PageQuestions_GenericPath.xml'
+        sTestPath = os.path.join(self.sTestDataDir, sTestFilename)
+        [bOpenResult, self.xRootNode] = self.oIOXml.OpenXml(sTestPath, 'Session')
+        self.oSession.SetRootNode(self.xRootNode)
+        
+        self.lPageQuestionCompositeIndices = []
+        
+        
+        self.oSession.BuildPageQuestionCompositeIndexList()
 
 #         bTestResult = self.oSession.readPresentationInstructions()
         tupResult = self.fnName, bTestResult

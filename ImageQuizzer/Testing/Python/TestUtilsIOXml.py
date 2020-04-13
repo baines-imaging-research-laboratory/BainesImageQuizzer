@@ -96,8 +96,9 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         sModuleName = 'ImageQuizzer'
         oUtilsIO = UtilsIO()
         oUtilsIO.SetupModuleDirs(sModuleName)
-#         # define path for test data
-        self.testDataDir = os.path.join(oUtilsIO.GetTestDataBaseDir(), 'Test_UtilsIOXml')
+
+        # define path for test data
+        self.sTestDataDir = os.path.join(oUtilsIO.GetTestDataBaseDir(), 'Test_UtilsIOXml')
         self.oIOXml = UtilsIOXml()
 
        
@@ -133,7 +134,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         # test simple items xml file - confirm root name
         sRootName = 'rootNode'
         sXmlFile = 'UtilsIOXml_Test-items.xml'
-        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
+        sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
   
           
         [bTestResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
@@ -152,7 +153,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         self.fnName = sys._getframe().f_code.co_name
       
         sXmlFile = 'ThisFileDoesNotExist.xml'
-        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
+        sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
    
         try:
             bTestResult = False
@@ -176,7 +177,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         self.fnName = sys._getframe().f_code.co_name
       
         sXmlFile = 'UtilsIOXml_Test-items.xml'
-        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
+        sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
    
         try:
             bTestResult = False
@@ -203,7 +204,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         self.fnName = sys._getframe().f_code.co_name
        
         sXmlFile = 'UtilsIOXml_Test-invalidParsingError.xml'
-        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
+        sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
     
         try:
             bTestResult = False
@@ -231,7 +232,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         self.fnName = sys._getframe().f_code.co_name
         
         sXmlFile = 'UtilsIOXml_Test-items.xml'
-        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
+        sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
         
         bSuccess, xRootNode = self.oIOXml.OpenXml(sXmlPath,'rootNode')
 
@@ -265,7 +266,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         self.fnName = sys._getframe().f_code.co_name
         sXmlFile = 'UtilsIOXml_Test-items.xml'
-        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
+        sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
         
         [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
             
@@ -304,7 +305,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         self.fnName = sys._getframe().f_code.co_name
         sXmlFile = 'UtilsIOXml_Test-items.xml'
-        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
+        sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
         
         [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
             
@@ -364,7 +365,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         self.fnName = sys._getframe().f_code.co_name
         
         sXmlFile = 'UtilsIOXml_Test-items.xml'
-        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
+        sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
         
         [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
             
@@ -406,7 +407,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         self.fnName = sys._getframe().f_code.co_name
 
         sXmlFile = 'UtilsIOXml_Test-items.xml'
-        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
+        sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
         
         [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
             
@@ -444,7 +445,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         self.fnName = sys._getframe().f_code.co_name
 
         sXmlFile = 'UtilsIOXml_Test-items.xml'
-        sXmlPath = os.path.join(self.testDataDir, sXmlFile)
+        sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
         
         [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
             

@@ -26,25 +26,20 @@ class Session:
         self.oIOXml = UtilsIOXml()
         self.lPageQuestionCompositeIndices = []
         self.iCompIndex = 0
+        
         self.xRootNode = None
         
         
-        self.oUtilsIO = None
-        self.oQuizWidgets = None
+#         self.oUtilsIO = None
+#         self.oQuizWidgets = None
         
-        
-        # Next button
-        self.btnNext = qt.QPushButton("Next")
-        self.btnNext.toolTip = "Display next set of questions."
-        self.btnNext.enabled = True
-        self.btnNext.connect('clicked(bool)',self.onNextButtonClicked)
-        
-        # Back button
-        self.btnPrevious = qt.QPushButton("Previous")
-        self.btnPrevious.toolTip = "Display previous set of questions."
-        self.btnPrevious.enabled = True
-        self.btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
+    #-------------------------------------------
+    #        Getters / Setters
+    #-------------------------------------------
+    #----------
 
+    def SetRootNode(self, xNode):
+        self.xRootNode = xNode
     #-----------------------------------------------
 
     def RunSetup(self, oUtilsIO, oQuizWidgets):
@@ -59,6 +54,20 @@ class Session:
         # TODO: create and add user-timestamp node
         # TODO: determine study status based on recorded answers
         
+        # create buttons
+        
+        # Next button
+        self.btnNext = qt.QPushButton("Next")
+        self.btnNext.toolTip = "Display next set of questions."
+        self.btnNext.enabled = True
+        self.btnNext.connect('clicked(bool)',self.onNextButtonClicked)
+        
+        # Back button
+        self.btnPrevious = qt.QPushButton("Previous")
+        self.btnPrevious.toolTip = "Display previous set of questions."
+        self.btnPrevious.enabled = True
+        self.btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
+
         
         # open xml and check for root node
         bSuccess, xRootNode = self.oIOXml.OpenXml(self.sXmlQuizPath,'Session')
@@ -87,15 +96,15 @@ class Session:
         
         # given the root of the xml document build composite list 
         #     of indexes for each page and the question sets within
-        oIOXml = UtilsIOXml()
+#         oIOXml = UtilsIOXml()
         
         # get Page nodes
-        xPages = oIOXml.GetChildren(self.xRootNode, 'Page')
+        xPages = self.oIOXml.GetChildren(self.xRootNode, 'Page')
 
         for iPageIndex in range(len(xPages)):
             # for each page - get number of question sets
-            xPageNode = oIOXml.GetNthChild(self.xRootNode, 'Page', iPageIndex)
-            xQuestionSets = oIOXml.GetChildren(xPageNode,'QuestionSet')
+            xPageNode = self.oIOXml.GetNthChild(self.xRootNode, 'Page', iPageIndex)
+            xQuestionSets = self.oIOXml.GetChildren(xPageNode,'QuestionSet')
             
             for iQuestionSetIndex in range(len(xQuestionSets)):
                 self.lPageQuestionCompositeIndices.append([iPageIndex, iQuestionSetIndex])
