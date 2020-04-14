@@ -4,7 +4,7 @@ import warnings
 import vtk, qt, ctk, slicer
 
 import xml.dom.minidom
-
+from shutil import copyfile
 
 ##########################################################################
 #
@@ -201,13 +201,19 @@ class UtilsIO:
     
     def __init__(self, parent=None):
         self.parent = parent
+        
         self._sXmlResourcesDir = ''
         self._sUsersBaseDir = ''
-        self._sQuizPath = ''
-        self._sQuizUsername = ''
         self._sTestDataBaseDir = ''
-        self._sTestDataFilename = ''
         self._sUserDir = ''
+
+        self._sQuizFilename = ''
+        self._sQuizUsername = ''
+        self._sTestDataFilename = ''
+
+        self._sResourcesQuizPath = ''
+        self._sUserQuizPath = ''
+
 
     def setup(self):
         self.oUtilsMsgs = UtilsMsgs()
@@ -216,8 +222,8 @@ class UtilsIO:
     #        Getters / Setters
     #-------------------------------------------
 
-    def SetQuizPath(self, sSelectedQuiz):
-        self._sQuizPath = sSelectedQuiz
+    def SetResourcesQuizPath(self, sSelectedQuiz):
+        self._sResourcesQuizPath = sSelectedQuiz
         
     #----------
     def SetQuizUsername(self, sSelectedUser):
@@ -228,8 +234,8 @@ class UtilsIO:
         self._sTestDataFilename = sTestDataFilename
         
     #----------
-    def GetQuizPath(self):
-        return self._sQuizPath
+    def GetResourcesQuizPath(self):
+        return self._sResourcesQuizPath
     
     #----------
     def GetQuizUsername(self):
@@ -286,16 +292,21 @@ class UtilsIO:
         # check if quiz file already exists in the user folder - if not, copy from Resources
 
         # setup for new location
-        sPath, sFilename = os.path.split(self._sQuizPath)
-        sUserQuizPath = os.path.join(self._sUserDir, sFilename)
-        if not os.path.isfile(sUserQuizPath):
+        sPath, self._sQuizFilename = os.path.split(self._sResourcesQuizPath)
+        self._sUserQuizPath = os.path.join(self._sUserDir, self._sQuizFilename)
+        if not os.path.isfile(self._sUserQuizPath):
             # file not found, copy file from Resources to User folder
-            copyfile(self._sQuizPath, sUserQuizPath)
+            copyfile(self._sResourcesQuizPath, self._sUserQuizPath)
             return True
 
         else:
+
+                
+            # create backup of existing file
+            self.BackupUserQuiz()
+                
             # file exists - make sure it is readable
-            if not os.access(sUserQuizPath, os.R_OK):
+            if not os.access(self._sUserQuizPath, os.R_OK):
                 # existing file is unreadable
                 sErrorMsg = 'Quiz file is not readable'
                 self.oUtilsMsgs.DisplayWarning(sErrorMsg)     
@@ -303,4 +314,28 @@ class UtilsIO:
             else:
                 return True
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    def BackupUserQuiz(self):
+        
+        # get current date/time
+        from datetime import datetime
+        now = datetime.now()
+        sSuffix = now.strftime("%b-%d-%Y-%H-%M-%S")
+        
+        sFileRoot, sExt = os.path.splitext(self._sQuizFilename)
+        
+        sNewFileRoot = '_'.join([sFileRoot, sSuffix])
+        sNewFilename = ''.join([sNewFileRoot, sExt])
+        
+        sBackupQuizPath = os.path.join(self._sUserDir, sNewFilename)
+        
+        # create copy with data/time stamp as suffix
+        copyfile(self._sUserQuizPath, sBackupQuizPath)
+        
+        
+        
+    def CloseFiles(self):
+        self.msgBox.information(slicer.util.mainWindow(), 'Information', 'Closing Time')
+    
         

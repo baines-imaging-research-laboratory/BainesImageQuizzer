@@ -32,6 +32,8 @@ class Session:
         
 #         self.oUtilsIO = None
 #         self.oQuizWidgets = None
+    def __del__(self):
+        print('Destructor Session')
         
     #-------------------------------------------
     #        Getters / Setters
@@ -55,7 +57,7 @@ class Session:
 
     def RunSetup(self, oUtilsIO, oQuizWidgets):
 
-        self.sXmlQuizPath = oUtilsIO.GetQuizPath()
+        self.sXmlQuizPath = oUtilsIO.GetResourcesQuizPath()
         self.sUsername = oUtilsIO.GetQuizUsername()
         self.slicerLeftMainLayout = oQuizWidgets.GetSlicerLeftMainLayout()
         self.slicerQuizLayout = oQuizWidgets.GetSlicerQuizLayout()

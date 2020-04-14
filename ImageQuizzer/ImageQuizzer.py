@@ -28,6 +28,9 @@ class ImageQuizzer(ScriptedLoadableModule):
         self.parent.acknowledgementText = """ Baines Imaging Research Laboratory. 
         Principal Investigator: Dr. Aaron Ward.
         """
+    def __del__(self):
+        print('Destructor Image Quizzer')
+
     
 
 ##########################################################################
@@ -58,7 +61,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 #         if not os.path.exists(self.oUtilsIO.GetUsersBaseDir()):
 #             os.makedirs(self.oUtilsIO.GetUsersBaseDir())
         
-
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def setup(self):
@@ -162,7 +164,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             self.qUserLoginWidget.show()
             self.qUserLoginWidget.activateWindow()
             
-            self.oUtilsIO.SetQuizPath(sSelectedQuiz)
+            self.oUtilsIO.SetResourcesQuizPath(sSelectedQuiz)
          
  
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
