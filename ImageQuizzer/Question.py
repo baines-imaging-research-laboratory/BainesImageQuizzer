@@ -30,7 +30,7 @@ class QuestionSet():
         # the list of tuples for building the question set form
         
         oIOXml = UtilsIOXml()
-        sNodeName = oIOXml.GetNodeName(xNodeQuestionSet)
+        sNodeName = oIOXml.GetElementNodeName(xNodeQuestionSet)
         if not (sNodeName == "QuestionSet"):
             raise Exception("Invalid XML node. Expecting 'QuestionSet', node name was: %s" % sNodeName)
         else:

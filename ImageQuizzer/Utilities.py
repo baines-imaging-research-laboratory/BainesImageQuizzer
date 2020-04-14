@@ -54,14 +54,19 @@ class UtilsIOXml:
                 xNode = xDoc.documentElement
                    
                 # check for expected root node
-                sNodeName = self.GetNodeName(xNode)
+                sNodeName = self.GetElementNodeName(xNode)
                 if sNodeName == sRootNodeName:
                     bSuccess = True
-
+ 
                 else:
                     bSuccess = False
-                    raise Exception('Invalid XML root node: %s' % sXmlPath)
+                    raise NameError('Invalid XML root node: %s' % sXmlPath)
+
+            except NameError:
+                raise
+
             except:
+                bSuccess = False
                 raise Exception('Parsing XML file error: %s' % sXmlPath)
                 
         else:
@@ -73,13 +78,13 @@ class UtilsIOXml:
     
     #-------------------------------------------
 
-    def GetNodeName(self, xNode):
+    def GetElementNodeName(self, xNode):
 
         # check for correct type of node  
         if xNode.nodeType == xml.dom.Node.ELEMENT_NODE:
             sNodeName = xNode.nodeName
         else:
-            raise Exception('Invalid XML node type')
+            raise TypeError('Invalid XML node type: should be Element type of node')
 
         return sNodeName
                 
@@ -137,23 +142,6 @@ class UtilsIOXml:
         
         xData = 'Empty'
         
-#         name = self.GetNodeName(xNode)
-#         print('???? NAME ????: %s' % name)
-# 
-#         infoObj = xNode.getElementsByTagName("Option")
-#         
-#         for i in range(0,infoObj.length):
-#             optNode = self.GetNthChild(xNode, 'Option', i)
-# 
-#             nodes = optNode.childNodes
-#             for node in nodes:
-#                 if node.nodeType == node.TEXT_NODE:
-#                     xData = node.data
-#                     print(xData)
-#                 else:
-#                     print('invalid data node  check xml schema' )
-
-
         nodes = xNode.childNodes
         for node in nodes:
             if node.nodeType == node.TEXT_NODE:
@@ -262,6 +250,10 @@ class UtilsIO:
     #----------
     def GetTestDataFilename(self):
         return self._sTestDataFilename
+
+    #----------
+    def GetTestDataBaseDir(self):
+        return self._sTestDataBaseDir
 
 
     #-------------------------------------------
