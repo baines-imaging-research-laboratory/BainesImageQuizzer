@@ -28,8 +28,6 @@ class ImageQuizzer(ScriptedLoadableModule):
         self.parent.acknowledgementText = """ Baines Imaging Research Laboratory. 
         Principal Investigator: Dr. Aaron Ward.
         """
-    def __del__(self):
-        print('Destructor Image Quizzer')
 
     
 

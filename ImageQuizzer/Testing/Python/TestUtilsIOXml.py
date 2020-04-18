@@ -121,6 +121,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_AccessChildren())
         tupResults.append(self.test_GetDataInNode())
         
+        tupResults.append(self.test_WriteXML())
+        
         logic.sessionTestStatus.DisplayTestResults(tupResults)
  
 
@@ -475,7 +477,44 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         tupResult = self.fnName, bTestResult
         return tupResult
         
+
+    #-------------------------------------------
     
+    def test_WriteXML(self):
+
+        # this test checks the function to extract the data value from an element node
+
+        self.fnName = sys._getframe().f_code.co_name
+
+        sXmlFile = 'UtilsIOXml_Test_WriteXML.xml'
+        sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
+        
+        sXmlOutputFile = 'TestOutpuXML.xml'
+        sXmlOutputFilePath = os.path.join(self.sTestDataDir, sXmlOutputFile)
+        
+         
+#         [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'Session')
+        xml_infile = xml.dom.minidom.parse(sXmlPath)
+        xNode = xml_infile.documentElement
+           
+        # check for expected root node
+        sNodeName = xNode.nodeName
+        print(sNodeName)
+            
+
+        with open(sXmlOutputFilePath,'w') as xml_outfile:
+            xml_infile.writexml(xml_outfile)
+            
+
+        
+        bTestResult = True
+
+
+
+
+        tupResult = self.fnName, bTestResult
+        return tupResult
+     
 ##########################################################################################
 #                      Launching from main (Reload and Test button)
 ##########################################################################################

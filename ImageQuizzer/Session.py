@@ -32,8 +32,11 @@ class Session:
         
 #         self.oUtilsIO = None
 #         self.oQuizWidgets = None
+
+
     def __del__(self):
         print('Destructor Session')
+#         self.RemoveNodes()
         
     #-------------------------------------------
     #        Getters / Setters
@@ -217,5 +220,22 @@ class Session:
 
     #-----------------------------------------------
 
+    #-----------------------------------------------
+    
+    def RemoveNodes(self):
+        print('Removing Nodes')
+
+        
+        # get list of all scalar nodes
+       
+#         lScalarNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLScalarVolumeNode')
+         
+#         for indSeg in range(lScalarNodes.GetNumberOfItems()):
+# 
+#             slScalarNode = lScalarNodes.GetItemAsObject(indSeg)
+#             sName = slScalarNode.GetName()
+#             print(sName)
+#             slicer.mrmlScene.RemoveNode(slScalarNode)
+    
    
         

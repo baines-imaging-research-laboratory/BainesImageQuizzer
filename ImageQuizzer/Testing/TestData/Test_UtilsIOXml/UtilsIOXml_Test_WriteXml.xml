@@ -16,33 +16,6 @@
 			<Orientation>Coronal</Orientation>
 			<Path>D:\PathToTestData\imagefilename.test</Path>
 		</Image>
-		<QuestionSet id="QS-Intro" title="Introduction to Quiz">
-			<Question type="InfoBox" descriptor="Introduction">
-				<Option>Lots of text describing something</Option>
-			</Question>
-		</QuestionSet>
-		<QuestionSet id="QS-Intro #2" title="How to - Instructions">
-			<Question type="InfoBox" descriptor="Instructions">
-				<Option>This is how to run the quiz : .....</Option>
-			</Question>
-		</QuestionSet>
-	</Page>
-	<Page name="Patient1" descriptor="Follow-up 1">
-		<Image format="nii" type="Volume" descriptor="Moving Volume" destination="Red">
-			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
-			<Path>D:\PathToTestData\imagefilename.test</Path>
-		</Image>
-		<Image format="nii" type="Volume" descriptor="Moving Volume" destination="Yellow">
-			<Layer>Background</Layer>
-			<Orientation>Sagittal</Orientation>
-			<Path>D:\PathToTestData\imagefilename.test</Path>
-		</Image>
-		<Image format="nii" type="Volume" descriptor="Moving Volume" destination="Green">
-			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
-			<Path>D:\PathToTestData\imagefilename.test</Path>
-		</Image>
 		<QuestionSet id="QS-Observation" title="What is your Assessment">
 			<Question type="Radio" descriptor="Assessment">
 				<Option>Injury</Option>
