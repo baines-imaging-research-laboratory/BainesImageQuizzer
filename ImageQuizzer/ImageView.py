@@ -162,6 +162,9 @@ class ImageView:
             slSegDisplayNode = slSegNode.GetDisplayNode()
             
             slSegDisplayNode.SetVisibility(False)
+            
+        # unregister the nodes created by 'GetNodeByClass'otherwise you get a memory leak
+        lSegNodes.UnRegister(slicer.mrmlScene) 
     
     #-----------------------------------------------
 
@@ -255,7 +258,10 @@ class ImageView:
             for indUserList in range(len(oViewNode.lsRoiList)):
                 slSegDisplayNode.SetSegmentVisibility(oViewNode.lsRoiList[indUserList], True)
                 
-
+        # clean up memory leaks
+        #    getting a node by ID (slSegDisplayNode) doesn't seem to cause a memory leak
+        #    getting nodes by class does create a memory leak so you have to unregister it!
+        slViewingNode.UnRegister(slicer.mrmlScene)
     
     
 ##########################################################################
