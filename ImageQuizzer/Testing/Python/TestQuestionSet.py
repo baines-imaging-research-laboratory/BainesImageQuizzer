@@ -121,7 +121,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         """
         slicer.mrmlScene.Clear(0)
         self.sClassName = type(self).__name__
-        self.lsClassNames = ['RadioQuestion', 'CheckBoxQuestion','TextQuestion', 'InfoBox', 'InvalidType']
+        self.lsClassNames = ['RadioQuestion', 'CheckBoxQuestion','TextQuestion', 'IntegerValueQuestion', 'DoubleValueQuestion', 'InfoBox', 'InvalidType']
 
     #------------------------------------------- 
 
@@ -139,6 +139,11 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_NoOptionsWarning())
         tupResults.append(self.test_NoErrors_QuestionSetTest())
         tupResults.append(self.test_Error_QuestionSetTest())
+        tupResults.append(self.test_CaptureResponse_RadioButtons())
+        tupResults.append(self.test_CaptureResponse_CheckBoxes())
+        tupResults.append(self.test_CaptureResponse_Text())
+        tupResults.append(self.test_CaptureResponse_IntegerValue())
+        tupResults.append(self.test_CaptureResponse_DoubleValue())
 
         
         logic.questionSetStatus.DisplayTestResults(tupResults)
@@ -163,6 +168,10 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
             elif self.lsClassNames[i] == 'CheckBoxQuestion':
                 self.questionType = CheckBoxQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
             elif self.lsClassNames[i] == 'TextQuestion':
+                self.questionType = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
+            elif self.lsClassNames[i] == 'IntegerValueQuestion':
+                self.questionType = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
+            elif self.lsClassNames[i] == 'DoubleValueQuestion':
                 self.questionType = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
             elif self.lsClassNames[i] == 'InfoBox':
                 self.questionType = InfoBox(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
@@ -279,6 +288,10 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
             elif self.lsClassNames[i] == 'CheckBoxQuestion':
                 self.questionType = CheckBoxQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
             elif self.lsClassNames[i] == 'TextQuestion':
+                self.questionType = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
+            elif self.lsClassNames[i] == 'IntegerValueQuestion':
+                self.questionType = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
+            elif self.lsClassNames[i] == 'DoubleValueQuestion':
                 self.questionType = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
             elif self.lsClassNames[i] == 'InfoBox':
                 self.questionType = InfoBox(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
@@ -404,8 +417,163 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
 
     #-----------------------------------------------
 
+    #-----------------------------------------------
 
+    def test_CaptureResponse_RadioButtons(self):
+        """ Testing capture of user responses to radio button questions
+        """
+        lOptions = ['RadioBtn 1 Test Unchecked','RadioBtn 2 Test Checked', 'RadioBtn 3 Test Unchecked']
+        sGroupTitle = 'Capture Response - Radio Buttons'
+        bTestResult = False
+        fnName = sys._getframe().f_code.co_name
         
+        oTest = RadioQuestion(lOptions, sGroupTitle + ' ...Test Capture Reponse for Radio Buttons')
+        bBuildResult, qGrpBox = oTest.BuildQuestion()
+        slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
+        
+#         for qBtns in qGrpBox.findChildren(qt.QRadioButton):
+#             print('traversing grp box')
+            
+        # set a button to checked for testing
+        lqAllBtns = qGrpBox.findChildren(qt.QRadioButton)
+        lqAllBtns[1].setChecked(True)
+        
+        lExpectedResponse = ['n','y','n']
+        
+        # get actual response list
+        lActualResponse = oTest.CaptureResponse()
+        if lActualResponse == lExpectedResponse:
+            bTestResult = True
+        
+        
+        tupResult = fnName, bTestResult
+        return tupResult
+
+    #-----------------------------------------------
+
+    def test_CaptureResponse_CheckBoxes(self):
+        """ Testing capture of user responses to check box questions
+        """
+        lOptions = ['CheckBox 1 Test Unchecked','CheckBox 2 Test Checked', 'CheckBox 3 Test Checked']
+        sGroupTitle = 'Capture Response - Check Boxes'
+        bTestResult = False
+        fnName = sys._getframe().f_code.co_name
+        
+        oTest = CheckBoxQuestion(lOptions, sGroupTitle + ' ...Test Capture Reponse for Check Boxes')
+        bBuildResult, qGrpBox = oTest.BuildQuestion()
+        slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
+        
+        # set a button to checked for testing
+        lqAllBoxes = qGrpBox.findChildren(qt.QCheckBox)
+        lqAllBoxes[0].setChecked(False)
+        lqAllBoxes[1].setChecked(True)
+        lqAllBoxes[2].setChecked(True)
+        
+        lExpectedResponse = ['n','y','y']
+        
+        # get actual response list
+        lActualResponse = oTest.CaptureResponse()
+        if lActualResponse == lExpectedResponse:
+            bTestResult = True
+        
+        
+        tupResult = fnName, bTestResult
+        return tupResult
+
+
+    #-----------------------------------------------
+
+    def test_CaptureResponse_Text(self):
+        """ Testing capture of user responses to text box questions
+        """
+        lOptions = ['TextBox 1:','TextBox 2:']
+        sGroupTitle = 'Capture Response - Text Boxes'
+        bTestResult = False
+        fnName = sys._getframe().f_code.co_name
+        
+        oTest = TextQuestion(lOptions, sGroupTitle + ' ...Test Capture Reponse for Text Boxes')
+        bBuildResult, qGrpBox = oTest.BuildQuestion()
+        slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
+        
+        # set a button to checked for testing
+        lqAllBoxes = qGrpBox.findChildren(qt.QLineEdit)
+        lqAllBoxes[0].setText('First Entry')
+        lqAllBoxes[1].setText('Second Entry')
+        
+        lExpectedResponse = ['First Entry','Second Entry']
+        
+        # get actual response list
+        lActualResponse = oTest.CaptureResponse()
+        if lActualResponse == lExpectedResponse:
+            bTestResult = True
+        
+        
+        tupResult = fnName, bTestResult
+        return tupResult
+
+    #-----------------------------------------------
+
+    def test_CaptureResponse_IntegerValue(self):
+        """ Testing capture of user responses to integer value questions
+        """
+        lOptions = ['IntegerValueSpinner 1:','IntegerValueSpinner 2:']
+        sGroupTitle = 'Capture Response - Integer Value Spinbox'
+        bTestResult = False
+        fnName = sys._getframe().f_code.co_name
+        
+        dictTest = {'min':'-10', 'max':'200'}
+        oTest = IntegerValueQuestion(lOptions, sGroupTitle + ' ...Test Capture Reponse for Integer Value SpinBoxes', dictTest)
+        bBuildResult, qGrpBox = oTest.BuildQuestion()
+        slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
+        
+        # set a button to checked for testing
+        lqAllBoxes = qGrpBox.findChildren(qt.QSpinBox)
+        lqAllBoxes[0].setValue(2)
+        lqAllBoxes[1].setValue(102)
+        
+        lExpectedResponse = [2,102]
+        
+        # get actual response list
+        lActualResponse = oTest.CaptureResponse()
+        if lActualResponse == lExpectedResponse:
+            bTestResult = True
+        
+        
+        tupResult = fnName, bTestResult
+        return tupResult
+
+    #-----------------------------------------------
+
+    def test_CaptureResponse_DoubleValue(self):
+        """ Testing capture of user responses to double value questions
+        """
+        lOptions = ['DoubleValueSpinner 1:','DoubleValueSpinner 2:']
+        sGroupTitle = 'Capture Response - Double Value Spinbox'
+        bTestResult = False
+        fnName = sys._getframe().f_code.co_name
+        
+        dictTest = {'min':'-10.5', 'max':'200.5'}
+        oTest = DoubleValueQuestion(lOptions, sGroupTitle + ' ...Test Capture Reponse for Double Value SpinBoxes', dictTest)
+        bBuildResult, qGrpBox = oTest.BuildQuestion()
+        slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
+        
+        # set a button to checked for testing
+        lqAllBoxes = qGrpBox.findChildren(qt.QDoubleSpinBox)
+        lqAllBoxes[0].setValue(2.5)
+        lqAllBoxes[1].setValue(102.5)
+        
+        lExpectedResponse = [2.5,102.5]
+        
+        # get actual response list
+        lActualResponse = oTest.CaptureResponse()
+        if lActualResponse == lExpectedResponse:
+            bTestResult = True
+        
+        
+        tupResult = fnName, bTestResult
+        return tupResult
+
+       
 ##########################################################################################
 #                      Launching from main (Reload and Test button)
 ##########################################################################################
