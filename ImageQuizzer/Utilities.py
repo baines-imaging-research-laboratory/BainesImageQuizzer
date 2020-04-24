@@ -131,6 +131,7 @@ class UtilsIOXml:
 
     def GetValueOfNodeAttribute(self, xNode, sAttributeName):
         # given a node and an attribute name, get the value
+        sAttributeValue = ''
         sAttributeValue = xNode.getAttribute(sAttributeName)
         
         return sAttributeValue
