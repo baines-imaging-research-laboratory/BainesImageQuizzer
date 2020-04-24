@@ -43,11 +43,22 @@ class QuestionSet():
             xQuestions = oIOXml.GetChildren(xNodeQuestionSet, 'Question')
             
             for xNodeQuestion in xQuestions:
+
+                lsQuestionOptions = []
+                dictModifiers = {}
+
                 sQuestionType = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'type')
                 sQuestionDescriptor = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'descriptor')
-               
+
+                # get modifiers for type = IntegerValue
+                if sQuestionType =="IntegerValue" or sQuestionType == "DoubleValue":
+                    sMin = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'min')               
+                    sMax = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'max')
+                    dictModifiers['min'] = sMin
+                    dictModifiers['max'] = sMax
+                    
+                                   
                 # get options for each question
-                lsQuestionOptions = []
                 
                 xOptions = oIOXml.GetChildren(xNodeQuestion, 'Option')
 
@@ -58,7 +69,7 @@ class QuestionSet():
                     lsQuestionOptions.append(sValue)
                 
             
-                tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
+                tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions, dictModifiers]
                 self.ltupQuestions.append(tupQuestionGroup)
                 
 
@@ -70,6 +81,7 @@ class QuestionSet():
         #        0: question type (string)
         #        1: question descriptor (string)
         #        2: list of question options (list of strings)
+        #      [ 3: dictionary of modifiers (eg. min, max) for certain question types ] 
         #    - create the appropriate group box
         #    - add to layout
         self.sFnName = sys._getframe().f_code.co_name
@@ -81,6 +93,8 @@ class QuestionSet():
             sQuestionType = str(tupQuestionItemInfo[0])
             sQuestionDescriptor = str(tupQuestionItemInfo[1])
             lsQuestionOptions = tupQuestionItemInfo[2]
+            if len(tupQuestionItemInfo) > 3:
+                dictModifiers = tupQuestionItemInfo[3]
 
             bQuestionTypeGood = True
             if (sQuestionType == 'Radio'):
@@ -89,6 +103,10 @@ class QuestionSet():
                 self.question = CheckBoxQuestion(lsQuestionOptions, sQuestionDescriptor)
             elif (sQuestionType == 'Text'):
                 self.question = TextQuestion(lsQuestionOptions, sQuestionDescriptor)
+            elif (sQuestionType == 'IntegerValue'):
+                self.question = IntegerValueQuestion(lsQuestionOptions, sQuestionDescriptor, dictModifiers)
+            elif (sQuestionType == 'DoubleValue'):
+                self.question = DoubleValueQuestion(lsQuestionOptions, sQuestionDescriptor, dictModifiers)
             elif (sQuestionType == 'InfoBox'):
                 self.question = InfoBox(lsQuestionOptions, sQuestionDescriptor)
             else:
@@ -141,6 +159,8 @@ class Question(ABC):
     @abstractmethod        
     def BuildQuestion(self): pass
     
+    @abstractmethod        
+    def CaptureResponse(self): pass
 
     #-----------------------------------------------
     
@@ -218,6 +238,21 @@ class RadioQuestion(Question):
 
         return True, self.qGrpBox
         
+    #-----------------------------------------------
+    
+    def CaptureResponse(self):
+        self.sFnName = sys._getframe().f_code.co_name
+        lResponses = []
+        for qBtn in self.qGrpBox.findChildren(qt.QRadioButton):
+#             sText = qBtn.text
+#             print(sText)
+            if qBtn.isChecked():
+                lResponses.append('y')
+            else:
+                lResponses.append('n')
+
+        return lResponses
+
 #========================================================================================
 #                     Class CheckBoxQuestion
 #========================================================================================
@@ -253,6 +288,23 @@ class CheckBoxQuestion(Question):
 
         return True, self.qGrpBox
         
+    #-----------------------------------------------
+    
+    def CaptureResponse(self):
+        self.sFnName = sys._getframe().f_code.co_name
+        lResponses = []
+        
+        for qChBox in self.qGrpBox.findChildren(qt.QCheckBox):
+#             sText = qBtn.text
+#             print(sText)
+            if qChBox.isChecked():
+                lResponses.append('y')
+            else:
+                lResponses.append('n')
+
+        return lResponses
+
+
 #========================================================================================
 #                     Class TextQuestion
 #========================================================================================
@@ -292,6 +344,137 @@ class TextQuestion(Question):
 
         return True, self.qGrpBox
         
+    #-----------------------------------------------
+    
+    def CaptureResponse(self):
+        self.sFnName = sys._getframe().f_code.co_name
+        print('Responses for Text Questions')
+        lResponses = []
+        
+        for qTextBox in self.qGrpBox.findChildren(qt.QLineEdit):
+#             sText = qBtn.text
+#             print(sText)
+            lResponses.append(qTextBox.text)
+
+        return lResponses
+
+#========================================================================================
+#                     Class IntegerValueQuestion
+#========================================================================================
+
+class IntegerValueQuestion(Question):
+    # Create a group box and add a spin box that allows the user to enter an integer value
+    # Inputs : lOptions - list of labels for each box 
+    # Outputs: exitCode - boolean describing whether function exited successfully
+    #          qGrpBox  - group box widget holding integer spin boxes
+    
+    def __init__(self, lOptions, sGrpBoxTitle, dictModifiers):
+        self.lOptions = lOptions
+        self.sGrpBoxTitle = sGrpBoxTitle
+        self.dictModifiers = dictModifiers
+        self.sClassName = type(self).__name__
+        
+    def BuildQuestion(self):
+        self.sFnName = sys._getframe().f_code.co_name
+
+        # add grid layout to group box
+        self.CreateGroupBox(self.sGrpBoxTitle)
+        newLayout = qt.QGridLayout()
+        self.qGrpBoxLayout.addLayout(newLayout)
+       
+        length = len(self.lOptions)
+        if length < 1 :
+            self.DisplayGroupBoxEmpty()
+            return False, self.qGrpBox
+
+        i = 0
+        while i < length:
+            element1 = self.lOptions[i]
+            qSpinBox = qt.QSpinBox()
+            sMin = self.dictModifiers.get('min')
+            sMax = self.dictModifiers.get('max')
+            if not sMin == '':
+                qSpinBox.setMinimum(int(sMin))
+            if not sMax == '':
+                qSpinBox.setMaximum(int(sMax))
+            qLabel = qt.QLabel(element1)
+            newLayout.addWidget(qLabel, i, 0)
+            newLayout.addWidget(qSpinBox, i, 1)
+            i = i + 1
+
+        return True, self.qGrpBox
+        
+    #-----------------------------------------------
+    
+    def CaptureResponse(self):
+        self.sFnName = sys._getframe().f_code.co_name
+        print('Responses for Integer Value Questions')
+        lResponses = []
+        
+        for qSpinner in self.qGrpBox.findChildren(qt.QSpinBox):
+            lResponses.append(qSpinner.value)
+
+        return lResponses
+
+#========================================================================================
+#                     Class DoubleValueQuestion
+#========================================================================================
+
+class DoubleValueQuestion(Question):
+    # Create a group box and add a spin box that allows the user to enter an integer value
+    # Inputs : lOptions - list of labels for each box 
+    # Outputs: exitCode - boolean describing whether function exited successfully
+    #          qGrpBox  - group box widget holding integer spin boxes
+    
+    def __init__(self, lOptions, sGrpBoxTitle, dictModifiers):
+        self.lOptions = lOptions
+        self.sGrpBoxTitle = sGrpBoxTitle
+        self.dictModifiers = dictModifiers
+        self.sClassName = type(self).__name__
+
+    def BuildQuestion(self):
+        self.sFnName = sys._getframe().f_code.co_name
+
+        # add grid layout to group box
+        self.CreateGroupBox(self.sGrpBoxTitle)
+        newLayout = qt.QGridLayout()
+        self.qGrpBoxLayout.addLayout(newLayout)
+       
+        length = len(self.lOptions)
+        if length < 1 :
+            self.DisplayGroupBoxEmpty()
+            return False, self.qGrpBox
+
+        i = 0
+        while i < length:
+            element1 = self.lOptions[i]
+            qDoubleSpinBox = qt.QDoubleSpinBox()
+            sMin = self.dictModifiers.get('min')
+            sMax = self.dictModifiers.get('max')
+            if not sMin == '':
+                qDoubleSpinBox.setMinimum(float(sMin))
+            if not sMax == '':
+                qDoubleSpinBox.setMaximum(float(sMax))
+            qLabel = qt.QLabel(element1)
+            newLayout.addWidget(qLabel, i, 0)
+            newLayout.addWidget(qDoubleSpinBox, i, 1)
+            i = i + 1
+
+        return True, self.qGrpBox
+        
+    #-----------------------------------------------
+    
+    def CaptureResponse(self):
+        self.sFnName = sys._getframe().f_code.co_name
+        print('Responses for Double Value Questions')
+        lResponses = []
+        
+        for qSpinner in self.qGrpBox.findChildren(qt.QDoubleSpinBox):
+            lResponses.append(qSpinner.value)
+
+        return lResponses
+
+
 #========================================================================================
 #                     Class InfoBox
 #========================================================================================
@@ -332,5 +515,14 @@ class InfoBox(Question):
 
         return True, self.qGrpBox
 
+    #-----------------------------------------------
+    
+    def CaptureResponse(self):
+        self.sFnName = sys._getframe().f_code.co_name
+        print('Responses for Info Box = NONE')
+
+        lResponses = []
+        
+        return lResponses
         
     

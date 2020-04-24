@@ -25,6 +25,9 @@
 			<Question type="InfoBox" descriptor="Instructions">
 				<Option>This is how to run the quiz : .....</Option>
 			</Question>
+			<Question type="Text" descriptor="First Impressions">
+				<Option>Enter your thoughts : </Option>
+			</Question>
 		</QuestionSet>
 	</Page>
 	<Page name="Patient1" descriptor="Follow-up 1">
@@ -52,6 +55,12 @@
 				<Option>Yes</Option>
 				<Option>Maybe</Option>
 				<Option>No</Option>
+			</Question>
+			<Question type="IntegerValue" title="Tumour Observation" min="-5" max="5">
+				<Option>Enter number of tumours:</Option>
+			</Question>
+			<Question type="DoubleValue" title="" min="10">
+				<Option>Enter RECIST of largest tumour:</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
