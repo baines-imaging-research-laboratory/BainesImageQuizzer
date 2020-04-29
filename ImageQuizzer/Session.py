@@ -9,9 +9,9 @@ from Question import *
 from ImageView import *
 #from ImageQuizzer import *
 
-import xml
-from xml.dom import minidom
 from slicer.util import EXIT_SUCCESS
+from datetime import datetime
+
 
 #-----------------------------------------------
 
@@ -24,11 +24,13 @@ class Session:
         
         self.oUtilsMsgs = UtilsMsgs()
         self.oIOXml = UtilsIOXml()
+        self.oUtilsIO = UtilsIO()
         self.iCompIndex = 0
         
-        self._xRootNode = None
+#         self._xRootNode = None
         self._lPageQuestionCompositeIndices = []
         
+       
         
 #         self.oUtilsIO = None
 #         self.oQuizWidgets = None
@@ -42,9 +44,14 @@ class Session:
     #        Getters / Setters
     #-------------------------------------------
 
-    def SetRootNode(self, xNode):
-        self._xRootNode = xNode
-        
+#     def SetRootNode(self, xNode):
+#         self._xRootNode = xNode
+#         
+#     #----------
+#     def GetRootNode(self):
+#         return self._xRootNode
+
+    
     #----------
     def SetCompositeIndicesList(self,lIndices):
         self._lPageQuestionCompositeIndices = lIndices
@@ -58,10 +65,12 @@ class Session:
     #        Functions
     #-------------------------------------------
 
-    def RunSetup(self, oUtilsIO, oQuizWidgets):
+    def RunSetup(self, oUtilsIO_fromLogin, oQuizWidgets):
 
-        self.sXmlQuizPath = oUtilsIO.GetResourcesQuizPath()
-        self.sUsername = oUtilsIO.GetQuizUsername()
+        self.oUtilsIO = oUtilsIO_fromLogin  # capture IO object
+        
+        sXmlQuizPath = self.oUtilsIO.GetResourcesQuizPath()
+        self.sUsername = self.oUtilsIO.GetQuizUsername()
         self.slicerLeftMainLayout = oQuizWidgets.GetSlicerLeftMainLayout()
         self.slicerQuizLayout = oQuizWidgets.GetSlicerQuizLayout()
 #         print(self.sXmlQuizPath)
@@ -86,13 +95,17 @@ class Session:
 
         
         # open xml and check for root node
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self.sXmlQuizPath,'Session')
+        bSuccess, xRootNode = self.oIOXml.OpenXml(sXmlQuizPath,'Session')
         if not bSuccess:
             sErrorMsg = "ERROR", "Not a valid quiz - Root node name was not 'Session'"
             self.oUtilsMsgs.DisplayError(sErrorMsg)
 
         else:
-            self._xRootNode = xRootNode
+#             self._xRootNode = xRootNode
+            
+            # add date time stamp to Session element
+            self.AddSessionLoginTimestamp()
+            
             self.slicerLeftMainLayout.addWidget(self.btnNext)
             self.slicerLeftMainLayout.addWidget(self.btnPrevious)
             
@@ -102,6 +115,21 @@ class Session:
 
 
             
+    #-----------------------------------------------
+
+    def AddSessionLoginTimestamp(self):
+        
+        now = datetime.now()
+        sLoginTime = now.strftime("%b-%d-%Y-%H-%M-%S")
+        
+        print(sLoginTime)
+        dictAttrib = {}
+        dictAttrib = {'time': sLoginTime}
+        
+        sUserQuizPath = self.oUtilsIO.GetUserQuizPath()
+        self.oIOXml.AddElementWithAttrib(self.oIOXml.GetRootNode(),'Login',dictAttrib)
+        
+        self.oIOXml.SaveXml(sUserQuizPath, self.oIOXml.GetXmlTree())
             
     #-----------------------------------------------
 
@@ -115,11 +143,13 @@ class Session:
 #         oIOXml = UtilsIOXml()
         
         # get Page nodes
-        xPages = self.oIOXml.GetChildren(self._xRootNode, 'Page')
+#         xPages = self.oIOXml.GetChildren(self._xRootNode, 'Page')
+        xPages = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
 
         for iPageIndex in range(len(xPages)):
             # for each page - get number of question sets
-            xPageNode = self.oIOXml.GetNthChild(self._xRootNode, 'Page', iPageIndex)
+#             xPageNode = self.oIOXml.GetNthChild(self._xRootNode, 'Page', iPageIndex)
+            xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
             xQuestionSets = self.oIOXml.GetChildren(xPageNode,'QuestionSet')
             
             for iQuestionSetIndex in range(len(xQuestionSets)):
@@ -134,7 +164,8 @@ class Session:
         iPageIndex = self._lPageQuestionCompositeIndices[self.iCompIndex][0]
         iQuestionSetIndex = self._lPageQuestionCompositeIndices[self.iCompIndex][1]
 
-        xNodePage = self.oIOXml.GetNthChild(self._xRootNode, 'Page', iPageIndex)
+#         xNodePage = self.oIOXml.GetNthChild(self._xRootNode, 'Page', iPageIndex)
+        xNodePage = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
         xNodeQuestionSet = self.oIOXml.GetNthChild(xNodePage, 'QuestionSet', iQuestionSetIndex)
         
         oQuestionSet = QuestionSet()

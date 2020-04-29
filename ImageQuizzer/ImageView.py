@@ -10,11 +10,8 @@ from Utilities import *
 
 from DICOMLib import DICOMUtils
 
-import xml
-from xml.dom import minidom
 import ssl
 from DICOMLib.DICOMUtils import loadPatientByUID
-from vtkmodules.vtkCommonKitPython import vtkPassInputTypeAlgorithm
 
 ##########################################################################
 #

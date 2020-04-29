@@ -71,7 +71,19 @@ class UtilsIOXml:
         self.sFnName = 'undefinedFunctionName'
         self.parent = parent
         
+        self._xTree = None
+        self._xRootNode = None
+        
     
+    #----------
+    def GetXmlTree(self):
+        return self._xTree
+    
+    #----------
+    def GetRootNode(self):
+        return self._xRootNode
+    
+
     #-------------------------------------------
 
     def OpenXml(self, sXmlPath, sRootNodeName):
@@ -117,11 +129,11 @@ class UtilsIOXml:
              
             try:
                 print(sXmlPath)
-                xTree = etree.parse(sXmlPath)
-                xRootNode = xTree.getroot()
+                self._xTree = etree.parse(sXmlPath)
+                self._xRootNode = self._xTree.getroot()
 
                 # check if root node name matches expected name
-                if xRootNode.tag == sRootNodeName:
+                if self._xRootNode.tag == sRootNodeName:
                     bSuccess = True
   
                 else:
@@ -141,7 +153,7 @@ class UtilsIOXml:
             raise Exception('XML file does not exist: %s' % sXmlPath)
          
 
-        return bSuccess, xRootNode
+        return bSuccess, self._xRootNode
 
     
     #-------------------------------------------
@@ -279,6 +291,56 @@ class UtilsIOXml:
         
         return sData
     
+    #-------------------------------------------
+
+    def AddElementWithAttrib(self, xParentNode, sTagName, dictAttrib):
+        
+        elem = xParentNode.makeelement(sTagName, dictAttrib)
+        xParentNode.append(elem)
+
+        
+    #-------------------------------------------
+
+    def prettify(self, elem):
+        """Return a pretty-printed XML string for the Element.
+
+            NB. 'toprettyxml' sets up the reparsed string for the print function
+            - returning the reparsed string lets you use 'writexml' function
+                with indent options
+        """
+
+        rough_string = etree.tostring(elem, 'utf-8')
+
+        # remove existing line feeds and tabs from the string (byte encoding is required)
+        byteTab = bytes('\t'.encode())
+        byteNull = bytes(''.encode())
+        byteLineFeed = bytes('\n'.encode())
+        rough_string = rough_string.replace(byteTab, byteNull)
+        rough_string = rough_string.replace(byteLineFeed, byteNull)
+
+        # use minidom to parse the string after line feeds and tabs have been removed
+        reparsed = xml.dom.minidom.parseString(rough_string)
+
+        return reparsed
+
+    #-------------------------------------------
+
+    def SaveXml(self, sXmlPath, xTree):
+        print('saving')
+
+        reparsedRoot = self.prettify(self._xRootNode)
+ 
+        try:
+            with open(sXmlPath, 'w') as xml_outfile:
+                reparsedRoot.writexml(xml_outfile, indent="\t", addindent="\t", newl="\n")
+
+
+#             with open(sXmlPath,'w') as xml_outfile:
+#                 xTree.write(xml_outfile, encoding='unicode', xml_declaration=True)
+            
+        except:
+            raise Exception('Write XML file error: %s' % sXmlPath)
+
 
 
 ##########################################################################
@@ -374,6 +436,10 @@ class UtilsIO:
     #----------
     def GetUserDir(self):
         return self._sUserDir
+    
+    #----------
+    def GetUserQuizPath(self):
+        return self._sUserQuizPath
     
     #----------
     def GetXmlResourcesDir(self):

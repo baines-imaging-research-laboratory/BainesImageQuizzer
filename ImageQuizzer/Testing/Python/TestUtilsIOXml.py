@@ -8,6 +8,36 @@ from TestingStatus import *
 import xml
 from xml.dom import minidom
 
+try:
+    from lxml import etree
+
+    print("running with lxml.etree")
+except ImportError:
+    try:
+        # Python 2.5
+        import xml.etree.cElementTree as etree
+
+        print("running with cElementTree on Python 2.5+")
+    except ImportError:
+        try:
+            # Python 2.5
+            import xml.etree.ElementTree as etree
+
+            print("running with ElementTree on Python 2.5+")
+        except ImportError:
+            try:
+                # normal cElementTree install
+                import cElementTree as etree
+
+                print("running with cElementTree")
+            except ImportError:
+                try:
+                    # normal ElementTree install
+                    import elementtree.ElementTree as etree
+
+                    print("running with ElementTree")
+                except ImportError:
+                    print("Failed to import ElementTree from any known place")
 
 ##########################################################################
 #
@@ -123,7 +153,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_GetDataInNode())
         tupResults.append(self.test_GetDataInNodeEmpty())
 #         
-#         tupResults.append(self.test_WriteXML())
+        tupResults.append(self.test_WriteXML())
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
  
@@ -529,6 +559,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         return tupResult
         
 
+    #-------------------------------------------
+
     def test_GetDataInNodeEmpty(self):
 
         # this test checks the function to extract the data value 
@@ -572,27 +604,34 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         sXmlFile = 'UtilsIOXml_Test_WriteXML.xml'
         sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
         
-        sXmlOutputFile = 'TestOutpuXML.xml'
+        sXmlOutputFile = 'TestOutputXML.xml'
         sXmlOutputFilePath = os.path.join(self.sTestDataDir, sXmlOutputFile)
         
          
-#         [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'Session')
-        xml_infile = xml.dom.minidom.parse(sXmlPath)
-        xNode = xml_infile.documentElement
-           
+        [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'Session')
+#         xml_infile = xml.dom.minidom.parse(sXmlPath)
+#         xNode = xml_infile.documentElement
+#         with open(sXmlOutputFilePath,'w') as xml_outfile:
+#             xml_infile.writexml(xml_outfile)
+#             
         # check for expected root node
-        sNodeName = xNode.nodeName
+#         sNodeName = xNode.nodeName
+
+        xTree = etree.parse(sXmlPath)
+        xRootNode = xTree.getroot()
+         
+        sNodeName = xRootNode.tag
         print(sNodeName)
             
-
-        with open(sXmlOutputFilePath,'w') as xml_outfile:
-            xml_infile.writexml(xml_outfile)
+        try:
+            self.oIOXml.SaveXml(sXmlOutputFilePath, xTree)
+#             with open(sXmlOutputFilePath,'w') as xml_outfile:
+#                 xTree.write(xml_outfile, encoding='unicode', xml_declaration=True)
             
+            bTestResult = True
 
-        
-        bTestResult = True
-
-
+        except:
+            bTestResult = False
 
 
         tupResult = self.fnName, bTestResult
