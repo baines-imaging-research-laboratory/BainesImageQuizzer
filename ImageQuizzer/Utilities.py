@@ -6,6 +6,39 @@ import vtk, qt, ctk, slicer
 import xml.dom.minidom
 from shutil import copyfile
 
+
+try:
+    from lxml import etree
+
+    print("running with lxml.etree")
+except ImportError:
+    try:
+        # Python 2.5
+        import xml.etree.cElementTree as etree
+
+        print("running with cElementTree on Python 2.5+")
+    except ImportError:
+        try:
+            # Python 2.5
+            import xml.etree.ElementTree as etree
+
+            print("running with ElementTree on Python 2.5+")
+        except ImportError:
+            try:
+                # normal cElementTree install
+                import cElementTree as etree
+
+                print("running with cElementTree")
+            except ImportError:
+                try:
+                    # normal ElementTree install
+                    import elementtree.ElementTree as etree
+
+                    print("running with ElementTree")
+                except ImportError:
+                    print("Failed to import ElementTree from any known place")
+
+
 ##########################################################################
 #
 #   class Utilities
@@ -42,59 +75,103 @@ class UtilsIOXml:
     #-------------------------------------------
 
     def OpenXml(self, sXmlPath, sRootNodeName):
+#         # given a path, open the xml document
+#         
+#         # initialize a document node
+#         xNode = None
+#         # test for existence
+#         if (os.path.isfile(sXmlPath)):
+#             
+#             try:
+#                 xDoc = xml.dom.minidom.parse(sXmlPath)
+#                 xNode = xDoc.documentElement
+#                    
+#                 # check for expected root node
+#                 sNodeName = self.GetElementNodeName(xNode)
+#                 if sNodeName == sRootNodeName:
+#                     bSuccess = True
+#  
+#                 else:
+#                     bSuccess = False
+#                     raise NameError('Invalid XML root node: %s' % sXmlPath)
+# 
+#             except NameError:
+#                 raise
+# 
+#             except:
+#                 bSuccess = False
+#                 raise Exception('Parsing XML file error: %s' % sXmlPath)
+#                 
+#         else:
+#             bSuccess = False
+#             raise Exception('XML file does not exist: %s' % sXmlPath)
+#         
+#         return bSuccess, xNode
+
         # given a path, open the xml document
-        
+         
         # initialize a document node
         xNode = None
         # test for existence
         if (os.path.isfile(sXmlPath)):
-            
+             
             try:
-                xDoc = xml.dom.minidom.parse(sXmlPath)
-                xNode = xDoc.documentElement
-                   
-                # check for expected root node
-                sNodeName = self.GetElementNodeName(xNode)
-                if sNodeName == sRootNodeName:
+                print(sXmlPath)
+                xTree = etree.parse(sXmlPath)
+                xRootNode = xTree.getroot()
+
+                # check if root node name matches expected name
+                if xRootNode.tag == sRootNodeName:
                     bSuccess = True
- 
+  
                 else:
                     bSuccess = False
                     raise NameError('Invalid XML root node: %s' % sXmlPath)
-
+ 
+                
             except NameError:
                 raise
-
+ 
             except:
                 bSuccess = False
                 raise Exception('Parsing XML file error: %s' % sXmlPath)
-                
+                 
         else:
             bSuccess = False
             raise Exception('XML file does not exist: %s' % sXmlPath)
-        
-        return bSuccess, xNode
+         
+
+        return bSuccess, xRootNode
 
     
     #-------------------------------------------
 
     def GetElementNodeName(self, xNode):
 
-        # check for correct type of node  
-        if xNode.nodeType == xml.dom.Node.ELEMENT_NODE:
-            sNodeName = xNode.nodeName
-        else:
+#         # check for correct type of node  
+#         if xNode.nodeType == xml.dom.Node.ELEMENT_NODE:
+#             sNodeName = xNode.nodeName
+#         else:
+#             raise TypeError('Invalid XML node type: should be Element type of node')
+
+        try:
+            sNodeName = xNode.tag
+        except:
             raise TypeError('Invalid XML node type: should be Element type of node')
+        
 
         return sNodeName
                 
     #-------------------------------------------
 
-    def GetNumChildren(self, xParentNode, sChildTagName):
+    def GetNumChildrenByName(self, xParentNode, sChildTagName):
         # given an xml node, return the number of children with the specified tagname
         
-        iNumChildren = xParentNode.getElementsByTagName(sChildTagName).length
-        
+#         iNumChildren = xParentNode.getElementsByTagName(sChildTagName).length
+
+#         iNumChildren = xParentNode.countChildren()
+
+        iNumChildren = len(xParentNode.findall(sChildTagName))
         return iNumChildren
 
     #-------------------------------------------
@@ -102,16 +179,32 @@ class UtilsIOXml:
     def GetChildren(self, xParentNode, sChildTagName):
         # given an xml node, return the child nodes with the specified tagname
         
-        xmlChildren = xParentNode.getElementsByTagName(sChildTagName)
+#         xmlChildren = xParentNode.getElementsByTagName(sChildTagName)
+
+        xmlChildren = xParentNode.findall(sChildTagName)
         
         return xmlChildren
 
     #-------------------------------------------
 
-    def GetNthChild(self, xParentNode, sChildTagName, iIndex):
+    def GetNthChild(self, xParentNode, sChildTagName, indElem):
         # given an xml node, return the nth child node with the specified tagname
         
-        xmlChildNode = xParentNode.getElementsByTagName(sChildTagName)[iIndex]
+#         xmlChildNode = xParentNode.getElementsByTagName(sChildTagName)[iIndex]
+
+        xmlChildNode = None
+
+        # for elem in parent[indElem].iter(sElemName):
+        #     print(elem.tag, elem.attrib, elem.text)
+
+        ind = 0
+        for elem in xParentNode.findall(sChildTagName):
+            if ( ind == indElem ):
+                xmlChildNode = elem
+                print(elem.tag, elem.attrib, elem.text)
+
+            ind = ind + 1
+        
         
         return xmlChildNode
 
@@ -119,11 +212,24 @@ class UtilsIOXml:
 
     def GetListOfNodeAttributes(self, xNode):
         # given a node, return a list of all its attributes
+        
+#         listOfAttributes = []
+#         for index in range(0,xNode.attributes.length):
+#             (name, value) = xNode.attributes.items()[index]
+#             tupAttribute = name, value
+#             listOfAttributes.append(tupAttribute)
+
+        # attributes are stored in dictionary format
         listOfAttributes = []
-        for index in range(0,xNode.attributes.length):
-            (name, value) = xNode.attributes.items()[index]
+        lNames = list(xNode.attrib.keys())
+        lValues = list(xNode.attrib.values())
+
+        for index in range(len(xNode.attrib)):
+            name = lNames[index]
+            value = lValues[index]
             tupAttribute = name, value
             listOfAttributes.append(tupAttribute)
+
             
         return listOfAttributes
         
@@ -131,8 +237,16 @@ class UtilsIOXml:
 
     def GetValueOfNodeAttribute(self, xNode, sAttributeName):
         # given a node and an attribute name, get the value
-        sAttributeValue = ''
-        sAttributeValue = xNode.getAttribute(sAttributeName)
+        #   if the attribute did not exist, return null string
+        
+#         sAttributeValue = xNode.getAttribute(sAttributeName)
+
+        try:
+            dictAttribs = xNode.attrib
+            sAttributeValue = dictAttribs[sAttributeName]
+        except:
+            sAttributeValue = ''
+            
         
         return sAttributeValue
 
@@ -141,18 +255,29 @@ class UtilsIOXml:
     def GetDataInNode(self, xNode):
         # given a node get the value
         
-        xData = 'Empty'
+#         xData = 'Empty'
+#         nodes = xNode.childNodes
+#         for node in nodes:
+#             if node.nodeType == node.TEXT_NODE:
+#                 xData =node.data
+# #                 print(xData)
+#             else:
+#                 print('invalid data node  check xml schema' )
         
-        nodes = xNode.childNodes
-        for node in nodes:
-            if node.nodeType == node.TEXT_NODE:
-                xData =node.data
-#                 print(xData)
-            else:
-                print('invalid data node  check xml schema' )
-             
-            
-        return xData
+        
+        sData = xNode.text
+        
+        
+        if '\n' or '\t' in sData: 
+            # clean up any tabs or line feeds in the data string; replace with null
+            #    Element tree stores '\n\t\t'  when the text property is empty for an element 
+            sTab = '\t'
+            sNull = ''
+            sLineFeed = '\n'
+            sData = sData.replace(sTab, sNull)
+            sData = sData.replace(sLineFeed, sNull)
+        
+        return sData
     
 
 

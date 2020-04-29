@@ -20,13 +20,13 @@
 			<Question type="InfoBox" descriptor="Introduction">
 				<Option>Lots of text describing something</Option>
 			</Question>
+			<Question type="Text" descriptor="First Impressions">
+				<Option>Enter your thoughts : </Option>
+			</Question>
 		</QuestionSet>
 		<QuestionSet id="QS-Intro #2" title="How to - Instructions">
 			<Question type="InfoBox" descriptor="Instructions">
 				<Option>This is how to run the quiz : .....</Option>
-			</Question>
-			<Question type="Text" descriptor="First Impressions">
-				<Option>Enter your thoughts : </Option>
 			</Question>
 		</QuestionSet>
 	</Page>
@@ -56,10 +56,10 @@
 				<Option>Maybe</Option>
 				<Option>No</Option>
 			</Question>
-			<Question type="IntegerValue" title="Tumour Observation" min="-5" max="5">
+			<Question type="IntegerValue" descriptor="Tumour Observation" min="-5" max="5">
 				<Option>Enter number of tumours:</Option>
 			</Question>
-			<Question type="DoubleValue" title="" min="10">
+			<Question type="DoubleValue" descriptor="" min="10">
 				<Option>Enter RECIST of largest tumour:</Option>
 			</Question>
 		</QuestionSet>

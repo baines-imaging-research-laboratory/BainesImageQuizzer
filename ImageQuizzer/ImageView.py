@@ -50,7 +50,7 @@ class ImageView:
 
         # display Images
         self.xImages = self.oIOXml.GetChildren(xPageNode, 'Image')
-        self.iNumImages = self.oIOXml.GetNumChildren(xPageNode, 'Image')
+        self.iNumImages = self.oIOXml.GetNumChildrenByName(xPageNode, 'Image')
         
         # clear views from previous page
         self.ClearImagesAndSegmentations()

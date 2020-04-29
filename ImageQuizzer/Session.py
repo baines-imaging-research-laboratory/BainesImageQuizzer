@@ -190,6 +190,12 @@ class Session:
 
     def onNextButtonClicked(self):
 
+        # check if a save is required before displaying next page
+        sPrevText = self.btnNext.text
+        print('(((((((( Prev Text: %s' %sPrevText)
+        if "Save" in sPrevText:
+            self.CaptureResponsesForPage()
+            
         
         self.iCompIndex = self.iCompIndex + 1
         
@@ -220,22 +226,15 @@ class Session:
 
     #-----------------------------------------------
 
-    #-----------------------------------------------
-    
-    def RemoveNodes(self):
-        print('Removing Nodes')
-
+    def CaptureResponsesForPage(self):
         
-        # get list of all scalar nodes
-       
-#         lScalarNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLScalarVolumeNode')
-         
-#         for indSeg in range(lScalarNodes.GetNumberOfItems()):
-# 
-#             slScalarNode = lScalarNodes.GetItemAsObject(indSeg)
-#             sName = slScalarNode.GetName()
-#             print(sName)
-#             slicer.mrmlScene.RemoveNode(slScalarNode)
-    
-   
+        print("                  SAVING Current respones for page %i )))))))" %self._lPageQuestionCompositeIndices[self.iCompIndex][0])
+        
+        # for the given page in the composite index, access all question set nodes
+        
+        
+        # for each Question set, iterate over all questions and capture responses
+        
+        
+    #-----------------------------------------------
         

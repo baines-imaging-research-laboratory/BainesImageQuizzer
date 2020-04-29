@@ -35,7 +35,7 @@ class QuestionSet():
             raise Exception("Invalid XML node. Expecting 'QuestionSet', node name was: %s" % sNodeName)
         else:
             # for each child named 'Question' extract labels and options
-            iNumQuestions = oIOXml.GetNumChildren(xNodeQuestionSet, "Question")
+            iNumQuestions = oIOXml.GetNumChildrenByName(xNodeQuestionSet, "Question")
             
             self.id = oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'id')
             self.title = oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'title')
@@ -62,7 +62,7 @@ class QuestionSet():
                 
                 xOptions = oIOXml.GetChildren(xNodeQuestion, 'Option')
 
-                for iIndex in range(0,xOptions.length):
+                for iIndex in range(0,len(xOptions)):
                     
                     xQuestionOption = oIOXml.GetNthChild(xNodeQuestion, 'Option', iIndex)
                     sValue = oIOXml.GetDataInNode(xQuestionOption)
