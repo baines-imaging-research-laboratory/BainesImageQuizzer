@@ -529,7 +529,7 @@ class DicomVolumeDetail(ViewNodeBase):
 
             self.sStudyInstanceUID = database.fileValue(self.sImagePath, tags['studyUID'])
             sExpectedSubjectHierarchyName = sPatientName + ' (' + sPatientID + ')'
-            print(' ~~~ Subject Hierarchy expected name : %s' % sExpectedSubjectHierarchyName)
+#             print(' ~~~ Subject Hierarchy expected name : %s' % sExpectedSubjectHierarchyName)
 
             
             # extract directory that stores the dicom series from defined image path

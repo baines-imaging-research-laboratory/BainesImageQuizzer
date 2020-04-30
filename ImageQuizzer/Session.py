@@ -29,6 +29,7 @@ class Session:
         
 #         self._xRootNode = None
         self._lPageQuestionCompositeIndices = []
+        self._xPageNode = None
         
        
         
@@ -36,8 +37,8 @@ class Session:
 #         self.oQuizWidgets = None
 
 
-    def __del__(self):
-        print('Destructor Session')
+#     def __del__(self):
+#         print('Destructor Session')
 #         self.RemoveNodes()
         
     #-------------------------------------------
@@ -122,7 +123,7 @@ class Session:
         now = datetime.now()
         sLoginTime = now.strftime("%b-%d-%Y-%H-%M-%S")
         
-        print(sLoginTime)
+#         print(sLoginTime)
         dictAttrib = {}
         dictAttrib = {'time': sLoginTime}
         
@@ -164,9 +165,9 @@ class Session:
         iPageIndex = self._lPageQuestionCompositeIndices[self.iCompIndex][0]
         iQuestionSetIndex = self._lPageQuestionCompositeIndices[self.iCompIndex][1]
 
-#         xNodePage = self.oIOXml.GetNthChild(self._xRootNode, 'Page', iPageIndex)
-        xNodePage = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
-        xNodeQuestionSet = self.oIOXml.GetNthChild(xNodePage, 'QuestionSet', iQuestionSetIndex)
+#         self._xPageNode = self.oIOXml.GetNthChild(self._xRootNode, 'Page', iPageIndex)
+        self._xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
+        xNodeQuestionSet = self.oIOXml.GetNthChild(self._xPageNode, 'QuestionSet', iQuestionSetIndex)
         
         oQuestionSet = QuestionSet()
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
@@ -184,7 +185,7 @@ class Session:
         
         
         oImageView = ImageView()
-        oImageView.RunSetup(xNodePage, qQuizWidget)
+        oImageView.RunSetup(self._xPageNode, qQuizWidget)
     
     #-----------------------------------------------
     
@@ -260,12 +261,23 @@ class Session:
     def CaptureResponsesForPage(self):
         
         print("                  SAVING Current respones for page %i )))))))" %self._lPageQuestionCompositeIndices[self.iCompIndex][0])
+        i = self.oIOXml.GetNumChildrenByName(self._xPageNode, 'QuestionSet')
+        print('---------- %i QuestionSets' % i)
         
         # for the given page in the composite index, access all question set nodes
         
         
         # for each Question set, iterate over all questions and capture responses
+        xQuestionSets = self.oIOXml.GetChildren(self._xPageNode,'QuestionSet')
         
+        for indexQSet in range(len(xQuestionSets)):
+#             iNumQuestions = self.oIOXml.GetNumChildrenByName(xQuestionSets, 'Question', indexQSet)
+            xQuestions = self.oIOXml.GetChildren(xQuestionSets, 'Question')
+            for indexQuestion in range(len(xQuestions)):
+                xQ = self.oIOXml.GetNthChild(xQuestionSets, 'Question', indexQuestion)
+                lResponses = xQ.CaptureResponse()
+                print(lResponses)
+            
         
     #-----------------------------------------------
         

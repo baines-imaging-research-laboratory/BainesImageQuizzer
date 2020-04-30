@@ -128,7 +128,7 @@ class UtilsIOXml:
         if (os.path.isfile(sXmlPath)):
              
             try:
-                print(sXmlPath)
+#                 print(sXmlPath)
                 self._xTree = etree.parse(sXmlPath)
                 self._xRootNode = self._xTree.getroot()
 
@@ -213,7 +213,7 @@ class UtilsIOXml:
         for elem in xParentNode.findall(sChildTagName):
             if ( ind == indElem ):
                 xmlChildNode = elem
-                print(elem.tag, elem.attrib, elem.text)
+#                 print(elem.tag, elem.attrib, elem.text)
 
             ind = ind + 1
         
@@ -326,7 +326,6 @@ class UtilsIOXml:
     #-------------------------------------------
 
     def SaveXml(self, sXmlPath, xTree):
-        print('saving')
 
         reparsedRoot = self.prettify(self._xRootNode)
  
