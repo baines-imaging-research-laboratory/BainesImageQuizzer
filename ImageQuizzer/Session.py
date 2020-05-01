@@ -31,6 +31,8 @@ class Session:
         self._lPageQuestionCompositeIndices = []
         self._xPageNode = None
         
+        self._lQuestionSets = []
+        
        
         
 #         self.oUtilsIO = None
@@ -127,8 +129,10 @@ class Session:
         dictAttrib = {}
         dictAttrib = {'time': sLoginTime}
         
+        sNullText = ''
+        
         sUserQuizPath = self.oUtilsIO.GetUserQuizPath()
-        self.oIOXml.AddElementWithAttrib(self.oIOXml.GetRootNode(),'Login',dictAttrib)
+        self.oIOXml.AddElement(self.oIOXml.GetRootNode(),'Login', sNullText, dictAttrib)
         
         self.oIOXml.SaveXml(sUserQuizPath, self.oIOXml.GetXmlTree())
             
@@ -182,7 +186,7 @@ class Session:
         bBuildSuccess, qQuizWidget = oQuestionSet.BuildQuestionSetForm()
         if bBuildSuccess:
             self.slicerQuizLayout.addWidget(qQuizWidget)
-        
+            self._lQuestionSets.append(oQuestionSet)
         
         oImageView = ImageView()
         oImageView.RunSetup(self._xPageNode, qQuizWidget)
@@ -227,6 +231,7 @@ class Session:
         print('(((((((( Prev Text: %s' %sPrevText)
         if "Save" in sPrevText:
             self.CaptureResponsesForPage()
+            self._lQuestionSets = []
             
         
         self.iCompIndex = self.iCompIndex + 1
@@ -268,16 +273,61 @@ class Session:
         
         
         # for each Question set, iterate over all questions and capture responses
-        xQuestionSets = self.oIOXml.GetChildren(self._xPageNode,'QuestionSet')
+#         xQuestionSets = self.oIOXml.GetChildren(self._xPageNode,'QuestionSet')
         
-        for indexQSet in range(len(xQuestionSets)):
+#         for indexQSet in range(len(xQuestionSets)):
 #             iNumQuestions = self.oIOXml.GetNumChildrenByName(xQuestionSets, 'Question', indexQSet)
-            xQuestions = self.oIOXml.GetChildren(xQuestionSets, 'Question')
-            for indexQuestion in range(len(xQuestions)):
-                xQ = self.oIOXml.GetNthChild(xQuestionSets, 'Question', indexQuestion)
-                lResponses = xQ.CaptureResponse()
-                print(lResponses)
+#             xQuestions = self.oIOXml.GetChildren(xQuestionSets, 'Question')
+#             for indexQuestion in range(len(xQuestions)):
+#                 xQ = self.oIOXml.GetNthChild(xQuestionSets, 'Question', indexQuestion)
+#                 lResponses = xQ.CaptureResponse()
+#                 print(lResponses)
+
+        for qsIndex in range(len(self._lQuestionSets)):
+            qs = self._lQuestionSets[qsIndex]
+            lQuestions = []
+            lQuestions = qs.GetQuestionList()
             
+            lResponses = []
+            for qIndex in range(len(lQuestions)):
+                q = lQuestions[qIndex]
+                lResponses = q.CaptureResponse()
+                
+                # add response element to proper node
+                for rIndex in range(len(lResponses)):
+                    xOptionNode = self.GetOptionNode( qsIndex, qIndex, rIndex)
+                    
+                    if not xOptionNode == None:
+                        self.AddResponseElement(xOptionNode, lResponses[rIndex])
+                
+       
+            
+    #-----------------------------------------------
+    def GetOptionNode(self, indQuestionSet, indQuestion, indResponse):
+
+        # get the element node for the option
+        
+        xOptionNode = None
+        
+        xQuestionSetNode = self.oIOXml.GetNthChild(self._xPageNode, 'QuestionSet', indQuestionSet)
+        xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
+        xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', indResponse)
+        
+        
+        return xOptionNode
         
     #-----------------------------------------------
+    def AddResponseElement(self, xOptionNode, sResponse):
+        
+        now = datetime.now()
+        sLoginTime = now.strftime("%b-%d-%Y-%H-%M-%S")
+        
+#         print(sLoginTime)
+        dictAttrib = {}
+        dictAttrib = {'time': sLoginTime}
+        
+        sUserQuizPath = self.oUtilsIO.GetUserQuizPath()
+        self.oIOXml.AddElement(xOptionNode,'Response', sResponse, dictAttrib)
+        
+        self.oIOXml.SaveXml(sUserQuizPath, self.oIOXml.GetXmlTree())
         

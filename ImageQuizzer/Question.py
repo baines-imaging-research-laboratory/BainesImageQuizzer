@@ -22,6 +22,11 @@ class QuestionSet():
         self.title = ''
         self.overwritableResponsesYN = False
         self.ltupQuestions = []
+        self._lQuestions = []
+        
+    #----------
+    def GetQuestionList(self):
+        return self._lQuestions
         
     #-----------------------------------------------
         
@@ -127,6 +132,7 @@ class QuestionSet():
                 bItemSuccess, qWidget = self.question.BuildQuestion()
                 if bItemSuccess :
                     self.qQuizWidgetLayout.addWidget(qWidget)
+                    self._lQuestions.append(self.question)
 
             if i > 0:
                 bBuildSuccess = bBuildSuccess & bItemSuccess
@@ -243,6 +249,8 @@ class RadioQuestion(Question):
     def CaptureResponse(self):
         self.sFnName = sys._getframe().f_code.co_name
         lResponses = []
+
+        print('Responses for Radio Questions')
         for qBtn in self.qGrpBox.findChildren(qt.QRadioButton):
 #             sText = qBtn.text
 #             print(sText)
@@ -294,6 +302,7 @@ class CheckBoxQuestion(Question):
         self.sFnName = sys._getframe().f_code.co_name
         lResponses = []
         
+        print('Responses for Checkbox Questions')
         for qChBox in self.qGrpBox.findChildren(qt.QCheckBox):
 #             sText = qBtn.text
 #             print(sText)
@@ -412,7 +421,7 @@ class IntegerValueQuestion(Question):
         lResponses = []
         
         for qSpinner in self.qGrpBox.findChildren(qt.QSpinBox):
-            lResponses.append(qSpinner.value)
+            lResponses.append(str(qSpinner.value))
 
         return lResponses
 
@@ -470,7 +479,7 @@ class DoubleValueQuestion(Question):
         lResponses = []
         
         for qSpinner in self.qGrpBox.findChildren(qt.QDoubleSpinBox):
-            lResponses.append(qSpinner.value)
+            lResponses.append(str(qSpinner.value))
 
         return lResponses
 

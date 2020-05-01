@@ -293,9 +293,10 @@ class UtilsIOXml:
     
     #-------------------------------------------
 
-    def AddElementWithAttrib(self, xParentNode, sTagName, dictAttrib):
+    def AddElement(self, xParentNode, sTagName, sText, dictAttrib):
         
         elem = xParentNode.makeelement(sTagName, dictAttrib)
+        elem.text = sText
         xParentNode.append(elem)
 
         
