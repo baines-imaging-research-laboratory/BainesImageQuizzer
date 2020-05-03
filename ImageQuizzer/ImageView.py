@@ -441,7 +441,7 @@ class DicomVolumeDetail(ViewNodeBase):
     def __init__(self, xImage, sPageID):
         self.sClassName = type(self).__name__
         self.oIOXml = UtilsIOXml()
-        self.oUtilsMsgs = Utilities()
+        self.oUtilsMsgs = UtilsMsgs()
         self.xImage = xImage
         self.sPageID = sPageID
         

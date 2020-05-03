@@ -27,7 +27,7 @@ class Session:
         self.oUtilsIO = UtilsIO()
         self.iCompIndex = 0
         
-#         self._xRootNode = None
+        self._xRootNode = None
         self._lPageQuestionCompositeIndices = []
         self._xPageNode = None
         
@@ -47,12 +47,12 @@ class Session:
     #        Getters / Setters
     #-------------------------------------------
 
-#     def SetRootNode(self, xNode):
-#         self._xRootNode = xNode
-#         
-#     #----------
-#     def GetRootNode(self):
-#         return self._xRootNode
+    def SetRootNode(self, xNode):
+        self._xRootNode = xNode
+          
+    #----------
+    def GetRootNode(self):
+        return self._xRootNode
 
     
     #----------
@@ -238,6 +238,7 @@ class Session:
         
         if self.iCompIndex > len(self._lPageQuestionCompositeIndices) -1:
             # the last question was answered - exit Slicer
+            self.oIOXml.SaveXml(self.oUtilsIO.GetUserQuizPath(), self.oIOXml.GetXmlTree())
             self.oUtilsMsgs.DisplayInfo("Quiz complete .... Exit")
             slicer.util.exit(status=EXIT_SUCCESS)
 
@@ -329,5 +330,5 @@ class Session:
         sUserQuizPath = self.oUtilsIO.GetUserQuizPath()
         self.oIOXml.AddElement(xOptionNode,'Response', sResponse, dictAttrib)
         
-        self.oIOXml.SaveXml(sUserQuizPath, self.oIOXml.GetXmlTree())
+#         self.oIOXml.SaveXml(sUserQuizPath, self.oIOXml.GetXmlTree())
         

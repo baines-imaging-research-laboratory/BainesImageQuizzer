@@ -83,7 +83,11 @@ class UtilsIOXml:
     def GetRootNode(self):
         return self._xRootNode
     
-
+    #----------
+    def SetRootNode(self, xNodeInput):
+        self._xRootNode = xNodeInput
+        
+        
     #-------------------------------------------
 
     def OpenXml(self, sXmlPath, sRootNodeName):
@@ -303,11 +307,15 @@ class UtilsIOXml:
     #-------------------------------------------
 
     def prettify(self, elem):
+        
         """Return a pretty-printed XML string for the Element.
 
-            NB. 'toprettyxml' sets up the reparsed string for the print function
             - returning the reparsed string lets you use 'writexml' function
                 with indent options
+                
+            (NB. 'toprettyxml' works on a DOM document and sets up the
+                 reparsed string for the print function. 
+                 This function is working only on the string.  )
         """
 
         rough_string = etree.tostring(elem, 'utf-8')
@@ -328,16 +336,15 @@ class UtilsIOXml:
 
     def SaveXml(self, sXmlPath, xTree):
 
+        # by using minidom to reparse the root, we can get a 'pretty' - more user friendly 
+        #    xml document output with indents and newlines using writexml
+        
         reparsedRoot = self.prettify(self._xRootNode)
  
         try:
             with open(sXmlPath, 'w') as xml_outfile:
-                reparsedRoot.writexml(xml_outfile, indent="\t", addindent="\t", newl="\n")
-
-
-#             with open(sXmlPath,'w') as xml_outfile:
-#                 xTree.write(xml_outfile, encoding='unicode', xml_declaration=True)
-            
+                reparsedRoot.writexml(xml_outfile, encoding="utf-8", indent="\t", addindent="\t", newl="\n")
+           
         except:
             raise Exception('Write XML file error: %s' % sXmlPath)
 

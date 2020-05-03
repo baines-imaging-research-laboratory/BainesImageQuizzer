@@ -531,7 +531,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         lqAllBoxes[0].setValue(2)
         lqAllBoxes[1].setValue(102)
         
-        lExpectedResponse = [2,102]
+        lExpectedResponse = ['2','102']
         
         # get actual response list
         lActualResponse = oTest.CaptureResponse()
@@ -562,7 +562,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         lqAllBoxes[0].setValue(2.5)
         lqAllBoxes[1].setValue(102.5)
         
-        lExpectedResponse = [2.5,102.5]
+        lExpectedResponse = ['2.5','102.5']
         
         # get actual response list
         lActualResponse = oTest.CaptureResponse()

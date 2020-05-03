@@ -156,7 +156,8 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         sTestFilename = 'Test_PageQuestions_GenericPath.xml'
         sTestPath = os.path.join(self.sTestDataDir, sTestFilename)
         [bOpenResult, self.xRootNode] = self.oIOXml.OpenXml(sTestPath, 'Session')
-        self.oSession.SetRootNode(self.xRootNode)
+        self.oIOXml.SetRootNode(self.xRootNode)
+#         self.oSession.SetRootNode(self.xRootNode)
         
         lExpectedCompositeIndices = []
         lExpectedCompositeIndices.append([0,0])
