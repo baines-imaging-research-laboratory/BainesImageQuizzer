@@ -303,6 +303,11 @@ class UtilsIOXml:
         elem.text = sText
         xParentNode.append(elem)
 
+#         elem = etree.Element(sTagName)
+#         elem.text = sText
+#         elem.attrib = dictAttrib
+#         xParentNode.insert(1, elem)
+
         
     #-------------------------------------------
 
@@ -420,16 +425,34 @@ class UtilsIO:
     #-------------------------------------------
 
     def SetResourcesQuizPath(self, sSelectedQuiz):
-        self._sResourcesQuizPath = sSelectedQuiz
+
+        self._sResourcesQuizPath = os.path.join(self._sXmlResourcesDir, sSelectedQuiz)
         
     #----------
     def SetQuizUsername(self, sSelectedUser):
         self._sQuizUsername = sSelectedUser
         
     #----------
-       
-#     def SetTestDataFilename(self, sTestDataFilename):
-#         self._sTestDataFilename = sTestDataFilename
+    def SetUserDir(self):
+        self._sUserDir = os.path.join(self._sUsersBaseDir, self._sQuizUsername)
+
+        # check that the user folder exists - if not, create it
+        if not os.path.exists(self._sUserDir):
+            os.makedirs(self._sUserDir)
+
+    #----------
+    def SetUserQuizPath(self, sFilename):
+        
+        self._sUserQuizPath = os.path.join(self._sUserDir, sFilename)
+        
+        
+    #----------
+    def SetModuleDirs(self, sModuleName, sSourceDirForQuiz):
+        sScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
+        sScriptedModulesPath = os.path.dirname(sScriptedModulesPath)
+        self._sXmlResourcesDir = os.path.join(sScriptedModulesPath, sSourceDirForQuiz)
+        self._sUsersBaseDir = os.path.join(sScriptedModulesPath, 'Users')
+        
         
     #----------
     def GetResourcesQuizPath(self):
@@ -455,42 +478,17 @@ class UtilsIO:
     def GetXmlResourcesDir(self):
         return self._sXmlResourcesDir
     
-#     #----------
-#     def GetTestDataFilename(self):
-#         return self._sTestDataFilename
-# 
-#     #----------
-#     def GetTestDataBaseDir(self):
-#         return self._sTestDataBaseDir
-
 
     #-------------------------------------------
     #        Functions
     #-------------------------------------------
-
-    def SetupModuleDirs(self, sModuleName, sSourceDirForQuiz):
-        sScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
-        sScriptedModulesPath = os.path.dirname(sScriptedModulesPath)
-#         self._sXmlResourcesDir = os.path.join(sScriptedModulesPath, 'Resources', 'XML')
-        self._sXmlResourcesDir = os.path.join(sScriptedModulesPath, sSourceDirForQuiz)
-        self._sUsersBaseDir = os.path.join(sScriptedModulesPath, 'Users')
-#         self._sTestDataBaseDir  = os.path.join(sScriptedModulesPath, 'Testing', 'TestData')
-        
-    #-------------------------------------------
-
-    def SetupUserDir(self):
-        self._sUserDir = os.path.join(self._sUsersBaseDir, self._sQuizUsername)
-
-        # check that the user folder exists - if not, create it
-        if not os.path.exists(self._sUserDir):
-            os.makedirs(self._sUserDir)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def PopulateUserQuizFolder(self):
 #         # create user folder if it doesn't exist
 
-        self.SetupUserDir()
+        self.SetUserDir()
             
         # check if quiz file already exists in the user folder - if not, copy from Resources
 
@@ -538,7 +536,7 @@ class UtilsIO:
         
         
         
-    def CloseFiles(self):
-        self.msgBox.information(slicer.util.mainWindow(), 'Information', 'Closing Time')
+#     def CloseFiles(self):
+#         self.msgBox.information(slicer.util.mainWindow(), 'Information', 'Closing Time')
     
         

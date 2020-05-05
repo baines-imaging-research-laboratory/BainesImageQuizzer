@@ -88,7 +88,7 @@ class Session:
         self.SetupButtons()
 
         # open xml and check for root node
-        bSuccess, xRootNode = self._oIOXml.OpenXml(self._oFilesIO.GetResourcesQuizPath(),'Session')
+        bSuccess, xRootNode = self._oIOXml.OpenXml(self._oFilesIO.GetUserQuizPath(),'Session')
 
         if not bSuccess:
             sErrorMsg = "ERROR", "Not a valid quiz - Root node name was not 'Session'"
