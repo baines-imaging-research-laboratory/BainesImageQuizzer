@@ -23,11 +23,10 @@ class Session:
         print('Constructor for Session')
         
         self.oUtilsMsgs = UtilsMsgs()
-        self.oIOXml = UtilsIOXml()
-        self.oUtilsIO = UtilsIO()
+
         self.iCompIndex = 0
         
-        self._xRootNode = None
+#         self._xRootNode = None
         self._lPageQuestionCompositeIndices = []
         self._xPageNode = None
         
@@ -35,8 +34,12 @@ class Session:
         
        
         
-#         self.oUtilsIO = None
-#         self.oQuizWidgets = None
+        self._oIOXml = None
+        self._oFilesIO = None
+        self._oQuizWidgets = None
+        
+        self._btnNext = None
+        self._btnPrevious = None
 
 
 #     def __del__(self):
@@ -47,12 +50,21 @@ class Session:
     #        Getters / Setters
     #-------------------------------------------
 
-    def SetRootNode(self, xNode):
-        self._xRootNode = xNode
-          
     #----------
-    def GetRootNode(self):
-        return self._xRootNode
+    def SetFilesIO(self, oFilesIO):
+        self._oFilesIO = oFilesIO
+
+    #----------
+    def SetIOXml(self, oIOXml):
+        self._oIOXml = oIOXml
+
+#     #----------
+#     def SetRootNode(self, xNode):
+#         self._xRootNode = xNode
+#           
+#     #----------
+#     def GetRootNode(self):
+#         return self._xRootNode
 
     
     #----------
@@ -68,56 +80,70 @@ class Session:
     #        Functions
     #-------------------------------------------
 
-    def RunSetup(self, oUtilsIO_fromLogin, oQuizWidgets):
+    def RunSetup(self, oFilesIO, oQuizWidgets):
+        
+        self._oIOXml = UtilsIOXml()
+        self.SetFilesIO(oFilesIO)
+        self.SetupWidgets(oQuizWidgets)
+        self.SetupButtons()
 
-        self.oUtilsIO = oUtilsIO_fromLogin  # capture IO object
-        
-        sXmlQuizPath = self.oUtilsIO.GetResourcesQuizPath()
-        self.sUsername = self.oUtilsIO.GetQuizUsername()
-        self.slicerLeftMainLayout = oQuizWidgets.GetSlicerLeftMainLayout()
-        self.slicerQuizLayout = oQuizWidgets.GetSlicerQuizLayout()
-#         print(self.sXmlQuizPath)
-#         print(self.sUsername)
-        
-        # TODO: create and add user-timestamp node
-        # TODO: determine study status based on recorded answers
-        
-        # create buttons
-        
-        # Next button
-        self.btnNext = qt.QPushButton("Next")
-        self.btnNext.toolTip = "Display next set of questions."
-        self.btnNext.enabled = True
-        self.btnNext.connect('clicked(bool)',self.onNextButtonClicked)
-        
-        # Back button
-        self.btnPrevious = qt.QPushButton("Previous")
-        self.btnPrevious.toolTip = "Display previous set of questions."
-        self.btnPrevious.enabled = True
-        self.btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
-
-        
         # open xml and check for root node
-        bSuccess, xRootNode = self.oIOXml.OpenXml(sXmlQuizPath,'Session')
+        bSuccess, xRootNode = self._oIOXml.OpenXml(self._oFilesIO.GetResourcesQuizPath(),'Session')
+
         if not bSuccess:
             sErrorMsg = "ERROR", "Not a valid quiz - Root node name was not 'Session'"
             self.oUtilsMsgs.DisplayError(sErrorMsg)
 
         else:
-#             self._xRootNode = xRootNode
-            
             # add date time stamp to Session element
             self.AddSessionLoginTimestamp()
             
-            self.slicerLeftMainLayout.addWidget(self.btnNext)
-            self.slicerLeftMainLayout.addWidget(self.btnPrevious)
-            
-            self.BuildPageQuestionCompositeIndexList()
-            self.EnableButtons()
-            self.DisplayPage()
+            self.slicerLeftMainLayout.addWidget(self._btnNext)
+            self.slicerLeftMainLayout.addWidget(self._btnPrevious)
 
 
-            
+
+        self.BuildPageQuestionCompositeIndexList()
+        self.EnableButtons()
+        self.DisplayPage()
+
+
+    #-----------------------------------------------
+
+   
+    
+    
+    #-----------------------------------------------
+
+    def SetupWidgets(self, oQuizWidgets_Input):
+        
+        self._oQuizWidgets = oQuizWidgets_Input
+    
+        self.slicerLeftMainLayout = self._oQuizWidgets.GetSlicerLeftMainLayout()
+        self.slicerQuizLayout = self._oQuizWidgets.GetSlicerQuizLayout()
+    
+    #-----------------------------------------------
+    
+    def SetupButtons(self):
+        
+        # create buttons
+        
+        # Next button
+        self._btnNext = qt.QPushButton("Next")
+        self._btnNext.toolTip = "Display next set of questions."
+        self._btnNext.enabled = True
+        self._btnNext.connect('clicked(bool)',self.onNextButtonClicked)
+        
+        # Back button
+        self._btnPrevious = qt.QPushButton("Previous")
+        self._btnPrevious.toolTip = "Display previous set of questions."
+        self._btnPrevious.enabled = True
+        self._btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
+
+        
+    
+        
+
     #-----------------------------------------------
 
     def AddSessionLoginTimestamp(self):
@@ -131,10 +157,10 @@ class Session:
         
         sNullText = ''
         
-        sUserQuizPath = self.oUtilsIO.GetUserQuizPath()
-        self.oIOXml.AddElement(self.oIOXml.GetRootNode(),'Login', sNullText, dictAttrib)
+        sUserQuizPath = self._oFilesIO.GetUserQuizPath()
+        self._oIOXml.AddElement(self._oIOXml.GetRootNode(),'Login', sNullText, dictAttrib)
         
-        self.oIOXml.SaveXml(sUserQuizPath, self.oIOXml.GetXmlTree())
+        self._oIOXml.SaveXml(sUserQuizPath, self._oIOXml.GetXmlTree())
             
     #-----------------------------------------------
 
@@ -145,17 +171,14 @@ class Session:
         
         # given the root of the xml document build composite list 
         #     of indexes for each page and the question sets within
-#         oIOXml = UtilsIOXml()
         
         # get Page nodes
-#         xPages = self.oIOXml.GetChildren(self._xRootNode, 'Page')
-        xPages = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
+        xPages = self._oIOXml.GetChildren(self._oIOXml.GetRootNode(), 'Page')
 
         for iPageIndex in range(len(xPages)):
             # for each page - get number of question sets
-#             xPageNode = self.oIOXml.GetNthChild(self._xRootNode, 'Page', iPageIndex)
-            xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
-            xQuestionSets = self.oIOXml.GetChildren(xPageNode,'QuestionSet')
+            xPageNode = self._oIOXml.GetNthChild(self._oIOXml.GetRootNode(), 'Page', iPageIndex)
+            xQuestionSets = self._oIOXml.GetChildren(xPageNode,'QuestionSet')
             
             for iQuestionSetIndex in range(len(xQuestionSets)):
                 self._lPageQuestionCompositeIndices.append([iPageIndex, iQuestionSetIndex])
@@ -169,9 +192,8 @@ class Session:
         iPageIndex = self._lPageQuestionCompositeIndices[self.iCompIndex][0]
         iQuestionSetIndex = self._lPageQuestionCompositeIndices[self.iCompIndex][1]
 
-#         self._xPageNode = self.oIOXml.GetNthChild(self._xRootNode, 'Page', iPageIndex)
-        self._xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
-        xNodeQuestionSet = self.oIOXml.GetNthChild(self._xPageNode, 'QuestionSet', iQuestionSetIndex)
+        self._xPageNode = self._oIOXml.GetNthChild(self._oIOXml.GetRootNode(), 'Page', iPageIndex)
+        xNodeQuestionSet = self._oIOXml.GetNthChild(self._xPageNode, 'QuestionSet', iQuestionSetIndex)
         
         oQuestionSet = QuestionSet()
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
@@ -197,38 +219,38 @@ class Session:
         
         # beginning of quiz
         if (self.iCompIndex == 0):
-            self.btnNext.enabled = True
-            self.btnPrevious.enabled = False
+            self._btnNext.enabled = True
+            self._btnPrevious.enabled = False
 
         # end of quiz
         elif (self.iCompIndex == len(self._lPageQuestionCompositeIndices) - 1):
-            self.btnNext.enabled = True
-            self.btnPrevious.enabled = True
+            self._btnNext.enabled = True
+            self._btnPrevious.enabled = True
 
         # somewhere in middle
         else:
-            self.btnNext.enabled = True
-            self.btnPrevious.enabled = True
+            self._btnNext.enabled = True
+            self._btnPrevious.enabled = True
 
         # assign button description           
         if (self.iCompIndex == len(self._lPageQuestionCompositeIndices) - 1):
             # last question of last image view
-            self.btnNext.setText("Save and Finish")
+            self._btnNext.setText("Save and Finish")
 
         else:
             # assume multiple questions in the question set
-            self.btnNext.setText("Next")
+            self._btnNext.setText("Next")
             # if last question in the question set - save answers and continue to next
             if not( self._lPageQuestionCompositeIndices[self.iCompIndex][0] == self._lPageQuestionCompositeIndices[self.iCompIndex + 1][0]):
-                self.btnNext.setText("Save and Continue")
+                self._btnNext.setText("Save and Continue")
 
     #-----------------------------------------------
 
     def onNextButtonClicked(self):
 
         # check if a save is required before displaying next page
-        sPrevText = self.btnNext.text
-        print('(((((((( Prev Text: %s' %sPrevText)
+        sPrevText = self._btnNext.text
+#         print('(((((((( Prev Text: %s' %sPrevText)
         if "Save" in sPrevText:
             self.CaptureResponsesForPage()
             self._lQuestionSets = []
@@ -238,7 +260,7 @@ class Session:
         
         if self.iCompIndex > len(self._lPageQuestionCompositeIndices) -1:
             # the last question was answered - exit Slicer
-            self.oIOXml.SaveXml(self.oUtilsIO.GetUserQuizPath(), self.oIOXml.GetXmlTree())
+            self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
             self.oUtilsMsgs.DisplayInfo("Quiz complete .... Exit")
             slicer.util.exit(status=EXIT_SUCCESS)
 
@@ -266,9 +288,9 @@ class Session:
 
     def CaptureResponsesForPage(self):
         
-        print("                  SAVING Current respones for page %i )))))))" %self._lPageQuestionCompositeIndices[self.iCompIndex][0])
-        i = self.oIOXml.GetNumChildrenByName(self._xPageNode, 'QuestionSet')
-        print('---------- %i QuestionSets' % i)
+#         print("                  SAVING Current respones for page %i )))))))" %self._lPageQuestionCompositeIndices[self.iCompIndex][0])
+        i = self._oIOXml.GetNumChildrenByName(self._xPageNode, 'QuestionSet')
+#         print('---------- %i QuestionSets' % i)
         
         # for the given page in the composite index, access all question set nodes
         
@@ -310,9 +332,9 @@ class Session:
         
         xOptionNode = None
         
-        xQuestionSetNode = self.oIOXml.GetNthChild(self._xPageNode, 'QuestionSet', indQuestionSet)
-        xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
-        xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', indResponse)
+        xQuestionSetNode = self._oIOXml.GetNthChild(self._xPageNode, 'QuestionSet', indQuestionSet)
+        xQuestionNode = self._oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
+        xOptionNode = self._oIOXml.GetNthChild(xQuestionNode, 'Option', indResponse)
         
         
         return xOptionNode
@@ -323,12 +345,11 @@ class Session:
         now = datetime.now()
         sLoginTime = now.strftime("%b-%d-%Y-%H-%M-%S")
         
-#         print(sLoginTime)
         dictAttrib = {}
         dictAttrib = {'time': sLoginTime}
         
-        sUserQuizPath = self.oUtilsIO.GetUserQuizPath()
-        self.oIOXml.AddElement(xOptionNode,'Response', sResponse, dictAttrib)
+        sUserQuizPath = self._oFilesIO.GetUserQuizPath()
+        self._oIOXml.AddElement(xOptionNode,'Response', sResponse, dictAttrib)
         
 #         self.oIOXml.SaveXml(sUserQuizPath, self.oIOXml.GetXmlTree())
         

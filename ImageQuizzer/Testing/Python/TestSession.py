@@ -96,14 +96,10 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         
         self.sModuleName = 'ImageQuizzer'
         self.sUsername = 'Tests'
+        self.sSourceDirForQuizTests = 'Testing/TestData/Test_Session'
+
         
-        
-#         sUserBasePath = oUtilsIO.GetUsersBasePath()
-#         sUserDir = os.path.join(oUtilsIO.GetUsersBasePath(), sUsername)
-#         
-#         # check that a Test folder exists - if not, create it
-#         if not os.path.exists(sUserDir):
-#             os.makedirs(sUserDir)
+        self._oFilesIO = None
         
         
     #------------------------------------------- 
@@ -114,20 +110,13 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         slicer.mrmlScene.Clear(0)
         self.sClassName = type(self).__name__
 
-        oUtilsIO = UtilsIO()
-        oUtilsIO.SetupModuleDirs(self.sModuleName)
-        oUtilsIO.SetQuizUsername(self.sUsername)
-        oUtilsIO.SetupUserDir()
+        self._oFilesIO = UtilsIO()
+        self._oFilesIO.SetupModuleDirs(self.sModuleName, self.sSourceDirForQuizTests)
+        self._oFilesIO.SetQuizUsername(self.sUsername)
+        self._oFilesIO.SetupUserDir()
 
-#         # define path for test data
-        self.sTestDataDir = os.path.join(oUtilsIO.GetTestDataBaseDir(), 'Test_Session')
-        self.oIOXml = UtilsIOXml()
+        self._oIOXml = UtilsIOXml()
 
-        # create Test folder in User area
-        # clear previous tests
-        # copy testing file into 
-
-       
     #------------------------------------------- 
 
     def runTest(self ):
@@ -141,6 +130,8 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         tupResults = []
         tupResults.append(self.test_BuildPageQuestionCompositeIndexList())
 
+#         bTestResult = self.oSession.readPresentationInstructions()
+
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
  
@@ -151,13 +142,13 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         bTestResult = True
         self.fnName = sys._getframe().f_code.co_name
         
-        self.oSession = Session()
         # copy test file to user area
         sTestFilename = 'Test_PageQuestions_GenericPath.xml'
-        sTestPath = os.path.join(self.sTestDataDir, sTestFilename)
-        [bOpenResult, self.xRootNode] = self.oIOXml.OpenXml(sTestPath, 'Session')
-        self.oIOXml.SetRootNode(self.xRootNode)
-#         self.oSession.SetRootNode(self.xRootNode)
+        sTestPath = os.path.join(self._oFilesIO.GetXmlResourcesDir(), sTestFilename)
+        
+        
+        [bOpenResult, self.xRootNode] = self._oIOXml.OpenXml(sTestPath, 'Session')
+        self._oIOXml.SetRootNode(self.xRootNode)
         
         lExpectedCompositeIndices = []
         lExpectedCompositeIndices.append([0,0])
@@ -166,6 +157,9 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         lExpectedCompositeIndices.append([2,0])
         
         
+        self.oSession = Session()
+        self.oSession.SetFilesIO(self._oFilesIO)
+        self.oSession.SetIOXml(self._oIOXml)
         self.oSession.BuildPageQuestionCompositeIndexList()
         lCompositeIndicesResult = self.oSession.GetCompositeIndicesList()
         
@@ -174,7 +168,6 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         else:
             bTestResult = False
 
-#         bTestResult = self.oSession.readPresentationInstructions()
         tupResult = self.fnName, bTestResult
         return tupResult
 

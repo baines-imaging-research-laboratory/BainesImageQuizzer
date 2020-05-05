@@ -49,10 +49,11 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         ScriptedLoadableModuleWidget.__init__(self,parent)
         
         sModuleName = 'ImageQuizzer'
+        sSourceDirForQuiz = 'Resources/XML'
 
         self.oUtilsMsgs = UtilsMsgs()
         self.oUtilsIO = UtilsIO()
-        self.oUtilsIO.SetupModuleDirs(sModuleName)
+        self.oUtilsIO.SetupModuleDirs(sModuleName, sSourceDirForQuiz)
         self.oUtilsIO.SetupUserDir()
         
 #         # test that Users folder exists - if not, create it

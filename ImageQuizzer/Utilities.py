@@ -397,17 +397,19 @@ class UtilsIO:
     def __init__(self, parent=None):
         self.parent = parent
         
-        self._sXmlResourcesDir = ''
-        self._sUsersBaseDir = ''
-        self._sTestDataBaseDir = ''
-        self._sUserDir = ''
+        self._sXmlResourcesDir = '' # folder - holds XML quiz files to copy to user
+        self._sUsersBaseDir = ''    # folder - parent dir to all user folders
+        self._sUserDir = ''         # folder - holds quiz for specific user
 
-        self._sQuizFilename = ''
-        self._sQuizUsername = ''
+        self._sQuizFilename = ''    # quiz filename only (no dir)
+        self._sQuizUsername = ''    # name of user taking the quiz
+
+        self._sResourcesQuizPath = ''   # full path (dir/file) of quiz to copy to user
+        self._sUserQuizPath = ''        # full path (dir/file) for user's quiz
+
+        self._sTestDataBaseDir = ''
         self._sTestDataFilename = ''
 
-        self._sResourcesQuizPath = ''
-        self._sUserQuizPath = ''
 
 
     def setup(self):
@@ -425,8 +427,9 @@ class UtilsIO:
         self._sQuizUsername = sSelectedUser
         
     #----------
-    def SetTestDataFilename(self, sTestDataFilename):
-        self._sTestDataFilename = sTestDataFilename
+       
+#     def SetTestDataFilename(self, sTestDataFilename):
+#         self._sTestDataFilename = sTestDataFilename
         
     #----------
     def GetResourcesQuizPath(self):
@@ -452,25 +455,26 @@ class UtilsIO:
     def GetXmlResourcesDir(self):
         return self._sXmlResourcesDir
     
-    #----------
-    def GetTestDataFilename(self):
-        return self._sTestDataFilename
-
-    #----------
-    def GetTestDataBaseDir(self):
-        return self._sTestDataBaseDir
+#     #----------
+#     def GetTestDataFilename(self):
+#         return self._sTestDataFilename
+# 
+#     #----------
+#     def GetTestDataBaseDir(self):
+#         return self._sTestDataBaseDir
 
 
     #-------------------------------------------
     #        Functions
     #-------------------------------------------
 
-    def SetupModuleDirs(self, sModuleName):
+    def SetupModuleDirs(self, sModuleName, sSourceDirForQuiz):
         sScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
         sScriptedModulesPath = os.path.dirname(sScriptedModulesPath)
-        self._sXmlResourcesDir = os.path.join(sScriptedModulesPath, 'Resources', 'XML')
+#         self._sXmlResourcesDir = os.path.join(sScriptedModulesPath, 'Resources', 'XML')
+        self._sXmlResourcesDir = os.path.join(sScriptedModulesPath, sSourceDirForQuiz)
         self._sUsersBaseDir = os.path.join(sScriptedModulesPath, 'Users')
-        self._sTestDataBaseDir  = os.path.join(sScriptedModulesPath, 'Testing', 'TestData')
+#         self._sTestDataBaseDir  = os.path.join(sScriptedModulesPath, 'Testing', 'TestData')
         
     #-------------------------------------------
 
