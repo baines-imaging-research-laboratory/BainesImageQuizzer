@@ -22,15 +22,15 @@ class Session:
         self.parent = parent
         print('Constructor for Session')
         
-        self.oUtilsMsgs = UtilsMsgs()
+        self._oMsgUtil = UtilsMsgs()
 
-        self.iCompIndex = 0
+        self._iCompIndex = 0
         
 #         self._xRootNode = None
-        self._lPageQuestionCompositeIndices = []
+        self._l2iPageQuestionCompositeIndices = []
         self._xPageNode = None
         
-        self._lQuestionSets = []
+        self._loQuestionSets = []
         
        
         
@@ -69,11 +69,11 @@ class Session:
     
     #----------
     def SetCompositeIndicesList(self,lIndices):
-        self._lPageQuestionCompositeIndices = lIndices
+        self._l2iPageQuestionCompositeIndices = lIndices
         
     #----------
     def GetCompositeIndicesList(self):
-        return self._lPageQuestionCompositeIndices
+        return self._l2iPageQuestionCompositeIndices
 
 
     #-------------------------------------------
@@ -181,7 +181,7 @@ class Session:
             xQuestionSets = self._oIOXml.GetChildren(xPageNode,'QuestionSet')
             
             for iQuestionSetIndex in range(len(xQuestionSets)):
-                self._lPageQuestionCompositeIndices.append([iPageIndex, iQuestionSetIndex])
+                self._l2iPageQuestionCompositeIndices.append([iPageIndex, iQuestionSetIndex])
         
 
     #-----------------------------------------------
@@ -189,8 +189,8 @@ class Session:
     def DisplayPage(self):
         # extract page and question set indices from the current composite index
         
-        iPageIndex = self._lPageQuestionCompositeIndices[self.iCompIndex][0]
-        iQuestionSetIndex = self._lPageQuestionCompositeIndices[self.iCompIndex][1]
+        iPageIndex = self._l2iPageQuestionCompositeIndices[self._iCompIndex][0]
+        iQuestionSetIndex = self._l2iPageQuestionCompositeIndices[self._iCompIndex][1]
 
         self._xPageNode = self._oIOXml.GetNthChild(self._oIOXml.GetRootNode(), 'Page', iPageIndex)
         xNodeQuestionSet = self._oIOXml.GetNthChild(self._xPageNode, 'QuestionSet', iQuestionSetIndex)
@@ -208,7 +208,7 @@ class Session:
         bBuildSuccess, qQuizWidget = oQuestionSet.BuildQuestionSetForm()
         if bBuildSuccess:
             self.slicerQuizLayout.addWidget(qQuizWidget)
-            self._lQuestionSets.append(oQuestionSet)
+            self._loQuestionSets.append(oQuestionSet)
         
         oImageView = ImageView()
         oImageView.RunSetup(self._xPageNode, qQuizWidget)
@@ -218,12 +218,12 @@ class Session:
     def EnableButtons(self):
         
         # beginning of quiz
-        if (self.iCompIndex == 0):
+        if (self._iCompIndex == 0):
             self._btnNext.enabled = True
             self._btnPrevious.enabled = False
 
         # end of quiz
-        elif (self.iCompIndex == len(self._lPageQuestionCompositeIndices) - 1):
+        elif (self._iCompIndex == len(self._l2iPageQuestionCompositeIndices) - 1):
             self._btnNext.enabled = True
             self._btnPrevious.enabled = True
 
@@ -233,7 +233,7 @@ class Session:
             self._btnPrevious.enabled = True
 
         # assign button description           
-        if (self.iCompIndex == len(self._lPageQuestionCompositeIndices) - 1):
+        if (self._iCompIndex == len(self._l2iPageQuestionCompositeIndices) - 1):
             # last question of last image view
             self._btnNext.setText("Save and Finish")
 
@@ -241,43 +241,57 @@ class Session:
             # assume multiple questions in the question set
             self._btnNext.setText("Next")
             # if last question in the question set - save answers and continue to next
-            if not( self._lPageQuestionCompositeIndices[self.iCompIndex][0] == self._lPageQuestionCompositeIndices[self.iCompIndex + 1][0]):
+            if not( self._l2iPageQuestionCompositeIndices[self._iCompIndex][0] == self._l2iPageQuestionCompositeIndices[self._iCompIndex + 1][0]):
                 self._btnNext.setText("Save and Continue")
 
     #-----------------------------------------------
 
     def onNextButtonClicked(self):
 
+        sMsg = ''
         # check if a save is required before displaying next page
         sPrevText = self._btnNext.text
 #         print('(((((((( Prev Text: %s' %sPrevText)
         if "Save" in sPrevText:
-            self.CaptureResponsesForPage()
-            self._lQuestionSets = []
+            bResponsesCapturedForPage = False
+            bResponsesCapturedForPage, sMsg = self.CaptureResponsesForPage()
+            if bResponsesCapturedForPage == True:
+                self._loQuestionSets = []
+                self.GoToNextPage()
+            else:
+                self._oMsgUtil.DisplayWarning(sMsg)
+        else:
+            self.GoToNextPage()
+            
             
         
-        self.iCompIndex = self.iCompIndex + 1
+    #-----------------------------------------------
+            
+    def GoToNextPage(self):
         
-        if self.iCompIndex > len(self._lPageQuestionCompositeIndices) -1:
+        self._iCompIndex = self._iCompIndex + 1
+            
+        if self._iCompIndex > len(self._l2iPageQuestionCompositeIndices) -1:
             # the last question was answered - exit Slicer
             self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
-            self.oUtilsMsgs.DisplayInfo("Quiz complete .... Exit")
+            self._oMsgUtil.DisplayInfo("Quiz complete .... Exit")
             slicer.util.exit(status=EXIT_SUCCESS)
 
 
         self.EnableButtons()
 
         self.DisplayPage()
+        
 
     #-----------------------------------------------
 
     def onPreviousButtonClicked(self):
 
 
-        self.iCompIndex = self.iCompIndex - 1
-        if self.iCompIndex < 0:
+        self._iCompIndex = self._iCompIndex - 1
+        if self._iCompIndex < 0:
             # reset to beginning
-            self.iCompIndex = 0
+            self._iCompIndex = 0
         
         self.EnableButtons()
         
@@ -288,40 +302,38 @@ class Session:
 
     def CaptureResponsesForPage(self):
         
-#         print("                  SAVING Current respones for page %i )))))))" %self._lPageQuestionCompositeIndices[self.iCompIndex][0])
-        i = self._oIOXml.GetNumChildrenByName(self._xPageNode, 'QuestionSet')
-#         print('---------- %i QuestionSets' % i)
-        
-        # for the given page in the composite index, access all question set nodes
-        
-        
-        # for each Question set, iterate over all questions and capture responses
-#         xQuestionSets = self.oIOXml.GetChildren(self._xPageNode,'QuestionSet')
-        
-#         for indexQSet in range(len(xQuestionSets)):
-#             iNumQuestions = self.oIOXml.GetNumChildrenByName(xQuestionSets, 'Question', indexQSet)
-#             xQuestions = self.oIOXml.GetChildren(xQuestionSets, 'Question')
-#             for indexQuestion in range(len(xQuestions)):
-#                 xQ = self.oIOXml.GetNthChild(xQuestionSets, 'Question', indexQuestion)
-#                 lResponses = xQ.CaptureResponse()
-#                 print(lResponses)
+        # set defaults 
+        bResponsesCapturedForPage = True
+        sMsg = ''
+            
+            
 
-        for qsIndex in range(len(self._lQuestionSets)):
-            qs = self._lQuestionSets[qsIndex]
-            lQuestions = []
-            lQuestions = qs.GetQuestionList()
+        for indQSet in range(len(self._loQuestionSets)):
+            oQuestionSet = self._loQuestionSets[indQSet]
+            loQuestions = []
+            loQuestions = oQuestionSet.GetQuestionList()
             
             lResponses = []
-            for qIndex in range(len(lQuestions)):
-                q = lQuestions[qIndex]
-                lResponses = q.CaptureResponse()
+            for indQuestion in range(len(loQuestions)):
+                oQuestion = loQuestions[indQuestion]
+                bResponseCapturedForQuestion = False
                 
-                # add response element to proper node
-                for rIndex in range(len(lResponses)):
-                    xOptionNode = self.GetOptionNode( qsIndex, qIndex, rIndex)
-                    
-                    if not xOptionNode == None:
-                        self.AddResponseElement(xOptionNode, lResponses[rIndex])
+                bResponseCapturedForQuestion, lResponses, sMsg = oQuestion.CaptureResponse()
+
+
+                if bResponseCapturedForQuestion == True:                
+                    # add response element to proper node
+                    for indResponse in range(len(lResponses)):
+                        xOptionNode = self.GetOptionNode( indQSet, indQuestion, indResponse)
+                        
+                        if not xOptionNode == None:
+                            self.AddResponseElement(xOptionNode, lResponses[indResponse])
+                else:
+                    # something on the page was not entered
+                    bResponsesCapturedForPage = False
+                    break
+                
+        return bResponsesCapturedForPage, sMsg
                 
        
             
