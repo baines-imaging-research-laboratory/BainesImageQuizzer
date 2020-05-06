@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Session>
 	<Page name="Patient1" descriptor="PlanningCT">
 		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Red">
@@ -24,9 +24,6 @@
 		<QuestionSet id="QS-Intro #2" title="How to - Instructions">
 			<Question type="InfoBox" descriptor="Instructions">
 				<Option>This is how to run the quiz : .....</Option>
-			</Question>
-			<Question type="Text" descriptor="First Impressions">
-				<Option>Enter your thoughts : </Option>
 			</Question>
 		</QuestionSet>
 	</Page>
@@ -56,11 +53,14 @@
 				<Option>Maybe</Option>
 				<Option>No</Option>
 			</Question>
-			<Question type="IntegerValue" title="Tumour Observation" min="-5" max="5">
+			<Question type="IntegerValue" descriptor="Tumour Observation" min="-5" max="5">
 				<Option>Enter number of tumours:</Option>
 			</Question>
-			<Question type="DoubleValue" title="" min="10">
+			<Question type="DoubleValue" descriptor="" max="50">
 				<Option>Enter RECIST of largest tumour:</Option>
+			</Question>
+			<Question type="Text" descriptor="First Impressions">
+				<Option>Enter your thoughts : </Option>
 			</Question>
 		</QuestionSet>
 	</Page>
@@ -120,6 +120,7 @@
 				<Option>I need sleep.</Option>
 				<Option>I need a vacation.</Option>
 				<Option>I need help.</Option>
+				<Option>Life is good.</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
@@ -221,7 +222,7 @@
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\BrainDWI\Segment_1-label.nrrd</Path>
 		</Image>
 		<QuestionSet id="QS-Checkup" title="Your thoughts?">
-			<Question type="Radio" descriptor="Milestone checker">
+			<Question type="Checkbox" descriptor="Milestone checker">
 				<Option>Working at home is comfortable.</Option>
 				<Option>Dan needs a hobby.</Option>
 				<Option>Buddy thinks life can't get any better.</Option>

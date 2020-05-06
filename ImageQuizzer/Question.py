@@ -22,6 +22,11 @@ class QuestionSet():
         self.title = ''
         self.overwritableResponsesYN = False
         self.ltupQuestions = []
+        self._loQuestions = []
+        
+    #----------
+    def GetQuestionList(self):
+        return self._loQuestions
         
     #-----------------------------------------------
         
@@ -35,7 +40,7 @@ class QuestionSet():
             raise Exception("Invalid XML node. Expecting 'QuestionSet', node name was: %s" % sNodeName)
         else:
             # for each child named 'Question' extract labels and options
-            iNumQuestions = oIOXml.GetNumChildren(xNodeQuestionSet, "Question")
+            iNumQuestions = oIOXml.GetNumChildrenByName(xNodeQuestionSet, "Question")
             
             self.id = oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'id')
             self.title = oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'title')
@@ -62,7 +67,7 @@ class QuestionSet():
                 
                 xOptions = oIOXml.GetChildren(xNodeQuestion, 'Option')
 
-                for iIndex in range(0,xOptions.length):
+                for iIndex in range(0,len(xOptions)):
                     
                     xQuestionOption = oIOXml.GetNthChild(xNodeQuestion, 'Option', iIndex)
                     sValue = oIOXml.GetDataInNode(xQuestionOption)
@@ -127,6 +132,7 @@ class QuestionSet():
                 bItemSuccess, qWidget = self.question.BuildQuestion()
                 if bItemSuccess :
                     self.qQuizWidgetLayout.addWidget(qWidget)
+                    self._loQuestions.append(self.question)
 
             if i > 0:
                 bBuildSuccess = bBuildSuccess & bItemSuccess
@@ -243,15 +249,26 @@ class RadioQuestion(Question):
     def CaptureResponse(self):
         self.sFnName = sys._getframe().f_code.co_name
         lResponses = []
+        bSuccess = False
+        bResponseFound = False
+        sMsg = ''
+
+#         print('Responses for Radio Questions')
         for qBtn in self.qGrpBox.findChildren(qt.QRadioButton):
 #             sText = qBtn.text
 #             print(sText)
             if qBtn.isChecked():
                 lResponses.append('y')
+                bResponseFound = True
             else:
                 lResponses.append('n')
 
-        return lResponses
+        if bResponseFound:
+            bSuccess = True
+        else:
+            sMsg = 'You missed a radio option for: ' + self.sGrpBoxTitle
+
+        return bSuccess, lResponses, sMsg
 
 #========================================================================================
 #                     Class CheckBoxQuestion
@@ -293,16 +310,26 @@ class CheckBoxQuestion(Question):
     def CaptureResponse(self):
         self.sFnName = sys._getframe().f_code.co_name
         lResponses = []
+        bSuccess = False
+        bResponseFound = False
+        sMsg = ''
         
+        print('Responses for Checkbox Questions')
         for qChBox in self.qGrpBox.findChildren(qt.QCheckBox):
 #             sText = qBtn.text
 #             print(sText)
             if qChBox.isChecked():
                 lResponses.append('y')
+                bResponseFound = True
             else:
                 lResponses.append('n')
+                
+        if bResponseFound:
+            bSuccess = True
+        else:
+            sMsg = 'You missed a check box option for: ' + self.sGrpBoxTitle
 
-        return lResponses
+        return bSuccess, lResponses, sMsg
 
 
 #========================================================================================
@@ -348,15 +375,26 @@ class TextQuestion(Question):
     
     def CaptureResponse(self):
         self.sFnName = sys._getframe().f_code.co_name
-        print('Responses for Text Questions')
+#         print('Responses for Text Questions')
         lResponses = []
+        bSuccess = False
+        bResponseFound = False
+        sMsg = ''
         
         for qTextBox in self.qGrpBox.findChildren(qt.QLineEdit):
-#             sText = qBtn.text
+            sText = qTextBox.text
 #             print(sText)
-            lResponses.append(qTextBox.text)
+            if not sText =='':
+                bResponseFound = True
+                lResponses.append(qTextBox.text)
+                
 
-        return lResponses
+        if bResponseFound:
+            bSuccess = True
+        else:
+            sMsg = 'You missed a text response for: ' + self.sGrpBoxTitle
+            
+        return bSuccess, lResponses, sMsg
 
 #========================================================================================
 #                     Class IntegerValueQuestion
@@ -410,11 +448,13 @@ class IntegerValueQuestion(Question):
         self.sFnName = sys._getframe().f_code.co_name
         print('Responses for Integer Value Questions')
         lResponses = []
+        bSuccess = True
+        sMsg = ''
         
         for qSpinner in self.qGrpBox.findChildren(qt.QSpinBox):
-            lResponses.append(qSpinner.value)
+            lResponses.append(str(qSpinner.value))
 
-        return lResponses
+        return bSuccess, lResponses, sMsg
 
 #========================================================================================
 #                     Class DoubleValueQuestion
@@ -468,11 +508,13 @@ class DoubleValueQuestion(Question):
         self.sFnName = sys._getframe().f_code.co_name
         print('Responses for Double Value Questions')
         lResponses = []
+        bSuccess = True
+        sMsg = ''
         
         for qSpinner in self.qGrpBox.findChildren(qt.QDoubleSpinBox):
-            lResponses.append(qSpinner.value)
+            lResponses.append(str(qSpinner.value))
 
-        return lResponses
+        return bSuccess, lResponses, sMsg
 
 
 #========================================================================================
@@ -520,9 +562,11 @@ class InfoBox(Question):
     def CaptureResponse(self):
         self.sFnName = sys._getframe().f_code.co_name
         print('Responses for Info Box = NONE')
+        bSuccess = True
+        sMsg = ''
 
         lResponses = []
         
-        return lResponses
+        return bSuccess, lResponses, sMsg
         
     

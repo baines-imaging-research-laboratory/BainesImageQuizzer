@@ -10,11 +10,8 @@ from Utilities import *
 
 from DICOMLib import DICOMUtils
 
-import xml
-from xml.dom import minidom
 import ssl
 from DICOMLib.DICOMUtils import loadPatientByUID
-from vtkmodules.vtkCommonKitPython import vtkPassInputTypeAlgorithm
 
 ##########################################################################
 #
@@ -50,7 +47,7 @@ class ImageView:
 
         # display Images
         self.xImages = self.oIOXml.GetChildren(xPageNode, 'Image')
-        self.iNumImages = self.oIOXml.GetNumChildren(xPageNode, 'Image')
+        self.iNumImages = self.oIOXml.GetNumChildrenByName(xPageNode, 'Image')
         
         # clear views from previous page
         self.ClearImagesAndSegmentations()
@@ -444,7 +441,7 @@ class DicomVolumeDetail(ViewNodeBase):
     def __init__(self, xImage, sPageID):
         self.sClassName = type(self).__name__
         self.oIOXml = UtilsIOXml()
-        self.oUtilsMsgs = Utilities()
+        self.oUtilsMsgs = UtilsMsgs()
         self.xImage = xImage
         self.sPageID = sPageID
         
@@ -532,7 +529,7 @@ class DicomVolumeDetail(ViewNodeBase):
 
             self.sStudyInstanceUID = database.fileValue(self.sImagePath, tags['studyUID'])
             sExpectedSubjectHierarchyName = sPatientName + ' (' + sPatientID + ')'
-            print(' ~~~ Subject Hierarchy expected name : %s' % sExpectedSubjectHierarchyName)
+#             print(' ~~~ Subject Hierarchy expected name : %s' % sExpectedSubjectHierarchyName)
 
             
             # extract directory that stores the dicom series from defined image path

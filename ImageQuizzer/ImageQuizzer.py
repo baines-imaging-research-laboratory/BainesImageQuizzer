@@ -28,6 +28,7 @@ class ImageQuizzer(ScriptedLoadableModule):
         self.parent.acknowledgementText = """ Baines Imaging Research Laboratory. 
         Principal Investigator: Dr. Aaron Ward.
         """
+
     
 
 ##########################################################################
@@ -48,17 +49,17 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         ScriptedLoadableModuleWidget.__init__(self,parent)
         
         sModuleName = 'ImageQuizzer'
+        sSourceDirForQuiz = 'Resources/XML'
 
         self.oUtilsMsgs = UtilsMsgs()
-        self.oUtilsIO = UtilsIO()
-        self.oUtilsIO.SetupModuleDirs(sModuleName)
-        self.oUtilsIO.SetupUserDir()
+        self.oFilesIO = UtilsIO()
+        self.oFilesIO.SetModuleDirs(sModuleName, sSourceDirForQuiz)
+        self.oFilesIO.SetUserDir()
         
 #         # test that Users folder exists - if not, create it
-#         if not os.path.exists(self.oUtilsIO.GetUsersBaseDir()):
-#             os.makedirs(self.oUtilsIO.GetUsersBaseDir())
+#         if not os.path.exists(self.oFilesIO.GetUsersBaseDir()):
+#             os.makedirs(self.oFilesIO.GetUsersBaseDir())
         
-
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def setup(self):
@@ -147,7 +148,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
  
         # get quiz filename
         self.quizInputFileDialog = qt.QFileDialog()
-        sSelectedQuiz = self.quizInputFileDialog.getOpenFileName(self.qUserLoginWidget, "Open File", self.oUtilsIO.GetXmlResourcesDir(), "XML files (*.xml)" )
+        sSelectedQuiz = self.quizInputFileDialog.getOpenFileName(self.qUserLoginWidget, "Open File", self.oFilesIO.GetXmlResourcesDir(), "XML files (*.xml)" )
  
         # check that file was selected
         if not sSelectedQuiz:
@@ -162,7 +163,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             self.qUserLoginWidget.show()
             self.qUserLoginWidget.activateWindow()
             
-            self.oUtilsIO.SetQuizPath(sSelectedQuiz)
+            self.oFilesIO.SetResourcesQuizPath(sSelectedQuiz)
          
  
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -174,14 +175,14 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             msgBox.critical(0,"ERROR","No user name was entered")
         else:
             
-            self.oUtilsIO.SetQuizUsername(self.qLineUserName.text)
+            self.oFilesIO.SetQuizUsername(self.qLineUserName.text)
             
             # copy file from Resource into user folder
-            if self.oUtilsIO.PopulateUserQuizFolder(): # success
+            if self.oFilesIO.PopulateUserQuizFolder(): # success
                 # start the session
                 self.slicerLeftWidget.activateWindow()
                 oSession = Session()
-                oSession.RunSetup(self.oUtilsIO, self.oQuizWidgets)
+                oSession.RunSetup(self.oFilesIO, self.oQuizWidgets)
                 try:
                     #provide as much room as possible for the quiz
                     qDataProbeCollapsibleButton = slicer.util.mainWindow().findChild("QWidget","DataProbeCollapsibleWidget")

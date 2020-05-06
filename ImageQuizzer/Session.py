@@ -9,9 +9,9 @@ from Question import *
 from ImageView import *
 #from ImageQuizzer import *
 
-import xml
-from xml.dom import minidom
 from slicer.util import EXIT_SUCCESS
+from datetime import datetime
+
 
 #-----------------------------------------------
 
@@ -22,81 +22,145 @@ class Session:
         self.parent = parent
         print('Constructor for Session')
         
-        self.oUtilsMsgs = UtilsMsgs()
-        self.oIOXml = UtilsIOXml()
-        self.iCompIndex = 0
+        self._oMsgUtil = UtilsMsgs()
+
+        self._iCompIndex = 0
         
-        self._xRootNode = None
-        self._lPageQuestionCompositeIndices = []
+#         self._xRootNode = None
+        self._l2iPageQuestionCompositeIndices = []
+        self._xPageNode = None
         
+        self._loQuestionSets = []
         
-#         self.oUtilsIO = None
-#         self.oQuizWidgets = None
+       
+        
+        self._oIOXml = None
+        self._oFilesIO = None
+        self._oQuizWidgets = None
+        
+        self._btnNext = None
+        self._btnPrevious = None
+
+
+#     def __del__(self):
+#         print('Destructor Session')
+#         self.RemoveNodes()
         
     #-------------------------------------------
     #        Getters / Setters
     #-------------------------------------------
 
-    def SetRootNode(self, xNode):
-        self._xRootNode = xNode
-        
+    #----------
+    def SetFilesIO(self, oFilesIO):
+        self._oFilesIO = oFilesIO
+
+    #----------
+    def SetIOXml(self, oIOXml):
+        self._oIOXml = oIOXml
+
+#     #----------
+#     def SetRootNode(self, xNode):
+#         self._xRootNode = xNode
+#           
+#     #----------
+#     def GetRootNode(self):
+#         return self._xRootNode
+
+    
     #----------
     def SetCompositeIndicesList(self,lIndices):
-        self._lPageQuestionCompositeIndices = lIndices
+        self._l2iPageQuestionCompositeIndices = lIndices
         
     #----------
     def GetCompositeIndicesList(self):
-        return self._lPageQuestionCompositeIndices
+        return self._l2iPageQuestionCompositeIndices
 
 
     #-------------------------------------------
     #        Functions
     #-------------------------------------------
 
-    def RunSetup(self, oUtilsIO, oQuizWidgets):
+    def RunSetup(self, oFilesIO, oQuizWidgets):
+        
+        self._oIOXml = UtilsIOXml()
+        self.SetFilesIO(oFilesIO)
+        self.SetupWidgets(oQuizWidgets)
+        self.SetupButtons()
 
-        self.sXmlQuizPath = oUtilsIO.GetQuizPath()
-        self.sUsername = oUtilsIO.GetQuizUsername()
-        self.slicerLeftMainLayout = oQuizWidgets.GetSlicerLeftMainLayout()
-        self.slicerQuizLayout = oQuizWidgets.GetSlicerQuizLayout()
-#         print(self.sXmlQuizPath)
-#         print(self.sUsername)
-        
-        # TODO: create and add user-timestamp node
-        # TODO: determine study status based on recorded answers
-        
-        # create buttons
-        
-        # Next button
-        self.btnNext = qt.QPushButton("Next")
-        self.btnNext.toolTip = "Display next set of questions."
-        self.btnNext.enabled = True
-        self.btnNext.connect('clicked(bool)',self.onNextButtonClicked)
-        
-        # Back button
-        self.btnPrevious = qt.QPushButton("Previous")
-        self.btnPrevious.toolTip = "Display previous set of questions."
-        self.btnPrevious.enabled = True
-        self.btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
-
-        
         # open xml and check for root node
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self.sXmlQuizPath,'Session')
+        bSuccess, xRootNode = self._oIOXml.OpenXml(self._oFilesIO.GetUserQuizPath(),'Session')
+
         if not bSuccess:
             sErrorMsg = "ERROR", "Not a valid quiz - Root node name was not 'Session'"
             self.oUtilsMsgs.DisplayError(sErrorMsg)
 
         else:
-            self._xRootNode = xRootNode
-            self.slicerLeftMainLayout.addWidget(self.btnNext)
-            self.slicerLeftMainLayout.addWidget(self.btnPrevious)
+            # add date time stamp to Session element
+            self.AddSessionLoginTimestamp()
             
-            self.BuildPageQuestionCompositeIndexList()
-            self.EnableButtons()
-            self.DisplayPage()
+            self.slicerLeftMainLayout.addWidget(self._btnNext)
+            self.slicerLeftMainLayout.addWidget(self._btnPrevious)
 
 
-            
+
+        self.BuildPageQuestionCompositeIndexList()
+        self.EnableButtons()
+        self.DisplayPage()
+
+
+    #-----------------------------------------------
+
+   
+    
+    
+    #-----------------------------------------------
+
+    def SetupWidgets(self, oQuizWidgets_Input):
+        
+        self._oQuizWidgets = oQuizWidgets_Input
+    
+        self.slicerLeftMainLayout = self._oQuizWidgets.GetSlicerLeftMainLayout()
+        self.slicerQuizLayout = self._oQuizWidgets.GetSlicerQuizLayout()
+    
+    #-----------------------------------------------
+    
+    def SetupButtons(self):
+        
+        # create buttons
+        
+        # Next button
+        self._btnNext = qt.QPushButton("Next")
+        self._btnNext.toolTip = "Display next set of questions."
+        self._btnNext.enabled = True
+        self._btnNext.connect('clicked(bool)',self.onNextButtonClicked)
+        
+        # Back button
+        self._btnPrevious = qt.QPushButton("Previous")
+        self._btnPrevious.toolTip = "Display previous set of questions."
+        self._btnPrevious.enabled = True
+        self._btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
+
+        
+    
+        
+
+    #-----------------------------------------------
+
+    def AddSessionLoginTimestamp(self):
+        
+        now = datetime.now()
+        sLoginTime = now.strftime("%b-%d-%Y-%H-%M-%S")
+        
+#         print(sLoginTime)
+        dictAttrib = {}
+        dictAttrib = {'time': sLoginTime}
+        
+        sNullText = ''
+        
+        sUserQuizPath = self._oFilesIO.GetUserQuizPath()
+        self._oIOXml.AddElement(self._oIOXml.GetRootNode(),'Login', sNullText, dictAttrib)
+        
+        self._oIOXml.SaveXml(sUserQuizPath, self._oIOXml.GetXmlTree())
             
     #-----------------------------------------------
 
@@ -107,18 +171,17 @@ class Session:
         
         # given the root of the xml document build composite list 
         #     of indexes for each page and the question sets within
-#         oIOXml = UtilsIOXml()
         
         # get Page nodes
-        xPages = self.oIOXml.GetChildren(self._xRootNode, 'Page')
+        xPages = self._oIOXml.GetChildren(self._oIOXml.GetRootNode(), 'Page')
 
         for iPageIndex in range(len(xPages)):
             # for each page - get number of question sets
-            xPageNode = self.oIOXml.GetNthChild(self._xRootNode, 'Page', iPageIndex)
-            xQuestionSets = self.oIOXml.GetChildren(xPageNode,'QuestionSet')
+            xPageNode = self._oIOXml.GetNthChild(self._oIOXml.GetRootNode(), 'Page', iPageIndex)
+            xQuestionSets = self._oIOXml.GetChildren(xPageNode,'QuestionSet')
             
             for iQuestionSetIndex in range(len(xQuestionSets)):
-                self._lPageQuestionCompositeIndices.append([iPageIndex, iQuestionSetIndex])
+                self._l2iPageQuestionCompositeIndices.append([iPageIndex, iQuestionSetIndex])
         
 
     #-----------------------------------------------
@@ -126,11 +189,11 @@ class Session:
     def DisplayPage(self):
         # extract page and question set indices from the current composite index
         
-        iPageIndex = self._lPageQuestionCompositeIndices[self.iCompIndex][0]
-        iQuestionSetIndex = self._lPageQuestionCompositeIndices[self.iCompIndex][1]
+        iPageIndex = self._l2iPageQuestionCompositeIndices[self._iCompIndex][0]
+        iQuestionSetIndex = self._l2iPageQuestionCompositeIndices[self._iCompIndex][1]
 
-        xNodePage = self.oIOXml.GetNthChild(self._xRootNode, 'Page', iPageIndex)
-        xNodeQuestionSet = self.oIOXml.GetNthChild(xNodePage, 'QuestionSet', iQuestionSetIndex)
+        self._xPageNode = self._oIOXml.GetNthChild(self._oIOXml.GetRootNode(), 'Page', iPageIndex)
+        xNodeQuestionSet = self._oIOXml.GetNthChild(self._xPageNode, 'QuestionSet', iQuestionSetIndex)
         
         oQuestionSet = QuestionSet()
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
@@ -145,68 +208,90 @@ class Session:
         bBuildSuccess, qQuizWidget = oQuestionSet.BuildQuestionSetForm()
         if bBuildSuccess:
             self.slicerQuizLayout.addWidget(qQuizWidget)
-        
+            self._loQuestionSets.append(oQuestionSet)
         
         oImageView = ImageView()
-        oImageView.RunSetup(xNodePage, qQuizWidget)
+        oImageView.RunSetup(self._xPageNode, qQuizWidget)
     
     #-----------------------------------------------
     
     def EnableButtons(self):
         
         # beginning of quiz
-        if (self.iCompIndex == 0):
-            self.btnNext.enabled = True
-            self.btnPrevious.enabled = False
+        if (self._iCompIndex == 0):
+            self._btnNext.enabled = True
+            self._btnPrevious.enabled = False
 
         # end of quiz
-        elif (self.iCompIndex == len(self._lPageQuestionCompositeIndices) - 1):
-            self.btnNext.enabled = True
-            self.btnPrevious.enabled = True
+        elif (self._iCompIndex == len(self._l2iPageQuestionCompositeIndices) - 1):
+            self._btnNext.enabled = True
+            self._btnPrevious.enabled = True
 
         # somewhere in middle
         else:
-            self.btnNext.enabled = True
-            self.btnPrevious.enabled = True
+            self._btnNext.enabled = True
+            self._btnPrevious.enabled = True
 
         # assign button description           
-        if (self.iCompIndex == len(self._lPageQuestionCompositeIndices) - 1):
+        if (self._iCompIndex == len(self._l2iPageQuestionCompositeIndices) - 1):
             # last question of last image view
-            self.btnNext.setText("Save and Finish")
+            self._btnNext.setText("Save and Finish")
 
         else:
             # assume multiple questions in the question set
-            self.btnNext.setText("Next")
+            self._btnNext.setText("Next")
             # if last question in the question set - save answers and continue to next
-            if not( self._lPageQuestionCompositeIndices[self.iCompIndex][0] == self._lPageQuestionCompositeIndices[self.iCompIndex + 1][0]):
-                self.btnNext.setText("Save and Continue")
+            if not( self._l2iPageQuestionCompositeIndices[self._iCompIndex][0] == self._l2iPageQuestionCompositeIndices[self._iCompIndex + 1][0]):
+                self._btnNext.setText("Save and Continue")
 
     #-----------------------------------------------
 
     def onNextButtonClicked(self):
 
+        sMsg = ''
+        # check if a save is required before displaying next page
+        sPrevText = self._btnNext.text
+#         print('(((((((( Prev Text: %s' %sPrevText)
+        if "Save" in sPrevText:
+            bResponsesCapturedForPage = False
+            bResponsesCapturedForPage, sMsg = self.CaptureResponsesForPage()
+            if bResponsesCapturedForPage == True:
+                self._loQuestionSets = []
+                self.GoToNextPage()
+            else:
+                self._oMsgUtil.DisplayWarning(sMsg)
+        else:
+            self.GoToNextPage()
+            
+            
         
-        self.iCompIndex = self.iCompIndex + 1
+    #-----------------------------------------------
+            
+    def GoToNextPage(self):
         
-        if self.iCompIndex > len(self._lPageQuestionCompositeIndices) -1:
+        self._iCompIndex = self._iCompIndex + 1
+            
+        if self._iCompIndex > len(self._l2iPageQuestionCompositeIndices) -1:
             # the last question was answered - exit Slicer
-            self.oUtilsMsgs.DisplayInfo("Quiz complete .... Exit")
+            self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
+            self._oMsgUtil.DisplayInfo("Quiz complete .... Exit")
             slicer.util.exit(status=EXIT_SUCCESS)
 
 
         self.EnableButtons()
 
         self.DisplayPage()
+        
 
     #-----------------------------------------------
 
     def onPreviousButtonClicked(self):
 
 
-        self.iCompIndex = self.iCompIndex - 1
-        if self.iCompIndex < 0:
+        self._iCompIndex = self._iCompIndex - 1
+        if self._iCompIndex < 0:
             # reset to beginning
-            self.iCompIndex = 0
+            self._iCompIndex = 0
         
         self.EnableButtons()
         
@@ -215,5 +300,68 @@ class Session:
 
     #-----------------------------------------------
 
-   
+    def CaptureResponsesForPage(self):
+        
+        # set defaults 
+        bResponsesCapturedForPage = True
+        sMsg = ''
+            
+            
+
+        for indQSet in range(len(self._loQuestionSets)):
+            oQuestionSet = self._loQuestionSets[indQSet]
+            loQuestions = []
+            loQuestions = oQuestionSet.GetQuestionList()
+            
+            lResponses = []
+            for indQuestion in range(len(loQuestions)):
+                oQuestion = loQuestions[indQuestion]
+                bResponseCapturedForQuestion = False
+                
+                bResponseCapturedForQuestion, lResponses, sMsg = oQuestion.CaptureResponse()
+
+
+                if bResponseCapturedForQuestion == True:                
+                    # add response element to proper node
+                    for indResponse in range(len(lResponses)):
+                        xOptionNode = self.GetOptionNode( indQSet, indQuestion, indResponse)
+                        
+                        if not xOptionNode == None:
+                            self.AddResponseElement(xOptionNode, lResponses[indResponse])
+                else:
+                    # something on the page was not entered
+                    bResponsesCapturedForPage = False
+                    break
+                
+        return bResponsesCapturedForPage, sMsg
+                
+       
+            
+    #-----------------------------------------------
+    def GetOptionNode(self, indQuestionSet, indQuestion, indResponse):
+
+        # get the element node for the option
+        
+        xOptionNode = None
+        
+        xQuestionSetNode = self._oIOXml.GetNthChild(self._xPageNode, 'QuestionSet', indQuestionSet)
+        xQuestionNode = self._oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
+        xOptionNode = self._oIOXml.GetNthChild(xQuestionNode, 'Option', indResponse)
+        
+        
+        return xOptionNode
+        
+    #-----------------------------------------------
+    def AddResponseElement(self, xOptionNode, sResponse):
+        
+        now = datetime.now()
+        sLoginTime = now.strftime("%b-%d-%Y-%H-%M-%S")
+        
+        dictAttrib = {}
+        dictAttrib = {'time': sLoginTime}
+        
+        sUserQuizPath = self._oFilesIO.GetUserQuizPath()
+        self._oIOXml.AddElement(xOptionNode,'Response', sResponse, dictAttrib)
+        
+#         self.oIOXml.SaveXml(sUserQuizPath, self.oIOXml.GetXmlTree())
         

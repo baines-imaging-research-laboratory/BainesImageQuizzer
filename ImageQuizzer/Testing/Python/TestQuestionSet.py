@@ -441,7 +441,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         lExpectedResponse = ['n','y','n']
         
         # get actual response list
-        lActualResponse = oTest.CaptureResponse()
+        bSuccess, lActualResponse, sMsg = oTest.CaptureResponse()
         if lActualResponse == lExpectedResponse:
             bTestResult = True
         
@@ -472,7 +472,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         lExpectedResponse = ['n','y','y']
         
         # get actual response list
-        lActualResponse = oTest.CaptureResponse()
+        bSuccess, lActualResponse, sMsg = oTest.CaptureResponse()
         if lActualResponse == lExpectedResponse:
             bTestResult = True
         
@@ -503,7 +503,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         lExpectedResponse = ['First Entry','Second Entry']
         
         # get actual response list
-        lActualResponse = oTest.CaptureResponse()
+        bSuccess, lActualResponse, sMsg = oTest.CaptureResponse()
         if lActualResponse == lExpectedResponse:
             bTestResult = True
         
@@ -531,10 +531,10 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         lqAllBoxes[0].setValue(2)
         lqAllBoxes[1].setValue(102)
         
-        lExpectedResponse = [2,102]
+        lExpectedResponse = ['2','102']
         
         # get actual response list
-        lActualResponse = oTest.CaptureResponse()
+        bSuccess, lActualResponse, sMsg = oTest.CaptureResponse()
         if lActualResponse == lExpectedResponse:
             bTestResult = True
         
@@ -562,10 +562,10 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         lqAllBoxes[0].setValue(2.5)
         lqAllBoxes[1].setValue(102.5)
         
-        lExpectedResponse = [2.5,102.5]
+        lExpectedResponse = ['2.5','102.5']
         
         # get actual response list
-        lActualResponse = oTest.CaptureResponse()
+        bSuccess, lActualResponse, sMsg = oTest.CaptureResponse()
         if lActualResponse == lExpectedResponse:
             bTestResult = True
         
