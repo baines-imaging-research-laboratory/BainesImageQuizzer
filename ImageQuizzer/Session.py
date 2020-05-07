@@ -42,9 +42,9 @@ class Session:
         self._btnPrevious = None
 
 
-#     def __del__(self):
-#         print('Destructor Session')
-#         self.RemoveNodes()
+    def __del__(self):
+        self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
+        self._oMsgUtil.DisplayInfo(' Image Quizzer Exiting - User file is saved.')
         
     #-------------------------------------------
     #        Getters / Setters
