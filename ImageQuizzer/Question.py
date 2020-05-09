@@ -248,7 +248,7 @@ class RadioQuestion(Question):
     
     def CaptureResponse(self):
         self.sFnName = sys._getframe().f_code.co_name
-        lResponses = []
+        lsResponses = []
         bSuccess = False
         bResponseFound = False
         sMsg = ''
@@ -258,17 +258,17 @@ class RadioQuestion(Question):
 #             sText = qBtn.text
 #             print(sText)
             if qBtn.isChecked():
-                lResponses.append('y')
+                lsResponses.append('y')
                 bResponseFound = True
             else:
-                lResponses.append('n')
+                lsResponses.append('n')
 
         if bResponseFound:
             bSuccess = True
         else:
             sMsg = 'You missed a radio option for: ' + self.sGrpBoxTitle
 
-        return bSuccess, lResponses, sMsg
+        return bSuccess, lsResponses, sMsg
 
 #========================================================================================
 #                     Class CheckBoxQuestion
@@ -309,7 +309,7 @@ class CheckBoxQuestion(Question):
     
     def CaptureResponse(self):
         self.sFnName = sys._getframe().f_code.co_name
-        lResponses = []
+        lsResponses = []
         bSuccess = False
         bResponseFound = False
         sMsg = ''
@@ -319,17 +319,17 @@ class CheckBoxQuestion(Question):
 #             sText = qBtn.text
 #             print(sText)
             if qChBox.isChecked():
-                lResponses.append('y')
+                lsResponses.append('y')
                 bResponseFound = True
             else:
-                lResponses.append('n')
+                lsResponses.append('n')
                 
         if bResponseFound:
             bSuccess = True
         else:
             sMsg = 'You missed a check box option for: ' + self.sGrpBoxTitle
 
-        return bSuccess, lResponses, sMsg
+        return bSuccess, lsResponses, sMsg
 
 
 #========================================================================================
@@ -376,7 +376,7 @@ class TextQuestion(Question):
     def CaptureResponse(self):
         self.sFnName = sys._getframe().f_code.co_name
 #         print('Responses for Text Questions')
-        lResponses = []
+        lsResponses = []
         bSuccess = False
         bResponseFound = False
         sMsg = ''
@@ -386,7 +386,7 @@ class TextQuestion(Question):
 #             print(sText)
             if not sText =='':
                 bResponseFound = True
-                lResponses.append(qTextBox.text)
+                lsResponses.append(qTextBox.text)
                 
 
         if bResponseFound:
@@ -394,7 +394,7 @@ class TextQuestion(Question):
         else:
             sMsg = 'You missed a text response for: ' + self.sGrpBoxTitle
             
-        return bSuccess, lResponses, sMsg
+        return bSuccess, lsResponses, sMsg
 
 #========================================================================================
 #                     Class IntegerValueQuestion
@@ -428,16 +428,26 @@ class IntegerValueQuestion(Question):
         i = 0
         while i < length:
             element1 = self.lOptions[i]
-            qSpinBox = qt.QSpinBox()
             sMin = self.dictModifiers.get('min')
             sMax = self.dictModifiers.get('max')
+            
+            sEndingMsg = ''
             if not sMin == '':
-                qSpinBox.setMinimum(int(sMin))
-            if not sMax == '':
-                qSpinBox.setMaximum(int(sMax))
+                sEndingMsg = sEndingMsg + '  minimum %s' % sMin
+                if not sMax == '':
+                    sEndingMsg = sEndingMsg + '   maximum: %s' % sMax
+                    
+            
+            sPlaceholderMsg = 'Enter integer' + sEndingMsg
+
+            # use a text box and validate the string entered is an integer
+            qLineEdit = qt.QLineEdit()
+            qLineEdit.setPlaceholderText(sPlaceholderMsg)
+
+            
             qLabel = qt.QLabel(element1)
             newLayout.addWidget(qLabel, i, 0)
-            newLayout.addWidget(qSpinBox, i, 1)
+            newLayout.addWidget(qLineEdit, i, 1)
             i = i + 1
 
         return True, self.qGrpBox
@@ -447,14 +457,67 @@ class IntegerValueQuestion(Question):
     def CaptureResponse(self):
         self.sFnName = sys._getframe().f_code.co_name
         print('Responses for Integer Value Questions')
-        lResponses = []
+        lsResponses = []
         bSuccess = True
         sMsg = ''
         
-        for qSpinner in self.qGrpBox.findChildren(qt.QSpinBox):
-            lResponses.append(str(qSpinner.value))
+#         for qSpinner in self.qGrpBox.findChildren(qt.QSpinBox):
+#             lsResponses.append(str(qSpinner.value))
 
-        return bSuccess, lResponses, sMsg
+        sMin = self.dictModifiers.get('min')
+        sMax = self.dictModifiers.get('max')
+        sEndingMsg = ''
+        if not sMin == '':
+            sEndingMsg = sEndingMsg + '  minimum %s' % sMin
+            xMin = int(sMin)
+        else:
+            xMin = None
+            
+        if not sMax == '':
+            sEndingMsg = sEndingMsg + '   maximum: %s' % sMax
+            xMax = int(sMax)
+        else:
+            xMax = None
+
+        
+        for qTextBox in self.qGrpBox.findChildren(qt.QLineEdit):
+            sText = qTextBox.text
+            if not sText =='':
+#                 bResponseFound = True
+                try:
+                    iValue = int(sText)
+                    bValid = self.ValidateRange(iValue, xMin, xMax)
+                    if bValid == True:
+                        lsResponses.append(qTextBox.text)
+                    else:
+                        raise ValueError()
+#                         sMsg = 'Please enter integer for: ' + self.sGrpBoxTitle + sEndingMsg
+#                         bSuccess = bSuccess * False
+                        
+                except ValueError:
+                    sMsg = 'Please enter integer for: ' + self.sGrpBoxTitle + sEndingMsg
+                    bSuccess = bSuccess * False
+                    
+                    
+        return bSuccess, lsResponses, sMsg
+    
+    def ValidateRange(self, iValue, xMin, xMax):
+        
+        bValid = True 
+        
+        if xMin == None and xMax == None:
+            # there are no restrictions for the value
+            bValid = True
+            
+        else:
+            if not xMin == None:
+                if iValue < xMin:
+                    bValid = bValid * False
+            if not xMax == None:
+                if iValue > xMax:
+                    bValid = bValid * False
+
+        return bValid
 
 #========================================================================================
 #                     Class DoubleValueQuestion
@@ -491,10 +554,13 @@ class DoubleValueQuestion(Question):
             qDoubleSpinBox = qt.QDoubleSpinBox()
             sMin = self.dictModifiers.get('min')
             sMax = self.dictModifiers.get('max')
+            sMin = -1
+            
             if not sMin == '':
                 qDoubleSpinBox.setMinimum(float(sMin))
             if not sMax == '':
                 qDoubleSpinBox.setMaximum(float(sMax))
+            qDoubleSpinBox.setSpecialValueText('Enter value')
             qLabel = qt.QLabel(element1)
             newLayout.addWidget(qLabel, i, 0)
             newLayout.addWidget(qDoubleSpinBox, i, 1)
@@ -507,14 +573,14 @@ class DoubleValueQuestion(Question):
     def CaptureResponse(self):
         self.sFnName = sys._getframe().f_code.co_name
         print('Responses for Double Value Questions')
-        lResponses = []
+        lsResponses = []
         bSuccess = True
         sMsg = ''
         
         for qSpinner in self.qGrpBox.findChildren(qt.QDoubleSpinBox):
-            lResponses.append(str(qSpinner.value))
+            lsResponses.append(str(qSpinner.value))
 
-        return bSuccess, lResponses, sMsg
+        return bSuccess, lsResponses, sMsg
 
 
 #========================================================================================
@@ -565,8 +631,8 @@ class InfoBox(Question):
         bSuccess = True
         sMsg = ''
 
-        lResponses = []
+        lsResponses = []
         
-        return bSuccess, lResponses, sMsg
+        return bSuccess, lsResponses, sMsg
         
     
