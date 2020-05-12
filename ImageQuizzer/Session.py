@@ -23,6 +23,7 @@ class Session:
         print('Constructor for Session')
         
         self._oMsgUtil = UtilsMsgs()
+        self.sLoginTime = ''
 
         self._iCompIndex = 0
         
@@ -151,11 +152,12 @@ class Session:
     def AddSessionLoginTimestamp(self):
         
         now = datetime.now()
-        sLoginTime = now.strftime("%b-%d-%Y-%H-%M-%S")
+#         self.sLoginTime = now.strftime("%b-%d-%Y-%H-%M-%S")
+        self.sLoginTime = now.strftime("%Y%m%d_%H:%M")
         
 #         print(sLoginTime)
         dictAttrib = {}
-        dictAttrib = {'time': sLoginTime}
+        dictAttrib = {'time': self.sLoginTime}
         
         sNullText = ''
         
@@ -357,11 +359,11 @@ class Session:
     #-----------------------------------------------
     def AddResponseElement(self, xOptionNode, sResponse):
         
-        now = datetime.now()
-        sLoginTime = now.strftime("%b-%d-%Y-%H-%M-%S")
+#         now = datetime.now()
+#         sLoginTime = now.strftime("%b-%d-%Y-%H-%M-%S")
         
         dictAttrib = {}
-        dictAttrib = {'time': sLoginTime}
+        dictAttrib = {'time': self.sLoginTime}
         
         sUserQuizPath = self._oFilesIO.GetUserQuizPath()
         self._oIOXml.AddElement(xOptionNode,'Response', sResponse, dictAttrib)
