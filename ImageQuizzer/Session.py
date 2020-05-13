@@ -61,7 +61,11 @@ class Session:
     def SetIOXml(self, oIOXml):
         self._oIOXml = oIOXml
 
-#     #----------
+    #----------
+    def SetQuizComplete(self, bInput):
+        self._bQuizComplete = bInput
+        
+        
 #     def SetRootNode(self, xNode):
 #         self._xRootNode = xNode
 #           
@@ -256,18 +260,35 @@ class Session:
         # check if a save is required before displaying next page
         sPrevText = self._btnNext.text
 #         print('(((((((( Prev Text: %s' %sPrevText)
-        if "Save" in sPrevText:
-            bResponsesCapturedForPage = False
-            bResponsesCapturedForPage, sMsg = self.CaptureResponsesForPage()
-            if bResponsesCapturedForPage == True:
-                self._loQuestionSets = []
-                self.GoToNextPage()
-            else:
-                self._oMsgUtil.DisplayWarning(sMsg)
+#         if "Save" in sPrevText:
+#             bResponsesCapturedForPage = False
+#             bResponsesCapturedForPage, sMsg = self.CaptureResponsesForPage()
+#             if bResponsesCapturedForPage == True:
+#                 self._loQuestionSets = []
+#                 self.GoToNextPage()
+#             else:
+#                 self._oMsgUtil.DisplayWarning(sMsg)
+#         else:
+#             self.GoToNextPage()
+            
+
+        bResponsesCapturedForPage, sMsg = self.CaptureResponsesForPage()
+        
+        if (bResponsesCapturedForPage == False):
+
+            self._oMsgUtil.DisplayWarning(sMsg)
+
         else:
+            
+            self.WriteResponses()
+            
+            
+            self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
+            
+            if "Save" in sPrevText:
+                self._loQuestionSets = []
+                
             self.GoToNextPage()
-            
-            
         
     #-----------------------------------------------
             
@@ -331,8 +352,8 @@ class Session:
                     for indResponse in range(len(lsResponses)):
                         xOptionNode = self.GetOptionNode( indQSet, indQuestion, indResponse)
                         
-                        if not xOptionNode == None:
-                            self.AddResponseElement(xOptionNode, lsResponses[indResponse])
+#                         if not xOptionNode == None:
+#                             self.AddResponseElement(xOptionNode, lsResponses[indResponse])
                 else:
                     # something on the page was not entered
                     bResponsesCapturedForPage = False
@@ -341,6 +362,39 @@ class Session:
         return bResponsesCapturedForPage, sMsg
                 
        
+
+    def WriteResponses(self):
+        
+        
+        for indQSet in range(len(self._loQuestionSets)):
+            oQuestionSet = self._loQuestionSets[indQSet]
+            loQuestions = []
+            loQuestions = oQuestionSet.GetQuestionList()
+            
+            lsResponses = []
+            for indQuestion in range(len(loQuestions)):
+                oQuestion = loQuestions[indQuestion]
+                bResponseCapturedForQuestion = False
+                
+                bResponseCapturedForQuestion, lsResponses, sMsg = oQuestion.CaptureResponse()
+
+
+                if bResponseCapturedForQuestion == True:                
+                    # add response element to proper node
+                    for indResponse in range(len(lsResponses)):
+                        xOptionNode = self.GetOptionNode( indQSet, indQuestion, indResponse)
+                        
+                        if not xOptionNode == None:
+                            self.AddResponseElement(xOptionNode, lsResponses[indResponse])
+#                 else:
+#                     # something on the page was not entered
+#                     bResponsesCapturedForPage = False
+#                     break
+#         
+        
+        
+
+
             
     #-----------------------------------------------
     def GetOptionNode(self, indQuestionSet, indQuestion, indResponse):

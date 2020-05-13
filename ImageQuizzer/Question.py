@@ -198,7 +198,7 @@ class Question(ABC):
 
         sRangeMsg = ''
         if not self.sMin == '':
-            sRangeMsg = sRangeMsg + '  minimum %s' % self.sMin
+            sRangeMsg = sRangeMsg + ' ... minimum %s' % self.sMin
         if not self.sMax == '':
             sRangeMsg = sRangeMsg + '   maximum: %s' % self.sMax
 
@@ -287,7 +287,7 @@ class RadioQuestion(Question):
         if bResponseFound:
             bSuccess = True
         else:
-            sMsg = 'You missed a radio option for: ' + self.sGrpBoxTitle
+            sMsg = 'Missing radio option for: ' + self.sGrpBoxTitle
 
         return bSuccess, lsResponses, sMsg
 
@@ -350,7 +350,7 @@ class CheckBoxQuestion(Question):
         if bResponseFound:
             bSuccess = True
         else:
-            sMsg = 'You missed a check box option for: ' + self.sGrpBoxTitle
+            sMsg = 'Missing check box option for: ' + self.sGrpBoxTitle
 
         return bSuccess, lsResponses, sMsg
 
@@ -416,7 +416,7 @@ class TextQuestion(Question):
         if bResponseFound:
             bSuccess = True
         else:
-            sMsg = 'You missed a text response for: ' + self.sGrpBoxTitle
+            sMsg = 'Missing text response for: ' + self.sGrpBoxTitle
             
         return bSuccess, lsResponses, sMsg
 
@@ -482,8 +482,9 @@ class IntegerValueQuestion(Question):
         oMsgUtil = UtilsMsgs()
 
         lsResponses = []
-        bSuccess = True
+        bSuccess = False
         sMsg = ''
+        bResponseFound = False
         
         sRangeMsg = self.CreateRangePrompt()
 
@@ -513,6 +514,8 @@ class IntegerValueQuestion(Question):
                     bValid = self.ValidateRange(iValue, iMin, iMax)
                     if bValid == True:
                         lsResponses.append(qTextBox.text)
+                        bResponseFound = True
+
                     else:
                         raise ValueError()
                         
@@ -520,7 +523,13 @@ class IntegerValueQuestion(Question):
                     sMsg = 'Please enter integer for: ' + self.sGrpBoxTitle + sRangeMsg
                     bSuccess = bSuccess * False
                     
+            else:
+                bResponseFound = False
 
+        if bResponseFound:
+            bSuccess = True
+        else:
+            sMsg = 'Invalid integer value response for: ' + self.sGrpBoxTitle + sRangeMsg
 
                     
         return bSuccess, lsResponses, sMsg
@@ -596,8 +605,9 @@ class FloatValueQuestion(Question):
         oMsgUtil = UtilsMsgs()
 
         lsResponses = []
-        bSuccess = True
+        bSuccess = False
         sMsg = ''
+        bResponseFound = False
         
         sRangeMsg = self.CreateRangePrompt()
 
@@ -627,14 +637,23 @@ class FloatValueQuestion(Question):
                     bValid = self.ValidateRange(fValue, fMin, fMax)
                     if bValid == True:
                         lsResponses.append(qTextBox.text)
+                        bResponseFound = True
+
                     else:
                         raise ValueError()
                         
                 except ValueError:
                     sMsg = 'Please enter decimal value for: ' + self.sGrpBoxTitle + sRangeMsg
                     bSuccess = bSuccess * False
-                    
+            else:
+                bResponseFound = False
+    
 
+
+        if bResponseFound:
+            bSuccess = True
+        else:
+            sMsg = 'Invalid decimal value response for: ' + self.sGrpBoxTitle + sRangeMsg
 
 
         return bSuccess, lsResponses, sMsg

@@ -167,6 +167,9 @@ class TestSessionTest(ScriptedLoadableModuleTest):
             bTestResult = True
         else:
             bTestResult = False
+            
+        # set quiz as complete for test purposes - so as not to trigger error message
+        self.oSession.SetQuizComplete(True)
 
         tupResult = self.fnName, bTestResult
         return tupResult
