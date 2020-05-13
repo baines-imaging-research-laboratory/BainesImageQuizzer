@@ -121,7 +121,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         """
         slicer.mrmlScene.Clear(0)
         self.sClassName = type(self).__name__
-        self.lsClassNames = ['RadioQuestion', 'CheckBoxQuestion','TextQuestion', 'IntegerValueQuestion', 'DoubleValueQuestion', 'InfoBox', 'InvalidType']
+        self.lsClassNames = ['RadioQuestion', 'CheckBoxQuestion','TextQuestion', 'IntegerValueQuestion', 'FloatValueQuestion', 'InfoBox', 'InvalidType']
 
     #------------------------------------------- 
 
@@ -143,7 +143,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_CaptureResponse_CheckBoxes())
         tupResults.append(self.test_CaptureResponse_Text())
         tupResults.append(self.test_CaptureResponse_IntegerValue())
-        tupResults.append(self.test_CaptureResponse_DoubleValue())
+        tupResults.append(self.test_CaptureResponse_FloatValue())
 
         
         logic.questionSetStatus.DisplayTestResults(tupResults)
@@ -153,13 +153,15 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
     def test_NoErrors_BuildQuestionWidget(self):
         """ Test for each question type with no errors encountered
         """
+        self.fnName = sys._getframe().f_code.co_name
 
         # initialize
         self.lOptions = ['Opt1','Opt2']
         self.sGroupTitle = 'Group Title'
-        self.fnName = sys._getframe().f_code.co_name
         self.questionType = None
         bTestResultTF = False
+        
+        dictModifiers = {}
         
         i = 0
         while i < len(self.lsClassNames):
@@ -170,9 +172,9 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
             elif self.lsClassNames[i] == 'TextQuestion':
                 self.questionType = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
             elif self.lsClassNames[i] == 'IntegerValueQuestion':
-                self.questionType = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
-            elif self.lsClassNames[i] == 'DoubleValueQuestion':
-                self.questionType = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
+                self.questionType = IntegerValueQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i], dictModifiers)
+            elif self.lsClassNames[i] == 'FloatValueQuestion':
+                self.questionType = FloatValueQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i], dictModifiers)
             elif self.lsClassNames[i] == 'InfoBox':
                 self.questionType = InfoBox(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
             else:
@@ -204,10 +206,11 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
     def test_NoErrors_RadioButtons(self):
         """ Class is called with no errors encountered
         """
+        self.fnName = sys._getframe().f_code.co_name
+
         self.lOptions = ['Injury','Recurrence']
         self.sGroupTitle = 'Assessment'
         bTestResult = False
-        self.fnName = sys._getframe().f_code.co_name
         
         self.rq = RadioQuestion(self.lOptions, self.sGroupTitle + ' ...Test No Errors for Radio Buttons')
         bTestResult, qGrpBox = self.rq.BuildQuestion()
@@ -221,10 +224,11 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
     def test_NoErrors_CheckBoxes(self):
         """ Class is called with no errors encountered
         """
+        self.fnName = sys._getframe().f_code.co_name
+
         self.sGroupTitle = 'High Risk Factors'
         self.lOptions = ['Enlarging Opacity','Bulging Margin', 'Sequential Enlargement']
         bTestResult = False
-        self.fnName = sys._getframe().f_code.co_name
         
         self.cb = CheckBoxQuestion(self.lOptions, self.sGroupTitle + ' ...Test No Errors for Check Boxes')
         bTestResult, qGrpBox = self.cb.BuildQuestion()
@@ -238,10 +242,11 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
     def test_NoErrors_TextQuestion(self):
         """ Class is called with no errors encountered
         """
+        self.fnName = sys._getframe().f_code.co_name
+
         self.sGroupTitle = 'Physician Notes'
         self.sNotes = ['Enter patient observations:','Describe next steps:']
         bTestResult = False
-        self.fnName = sys._getframe().f_code.co_name
         
         self.textQuestion = TextQuestion(self.sNotes, self.sGroupTitle + ' ...Test No Errors for Line Edits')
         bTestResult, qGrpBox = self.textQuestion.BuildQuestion()
@@ -255,10 +260,11 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
     def test_NoErrors_InfoBox(self):
         """ Class is called with no errors encountered
         """
+        self.fnName = sys._getframe().f_code.co_name
+
         self.sGroupTitle = 'Welcome Notes'
         self.sNotes = ['Welcome to Image Quizzer','Following are instructions for the next question set']
         bTestResult = False
-        self.fnName = sys._getframe().f_code.co_name
         
         self.infoBox = InfoBox(self.sNotes, self.sGroupTitle + ' ...Test no errors for information boxes')
         bTestResult, qGrpBox = self.infoBox.BuildQuestion()
@@ -273,13 +279,15 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         """ Test warning when no options are given.
             Test for each class in the list of classes defined in constructor.
         """
+        self.fnName = sys._getframe().f_code.co_name
 
         # initialize
         self.lOptions = []
         self.sGroupTitle = 'Test No Options'
-        self.fnName = sys._getframe().f_code.co_name
         self.questionType = None       
         bTestResultTF = False
+        
+        dictModifiers = {}
         
         i = 0
         while i < len(self.lsClassNames):
@@ -290,9 +298,9 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
             elif self.lsClassNames[i] == 'TextQuestion':
                 self.questionType = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
             elif self.lsClassNames[i] == 'IntegerValueQuestion':
-                self.questionType = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
-            elif self.lsClassNames[i] == 'DoubleValueQuestion':
-                self.questionType = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
+                self.questionType = IntegerValueQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i], dictModifiers)
+            elif self.lsClassNames[i] == 'FloatValueQuestion':
+                self.questionType = FloatValueQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i], dictModifiers)
             elif self.lsClassNames[i] == 'InfoBox':
                 self.questionType = InfoBox(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
             else:
@@ -422,10 +430,11 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
     def test_CaptureResponse_RadioButtons(self):
         """ Testing capture of user responses to radio button questions
         """
+        fnName = sys._getframe().f_code.co_name
+
         lOptions = ['RadioBtn 1 Test Unchecked','RadioBtn 2 Test Checked', 'RadioBtn 3 Test Unchecked']
         sGroupTitle = 'Capture Response - Radio Buttons'
         bTestResult = False
-        fnName = sys._getframe().f_code.co_name
         
         oTest = RadioQuestion(lOptions, sGroupTitle + ' ...Test Capture Reponse for Radio Buttons')
         bBuildResult, qGrpBox = oTest.BuildQuestion()
@@ -434,7 +443,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
 #         for qBtns in qGrpBox.findChildren(qt.QRadioButton):
 #             print('traversing grp box')
             
-        # set a button to checked for testing
+        # set a button to check for testing
         lqAllBtns = qGrpBox.findChildren(qt.QRadioButton)
         lqAllBtns[1].setChecked(True)
         
@@ -454,16 +463,16 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
     def test_CaptureResponse_CheckBoxes(self):
         """ Testing capture of user responses to check box questions
         """
+        fnName = sys._getframe().f_code.co_name
+
         lOptions = ['CheckBox 1 Test Unchecked','CheckBox 2 Test Checked', 'CheckBox 3 Test Checked']
         sGroupTitle = 'Capture Response - Check Boxes'
         bTestResult = False
-        fnName = sys._getframe().f_code.co_name
         
         oTest = CheckBoxQuestion(lOptions, sGroupTitle + ' ...Test Capture Reponse for Check Boxes')
         bBuildResult, qGrpBox = oTest.BuildQuestion()
         slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
         
-        # set a button to checked for testing
         lqAllBoxes = qGrpBox.findChildren(qt.QCheckBox)
         lqAllBoxes[0].setChecked(False)
         lqAllBoxes[1].setChecked(True)
@@ -486,16 +495,16 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
     def test_CaptureResponse_Text(self):
         """ Testing capture of user responses to text box questions
         """
+        fnName = sys._getframe().f_code.co_name
+
         lOptions = ['TextBox 1:','TextBox 2:']
         sGroupTitle = 'Capture Response - Text Boxes'
         bTestResult = False
-        fnName = sys._getframe().f_code.co_name
         
         oTest = TextQuestion(lOptions, sGroupTitle + ' ...Test Capture Reponse for Text Boxes')
         bBuildResult, qGrpBox = oTest.BuildQuestion()
         slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
         
-        # set a button to checked for testing
         lqAllBoxes = qGrpBox.findChildren(qt.QLineEdit)
         lqAllBoxes[0].setText('First Entry')
         lqAllBoxes[1].setText('Second Entry')
@@ -516,20 +525,20 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
     def test_CaptureResponse_IntegerValue(self):
         """ Testing capture of user responses to integer value questions
         """
+        fnName = sys._getframe().f_code.co_name
+
         lOptions = ['IntegerValueSpinner 1:','IntegerValueSpinner 2:']
         sGroupTitle = 'Capture Response - Integer Value Spinbox'
         bTestResult = False
-        fnName = sys._getframe().f_code.co_name
         
         dictTest = {'min':'-10', 'max':'200'}
-        oTest = IntegerValueQuestion(lOptions, sGroupTitle + ' ...Test Capture Reponse for Integer Value SpinBoxes', dictTest)
+        oTest = IntegerValueQuestion(lOptions, sGroupTitle + ' ...Test Capture Reponse for Integer Value box', dictTest)
         bBuildResult, qGrpBox = oTest.BuildQuestion()
         slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
         
-        # set a button to checked for testing
-        lqAllBoxes = qGrpBox.findChildren(qt.QSpinBox)
-        lqAllBoxes[0].setValue(2)
-        lqAllBoxes[1].setValue(102)
+        lqAllBoxes = qGrpBox.findChildren(qt.QLineEdit)
+        lqAllBoxes[0].setText(2)
+        lqAllBoxes[1].setText(102)
         
         lExpectedResponse = ['2','102']
         
@@ -544,23 +553,23 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
 
     #-----------------------------------------------
 
-    def test_CaptureResponse_DoubleValue(self):
-        """ Testing capture of user responses to double value questions
+    def test_CaptureResponse_FloatValue(self):
+        """ Testing capture of user responses to float value questions
         """
-        lOptions = ['DoubleValueSpinner 1:','DoubleValueSpinner 2:']
-        sGroupTitle = 'Capture Response - Double Value Spinbox'
-        bTestResult = False
         fnName = sys._getframe().f_code.co_name
+
+        lOptions = ['FloatValue line edit 1:','FloatValue line edit 2:']
+        sGroupTitle = 'Capture Response - Float Value edit box'
+        bTestResult = False
         
         dictTest = {'min':'-10.5', 'max':'200.5'}
-        oTest = DoubleValueQuestion(lOptions, sGroupTitle + ' ...Test Capture Reponse for Double Value SpinBoxes', dictTest)
+        oTest = FloatValueQuestion(lOptions, sGroupTitle + ' ...Test Capture Reponse for Float Value box', dictTest)
         bBuildResult, qGrpBox = oTest.BuildQuestion()
         slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
         
-        # set a button to checked for testing
-        lqAllBoxes = qGrpBox.findChildren(qt.QDoubleSpinBox)
-        lqAllBoxes[0].setValue(2.5)
-        lqAllBoxes[1].setValue(102.5)
+        lqAllBoxes = qGrpBox.findChildren(qt.QLineEdit)
+        lqAllBoxes[0].setText(2.5)
+        lqAllBoxes[1].setText(102.5)
         
         lExpectedResponse = ['2.5','102.5']
         

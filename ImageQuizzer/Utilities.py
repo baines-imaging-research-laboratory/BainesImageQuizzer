@@ -349,6 +349,7 @@ class UtilsIOXml:
         try:
             with open(sXmlPath, 'w') as xml_outfile:
                 reparsedRoot.writexml(xml_outfile, encoding="utf-8", indent="\t", addindent="\t", newl="\n")
+                xml_outfile.flush()
            
         except:
             raise Exception('Write XML file error: %s' % sXmlPath)

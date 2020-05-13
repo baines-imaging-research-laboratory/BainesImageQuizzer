@@ -56,7 +56,7 @@ class QuestionSet():
                 sQuestionDescriptor = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'descriptor')
 
                 # get modifiers for type = IntegerValue
-                if sQuestionType =="IntegerValue" or sQuestionType == "DoubleValue":
+                if sQuestionType =="IntegerValue" or sQuestionType == "FloatValue":
                     sMin = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'min')               
                     sMax = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'max')
                     dictModifiers['min'] = sMin
@@ -110,8 +110,8 @@ class QuestionSet():
                 self.question = TextQuestion(lsQuestionOptions, sQuestionDescriptor)
             elif (sQuestionType == 'IntegerValue'):
                 self.question = IntegerValueQuestion(lsQuestionOptions, sQuestionDescriptor, dictModifiers)
-            elif (sQuestionType == 'DoubleValue'):
-                self.question = DoubleValueQuestion(lsQuestionOptions, sQuestionDescriptor, dictModifiers)
+            elif (sQuestionType == 'FloatValue'):
+                self.question = FloatValueQuestion(lsQuestionOptions, sQuestionDescriptor, dictModifiers)
             elif (sQuestionType == 'InfoBox'):
                 self.question = InfoBox(lsQuestionOptions, sQuestionDescriptor)
             else:
@@ -190,24 +190,43 @@ class Question(ABC):
         self.qGrpBoxLayout.addWidget(qlabel)
         warnings.warn( sWarningMsg )
 
-#-----------------------------------------------
-# class LabelWarningBox(Question):
-#     # Class to produce a box with a label
-#     # Special use case: To display a warning
-#     def __init__(self, sLabelText, sGrpBoxTitle):
-#         self.sGrpBoxTitle = sGrpBoxTitle
-#         self.sLabelText = sLabelText
-#         self.sClassName = type(self).__name__
-# 
-#     
-#     def BuildQuestion(self):
-#         # This is a special case where a warning msg will appear in a box
-#         # with a label
-#         self.sFnName = sys._getframe().f_code.co_name
-#         self.createGroupBox(self.sGrpBoxTitle)
-#         qlabel = qt.QLabel(self.sLabelText)
-#         self.qGrpBoxLayout.addWidget(qlabel)
-#         return True, self.qGrpBox
+    #-----------------------------------------------
+
+    def CreateRangePrompt(self):
+        # extract minimum and maximum restrictions defined in the XML element
+        # return the message for prompting the user on allowed range
+
+        sRangeMsg = ''
+        if not self.sMin == '':
+            sRangeMsg = sRangeMsg + ' ... minimum %s' % self.sMin
+        if not self.sMax == '':
+            sRangeMsg = sRangeMsg + '   maximum: %s' % self.sMax
+
+        return sRangeMsg
+
+    
+    #-----------------------------------------------
+
+    def ValidateRange(self, xValue, xMin, xMax):
+        # return boolean to reflect whether the value input is within
+        #     the defined minimum to maximum range
+        # input values may be either integer or float
+        
+        bValid = True 
+        
+        if xMin == None and xMax == None:
+            # there are no restrictions for the value
+            bValid = True
+            
+        else:
+            if not xMin == None:    # if there is a minimum restriction
+                if xValue < xMin:
+                    bValid = False
+            if not xMax == None:    # if there is a maximum restriction
+                if xValue > xMax:
+                    bValid = False
+
+        return bValid
 
 #========================================================================================
 #                     Class RadioQuestion
@@ -220,14 +239,16 @@ class RadioQuestion(Question):
     #          qGrpBox  - group box widget holding radio buttons
     
     def __init__(self, lOptions, sGrpBoxTitle):
+        self.sClassName = type(self).__name__
+
         self.lOptions = lOptions
         self.sGrpBoxTitle = sGrpBoxTitle
-        self.sClassName = type(self).__name__
        
     #-----------------------------------------------
     
     def BuildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
+
         self.CreateGroupBox(self.sGrpBoxTitle)
         
         length = len(self.lOptions)
@@ -248,27 +269,27 @@ class RadioQuestion(Question):
     
     def CaptureResponse(self):
         self.sFnName = sys._getframe().f_code.co_name
-        lResponses = []
+
+        lsResponses = []
         bSuccess = False
         bResponseFound = False
         sMsg = ''
 
-#         print('Responses for Radio Questions')
         for qBtn in self.qGrpBox.findChildren(qt.QRadioButton):
 #             sText = qBtn.text
 #             print(sText)
             if qBtn.isChecked():
-                lResponses.append('y')
+                lsResponses.append('y')
                 bResponseFound = True
             else:
-                lResponses.append('n')
+                lsResponses.append('n')
 
         if bResponseFound:
             bSuccess = True
         else:
-            sMsg = 'You missed a radio option for: ' + self.sGrpBoxTitle
+            sMsg = 'Missing radio option for: ' + self.sGrpBoxTitle
 
-        return bSuccess, lResponses, sMsg
+        return bSuccess, lsResponses, sMsg
 
 #========================================================================================
 #                     Class CheckBoxQuestion
@@ -281,14 +302,16 @@ class CheckBoxQuestion(Question):
     #          qGrpBox  - group box widget holding check boxes
     
     def __init__(self, lOptions, sGrpBoxTitle):
+        self.sClassName = type(self).__name__
+
         self.lOptions = lOptions
         self.sGrpBoxTitle = sGrpBoxTitle
-        self.sClassName = type(self).__name__
 
     #-----------------------------------------------
        
     def BuildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
+
         self.CreateGroupBox(self.sGrpBoxTitle)
         
         length = len(self.lOptions)
@@ -309,27 +332,27 @@ class CheckBoxQuestion(Question):
     
     def CaptureResponse(self):
         self.sFnName = sys._getframe().f_code.co_name
-        lResponses = []
+
+        lsResponses = []
         bSuccess = False
         bResponseFound = False
         sMsg = ''
         
-        print('Responses for Checkbox Questions')
         for qChBox in self.qGrpBox.findChildren(qt.QCheckBox):
 #             sText = qBtn.text
 #             print(sText)
             if qChBox.isChecked():
-                lResponses.append('y')
+                lsResponses.append('y')
                 bResponseFound = True
             else:
-                lResponses.append('n')
+                lsResponses.append('n')
                 
         if bResponseFound:
             bSuccess = True
         else:
-            sMsg = 'You missed a check box option for: ' + self.sGrpBoxTitle
+            sMsg = 'Missing check box option for: ' + self.sGrpBoxTitle
 
-        return bSuccess, lResponses, sMsg
+        return bSuccess, lsResponses, sMsg
 
 
 #========================================================================================
@@ -343,9 +366,10 @@ class TextQuestion(Question):
     #          qGrpBox  - group box widget holding text edit boxes
     
     def __init__(self, lOptions, sGrpBoxTitle):
+        self.sClassName = type(self).__name__
+
         self.lOptions = lOptions
         self.sGrpBoxTitle = sGrpBoxTitle
-        self.sClassName = type(self).__name__
         
     def BuildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
@@ -375,8 +399,8 @@ class TextQuestion(Question):
     
     def CaptureResponse(self):
         self.sFnName = sys._getframe().f_code.co_name
-#         print('Responses for Text Questions')
-        lResponses = []
+
+        lsResponses = []
         bSuccess = False
         bResponseFound = False
         sMsg = ''
@@ -386,31 +410,36 @@ class TextQuestion(Question):
 #             print(sText)
             if not sText =='':
                 bResponseFound = True
-                lResponses.append(qTextBox.text)
+                lsResponses.append(qTextBox.text)
                 
 
         if bResponseFound:
             bSuccess = True
         else:
-            sMsg = 'You missed a text response for: ' + self.sGrpBoxTitle
+            sMsg = 'Missing text response for: ' + self.sGrpBoxTitle
             
-        return bSuccess, lResponses, sMsg
+        return bSuccess, lsResponses, sMsg
 
 #========================================================================================
 #                     Class IntegerValueQuestion
 #========================================================================================
 
 class IntegerValueQuestion(Question):
-    # Create a group box and add a spin box that allows the user to enter an integer value
+    # Create a group box and add a line edit that allows the user to enter an integer value
     # Inputs : lOptions - list of labels for each box 
     # Outputs: exitCode - boolean describing whether function exited successfully
-    #          qGrpBox  - group box widget holding integer spin boxes
+    #          qGrpBox  - group box widget holding the text box for integer input
     
     def __init__(self, lOptions, sGrpBoxTitle, dictModifiers):
+        self.sClassName = type(self).__name__
+
+        self.oMsgUtil = UtilsMsgs()
         self.lOptions = lOptions
         self.sGrpBoxTitle = sGrpBoxTitle
         self.dictModifiers = dictModifiers
-        self.sClassName = type(self).__name__
+        self.sMin = ''
+        self.sMax = ''
+        
         
     def BuildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
@@ -428,16 +457,19 @@ class IntegerValueQuestion(Question):
         i = 0
         while i < length:
             element1 = self.lOptions[i]
-            qSpinBox = qt.QSpinBox()
-            sMin = self.dictModifiers.get('min')
-            sMax = self.dictModifiers.get('max')
-            if not sMin == '':
-                qSpinBox.setMinimum(int(sMin))
-            if not sMax == '':
-                qSpinBox.setMaximum(int(sMax))
+            self.sMin = self.dictModifiers.get('min')
+            self.sMax = self.dictModifiers.get('max')
+            
+            sRangeMsg = self.CreateRangePrompt()
+            sPlaceholderMsg = 'Enter integer value' + sRangeMsg
+
+            qLineEdit = qt.QLineEdit()
+            qLineEdit.setPlaceholderText(sPlaceholderMsg)
+
+            
             qLabel = qt.QLabel(element1)
             newLayout.addWidget(qLabel, i, 0)
-            newLayout.addWidget(qSpinBox, i, 1)
+            newLayout.addWidget(qLineEdit, i, 1)
             i = i + 1
 
         return True, self.qGrpBox
@@ -446,31 +478,81 @@ class IntegerValueQuestion(Question):
     
     def CaptureResponse(self):
         self.sFnName = sys._getframe().f_code.co_name
-        print('Responses for Integer Value Questions')
-        lResponses = []
-        bSuccess = True
+
+        oMsgUtil = UtilsMsgs()
+
+        lsResponses = []
+        bSuccess = False
         sMsg = ''
+        bResponseFound = False
         
-        for qSpinner in self.qGrpBox.findChildren(qt.QSpinBox):
-            lResponses.append(str(qSpinner.value))
+        sRangeMsg = self.CreateRangePrompt()
 
-        return bSuccess, lResponses, sMsg
+        iMin = None
+        iMax = None
+
+        try:
+            if not self.sMin == '':
+                iMin = int(self.sMin)
+                
+            if not self.sMax == '':
+                iMax = int(self.sMax)
+        except ValueError:
+            bSuccess = False
+            sErrorMsg = 'See Administrator. Invalid range attribute in XML tag : ' + self.sGrpBoxTitle
+            self.oMsgUtil.DisplayError(sErrorMsg)
+            
+                
+        
+        for qTextBox in self.qGrpBox.findChildren(qt.QLineEdit):
+            sText = qTextBox.text
+
+            if not sText =='':
+
+                try:
+                    iValue = int(sText)
+                    bValid = self.ValidateRange(iValue, iMin, iMax)
+                    if bValid == True:
+                        lsResponses.append(qTextBox.text)
+                        bResponseFound = True
+
+                    else:
+                        raise ValueError()
+                        
+                except ValueError:
+                    sMsg = 'Please enter integer for: ' + self.sGrpBoxTitle + sRangeMsg
+                    bSuccess = bSuccess * False
+                    
+            else:
+                bResponseFound = False
+
+        if bResponseFound:
+            bSuccess = True
+        else:
+            sMsg = 'Invalid integer value response for: ' + self.sGrpBoxTitle + sRangeMsg
+
+                    
+        return bSuccess, lsResponses, sMsg
+    
 
 #========================================================================================
-#                     Class DoubleValueQuestion
+#                     Class FloatValueQuestion
 #========================================================================================
 
-class DoubleValueQuestion(Question):
-    # Create a group box and add a spin box that allows the user to enter an integer value
-    # Inputs : lOptions - list of labels for each box 
+class FloatValueQuestion(Question):
+    # Create a group box and add a line edit that allows the user to enter a float value
     # Outputs: exitCode - boolean describing whether function exited successfully
-    #          qGrpBox  - group box widget holding integer spin boxes
+    #          qGrpBox  - group box widget holding the text box for float input
     
     def __init__(self, lOptions, sGrpBoxTitle, dictModifiers):
+        self.sClassName = type(self).__name__
+
+        self.oMsgUtil = UtilsMsgs()
         self.lOptions = lOptions
         self.sGrpBoxTitle = sGrpBoxTitle
         self.dictModifiers = dictModifiers
-        self.sClassName = type(self).__name__
+        self.sMin = ''
+        self.sMax = ''
 
     def BuildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
@@ -488,16 +570,21 @@ class DoubleValueQuestion(Question):
         i = 0
         while i < length:
             element1 = self.lOptions[i]
-            qDoubleSpinBox = qt.QDoubleSpinBox()
-            sMin = self.dictModifiers.get('min')
-            sMax = self.dictModifiers.get('max')
-            if not sMin == '':
-                qDoubleSpinBox.setMinimum(float(sMin))
-            if not sMax == '':
-                qDoubleSpinBox.setMaximum(float(sMax))
+
+            self.sMin = self.dictModifiers.get('min')
+            self.sMax = self.dictModifiers.get('max')
+            
+
+            sRangeMsg = self.CreateRangePrompt()
+            sPlaceholderMsg = 'Enter decimal value' + sRangeMsg
+
+            qLineEdit = qt.QLineEdit()
+            qLineEdit.setPlaceholderText(sPlaceholderMsg)
+            
+            
             qLabel = qt.QLabel(element1)
             newLayout.addWidget(qLabel, i, 0)
-            newLayout.addWidget(qDoubleSpinBox, i, 1)
+            newLayout.addWidget(qLineEdit, i, 1)
             i = i + 1
 
         return True, self.qGrpBox
@@ -506,15 +593,70 @@ class DoubleValueQuestion(Question):
     
     def CaptureResponse(self):
         self.sFnName = sys._getframe().f_code.co_name
-        print('Responses for Double Value Questions')
-        lResponses = []
-        bSuccess = True
-        sMsg = ''
-        
-        for qSpinner in self.qGrpBox.findChildren(qt.QDoubleSpinBox):
-            lResponses.append(str(qSpinner.value))
 
-        return bSuccess, lResponses, sMsg
+#         lsResponses = []
+#         bSuccess = True
+#         sMsg = ''
+#         
+#         for qSpinner in self.qGrpBox.findChildren(qt.QDoubleSpinBox):
+#             lsResponses.append(str(qSpinner.value))
+
+
+        oMsgUtil = UtilsMsgs()
+
+        lsResponses = []
+        bSuccess = False
+        sMsg = ''
+        bResponseFound = False
+        
+        sRangeMsg = self.CreateRangePrompt()
+
+        fMin = None
+        fMax = None
+
+        try:
+            if not self.sMin == '':
+                fMin = float(self.sMin)
+                
+            if not self.sMax == '':
+                fMax = float(self.sMax)
+        except ValueError:
+            bSuccess = False
+            sErrorMsg = 'See Administrator. Invalid range attribute in XML tag : ' + self.sGrpBoxTitle
+            self.oMsgUtil.DisplayError(sErrorMsg)
+            
+                
+        
+        for qTextBox in self.qGrpBox.findChildren(qt.QLineEdit):
+            sText = qTextBox.text
+
+            if not sText =='':
+
+                try:
+                    fValue = float(sText)
+                    bValid = self.ValidateRange(fValue, fMin, fMax)
+                    if bValid == True:
+                        lsResponses.append(qTextBox.text)
+                        bResponseFound = True
+
+                    else:
+                        raise ValueError()
+                        
+                except ValueError:
+                    sMsg = 'Please enter decimal value for: ' + self.sGrpBoxTitle + sRangeMsg
+                    bSuccess = bSuccess * False
+            else:
+                bResponseFound = False
+    
+
+
+        if bResponseFound:
+            bSuccess = True
+        else:
+            sMsg = 'Invalid decimal value response for: ' + self.sGrpBoxTitle + sRangeMsg
+
+
+        return bSuccess, lsResponses, sMsg
 
 
 #========================================================================================
@@ -529,9 +671,10 @@ class InfoBox(Question):
     #          qGrpBox  - group box widget holding text edit boxes
     
     def __init__(self, lOptions, sGrpBoxTitle):
+        self.sClassName = type(self).__name__
+
         self.lOptions = lOptions
         self.sGrpBoxTitle = sGrpBoxTitle
-        self.sClassName = type(self).__name__
         
     #-----------------------------------------------
 
@@ -561,12 +704,12 @@ class InfoBox(Question):
     
     def CaptureResponse(self):
         self.sFnName = sys._getframe().f_code.co_name
-        print('Responses for Info Box = NONE')
+
         bSuccess = True
         sMsg = ''
 
-        lResponses = []
+        lsResponses = ['']
         
-        return bSuccess, lResponses, sMsg
+        return bSuccess, lsResponses, sMsg
         
     

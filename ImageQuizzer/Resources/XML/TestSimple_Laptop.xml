@@ -56,7 +56,7 @@
 			<Question type="IntegerValue" descriptor="Tumour Observation" min="-5" max="5">
 				<Option>Enter number of tumours:</Option>
 			</Question>
-			<Question type="DoubleValue" descriptor="" max="50">
+			<Question type="FloatValue" descriptor="Tumour Measurment" max="50">
 				<Option>Enter RECIST of largest tumour:</Option>
 			</Question>
 			<Question type="Text" descriptor="First Impressions">

@@ -23,6 +23,7 @@ class Session:
         print('Constructor for Session')
         
         self._oMsgUtil = UtilsMsgs()
+        self.sLoginTime = ''
 
         self._iCompIndex = 0
         
@@ -32,6 +33,7 @@ class Session:
         
         self._loQuestionSets = []
         
+        self._bQuizComplete = False
        
         
         self._oIOXml = None
@@ -42,9 +44,10 @@ class Session:
         self._btnPrevious = None
 
 
-#     def __del__(self):
-#         print('Destructor Session')
-#         self.RemoveNodes()
+    def __del__(self):
+        if not self._bQuizComplete == True:
+            self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
+            self._oMsgUtil.DisplayInfo(' Image Quizzer Exiting - User file is saved.')
         
     #-------------------------------------------
     #        Getters / Setters
@@ -58,7 +61,11 @@ class Session:
     def SetIOXml(self, oIOXml):
         self._oIOXml = oIOXml
 
-#     #----------
+    #----------
+    def SetQuizComplete(self, bInput):
+        self._bQuizComplete = bInput
+        
+        
 #     def SetRootNode(self, xNode):
 #         self._xRootNode = xNode
 #           
@@ -149,11 +156,12 @@ class Session:
     def AddSessionLoginTimestamp(self):
         
         now = datetime.now()
-        sLoginTime = now.strftime("%b-%d-%Y-%H-%M-%S")
+#         self.sLoginTime = now.strftime("%b-%d-%Y-%H-%M-%S")
+        self.sLoginTime = now.strftime("%Y%m%d_%H:%M")
         
 #         print(sLoginTime)
         dictAttrib = {}
-        dictAttrib = {'time': sLoginTime}
+        dictAttrib = {'time': self.sLoginTime}
         
         sNullText = ''
         
@@ -252,18 +260,35 @@ class Session:
         # check if a save is required before displaying next page
         sPrevText = self._btnNext.text
 #         print('(((((((( Prev Text: %s' %sPrevText)
-        if "Save" in sPrevText:
-            bResponsesCapturedForPage = False
-            bResponsesCapturedForPage, sMsg = self.CaptureResponsesForPage()
-            if bResponsesCapturedForPage == True:
-                self._loQuestionSets = []
-                self.GoToNextPage()
-            else:
-                self._oMsgUtil.DisplayWarning(sMsg)
+#         if "Save" in sPrevText:
+#             bResponsesCapturedForPage = False
+#             bResponsesCapturedForPage, sMsg = self.CaptureResponsesForPage()
+#             if bResponsesCapturedForPage == True:
+#                 self._loQuestionSets = []
+#                 self.GoToNextPage()
+#             else:
+#                 self._oMsgUtil.DisplayWarning(sMsg)
+#         else:
+#             self.GoToNextPage()
+            
+
+        bResponsesCapturedForPage, sMsg = self.CaptureResponsesForPage()
+        
+        if (bResponsesCapturedForPage == False):
+
+            self._oMsgUtil.DisplayWarning(sMsg)
+
         else:
+            
+            self.WriteResponses()
+            
+            
+            self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
+            
+            if "Save" in sPrevText:
+                self._loQuestionSets = []
+                
             self.GoToNextPage()
-            
-            
         
     #-----------------------------------------------
             
@@ -274,6 +299,7 @@ class Session:
         if self._iCompIndex > len(self._l2iPageQuestionCompositeIndices) -1:
             # the last question was answered - exit Slicer
             self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
+            self._bQuizComplete = True
             self._oMsgUtil.DisplayInfo("Quiz complete .... Exit")
             slicer.util.exit(status=EXIT_SUCCESS)
 
@@ -313,21 +339,21 @@ class Session:
             loQuestions = []
             loQuestions = oQuestionSet.GetQuestionList()
             
-            lResponses = []
+            lsResponses = []
             for indQuestion in range(len(loQuestions)):
                 oQuestion = loQuestions[indQuestion]
                 bResponseCapturedForQuestion = False
                 
-                bResponseCapturedForQuestion, lResponses, sMsg = oQuestion.CaptureResponse()
+                bResponseCapturedForQuestion, lsResponses, sMsg = oQuestion.CaptureResponse()
 
 
                 if bResponseCapturedForQuestion == True:                
                     # add response element to proper node
-                    for indResponse in range(len(lResponses)):
+                    for indResponse in range(len(lsResponses)):
                         xOptionNode = self.GetOptionNode( indQSet, indQuestion, indResponse)
                         
-                        if not xOptionNode == None:
-                            self.AddResponseElement(xOptionNode, lResponses[indResponse])
+#                         if not xOptionNode == None:
+#                             self.AddResponseElement(xOptionNode, lsResponses[indResponse])
                 else:
                     # something on the page was not entered
                     bResponsesCapturedForPage = False
@@ -336,6 +362,39 @@ class Session:
         return bResponsesCapturedForPage, sMsg
                 
        
+
+    def WriteResponses(self):
+        
+        
+        for indQSet in range(len(self._loQuestionSets)):
+            oQuestionSet = self._loQuestionSets[indQSet]
+            loQuestions = []
+            loQuestions = oQuestionSet.GetQuestionList()
+            
+            lsResponses = []
+            for indQuestion in range(len(loQuestions)):
+                oQuestion = loQuestions[indQuestion]
+                bResponseCapturedForQuestion = False
+                
+                bResponseCapturedForQuestion, lsResponses, sMsg = oQuestion.CaptureResponse()
+
+
+                if bResponseCapturedForQuestion == True:                
+                    # add response element to proper node
+                    for indResponse in range(len(lsResponses)):
+                        xOptionNode = self.GetOptionNode( indQSet, indQuestion, indResponse)
+                        
+                        if not xOptionNode == None:
+                            self.AddResponseElement(xOptionNode, lsResponses[indResponse])
+#                 else:
+#                     # something on the page was not entered
+#                     bResponsesCapturedForPage = False
+#                     break
+#         
+        
+        
+
+
             
     #-----------------------------------------------
     def GetOptionNode(self, indQuestionSet, indQuestion, indResponse):
@@ -354,11 +413,11 @@ class Session:
     #-----------------------------------------------
     def AddResponseElement(self, xOptionNode, sResponse):
         
-        now = datetime.now()
-        sLoginTime = now.strftime("%b-%d-%Y-%H-%M-%S")
+#         now = datetime.now()
+#         sLoginTime = now.strftime("%b-%d-%Y-%H-%M-%S")
         
         dictAttrib = {}
-        dictAttrib = {'time': sLoginTime}
+        dictAttrib = {'time': self.sLoginTime}
         
         sUserQuizPath = self._oFilesIO.GetUserQuizPath()
         self._oIOXml.AddElement(xOptionNode,'Response', sResponse, dictAttrib)

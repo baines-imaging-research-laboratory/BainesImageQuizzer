@@ -56,10 +56,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.oFilesIO.SetModuleDirs(sModuleName, sSourceDirForQuiz)
         self.oFilesIO.SetUserDir()
         
-#         # test that Users folder exists - if not, create it
-#         if not os.path.exists(self.oFilesIO.GetUsersBaseDir()):
-#             os.makedirs(self.oFilesIO.GetUsersBaseDir())
-        
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def setup(self):
