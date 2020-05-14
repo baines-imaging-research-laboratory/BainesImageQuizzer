@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Session>
+<Session allowmultipleresponses="n">
 	<Page name="Patient1" descriptor="PlanningCT">
 		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Red">
 			<Layer>Background</Layer>

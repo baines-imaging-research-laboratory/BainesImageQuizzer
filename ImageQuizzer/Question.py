@@ -67,7 +67,7 @@ class QuestionSet():
                 
                 xOptions = oIOXml.GetChildren(xNodeQuestion, 'Option')
 
-                for iIndex in range(0,len(xOptions)):
+                for iIndex in range(len(xOptions)):
                     
                     xQuestionOption = oIOXml.GetNthChild(xNodeQuestion, 'Option', iIndex)
                     sValue = oIOXml.GetDataInNode(xQuestionOption)
