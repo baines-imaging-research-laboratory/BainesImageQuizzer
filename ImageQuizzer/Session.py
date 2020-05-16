@@ -252,30 +252,49 @@ class Session:
             self._btnNext.enabled = True
             self._btnPrevious.enabled = True
 
+
         # assign button description           
         if (self._iCompIndex == len(self._l2iPageQuestionCompositeIndices) - 1):
             # last question of last image view
             self._btnNext.setText("Save and Finish")
+# 
+#         else:
+#             # assume multiple questions in the question set
+#             self._btnNext.setText("Next")
+#             # if last question in the question set - save answers and continue to next
+#             if not( self._l2iPageQuestionCompositeIndices[self._iCompIndex][0] == self._l2iPageQuestionCompositeIndices[self._iCompIndex + 1][0]):
+#                 self._btnNext.setText("Save and Continue")
+
+    #-----------------------------------------------
+
+    def CheckForLastQuestionSetForPage(self):
+        bLastQuestionSet = False
+        
+        # check if at the end of the quiz
+        if (self._iCompIndex == len(self._l2iPageQuestionCompositeIndices) - 1):
+            bLastQuestionSet = True
 
         else:
-            # assume multiple questions in the question set
-            self._btnNext.setText("Next")
-            # if last question in the question set - save answers and continue to next
+            # we are not at the end of the quiz
+            # assume multiple question sets for the page
+            # check if next page in the composite index is different than the current page
+            #    if yes - we have reached the last question set
             if not( self._l2iPageQuestionCompositeIndices[self._iCompIndex][0] == self._l2iPageQuestionCompositeIndices[self._iCompIndex + 1][0]):
-                self._btnNext.setText("Save and Continue")
-
+                bLastQuestionSet = True            
+           
+            
+        return bLastQuestionSet
+        
     #-----------------------------------------------
 
     def onNextButtonClicked(self):
 
         sMsg = ''
-        # check if a save is required before displaying next page
-        sPrevText = self._btnNext.text
             
 
-        bResponsesCapturedForPage, sMsg = self.CaptureResponsesForPage()
+        bResponsesCaptured, sMsg = self.CaptureResponses()
         
-        if (bResponsesCapturedForPage == False):
+        if (bResponsesCaptured == False):
 
             self._oMsgUtil.DisplayWarning(sMsg)
 
@@ -292,7 +311,8 @@ class Session:
             self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
             self._bStartOfSession = False
             
-            if "Save" in sPrevText:
+            # if last question set, clear list
+            if self.CheckForLastQuestionSetForPage() == True:
                 self._loQuestionSets = []
                 
         
@@ -334,66 +354,59 @@ class Session:
 
     #-----------------------------------------------
 
-    def CaptureResponsesForPage(self):
+    def CaptureResponses(self):
         
         # set defaults 
-        bResponsesCapturedForPage = True
         sMsg = ''
+        # get list of questions from current question set
+        
             
+        indQSet = self._l2iPageQuestionCompositeIndices[self._iCompIndex][1]
 
-        for indQSet in range(len(self._loQuestionSets)):
-            oQuestionSet = self._loQuestionSets[indQSet]
-            loQuestions = []
-            loQuestions = oQuestionSet.GetQuestionList()
+        oQuestionSet = self._loQuestionSets[indQSet]
+        loQuestions = []
+        loQuestions = oQuestionSet.GetQuestionList()
             
-            lsResponsesForOptions = []
-            for indQuestion in range(len(loQuestions)):
-                oQuestion = loQuestions[indQuestion]
-                bResponseCapturedForQuestion = False
-                
-                bResponseCapturedForQuestion, lsResponsesForOptions, sMsg = oQuestion.CaptureResponse()
+        self._lsResponsesForOptions = []
+        for indQuestion in range(len(loQuestions)):
+            oQuestion = loQuestions[indQuestion]
+            bResponseCaptured = False
+            
+            bResponseCaptured, self._lsResponsesForOptions, sMsg = oQuestion.CaptureResponse()
 
+            if bResponseCaptured == False:
+                break   # exit from loop - question is missing response
 
-                if bResponseCapturedForQuestion == True:                
-                    # add response element to proper node
-                    for indOption in range(len(lsResponsesForOptions)):
-                        xOptionNode = self.GetOptionNode( indQSet, indQuestion, indOption)
-                        
-#                         if not xOptionNode == None:
-#                             self.AddResponseElement(xOptionNode, lsResponsesForOptions[indOption])
-                else:
-                    # something on the page was not entered
-                    bResponsesCapturedForPage = False
-                    break
                 
-        return bResponsesCapturedForPage, sMsg
-                
+        return bResponseCaptured, sMsg
        
     #-----------------------------------------------
 
     def WriteResponses(self):
         
         
-        for indQSet in range(len(self._loQuestionSets)):
-            oQuestionSet = self._loQuestionSets[indQSet]
-            loQuestions = []
-            loQuestions = oQuestionSet.GetQuestionList()
+#         for indQSet in range(len(self._loQuestionSets)):
+        indQSet = self._l2iPageQuestionCompositeIndices[self._iCompIndex][1]
+
+        oQuestionSet = self._loQuestionSets[indQSet]
+        loQuestions = []
+        loQuestions = oQuestionSet.GetQuestionList()
+        
+        lsResponsesForOptions = []
+        for indQuestion in range(len(loQuestions)):
+            oQuestion = loQuestions[indQuestion]
+            bResponseCaptured = False
             
-            lsResponsesForOptions = []
-            for indQuestion in range(len(loQuestions)):
-                oQuestion = loQuestions[indQuestion]
-                bResponseCapturedForQuestion = False
-                
-                bResponseCapturedForQuestion, lsResponsesForOptions, sMsg = oQuestion.CaptureResponse()
+            bResponseCaptured, lsResponsesForOptions, sMsg = oQuestion.CaptureResponse()
 
 
-                if bResponseCapturedForQuestion == True:                
-                    # add response element to proper option node
-                    for indOption in range(len(lsResponsesForOptions)):
-                        xOptionNode = self.GetOptionNode( indQSet, indQuestion, indOption)
-                        
-                        if not xOptionNode == None:
-                            self.AddResponseElement(xOptionNode, lsResponsesForOptions[indOption])
+            if bResponseCaptured == True:                
+                # add response element to proper option node
+                for indOption in range(len(lsResponsesForOptions)):
+                    xOptionNode = self.GetOptionNode( indQSet, indQuestion, indOption)
+                    
+                    if not xOptionNode == None:
+                        self.AddResponseElement(xOptionNode, lsResponsesForOptions[indOption])
 
             
     #-----------------------------------------------
