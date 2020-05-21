@@ -167,6 +167,9 @@ class Question(ABC):
     
     @abstractmethod        
     def CaptureResponse(self): pass
+    
+    @abstractmethod
+    def PopulateQuestionWithResponses(self, lsResponseValues): pass
 
     #-----------------------------------------------
     
@@ -290,6 +293,25 @@ class RadioQuestion(Question):
             sMsg = 'Missing radio option for: ' + self.sGrpBoxTitle
 
         return bSuccess, lsResponses, sMsg
+    
+    
+    
+    #-----------------------------------------------
+    
+    def PopulateQuestionWithResponses(self, lsResponses):
+        
+        i = 0
+        for qBtn in self.qGrpBox.findChildren(qt.QRadioButton):
+            
+            if lsResponses[i] == 'n':
+                qBtn.setChecked(False)
+            else:
+                if lsResponses[i] == 'y':
+                    qBtn.setChecked(True)
+            i = i + 1
+            
+        
+
 
 #========================================================================================
 #                     Class CheckBoxQuestion
@@ -354,6 +376,10 @@ class CheckBoxQuestion(Question):
 
         return bSuccess, lsResponses, sMsg
 
+    #-----------------------------------------------
+    
+    def PopulateQuestionWithResponses(self, lsResponses):
+        pass
 
 #========================================================================================
 #                     Class TextQuestion
@@ -419,6 +445,11 @@ class TextQuestion(Question):
             sMsg = 'Missing text response for: ' + self.sGrpBoxTitle
             
         return bSuccess, lsResponses, sMsg
+
+    #-----------------------------------------------
+    
+    def PopulateQuestionWithResponses(self, lsResponses):
+        pass
 
 #========================================================================================
 #                     Class IntegerValueQuestion
@@ -534,6 +565,10 @@ class IntegerValueQuestion(Question):
                     
         return bSuccess, lsResponses, sMsg
     
+    #-----------------------------------------------
+    
+    def PopulateQuestionWithResponses(self, lsResponses):
+        pass
 
 #========================================================================================
 #                     Class FloatValueQuestion
@@ -658,6 +693,10 @@ class FloatValueQuestion(Question):
 
         return bSuccess, lsResponses, sMsg
 
+    #-----------------------------------------------
+    
+    def PopulateQuestionWithResponses(self, lsResponses):
+        pass
 
 #========================================================================================
 #                     Class InfoBox
@@ -712,4 +751,9 @@ class InfoBox(Question):
         
         return bSuccess, lsResponses, sMsg
         
+    #-----------------------------------------------
+    
+    def PopulateQuestionWithResponses(self, lsResponses):
+        # there is nothing to populate for info box type questions
+        pass
     

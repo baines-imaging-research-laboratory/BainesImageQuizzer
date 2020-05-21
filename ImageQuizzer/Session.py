@@ -92,6 +92,13 @@ class Session:
         else:
             self._bAllowMultipleResponse = False
             
+    #----------
+    def GetAllQuestionSetsForPage(self, iPageIndex):
+        self._xPageNode = self._oIOXml.GetNthChild(self._oIOXml.GetRootNode(), 'Page', iPageIndex)
+        xNodesAllQuestionSets = self._oIOXml.GetChildren(self._xPageNode, 'QuestionSet')
+        
+        return xNodesAllQuestionSets
+            
 
     #-------------------------------------------
     #        Functions
@@ -213,10 +220,19 @@ class Session:
         iQuestionSetIndex = self._l2iPageQuestionCompositeIndices[self._iCompIndex][1]
 
         self._xPageNode = self._oIOXml.GetNthChild(self._oIOXml.GetRootNode(), 'Page', iPageIndex)
-        xNodeQuestionSet = self._oIOXml.GetNthChild(self._xPageNode, 'QuestionSet', iQuestionSetIndex)
+        xNodeCurrentQuestionSet = self._oIOXml.GetNthChild(self._xPageNode, 'QuestionSet', iQuestionSetIndex)
         
-        oQuestionSet = QuestionSet()
-        oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
+        # get all question sets for the page
+        xNodesAllQuestionSets = self.GetAllQuestionSetsForPage(iPageIndex)
+        for xNodeQuestionSet in xNodesAllQuestionSets:
+            oQuestionSet = QuestionSet()
+            oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
+            self._loQuestionSets.append(oQuestionSet)
+        
+        
+        oCurrentQuestionSet = QuestionSet()
+#         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
+        oCurrentQuestionSet = self._loQuestionSets[iQuestionSetIndex]
         
         # first clear any previous widgets (except push buttons)
         for i in reversed(range(self.slicerQuizLayout.count())):
@@ -225,10 +241,10 @@ class Session:
             self.slicerQuizLayout.itemAt(i).widget().setParent(None)
 
         
-        bBuildSuccess, qQuizWidget = oQuestionSet.BuildQuestionSetForm()
+        bBuildSuccess, qQuizWidget = oCurrentQuestionSet.BuildQuestionSetForm()
         if bBuildSuccess:
             self.slicerQuizLayout.addWidget(qQuizWidget)
-            self._loQuestionSets.append(oQuestionSet)
+#             self._loQuestionSets.append(oQuestionSet)
         
         oImageView = ImageView()
         oImageView.RunSetup(self._xPageNode, qQuizWidget)
@@ -342,6 +358,7 @@ class Session:
     def onPreviousButtonClicked(self):
 
 
+
         self._iCompIndex = self._iCompIndex - 1
         if self._iCompIndex < 0:
             # reset to beginning
@@ -349,7 +366,11 @@ class Session:
         
         self.EnableButtons()
         
+        self._loQuestionSets = []
         self.DisplayPage()
+        self.GetExistingResponses()
+        
+        
 
 
     #-----------------------------------------------
@@ -380,6 +401,61 @@ class Session:
                 
         return bResponseCaptured, sMsg
        
+    #-----------------------------------------------
+
+    def GetExistingResponses(self):
+
+        iPageIndex = self._l2iPageQuestionCompositeIndices[self._iCompIndex][0]
+        iQuestionSetIndex = self._l2iPageQuestionCompositeIndices[self._iCompIndex][1]
+        
+        print('Indices ... Page: %i' % iPageIndex)
+        print('              QS: %i' % iQuestionSetIndex)
+
+        self._xPageNode = self._oIOXml.GetNthChild(self._oIOXml.GetRootNode(), 'Page', iPageIndex)
+        xQuestionSetNode = self._oIOXml.GetNthChild(self._xPageNode, 'QuestionSet', iQuestionSetIndex)
+        
+        
+
+        oQuestionSet = self._loQuestionSets[iQuestionSetIndex]
+        loQuestions = []
+        loQuestions = oQuestionSet.GetQuestionList()
+        
+        # for each question and each option, extract any existing responses from the XML
+        
+        for indQuestion in range(len(loQuestions)):
+            oQuestion = loQuestions[indQuestion]
+            xQuestionNode = self._oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
+            
+                
+            lsResponseValues = []
+            xAllOptions = self._oIOXml.GetChildren(xQuestionNode, 'Option')
+            for xOptionNode in xAllOptions:
+                
+                lsResponses = []
+                
+                dtLatestTimestamp = ''    # timestamp of type 'datetime'
+                sLatestResponse = ''
+                
+                xAllResponseNodes = self._oIOXml.GetChildren(xOptionNode, 'Response')
+                for xResponseNode in xAllResponseNodes:
+                    sResponseTime = self._oIOXml.GetValueOfNodeAttribute(xResponseNode, 'time')
+                    dtResponseTimestamp = datetime.strptime(sResponseTime, self.sTimestampFormat)
+                    print('*** TIME : %s' % sResponseTime)
+                    
+                    if dtLatestTimestamp == '':
+                        dtLatestTimestamp = dtResponseTimestamp
+                        sLatestResponse = self._oIOXml.GetDataInNode(xResponseNode)
+                    else:
+                        if dtResponseTimestamp > dtLatestTimestamp:
+                            dtLatestTimestamp = dtResponseTimestamp
+                            sLatestResponse = self._oIOXml.GetDataInNode(xResponseNode)
+
+                    print('************Data...%s***END***' % sLatestResponse)
+                    lsResponseValues.append(sLatestResponse)
+                    
+                    
+            oQuestion.PopulateQuestionWithResponses(lsResponseValues)                    
+    
     #-----------------------------------------------
 
     def WriteResponses(self):
@@ -462,7 +538,7 @@ class Session:
         #    last login time (prior to current login)
 
         for indCI in reversed(range(len(self._l2iPageQuestionCompositeIndices))):
-            print(indCI)
+#             print(indCI)
             
             bLastLoginResponseFound = False # default
             
@@ -471,7 +547,7 @@ class Session:
             indQuestionSet = self._l2iPageQuestionCompositeIndices[indCI][1]
             xPageNode = self._oIOXml.GetNthChild(self._oIOXml.GetRootNode(), 'Page', indPage)
             xQuestionSetNode = self._oIOXml.GetNthChild(xPageNode, 'QuestionSet', indQuestionSet)
-            print(indCI, 'Page:', indPage, 'QS:', indQuestionSet)
+#             print(indCI, 'Page:', indPage, 'QS:', indQuestionSet)
             
             # get first Option node of the first Question
             xQuestionNode = self._oIOXml.GetNthChild(xQuestionSetNode, 'Question', 0)
