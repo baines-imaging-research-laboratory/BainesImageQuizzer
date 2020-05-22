@@ -298,20 +298,18 @@ class RadioQuestion(Question):
     
     #-----------------------------------------------
     
-    def PopulateQuestionWithResponses(self, lsResponses):
+    def PopulateQuestionWithResponses(self, lsValues):
         
         i = 0
         for qBtn in self.qGrpBox.findChildren(qt.QRadioButton):
             
-            if lsResponses[i] == 'n':
+            if lsValues[i] == 'n':
                 qBtn.setChecked(False)
             else:
-                if lsResponses[i] == 'y':
+                if lsValues[i] == 'y':
                     qBtn.setChecked(True)
             i = i + 1
             
-        
-
 
 #========================================================================================
 #                     Class CheckBoxQuestion
@@ -378,8 +376,19 @@ class CheckBoxQuestion(Question):
 
     #-----------------------------------------------
     
-    def PopulateQuestionWithResponses(self, lsResponses):
-        pass
+    def PopulateQuestionWithResponses(self, lsValues):
+            
+        i = 0
+        for qBox in self.qGrpBox.findChildren(qt.QCheckBox):
+            
+            if lsValues[i] == 'n':
+                qBox.setChecked(False)
+            else:
+                if lsValues[i] == 'y':
+                    qBox.setChecked(True)
+            i = i + 1
+        
+        
 
 #========================================================================================
 #                     Class TextQuestion
@@ -448,8 +457,12 @@ class TextQuestion(Question):
 
     #-----------------------------------------------
     
-    def PopulateQuestionWithResponses(self, lsResponses):
-        pass
+    def PopulateQuestionWithResponses(self, lsValues):
+        i = 0
+        for qTxt in self.qGrpBox.findChildren(qt.QLineEdit):
+            
+            qTxt.setText(lsValues[i])
+            i = i + 1
 
 #========================================================================================
 #                     Class IntegerValueQuestion
@@ -567,8 +580,13 @@ class IntegerValueQuestion(Question):
     
     #-----------------------------------------------
     
-    def PopulateQuestionWithResponses(self, lsResponses):
-        pass
+    def PopulateQuestionWithResponses(self, lsValues):
+
+        i = 0
+        for qTxt in self.qGrpBox.findChildren(qt.QLineEdit):
+            
+            qTxt.setText(lsValues[i])
+            i = i + 1
 
 #========================================================================================
 #                     Class FloatValueQuestion
@@ -695,8 +713,13 @@ class FloatValueQuestion(Question):
 
     #-----------------------------------------------
     
-    def PopulateQuestionWithResponses(self, lsResponses):
-        pass
+    def PopulateQuestionWithResponses(self, lsValues):
+
+        i = 0
+        for qTxt in self.qGrpBox.findChildren(qt.QLineEdit):
+            
+            qTxt.setText(lsValues[i])
+            i = i + 1
 
 #========================================================================================
 #                     Class InfoBox
@@ -753,7 +776,7 @@ class InfoBox(Question):
         
     #-----------------------------------------------
     
-    def PopulateQuestionWithResponses(self, lsResponses):
+    def PopulateQuestionWithResponses(self, lsValues):
         # there is nothing to populate for info box type questions
         pass
     

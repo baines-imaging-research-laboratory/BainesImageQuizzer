@@ -25,6 +25,9 @@
 			<Question type="InfoBox" descriptor="Instructions">
 				<Option>This is how to run the quiz : .....</Option>
 			</Question>
+			<Question type="IntegerValue" descriptor="Food Order" max="5">
+				<Option>Enter number of pizzas:</Option>
+			</Question>
 		</QuestionSet>
 	</Page>
 	<Page name="Patient1" descriptor="Follow-up 1">
