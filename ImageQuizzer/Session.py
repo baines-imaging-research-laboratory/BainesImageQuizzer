@@ -245,7 +245,17 @@ class Session:
         if bBuildSuccess:
             self.slicerQuizLayout.addWidget(qQuizWidget)
 #             self._loQuestionSets.append(oQuestionSet)
-        
+
+            # enable widget if no response exists or if user is allowed to 
+            # input multiple responses
+            if self.CheckForExistingResponse() == True:
+                if self._bAllowMultipleResponse == False:
+                    qQuizWidget.setEnabled(False)
+                    self.DisplayExistingResponses()
+                else:
+                    qQuizWidget.setEnabled(True)
+                    
+                    
         oImageView = ImageView()
         oImageView.RunSetup(self._xPageNode, qQuizWidget)
     
@@ -316,16 +326,22 @@ class Session:
 
         else:
             
-            # Responses have been captured, if it's the first set of responses
-            #    for the session, add in the login timestamp
-            #    This timestamp is added here in case the user exited without responding to anything,
-            #    allowing for the resume check to function properly
-            if self._bStartOfSession == True:
-                self.AddSessionLoginTimestamp()
             
-            self.WriteResponses()
-            self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
-            self._bStartOfSession = False
+            # only allow for writing of responses under certain conditions
+            
+            if ( self._bAllowMultipleResponse == True)  or \
+                ((self._bAllowMultipleResponse == False) and (self.CheckForExistingResponse() == False) ):
+
+                # Responses have been captured, if it's the first set of responses
+                #    for the session, add in the login timestamp
+                #    This timestamp is added here in case the user exited without responding to anything,
+                #    allowing for the resume check to function properly
+                if self._bStartOfSession == True:
+                    self.AddSessionLoginTimestamp()
+
+                self.WriteResponses()
+                self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
+                self._bStartOfSession = False
             
             # if last question set, clear list
             if self.CheckForLastQuestionSetForPage() == True:
@@ -404,13 +420,31 @@ class Session:
        
     #-----------------------------------------------
 
+    def CheckForExistingResponse(self):
+        
+        bResponseExists = False
+        
+        iQuestionSetIndex = self._l2iPageQuestionCompositeIndices[self._iCompIndex][1]
+        
+        # get option node for the current question set , 1st question, 1st otpion
+        xOptionNode = self.GetOptionNode(iQuestionSetIndex, 0, 0)
+        
+        iNumResponses = self._oIOXml.GetNumChildrenByName(xOptionNode,'Response')
+        print ('Number of responses: %i' %iNumResponses)
+        if iNumResponses >0:
+            bResponseExists = True
+        
+        return bResponseExists
+    
+    #-----------------------------------------------
+
     def DisplayExistingResponses(self):
 
         iPageIndex = self._l2iPageQuestionCompositeIndices[self._iCompIndex][0]
         iQuestionSetIndex = self._l2iPageQuestionCompositeIndices[self._iCompIndex][1]
         
-        print('Indices ... Page: %i' % iPageIndex)
-        print('              QS: %i' % iQuestionSetIndex)
+#         print('Indices ... Page: %i' % iPageIndex)
+#         print('              QS: %i' % iQuestionSetIndex)
 
         self._xPageNode = self._oIOXml.GetNthChild(self._oIOXml.GetRootNode(), 'Page', iPageIndex)
         xQuestionSetNode = self._oIOXml.GetNthChild(self._xPageNode, 'QuestionSet', iQuestionSetIndex)
@@ -435,28 +469,30 @@ class Session:
             for xOptionNode in xAllOptions:
                 
                 
-#                 dtLatestTimestamp = ''    # timestamp of type 'datetime'
-#                 sLatestResponse = ''
-#                 
-#                 xAllResponseNodes = self._oIOXml.GetChildren(xOptionNode, 'Response')
-#                 for xResponseNode in xAllResponseNodes:
-#                     sResponseTime = self._oIOXml.GetValueOfNodeAttribute(xResponseNode, 'time')
-#                     dtResponseTimestamp = datetime.strptime(sResponseTime, self.sTimestampFormat)
+                dtLatestTimestamp = ''    # timestamp of type 'datetime'
+                sLatestResponse = ''
+                 
+                xAllResponseNodes = self._oIOXml.GetChildren(xOptionNode, 'Response')
+                for xResponseNode in xAllResponseNodes:
+                    sResponseTime = self._oIOXml.GetValueOfNodeAttribute(xResponseNode, 'time')
+                    dtResponseTimestamp = datetime.strptime(sResponseTime, self.sTimestampFormat)
 #                     print('*** TIME : %s' % sResponseTime)
-#                     
-#                     if dtLatestTimestamp == '':
-#                         dtLatestTimestamp = dtResponseTimestamp
-#                         sLatestResponse = self._oIOXml.GetDataInNode(xResponseNode)
-#                     else:
-#                         if dtResponseTimestamp > dtLatestTimestamp:
-#                             dtLatestTimestamp = dtResponseTimestamp
-#                             sLatestResponse = self._oIOXml.GetDataInNode(xResponseNode)
+                     
+                    if dtLatestTimestamp == '':
+                        dtLatestTimestamp = dtResponseTimestamp
+                        sLatestResponse = self._oIOXml.GetDataInNode(xResponseNode)
+                    else:
+                        # compare with >= in order to capture 'last' response 
+                        #    in case there are responses with the same timestamp
+                        if dtResponseTimestamp >= dtLatestTimestamp:
+                            dtLatestTimestamp = dtResponseTimestamp
+                            sLatestResponse = self._oIOXml.GetDataInNode(xResponseNode)
 
-                sLatestResponse, dtLatestTimestamp = self.GetLatestResponse(xOptionNode)
+#                 sLatestResponse, dtLatestTimestamp = self.GetLatestResponse(xOptionNode)
 
 
                 # search for 'latest' response completed - update the list
-                print('************Data...%s***END***' % sLatestResponse)
+#                 print('************Data...%s***END***' % sLatestResponse)
                 lsResponseValues.append(sLatestResponse)
                     
                     
@@ -470,27 +506,27 @@ class Session:
     
     #-----------------------------------------------
 
-    def GetLatestResponse(self, xOptionNode):
-        
-        
-        dtLatestTimestamp = ''    # timestamp of type 'datetime'
-        sLatestResponse = ''
-        
-        xAllResponseNodes = self._oIOXml.GetChildren(xOptionNode, 'Response')
-        for xResponseNode in xAllResponseNodes:
-            sResponseTime = self._oIOXml.GetValueOfNodeAttribute(xResponseNode, 'time')
-            dtResponseTimestamp = datetime.strptime(sResponseTime, self.sTimestampFormat)
-            print('*** TIME : %s' % sResponseTime)
-            
-            if dtLatestTimestamp == '':
-                dtLatestTimestamp = dtResponseTimestamp
-                sLatestResponse = self._oIOXml.GetDataInNode(xResponseNode)
-            else:
-                if dtResponseTimestamp > dtLatestTimestamp:
-                    dtLatestTimestamp = dtResponseTimestamp
-                    sLatestResponse = self._oIOXml.GetDataInNode(xResponseNode)
-
-        return sLatestResponse, dtLatestTimestamp
+#     def GetLatestResponse(self, xOptionNode):
+#         
+#         
+#         dtLatestTimestamp = ''    # timestamp of type 'datetime'
+#         sLatestResponse = ''
+#         
+#         xAllResponseNodes = self._oIOXml.GetChildren(xOptionNode, 'Response')
+#         for xResponseNode in xAllResponseNodes:
+#             sResponseTime = self._oIOXml.GetValueOfNodeAttribute(xResponseNode, 'time')
+#             dtResponseTimestamp = datetime.strptime(sResponseTime, self.sTimestampFormat)
+#             print('*** TIME : %s' % sResponseTime)
+#             
+#             if dtLatestTimestamp == '':
+#                 dtLatestTimestamp = dtResponseTimestamp
+#                 sLatestResponse = self._oIOXml.GetDataInNode(xResponseNode)
+#             else:
+#                 if dtResponseTimestamp > dtLatestTimestamp:
+#                     dtLatestTimestamp = dtResponseTimestamp
+#                     sLatestResponse = self._oIOXml.GetDataInNode(xResponseNode)
+# 
+#         return sLatestResponse, dtLatestTimestamp
 
     #-----------------------------------------------
 
