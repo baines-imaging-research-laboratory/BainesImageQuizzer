@@ -161,7 +161,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         self.oSession.SetFilesIO(self._oFilesIO)
         self.oSession.SetIOXml(self._oIOXml)
         self.oSession.BuildPageQuestionCompositeIndexList()
-        lCompositeIndicesResult = self.oSession.GetCompositeIndicesList()
+        lCompositeIndicesResult = self.oSession.CompositeIndicesList()
         
         if lCompositeIndicesResult == lExpectedCompositeIndices :
             bTestResult = True

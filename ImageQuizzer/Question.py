@@ -20,7 +20,6 @@ class QuestionSet():
         self.sClassName = type(self).__name__
         self.id = ''
         self.title = ''
-        self.overwritableResponsesYN = False
         self.ltupQuestions = []
         self._loQuestions = []
         
