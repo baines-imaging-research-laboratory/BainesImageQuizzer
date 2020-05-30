@@ -66,12 +66,10 @@ class QuestionSet():
                 elif (sQuestionType == 'Text'):
                     self.question = TextQuestion(lsQuestionOptions, sQuestionDescriptor)
                 elif (sQuestionType == 'IntegerValue'):
-#                     self.question = IntegerValueQuestion(lsQuestionOptions, sQuestionDescriptor, dictModifiers)
                     self.question = IntegerValueQuestion(lsQuestionOptions, sQuestionDescriptor)
                     dictModifiers = self.question.GetMinMaxAttributesFromXML(xNodeQuestion)
                     self.question.UpdateDictionaryModifiers(dictModifiers)
                 elif (sQuestionType == 'FloatValue'):
-#                     self.question = FloatValueQuestion(lsQuestionOptions, sQuestionDescriptor, dictModifiers)
                     self.question = FloatValueQuestion(lsQuestionOptions, sQuestionDescriptor)
                     dictModifiers = self.question.GetMinMaxAttributesFromXML(xNodeQuestion)
                     self.question.UpdateDictionaryModifiers(dictModifiers)
@@ -203,9 +201,13 @@ class QuestionSet():
 #                 bQuestionTypeGood = False
 #                 bBuildSuccess = False
 
-        bBuildSuccess, qWidget = self.question.BuildQuestion()
-        if bBuildSuccess :
-            self.qQuizWidgetLayout.addWidget(qWidget)
+        bBuildSuccess = True
+        for i in range(len(self._loQuestions)):
+            question = self._loQuestions[i]
+            bBuildQuestion, qWidget = question.BuildQuestion()
+            if bBuildQuestion :
+                self.qQuizWidgetLayout.addWidget(qWidget)
+                bBuildSuccess = bBuildSuccess * bBuildQuestion
 
                 
         return bBuildSuccess, self.qQuizWidget
@@ -359,6 +361,12 @@ class RadioQuestion(Question):
         self.lOptions = lOptions
         self.sGrpBoxTitle = sGrpBoxTitle
        
+    def _lsOptions_setter(self, lsInput):
+        self._lsOptions = lsInput
+        
+    def _lsOptions_getter(self):
+        return self._lsOptions
+        
     #-----------------------------------------------
     
     def BuildQuestion(self):
@@ -366,14 +374,15 @@ class RadioQuestion(Question):
 
         self.CreateGroupBox(self.sGrpBoxTitle)
         
-        length = len(self.lOptions)
+        lsStoredOptions = self._lsOptions_getter()
+        length = len(lsStoredOptions)
         if length < 1 :
             self.DisplayGroupBoxEmpty()
             return False, self.qGrpBox
         
         i = 0
         while i < length:
-            element1 = self.lOptions[i]
+            element1 = lsStoredOptions[i]
             qRadioBtn = qt.QRadioButton(element1)
             self.qGrpBoxLayout.addWidget(qRadioBtn)
             i = i + 1
@@ -439,6 +448,12 @@ class CheckBoxQuestion(Question):
         self.lOptions = lOptions
         self.sGrpBoxTitle = sGrpBoxTitle
 
+    def _lsOptions_setter(self, lsInput):
+        self._lsOptions = lsInput
+        
+    def _lsOptions_getter(self):
+        return self._lsOptions
+        
     #-----------------------------------------------
        
     def BuildQuestion(self):
@@ -446,14 +461,15 @@ class CheckBoxQuestion(Question):
 
         self.CreateGroupBox(self.sGrpBoxTitle)
         
-        length = len(self.lOptions)
+        lsStoredOptions = self._lsOptions_getter()
+        length = len(lsStoredOptions)
         if length < 1 :
             self.DisplayGroupBoxEmpty()
             return False, self.qGrpBox
         
         i = 0
         while i < length:
-            element1 = self.lOptions[i]
+            element1 = lsStoredOptions[i]
             qChkBox = qt.QCheckBox(element1)
             self.qGrpBoxLayout.addWidget(qChkBox)
             i = i + 1
@@ -518,6 +534,14 @@ class TextQuestion(Question):
         self.lOptions = lOptions
         self.sGrpBoxTitle = sGrpBoxTitle
         
+    def _lsOptions_setter(self, lsInput):
+        self._lsOptions = lsInput
+        
+    def _lsOptions_getter(self):
+        return self._lsOptions
+        
+    #-----------------------------------------------
+    
     def BuildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
 
@@ -526,14 +550,15 @@ class TextQuestion(Question):
         newLayout = qt.QGridLayout()
         self.qGrpBoxLayout.addLayout(newLayout)
        
-        length = len(self.lOptions)
+        lsStoredOptions = self._lsOptions_getter()
+        length = len(lsStoredOptions)
         if length < 1 :
             self.DisplayGroupBoxEmpty()
             return False, self.qGrpBox
 
         i = 0
         while i < length:
-            element1 = self.lOptions[i]
+            element1 = lsStoredOptions[i]
             qLineEdit = qt.QLineEdit()
             qLabel = qt.QLabel(element1)
             newLayout.addWidget(qLabel, i, 0)
@@ -596,8 +621,8 @@ class IntegerValueQuestion(Question):
         self.sMin = ''
         self.sMax = ''
         
-    def _lsOptions_setter(self, lInput):
-        self._lsOptions = lInput
+    def _lsOptions_setter(self, lsInput):
+        self._lsOptions = lsInput
         
     def _lsOptions_getter(self):
         return self._lsOptions
@@ -614,15 +639,15 @@ class IntegerValueQuestion(Question):
         newLayout = qt.QGridLayout()
         self.qGrpBoxLayout.addLayout(newLayout)
        
-        self.lsStoredOptions = self._lsOptions_getter()
-        length = len(self.lsStoredOptions)
+        lsStoredOptions = self._lsOptions_getter()
+        length = len(lsStoredOptions)
         if length < 1 :
             self.DisplayGroupBoxEmpty()
             return False, self.qGrpBox
 
         i = 0
         while i < length:
-            element1 = self.lsStoredOptions[i]
+            element1 = lsStoredOptions[i]
             self.sMin = self.dictModifiers.get('min')
             self.sMax = self.dictModifiers.get('max')
             
@@ -645,7 +670,6 @@ class IntegerValueQuestion(Question):
     def CaptureResponse(self):
         self.sFnName = sys._getframe().f_code.co_name
 
-        oMsgUtil = UtilsMsgs()
 
         lsResponses = []
         bSuccess = False
@@ -729,9 +753,17 @@ class FloatValueQuestion(Question):
         self.sMin = ''
         self.sMax = ''
 
+    def _lsOptions_setter(self, lsInput):
+        self._lsOptions = lsInput
+        
+    def _lsOptions_getter(self):
+        return self._lsOptions
+        
     def UpdateDictionaryModifiers(self, dictionaryInput):
         self.dictModifiers = dictionaryInput
         
+    #-----------------------------------------------
+
     def BuildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
 
@@ -740,14 +772,15 @@ class FloatValueQuestion(Question):
         newLayout = qt.QGridLayout()
         self.qGrpBoxLayout.addLayout(newLayout)
        
-        length = len(self.lOptions)
+        lsStoredOptions = self._lsOptions_getter()
+        length = len(lsStoredOptions)
         if length < 1 :
             self.DisplayGroupBoxEmpty()
             return False, self.qGrpBox
 
         i = 0
         while i < length:
-            element1 = self.lOptions[i]
+            element1 = lsStoredOptions[i]
 
             self.sMin = self.dictModifiers.get('min')
             self.sMax = self.dictModifiers.get('max')
@@ -780,7 +813,6 @@ class FloatValueQuestion(Question):
 #             lsResponses.append(str(qSpinner.value))
 
 
-        oMsgUtil = UtilsMsgs()
 
         lsResponses = []
         bSuccess = False
@@ -860,11 +892,10 @@ class InfoBox(Question):
     def __init__(self, lOptions, sGrpBoxTitle):
         self.sClassName = type(self).__name__
 
-        self.lsStoredOptions = []
         self.sGrpBoxTitle = sGrpBoxTitle
         
-    def _lsOptions_setter(self, lInput):
-        self._lsOptions = lInput
+    def _lsOptions_setter(self, lsInput):
+        self._lsOptions = lsInput
         
     def _lsOptions_getter(self):
         return self._lsOptions
@@ -879,15 +910,15 @@ class InfoBox(Question):
         newLayout = qt.QGridLayout()
         self.qGrpBoxLayout.addLayout(newLayout)
        
-        self.lsStoredOptions = self._lsOptions_getter()
-        length = len(self.lsStoredOptions)
+        lsStoredOptions = self._lsOptions_getter()
+        length = len(lsStoredOptions)
         if length < 1 :
             self.DisplayGroupBoxEmpty()
             return False, self.qGrpBox
 
         i = 0
         while i < length:
-            element1 = self.lsStoredOptions[i]
+            element1 = lsStoredOptions[i]
             qLabel = qt.QLabel(element1)
             newLayout.addWidget(qLabel, i, 0)
             i = i + 1
