@@ -112,6 +112,14 @@ class Session:
         return xPageNode
     
     #----------
+    def GetCurrentPageIndex(self):
+        return self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][0]
+    
+    #----------
+    def GetCurrentQuestionSetIndex(self):
+        return self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][1]
+    
+    #----------
     def GetCurrentQuestionSetNode(self):
         iQSetIndex = self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][1]
         xPageNode = self.GetCurrentPageNode()
@@ -290,8 +298,8 @@ class Session:
 #         oCurrentQuestionSet = self._loQuestionSets[iQuestionSetIndex]
 
         xNodeQuestionSet = self.GetCurrentQuestionSetNode()
-        oCurrentQuestionSet = QuestionSet()
-        oCurrentQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
+        oQuestionSet = QuestionSet()
+        oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
         
 
         
@@ -302,10 +310,10 @@ class Session:
             self.slicerQuizLayout.itemAt(i).widget().setParent(None)
 
         
-        bBuildSuccess, qQuizWidget = oCurrentQuestionSet.BuildQuestionSetForm()
+        bBuildSuccess, qQuizWidget = oQuestionSet.BuildQuestionSetForm()
         if bBuildSuccess:
             self.slicerQuizLayout.addWidget(qQuizWidget)
-#             self._loQuestionSets.append(oQuestionSet)
+            self._loQuestionSets.append(oQuestionSet)
 
             # enable widget if no response exists or if user is allowed to 
             # input multiple responses
@@ -379,7 +387,7 @@ class Session:
         sMsg = ''
             
 
-        bResponsesCaptured, sMsg = self.CaptureResponses()
+        bResponsesCaptured, sMsg = self.CaptureResponsesForQuestionSet()
         
         if (bResponsesCaptured == False):
 
@@ -453,7 +461,7 @@ class Session:
 
     #-----------------------------------------------
 
-    def CaptureResponses(self):
+    def CaptureResponsesForQuestionSet(self):
         
         # set defaults 
         sMsg = ''
@@ -466,10 +474,9 @@ class Session:
 # #         loQuestions = []
 
 
-        xNodeQuestionSet = self.GetCurrentQuestionSetNode()
-        oQuestionSet = QuestionSet()
-        oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
-
+        indQSet = self.GetCurrentQuestionSetIndex()
+ 
+        oQuestionSet = self._loQuestionSets[indQSet]
 
         loQuestions = oQuestionSet.GetQuestionList()
             
@@ -492,7 +499,7 @@ class Session:
         
         bResponseExists = False
         
-        indQSet = self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][1]
+#         indQSet = self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][1]
         
         # get option node for the current question set , 1st question, 1st otpion
         xOptionNode = self.GetNthOptionNode( 0, 0)
@@ -522,9 +529,11 @@ class Session:
 #         oQuestionSet = self._loQuestionSets[iQuestionSetIndex]
 #         loQuestions = []
 
+
         xNodeQuestionSet = self.GetCurrentQuestionSetNode()
-        oQuestionSet = QuestionSet()
-        oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
+        indQSet = self.GetCurrentQuestionSetIndex()
+ 
+        oQuestionSet = self._loQuestionSets[indQSet]
 
 
         loQuestions = oQuestionSet.GetQuestionList()
@@ -583,28 +592,6 @@ class Session:
     
     #-----------------------------------------------
 
-#     def GetLatestResponse(self, xOptionNode):
-#         
-#         
-#         dtLatestTimestamp = ''    # timestamp of type 'datetime'
-#         sLatestResponse = ''
-#         
-#         xAllResponseNodes = self._oIOXml.GetChildren(xOptionNode, 'Response')
-#         for xResponseNode in xAllResponseNodes:
-#             sResponseTime = self._oIOXml.GetValueOfNodeAttribute(xResponseNode, 'time')
-#             dtResponseTimestamp = datetime.strptime(sResponseTime, self.sTimestampFormat)
-#             print('*** TIME : %s' % sResponseTime)
-#             
-#             if dtLatestTimestamp == '':
-#                 dtLatestTimestamp = dtResponseTimestamp
-#                 sLatestResponse = self._oIOXml.GetDataInNode(xResponseNode)
-#             else:
-#                 if dtResponseTimestamp > dtLatestTimestamp:
-#                     dtLatestTimestamp = dtResponseTimestamp
-#                     sLatestResponse = self._oIOXml.GetDataInNode(xResponseNode)
-# 
-#         return sLatestResponse, dtLatestTimestamp
-
     #-----------------------------------------------
 
     def WriteResponses(self):
@@ -616,9 +603,11 @@ class Session:
 #         oQuestionSet = self._loQuestionSets[indQSet]
 # #         loQuestions = []
 
-        xNodeQuestionSet = self.GetCurrentQuestionSetNode()
-        oQuestionSet = QuestionSet()
-        oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
+
+        indQSet = self.GetCurrentQuestionSetIndex()
+ 
+        oQuestionSet = self._loQuestionSets[indQSet]
+
 
         loQuestions = oQuestionSet.GetQuestionList()
         
@@ -645,10 +634,8 @@ class Session:
         now = datetime.now()
         sResponseTime = now.strftime(self.sTimestampFormat)
         
-        dictAttrib = {}
         dictAttrib = { 'logintime': self.LoginTime(), 'responsetime': sResponseTime}
         
-        sUserQuizPath = self._oFilesIO.GetUserQuizPath()
         self._oIOXml.AddElement(xOptionNode,'Response', sResponse, dictAttrib)
         
     #-----------------------------------------------

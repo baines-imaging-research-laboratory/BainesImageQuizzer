@@ -206,7 +206,6 @@ class QuestionSet():
         bBuildSuccess, qWidget = self.question.BuildQuestion()
         if bBuildSuccess :
             self.qQuizWidgetLayout.addWidget(qWidget)
-            self._loQuestions.append(self.question)
 
                 
         return bBuildSuccess, self.qQuizWidget
