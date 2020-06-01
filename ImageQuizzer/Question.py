@@ -59,22 +59,29 @@ class QuestionSet():
 
 
                 bQuestionTypeGood = True
+
                 if (sQuestionType == 'Radio'):
-                    self.question = RadioQuestion(lsQuestionOptions, sQuestionDescriptor)
+                    self.question = RadioQuestion()
+
                 elif (sQuestionType == 'Checkbox'):
-                    self.question = CheckBoxQuestion(lsQuestionOptions, sQuestionDescriptor)
+                    self.question = CheckBoxQuestion()
+
                 elif (sQuestionType == 'Text'):
-                    self.question = TextQuestion(lsQuestionOptions, sQuestionDescriptor)
+                    self.question = TextQuestion()
+
                 elif (sQuestionType == 'IntegerValue'):
-                    self.question = IntegerValueQuestion(lsQuestionOptions, sQuestionDescriptor)
+                    self.question = IntegerValueQuestion()
                     dictModifiers = self.question.GetMinMaxAttributesFromXML(xNodeQuestion)
                     self.question.UpdateDictionaryModifiers(dictModifiers)
+
                 elif (sQuestionType == 'FloatValue'):
-                    self.question = FloatValueQuestion(lsQuestionOptions, sQuestionDescriptor)
+                    self.question = FloatValueQuestion()
                     dictModifiers = self.question.GetMinMaxAttributesFromXML(xNodeQuestion)
                     self.question.UpdateDictionaryModifiers(dictModifiers)
+
                 elif (sQuestionType == 'InfoBox'):
-                    self.question = InfoBox(lsQuestionOptions, sQuestionDescriptor)
+                    self.question = InfoBox()
+
                 else:
                     sLabel = 'Warning : Contact Administrator - Invalid question    '
                     sWarningMsg = self.sClassName + ':' + self.sFnName + ':' + 'UnrecognizedQuestionType - Contact Administrator'
@@ -82,9 +89,12 @@ class QuestionSet():
                     bQuestionTypeGood = False
                     
 
-                lOptions = self.GetOptionsFromXML(xNodeQuestion)
-                self.question._lsOptions_setter(lOptions)
-                self._loQuestions.append(self.question)
+                if bQuestionTypeGood == True:
+                    self.question._sGrpBoxTitle_setter(sQuestionDescriptor)
+                    
+                    lOptions = self.GetOptionsFromXML(xNodeQuestion)
+                    self.question._lsOptions_setter(lOptions)
+                    self._loQuestions.append(self.question)
 
                 
     #-----------------------------------------------
@@ -104,53 +114,6 @@ class QuestionSet():
         return lOptions
     #-----------------------------------------------
         
-#     def ExtractQuestionsFromXML(self, xNodeQuestionSet):
-#         # given the xml question set node, extract the questions and set up
-#         # the list of tuples for building the question set form
-#         
-#         sNodeName = self.oIOXml.GetElementNodeName(xNodeQuestionSet)
-#         if not (sNodeName == "QuestionSet"):
-#             raise Exception("Invalid XML node. Expecting 'QuestionSet', node name was: %s" % sNodeName)
-#         else:
-#             # for each child named 'Question' extract labels and options
-#             iNumQuestions = self.oIOXml.GetNumChildrenByName(xNodeQuestionSet, "Question")
-#             
-#             self.id = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'id')
-#             self.title = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'title')
-#             
-#             xQuestions = self.oIOXml.GetChildren(xNodeQuestionSet, 'Question')
-#             
-#             for xNodeQuestion in xQuestions:
-# 
-#                 lsQuestionOptions = []
-#                 dictModifiers = {}
-# 
-#                 sQuestionType = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'type')
-#                 sQuestionDescriptor = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'descriptor')
-# 
-#                 # get modifiers for type = IntegerValue
-#                 if sQuestionType =="IntegerValue" or sQuestionType == "FloatValue":
-#                     sMin = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'min')               
-#                     sMax = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'max')
-#                     dictModifiers['min'] = sMin
-#                     dictModifiers['max'] = sMax
-#                     
-#                                    
-#                 # get options for each question
-#                 
-#                 xOptions = self.oIOXml.GetChildren(xNodeQuestion, 'Option')
-# 
-#                 for iIndex in range(len(xOptions)):
-#                     
-#                     xQuestionOption = self.oIOXml.GetNthChild(xNodeQuestion, 'Option', iIndex)
-#                     sValue = self.oIOXml.GetDataInNode(xQuestionOption)
-#                     lsQuestionOptions.append(sValue)
-#                 
-#             
-#                 tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions, dictModifiers]
-#                 self.ltupQuestions.append(tupQuestionGroup)
-#                 
-
     #-----------------------------------------------
         
     def BuildQuestionSetForm(self):
@@ -166,40 +129,6 @@ class QuestionSet():
 
         self.CreateGroupBoxWidget()
         
-#         for i in range(len(self.ltupQuestions)):
-#             tupQuestionItemInfo = self.ltupQuestions[i]
-#             sQuestionType = str(tupQuestionItemInfo[0])
-#             sQuestionDescriptor = str(tupQuestionItemInfo[1])
-#             lsQuestionOptions = tupQuestionItemInfo[2]
-#             if len(tupQuestionItemInfo) > 3:
-#                 dictModifiers = tupQuestionItemInfo[3]
-# 
-#             bQuestionTypeGood = True
-#             if (sQuestionType == 'Radio'):
-#                 self.question = RadioQuestion(lsQuestionOptions, sQuestionDescriptor)
-#             elif (sQuestionType == 'Checkbox'):
-#                 self.question = CheckBoxQuestion(lsQuestionOptions, sQuestionDescriptor)
-#             elif (sQuestionType == 'Text'):
-#                 self.question = TextQuestion(lsQuestionOptions, sQuestionDescriptor)
-#             elif (sQuestionType == 'IntegerValue'):
-#                 self.question = IntegerValueQuestion(lsQuestionOptions, sQuestionDescriptor, dictModifiers)
-#             elif (sQuestionType == 'FloatValue'):
-#                 self.question = FloatValueQuestion(lsQuestionOptions, sQuestionDescriptor, dictModifiers)
-#             elif (sQuestionType == 'InfoBox'):
-#                 self.question = InfoBox(lsQuestionOptions, sQuestionDescriptor)
-#             else:
-#                 sLabel = 'Warning : Contact Administrator - Invalid question    '
-#                 sWarningMsg = self.sClassName + ':' + self.sFnName + ':' + 'UnrecognizedQuestionType - Contact Administrator'
-#                 qlabel = qt.QLabel(sLabel + sWarningMsg)
-#                 qGrpBox = qt.QGroupBox()
-#                 qGrpBoxLayout = qt.QVBoxLayout()
-#                 qGrpBox.setLayout(qGrpBoxLayout)
-#                 qGrpBoxLayout.addWidget(qlabel)
-#                 # TODO .... is the warnings.warn failing??? 
-#                 warnings.warn( sWarningMsg )
-#                 self.qQuizWidgetLayout.addWidget(qGrpBox)
-#                 bQuestionTypeGood = False
-#                 bBuildSuccess = False
 
         bBuildSuccess = True
         for i in range(len(self._loQuestions)):
@@ -235,6 +164,7 @@ class Question(ABC):
         self.sFnName = 'undefinedFunctionName'
 
         self._lsOptions = []
+        self._sGrpBoxTitle = ''
 
     
     # abstract properties require level of indirection
@@ -258,6 +188,26 @@ class Question(ABC):
         return self._lsOptions
     #----------
     
+    #----------
+    # _sGrpBoxTitle
+    #----------
+    @property
+    def sGrpBoxTitle(self):
+        return self._sGrpBoxTitle
+    
+    @sGrpBoxTitle.setter
+    def sGrpBoxTitle(self, x):
+        self._sGrpBoxTitle_setter(x)
+        
+    @abstractmethod
+    def _sGrpBoxTitle_setter(self,x):
+        pass
+    
+    @abstractmethod
+    def _sGrpBoxTitle_getter(self):
+        return self._sGrpBoxTitle
+    #----------
+    
     
     @abstractmethod        
     def BuildQuestion(self): pass
@@ -268,12 +218,6 @@ class Question(ABC):
     @abstractmethod
     def PopulateQuestionWithResponses(self, lsResponseValues): pass
 
-#     #-----------------------------------------------
-#     def GetOptionsList(self):
-#         return self.lOptions
-# 
-#     def AddToOptionsList(self, sItem):
-#         self.lOptions.append(sItem)
     #-----------------------------------------------
     
     def CreateGroupBox(self, sTitle):
@@ -357,15 +301,13 @@ class Question(ABC):
 
 class RadioQuestion(Question):
     # Create a group box and add radio buttons based on the options provided
-    # Inputs : lOptions - list of labels for each radio button
+    # Inputs : 
     # Outputs: exitCode - boolean describing whether function exited successfully
     #          qGrpBox  - group box widget holding radio buttons
     
-    def __init__(self, lOptions, sGrpBoxTitle):
+    def __init__(self):
         self.sClassName = type(self).__name__
 
-        self.lOptions = lOptions
-        self.sGrpBoxTitle = sGrpBoxTitle
        
     def _lsOptions_setter(self, lsInput):
         self._lsOptions = lsInput
@@ -373,12 +315,18 @@ class RadioQuestion(Question):
     def _lsOptions_getter(self):
         return self._lsOptions
         
+    def _sGrpBoxTitle_setter(self, sInput):
+        self._sGrpBoxTitle = sInput
+        
+    def _sGrpBoxTitle_getter(self):
+        return self._sGrpBoxTitle
+
     #-----------------------------------------------
     
     def BuildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
 
-        self.CreateGroupBox(self.sGrpBoxTitle)
+        self.CreateGroupBox(self._sGrpBoxTitle_getter())
         
         lsStoredOptions = self._lsOptions_getter()
         length = len(lsStoredOptions)
@@ -417,7 +365,7 @@ class RadioQuestion(Question):
         if bResponseFound:
             bSuccess = True
         else:
-            sMsg = 'Missing radio option for: ' + self.sGrpBoxTitle
+            sMsg = 'Missing radio option for: ' + self._sGrpBoxTitle_getter()
 
         return bSuccess, lsResponses, sMsg
     
@@ -444,15 +392,13 @@ class RadioQuestion(Question):
 
 class CheckBoxQuestion(Question):
     # Create a group box and add check boxes based on the options provided
-    # Inputs : lOptions - list of options for each check box
+    # Inputs : 
     # Outputs: exitCode - boolean describing whether function exited successfully
     #          qGrpBox  - group box widget holding check boxes
     
-    def __init__(self, lOptions, sGrpBoxTitle):
+    def __init__(self):
         self.sClassName = type(self).__name__
 
-        self.lOptions = lOptions
-        self.sGrpBoxTitle = sGrpBoxTitle
 
     def _lsOptions_setter(self, lsInput):
         self._lsOptions = lsInput
@@ -460,12 +406,18 @@ class CheckBoxQuestion(Question):
     def _lsOptions_getter(self):
         return self._lsOptions
         
+    def _sGrpBoxTitle_setter(self, sInput):
+        self._sGrpBoxTitle = sInput
+        
+    def _sGrpBoxTitle_getter(self):
+        return self._sGrpBoxTitle
+
     #-----------------------------------------------
        
     def BuildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
 
-        self.CreateGroupBox(self.sGrpBoxTitle)
+        self.CreateGroupBox(self._sGrpBoxTitle_getter())
         
         lsStoredOptions = self._lsOptions_getter()
         length = len(lsStoredOptions)
@@ -504,7 +456,7 @@ class CheckBoxQuestion(Question):
         if bResponseFound:
             bSuccess = True
         else:
-            sMsg = 'Missing check box option for: ' + self.sGrpBoxTitle
+            sMsg = 'Missing check box option for: ' + self._sGrpBoxTitle_getter()
 
         return bSuccess, lsResponses, sMsg
 
@@ -530,15 +482,13 @@ class CheckBoxQuestion(Question):
 
 class TextQuestion(Question):
     # Create a group box and add a text box that allows the user to enter text
-    # Inputs : lOptions - list of labels for each box 
+    # Inputs : 
     # Outputs: exitCode - boolean describing whether function exited successfully
     #          qGrpBox  - group box widget holding text edit boxes
     
-    def __init__(self, lOptions, sGrpBoxTitle):
+    def __init__(self):
         self.sClassName = type(self).__name__
 
-        self.lOptions = lOptions
-        self.sGrpBoxTitle = sGrpBoxTitle
         
     def _lsOptions_setter(self, lsInput):
         self._lsOptions = lsInput
@@ -546,13 +496,19 @@ class TextQuestion(Question):
     def _lsOptions_getter(self):
         return self._lsOptions
         
+    def _sGrpBoxTitle_setter(self, sInput):
+        self._sGrpBoxTitle = sInput
+        
+    def _sGrpBoxTitle_getter(self):
+        return self._sGrpBoxTitle
+
     #-----------------------------------------------
     
     def BuildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
 
         # add grid layout to group box
-        self.CreateGroupBox(self.sGrpBoxTitle)
+        self.CreateGroupBox(self._sGrpBoxTitle_getter())
         newLayout = qt.QGridLayout()
         self.qGrpBoxLayout.addLayout(newLayout)
        
@@ -594,7 +550,7 @@ class TextQuestion(Question):
         if bResponseFound:
             bSuccess = True
         else:
-            sMsg = 'Missing text response for: ' + self.sGrpBoxTitle
+            sMsg = 'Missing text response for: ' + self._sGrpBoxTitle_getter()
             
         return bSuccess, lsResponses, sMsg
 
@@ -613,16 +569,14 @@ class TextQuestion(Question):
 
 class IntegerValueQuestion(Question):
     # Create a group box and add a line edit that allows the user to enter an integer value
-    # Inputs : lOptions - list of labels for each box 
+    # Inputs : 
     # Outputs: exitCode - boolean describing whether function exited successfully
     #          qGrpBox  - group box widget holding the text box for integer input
     
-    def __init__(self, lOptions, sGrpBoxTitle):
+    def __init__(self):
         self.sClassName = type(self).__name__
 
         self.oMsgUtil = UtilsMsgs()
-        self.lOptions = lOptions
-        self.sGrpBoxTitle = sGrpBoxTitle
         self.dictModifiers = {}
         self.sMin = ''
         self.sMax = ''
@@ -633,15 +587,22 @@ class IntegerValueQuestion(Question):
     def _lsOptions_getter(self):
         return self._lsOptions
         
+    def _sGrpBoxTitle_setter(self, sInput):
+        self._sGrpBoxTitle = sInput
+        
+    def _sGrpBoxTitle_getter(self):
+        return self._sGrpBoxTitle
+
     def UpdateDictionaryModifiers(self, dictionaryInput):
         self.dictModifiers = dictionaryInput
         
+    #-----------------------------------------------
         
     def BuildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
 
         # add grid layout to group box
-        self.CreateGroupBox(self.sGrpBoxTitle)
+        self.CreateGroupBox(self._sGrpBoxTitle_getter())
         newLayout = qt.QGridLayout()
         self.qGrpBoxLayout.addLayout(newLayout)
        
@@ -695,7 +656,7 @@ class IntegerValueQuestion(Question):
                 iMax = int(self.sMax)
         except ValueError:
             bSuccess = False
-            sErrorMsg = 'See Administrator. Invalid range attribute in XML tag : ' + self.sGrpBoxTitle
+            sErrorMsg = 'See Administrator. Invalid range attribute in XML tag : ' + self._sGrpBoxTitle_getter()
             self.oMsgUtil.DisplayError(sErrorMsg)
             
                 
@@ -716,7 +677,7 @@ class IntegerValueQuestion(Question):
                         raise ValueError()
                         
                 except ValueError:
-                    sMsg = 'Please enter integer for: ' + self.sGrpBoxTitle + sRangeMsg
+                    sMsg = 'Please enter integer for: ' + self._sGrpBoxTitle_getter() + sRangeMsg
                     bSuccess = bSuccess * False
                     
             else:
@@ -725,7 +686,7 @@ class IntegerValueQuestion(Question):
         if bResponseFound:
             bSuccess = True
         else:
-            sMsg = 'Invalid integer value response for: ' + self.sGrpBoxTitle + sRangeMsg
+            sMsg = 'Invalid integer value response for: ' + self._sGrpBoxTitle_getter() + sRangeMsg
 
                     
         return bSuccess, lsResponses, sMsg
@@ -749,12 +710,10 @@ class FloatValueQuestion(Question):
     # Outputs: exitCode - boolean describing whether function exited successfully
     #          qGrpBox  - group box widget holding the text box for float input
     
-    def __init__(self, lOptions, sGrpBoxTitle):
+    def __init__(self):
         self.sClassName = type(self).__name__
 
         self.oMsgUtil = UtilsMsgs()
-        self.lOptions = lOptions
-        self.sGrpBoxTitle = sGrpBoxTitle
         self.dictModifiers = {}
         self.sMin = ''
         self.sMax = ''
@@ -765,6 +724,12 @@ class FloatValueQuestion(Question):
     def _lsOptions_getter(self):
         return self._lsOptions
         
+    def _sGrpBoxTitle_setter(self, sInput):
+        self._sGrpBoxTitle = sInput
+        
+    def _sGrpBoxTitle_getter(self):
+        return self._sGrpBoxTitle
+
     def UpdateDictionaryModifiers(self, dictionaryInput):
         self.dictModifiers = dictionaryInput
         
@@ -774,7 +739,7 @@ class FloatValueQuestion(Question):
         self.sFnName = sys._getframe().f_code.co_name
 
         # add grid layout to group box
-        self.CreateGroupBox(self.sGrpBoxTitle)
+        self.CreateGroupBox(self._sGrpBoxTitle_getter())
         newLayout = qt.QGridLayout()
         self.qGrpBoxLayout.addLayout(newLayout)
        
@@ -811,14 +776,6 @@ class FloatValueQuestion(Question):
     def CaptureResponse(self):
         self.sFnName = sys._getframe().f_code.co_name
 
-#         lsResponses = []
-#         bSuccess = True
-#         sMsg = ''
-#         
-#         for qSpinner in self.qGrpBox.findChildren(qt.QDoubleSpinBox):
-#             lsResponses.append(str(qSpinner.value))
-
-
 
         lsResponses = []
         bSuccess = False
@@ -838,7 +795,7 @@ class FloatValueQuestion(Question):
                 fMax = float(self.sMax)
         except ValueError:
             bSuccess = False
-            sErrorMsg = 'See Administrator. Invalid range attribute in XML tag : ' + self.sGrpBoxTitle
+            sErrorMsg = 'See Administrator. Invalid range attribute in XML tag : ' + self._sGrpBoxTitle_getter()
             self.oMsgUtil.DisplayError(sErrorMsg)
             
                 
@@ -859,7 +816,7 @@ class FloatValueQuestion(Question):
                         raise ValueError()
                         
                 except ValueError:
-                    sMsg = 'Please enter decimal value for: ' + self.sGrpBoxTitle + sRangeMsg
+                    sMsg = 'Please enter decimal value for: ' + self._sGrpBoxTitle_getter() + sRangeMsg
                     bSuccess = bSuccess * False
             else:
                 bResponseFound = False
@@ -869,7 +826,7 @@ class FloatValueQuestion(Question):
         if bResponseFound:
             bSuccess = True
         else:
-            sMsg = 'Invalid decimal value response for: ' + self.sGrpBoxTitle + sRangeMsg
+            sMsg = 'Invalid decimal value response for: ' + self._sGrpBoxTitle_getter() + sRangeMsg
 
 
         return bSuccess, lsResponses, sMsg
@@ -891,14 +848,13 @@ class FloatValueQuestion(Question):
 class InfoBox(Question):
     # Create a group box and add a label holding information
     # There are no responses from the user to catch
-    # Inputs : lOptions - list of labels to go in this label box
+    # Inputs :
     # Outputs: exitCode - boolean describing whether function exited successfully
     #          qGrpBox  - group box widget holding text edit boxes
     
-    def __init__(self, lOptions, sGrpBoxTitle):
+    def __init__(self):
         self.sClassName = type(self).__name__
 
-        self.sGrpBoxTitle = sGrpBoxTitle
         
     def _lsOptions_setter(self, lsInput):
         self._lsOptions = lsInput
@@ -906,13 +862,19 @@ class InfoBox(Question):
     def _lsOptions_getter(self):
         return self._lsOptions
         
+    def _sGrpBoxTitle_setter(self, sInput):
+        self._sGrpBoxTitle = sInput
+        
+    def _sGrpBoxTitle_getter(self):
+        return self._sGrpBoxTitle
+
     #-----------------------------------------------
 
     def BuildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
 
         # add grid layout to group box
-        self.CreateGroupBox(self.sGrpBoxTitle)
+        self.CreateGroupBox(self._sGrpBoxTitle_getter())
         newLayout = qt.QGridLayout()
         self.qGrpBoxLayout.addLayout(newLayout)
        
