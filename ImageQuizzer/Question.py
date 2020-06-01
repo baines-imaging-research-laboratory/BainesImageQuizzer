@@ -204,9 +204,9 @@ class QuestionSet():
         bBuildSuccess = True
         for i in range(len(self._loQuestions)):
             question = self._loQuestions[i]
-            bBuildQuestion, qWidget = question.BuildQuestion()
+            bBuildQuestion, qGrpboxWidget = question.BuildQuestion()
             if bBuildQuestion :
-                self.qQuizWidgetLayout.addWidget(qWidget)
+                self.qQuizWidgetLayout.addWidget(qGrpboxWidget)
                 bBuildSuccess = bBuildSuccess * bBuildQuestion
 
                 
@@ -235,7 +235,12 @@ class Question(ABC):
         self.sFnName = 'undefinedFunctionName'
 
         self._lsOptions = []
-        
+
+    
+    # abstract properties require level of indirection
+    #----------
+    # _lsOptions
+    #----------
     @property
     def lsOptions(self):
         return self._lsOptions
@@ -251,6 +256,7 @@ class Question(ABC):
     @abstractmethod
     def _lsOptions_getter(self):
         return self._lsOptions
+    #----------
     
     
     @abstractmethod        
@@ -262,12 +268,12 @@ class Question(ABC):
     @abstractmethod
     def PopulateQuestionWithResponses(self, lsResponseValues): pass
 
-    #-----------------------------------------------
-    def GetOptionsList(self):
-        return self.lOptions
-
-    def AddToOptionsList(self, sItem):
-        self.lOptions.append(sItem)
+#     #-----------------------------------------------
+#     def GetOptionsList(self):
+#         return self.lOptions
+# 
+#     def AddToOptionsList(self, sItem):
+#         self.lOptions.append(sItem)
     #-----------------------------------------------
     
     def CreateGroupBox(self, sTitle):
