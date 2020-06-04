@@ -164,6 +164,7 @@ class Question(ABC):
         self.sFnName = 'undefinedFunctionName'
 
         self._lsOptions = []
+        self._lsResponses = []
         self._sGrpBoxTitle = ''
 
     
@@ -186,6 +187,26 @@ class Question(ABC):
     @abstractmethod
     def _lsOptions_getter(self):
         return self._lsOptions
+    #----------
+    
+    #----------
+    # _lsOptions
+    #----------
+    @property
+    def lsResponses(self):
+        return self._lsResponses
+        
+    @lsResponses.setter
+    def lsResponses(self,x):
+        self._lsResponses_setter(x)
+        
+    @abstractmethod
+    def _lsResponses_setter(self, x):
+        pass
+        
+    @abstractmethod
+    def _lsResponses_getter(self):
+        return self._lsResponses
     #----------
     
     #----------
@@ -315,6 +336,12 @@ class RadioQuestion(Question):
     def _lsOptions_getter(self):
         return self._lsOptions
         
+    def _lsResponses_setter(self, lsInput):
+        self._lsResponses = lsInput
+        
+    def _lsResponses_getter(self):
+        return self._lsResponses
+        
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput
         
@@ -406,6 +433,12 @@ class CheckBoxQuestion(Question):
     def _lsOptions_getter(self):
         return self._lsOptions
         
+    def _lsResponses_setter(self, lsInput):
+        self._lsResponses = lsInput
+        
+    def _lsResponses_getter(self):
+        return self._lsResponses
+        
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput
         
@@ -495,6 +528,12 @@ class TextQuestion(Question):
         
     def _lsOptions_getter(self):
         return self._lsOptions
+        
+    def _lsResponses_setter(self, lsInput):
+        self._lsResponses = lsInput
+        
+    def _lsResponses_getter(self):
+        return self._lsResponses
         
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput
@@ -586,6 +625,12 @@ class IntegerValueQuestion(Question):
         
     def _lsOptions_getter(self):
         return self._lsOptions
+        
+    def _lsResponses_setter(self, lsInput):
+        self._lsResponses = lsInput
+        
+    def _lsResponses_getter(self):
+        return self._lsResponses
         
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput
@@ -724,6 +769,12 @@ class FloatValueQuestion(Question):
     def _lsOptions_getter(self):
         return self._lsOptions
         
+    def _lsResponses_setter(self, lsInput):
+        self._lsResponses = lsInput
+        
+    def _lsResponses_getter(self):
+        return self._lsResponses
+        
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput
         
@@ -861,6 +912,12 @@ class InfoBox(Question):
         
     def _lsOptions_getter(self):
         return self._lsOptions
+        
+    def _lsResponses_setter(self, lsInput):
+        self._lsResponses = lsInput
+        
+    def _lsResponses_getter(self):
+        return self._lsResponses
         
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput

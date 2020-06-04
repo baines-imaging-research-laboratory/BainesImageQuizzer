@@ -32,6 +32,7 @@ class Session:
         self._xPageNode = None
         
         self._loQuestionSets = []
+        self._lsResponsesForQuestionSet = []
         
         self._bStartOfSession = True
         self._bQuizComplete = False
@@ -565,9 +566,11 @@ class Session:
                 # search for 'latest' response completed - update the list
 #                 print('************Data...%s***END***' % sLatestResponse)
                 lsResponseValues.append(sLatestResponse)
+                self._lsResponsesForQuestionSet.append(lsResponseValues)
                     
                     
             oQuestion.PopulateQuestionWithResponses(lsResponseValues)
+            oQuestion._lsResponses_setter(lsResponseValues)
     
             lsResponseValues = []  # clear for next set of options 
             
