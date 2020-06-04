@@ -240,23 +240,115 @@ class Session:
 
     #-----------------------------------------------
 
-    def AddSessionLoginTimestamp(self):
+    def onNextButtonClicked(self):
+
+        sMsg = ''
+            
+
+        bResponsesCaptured, sMsg = self.CaptureResponsesForQuestionSet()
+        
+        if (bResponsesCaptured == False):
+
+            self._oMsgUtil.DisplayWarning(sMsg)
+
+        else:
+            
+            
+            # only allow for writing of responses under certain conditions
+            
+            if ( self._bAllowMultipleResponse == True)  or \
+                ((self._bAllowMultipleResponse == False) and (self.CheckForSavedResponse() == False) ):
+
+                # Responses have been captured, if it's the first set of responses
+                #    for the session, add in the login timestamp
+                #    This timestamp is added here in case the user exited without responding to anything,
+                #    allowing for the resume check to function properly
+                if self._bStartOfSession == True:
+                    self.AddSessionLoginTimestamp()
+
+                self.WriteResponses()
+                self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
+                self._bStartOfSession = False
+            
+            # if last question set, clear list
+            if self.CheckForLastQuestionSetForPage() == True:
+                self._loQuestionSets = []
+                
+        
+            self._iCurrentCompositeIndex = self._iCurrentCompositeIndex + 1
+                
+            if self._iCurrentCompositeIndex > len(self._l2iPageQuestionCompositeIndices) -1:
+                # the last question was answered - exit Slicer
+                self.ExitOnQuizComplete("Quiz complete .... Exit")
+    
+            self.EnableButtons()
+   
+            self.DisplayPage()
+
+        
+    #-----------------------------------------------
+
+    def onPreviousButtonClicked(self):
+
+
+
+        self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
+        if self._iCurrentCompositeIndex < 0:
+            # reset to beginning
+            self._iCurrentCompositeIndex = 0
+        
+        self.EnableButtons()
+        
+        # if there are multiple question sets for a page, the list of question sets must
+        #    include all previous question sets - up to the one being displayed
+        #    (eg. if a page has 4 Qsets, and we are going back to Qset 3,
+        #    we need to collect question set indices 0, and 1 first,
+        #    then continue processing for index 2 which will be appended in Display Page)
+        
+        self._loQuestionSets = [] # initialize
+        indQSet = self.GetCurrentQuestionSetIndex()
+        if indQSet > 0:
+            self.CollectPreviousQuestionSetsToIndex(indQSet)
+        
+        
+        
+        self.DisplayPage()
+        self.DisplaySavedResponse()
+        
         
 
-        now = datetime.now()
-#         self.sLoginTime = now.strftime("%b-%d-%Y-%H-%M-%S")
-        self.SetLoginTime( now.strftime(self.sTimestampFormat) )
+    #-----------------------------------------------
+    
+    def EnableButtons(self):
         
-        dictAttrib = {}
-        dictAttrib = {'logintime': self.LoginTime()}
-        
-        sNullText = ''
-        
-        sUserQuizPath = self._oFilesIO.GetUserQuizPath()
-        self._oIOXml.AddElement(self._oIOXml.GetRootNode(),'Login', sNullText, dictAttrib)
-        
-        self._oIOXml.SaveXml(sUserQuizPath, self._oIOXml.GetXmlTree())
-            
+        # beginning of quiz
+        if (self._iCurrentCompositeIndex == 0):
+            self._btnNext.enabled = True
+            self._btnPrevious.enabled = False
+
+        # end of quiz
+        elif (self._iCurrentCompositeIndex == len(self._l2iPageQuestionCompositeIndices) - 1):
+            self._btnNext.enabled = True
+            self._btnPrevious.enabled = True
+
+        # somewhere in middle
+        else:
+            self._btnNext.enabled = True
+            self._btnPrevious.enabled = True
+
+
+        # assign button description           
+        if (self._iCurrentCompositeIndex == len(self._l2iPageQuestionCompositeIndices) - 1):
+            # last question of last image view
+            self._btnNext.setText("Save and Finish")
+# 
+#         else:
+#             # assume multiple questions in the question set
+#             self._btnNext.setText("Next")
+#             # if last question in the question set - save answers and continue to next
+#             if not( self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][0] == self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex + 1][0]):
+#                 self._btnNext.setText("Save and Continue")
+
     #-----------------------------------------------
 
     def BuildPageQuestionCompositeIndexList(self):
@@ -320,38 +412,6 @@ class Session:
         oImageView.RunSetup(self.GetCurrentPageNode(), qQuizWidget)
     
     #-----------------------------------------------
-    
-    def EnableButtons(self):
-        
-        # beginning of quiz
-        if (self._iCurrentCompositeIndex == 0):
-            self._btnNext.enabled = True
-            self._btnPrevious.enabled = False
-
-        # end of quiz
-        elif (self._iCurrentCompositeIndex == len(self._l2iPageQuestionCompositeIndices) - 1):
-            self._btnNext.enabled = True
-            self._btnPrevious.enabled = True
-
-        # somewhere in middle
-        else:
-            self._btnNext.enabled = True
-            self._btnPrevious.enabled = True
-
-
-        # assign button description           
-        if (self._iCurrentCompositeIndex == len(self._l2iPageQuestionCompositeIndices) - 1):
-            # last question of last image view
-            self._btnNext.setText("Save and Finish")
-# 
-#         else:
-#             # assume multiple questions in the question set
-#             self._btnNext.setText("Next")
-#             # if last question in the question set - save answers and continue to next
-#             if not( self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][0] == self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex + 1][0]):
-#                 self._btnNext.setText("Save and Continue")
-
-    #-----------------------------------------------
 
     def CheckForLastQuestionSetForPage(self):
         bLastQuestionSet = False
@@ -371,96 +431,6 @@ class Session:
             
         return bLastQuestionSet
         
-    #-----------------------------------------------
-
-    def onNextButtonClicked(self):
-
-        sMsg = ''
-            
-
-        bResponsesCaptured, sMsg = self.CaptureResponsesForQuestionSet()
-        
-        if (bResponsesCaptured == False):
-
-            self._oMsgUtil.DisplayWarning(sMsg)
-
-        else:
-            
-            
-            # only allow for writing of responses under certain conditions
-            
-            if ( self._bAllowMultipleResponse == True)  or \
-                ((self._bAllowMultipleResponse == False) and (self.CheckForSavedResponse() == False) ):
-
-                # Responses have been captured, if it's the first set of responses
-                #    for the session, add in the login timestamp
-                #    This timestamp is added here in case the user exited without responding to anything,
-                #    allowing for the resume check to function properly
-                if self._bStartOfSession == True:
-                    self.AddSessionLoginTimestamp()
-
-                self.WriteResponses()
-                self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
-                self._bStartOfSession = False
-            
-            # if last question set, clear list
-            if self.CheckForLastQuestionSetForPage() == True:
-                self._loQuestionSets = []
-                
-        
-            self._iCurrentCompositeIndex = self._iCurrentCompositeIndex + 1
-                
-            if self._iCurrentCompositeIndex > len(self._l2iPageQuestionCompositeIndices) -1:
-                # the last question was answered - exit Slicer
-                self.ExitOnQuizComplete("Quiz complete .... Exit")
-    
-            self.EnableButtons()
-   
-            self.DisplayPage()
-
-        
-    #-----------------------------------------------
-            
-    def ExitOnQuizComplete(self, sMsg):
-
-        self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
-        self.SetQuizComplete(True)
-        self._oMsgUtil.DisplayInfo(sMsg)
-        slicer.util.exit(status=EXIT_SUCCESS)
-
-    
-    
-    #-----------------------------------------------
-
-    def onPreviousButtonClicked(self):
-
-
-
-        self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
-        if self._iCurrentCompositeIndex < 0:
-            # reset to beginning
-            self._iCurrentCompositeIndex = 0
-        
-        self.EnableButtons()
-        
-        # if there are multiple question sets for a page, the list of question sets must
-        #    include all previous question sets - up to the one being displayed
-        #    (eg. if a page has 4 Qsets, and we are going back to Qset 3,
-        #    we need to collect question set indices 0, and 1 first,
-        #    then continue processing for index 2 which will be appended in Display Page)
-        
-        self._loQuestionSets = [] # initialize
-        indQSet = self.GetCurrentQuestionSetIndex()
-        if indQSet > 0:
-            self.CollectPreviousQuestionSetsToIndex(indQSet)
-        
-        
-        
-        self.DisplayPage()
-        self.DisplaySavedResponse()
-        
-        
-
     #-----------------------------------------------
 
     def CollectPreviousQuestionSetsToIndex(self, iIndex):
@@ -618,6 +588,25 @@ class Session:
         
     #-----------------------------------------------
 
+    def AddSessionLoginTimestamp(self):
+        
+
+        now = datetime.now()
+#         self.sLoginTime = now.strftime("%b-%d-%Y-%H-%M-%S")
+        self.SetLoginTime( now.strftime(self.sTimestampFormat) )
+        
+        dictAttrib = {}
+        dictAttrib = {'logintime': self.LoginTime()}
+        
+        sNullText = ''
+        
+        sUserQuizPath = self._oFilesIO.GetUserQuizPath()
+        self._oIOXml.AddElement(self._oIOXml.GetRootNode(),'Login', sNullText, dictAttrib)
+        
+        self._oIOXml.SaveXml(sUserQuizPath, self._oIOXml.GetXmlTree())
+            
+    #-----------------------------------------------
+
     def SetCompositeIndexIfResumeRequired(self):
         # Scan the user's quiz file for existing responses in case the user
         #     exited the quiz prematurely (before it was complete) on the last login
@@ -735,3 +724,14 @@ class Session:
                             
         return dtLastTimestamp
             
+    #-----------------------------------------------
+            
+    def ExitOnQuizComplete(self, sMsg):
+
+        self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
+        self.SetQuizComplete(True)
+        self._oMsgUtil.DisplayInfo(sMsg)
+        slicer.util.exit(status=EXIT_SUCCESS)
+
+    
+    

@@ -51,7 +51,6 @@ class QuestionSet():
             
             for xNodeQuestion in xQuestions:
 
-                lsQuestionOptions = []
                 dictModifiers = {}
 
                 sQuestionType = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'type')
@@ -102,17 +101,40 @@ class QuestionSet():
     def GetOptionsFromXML(self, xNodeQuestion):
 
         lOptions = []
+#         lsResponseValues = []
         # get options for each question
         xOptions = self.oIOXml.GetChildren(xNodeQuestion, 'Option')
 
-        for iIndex in range(len(xOptions)):
+        for iElem in range(len(xOptions)):
             
-            xQuestionOption = self.oIOXml.GetNthChild(xNodeQuestion, 'Option', iIndex)
-            sValue = self.oIOXml.GetDataInNode(xQuestionOption)
+            xNodeOption = self.oIOXml.GetNthChild(xNodeQuestion, 'Option', iElem)
+            sValue = self.oIOXml.GetDataInNode(xNodeOption)
+            
+#             # get list of responses and update the question object
+#             lsResponseValues.append( self.GetResponsesFromXML(xNodeOption) )
+#             self.question._lsResponses_setter(lsResponseValues)
+            
             lOptions.append(sValue)
-            
+
         return lOptions
+    
     #-----------------------------------------------
+
+#     def GetResponsesFromXML(self, xNodeOption):
+#         
+#         lsResponseValues = []
+#         
+#         xResponses = self.oIOXml.GetChildren(xNodeOption, 'Response')
+#         
+#         for iElem in range(len(xResponses)):
+#             
+#             # for each response element, get the value and append to list
+#             xNodeResponse = self.oIOXml.GetNthChild(xNodeOption, 'Response', iElem)
+#             sValue = self.oIOXml.GetDataInNode(xNodeResponse)
+#             lsResponseValues.append(sValue)
+#         
+#         return lsResponseValues
+#     #-----------------------------------------------
         
     #-----------------------------------------------
         
