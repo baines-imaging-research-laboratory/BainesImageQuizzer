@@ -32,7 +32,8 @@ class Session:
         self._xPageNode = None
         
         self._loQuestionSets = []
-        self._lsResponsesForQuestionSet = []
+        self._lsPreviousResponses = []
+        self._lsNewResponses = []
         
         self._bStartOfSession = True
         self._bQuizComplete = False
@@ -245,7 +246,7 @@ class Session:
         sMsg = ''
             
 
-        bResponsesCaptured, sMsg = self.CaptureResponsesForQuestionSet()
+        bResponsesCaptured, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet()
         
         if (bResponsesCaptured == False):
 
@@ -265,10 +266,14 @@ class Session:
                 #    allowing for the resume check to function properly
                 if self._bStartOfSession == True:
                     self.AddSessionLoginTimestamp()
-
-                self.WriteResponses()
-                self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
-                self._bStartOfSession = False
+                    
+                # check to see if the responses for the question set match 
+                #    what was previously captured
+                #    -only write responses if they have changed
+                if not self._lsNewResponses == self._lsPreviousResponses:
+                    self.WriteResponses()
+                    self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
+                    self._bStartOfSession = False
             
             # if last question set, clear list
             if self.CheckForLastQuestionSetForPage() == True:
@@ -313,7 +318,7 @@ class Session:
         
         
         self.DisplayPage()
-        self.DisplaySavedResponse()
+#         self.DisplaySavedResponse() # ALREADY IN DISPLAY PAGE??
         
         
 
@@ -446,7 +451,7 @@ class Session:
 
     def CaptureResponsesForQuestionSet(self):
         
-        # set defaults 
+        # sMsg may be set in Question class function to capture the response
         sMsg = ''
         
         # get list of questions from current question set
@@ -457,18 +462,21 @@ class Session:
 
         loQuestions = oQuestionSet.GetQuestionList()
             
-        self._lsResponsesForOptions = []
+        lsAllResponses = []
+        lsResponsesForOptions = []
         for indQuestion in range(len(loQuestions)):
             oQuestion = loQuestions[indQuestion]
             bResponseCaptured = False
             
-            bResponseCaptured, self._lsResponsesForOptions, sMsg = oQuestion.CaptureResponse()
+            bResponseCaptured, lsResponsesForOptions, sMsg = oQuestion.CaptureResponse()
 
             if bResponseCaptured == False:
                 break   # exit from loop - question is missing response
+            else:
+                lsAllResponses.append(lsResponsesForOptions)
 
                 
-        return bResponseCaptured, sMsg
+        return bResponseCaptured, lsAllResponses, sMsg
        
     #-----------------------------------------------
 
@@ -501,6 +509,7 @@ class Session:
          
         # for each question and each option, extract any existing responses from the XML
          
+        lsAllResponsesForOption = []
         for indQuestion in range(len(loQuestions)):
             oQuestion = loQuestions[indQuestion]
             xQuestionNode = self._oIOXml.GetNthChild(xNodeQuestionSet, 'Question', indQuestion)
@@ -509,13 +518,14 @@ class Session:
             lsResponseValues = []                  
             xAllOptions = self._oIOXml.GetChildren(xQuestionNode, 'Option')
 
+
             xAllOptions = self.GetAllOptionNodes(indQuestion)
             for xOptionNode in xAllOptions:
                 
                 
                 dtLatestTimestamp = ''    # timestamp of type 'datetime'
                 sLatestResponse = ''
-                 
+
                 xAllResponseNodes = self._oIOXml.GetChildren(xOptionNode, 'Response')
                 for xResponseNode in xAllResponseNodes:
                     sResponseTime = self._oIOXml.GetValueOfNodeAttribute(xResponseNode, 'responsetime')
@@ -531,18 +541,22 @@ class Session:
                         if dtResponseTimestamp >= dtLatestTimestamp:
                             dtLatestTimestamp = dtResponseTimestamp
                             sLatestResponse = self._oIOXml.GetDataInNode(xResponseNode)
-
-
+                            
+                    
+    
                 # search for 'latest' response completed - update the list
 #                 print('************Data...%s***END***' % sLatestResponse)
                 lsResponseValues.append(sLatestResponse)
-                self._lsResponsesForQuestionSet.append(lsResponseValues)
-                    
-                    
+                
             oQuestion.PopulateQuestionWithResponses(lsResponseValues)
             oQuestion._lsResponses_setter(lsResponseValues)
+
+            lsAllResponsesForOption.append(lsResponseValues)
+            
     
             lsResponseValues = []  # clear for next set of options 
+
+        self._lsPreviousResponses = lsAllResponsesForOption
             
     
     #-----------------------------------------------

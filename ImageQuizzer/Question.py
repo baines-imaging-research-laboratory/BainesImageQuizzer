@@ -212,7 +212,7 @@ class Question(ABC):
     #----------
     
     #----------
-    # _lsOptions
+    # _lsResponses
     #----------
     @property
     def lsResponses(self):
