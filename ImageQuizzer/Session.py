@@ -20,7 +20,7 @@ class Session:
     def __init__(self,  parent=None):
         self.sClassName = type(self).__name__
         self.parent = parent
-        print('Constructor for Session')
+#         print('Constructor for Session')
         
         self._oMsgUtil = UtilsMsgs()
         self._sLoginTime = ''
@@ -227,8 +227,8 @@ class Session:
         # create buttons
         
         # Next button
-        self._btnNext = qt.QPushButton("Next")
-        self._btnNext.toolTip = "Display next set of questions."
+        self._btnNext = qt.QPushButton("Save and Next")
+        self._btnNext.toolTip = "Save responses and display next set of questions."
         self._btnNext.enabled = True
         self._btnNext.connect('clicked(bool)',self.onNextButtonClicked)
         
@@ -254,7 +254,6 @@ class Session:
 
         else:
             
-            
             # only allow for writing of responses under certain conditions
             
             if ( self._bAllowMultipleResponse == True)  or \
@@ -262,7 +261,7 @@ class Session:
 
                 # Responses have been captured, if it's the first set of responses
                 #    for the session, add in the login timestamp
-                #    This timestamp is added here in case the user exited without responding to anything,
+                #    The timestamp is added here in case the user exited without responding to anything,
                 #    allowing for the resume check to function properly
                 if self._bStartOfSession == True:
                     self.AddSessionLoginTimestamp()
@@ -325,6 +324,9 @@ class Session:
     #-----------------------------------------------
     
     def EnableButtons(self):
+        
+        # assume not at the end of the quiz
+        self._btnNext.setText("Save and Next")
         
         # beginning of quiz
         if (self._iCurrentCompositeIndex == 0):
@@ -509,7 +511,7 @@ class Session:
          
         # for each question and each option, extract any existing responses from the XML
          
-        lsAllResponsesForOption = []
+        lsAllResponsesForQuestion = []
         for indQuestion in range(len(loQuestions)):
             oQuestion = loQuestions[indQuestion]
             xQuestionNode = self._oIOXml.GetNthChild(xNodeQuestionSet, 'Question', indQuestion)
@@ -549,14 +551,13 @@ class Session:
                 lsResponseValues.append(sLatestResponse)
                 
             oQuestion.PopulateQuestionWithResponses(lsResponseValues)
-            oQuestion._lsResponses_setter(lsResponseValues)
 
-            lsAllResponsesForOption.append(lsResponseValues)
+            lsAllResponsesForQuestion.append(lsResponseValues)
             
     
             lsResponseValues = []  # clear for next set of options 
 
-        self._lsPreviousResponses = lsAllResponsesForOption
+        self._lsPreviousResponses = lsAllResponsesForQuestion
             
     
     #-----------------------------------------------
@@ -591,6 +592,7 @@ class Session:
 
             
     #-----------------------------------------------
+
     def AddResponseElement(self, xOptionNode, sResponse):
         
         now = datetime.now()
@@ -609,7 +611,6 @@ class Session:
 #         self.sLoginTime = now.strftime("%b-%d-%Y-%H-%M-%S")
         self.SetLoginTime( now.strftime(self.sTimestampFormat) )
         
-        dictAttrib = {}
         dictAttrib = {'logintime': self.LoginTime()}
         
         sNullText = ''
@@ -629,7 +630,7 @@ class Session:
         #    - the quiz pages and question sets are presented sequentially 
         #        as laid out in the quiz file
         #    - during one session login, if any questions in the question set were unanswered,
-        #        no responses for that question set were captured (so we only have
+        #        no responses for that question set were saved (so we only have
         #        to inspect the first option of the first question in the question set)
         #
         # By looping through the page/question set indices stored in the
@@ -656,7 +657,7 @@ class Session:
             indQuestionSet = self._l2iPageQuestionCompositeIndices[indCI][1]
             xPageNode = self._oIOXml.GetNthChild(self._oIOXml.GetRootNode(), 'Page', indPage)
             xQuestionSetNode = self._oIOXml.GetNthChild(xPageNode, 'QuestionSet', indQuestionSet)
-            print(indCI, 'Page:', indPage, 'QS:', indQuestionSet)
+#             print(indCI, 'Page:', indPage, 'QS:', indQuestionSet)
             
             # get first Option node of the first Question
             xQuestionNode = self._oIOXml.GetNthChild(xQuestionSetNode, 'Question', 0)
@@ -701,7 +702,7 @@ class Session:
 
     def GetLastLoginTimestamp(self):
         # function to scan the user's quiz file for all session login times
-        # return the last session login time prior to the current session
+        # return the last session login time
 
         lsTimestamps = []
         dtLastTimestamp = ''    # timestamp of type 'datetime'
@@ -730,7 +731,7 @@ class Session:
                 dtLastTimestamp = dtNewTimestamp
                 
             else:
-                # update the last time stamp (if not current)
+                # update the last time stamp 
 #                 if not (dtNewTimestamp==dtCurrentLogin):
                 if dtNewTimestamp > dtLastTimestamp:
                     dtLastTimestamp = dtNewTimestamp
@@ -742,6 +743,9 @@ class Session:
             
     def ExitOnQuizComplete(self, sMsg):
 
+        # the last index in the composite indices list was reached
+        # the quiz was completed - exit
+        
         self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
         self.SetQuizComplete(True)
         self._oMsgUtil.DisplayInfo(sMsg)

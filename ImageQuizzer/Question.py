@@ -29,12 +29,16 @@ class QuestionSet():
         self.oMsgUtil = UtilsMsgs()
         
     #----------
+    def SetQuestionList(self, loQuestionsInput):
+        self._loQuestions = loQuestionsInput
+    #----------
     def GetQuestionList(self):
         return self._loQuestions
         
     #-----------------------------------------------
         
     def ExtractQuestionsFromXML(self, xNodeQuestionSet):
+        sFnName = sys._getframe().f_code.co_name
         
         
         sNodeName = self.oIOXml.GetElementNodeName(xNodeQuestionSet)
@@ -60,40 +64,40 @@ class QuestionSet():
                 bQuestionTypeGood = True
 
                 if (sQuestionType == 'Radio'):
-                    self.question = RadioQuestion()
+                    oQuestion = RadioQuestion()
 
                 elif (sQuestionType == 'Checkbox'):
-                    self.question = CheckBoxQuestion()
+                    oQuestion = CheckBoxQuestion()
 
                 elif (sQuestionType == 'Text'):
-                    self.question = TextQuestion()
+                    oQuestion = TextQuestion()
 
                 elif (sQuestionType == 'IntegerValue'):
-                    self.question = IntegerValueQuestion()
-                    dictModifiers = self.question.GetMinMaxAttributesFromXML(xNodeQuestion)
-                    self.question.UpdateDictionaryModifiers(dictModifiers)
+                    oQuestion = IntegerValueQuestion()
+                    dictModifiers = oQuestion.GetMinMaxAttributesFromXML(xNodeQuestion)
+                    oQuestion.UpdateDictionaryModifiers(dictModifiers)
 
                 elif (sQuestionType == 'FloatValue'):
-                    self.question = FloatValueQuestion()
-                    dictModifiers = self.question.GetMinMaxAttributesFromXML(xNodeQuestion)
-                    self.question.UpdateDictionaryModifiers(dictModifiers)
+                    oQuestion = FloatValueQuestion()
+                    dictModifiers = oQuestion.GetMinMaxAttributesFromXML(xNodeQuestion)
+                    oQuestion.UpdateDictionaryModifiers(dictModifiers)
 
                 elif (sQuestionType == 'InfoBox'):
-                    self.question = InfoBox()
+                    oQuestion = InfoBox()
 
                 else:
                     sLabel = 'Warning : Contact Administrator - Invalid question    '
-                    sWarningMsg = self.sClassName + ':' + self.sFnName + ':' + 'UnrecognizedQuestionType - Contact Administrator'
+                    sWarningMsg = self.sClassName + ':' + sFnName + ':' + 'UnrecognizedQuestionType - Contact Administrator'
                     self.oMsgUtil.DisplayWarning(sWarningMsg)
                     bQuestionTypeGood = False
                     
 
                 if bQuestionTypeGood == True:
-                    self.question._sGrpBoxTitle_setter(sQuestionDescriptor)
+                    oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
                     
                     lOptions = self.GetOptionsFromXML(xNodeQuestion)
-                    self.question._lsOptions_setter(lOptions)
-                    self._loQuestions.append(self.question)
+                    oQuestion._lsOptions_setter(lOptions)
+                    self._loQuestions.append(oQuestion)
 
                 
     #-----------------------------------------------
@@ -119,22 +123,6 @@ class QuestionSet():
         return lOptions
     
     #-----------------------------------------------
-
-#     def GetResponsesFromXML(self, xNodeOption):
-#         
-#         lsResponseValues = []
-#         
-#         xResponses = self.oIOXml.GetChildren(xNodeOption, 'Response')
-#         
-#         for iElem in range(len(xResponses)):
-#             
-#             # for each response element, get the value and append to list
-#             xNodeResponse = self.oIOXml.GetNthChild(xNodeOption, 'Response', iElem)
-#             sValue = self.oIOXml.GetDataInNode(xNodeResponse)
-#             lsResponseValues.append(sValue)
-#         
-#         return lsResponseValues
-#     #-----------------------------------------------
         
     #-----------------------------------------------
         
@@ -147,7 +135,7 @@ class QuestionSet():
         #      [ 3: dictionary of modifiers (eg. min, max) for certain question types ] 
         #    - create the appropriate group box
         #    - add to layout
-        self.sFnName = sys._getframe().f_code.co_name
+        sFnName = sys._getframe().f_code.co_name
 
         self.CreateGroupBoxWidget()
         
@@ -186,7 +174,6 @@ class Question(ABC):
         self.sFnName = 'undefinedFunctionName'
 
         self._lsOptions = []
-        self._lsResponses = []
         self._sGrpBoxTitle = ''
 
     
@@ -212,26 +199,6 @@ class Question(ABC):
     #----------
     
     #----------
-    # _lsResponses
-    #----------
-    @property
-    def lsResponses(self):
-        return self._lsResponses
-        
-    @lsResponses.setter
-    def lsResponses(self,x):
-        self._lsResponses_setter(x)
-        
-    @abstractmethod
-    def _lsResponses_setter(self, x):
-        pass
-        
-    @abstractmethod
-    def _lsResponses_getter(self):
-        return self._lsResponses
-    #----------
-    
-    #----------
     # _sGrpBoxTitle
     #----------
     @property
@@ -252,6 +219,7 @@ class Question(ABC):
     #----------
     
     
+    #----------
     @abstractmethod        
     def BuildQuestion(self): pass
     
@@ -358,12 +326,6 @@ class RadioQuestion(Question):
     def _lsOptions_getter(self):
         return self._lsOptions
         
-    def _lsResponses_setter(self, lsInput):
-        self._lsResponses = lsInput
-        
-    def _lsResponses_getter(self):
-        return self._lsResponses
-        
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput
         
@@ -455,12 +417,6 @@ class CheckBoxQuestion(Question):
     def _lsOptions_getter(self):
         return self._lsOptions
         
-    def _lsResponses_setter(self, lsInput):
-        self._lsResponses = lsInput
-        
-    def _lsResponses_getter(self):
-        return self._lsResponses
-        
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput
         
@@ -550,12 +506,6 @@ class TextQuestion(Question):
         
     def _lsOptions_getter(self):
         return self._lsOptions
-        
-    def _lsResponses_setter(self, lsInput):
-        self._lsResponses = lsInput
-        
-    def _lsResponses_getter(self):
-        return self._lsResponses
         
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput
@@ -647,12 +597,6 @@ class IntegerValueQuestion(Question):
         
     def _lsOptions_getter(self):
         return self._lsOptions
-        
-    def _lsResponses_setter(self, lsInput):
-        self._lsResponses = lsInput
-        
-    def _lsResponses_getter(self):
-        return self._lsResponses
         
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput
@@ -791,12 +735,6 @@ class FloatValueQuestion(Question):
     def _lsOptions_getter(self):
         return self._lsOptions
         
-    def _lsResponses_setter(self, lsInput):
-        self._lsResponses = lsInput
-        
-    def _lsResponses_getter(self):
-        return self._lsResponses
-        
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput
         
@@ -934,12 +872,6 @@ class InfoBox(Question):
         
     def _lsOptions_getter(self):
         return self._lsOptions
-        
-    def _lsResponses_setter(self, lsInput):
-        self._lsResponses = lsInput
-        
-    def _lsResponses_getter(self):
-        return self._lsResponses
         
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput
