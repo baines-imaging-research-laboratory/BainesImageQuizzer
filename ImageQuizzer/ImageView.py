@@ -113,12 +113,18 @@ class ImageView:
         slWidget = slicer.app.layoutManager().sliceWidget(oViewNode.sDestination)
         slWindowLogic = slWidget.sliceLogic()
         slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
+        
+        slWidgetController = slWidget.sliceController()
+        
         if oViewNode.sViewLayer == 'Background':
             slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
             slWidget.setSliceOrientation(oViewNode.sOrientation)
+            slWidget.fitSliceToBackground()
         elif oViewNode.sViewLayer == 'Foreground':
             slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
             slWidget.setSliceOrientation(oViewNode.sOrientation)
+            slWidget.fitSliceToBackground()
+            slWidgetController.setForegroundOpacity(0.5)
         elif oViewNode.sViewLayer == 'Label':
             slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
         elif oViewNode.sViewLayer == 'Segmentation':
