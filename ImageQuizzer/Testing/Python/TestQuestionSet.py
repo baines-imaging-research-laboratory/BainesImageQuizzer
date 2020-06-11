@@ -137,8 +137,8 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_NoErrors_TextQuestion())
         tupResults.append(self.test_NoErrors_InfoBox())
         tupResults.append(self.test_NoOptionsWarning())
-        tupResults.append(self.test_NoErrors_QuestionSetTest())
-        tupResults.append(self.test_Error_QuestionSetTest())
+#         tupResults.append(self.test_NoErrors_QuestionSetTest())
+#         tupResults.append(self.test_Error_QuestionSetTest())
         tupResults.append(self.test_CaptureResponse_RadioButtons())
         tupResults.append(self.test_CaptureResponse_CheckBoxes())
         tupResults.append(self.test_CaptureResponse_Text())
@@ -153,12 +153,12 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
     def test_NoErrors_BuildQuestionWidget(self):
         """ Test for each question type with no errors encountered
         """
-        self.fnName = sys._getframe().f_code.co_name
+        fnName = sys._getframe().f_code.co_name
 
         # initialize
-        self.lOptions = ['Opt1','Opt2']
-        self.sGroupTitle = 'Group Title'
-        self.questionType = None
+        lsOptions = ['Opt1','Opt2']
+        sGroupTitle = 'Group Title'
+        oQuestion = None
         bTestResultTF = False
         
         dictModifiers = {}
@@ -166,20 +166,22 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         i = 0
         while i < len(self.lsClassNames):
             if self.lsClassNames[i] == 'RadioQuestion':
-                self.questionType = RadioQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
+                oQuestion = RadioQuestion()
             elif self.lsClassNames[i] == 'CheckBoxQuestion':
-                self.questionType = CheckBoxQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
+                oQuestion = CheckBoxQuestion()
             elif self.lsClassNames[i] == 'TextQuestion':
-                self.questionType = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
+                oQuestion = TextQuestion()
             elif self.lsClassNames[i] == 'IntegerValueQuestion':
-                self.questionType = IntegerValueQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i], dictModifiers)
+                oQuestion = IntegerValueQuestion()
+                oQuestion.UpdateDictionaryModifiers(dictModifiers)
             elif self.lsClassNames[i] == 'FloatValueQuestion':
-                self.questionType = FloatValueQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i], dictModifiers)
+                oQuestion = FloatValueQuestion()
+                oQuestion.UpdateDictionaryModifiers(dictModifiers)
             elif self.lsClassNames[i] == 'InfoBox':
-                self.questionType = InfoBox(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
+                oQuestion = InfoBox()
             else:
-#  TODO ??               self.questionType = LabelWarningBox('Invalid question type', 'WARNING- See administrator')
-                self.questionType = None
+#  TODO ??               oQuestion = LabelWarningBox('Invalid question type', 'WARNING- See administrator')
+                oQuestion = None
                 if (self.lsClassNames[i] == 'InvalidType'):
                     # If here, the test was successful. We specifically tried to trap the 'InvalidType'
                     bTestResultTF = True
@@ -190,15 +192,21 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
                     bTestResultTF = False
                     break
                 
-            if self.questionType != None:
+            if oQuestion != None:
                 # Question type was constructed - try to create a widget
-                bTestResult, qWidgetBox = self.questionType.BuildQuestion()
+                sQuestionDescriptor = sGroupTitle + '...' + self.lsClassNames[i]
+                oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
+                
+                oQuestion._lsOptions_setter(lsOptions)
+
+                
+                bTestResult, qWidgetBox = oQuestion.BuildQuestion()
                 slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qWidgetBox)
                 bTestResultTF = True
 
             i = i + 1
             
-        tupResult = self.fnName, bTestResultTF
+        tupResult = fnName, bTestResultTF
         return tupResult
         
     #-----------------------------------------------
@@ -206,106 +214,125 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
     def test_NoErrors_RadioButtons(self):
         """ Class is called with no errors encountered
         """
-        self.fnName = sys._getframe().f_code.co_name
-
-        self.lOptions = ['Injury','Recurrence']
-        self.sGroupTitle = 'Assessment'
+        fnName = sys._getframe().f_code.co_name
+ 
+        lsOptions = ['Injury','Recurrence']
+        sGroupTitle = 'Assessment'
         bTestResult = False
+         
+        oQuestion = RadioQuestion()
         
-        self.rq = RadioQuestion(self.lOptions, self.sGroupTitle + ' ...Test No Errors for Radio Buttons')
-        bTestResult, qGrpBox = self.rq.BuildQuestion()
+        sQuestionDescriptor = sGroupTitle + ' ...Test No Errors for Radio Buttons'
+        oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
+        oQuestion._lsOptions_setter(lsOptions)
+
+        bTestResult, qGrpBox = oQuestion.BuildQuestion()
         slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
-        
-        tupResult = self.fnName, bTestResult
+         
+        tupResult = fnName, bTestResult
         return tupResult
-
+ 
     #-----------------------------------------------
-
+ 
     def test_NoErrors_CheckBoxes(self):
         """ Class is called with no errors encountered
         """
-        self.fnName = sys._getframe().f_code.co_name
-
-        self.sGroupTitle = 'High Risk Factors'
-        self.lOptions = ['Enlarging Opacity','Bulging Margin', 'Sequential Enlargement']
+        fnName = sys._getframe().f_code.co_name
+ 
+        sGroupTitle = 'High Risk Factors'
+        lsOptions = ['Enlarging Opacity','Bulging Margin', 'Sequential Enlargement']
         bTestResult = False
+         
+        oQuestion = CheckBoxQuestion()
+        sQuestionDescriptor = sGroupTitle + ' ...Test No Errors for Check Boxes'
+        oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
+        oQuestion._lsOptions_setter(lsOptions)
         
-        self.cb = CheckBoxQuestion(self.lOptions, self.sGroupTitle + ' ...Test No Errors for Check Boxes')
-        bTestResult, qGrpBox = self.cb.BuildQuestion()
+        bTestResult, qGrpBox = oQuestion.BuildQuestion()
         slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
-        
-        tupResult = self.fnName, bTestResult
+         
+        tupResult = fnName, bTestResult
         return tupResult
-    
+     
     #-----------------------------------------------
-
+ 
     def test_NoErrors_TextQuestion(self):
         """ Class is called with no errors encountered
         """
-        self.fnName = sys._getframe().f_code.co_name
-
-        self.sGroupTitle = 'Physician Notes'
-        self.sNotes = ['Enter patient observations:','Describe next steps:']
+        fnName = sys._getframe().f_code.co_name
+ 
+        sGroupTitle = 'Physician Notes'
+        lsOptions = ['Enter patient observations:','Describe next steps:']
         bTestResult = False
+         
+        oQuestion = TextQuestion()
+        sQuestionDescriptor = sGroupTitle + ' ...Test No Errors for Line Edits'
+        oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
+        oQuestion._lsOptions_setter(lsOptions)
         
-        self.textQuestion = TextQuestion(self.sNotes, self.sGroupTitle + ' ...Test No Errors for Line Edits')
-        bTestResult, qGrpBox = self.textQuestion.BuildQuestion()
+        bTestResult, qGrpBox = oQuestion.BuildQuestion()
         slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
-        
-        tupResult = self.fnName, bTestResult
+         
+        tupResult = fnName, bTestResult
         return tupResult
-    
+     
     #-----------------------------------------------
-
+ 
     def test_NoErrors_InfoBox(self):
         """ Class is called with no errors encountered
         """
-        self.fnName = sys._getframe().f_code.co_name
-
-        self.sGroupTitle = 'Welcome Notes'
-        self.sNotes = ['Welcome to Image Quizzer','Following are instructions for the next question set']
+        fnName = sys._getframe().f_code.co_name
+ 
+        sGroupTitle = 'Welcome Notes'
+        lsOptions = ['Welcome to Image Quizzer','Following are instructions for the next question set']
         bTestResult = False
-        
-        self.infoBox = InfoBox(self.sNotes, self.sGroupTitle + ' ...Test no errors for information boxes')
-        bTestResult, qGrpBox = self.infoBox.BuildQuestion()
-        slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
-        
-        tupResult = self.fnName, bTestResult
-        return tupResult
-    
-    #-----------------------------------------------
+         
+        oQuestion = InfoBox()
+        sQuestionDescriptor = sGroupTitle + ' ...Test no errors for information boxes'
+        oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
+        oQuestion._lsOptions_setter(lsOptions)
 
+        bTestResult, qGrpBox = oQuestion.BuildQuestion()
+        slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
+         
+        tupResult = fnName, bTestResult
+        return tupResult
+     
+    #-----------------------------------------------
+ 
     def test_NoOptionsWarning(self):
         """ Test warning when no options are given.
             Test for each class in the list of classes defined in constructor.
         """
-        self.fnName = sys._getframe().f_code.co_name
-
+        fnName = sys._getframe().f_code.co_name
+ 
         # initialize
-        self.lOptions = []
-        self.sGroupTitle = 'Test No Options'
-        self.questionType = None       
+        lsOptions = []
+        sGroupTitle = 'Test No Options'
+        oQuestion = None       
         bTestResultTF = False
-        
+         
         dictModifiers = {}
-        
+         
         i = 0
         while i < len(self.lsClassNames):
             if self.lsClassNames[i] == 'RadioQuestion':
-                self.questionType = RadioQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
+                oQuestion = RadioQuestion()
             elif self.lsClassNames[i] == 'CheckBoxQuestion':
-                self.questionType = CheckBoxQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
+                oQuestion = CheckBoxQuestion()
             elif self.lsClassNames[i] == 'TextQuestion':
-                self.questionType = TextQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
+                oQuestion = TextQuestion()
             elif self.lsClassNames[i] == 'IntegerValueQuestion':
-                self.questionType = IntegerValueQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i], dictModifiers)
+                oQuestion = IntegerValueQuestion()
+                oQuestion.UpdateDictionaryModifiers(dictModifiers)
             elif self.lsClassNames[i] == 'FloatValueQuestion':
-                self.questionType = FloatValueQuestion(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i], dictModifiers)
+                oQuestion = FloatValueQuestion()
+                oQuestion.UpdateDictionaryModifiers(dictModifiers)
             elif self.lsClassNames[i] == 'InfoBox':
-                self.questionType = InfoBox(self.lOptions, self.sGroupTitle + '...' + self.lsClassNames[i])
+                oQuestion = InfoBox()
             else:
                     # If here, the test was successful. We specifically tried to trap the 'InvalidType'
-                self.questionType = None 
+                oQuestion = None 
                 if (self.lsClassNames[i] == 'InvalidType'):
                     bTestResultTF = True
                 else:
@@ -314,12 +341,18 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
                     print(sMsg)
                     bTestResultTF = False
                     break
-
-            if self.questionType != None:
+ 
+            if oQuestion != None:
                 sExpWarning = self.lsClassNames[i] + ':buildQuestion:NoOptionsAvailable'
                 with warnings.catch_warnings (record=True) as w:
                     warnings.simplefilter("always")
-                    bFnResultSuccess, qGrpBox = self.questionType.BuildQuestion() 
+
+                    sQuestionDescriptor = sGroupTitle + '...' + self.lsClassNames[i]
+                    oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
+                    oQuestion._lsOptions_setter(lsOptions)
+
+                    
+                    bFnResultSuccess, qGrpBox = oQuestion.BuildQuestion() 
                     if bFnResultSuccess == False:   # error was encountered - check the warning msg
                         if len(w) > 0:
                             print(str(w[0].message))
@@ -332,253 +365,285 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
                             else:
                                 bTestResultTF = False
             i = i + 1
-            
-        tupResult = self.fnName, bTestResultTF
+             
+        tupResult = fnName, bTestResultTF
         return tupResult
-            
+             
+#     #-----------------------------------------------
+#  
+#     def test_NoErrors_QuestionSetTest(self):
+#         """ Test building a form given a list of questions.
+#         """
+#         fnName = sys._getframe().f_code.co_name
+#          
+#         bTestResultTF = True
+#          
+#         # initialize
+#         ltupQuestionSet = []
+#         sID = 'QS 1.0'
+#         sQuestionSetTitle = 'Test Baines Image Quizzer Title'
+# #         self.oQuestionSet = QuestionSet(sID, sQuestionSetTitle )
+#         oQuestionSet = QuestionSet()
+#          
+#         lsQuestionOptions = ['rbtn1', 'rbtn2', 'rbtn3']
+#         sQuestionType = 'Radio'
+#         sQuestionDescriptor = 'Title for radio button group'
+#         tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
+#         ltupQuestionSet.append(tupQuestionGroup)
+#          
+#         lsQuestionOptions = ['box1', 'box2', 'box3']
+#         sQuestionType = 'Checkbox'
+#         sQuestionDescriptor = 'Title for checkbox group'
+#         tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
+#         ltupQuestionSet.append(tupQuestionGroup)
+#  
+#         lsQuestionOptions = ['text label1', 'text label2']
+#         sQuestionType = 'Text'
+#         sQuestionDescriptor = 'Title for line edit text group'
+#         tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
+#         ltupQuestionSet.append(tupQuestionGroup)
+#          
+#  
+#         lsQuestionOptions = ['infobox label1', ' ', 'infobox label2']
+#         sQuestionType = 'InfoBox'
+#         sQuestionDescriptor = 'Title for information label group - including spacer'
+#         tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
+#         ltupQuestionSet.append(tupQuestionGroup)
+#  
+#         oQuestionSet.ltupQuestions = ltupQuestionSet
+#         bTestResultTF, qQuizWidget = oQuestionSet.BuildQuestionSetForm()
+#   
+#         slicer.modules.TestQuestionSetWidget.questionSetLayout.addWidget(qQuizWidget)
+#          
+#         tupResult = fnName, bTestResultTF
+#         return tupResult
+#      
+#     #-----------------------------------------------
+#  
+#     def test_Error_QuestionSetTest(self):
+#         """ Test building a form given a list of questions.
+#         """
+#         fnName = sys._getframe().f_code.co_name
+#          
+#         bBuildSetSuccess = True
+#          
+#         # initialize
+#         ltupQuestionSet = []
+#         sID = 'QS 1.0'
+#         sQuestionSetTitle = 'Test Baines Image Quizzer Title'
+# 
+#         oQuestionSet = QuestionSet()
+#          
+#         lsQuestionOptions = ['option1']
+#         sQuestionType = 'Invalid'
+#         sQuestionDescriptor = 'Title invalid group'
+#         tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
+#         ltupQuestionSet.append(tupQuestionGroup)
+#  
+#         lsQuestionOptions = ['rbtn1', 'rbtn2', 'rbtn3']
+#         sQuestionType = 'Radio'
+#         sQuestionDescriptor = 'Title for radio button group'
+#         tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
+#         ltupQuestionSet.append(tupQuestionGroup)
+#  
+#         oQuestionSet.ltupQuestions = ltupQuestionSet
+#         bBuildSetSuccess, qQuizWidget = oQuestionSet.BuildQuestionSetForm()
+#  
+#         if bBuildSetSuccess == False:
+#             bTestResultTF = True # we expected an error
+#          
+#          
+#         tupResult = fnName, bTestResultTF
+#         return tupResult
+#  
+#     #-----------------------------------------------
+# 
     #-----------------------------------------------
-
-    def test_NoErrors_QuestionSetTest(self):
-        """ Test building a form given a list of questions.
-        """
-        self.fnName = sys._getframe().f_code.co_name
-        
-        bTestResultTF = True
-        
-        # initialize
-        ltupQuestionSet = []
-        sID = 'QS 1.0'
-        sQuestionSetTitle = 'Test Baines Image Quizzer Title'
-#         self.oQuestionSet = QuestionSet(sID, sQuestionSetTitle )
-        self.oQuestionSet = QuestionSet()
-        
-        lsQuestionOptions = ['rbtn1', 'rbtn2', 'rbtn3']
-        sQuestionType = 'Radio'
-        sQuestionDescriptor = 'Title for radio button group'
-        tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
-        ltupQuestionSet.append(tupQuestionGroup)
-        
-        lsQuestionOptions = ['box1', 'box2', 'box3']
-        sQuestionType = 'Checkbox'
-        sQuestionDescriptor = 'Title for checkbox group'
-        tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
-        ltupQuestionSet.append(tupQuestionGroup)
-
-        lsQuestionOptions = ['text label1', 'text label2']
-        sQuestionType = 'Text'
-        sQuestionDescriptor = 'Title for line edit text group'
-        tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
-        ltupQuestionSet.append(tupQuestionGroup)
-        
-
-        lsQuestionOptions = ['infobox label1', ' ', 'infobox label2']
-        sQuestionType = 'InfoBox'
-        sQuestionDescriptor = 'Title for information label group - including spacer'
-        tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
-        ltupQuestionSet.append(tupQuestionGroup)
-
-        self.oQuestionSet.ltupQuestions = ltupQuestionSet
-        bTestResultTF, qQuizWidget = self.oQuestionSet.BuildQuestionSetForm()
  
-        slicer.modules.TestQuestionSetWidget.questionSetLayout.addWidget(qQuizWidget)
-        
-        tupResult = self.fnName, bTestResultTF
-        return tupResult
-    
-    #-----------------------------------------------
-
-    def test_Error_QuestionSetTest(self):
-        """ Test building a form given a list of questions.
-        """
-        self.fnName = sys._getframe().f_code.co_name
-        
-        bBuildSetSuccess = True
-        
-        # initialize
-        ltupQuestionSet = []
-        sID = 'QS 1.0'
-        sQuestionSetTitle = 'Test Baines Image Quizzer Title'
-#         self.oQuestionSet = QuestionSet(sID, sQuestionSetTitle )
-        self.oQuestionSet = QuestionSet()
-        
-        lsQuestionOptions = ['option1']
-        sQuestionType = 'Invalid'
-        sQuestionDescriptor = 'Title invalid group'
-        tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
-        ltupQuestionSet.append(tupQuestionGroup)
-
-        lsQuestionOptions = ['rbtn1', 'rbtn2', 'rbtn3']
-        sQuestionType = 'Radio'
-        sQuestionDescriptor = 'Title for radio button group'
-        tupQuestionGroup = [sQuestionType, sQuestionDescriptor, lsQuestionOptions]
-        ltupQuestionSet.append(tupQuestionGroup)
-
-        self.oQuestionSet.ltupQuestions = ltupQuestionSet
-        bBuildSetSuccess, qQuizWidget = self.oQuestionSet.BuildQuestionSetForm()
-
-        if bBuildSetSuccess == False:
-            bTestResultTF = True # we expected an error
-        
-        
-        tupResult = self.fnName, bTestResultTF
-        return tupResult
-
-    #-----------------------------------------------
-
-    #-----------------------------------------------
-
     def test_CaptureResponse_RadioButtons(self):
         """ Testing capture of user responses to radio button questions
         """
         fnName = sys._getframe().f_code.co_name
-
-        lOptions = ['RadioBtn 1 Test Unchecked','RadioBtn 2 Test Checked', 'RadioBtn 3 Test Unchecked']
+ 
+        lsOptions = ['RadioBtn 1 Test Unchecked','RadioBtn 2 Test Checked', 'RadioBtn 3 Test Unchecked']
         sGroupTitle = 'Capture Response - Radio Buttons'
         bTestResult = False
+         
+        oQuestion = RadioQuestion()
+
+        sQuestionDescriptor = sGroupTitle + ' ...Test Capture Reponse for Radio Buttons'
+        oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
+        oQuestion._lsOptions_setter(lsOptions)
         
-        oTest = RadioQuestion(lOptions, sGroupTitle + ' ...Test Capture Reponse for Radio Buttons')
-        bBuildResult, qGrpBox = oTest.BuildQuestion()
+        
+        bBuildResult, qGrpBox = oQuestion.BuildQuestion()
         slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
-        
+         
 #         for qBtns in qGrpBox.findChildren(qt.QRadioButton):
 #             print('traversing grp box')
-            
+             
         # set a button to check for testing
         lqAllBtns = qGrpBox.findChildren(qt.QRadioButton)
         lqAllBtns[1].setChecked(True)
-        
-        lExpectedResponse = ['n','y','n']
-        
+         
+        lsExpectedResponse = ['n','y','n']
+         
         # get actual response list
-        bSuccess, lActualResponse, sMsg = oTest.CaptureResponse()
-        if lActualResponse == lExpectedResponse:
+        bSuccess, lActualResponse, sMsg = oQuestion.CaptureResponse()
+        if lActualResponse == lsExpectedResponse:
             bTestResult = True
-        
-        
+         
+         
         tupResult = fnName, bTestResult
         return tupResult
-
+ 
     #-----------------------------------------------
-
+ 
     def test_CaptureResponse_CheckBoxes(self):
         """ Testing capture of user responses to check box questions
         """
         fnName = sys._getframe().f_code.co_name
-
-        lOptions = ['CheckBox 1 Test Unchecked','CheckBox 2 Test Checked', 'CheckBox 3 Test Checked']
+ 
+        lsOptions = ['CheckBox 1 Test Unchecked','CheckBox 2 Test Checked', 'CheckBox 3 Test Checked']
         sGroupTitle = 'Capture Response - Check Boxes'
         bTestResult = False
+         
+        oQuestion = CheckBoxQuestion()
+
+        sQuestionDescriptor = sGroupTitle + ' ...Test Capture Reponse for Check Boxes'
+        oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
+        oQuestion._lsOptions_setter(lsOptions)
         
-        oTest = CheckBoxQuestion(lOptions, sGroupTitle + ' ...Test Capture Reponse for Check Boxes')
-        bBuildResult, qGrpBox = oTest.BuildQuestion()
+        
+        bBuildResult, qGrpBox = oQuestion.BuildQuestion()
         slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
-        
+         
         lqAllBoxes = qGrpBox.findChildren(qt.QCheckBox)
         lqAllBoxes[0].setChecked(False)
         lqAllBoxes[1].setChecked(True)
         lqAllBoxes[2].setChecked(True)
-        
-        lExpectedResponse = ['n','y','y']
-        
+         
+        lsExpectedResponse = ['n','y','y']
+         
         # get actual response list
-        bSuccess, lActualResponse, sMsg = oTest.CaptureResponse()
-        if lActualResponse == lExpectedResponse:
+        bSuccess, lActualResponse, sMsg = oQuestion.CaptureResponse()
+        if lActualResponse == lsExpectedResponse:
             bTestResult = True
-        
-        
+         
+         
         tupResult = fnName, bTestResult
         return tupResult
-
-
+ 
+ 
     #-----------------------------------------------
-
+ 
     def test_CaptureResponse_Text(self):
         """ Testing capture of user responses to text box questions
         """
         fnName = sys._getframe().f_code.co_name
-
-        lOptions = ['TextBox 1:','TextBox 2:']
+ 
+        lsOptions = ['TextBox 1:','TextBox 2:']
         sGroupTitle = 'Capture Response - Text Boxes'
         bTestResult = False
+         
+        oQuestion = TextQuestion()
+
+        sQuestionDescriptor = sGroupTitle + ' ...Test Capture Reponse for Text Boxes'
+        oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
+        oQuestion._lsOptions_setter(lsOptions)
         
-        oTest = TextQuestion(lOptions, sGroupTitle + ' ...Test Capture Reponse for Text Boxes')
-        bBuildResult, qGrpBox = oTest.BuildQuestion()
+        
+        bBuildResult, qGrpBox = oQuestion.BuildQuestion()
         slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
-        
+         
         lqAllBoxes = qGrpBox.findChildren(qt.QLineEdit)
         lqAllBoxes[0].setText('First Entry')
         lqAllBoxes[1].setText('Second Entry')
-        
-        lExpectedResponse = ['First Entry','Second Entry']
-        
+         
+        lsExpectedResponse = ['First Entry','Second Entry']
+         
         # get actual response list
-        bSuccess, lActualResponse, sMsg = oTest.CaptureResponse()
-        if lActualResponse == lExpectedResponse:
+        bSuccess, lActualResponse, sMsg = oQuestion.CaptureResponse()
+        if lActualResponse == lsExpectedResponse:
             bTestResult = True
-        
-        
+         
+         
         tupResult = fnName, bTestResult
         return tupResult
-
+ 
     #-----------------------------------------------
-
+ 
     def test_CaptureResponse_IntegerValue(self):
         """ Testing capture of user responses to integer value questions
         """
         fnName = sys._getframe().f_code.co_name
-
-        lOptions = ['IntegerValueSpinner 1:','IntegerValueSpinner 2:']
+ 
+        lsOptions = ['IntegerValueSpinner 1:','IntegerValueSpinner 2:']
         sGroupTitle = 'Capture Response - Integer Value Spinbox'
         bTestResult = False
+         
+        dictModifiers = {'min':'-10', 'max':'200'}
+        oQuestion = IntegerValueQuestion()
+
+        sQuestionDescriptor = sGroupTitle + ' ...Test Capture Reponse for Integer Value box'
+        oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
+        oQuestion._lsOptions_setter(lsOptions)
+        oQuestion.UpdateDictionaryModifiers(dictModifiers)
         
-        dictTest = {'min':'-10', 'max':'200'}
-        oTest = IntegerValueQuestion(lOptions, sGroupTitle + ' ...Test Capture Reponse for Integer Value box', dictTest)
-        bBuildResult, qGrpBox = oTest.BuildQuestion()
+        
+        bBuildResult, qGrpBox = oQuestion.BuildQuestion()
         slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
-        
+         
         lqAllBoxes = qGrpBox.findChildren(qt.QLineEdit)
         lqAllBoxes[0].setText(2)
         lqAllBoxes[1].setText(102)
-        
-        lExpectedResponse = ['2','102']
-        
+         
+        lsExpectedResponse = ['2','102']
+         
         # get actual response list
-        bSuccess, lActualResponse, sMsg = oTest.CaptureResponse()
-        if lActualResponse == lExpectedResponse:
+        bSuccess, lActualResponse, sMsg = oQuestion.CaptureResponse()
+        if lActualResponse == lsExpectedResponse:
             bTestResult = True
-        
-        
+         
+         
         tupResult = fnName, bTestResult
         return tupResult
-
+ 
     #-----------------------------------------------
-
+ 
     def test_CaptureResponse_FloatValue(self):
         """ Testing capture of user responses to float value questions
         """
         fnName = sys._getframe().f_code.co_name
-
-        lOptions = ['FloatValue line edit 1:','FloatValue line edit 2:']
+ 
+        lsOptions = ['FloatValue line edit 1:','FloatValue line edit 2:']
         sGroupTitle = 'Capture Response - Float Value edit box'
         bTestResult = False
+         
+        dictModifiers = {'min':'-10.5', 'max':'200.5'}
+        oQuestion = FloatValueQuestion()
+
+        sQuestionDescriptor = sGroupTitle + ' ...Test Capture Reponse for Float Value box'
+        oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
+        oQuestion._lsOptions_setter(lsOptions)
+        oQuestion.UpdateDictionaryModifiers(dictModifiers)
         
-        dictTest = {'min':'-10.5', 'max':'200.5'}
-        oTest = FloatValueQuestion(lOptions, sGroupTitle + ' ...Test Capture Reponse for Float Value box', dictTest)
-        bBuildResult, qGrpBox = oTest.BuildQuestion()
+        
+        bBuildResult, qGrpBox = oQuestion.BuildQuestion()
         slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
-        
+         
         lqAllBoxes = qGrpBox.findChildren(qt.QLineEdit)
         lqAllBoxes[0].setText(2.5)
         lqAllBoxes[1].setText(102.5)
-        
-        lExpectedResponse = ['2.5','102.5']
-        
+         
+        lsExpectedResponse = ['2.5','102.5']
+         
         # get actual response list
-        bSuccess, lActualResponse, sMsg = oTest.CaptureResponse()
-        if lActualResponse == lExpectedResponse:
+        bSuccess, lActualResponse, sMsg = oQuestion.CaptureResponse()
+        if lActualResponse == lsExpectedResponse:
             bTestResult = True
-        
-        
+         
+         
         tupResult = fnName, bTestResult
         return tupResult
 

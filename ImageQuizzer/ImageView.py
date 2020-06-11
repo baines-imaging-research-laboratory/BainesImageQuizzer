@@ -113,12 +113,18 @@ class ImageView:
         slWidget = slicer.app.layoutManager().sliceWidget(oViewNode.sDestination)
         slWindowLogic = slWidget.sliceLogic()
         slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
+        
+        slWidgetController = slWidget.sliceController()
+        
         if oViewNode.sViewLayer == 'Background':
             slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
             slWidget.setSliceOrientation(oViewNode.sOrientation)
+            slWidget.fitSliceToBackground()
         elif oViewNode.sViewLayer == 'Foreground':
             slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
             slWidget.setSliceOrientation(oViewNode.sOrientation)
+            slWidget.fitSliceToBackground() # use background for scaling
+            slWidgetController.setForegroundOpacity(0.5)
         elif oViewNode.sViewLayer == 'Label':
             slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
         elif oViewNode.sViewLayer == 'Segmentation':
@@ -200,8 +206,7 @@ class ImageView:
         slSegDataNode = slSHNode.GetItemDataNode(slRTStructItemId)
         slSegDisplayNodeId = slSegDataNode.GetDisplayNodeID()
         slSegDisplayNode = slicer.mrmlScene.GetNodeByID(slSegDisplayNodeId)
-        
-        
+
         # assign segmentation display node to the requested viewing window destination
         lsViewIDs = []
         
@@ -212,7 +217,7 @@ class ImageView:
 
         lsViewIDs.append(sViewID)
         
-        # if this segmentation display node was already assigned to a window,
+        # if this segmentation display node was already assigned to a viewing window,
         #    capture the previous assignment and append the new request
         tupPreviousViewAssignments = slSegDisplayNode.GetViewNodeIDs()
         lsRemainingPreviousAssignments = []
@@ -221,15 +226,26 @@ class ImageView:
 #             sPrevViewAssignments = ''.join(sPreviousViewAssignments)
 
             # extract first element of tuple and a list with the rest of the elements 
+            #    (following python syntax rules for tuples) 
             sFirstPreviousAssignment, *lsRemainingPreviousAssignments = tupPreviousViewAssignments
-            lsViewIDs.append(sFirstPreviousAssignment)
-            if len(lsRemainingPreviousAssignments) >0:
-                for indTupList in range(len(lsRemainingPreviousAssignments)):
-                    lsViewIDs.append(lsRemainingPreviousAssignments[indTupList])
-            
+
+            # the current requested view ID (sViewID) may already be in the list of
+            #    previous assignments. Don't bother appending.
+            #    (This may occur when this display is coming after a 'previous' button selection)
+            if not (sFirstPreviousAssignment == sViewID):
+                lsViewIDs.append(sFirstPreviousAssignment)
+                if len(lsRemainingPreviousAssignments) >0:
+                    for indTupList in range(len(lsRemainingPreviousAssignments)):
+                        if not (lsRemainingPreviousAssignments[indTupList] == sViewID):
+                            lsViewIDs.append(lsRemainingPreviousAssignments[indTupList])
+                
         # assign all requested view destinations to the display node
         slSegDisplayNode.SetViewNodeIDs(lsViewIDs)
         
+        
+        # turn on segmentation node visibility 
+        #    (necessary when this display is coming after a 'previous' button selection)
+        slSegDataNode.SetDisplayVisibility(True)
         
         # adjust visibility of each ROI as per user's request
         

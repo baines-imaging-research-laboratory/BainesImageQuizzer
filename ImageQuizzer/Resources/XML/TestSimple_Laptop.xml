@@ -6,6 +6,11 @@
 			<Orientation>Axial</Orientation>
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
+			<Image descriptor="Brain MR" destination="Red" format="nrrd" type="Volume">
+				<Layer>Foreground</Layer>
+				<Orientation>Axial</Orientation>
+				<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nrrd</Path>
+			</Image>
 		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Yellow">
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
@@ -24,6 +29,9 @@
 		<QuestionSet id="QS-Intro #2" title="How to - Instructions">
 			<Question type="InfoBox" descriptor="Instructions">
 				<Option>This is how to run the quiz : .....</Option>
+			</Question>
+			<Question type="IntegerValue" descriptor="Food Order" max="5">
+				<Option>Enter number of pizzas:</Option>
 			</Question>
 		</QuestionSet>
 	</Page>

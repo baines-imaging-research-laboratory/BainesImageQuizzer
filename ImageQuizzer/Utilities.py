@@ -7,6 +7,7 @@ import xml.dom.minidom
 from shutil import copyfile
 
 
+
 try:
     from lxml import etree
 
@@ -91,40 +92,8 @@ class UtilsIOXml:
     #-------------------------------------------
 
     def OpenXml(self, sXmlPath, sRootNodeName):
-#         # given a path, open the xml document
-#         
-#         # initialize a document node
-#         xNode = None
-#         # test for existence
-#         if (os.path.isfile(sXmlPath)):
-#             
-#             try:
-#                 xDoc = xml.dom.minidom.parse(sXmlPath)
-#                 xNode = xDoc.documentElement
-#                    
-#                 # check for expected root node
-#                 sNodeName = self.GetElementNodeName(xNode)
-#                 if sNodeName == sRootNodeName:
-#                     bSuccess = True
-#  
-#                 else:
-#                     bSuccess = False
-#                     raise NameError('Invalid XML root node: %s' % sXmlPath)
-# 
-#             except NameError:
-#                 raise
-# 
-#             except:
-#                 bSuccess = False
-#                 raise Exception('Parsing XML file error: %s' % sXmlPath)
-#                 
-#         else:
-#             bSuccess = False
-#             raise Exception('XML file does not exist: %s' % sXmlPath)
-#         
-#         return bSuccess, xNode
-
         # given a path, open the xml document
+         
          
         # initialize a document node
         xNode = None
@@ -280,19 +249,20 @@ class UtilsIOXml:
 #             else:
 #                 print('invalid data node  check xml schema' )
         
-        
         sData = xNode.text
         
-        
-        if '\n' or '\t' in sData: 
-            # clean up any tabs or line feeds in the data string; replace with null
-            #    Element tree stores '\n\t\t'  when the text property is empty for an element 
-            sTab = '\t'
-            sNull = ''
-            sLineFeed = '\n'
-            sData = sData.replace(sTab, sNull)
-            sData = sData.replace(sLineFeed, sNull)
-        
+        if sData is None:        
+            sData = ''
+        else:
+            if '\n' or '\t' in sData: 
+                # clean up any tabs or line feeds in the data string; replace with null
+                #    Element tree stores '\n\t\t'  when the text property is empty for an element 
+                sTab = '\t'
+                sNull = ''
+                sLineFeed = '\n'
+                sData = sData.replace(sTab, sNull)
+                sData = sData.replace(sLineFeed, sNull)
+                
         return sData
     
     #-------------------------------------------
