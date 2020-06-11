@@ -179,8 +179,8 @@ class Session:
         
         self._oIOXml = UtilsIOXml()
         self.SetFilesIO(oFilesIO)
-        self.SetupWidgets(oQuizWidgets)
         self.SetupButtons()
+        self.SetupWidgets(oQuizWidgets)
 
         # open xml and check for root node
         bSuccess, xRootNode = self._oIOXml.OpenXml(self._oFilesIO.GetUserQuizPath(),'Session')

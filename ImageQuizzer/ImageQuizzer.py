@@ -77,7 +77,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
         # create the ImageQuizzer widget 
         self.oQuizWidgets = QuizWidgets()
-        self.oQuizWidgets.CreateQuizzerLayout()
+#         self.oQuizWidgets.CreateQuizzerLayout()
+        self.oQuizWidgets.CreateQuizzerLayoutWithTabs()
 
 
         # add to Slicer's main layout
@@ -151,8 +152,10 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         if not sSelectedQuiz:
 #             msgBox = qt.QMessageBox()
 #             msgBox.critical(0,"Error","No quiz was selected")
-            sErrorMsg = 'No quiz was selected'
-            self.oUtilsMsgs.DisplayError(sErrorMsg)
+            sMsg = 'No quiz was selected'
+#             self.oUtilsMsgs.DisplayError(sMsg)
+            self.oUtilsMsgs.DisplayWarning(sMsg)
+
         else:
             # enable the launch button
             self.qLblQuizFilename.setText(sSelectedQuiz)
@@ -288,6 +291,10 @@ class QuizWidgets:
         self.quizFrame.setLayout(qt.QVBoxLayout())
         self._slicerQuizLayout.addWidget(self.quizFrame)
 
+
+
+
+
 #         #-------------------------------------------
 #         # setup the tab widget
 #         leftTabWidget = qt.QTabWidget()
@@ -308,5 +315,34 @@ class QuizWidgets:
 #         
 #         #add quiz
 #         self.quizFrame.layout().addWidget(leftTabWidget)
+
+
+    def CreateQuizzerLayoutWithTabs(self):
+
+        #-------------------------------------------
+        # set up quiz widget
+        self._slicerLeftWidget = qt.QWidget()
+        self._slicerLeftMainLayout = qt.QVBoxLayout()
+        self._slicerLeftWidget.setLayout(self._slicerLeftMainLayout)
+
     
+        #-------------------------------------------
+        # setup the tab widget
+        leftTabWidget = qt.QTabWidget()
+        qTabQuiz = qt.QWidget()
+        leftTabWidget.addTab(qTabQuiz,"Quiz")
+        leftTabWidget.addTab(slicer.modules.segmenteditor.widgetRepresentation(),"Segment Editor")
+
+
+        self._slicerLeftMainLayout.addWidget(leftTabWidget)
+
+        
+        # Layout within the tab widget - form needs a frame
+
+        self._slicerQuizLayout = qt.QFormLayout(qTabQuiz)
+        self.quizFrame = qt.QFrame(qTabQuiz)
+        self.quizFrame.setLayout(qt.QVBoxLayout())
+        self._slicerQuizLayout.addWidget(self.quizFrame)
+
+
 
