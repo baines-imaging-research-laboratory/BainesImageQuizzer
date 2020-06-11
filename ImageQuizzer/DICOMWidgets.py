@@ -18,7 +18,10 @@ import DICOMLib
 #
 #    OVERRIDE DICOMWidgets.py for Baines Image Quizzer app
 #
-#    Author: C.Johnson - June 2020
+#    Original Slicer file located in 
+#    .../AppData/Local/NA-MIC/Slicer4.11.xxx/lib/Slicer-4.11/qt-scripted-modules/DICOMlib
+#
+#    Modified by: C.Johnson - June 2020
 #
 #    Function: showReferenceDialogAndProceed
 #        Bypass showing this dialog box leaving the loading of
