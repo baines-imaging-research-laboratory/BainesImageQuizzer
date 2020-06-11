@@ -123,7 +123,7 @@ class ImageView:
         elif oViewNode.sViewLayer == 'Foreground':
             slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
             slWidget.setSliceOrientation(oViewNode.sOrientation)
-            slWidget.fitSliceToBackground()
+            slWidget.fitSliceToBackground() # use background for scaling
             slWidgetController.setForegroundOpacity(0.5)
         elif oViewNode.sViewLayer == 'Label':
             slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
