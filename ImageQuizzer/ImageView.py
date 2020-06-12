@@ -13,6 +13,7 @@ from DICOMLib import DICOMUtils
 import ssl
 from DICOMLib.DICOMUtils import loadPatientByUID
 
+
 ##########################################################################
 #
 #   Class ImageView
@@ -29,6 +30,7 @@ class ImageView:
         
         self.lValidVolumeFormats = ['nrrd', 'nii', 'mhd', 'dicom']
         self.loViewNodes = []
+        self.bLinkViews = True
         
         
 
@@ -52,17 +54,32 @@ class ImageView:
         # clear views from previous page
         self.ClearImagesAndSegmentations()
        
-        self.loViewNodes = self.BuildViewNodes(self.xImages)
+#         self.loViewNodes = self.BuildViewNodes(self.xImages)
+        self.BuildViewNodes(self.xImages)
         
         
+
+        # Assign images to view with proper orientation
         if len(self.loViewNodes) > 0:
             
 #             # clear views from previous page
 #             self.ClearImagesAndSegmentations()
 
+            sViewOrientation = ''
             # assign nodes for current page to views
             for i in range(len(self.loViewNodes)):
+                
+                # if all view nodes have the same orientation, link them for scrolling
+                if (self.loViewNodes[i].sViewLayer=='Background') or (self.loViewNodes[i]=='Foreground'):
+                    if sViewOrientation == '':
+                        sViewOrientation = self.loViewNodes[i].sOrientation # assign to first view
+                        
+                    else:
+                        if not (sViewOrientation == self.loViewNodes[i].sOrientation):
+                            self.bLinkViews = False
+                    
                 self.AssignNodesToView(self.loViewNodes[i])
+                
             
 
     #-----------------------------------------------
@@ -99,7 +116,7 @@ class ImageView:
                  
 
     
-        return self.loViewNodes
+#         return self.loViewNodes
                     
                     
          
@@ -113,20 +130,28 @@ class ImageView:
         slWidget = slicer.app.layoutManager().sliceWidget(oViewNode.sDestination)
         slWindowLogic = slWidget.sliceLogic()
         slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
-        
         slWidgetController = slWidget.sliceController()
+        
+        if self.bLinkViews == True:
+            slWindowCompositeNode.LinkedControlOn()
+        else:
+            slWindowCompositeNode.LinkedControlOff()
+        
         
         if oViewNode.sViewLayer == 'Background':
             slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
             slWidget.setSliceOrientation(oViewNode.sOrientation)
             slWidget.fitSliceToBackground()
+
         elif oViewNode.sViewLayer == 'Foreground':
             slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
             slWidget.setSliceOrientation(oViewNode.sOrientation)
             slWidget.fitSliceToBackground() # use background for scaling
             slWidgetController.setForegroundOpacity(0.5)
+
         elif oViewNode.sViewLayer == 'Label':
             slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
+
         elif oViewNode.sViewLayer == 'Segmentation':
             if not (oViewNode.sRoiVisibilityCode == 'Empty'):
                 self.SetSegmentRoiVisibility(oViewNode)
