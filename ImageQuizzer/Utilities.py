@@ -358,6 +358,10 @@ class UtilsMsgs:
         self.msgBox.information(slicer.util.mainWindow(), 'Information', sTextMsg)
 
     #-------------------------------------------
+    
+    def DisplayYesNo(self, sMsg):
+        qtAns = self.msgBox.question(slicer.util.mainWindow(),'Continue?',sMsg, qt.QMessageBox.Yes, qt.QMessageBox.No)
+        return qtAns
 
 ##########################################################################
 #

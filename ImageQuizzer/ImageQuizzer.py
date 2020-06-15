@@ -4,6 +4,7 @@ from slicer.ScriptedLoadableModule import *
 from Session import *
 from pip._vendor.distlib._backport.shutil import copyfile
 from slicer.util import findChild
+
 #
 
 ##########################################################################################
@@ -324,6 +325,11 @@ class QuizWidgets:
         self._slicerLeftWidget = qt.QWidget()
         self._slicerLeftMainLayout = qt.QVBoxLayout()
         self._slicerLeftWidget.setLayout(self._slicerLeftMainLayout)
+        
+        qTitle = qt.QLabel('Baines Image Quizzer')
+        qTitle.setFont(qt.QFont('Arial',14, qt.QFont.Bold))
+
+        self._slicerLeftMainLayout.addWidget(qTitle)
 
     
         #-------------------------------------------

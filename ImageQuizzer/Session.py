@@ -684,7 +684,14 @@ class Session:
         if bLastLoginResponseFound == True:
             if indCI == (len(self._l2iPageQuestionCompositeIndices) - 1):
                 if self._bAllowMultipleResponse == True:
-                    iResumeCompIndex = 0
+                    sMsg = 'Quiz has already been completed. \nClick Yes to begin again. Click No to exit.'
+#                     sAns = qt.QMessageBox.question(slicer.util.mainWindow(),'Continue?',sMsg, qt.QMessageBox.Yes, qt.QMessageBox.No)
+                    qtAns = self._oMsgUtil.DisplayYesNo(sMsg)
+
+                    if qtAns == qt.QMessageBox.Yes:
+                        iResumeCompIndex = 0
+                    else:
+                        self.ExitOnQuizComplete("This quiz was already completed. Exiting")
                 else:
                     self.ExitOnQuizComplete("This quiz was already completed. Exiting")
             else:
