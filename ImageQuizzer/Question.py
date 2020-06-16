@@ -22,7 +22,8 @@ class QuestionSet():
         self.sClassName = type(self).__name__
         self.id = ''
         self.title = ''
-#         self.ltupQuestions = []
+        self._bSegmentRequired = False
+        
         self._loQuestions = []
         
         self.oIOXml = UtilsIOXml()
@@ -31,9 +32,24 @@ class QuestionSet():
     #----------
     def SetQuestionList(self, loQuestionsInput):
         self._loQuestions = loQuestionsInput
+
     #----------
     def GetQuestionList(self):
         return self._loQuestions
+    
+    #----------
+    def GetSegmentRequiredYN(self):
+        return self._bSegmentRequired
+    
+    #----------
+    def SetSegmentRequiredYN(self, sYN):
+        if sYN == 'y' or sYN == 'Y':
+            self._bSegmentRequired = True
+        else:
+            self._bSegmentRequired = False
+    
+    
+    #----------
         
     #-----------------------------------------------
         
@@ -50,6 +66,9 @@ class QuestionSet():
             
             self.id = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'id')
             self.title = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'title')
+            self.SetSegmentRequiredYN(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'segmentrequired'))
+            
+            
             
             xQuestions = self.oIOXml.GetChildren(xNodeQuestionSet, 'Question')
             

@@ -38,7 +38,7 @@ class Session:
         self._bStartOfSession = True
         self._bQuizComplete = False
         self._bAllowMultipleResponse = False
-        self._bSegmentationFunctionality = False       
+        self._bSegmentationModule = False       
         
         self._oIOXml = None
         self._oFilesIO = None
@@ -97,17 +97,20 @@ class Session:
             self._bAllowMultipleResponse = False
             
     #----------
-    def SetSegmentationFunctionality(self, sInput):
+    def AddSegmentationModule(self, sInput):
         if sInput == 'y' or sInput == 'Y':
             # add segment editor tab to quiz widget
             self.slicerTabWidget.addTab(slicer.modules.segmenteditor.widgetRepresentation(),"Segment Editor")
-            self._bSegmentationFunctionality = True
+            self._bSegmentationModule = True
             self._bSegmentationTabIndex = self.slicerTabWidget.count - 1
             self.slicerTabWidget.setTabEnabled(self._bSegmentationTabIndex, True)
         else:
-            self._bSegmentationFunctionality = False
+            self._bSegmentationModule = False
         
     #----------
+    def SegmentationTabEnabler(self, bYN):
+        self.slicerTabWidget.setTabEnabled(self.GetSegmentationTabIndex(), bYN)
+
     #----------
     def GetSegmentationTabIndex(self):
         return self._bSegmentationTabIndex
@@ -209,8 +212,8 @@ class Session:
             sMultiplesAllowed = self._oIOXml.GetValueOfNodeAttribute(xRootNode, 'allowmultipleresponses')
             self.SetMultipleResponsesAllowed(sMultiplesAllowed)
             
-            sSegmentationYN = self._oIOXml.GetValueOfNodeAttribute(xRootNode, 'segmentationfunctionality')
-            self.SetSegmentationFunctionality(sSegmentationYN)
+            sSegmentationYN = self._oIOXml.GetValueOfNodeAttribute(xRootNode, 'segmentationmodule')
+            self.AddSegmentationModule(sSegmentationYN)
             
             self.slicerLeftMainLayout.addWidget(self._btnNext)
             self.slicerLeftMainLayout.addWidget(self._btnPrevious)
@@ -410,6 +413,9 @@ class Session:
         xNodeQuestionSet = self.GetCurrentQuestionSetNode()
         oQuestionSet = QuestionSet()
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
+        
+        self.SegmentationTabEnabler(oQuestionSet.GetSegmentRequiredYN())
+
         
 
         
