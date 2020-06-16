@@ -246,6 +246,7 @@ class QuizWidgets:
         self._slicerLeftMainLayout = None
         self._slicerQuizLayout = None
         self._slicerLeftWidget = None
+        self._slicerTabWidget = None
         
     def GetSlicerLeftMainLayout(self):
         return self._slicerLeftMainLayout
@@ -255,6 +256,9 @@ class QuizWidgets:
     
     def GetSlicerLeftWidget(self):
         return self._slicerLeftWidget
+    
+    def GetSlicerTabWidget(self):
+        return self._slicerTabWidget
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -322,8 +326,12 @@ class QuizWidgets:
 
         #-------------------------------------------
         # set up quiz widget
-        self._slicerLeftWidget = qt.QWidget()
+
+        # create a layout for the quiz to go in Slicer's left widget
         self._slicerLeftMainLayout = qt.QVBoxLayout()
+        
+        # add the quiz main layout to Slicer's left widget
+        self._slicerLeftWidget = qt.QWidget()
         self._slicerLeftWidget.setLayout(self._slicerLeftMainLayout)
         
         qTitle = qt.QLabel('Baines Image Quizzer')
@@ -334,13 +342,13 @@ class QuizWidgets:
     
         #-------------------------------------------
         # setup the tab widget
-        leftTabWidget = qt.QTabWidget()
+        self._slicerTabWidget = qt.QTabWidget()
         qTabQuiz = qt.QWidget()
-        leftTabWidget.addTab(qTabQuiz,"Quiz")
-        leftTabWidget.addTab(slicer.modules.segmenteditor.widgetRepresentation(),"Segment Editor")
+        self._slicerTabWidget.addTab(qTabQuiz,"Quiz")
+#         self._slicerTabWidget.addTab(slicer.modules.segmenteditor.widgetRepresentation(),"Segment Editor")
 
 
-        self._slicerLeftMainLayout.addWidget(leftTabWidget)
+        self._slicerLeftMainLayout.addWidget(self._slicerTabWidget)
 
         
         # Layout within the tab widget - form needs a frame
