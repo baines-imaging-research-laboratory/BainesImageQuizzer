@@ -38,7 +38,7 @@ class Session:
         self._bStartOfSession = True
         self._bQuizComplete = False
         self._bAllowMultipleResponse = False
-       
+        self._bSegmentationFunctionality = False       
         
         self._oIOXml = None
         self._oFilesIO = None
@@ -97,7 +97,22 @@ class Session:
             self._bAllowMultipleResponse = False
             
     #----------
+    def SetSegmentationFunctionality(self, sInput):
+        if sInput == 'y' or sInput == 'Y':
+            # add segment editor tab to quiz widget
+            self.slicerTabWidget.addTab(slicer.modules.segmenteditor.widgetRepresentation(),"Segment Editor")
+            self._bSegmentationFunctionality = True
+            self._bSegmentationTabIndex = self.slicerTabWidget.count - 1
+            self.slicerTabWidget.setTabEnabled(self._bSegmentationTabIndex, True)
+        else:
+            self._bSegmentationFunctionality = False
+        
     #----------
+    #----------
+    def GetSegmentationTabIndex(self):
+        return self._bSegmentationTabIndex
+        
+        
     #----------
     #----------
     def GetAllQuestionSetsForNthPage(self, iPageIndex):
@@ -194,6 +209,9 @@ class Session:
             sMultiplesAllowed = self._oIOXml.GetValueOfNodeAttribute(xRootNode, 'allowmultipleresponses')
             self.SetMultipleResponsesAllowed(sMultiplesAllowed)
             
+            sSegmentationYN = self._oIOXml.GetValueOfNodeAttribute(xRootNode, 'segmentationfunctionality')
+            self.SetSegmentationFunctionality(sSegmentationYN)
+            
             self.slicerLeftMainLayout.addWidget(self._btnNext)
             self.slicerLeftMainLayout.addWidget(self._btnPrevious)
 
@@ -219,6 +237,8 @@ class Session:
     
         self.slicerLeftMainLayout = self._oQuizWidgets.GetSlicerLeftMainLayout()
         self.slicerQuizLayout = self._oQuizWidgets.GetSlicerQuizLayout()
+        self.slicerTabWidget = self._oQuizWidgets.GetSlicerTabWidget()
+        
     
     #-----------------------------------------------
     
