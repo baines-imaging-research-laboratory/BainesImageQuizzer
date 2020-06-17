@@ -37,8 +37,10 @@ class Session:
         
         self._bStartOfSession = True
         self._bQuizComplete = False
-        self._bAllowMultipleResponse = False
-        self._bSegmentationModule = False       
+        self._bAllowMultipleResponseInQuiz = False
+        self._bAllowMultipleResponseInQSet = False      # for question set
+        self._bSegmentationModule = False
+        self._iSegmentationTabIndex = -1   # default
         
         self._oIOXml = None
         self._oFilesIO = None
@@ -90,30 +92,46 @@ class Session:
         return self._l2iPageQuestionCompositeIndices
 
     #----------
-    def SetMultipleResponsesAllowed(self, sInput):
-        if sInput == 'y' or sInput == 'Y':
-            self._bAllowMultipleResponse = True
-        else:
-            self._bAllowMultipleResponse = False
+    def SetMultipleResponsesInQSetAllowed(self, bInput):
+        
+        self._bAllowMultipleResponseInQSet = bInput
+
+    #----------
+    def GetMultipleResponsesInQsetAllowed(self):
+        return self._bAllowMultipleResponseInQSet
+            
+        
+    #----------
+    def SetMultipleResponsesInQuiz(self, sYN):        
+        if sYN == 'y' or sYN == 'Y':
+            self._bAllowMultipleResponseInQuiz = True
             
     #----------
-    def AddSegmentationModule(self, sInput):
-        if sInput == 'y' or sInput == 'Y':
+    def GetMultipleResponsesInQuiz(self):
+        return self._bAllowMultipleResponseInQuiz
+            
+    #----------
+    def AddSegmentationModule(self, sYN):
+        if sYN == 'y' or sYN == 'Y':
             # add segment editor tab to quiz widget
             self.slicerTabWidget.addTab(slicer.modules.segmenteditor.widgetRepresentation(),"Segment Editor")
             self._bSegmentationModule = True
-            self._bSegmentationTabIndex = self.slicerTabWidget.count - 1
-            self.slicerTabWidget.setTabEnabled(self._bSegmentationTabIndex, True)
+            self._iSegmentationTabIndex = self.slicerTabWidget.count - 1
+            self.slicerTabWidget.setTabEnabled(self._iSegmentationTabIndex, True)
         else:
             self._bSegmentationModule = False
         
     #----------
-    def SegmentationTabEnabler(self, bYN):
-        self.slicerTabWidget.setTabEnabled(self.GetSegmentationTabIndex(), bYN)
+    def SegmentationTabEnabler(self, bTF):
+        self.slicerTabWidget.setTabEnabled(self.GetSegmentationTabIndex(), bTF)
 
+#     #----------
+#     def QuizTabEnabler(self,bTF):
+#         self.slicerTabWidget.setTabEnabled(0, bTF)
+#     
     #----------
     def GetSegmentationTabIndex(self):
-        return self._bSegmentationTabIndex
+        return self._iSegmentationTabIndex
         
         
     #----------
@@ -208,11 +226,12 @@ class Session:
             self.oUtilsMsgs.DisplayError(sErrorMsg)
 
         else:
-            # set the boolean allowing multiple responses
-            sMultiplesAllowed = self._oIOXml.GetValueOfNodeAttribute(xRootNode, 'allowmultipleresponses')
-            self.SetMultipleResponsesAllowed(sMultiplesAllowed)
+            # set the boolean indicating whether multiple responses are allowed in the quiz
+            #    (question sets also have an attribute to control multiple responses at that level)  
+            sMultiplesAllowedYN = self._oIOXml.GetValueOfNodeAttribute(xRootNode, 'multipleresponsefunctionality')
+            self.SetMultipleResponsesInQuiz(sMultiplesAllowedYN)
             
-            sSegmentationYN = self._oIOXml.GetValueOfNodeAttribute(xRootNode, 'segmentationmodule')
+            sSegmentationYN = self._oIOXml.GetValueOfNodeAttribute(xRootNode, 'segmentationfunctionality')
             self.AddSegmentationModule(sSegmentationYN)
             
             self.slicerLeftMainLayout.addWidget(self._btnNext)
@@ -267,7 +286,10 @@ class Session:
     def onNextButtonClicked(self):
 
         sMsg = ''
-            
+        
+        ############################################    
+        # work on saving responses for current page
+        ############################################    
 
         bResponsesCaptured, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet()
         
@@ -278,9 +300,13 @@ class Session:
         else:
             
             # only allow for writing of responses under certain conditions
+            #    - allow if the question set is marked for multiple responses
+            #    - allow if no responses were recorded yet
             
-            if ( self._bAllowMultipleResponse == True)  or \
-                ((self._bAllowMultipleResponse == False) and (self.CheckForSavedResponse() == False) ):
+#             if ( self._bAllowMultipleResponse == True)  or \
+#                 ((self._bAllowMultipleResponse == False) and (self.CheckForSavedResponse() == False) ):
+            if ( self.GetMultipleResponsesInQsetAllowed() == True)  or \
+                ((self.GetMultipleResponsesInQsetAllowed() == False) and (self.CheckForSavedResponse() == False) ):
 
                 # Responses have been captured, if it's the first set of responses
                 #    for the session, add in the login timestamp
@@ -297,10 +323,14 @@ class Session:
                     self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
                     self._bStartOfSession = False
             
+
+            ########################################    
+            # set up for next page
+            ########################################    
+            
             # if last question set, clear list
             if self.CheckForLastQuestionSetForPage() == True:
                 self._loQuestionSets = []
-                
         
             self._iCurrentCompositeIndex = self._iCurrentCompositeIndex + 1
                 
@@ -414,8 +444,11 @@ class Session:
         oQuestionSet = QuestionSet()
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
         
-        self.SegmentationTabEnabler(oQuestionSet.GetSegmentRequiredYN())
+        if self.GetSegmentationTabIndex() > 0:
+            self.SegmentationTabEnabler(oQuestionSet.GetSegmentRequiredTF())
 
+        self.SetMultipleResponsesInQSetAllowed(oQuestionSet.GetMultipleResponseTF())
+        
         
 
         
@@ -427,17 +460,16 @@ class Session:
 
         
         bBuildSuccess, qQuizWidget = oQuestionSet.BuildQuestionSetForm()
+        
         if bBuildSuccess:
             self.slicerQuizLayout.addWidget(qQuizWidget)
             self._loQuestionSets.append(oQuestionSet)
+            qQuizWidget.setEnabled(True) # initialize
 
             # enable widget if no response exists or if user is allowed to 
             # input multiple responses
             if self.CheckForSavedResponse() == True:
-                if self._bAllowMultipleResponse == False:
-                    qQuizWidget.setEnabled(False)
-                else:
-                    qQuizWidget.setEnabled(True)
+                qQuizWidget.setEnabled(self.GetMultipleResponsesInQsetAllowed())
                 self.DisplaySavedResponse()
                    
                     
@@ -709,7 +741,9 @@ class Session:
             
         if bLastLoginResponseFound == True:
             if indCI == (len(self._l2iPageQuestionCompositeIndices) - 1):
-                if self._bAllowMultipleResponse == True:
+                
+                # if one question set allows a multiple response, user has option to redo response
+                if self.GetMultipleResponsesInQuiz() == True:
                     sMsg = 'Quiz has already been completed. \nClick Yes to begin again. Click No to exit.'
 #                     sAns = qt.QMessageBox.question(slicer.util.mainWindow(),'Continue?',sMsg, qt.QMessageBox.Yes, qt.QMessageBox.No)
                     qtAns = self._oMsgUtil.DisplayYesNo(sMsg)
