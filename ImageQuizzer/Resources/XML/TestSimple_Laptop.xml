@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Session allowmultipleresponses="n" segmentationmodule="y">
+<Session>
 	<Page name="Patient1" descriptor="PlanningCT">
 		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Red">
 			<Layer>Background</Layer>
@@ -21,12 +21,12 @@
 			<Orientation>Coronal</Orientation>
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-		<QuestionSet id="QS-Intro" title="Introduction to Quiz"  segmentrequired="n">
+		<QuestionSet id="QS-Intro" title="Introduction to Quiz"  segmentrequired="n" allowmultipleresponse="n">
 			<Question type="InfoBox" descriptor="Introduction">
 				<Option>Lots of text describing something</Option>
 			</Question>
 		</QuestionSet>
-		<QuestionSet id="QS-Intro #2" title="How to - Instructions"  segmentrequired="n">
+		<QuestionSet id="QS-Intro #2" title="How to - Instructions"  segmentrequired="n"  allowmultipleresponse="n">
 			<Question type="InfoBox" descriptor="Instructions">
 				<Option>This is how to run the quiz : .....</Option>
 			</Question>
@@ -51,7 +51,7 @@
 			<Orientation>Coronal</Orientation>
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nii</Path>
 		</Image>
-		<QuestionSet id="QS-Observation" title="What is your Assessment"  segmentrequired="y">
+		<QuestionSet id="QS-Observation" title="What is your Assessment"  segmentrequired="y"  allowmultipleresponse="y">
 			<Question type="Radio" descriptor="Assessment">
 				<Option>Injury</Option>
 				<Option>Recurrence</Option>
@@ -92,7 +92,7 @@
 			<Layer>Label</Layer>
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Prostate\Case00_segmentation.mhd</Path>
 		</Image>
-		<QuestionSet id="QS-Demo" title="Demo buttons" segmentrequired="y">
+		<QuestionSet id="QS-Demo" title="Demo buttons" segmentrequired="y"  allowmultipleresponse="y">
 			<Question type="Checkbox"  descriptor="Demo Checks">
 				<Option>Check 1</Option>
 				<Option>Check 2</Option>
@@ -123,7 +123,7 @@
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<QuestionSet id="QS-Checkup" title="Tell us how you feel" segmentrequired="n">
+		<QuestionSet id="QS-Checkup" title="Tell us how you feel" segmentrequired="n"  allowmultipleresponse="n">
 			<Question type="Checkbox" descriptor="Patient general health">
 				<Option>I need sleep.</Option>
 				<Option>I need a vacation.</Option>
@@ -181,7 +181,7 @@
 				<ROI>Body_Contour</ROI>
 			</ROIs>
 		</Image>
-		<QuestionSet id="QS-Checkup" title="What's your progress"  segmentrequired="y">
+		<QuestionSet id="QS-Checkup" title="What's your progress"  segmentrequired="y"  allowmultipleresponse="n">
 			<Question type="Radio" descriptor="Milestone checker">
 				<Option>Cooking with gas.</Option>
 				<Option>On track.</Option>
@@ -229,7 +229,7 @@
 			<Layer>Label</Layer>
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\BrainDWI\Segment_1-label.nrrd</Path>
 		</Image>
-		<QuestionSet id="QS-Checkup" title="Your thoughts?"  segmentrequired="y">
+		<QuestionSet id="QS-Checkup" title="Your thoughts?" allowmultipleresponse="y">
 			<Question type="Checkbox" descriptor="Milestone checker">
 				<Option>Working at home is comfortable.</Option>
 				<Option>Dan needs a hobby.</Option>
