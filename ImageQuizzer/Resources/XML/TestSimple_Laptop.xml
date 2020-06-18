@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Session segmentationmodule="y">
+<Session>
 	<Page name="Patient1" descriptor="PlanningCT">
 		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Red">
 			<Layer>Background</Layer>
@@ -51,7 +51,7 @@
 			<Orientation>Coronal</Orientation>
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nii</Path>
 		</Image>
-		<QuestionSet id="QS-Observation" title="What is your Assessment"  segmentrequired="y"  allowmultipleresponse="n">
+		<QuestionSet id="QS-Observation" title="What is your Assessment"  segmentrequired="y"  allowmultipleresponse="y">
 			<Question type="Radio" descriptor="Assessment">
 				<Option>Injury</Option>
 				<Option>Recurrence</Option>
@@ -92,7 +92,7 @@
 			<Layer>Label</Layer>
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Prostate\Case00_segmentation.mhd</Path>
 		</Image>
-		<QuestionSet id="QS-Demo" title="Demo buttons" segmentrequired="y"  allowmultipleresponse="n">
+		<QuestionSet id="QS-Demo" title="Demo buttons" segmentrequired="y"  allowmultipleresponse="y">
 			<Question type="Checkbox"  descriptor="Demo Checks">
 				<Option>Check 1</Option>
 				<Option>Check 2</Option>
@@ -229,7 +229,7 @@
 			<Layer>Label</Layer>
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\BrainDWI\Segment_1-label.nrrd</Path>
 		</Image>
-		<QuestionSet id="QS-Checkup" title="Your thoughts?"  segmentrequired="y"  allowmultipleresponse="n">
+		<QuestionSet id="QS-Checkup" title="Your thoughts?" allowmultipleresponse="y">
 			<Question type="Checkbox" descriptor="Milestone checker">
 				<Option>Working at home is comfortable.</Option>
 				<Option>Dan needs a hobby.</Option>

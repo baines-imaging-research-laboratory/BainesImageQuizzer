@@ -102,17 +102,18 @@ class Session:
             
         
     #----------
-    def SetMultipleResponsesInQuiz(self, sYN):        
-        if sYN == 'y' or sYN == 'Y':
-            self._bAllowMultipleResponseInQuiz = True
+    def SetMultipleResponsesInQuiz(self, bTF):
+        # flag for quiz if any question sets allowed for multiple responses
+        # this is used for 'resuming' after quiz was completed     
+        self._bAllowMultipleResponseInQuiz = bTF
             
     #----------
     def GetMultipleResponsesInQuiz(self):
         return self._bAllowMultipleResponseInQuiz
             
     #----------
-    def AddSegmentationModule(self, sYN):
-        if sYN == 'y' or sYN == 'Y':
+    def AddSegmentationModule(self, bTF):
+        if bTF == True:
             # add segment editor tab to quiz widget
             self.slicerTabWidget.addTab(slicer.modules.segmenteditor.widgetRepresentation(),"Segment Editor")
             self._bSegmentationModule = True
@@ -226,13 +227,14 @@ class Session:
             self.oUtilsMsgs.DisplayError(sErrorMsg)
 
         else:
-            # set the boolean indicating whether multiple responses are allowed in the quiz
-            #    (question sets also have an attribute to control multiple responses at that level)  
-            sMultiplesAllowedYN = self._oIOXml.GetValueOfNodeAttribute(xRootNode, 'multipleresponsefunctionality')
-            self.SetMultipleResponsesInQuiz(sMultiplesAllowedYN)
-            
-            sSegmentationYN = self._oIOXml.GetValueOfNodeAttribute(xRootNode, 'segmentationfunctionality')
-            self.AddSegmentationModule(sSegmentationYN)
+
+            # turn on functionality if any of the question set attributes indicated they are required
+            self.SetMultipleResponsesInQuiz( \
+                self._oIOXml.CheckForRequiredFunctionalityInAttribute( \
+                './/Page/QuestionSet', 'allowmultipleresponse','y'))
+            self.AddSegmentationModule( \
+                self._oIOXml.CheckForRequiredFunctionalityInAttribute( \
+                './/Page/QuestionSet', 'segmentrequired','y'))
             
             self.slicerLeftMainLayout.addWidget(self._btnNext)
             self.slicerLeftMainLayout.addWidget(self._btnPrevious)
@@ -308,17 +310,17 @@ class Session:
             if ( self.GetMultipleResponsesInQsetAllowed() == True)  or \
                 ((self.GetMultipleResponsesInQsetAllowed() == False) and (self.CheckForSavedResponse() == False) ):
 
-                # Responses have been captured, if it's the first set of responses
-                #    for the session, add in the login timestamp
-                #    The timestamp is added here in case the user exited without responding to anything,
-                #    allowing for the resume check to function properly
-                if self._bStartOfSession == True:
-                    self.AddSessionLoginTimestamp()
-                    
                 # check to see if the responses for the question set match 
                 #    what was previously captured
                 #    -only write responses if they have changed
                 if not self._lsNewResponses == self._lsPreviousResponses:
+                    # Responses have been captured, if it's the first set of responses
+                    #    for the session, add in the login timestamp
+                    #    The timestamp is added here in case the user exited without responding to anything,
+                    #    allowing for the resume check to function properly
+                    if self._bStartOfSession == True:
+                        self.AddSessionLoginTimestamp()
+                    
                     self.WriteResponses()
                     self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
                     self._bStartOfSession = False

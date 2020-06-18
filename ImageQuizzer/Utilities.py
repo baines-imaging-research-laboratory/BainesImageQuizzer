@@ -279,6 +279,27 @@ class UtilsIOXml:
 #         xParentNode.insert(1, elem)
 
         
+    #-----------------------------------------------
+
+    def CheckForRequiredFunctionalityInAttribute(self, sTreeLevel, sAttribute, sSetting):
+        
+        # query the Question Set elements in the selected quiz xml
+        # functionality is defined at the Question Set level
+        # if any question set has the specified attribute setting, return true
+        
+        bRequired = False 
+        
+        tree = self.GetXmlTree()
+        for node in tree.findall(sTreeLevel):
+            sAns = self.GetValueOfNodeAttribute(node, sAttribute)
+            print(sAns)
+            if sAns == sSetting:
+                bRequired = True
+                break
+        
+        return bRequired
+        
+    
     #-------------------------------------------
 
     def prettify(self, elem):
