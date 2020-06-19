@@ -35,6 +35,8 @@ class Session:
         self._lsPreviousResponses = []
         self._lsNewResponses = []
         
+        self._loImageNodes = []
+        
         self._bStartOfSession = True
         self._bQuizComplete = False
         self._bAllowMultipleResponseInQuiz = False
@@ -206,7 +208,9 @@ class Session:
         
         return xAllOptionNodes
         
-            
+    #----------
+    def SetImageViewList(self, lInput):
+        self._loImageNodes = lInput
 
     #-------------------------------------------
     #        Functions
@@ -294,6 +298,7 @@ class Session:
         ############################################    
 
         bResponsesCaptured, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet()
+        self.CaptureImageState()
         
         if (bResponsesCaptured == False):
 
@@ -477,6 +482,8 @@ class Session:
                     
         oImageView = ImageView()
         oImageView.RunSetup(self.GetCurrentPageNode(), qQuizWidget)
+        
+        self.SetImageViewList(oImageView.GetViewNodesList())
     
     #-----------------------------------------------
 
@@ -509,6 +516,19 @@ class Session:
             self._loQuestionSets.append(oQuestionSet)
 
 
+    #-----------------------------------------------
+
+    def CaptureImageState(self):
+        # for each image, capture the slice, window and level settings
+        
+        for oImageNode in self._loImageNodes:
+            if (oImageNode.sImageType == 'Volume'):
+                fLevel, fWindow = oImageNode.GetViewState()
+                print(fLevel,'...',fWindow)
+                print(oImageNode.GetXmlImageElement().tag)
+        
+        
+    
     #-----------------------------------------------
 
     def CaptureResponsesForQuestionSet(self):
