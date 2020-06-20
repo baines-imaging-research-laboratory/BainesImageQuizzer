@@ -278,6 +278,12 @@ class UtilsIOXml:
 #         elem.attrib = dictAttrib
 #         xParentNode.insert(1, elem)
 
+    #-----------------------------------------------
+
+    def UpdateAttribute(self, xParentNode, sAttribute, sInput):
+        
+        xParentNode.attrib[sAttribute] = sInput
+    #-----------------------------------------------
         
     #-----------------------------------------------
 

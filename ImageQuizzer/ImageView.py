@@ -421,9 +421,9 @@ class ViewNodeBase:
 
     def GetViewState(self):
         # given the view node, get the slice, window and level
-        dn = self.slNode.GetDisplayNode()
-        fLevel = dn.GetLevel()
-        fWindow = dn.GetWindow()
+        slDisplayNode = self.slNode.GetDisplayNode()
+        fLevel = slDisplayNode.GetLevel()
+        fWindow = slDisplayNode.GetWindow()
         
         return fLevel, fWindow
         

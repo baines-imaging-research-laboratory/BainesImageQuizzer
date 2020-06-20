@@ -298,7 +298,7 @@ class Session:
         ############################################    
 
         bResponsesCaptured, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet()
-        self.CaptureImageState()
+        self.CaptureAndSaveImageState()
         
         if (bResponsesCaptured == False):
 
@@ -518,16 +518,27 @@ class Session:
 
     #-----------------------------------------------
 
-    def CaptureImageState(self):
+    def CaptureAndSaveImageState(self):
+
         # for each image, capture the slice, window and level settings
-        
         for oImageNode in self._loImageNodes:
             if (oImageNode.sImageType == 'Volume'):
                 fLevel, fWindow = oImageNode.GetViewState()
-                print(fLevel,'...',fWindow)
-                print(oImageNode.GetXmlImageElement().tag)
-        
-        
+#                 print(fLevel,'...',fWindow, '...', oImageNode.sDestination)
+                dictAttrib = { 'window': str(fWindow), 'level':  str(fLevel)}
+
+                # check if xml State element exists
+                xImage = oImageNode.GetXmlImageElement()
+                iNumStateElements = self._oIOXml.GetNumChildrenByName(xImage, 'State')
+                if iNumStateElements >0:
+                    # update xml image/state element (first child)
+                    xStateElement = self._oIOXml.GetNthChild(xImage, 'State', 0)
+                    self.UpdateAtributesInElement(xStateElement, dictAttrib)
+                # if no State element, add one
+                else:
+                    self.AddImageStateElement(xImage, dictAttrib)
+                    
+        self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
     
     #-----------------------------------------------
 
@@ -681,6 +692,23 @@ class Session:
         dictAttrib = { 'logintime': self.LoginTime(), 'responsetime': sResponseTime}
         
         self._oIOXml.AddElement(xOptionNode,'Response', sResponse, dictAttrib)
+        
+    #-----------------------------------------------
+
+    def AddImageStateElement(self, xImageNode, dictAttrib):
+        
+        sNullData = ''
+
+        self._oIOXml.AddElement(xImageNode,'State', sNullData, dictAttrib)
+        
+        
+    #-----------------------------------------------
+        
+    def UpdateAtributesInElement(self, xElement, dictAttrib):
+        
+        # for each key, value in the dictionary, update the element attributes
+        for sKey, sValue in dictAttrib.items():
+            self._oIOXml.UpdateAttribute(xElement, sKey, sValue)
         
     #-----------------------------------------------
 
