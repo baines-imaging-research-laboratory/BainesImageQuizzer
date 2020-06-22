@@ -29,13 +29,13 @@ class ImageView:
         self.sPageDescriptor = ''
         
         self.lValidVolumeFormats = ['nrrd', 'nii', 'mhd', 'dicom']
-        self._loViewNodes = []
+        self._loImageViews = []
         self.bLinkViews = True
         
         
     #----------
-    def GetViewNodesList(self):
-        return self._loViewNodes
+    def GetImageViewList(self):
+        return self._loImageViews
 
 
     #-----------------------------------------------
@@ -63,25 +63,29 @@ class ImageView:
         
 
         # Assign images to view with proper orientation
-        if len(self._loViewNodes) > 0:
+        if len(self._loImageViews) > 0:
             
 #             # clear views from previous page
 #             self.ClearImagesAndSegmentations()
 
             sViewOrientation = ''
             # assign nodes for current page to views
-            for i in range(len(self._loViewNodes)):
+            for i in range(len(self._loImageViews)):
                 
                 # if all view nodes have the same orientation, link them for scrolling
-                if (self._loViewNodes[i].sViewLayer=='Background') or (self._loViewNodes[i]=='Foreground'):
+                if (self._loImageViews[i].sViewLayer=='Background') or (self._loImageViews[i]=='Foreground'):
                     if sViewOrientation == '':
-                        sViewOrientation = self._loViewNodes[i].sOrientation # assign to first view
+                        sViewOrientation = self._loImageViews[i].sOrientation # assign to first view
                         
                     else:
-                        if not (sViewOrientation == self._loViewNodes[i].sOrientation):
+                        if not (sViewOrientation == self._loImageViews[i].sOrientation):
                             self.bLinkViews = False
                     
-                self.AssignNodesToView(self._loViewNodes[i])
+                self.AssignNodesToView(self._loImageViews[i])
+                
+        # reset field of view to maximize background
+        slicer.util.resetSliceViews()
+                
                 
             
 
@@ -111,17 +115,13 @@ class ImageView:
                 oImageViewItem = DataVolumeDetail(self.xImageNodes[indImage], sPageID)
                 
             bLoadSuccess = oImageViewItem.LoadVolume()
-                
+            
                 
             if bLoadSuccess and (oImageViewItem.slNode is not None):
                  
-                self._loViewNodes.append(oImageViewItem)
+                self._loImageViews.append(oImageViewItem)
                  
 
-    
-#         return self._loViewNodes
-                    
-                    
          
     #-----------------------------------------------
     #         Manage Views
@@ -144,12 +144,10 @@ class ImageView:
         if oViewNode.sViewLayer == 'Background':
             slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
             slWidget.setSliceOrientation(oViewNode.sOrientation)
-            slWidget.fitSliceToBackground()
 
         elif oViewNode.sViewLayer == 'Foreground':
             slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
             slWidget.setSliceOrientation(oViewNode.sOrientation)
-            slWidget.fitSliceToBackground() # use background for scaling
             slWidgetController.setForegroundOpacity(0.5)
 
         elif oViewNode.sViewLayer == 'Label':
@@ -307,7 +305,7 @@ class ImageView:
         
     #-----------------------------------------------
 
-    #-----------------------------------------------
+#     #-----------------------------------------------
 
     
 ##########################################################################
@@ -349,6 +347,10 @@ class ViewNodeBase:
     #----------
     def GetPageID(self):
         return self._sPageID
+
+    #-----------------------------------------------
+    def GetSlicerViewNode(self):
+        return self.slNode
 
     #-----------------------------------------------
 
@@ -394,7 +396,8 @@ class ViewNodeBase:
                 self.oUtilsMsgs.DisplayWarning(sWarningMsg)
     
             self.sOrientation = self.oIOXml.GetDataInNode(xOrientationNodes[0])
-   
+            
+            
 
     #-----------------------------------------------
 
@@ -420,14 +423,52 @@ class ViewNodeBase:
     #-----------------------------------------------
 
     def GetViewState(self):
-        # given the view node, get the slice, window and level
+        
+        # given the view node, window and level
         slDisplayNode = self.slNode.GetDisplayNode()
         fLevel = slDisplayNode.GetLevel()
         fWindow = slDisplayNode.GetWindow()
+
+        # get the slice offset position for the current widget in the layout manager
+        slWidget = slicer.app.layoutManager().sliceWidget(self.sDestination)
+        slWindowLogic = slWidget.sliceLogic()
         
-        return fLevel, fWindow
+        fSliceOffset = slWindowLogic.GetSliceOffset()
         
-    
+        dictAttrib = { 'window': str(fWindow), 'level':  str(fLevel),\
+                      'sliceoffset': str(fSliceOffset)}
+        
+        return dictAttrib
+
+    #-----------------------------------------------
+
+    def SetImageState(self, dictImageState):
+        
+        
+        slViewNode = self.GetSlicerViewNode()
+        slDisplayNode = slViewNode.GetDisplayNode()
+        slDisplayNode.AutoWindowLevelOn() # default - if no saved state
+            
+        if len(dictImageState) > 0:
+            for sKey, sValue in dictImageState.items():
+                print(sKey,':',sValue)
+            fLevel = float(dictImageState['level'])
+            fWindow = float(dictImageState['window'])
+            
+            # get display node for slicer image element
+            slDisplayNode.AutoWindowLevelOff()
+            slDisplayNode.SetLevel(fLevel)
+            slDisplayNode.SetWindow(fWindow)
+
+        # set the slice offset position for the current widget
+        slWidget = slicer.app.layoutManager().sliceWidget(self.sDestination)
+        slWindowLogic = slWidget.sliceLogic()
+        
+        fSliceOffset = float(dictImageState['sliceoffset'])
+        
+        slWindowLogic.SetSliceOffset(fSliceOffset)
+        
+    #-----------------------------------------------
     
 ##########################################################################
 #

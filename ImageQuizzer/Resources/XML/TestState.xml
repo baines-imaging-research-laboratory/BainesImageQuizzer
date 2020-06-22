@@ -10,12 +10,12 @@
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nrrd</Path>
-			<State window="400" level="800"/>
 		</Image>
 		<Image format="mhd" type="Volume" descriptor="Case00Prostate" destination="Yellow">
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Prostate\Case00.mhd</Path>
+			<State window="4000" level="100"/>
 		</Image>
 		<Image format="mhd" type="Labelmap" descriptor="Case00Prostate Segmentation" destination="Yellow">
 			<Layer>Label</Layer>

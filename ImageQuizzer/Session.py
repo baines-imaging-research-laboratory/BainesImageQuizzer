@@ -35,7 +35,7 @@ class Session:
         self._lsPreviousResponses = []
         self._lsNewResponses = []
         
-        self._loImageNodes = []
+        self._loImageViews = []
         
         self._bStartOfSession = True
         self._bQuizComplete = False
@@ -210,7 +210,7 @@ class Session:
         
     #----------
     def SetImageViewList(self, lInput):
-        self._loImageNodes = lInput
+        self._loImageViews = lInput
 
     #-------------------------------------------
     #        Functions
@@ -345,6 +345,7 @@ class Session:
                 # the last question was answered - exit Slicer
                 self.ExitOnQuizComplete("Quiz complete .... Exit")
     
+            
             self.EnableButtons()
    
             self.DisplayPage()
@@ -473,17 +474,20 @@ class Session:
             self._loQuestionSets.append(oQuestionSet)
             qQuizWidget.setEnabled(True) # initialize
 
+
             # enable widget if no response exists or if user is allowed to 
             # input multiple responses
             if self.CheckForSavedResponse() == True:
                 qQuizWidget.setEnabled(self.GetMultipleResponsesInQsetAllowed())
                 self.DisplaySavedResponse()
+
                    
                     
         oImageView = ImageView()
         oImageView.RunSetup(self.GetCurrentPageNode(), qQuizWidget)
-        
-        self.SetImageViewList(oImageView.GetViewNodesList())
+
+        self.SetImageViewList(oImageView.GetImageViewList())
+        self.SetSavedImageState()
     
     #-----------------------------------------------
 
@@ -521,11 +525,12 @@ class Session:
     def CaptureAndSaveImageState(self):
 
         # for each image, capture the slice, window and level settings
-        for oImageNode in self._loImageNodes:
+        for oImageNode in self._loImageViews:
             if (oImageNode.sImageType == 'Volume'):
-                fLevel, fWindow = oImageNode.GetViewState()
+#                 fLevel, fWindow = oImageNode.GetViewState()
 #                 print(fLevel,'...',fWindow, '...', oImageNode.sDestination)
-                dictAttrib = { 'window': str(fWindow), 'level':  str(fLevel)}
+#                 dictAttrib = { 'window': str(fWindow), 'level':  str(fLevel)}
+                dictAttribState = oImageNode.GetViewState()
 
                 # check if xml State element exists
                 xImage = oImageNode.GetXmlImageElement()
@@ -533,12 +538,45 @@ class Session:
                 if iNumStateElements >0:
                     # update xml image/state element (first child)
                     xStateElement = self._oIOXml.GetNthChild(xImage, 'State', 0)
-                    self.UpdateAtributesInElement(xStateElement, dictAttrib)
+                    self.UpdateAtributesInElement(xStateElement, dictAttribState)
                 # if no State element, add one
                 else:
-                    self.AddImageStateElement(xImage, dictAttrib)
+                    self.AddImageStateElement(xImage, dictAttribState)
                     
         self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
+    
+    #-----------------------------------------------
+# 
+#     def GetSavedImageState(self):
+# 
+#         xStateElement = None
+#         dictStateAttribs = {}
+#         
+#         for oImageNode in self._loImageViews:
+#             if (oImageNode.sImageType == 'Volume'):
+#                 xImage = oImageNode.GetXmlImageElement()
+#                 xStateElement = self._oIOXml.GetNthChild(xImage, 'State', 0)
+#                 if not xStateElement == None:
+#                     dictStateAttribs = self._oIOXml.GetAttributes(xStateElement)
+#                     
+#                 for sKey, sValue in dictStateAttribs.items():
+#                     print(sKey,':',sValue)
+#                     
+#         return dictStateAttribs
+    
+    #-----------------------------------------------
+
+    def SetSavedImageState(self):
+        
+        for oImageView in self._loImageViews:
+            if (oImageView.sImageType == 'Volume'):
+        
+                xStateElement = self._oIOXml.GetNthChild(oImageView.GetXmlImageElement(), 'State', 0)
+                dictImageState = self._oIOXml.GetAttributes(xStateElement)
+                
+                oImageView.SetImageState(dictImageState)
+            
+            
     
     #-----------------------------------------------
 

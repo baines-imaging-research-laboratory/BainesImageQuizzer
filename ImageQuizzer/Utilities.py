@@ -284,7 +284,14 @@ class UtilsIOXml:
         
         xParentNode.attrib[sAttribute] = sInput
     #-----------------------------------------------
+    
+    def GetAttributes(self, xParentNode):
         
+        dictAttrib = {}
+        if not xParentNode == None:
+            dictAttrib = xParentNode.attrib
+            
+        return dictAttrib
     #-----------------------------------------------
 
     def CheckForRequiredFunctionalityInAttribute(self, sTreeLevel, sAttribute, sSetting):
