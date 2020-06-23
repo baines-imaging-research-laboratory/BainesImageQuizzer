@@ -292,7 +292,7 @@ class UtilsIOXml:
         tree = self.GetXmlTree()
         for node in tree.findall(sTreeLevel):
             sAns = self.GetValueOfNodeAttribute(node, sAttribute)
-            print(sAns)
+#             print(sAns)
             if sAns == sSetting:
                 bRequired = True
                 break
