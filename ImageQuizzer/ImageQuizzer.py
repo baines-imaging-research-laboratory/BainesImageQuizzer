@@ -122,7 +122,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
         self.comboGetUserName = qt.QComboBox()
         self.comboGetUserName.setEditable(True)
-        self.comboGetUserName.addItem(' ') # default to space to force user entry
+        self.comboGetUserName.addItem('?') # default to space to force user entry
         
         sUserSubfolders = [ f.name for f in os.scandir(self.oFilesIO.GetUserDir()) if f.is_dir() ]
         for sUserName in list(sUserSubfolders):
@@ -201,7 +201,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         # confirm username was entered
         
-        if (self.comboGetUserName.currentText == '' or self.comboGetUserName.currentText == ' '):
+        if (self.comboGetUserName.currentText == '' or self.comboGetUserName.currentText == '?'):
             sMsg = 'No user name was entered'
             self.oUtilsMsgs.DisplayWarning(sMsg)
             
