@@ -184,6 +184,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         if not sSelectedQuiz:
             sMsg = 'No quiz was selected'
             self.oUtilsMsgs.DisplayWarning(sMsg)
+            self.qUserLoginWidget.raise_()
 
         else:
             # enable the launch button
@@ -204,6 +205,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         if (self.comboGetUserName.currentText == '' or self.comboGetUserName.currentText == '?'):
             sMsg = 'No user name was entered'
             self.oUtilsMsgs.DisplayWarning(sMsg)
+            self.qUserLoginWidget.raise_()
             
         else:
             print(self.oFilesIO.GetQuizUsername())
