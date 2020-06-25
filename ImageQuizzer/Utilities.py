@@ -278,7 +278,20 @@ class UtilsIOXml:
 #         elem.attrib = dictAttrib
 #         xParentNode.insert(1, elem)
 
+    #-----------------------------------------------
+
+    def UpdateAttribute(self, xParentNode, sAttribute, sInput):
         
+        xParentNode.attrib[sAttribute] = sInput
+    #-----------------------------------------------
+    
+    def GetAttributes(self, xParentNode):
+        
+        dictAttrib = {}
+        if not xParentNode == None:
+            dictAttrib = xParentNode.attrib
+            
+        return dictAttrib
     #-----------------------------------------------
 
     def CheckForRequiredFunctionalityInAttribute(self, sTreeLevel, sAttribute, sSetting):
@@ -292,7 +305,6 @@ class UtilsIOXml:
         tree = self.GetXmlTree()
         for node in tree.findall(sTreeLevel):
             sAns = self.GetValueOfNodeAttribute(node, sAttribute)
-#             print(sAns)
             if sAns == sSetting:
                 bRequired = True
                 break

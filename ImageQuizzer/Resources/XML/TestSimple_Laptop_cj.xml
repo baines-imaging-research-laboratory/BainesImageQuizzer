@@ -6,11 +6,11 @@
 			<Orientation>Axial</Orientation>
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-			<Image descriptor="Brain MR" destination="Red" format="nrrd" type="Volume">
-				<Layer>Foreground</Layer>
-				<Orientation>Axial</Orientation>
-				<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nrrd</Path>
-			</Image>
+		<Image descriptor="Brain MR" destination="Red" format="nrrd" type="Volume">
+			<Layer>Foreground</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nrrd</Path>
+		</Image>
 		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Yellow">
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>

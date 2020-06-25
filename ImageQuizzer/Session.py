@@ -35,6 +35,8 @@ class Session:
         self._lsPreviousResponses = []
         self._lsNewResponses = []
         
+        self._loImageViews = []
+        
         self._bStartOfSession = True
         self._bQuizComplete = False
         self._bAllowMultipleResponseInQuiz = False
@@ -206,7 +208,9 @@ class Session:
         
         return xAllOptionNodes
         
-            
+    #----------
+    def UpdateImageViewObjects(self, lInput):
+        self._loImageViews = lInput
 
     #-------------------------------------------
     #        Functions
@@ -294,6 +298,7 @@ class Session:
         ############################################    
 
         bResponsesCaptured, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet()
+        self.CaptureAndSaveImageState()
         
         if (bResponsesCaptured == False):
 
@@ -340,6 +345,7 @@ class Session:
                 # the last question was answered - exit Slicer
                 self.ExitOnQuizComplete("Quiz complete .... Exit")
     
+            
             self.EnableButtons()
    
             self.DisplayPage()
@@ -468,15 +474,20 @@ class Session:
             self._loQuestionSets.append(oQuestionSet)
             qQuizWidget.setEnabled(True) # initialize
 
+
             # enable widget if no response exists or if user is allowed to 
             # input multiple responses
             if self.CheckForSavedResponse() == True:
                 qQuizWidget.setEnabled(self.GetMultipleResponsesInQsetAllowed())
                 self.DisplaySavedResponse()
+
                    
                     
         oImageView = ImageView()
         oImageView.RunSetup(self.GetCurrentPageNode(), qQuizWidget)
+
+        self.UpdateImageViewObjects(oImageView.GetImageViewList())
+        self.SetSavedImageState()
     
     #-----------------------------------------------
 
@@ -509,6 +520,43 @@ class Session:
             self._loQuestionSets.append(oQuestionSet)
 
 
+    #-----------------------------------------------
+
+    def CaptureAndSaveImageState(self):
+
+        # for each image, capture the slice, window and level settings
+        for oImageNode in self._loImageViews:
+            if (oImageNode.sImageType == 'Volume'):
+
+                dictAttribState = oImageNode.GetViewState()
+
+                # check if xml State element exists
+                xImage = oImageNode.GetXmlImageElement()
+                iNumStateElements = self._oIOXml.GetNumChildrenByName(xImage, 'State')
+                if iNumStateElements >0:
+                    # update xml image/state element (first child)
+                    xStateElement = self._oIOXml.GetNthChild(xImage, 'State', 0)
+                    self.UpdateAtributesInElement(xStateElement, dictAttribState)
+                # if no State element, add one
+                else:
+                    self.AddImageStateElement(xImage, dictAttribState)
+                    
+        self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
+    
+    
+    #-----------------------------------------------
+
+    def SetSavedImageState(self):
+        
+        for oImageView in self._loImageViews:
+            if (oImageView.sImageType == 'Volume'):
+        
+                xStateElement = self._oIOXml.GetNthChild(oImageView.GetXmlImageElement(), 'State', 0)
+                dictImageState = self._oIOXml.GetAttributes(xStateElement)
+                
+                oImageView.SetImageState(dictImageState)
+            
+            
     #-----------------------------------------------
 
     def CaptureResponsesForQuestionSet(self):
@@ -664,6 +712,23 @@ class Session:
         
     #-----------------------------------------------
 
+    def AddImageStateElement(self, xImageNode, dictAttrib):
+        
+        sNullData = ''
+
+        self._oIOXml.AddElement(xImageNode,'State', sNullData, dictAttrib)
+        
+        
+    #-----------------------------------------------
+        
+    def UpdateAtributesInElement(self, xElement, dictAttrib):
+        
+        # for each key, value in the dictionary, update the element attributes
+        for sKey, sValue in dictAttrib.items():
+            self._oIOXml.UpdateAttribute(xElement, sKey, sValue)
+        
+    #-----------------------------------------------
+
     def AddSessionLoginTimestamp(self):
         
 
@@ -745,8 +810,8 @@ class Session:
                 
                 # if one question set allows a multiple response, user has option to redo response
                 if self.GetMultipleResponsesInQuiz() == True:
+
                     sMsg = 'Quiz has already been completed. \nClick Yes to begin again. Click No to exit.'
-#                     sAns = qt.QMessageBox.question(slicer.util.mainWindow(),'Continue?',sMsg, qt.QMessageBox.Yes, qt.QMessageBox.No)
                     qtAns = self._oMsgUtil.DisplayYesNo(sMsg)
 
                     if qtAns == qt.QMessageBox.Yes:
@@ -799,8 +864,8 @@ class Session:
                 dtLastTimestamp = dtNewTimestamp
                 
             else:
+
                 # update the last time stamp 
-#                 if not (dtNewTimestamp==dtCurrentLogin):
                 if dtNewTimestamp > dtLastTimestamp:
                     dtLastTimestamp = dtNewTimestamp
                 
@@ -814,7 +879,6 @@ class Session:
         # the last index in the composite indices list was reached
         # the quiz was completed - exit
         
-#         self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
         self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
         self.SetQuizComplete(True)
         self._oMsgUtil.DisplayInfo(sMsg)
