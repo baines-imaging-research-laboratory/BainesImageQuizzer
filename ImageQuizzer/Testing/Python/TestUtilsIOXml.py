@@ -669,7 +669,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         print(sNodeName)
             
         try:
-            self.oIOXml.SaveXml(sXmlOutputFilePath, xTree)
+            self.oIOXml.SaveXml(sXmlOutputFilePath)
 #             with open(sXmlOutputFilePath,'w') as xml_outfile:
 #                 xTree.write(xml_outfile, encoding='unicode', xml_declaration=True)
             

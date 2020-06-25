@@ -65,9 +65,6 @@ class ImageView:
         # Assign images to view with proper orientation
         if len(self._loImageViews) > 0:
             
-#             # clear views from previous page
-#             self.ClearImagesAndSegmentations()
-
             sViewOrientation = ''
             # assign nodes for current page to views
             for i in range(len(self._loImageViews)):
@@ -248,8 +245,6 @@ class ImageView:
         tupPreviousViewAssignments = slSegDisplayNode.GetViewNodeIDs()
         lsRemainingPreviousAssignments = []
         if len(tupPreviousViewAssignments) > 0:
-#             # convert the tuple into a string
-#             sPrevViewAssignments = ''.join(sPreviousViewAssignments)
 
             # extract first element of tuple and a list with the rest of the elements 
             #    (following python syntax rules for tuples) 
@@ -450,23 +445,24 @@ class ViewNodeBase:
         slDisplayNode.AutoWindowLevelOn() # default - if no saved state
             
         if len(dictImageState) > 0:
-            for sKey, sValue in dictImageState.items():
-                print(sKey,':',sValue)
-            fLevel = float(dictImageState['level'])
-            fWindow = float(dictImageState['window'])
-            
-            # get display node for slicer image element
-            slDisplayNode.AutoWindowLevelOff()
-            slDisplayNode.SetLevel(fLevel)
-            slDisplayNode.SetWindow(fWindow)
 
-        # set the slice offset position for the current widget
-        slWidget = slicer.app.layoutManager().sliceWidget(self.sDestination)
-        slWindowLogic = slWidget.sliceLogic()
-        
-        fSliceOffset = float(dictImageState['sliceoffset'])
-        
-        slWindowLogic.SetSliceOffset(fSliceOffset)
+            if 'level' in dictImageState.keys() and 'window' in dictImageState.keys():
+                fLevel = float(dictImageState['level'])
+                fWindow = float(dictImageState['window'])
+            
+                # get display node for slicer image element
+                slDisplayNode.AutoWindowLevelOff()
+                slDisplayNode.SetLevel(fLevel)
+                slDisplayNode.SetWindow(fWindow)
+
+            if 'sliceoffset' in dictImageState.keys():
+                # set the slice offset position for the current widget
+                slWidget = slicer.app.layoutManager().sliceWidget(self.sDestination)
+                slWindowLogic = slWidget.sliceLogic()
+                
+                fSliceOffset = float(dictImageState['sliceoffset'])
+                
+                slWindowLogic.SetSliceOffset(fSliceOffset)
         
     #-----------------------------------------------
     
@@ -483,8 +479,6 @@ class DataVolumeDetail(ViewNodeBase):
         self.sClassName = type(self).__name__
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
-#         self.xImage = xImage
-#         self.sPageID = sPageID
 
 
         #--------------------
@@ -567,8 +561,6 @@ class DicomVolumeDetail(ViewNodeBase):
         self.sClassName = type(self).__name__
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
-#         self.xImage = xImage
-#         self.sPageID = sPageID
         
         self.sRoiVisibilityCode = 'Empty'
         self.sVolumeReferenceSeriesUID = ''

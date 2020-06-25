@@ -136,7 +136,7 @@ class QuestionSet():
     def GetOptionsFromXML(self, xNodeQuestion):
 
         lOptions = []
-#         lsResponseValues = []
+
         # get options for each question
         xOptions = self.oIOXml.GetChildren(xNodeQuestion, 'Option')
 
@@ -144,10 +144,6 @@ class QuestionSet():
             
             xNodeOption = self.oIOXml.GetNthChild(xNodeQuestion, 'Option', iElem)
             sValue = self.oIOXml.GetDataInNode(xNodeOption)
-            
-#             # get list of responses and update the question object
-#             lsResponseValues.append( self.GetResponsesFromXML(xNodeOption) )
-#             self.question._lsResponses_setter(lsResponseValues)
             
             lOptions.append(sValue)
 

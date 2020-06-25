@@ -209,7 +209,7 @@ class Session:
         return xAllOptionNodes
         
     #----------
-    def SetImageViewList(self, lInput):
+    def UpdateImageViewObjects(self, lInput):
         self._loImageViews = lInput
 
     #-------------------------------------------
@@ -486,7 +486,7 @@ class Session:
         oImageView = ImageView()
         oImageView.RunSetup(self.GetCurrentPageNode(), qQuizWidget)
 
-        self.SetImageViewList(oImageView.GetImageViewList())
+        self.UpdateImageViewObjects(oImageView.GetImageViewList())
         self.SetSavedImageState()
     
     #-----------------------------------------------
@@ -527,9 +527,7 @@ class Session:
         # for each image, capture the slice, window and level settings
         for oImageNode in self._loImageViews:
             if (oImageNode.sImageType == 'Volume'):
-#                 fLevel, fWindow = oImageNode.GetViewState()
-#                 print(fLevel,'...',fWindow, '...', oImageNode.sDestination)
-#                 dictAttrib = { 'window': str(fWindow), 'level':  str(fLevel)}
+
                 dictAttribState = oImageNode.GetViewState()
 
                 # check if xml State element exists
@@ -543,26 +541,8 @@ class Session:
                 else:
                     self.AddImageStateElement(xImage, dictAttribState)
                     
-        self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
+        self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
     
-    #-----------------------------------------------
-# 
-#     def GetSavedImageState(self):
-# 
-#         xStateElement = None
-#         dictStateAttribs = {}
-#         
-#         for oImageNode in self._loImageViews:
-#             if (oImageNode.sImageType == 'Volume'):
-#                 xImage = oImageNode.GetXmlImageElement()
-#                 xStateElement = self._oIOXml.GetNthChild(xImage, 'State', 0)
-#                 if not xStateElement == None:
-#                     dictStateAttribs = self._oIOXml.GetAttributes(xStateElement)
-#                     
-#                 for sKey, sValue in dictStateAttribs.items():
-#                     print(sKey,':',sValue)
-#                     
-#         return dictStateAttribs
     
     #-----------------------------------------------
 
@@ -577,7 +557,6 @@ class Session:
                 oImageView.SetImageState(dictImageState)
             
             
-    
     #-----------------------------------------------
 
     def CaptureResponsesForQuestionSet(self):
@@ -831,8 +810,8 @@ class Session:
                 
                 # if one question set allows a multiple response, user has option to redo response
                 if self.GetMultipleResponsesInQuiz() == True:
+
                     sMsg = 'Quiz has already been completed. \nClick Yes to begin again. Click No to exit.'
-#                     sAns = qt.QMessageBox.question(slicer.util.mainWindow(),'Continue?',sMsg, qt.QMessageBox.Yes, qt.QMessageBox.No)
                     qtAns = self._oMsgUtil.DisplayYesNo(sMsg)
 
                     if qtAns == qt.QMessageBox.Yes:
@@ -885,8 +864,8 @@ class Session:
                 dtLastTimestamp = dtNewTimestamp
                 
             else:
+
                 # update the last time stamp 
-#                 if not (dtNewTimestamp==dtCurrentLogin):
                 if dtNewTimestamp > dtLastTimestamp:
                     dtLastTimestamp = dtNewTimestamp
                 
@@ -900,7 +879,6 @@ class Session:
         # the last index in the composite indices list was reached
         # the quiz was completed - exit
         
-#         self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
         self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
         self.SetQuizComplete(True)
         self._oMsgUtil.DisplayInfo(sMsg)
