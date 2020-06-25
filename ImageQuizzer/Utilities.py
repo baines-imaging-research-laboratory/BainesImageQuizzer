@@ -342,7 +342,7 @@ class UtilsIOXml:
 
     #-------------------------------------------
 
-    def SaveXml(self, sXmlPath, xTree):
+    def SaveXml(self, sXmlPath):
 
         # by using minidom to reparse the root, we can get a 'pretty' - more user friendly 
         #    xml document output with indents and newlines using writexml

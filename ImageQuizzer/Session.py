@@ -54,7 +54,7 @@ class Session:
 
     def __del__(self):
         if not self.QuizComplete():
-            self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
+            self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
             self._oMsgUtil.DisplayInfo(' Image Quizzer Exiting - User file is saved.')
         
     #-------------------------------------------
@@ -327,7 +327,7 @@ class Session:
                         self.AddSessionLoginTimestamp()
                     
                     self.WriteResponses()
-                    self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
+                    self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
                     self._bStartOfSession = False
             
 
@@ -761,10 +761,9 @@ class Session:
         
         sNullText = ''
         
-        sUserQuizPath = self._oFilesIO.GetUserQuizPath()
         self._oIOXml.AddElement(self._oIOXml.GetRootNode(),'Login', sNullText, dictAttrib)
         
-        self._oIOXml.SaveXml(sUserQuizPath, self._oIOXml.GetXmlTree())
+        self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
             
     #-----------------------------------------------
 
@@ -901,7 +900,8 @@ class Session:
         # the last index in the composite indices list was reached
         # the quiz was completed - exit
         
-        self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
+#         self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath(), self._oIOXml.GetXmlTree())
+        self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
         self.SetQuizComplete(True)
         self._oMsgUtil.DisplayInfo(sMsg)
         slicer.util.exit(status=EXIT_SUCCESS)
