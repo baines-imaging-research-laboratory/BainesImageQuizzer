@@ -364,17 +364,7 @@ class Session:
         
         self.EnableButtons()
         
-        # if there are multiple question sets for a page, the list of question sets must
-        #    include all previous question sets - up to the one being displayed
-        #    (eg. if a page has 4 Qsets, and we are going back to Qset 3,
-        #    we need to collect question set indices 0, and 1 first,
-        #    then continue processing for index 2 which will be appended in Display Page)
-        
-        self._loQuestionSets = [] # initialize
-        indQSet = self.GetCurrentQuestionSetIndex()
-        if indQSet > 0:
-            self.CollectPreviousQuestionSetsToIndex(indQSet)
-        
+        self.AdjustForPreviousQuestionSets()
         
         
         self.DisplayPage()
@@ -511,13 +501,27 @@ class Session:
         
     #-----------------------------------------------
 
-    def CollectPreviousQuestionSetsToIndex(self, iIndex):
+    def AdjustForPreviousQuestionSets(self):
         
-        for idx in range(iIndex):
-            xNodeQuestionSet = self.GetNthQuestionSetForPage(idx)
-            oQuestionSet = QuestionSet()
-            oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
-            self._loQuestionSets.append(oQuestionSet)
+        # if there are multiple question sets for a page, the list of question sets must
+        #    include all previous question sets - up to the one being displayed
+        #    (eg. if a page has 4 Qsets, and we are going back to Qset 3,
+        #    we need to collect question set indices 0, and 1 first,
+        #    then continue processing for index 2 which will be appended in Display Page)
+        
+        # This function is called when the previous button is pressed or if a
+        # resume is required into a question set that is not the first for the page.
+        
+        self._loQuestionSets = [] # initialize
+        indQSet = self.GetCurrentQuestionSetIndex()
+
+        if indQSet > 0:
+
+            for idx in range(indQSet):
+                xNodeQuestionSet = self.GetNthQuestionSetForPage(idx)
+                oQuestionSet = QuestionSet()
+                oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
+                self._loQuestionSets.append(oQuestionSet)
 
 
     #-----------------------------------------------
@@ -829,6 +833,9 @@ class Session:
             self._oMsgUtil.DisplayInfo('Resuming quiz from previous login session.')
             
         self._iCurrentCompositeIndex = iResumeCompIndex
+        
+        # adjust if the resume question set is not the first on the page
+        self.AdjustForPreviousQuestionSets()
 
 
     #-----------------------------------------------
