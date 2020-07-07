@@ -240,8 +240,7 @@ class Session:
                 self._oIOXml.CheckForRequiredFunctionalityInAttribute( \
                 './/Page/QuestionSet', 'segmentrequired','y'))
             
-            self.slicerLeftMainLayout.addWidget(self._btnNext)
-            self.slicerLeftMainLayout.addWidget(self._btnPrevious)
+            self.slicerLeftMainLayout.addWidget(self.qButtonGrpBox)
 
 
 
@@ -274,6 +273,11 @@ class Session:
         
         # create buttons
         
+        # add horizontal layout
+        self.qButtonGrpBox = qt.QGroupBox()
+        self.qButtonGrpBoxLayout = qt.QHBoxLayout()
+        self.qButtonGrpBox.setLayout(self.qButtonGrpBoxLayout)
+
         # Next button
         self._btnNext = qt.QPushButton("Save and Next")
         self._btnNext.toolTip = "Save responses and display next set of questions."
@@ -286,6 +290,10 @@ class Session:
         self._btnPrevious.enabled = True
         self._btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
 
+
+        self.qButtonGrpBoxLayout.addWidget(self._btnPrevious)
+        self.qButtonGrpBoxLayout.addWidget(self._btnNext)
+        
 
     #-----------------------------------------------
 
