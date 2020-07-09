@@ -9,8 +9,9 @@ l: list
 o: class object
 
 
-x: variable from xml
+x:  variable associated with xml
 sl: variable associated with Slicer functionality
+q:  variable associated with Python Qt
 
 
 
