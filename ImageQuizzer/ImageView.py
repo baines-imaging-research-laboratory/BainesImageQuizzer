@@ -30,7 +30,7 @@ class ImageView:
         
         self.lValidVolumeFormats = ['nrrd', 'nii', 'mhd', 'dicom']
         self._loImageViews = []
-        self.bLinkViews = True
+        self.bLinkViews = False
         
         
     #----------
@@ -50,6 +50,12 @@ class ImageView:
         # get name and descriptor
         self.sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'name')
         self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'descriptor')
+        
+        # assign link views
+        if (self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'linkviews') == 'y'):
+            self.bLinkViews = True
+        else:
+            self.bLinkViews = False
 
         # display Images
         self.xImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
@@ -65,19 +71,9 @@ class ImageView:
         # Assign images to view with proper orientation
         if len(self._loImageViews) > 0:
             
-            sViewOrientation = ''
             # assign nodes for current page to views
             for i in range(len(self._loImageViews)):
                 
-                # if all view nodes have the same orientation, link them for scrolling
-                if (self._loImageViews[i].sViewLayer=='Background') or (self._loImageViews[i]=='Foreground'):
-                    if sViewOrientation == '':
-                        sViewOrientation = self._loImageViews[i].sOrientation # assign to first view
-                        
-                    else:
-                        if not (sViewOrientation == self._loImageViews[i].sOrientation):
-                            self.bLinkViews = False
-                    
                 self.AssignNodesToView(self._loImageViews[i])
                 
         # reset field of view to maximize background

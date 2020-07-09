@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session>
-	<Page name="Patient2" descriptor="Mixed Displays">
+	<Page name="Patient2" descriptor="Mixed Displays" linkview="y">
 		<Image format="nrrd" type="Volume"  descriptor="Brain CT" destination="Red">
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
