@@ -63,9 +63,12 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
     def setup(self):
         ScriptedLoadableModuleWidget.setup(self)
         
-        # ------------------------------------------------------------------------------------
-        #                                   Global Variables
-        # ------------------------------------------------------------------------------------
+
+        settings = qt.QSettings()
+        settings.setValue('MainWindow/RestoreGeometry', 'true')
+
+        
+        
         self.qtQuizProgressWidget = qt.QTextEdit()
         #self.logic = ImageQuizzerLogic(self)
         self.slicerLeftWidget= None     
@@ -75,6 +78,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 #         slicer.util.setToolbarsVisible(False) # for live runs
         slicer.util.setToolbarsVisible(True) # while developing
         
+        # create button layout
+        self.CreateModuleButtons()
 
         # create the ImageQuizzer widget 
         self.oQuizWidgets = QuizWidgets()
@@ -88,7 +93,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
               
 
         self.BuildUserLoginWidget()
-        self.qUserLoginWidget.show()
+#         self.qUserLoginWidget.show()
 
 
 
@@ -122,7 +127,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
         self.comboGetUserName = qt.QComboBox()
         self.comboGetUserName.setEditable(True)
-        self.comboGetUserName.addItem('?') # default to space to force user entry
+        self.comboGetUserName.addItem('?') # default to special character to force user entry
         
         sUserSubfolders = [ f.name for f in os.scandir(self.oFilesIO.GetUserDir()) if f.is_dir() ]
         for sUserName in list(sUserSubfolders):
@@ -225,9 +230,53 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                     pass
                 
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CreateModuleButtons(self):
+
+        self.qModuleBtnGrpBox = qt.QGroupBox()
+        self.qModuleBtnGrpBoxLayout = qt.QHBoxLayout()
+        self.qModuleBtnGrpBox.setLayout(self.qModuleBtnGrpBoxLayout)
+
+        # Login button
+        self.btnLogin = qt.QPushButton("Login")
+        self.btnLogin.toolTip = "Login and select quiz"
+        self.btnLogin.enabled = True
+        self.btnLogin.connect('clicked(bool)', self.onLoginButtonClicked)
+        
+        # Quiz Button
+        self.btnQuizzer = qt.QPushButton("Baines Image Quizzer")
+        self.btnQuizzer.enabled = True
+        self.btnQuizzer.connect('clicked(bool)', self.onQuizButtonClicked)
+        
+        # Segment Editor Button
+        self.btnSegEditor = qt.QPushButton("Segment Editor")
+        self.btnSegEditor.enabled = True
+        self.btnSegEditor.connect('clicked(bool)', self.onSegEditorButtonClicked)
+
+        self.qModuleBtnGrpBoxLayout.addWidget(self.btnLogin)
+        self.qModuleBtnGrpBoxLayout.addSpacing(20)
+        self.qModuleBtnGrpBoxLayout.addWidget(self.btnQuizzer)
+        self.qModuleBtnGrpBoxLayout.addSpacing(20)
+        self.qModuleBtnGrpBoxLayout.addWidget(self.btnSegEditor)
+
+        self.layout.addWidget(self.qModuleBtnGrpBox)  
+
         
         
+    def onLoginButtonClicked(self):
+        self.qUserLoginWidget.show()
+        self.qUserLoginWidget.raise_()
+
+        
+    def onQuizButtonClicked(self):
+        self.oUtilsMsgs.DisplayInfo('Return to Quiz')
+        slicer.util.selectModule('ImageQuizzer')
     
+    def onSegEditorButtonClicked(self):
+#         self.oUtilsMsgs.DisplayInfo('Start Segment Editor Module')
+#         slicer.modules.segmenteditor.widgetRepresentation().show()
+        slicer.util.selectModule('SegmentEditor')
+
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
