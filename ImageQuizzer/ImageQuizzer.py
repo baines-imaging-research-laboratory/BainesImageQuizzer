@@ -57,6 +57,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.oFilesIO.SetModuleDirs(sModuleName, sSourceDirForQuiz)
         self.oFilesIO.SetUserDir()
         
+        self.slicerMainLayout = self.layout
+        
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -78,22 +80,22 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 #         slicer.util.setToolbarsVisible(False) # for live runs
         slicer.util.setToolbarsVisible(True) # while developing
         
-        # create button layout
-        self.CreateModuleButtons()
+#         # create button layout
+#         self.CreateModuleButtons()
 
-        # create the ImageQuizzer widget 
-        self.oQuizWidgets = QuizWidgets()
-#         self.oQuizWidgets.CreateQuizzerLayout()
-        self.oQuizWidgets.CreateQuizzerLayoutWithTabs()
-
-
-        # add to Slicer's main layout
-        self.slicerLeftWidget = self.oQuizWidgets.GetSlicerLeftWidget()
-        self.layout.addWidget(self.slicerLeftWidget)  
+#         # create the ImageQuizzer widget 
+#         self.oQuizWidgets = QuizWidgets()
+# #         self.oQuizWidgets.CreateQuizzerLayout()
+#         self.oQuizWidgets.CreateQuizzerLayoutWithTabs()
+# 
+# 
+#         # add to Slicer's main layout
+#         self.slicerLeftWidget = self.oQuizWidgets.GetSlicerLeftWidget()
+#         self.layout.addWidget(self.slicerLeftWidget)  
               
 
         self.BuildUserLoginWidget()
-#         self.qUserLoginWidget.show()
+        self.qUserLoginWidget.show()
 
 
 
@@ -218,9 +220,15 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             # copy file from Resource into user folder
             if self.oFilesIO.PopulateUserQuizFolder(): # success
                 # start the session
-                self.slicerLeftWidget.activateWindow()
+#                 self.slicerLeftWidget.activateWindow()
+#                 oSession = Session()
+#                 oSession.RunSetup(self.oFilesIO, self.oQuizWidgets)
+
+
                 oSession = Session()
-                oSession.RunSetup(self.oFilesIO, self.oQuizWidgets)
+                oSession.RunSetup(self.oFilesIO, self.slicerMainLayout)
+
+                
                 try:
                     #provide as much room as possible for the quiz
                     qDataProbeCollapsibleButton = slicer.util.mainWindow().findChild("QWidget","DataProbeCollapsibleWidget")
@@ -311,110 +319,110 @@ class ImageQuizzerLogic(ScriptedLoadableModuleLogic):
 
  
  
-##########################################################################
-#
-# class QuizWidgets
-#
-##########################################################################
-
-class QuizWidgets:
-    
-    def __init__(self,  parent=None):
-        self.sClassName = type(self).__name__
-        self.parent = parent
-        print('Constructor for QuizWidgets')
-
-        self._slicerLeftMainLayout = None
-        self._slicerQuizLayout = None
-        self._slicerLeftWidget = None
-        self._slicerTabWidget = None
-        
-    def GetSlicerLeftMainLayout(self):
-        return self._slicerLeftMainLayout
-
-    def GetSlicerQuizLayout(self):
-        return self._slicerQuizLayout
-    
-    def GetSlicerLeftWidget(self):
-        return self._slicerLeftWidget
-    
-    def GetSlicerTabWidget(self):
-        return self._slicerTabWidget
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-#     def CreateQuizzerLayout(self):
+# ##########################################################################
+# #
+# # class QuizWidgets
+# #
+# ##########################################################################
 # 
-#         print ("-------ImageQuizzer Widget SetUp--------")
+# class QuizWidgets:
+#     
+#     def __init__(self,  parent=None):
+#         self.sClassName = type(self).__name__
+#         self.parent = parent
+#         print('Constructor for QuizWidgets')
+# 
+#         self._slicerLeftMainLayout = None
+#         self._slicerQuizLayout = None
+#         self._slicerLeftWidget = None
+#         self._slicerTabWidget = None
+#         
+#     def GetSlicerLeftMainLayout(self):
+#         return self._slicerLeftMainLayout
+# 
+#     def GetSlicerQuizLayout(self):
+#         return self._slicerQuizLayout
+#     
+#     def GetSlicerLeftWidget(self):
+#         return self._slicerLeftWidget
+#     
+#     def GetSlicerTabWidget(self):
+#         return self._slicerTabWidget
+# 
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 
+# #     def CreateQuizzerLayout(self):
+# # 
+# #         print ("-------ImageQuizzer Widget SetUp--------")
+# # 
+# #         #-------------------------------------------
+# #         # set up quiz widget
+# #         self._slicerLeftWidget = qt.QWidget()
+# #         self._slicerLeftMainLayout = qt.QVBoxLayout()
+# #         self._slicerLeftWidget.setLayout(self._slicerLeftMainLayout)
+# #          
+# #         
+# #         
+# #         # Status button
+# #         self.btnShowQuizProgress = qt.QPushButton("Show Quiz Progress")
+# #         self.btnShowQuizProgress.toolTip = "Display status of images."
+# #         self.btnShowQuizProgress.enabled = True
+# #         self._slicerLeftMainLayout.addWidget(self.btnShowQuizProgress)
+# #         
+# # 
+# #         
+# #         #-------------------------------------------
+# #         # Collapsible button
+# #         self.quizCollapsibleButton = ctk.ctkCollapsibleButton()
+# #         self.quizCollapsibleButton.text = "Baines Image Quizzer"
+# #         self._slicerLeftMainLayout.addWidget(self.quizCollapsibleButton)
+# #         
+# # 
+# #         
+# #         # Layout within the sample collapsible button - form needs a frame
+# #         self._slicerQuizLayout = qt.QFormLayout(self.quizCollapsibleButton)
+# #         self.quizFrame = qt.QFrame(self.quizCollapsibleButton)
+# #         self.quizFrame.setLayout(qt.QVBoxLayout())
+# #         self._slicerQuizLayout.addWidget(self.quizFrame)
+# 
+# 
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 
+#     def CreateQuizzerLayoutWithTabs(self):
 # 
 #         #-------------------------------------------
 #         # set up quiz widget
-#         self._slicerLeftWidget = qt.QWidget()
+# 
+#         # create a layout for the quiz to go in Slicer's left widget
 #         self._slicerLeftMainLayout = qt.QVBoxLayout()
+#         
+#         # add the quiz main layout to Slicer's left widget
+#         self._slicerLeftWidget = qt.QWidget()
 #         self._slicerLeftWidget.setLayout(self._slicerLeftMainLayout)
-#          
 #         
-#         
-#         # Status button
-#         self.btnShowQuizProgress = qt.QPushButton("Show Quiz Progress")
-#         self.btnShowQuizProgress.toolTip = "Display status of images."
-#         self.btnShowQuizProgress.enabled = True
-#         self._slicerLeftMainLayout.addWidget(self.btnShowQuizProgress)
-#         
+#         qTitle = qt.QLabel('Baines Image Quizzer')
+#         qTitle.setFont(qt.QFont('Arial',14, qt.QFont.Bold))
 # 
-#         
+#         self._slicerLeftMainLayout.addWidget(qTitle)
+# 
+#     
 #         #-------------------------------------------
-#         # Collapsible button
-#         self.quizCollapsibleButton = ctk.ctkCollapsibleButton()
-#         self.quizCollapsibleButton.text = "Baines Image Quizzer"
-#         self._slicerLeftMainLayout.addWidget(self.quizCollapsibleButton)
+#         # setup the tab widget
+#         self._slicerTabWidget = qt.QTabWidget()
+#         qTabQuiz = qt.QWidget()
+#         self._slicerTabWidget.addTab(qTabQuiz,"Quiz")
 #         
+#         # NOTE: Tab for segment editor is set up in Session - if a quiz question set requires it 
+# 
+#         self._slicerLeftMainLayout.addWidget(self._slicerTabWidget)
 # 
 #         
-#         # Layout within the sample collapsible button - form needs a frame
-#         self._slicerQuizLayout = qt.QFormLayout(self.quizCollapsibleButton)
-#         self.quizFrame = qt.QFrame(self.quizCollapsibleButton)
+#         # Layout within the tab widget - form needs a frame
+# 
+#         self._slicerQuizLayout = qt.QFormLayout(qTabQuiz)
+#         self.quizFrame = qt.QFrame(qTabQuiz)
 #         self.quizFrame.setLayout(qt.QVBoxLayout())
 #         self._slicerQuizLayout.addWidget(self.quizFrame)
-
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    def CreateQuizzerLayoutWithTabs(self):
-
-        #-------------------------------------------
-        # set up quiz widget
-
-        # create a layout for the quiz to go in Slicer's left widget
-        self._slicerLeftMainLayout = qt.QVBoxLayout()
-        
-        # add the quiz main layout to Slicer's left widget
-        self._slicerLeftWidget = qt.QWidget()
-        self._slicerLeftWidget.setLayout(self._slicerLeftMainLayout)
-        
-        qTitle = qt.QLabel('Baines Image Quizzer')
-        qTitle.setFont(qt.QFont('Arial',14, qt.QFont.Bold))
-
-        self._slicerLeftMainLayout.addWidget(qTitle)
-
-    
-        #-------------------------------------------
-        # setup the tab widget
-        self._slicerTabWidget = qt.QTabWidget()
-        qTabQuiz = qt.QWidget()
-        self._slicerTabWidget.addTab(qTabQuiz,"Quiz")
-        
-        # NOTE: Tab for segment editor is set up in Session - if a quiz question set requires it 
-
-        self._slicerLeftMainLayout.addWidget(self._slicerTabWidget)
-
-        
-        # Layout within the tab widget - form needs a frame
-
-        self._slicerQuizLayout = qt.QFormLayout(qTabQuiz)
-        self.quizFrame = qt.QFrame(qTabQuiz)
-        self.quizFrame.setLayout(qt.QVBoxLayout())
-        self._slicerQuizLayout.addWidget(self.quizFrame)
-
+# 
 
 

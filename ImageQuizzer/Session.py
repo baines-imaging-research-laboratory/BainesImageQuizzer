@@ -46,7 +46,7 @@ class Session:
         
         self._oIOXml = None
         self._oFilesIO = None
-        self._oQuizWidgets = None
+#         self._oQuizWidgets = None
         
         self._btnNext = None
         self._btnPrevious = None
@@ -216,12 +216,14 @@ class Session:
     #        Functions
     #-------------------------------------------
 
-    def RunSetup(self, oFilesIO, oQuizWidgets):
+#     def RunSetup(self, oFilesIO, oQuizWidgets):
+    def RunSetup(self, oFilesIO, slicerMainLayout):
         
         self._oIOXml = UtilsIOXml()
         self.SetFilesIO(oFilesIO)
-        self.SetupButtons()
-        self.SetupWidgets(oQuizWidgets)
+#         self.SetupButtons()
+# #         self.SetupWidgets(oQuizWidgets)
+#         self.SetupWidgets(slicerMainLayout)
 
         # open xml and check for root node
         bSuccess, xRootNode = self._oIOXml.OpenXml(self._oFilesIO.GetUserQuizPath(),'Session')
@@ -232,6 +234,12 @@ class Session:
 
         else:
 
+            self.SetupButtons()
+            self.SetupWidgets(slicerMainLayout)
+            self.slicerLeftMainLayout.addWidget(self.qButtonGrpBox)
+            self.slicerLeftWidget.activateWindow()
+
+            
             # turn on functionality if any of the question set attributes indicated they are required
             self.SetMultipleResponsesInQuiz( \
                 self._oIOXml.CheckForRequiredFunctionalityInAttribute( \
@@ -240,7 +248,6 @@ class Session:
                 self._oIOXml.CheckForRequiredFunctionalityInAttribute( \
                 './/Page/QuestionSet', 'segmentrequired','y'))
             
-            self.slicerLeftMainLayout.addWidget(self.qButtonGrpBox)
 
 
 
@@ -258,13 +265,33 @@ class Session:
 
     #-----------------------------------------------
 
-    def SetupWidgets(self, oQuizWidgets_Input):
+    def SetupWidgets(self, slicerMainLayout):
         
-        self._oQuizWidgets = oQuizWidgets_Input
+
+#         self._oQuizWidgets = oQuizWidgets_Input
     
-        self.slicerLeftMainLayout = self._oQuizWidgets.GetSlicerLeftMainLayout()
-        self.slicerQuizLayout = self._oQuizWidgets.GetSlicerQuizLayout()
-        self.slicerTabWidget = self._oQuizWidgets.GetSlicerTabWidget()
+#         self.slicerLeftMainLayout = self._oQuizWidgets.GetSlicerLeftMainLayout()
+#         self.slicerQuizLayout = self._oQuizWidgets.GetSlicerQuizLayout()
+#         self.slicerTabWidget = self._oQuizWidgets.GetSlicerTabWidget()
+
+        
+        
+        
+        # create the ImageQuizzer widget 
+        self.oQuizWidgets = QuizWidgets()
+        self.oQuizWidgets.CreateQuizzerLayoutWithTabs()
+
+
+        # add to Slicer's main layout
+        self.slicerLeftWidget = self.oQuizWidgets.GetSlicerLeftWidget()
+        slicerMainLayout.addWidget(self.slicerLeftWidget)  
+
+
+        self.slicerLeftMainLayout = self.oQuizWidgets.GetSlicerLeftMainLayout()
+        self.slicerQuizLayout = self.oQuizWidgets.GetSlicerQuizLayout()
+        self.slicerTabWidget = self.oQuizWidgets.GetSlicerTabWidget()
+        
+
         
     
     #-----------------------------------------------
@@ -465,24 +492,24 @@ class Session:
             self.slicerQuizLayout.itemAt(i).widget().setParent(None)
 
         
-        bBuildSuccess, qQuizWidget = oQuestionSet.BuildQuestionSetForm()
+        bBuildSuccess, qWidgetQuestionSetForm = oQuestionSet.BuildQuestionSetForm()
         
         if bBuildSuccess:
-            self.slicerQuizLayout.addWidget(qQuizWidget)
+            self.slicerQuizLayout.addWidget(qWidgetQuestionSetForm)
             self._loQuestionSets.append(oQuestionSet)
-            qQuizWidget.setEnabled(True) # initialize
+            qWidgetQuestionSetForm.setEnabled(True) # initialize
 
 
             # enable widget if no response exists or if user is allowed to 
             # input multiple responses
             if self.CheckForSavedResponse() == True:
-                qQuizWidget.setEnabled(self.GetMultipleResponsesInQsetAllowed())
+                qWidgetQuestionSetForm.setEnabled(self.GetMultipleResponsesInQsetAllowed())
                 self.DisplaySavedResponse()
 
                    
                     
         oImageView = ImageView()
-        oImageView.RunSetup(self.GetCurrentPageNode(), qQuizWidget)
+        oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm)
 
         self.UpdateImageViewObjects(oImageView.GetImageViewList())
         self.SetSavedImageState()
@@ -900,4 +927,77 @@ class Session:
         slicer.util.exit(status=EXIT_SUCCESS)
 
     
+##########################################################################
+#
+# class QuizWidgets
+#
+##########################################################################
+
+class QuizWidgets:
+    
+    def __init__(self,  parent=None):
+        self.sClassName = type(self).__name__
+        self.parent = parent
+        print('Constructor for QuizWidgets')
+
+        self._slicerLeftMainLayout = None
+        self._slicerQuizLayout = None
+        self._slicerLeftWidget = None
+        self._slicerTabWidget = None
+        
+    def GetSlicerLeftMainLayout(self):
+        return self._slicerLeftMainLayout
+
+    def GetSlicerQuizLayout(self):
+        return self._slicerQuizLayout
+    
+    def GetSlicerLeftWidget(self):
+        return self._slicerLeftWidget
+    
+    def GetSlicerTabWidget(self):
+        return self._slicerTabWidget
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    def CreateQuizzerLayoutWithTabs(self):
+
+        #-------------------------------------------
+        # set up quiz widget
+
+        # create a layout for the quiz to go in Slicer's left widget
+        self._slicerLeftMainLayout = qt.QVBoxLayout()
+        
+        # add the quiz main layout to Slicer's left widget
+        self._slicerLeftWidget = qt.QWidget()
+        self._slicerLeftWidget.setLayout(self._slicerLeftMainLayout)
+        
+        qTitle = qt.QLabel('Baines Image Quizzer')
+        qTitle.setFont(qt.QFont('Arial',14, qt.QFont.Bold))
+
+        self._slicerLeftMainLayout.addWidget(qTitle)
+
+    
+        #-------------------------------------------
+        # setup the tab widget
+        self._slicerTabWidget = qt.QTabWidget()
+        qTabQuiz = qt.QWidget()
+        self._slicerTabWidget.addTab(qTabQuiz,"Quiz")
+        
+        # NOTE: Tab for segment editor is set up in Session - if a quiz question set requires it 
+
+        self._slicerLeftMainLayout.addWidget(self._slicerTabWidget)
+
+        
+        # Layout within the tab widget - form needs a frame
+
+        self._slicerQuizLayout = qt.QFormLayout(qTabQuiz)
+        self.quizFrame = qt.QFrame(qTabQuiz)
+        self.quizFrame.setLayout(qt.QVBoxLayout())
+        self._slicerQuizLayout.addWidget(self.quizFrame)
+
+
+
     
