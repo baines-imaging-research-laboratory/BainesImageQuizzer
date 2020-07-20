@@ -7,6 +7,8 @@ import slicer
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 
+from HelperBox2 import HelperBox2
+
 #
 # Editor
 #
@@ -15,7 +17,7 @@ class QuizzerEditor(ScriptedLoadableModule):
   def __init__(self, parent):
     ScriptedLoadableModule.__init__(self, parent)
     import string
-    parent.title = "Editor"
+    parent.title = "PI-RADS Editor"
     parent.categories = ["Legacy"]
     parent.contributors = ["Steve Pieper (Isomics)"]
     parent.helpText = string.Template("""
@@ -214,7 +216,8 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # create the helper box - note this isn't a Qt widget
     #  but a helper class that creates Qt widgets in the given parent
     if self.showVolumesFrame:
-      self.helper = EditorLib.HelperBox(self.volumes)
+#       self.helper = EditorLib.HelperBox(self.volumes)
+      self.helper = HelperBox2(self.volumes)
     else:
       self.helper = None
 
