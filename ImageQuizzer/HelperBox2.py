@@ -127,6 +127,12 @@ class HelperBox2(VTKObservationMixin):
   def select(self, masterVolume=None, mergeVolume=None):
     """select master volume - load merge volume if one with the correct name exists"""
 
+
+    self.tupVolumeIDs = []
+    self.CaptureCurrentImageDisplay()
+
+
+
     if masterVolume is None:
         masterVolume = self.masterSelector.currentNode()
     self.master = masterVolume
@@ -150,6 +156,7 @@ class HelperBox2(VTKObservationMixin):
         EditUtil.setActiveVolumes(self.master, merge)
         self.mergeSelector.setCurrentNode(merge)
 
+
 ############### REMOVE PER STRUCTURE REFERENCES ############
 #     self.structureListWidget.master = self.master
 #     self.structureListWidget.merge = merge
@@ -168,6 +175,9 @@ class HelperBox2(VTKObservationMixin):
 
     if self.selectCommand:
       self.selectCommand()
+    
+    self.RestoreImageDisplay()
+      
 
   def setVolumes(self,masterVolume,mergeVolume):
     """set both volumes at the same time - trick the callback into
@@ -323,15 +333,132 @@ class HelperBox2(VTKObservationMixin):
 #     """backward compatibility"""
 #     self.structureListWidget.selectStructure(idx)
 ############################################################
+
+############### REMOVE PER STRUCTURE REFERENCES ############
+    # setup specifics for the PI-RADS segment editor
+    sQuizModuleName = 'ImageQuizzer'
+    self.sColorTableName = 'PI-RADS'
+    self.sColorTableFilename = self.sColorTableName + '.txt'
+    scriptedModulesPath = eval('slicer.modules.%s.path' % sQuizModuleName.lower())
+    scriptedModulesPath = os.path.dirname(scriptedModulesPath)
+    self.pathQuizColorFiles = os.path.join(scriptedModulesPath, 'Resources', 'ColorFiles')
+    print(self.pathQuizColorFiles)
+    
+
+  def CaptureCurrentImageDisplay(self):
+    print('Getting Images')
+    rbgID = 'None'
+    rfgID = 'None'
+    rlbID = 'None'
+    ybgID = 'None'
+    yfgID = 'None'
+    ylbID = 'None'
+    gbgID = 'None'
+    gfgID = 'None'
+    glbID = 'None'
+    
+    lm = slicer.app.layoutManager()
+
+    # red
+    view = lm.sliceWidget('Red').sliceView()
+    sliceNode = view.mrmlSliceNode()
+    sliceLogic = slicer.app.applicationLogic().GetSliceLogic(sliceNode)
+    compositeNode = sliceLogic.GetSliceCompositeNode()
+    rbgID = compositeNode.GetBackgroundVolumeID()
+    rfgID = compositeNode.GetForegroundVolumeID()
+    rlbID = compositeNode.GetLabelVolumeID()
+
+    
+    # yellow
+    view = lm.sliceWidget('Yellow').sliceView()
+    sliceNode = view.mrmlSliceNode()
+    sliceLogic = slicer.app.applicationLogic().GetSliceLogic(sliceNode)
+    compositeNode = sliceLogic.GetSliceCompositeNode()
+    ybgID = compositeNode.GetBackgroundVolumeID()
+    yfgID = compositeNode.GetForegroundVolumeID()
+    ylbID = compositeNode.GetLabelVolumeID()
+    
+    #green
+    view = lm.sliceWidget('Green').sliceView()
+    sliceNode = view.mrmlSliceNode()
+    sliceLogic = slicer.app.applicationLogic().GetSliceLogic(sliceNode)
+    compositeNode = sliceLogic.GetSliceCompositeNode()
+    gbgID = compositeNode.GetBackgroundVolumeID()
+    gfgID = compositeNode.GetForegroundVolumeID()
+    glbID = compositeNode.GetLabelVolumeID()
+    print(gbgID, gfgID, glbID)
+
+    self.tupVolumeIDs = [rbgID, rfgID, rlbID, ybgID, yfgID, ylbID, gbgID, gfgID, glbID]
+    
+    
+  def RestoreImageDisplay(self):
+    print('Restoring Display')
+    print(self.tupVolumeIDs[0])
+    
+    lm = slicer.app.layoutManager()
+    
+    
+    #yellow
+    view = lm.sliceWidget('Yellow').sliceView()
+    sliceNode = view.mrmlSliceNode()
+    sliceLogic = slicer.app.applicationLogic().GetSliceLogic(sliceNode)
+    compositeNode = sliceLogic.GetSliceCompositeNode()
+
+    compositeNode.SetBackgroundVolumeID(self.tupVolumeIDs[3])
+    compositeNode.SetForegroundVolumeID(self.tupVolumeIDs[4])
+    compositeNode.SetLabelVolumeID(self.tupVolumeIDs[5])
+ 
+    #green
+    view = lm.sliceWidget('Green').sliceView()
+    sliceNode = view.mrmlSliceNode()
+    sliceLogic = slicer.app.applicationLogic().GetSliceLogic(sliceNode)
+    compositeNode = sliceLogic.GetSliceCompositeNode()
+
+    compositeNode.SetBackgroundVolumeID(self.tupVolumeIDs[6])
+    compositeNode.SetForegroundVolumeID(self.tupVolumeIDs[7])
+    compositeNode.SetLabelVolumeID(self.tupVolumeIDs[8])
+
+    #red
+    view = lm.sliceWidget('Red').sliceView()
+    sliceNode = view.mrmlSliceNode()
+    sliceLogic = slicer.app.applicationLogic().GetSliceLogic(sliceNode)
+    compositeNode = sliceLogic.GetSliceCompositeNode()
+
+    compositeNode.SetBackgroundVolumeID(self.tupVolumeIDs[0])
+    compositeNode.SetForegroundVolumeID(self.tupVolumeIDs[1])
+    compositeNode.SetLabelVolumeID(self.tupVolumeIDs[2])
+      
+############################################################
+
+
   def labelCreateDialog(self):
     """label create dialog"""
     if self.master is None:
         return
-    dlg = LabelCreateDialog(slicer.util.mainWindow(), self.master, self.mergeVolumePostfix)
-    colorLogic = slicer.modules.colors.logic()
-    dlg.colorNodeID = colorLogic.GetDefaultEditorColorNodeID()
+############### REMOVE REQUEST FOR COLOR FILE ############
+#     dlg = LabelCreateDialog(slicer.util.mainWindow(), self.master, self.mergeVolumePostfix)
+#     colorLogic = slicer.modules.colors.logic()
+#     dlg.colorNodeID = colorLogic.GetDefaultEditorColorNodeID()
+#   
+#     if dlg.exec_() == qt.QDialog.Accepted:
+#       self.colorNodeID = dlg.colorNodeID
+#       self.createMerge()
+############################################################
 
-    if dlg.exec_() == qt.QDialog.Accepted:
-      self.colorNodeID = dlg.colorNodeID
-      self.createMerge()
+# ############### LOAD PI-RADS COLOR FILE ############
+    colorLogic = slicer.modules.colors.logic()
+     
+#     sUserColorPath = 'D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Resources\ColorFiles'
+    colorLogic.SetUserColorFilePaths(self.pathQuizColorFiles)
+    lsUserColorTables = colorLogic.FindUserColorFiles()
+    
+    for ind in range(len(lsUserColorTables)):
+        head, tail = os.path.split(lsUserColorTables[ind])
+        if tail == self.sColorTableFilename:
+            piradsCTNode = colorLogic.LoadColorFile(lsUserColorTables[ind], self.sColorTableName)
+
+    self.colorNodeID = piradsCTNode.GetID()
+     
+    self.createMerge()
+# ############################################################
 

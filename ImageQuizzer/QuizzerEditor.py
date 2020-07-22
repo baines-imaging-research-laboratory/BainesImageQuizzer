@@ -216,8 +216,12 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # create the helper box - note this isn't a Qt widget
     #  but a helper class that creates Qt widgets in the given parent
     if self.showVolumesFrame:
+############### SETUP FOR IMAGE QUIZZER - PI-Rads Editor ############
 #       self.helper = EditorLib.HelperBox(self.volumes)
       self.helper = HelperBox2(self.volumes)
+      
+      
+      
     else:
       self.helper = None
 
