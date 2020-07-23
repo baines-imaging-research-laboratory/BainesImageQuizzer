@@ -63,6 +63,7 @@ class HelperBox2(VTKObservationMixin):
     # - python callable that gets True or False
     self.selectCommand = None
     print("In HELPER2")
+    self.bInitalCaptureComplete = False
 
     if not parent:
       self.parent = slicer.qMRMLWidget()
@@ -124,12 +125,17 @@ class HelperBox2(VTKObservationMixin):
       self.setMergeVolume( merge )
     self.select(mergeVolume=merge)
 
+
+
   def select(self, masterVolume=None, mergeVolume=None):
     """select master volume - load merge volume if one with the correct name exists"""
 
-
-    self.tupVolumeIDs = []
-    self.CaptureCurrentImageDisplay()
+############### Current State of Image Display ############
+    if self.bInitalCaptureComplete == False:
+      self.tupVolumeIDs = []
+      self.CaptureCurrentImageDisplay()
+      self.bInitalCaptureComplete = True
+############################################################
 
 
 
@@ -169,6 +175,7 @@ class HelperBox2(VTKObservationMixin):
         warnings = "Geometry of master and merge volumes do not match.\n\n" + warnings
         slicer.util.errorDisplay( "Warning: %s" % warnings )
 
+        
     # trigger a modified event on the parameter node so that other parts of the GUI
     # (such as the EditColor) will know to update and enable themselves
     EditUtil.getParameterNode().Modified()
@@ -176,7 +183,6 @@ class HelperBox2(VTKObservationMixin):
     if self.selectCommand:
       self.selectCommand()
     
-    self.RestoreImageDisplay()
       
 
   def setVolumes(self,masterVolume,mergeVolume):
@@ -198,6 +204,7 @@ class HelperBox2(VTKObservationMixin):
     if self.master:
       self.masterWhenMergeWasSet = self.master
       self.select(masterVolume=self.master,mergeVolume=mergeVolume)
+      
 
   def mergeVolume(self):
     """select merge volume"""
@@ -295,6 +302,12 @@ class HelperBox2(VTKObservationMixin):
     self.newMergeVolumeAction = qt.QAction("Create new LabelMapVolume", self.mergeSelector)
     self.newMergeVolumeAction.connect("triggered()", self.newMerge)
     self.mergeSelector.addMenuAction(self.newMergeVolumeAction)
+    
+    
+    self.btnResetDisplay = qt.QPushButton("Reset Display")
+    self.btnResetDisplay.setEnabled(True)
+    self.btnResetDisplay.connect('clicked(bool)', self.RestoreImageDisplay)
+    self.masterFrame.layout().addWidget(self.btnResetDisplay)
 
 ############### REMOVE PER STRUCTURE REFERENCES ############
 #     #
@@ -334,7 +347,7 @@ class HelperBox2(VTKObservationMixin):
 #     self.structureListWidget.selectStructure(idx)
 ############################################################
 
-############### REMOVE PER STRUCTURE REFERENCES ############
+############### PI-RADS INITIALIZATION #####################
     # setup specifics for the PI-RADS segment editor
     sQuizModuleName = 'ImageQuizzer'
     self.sColorTableName = 'PI-RADS'
@@ -343,19 +356,20 @@ class HelperBox2(VTKObservationMixin):
     scriptedModulesPath = os.path.dirname(scriptedModulesPath)
     self.pathQuizColorFiles = os.path.join(scriptedModulesPath, 'Resources', 'ColorFiles')
     print(self.pathQuizColorFiles)
+############################################################
     
 
   def CaptureCurrentImageDisplay(self):
     print('Getting Images')
     rbgID = 'None'
-    rfgID = 'None'
-    rlbID = 'None'
+#     rfgID = 'None'
+#     rlbID = 'None'
     ybgID = 'None'
-    yfgID = 'None'
-    ylbID = 'None'
+#     yfgID = 'None'
+#     ylbID = 'None'
     gbgID = 'None'
-    gfgID = 'None'
-    glbID = 'None'
+#     gfgID = 'None'
+#     glbID = 'None'
     
     lm = slicer.app.layoutManager()
 
@@ -365,8 +379,8 @@ class HelperBox2(VTKObservationMixin):
     sliceLogic = slicer.app.applicationLogic().GetSliceLogic(sliceNode)
     compositeNode = sliceLogic.GetSliceCompositeNode()
     rbgID = compositeNode.GetBackgroundVolumeID()
-    rfgID = compositeNode.GetForegroundVolumeID()
-    rlbID = compositeNode.GetLabelVolumeID()
+#     rfgID = compositeNode.GetForegroundVolumeID()
+#     rlbID = compositeNode.GetLabelVolumeID()
 
     
     # yellow
@@ -375,8 +389,8 @@ class HelperBox2(VTKObservationMixin):
     sliceLogic = slicer.app.applicationLogic().GetSliceLogic(sliceNode)
     compositeNode = sliceLogic.GetSliceCompositeNode()
     ybgID = compositeNode.GetBackgroundVolumeID()
-    yfgID = compositeNode.GetForegroundVolumeID()
-    ylbID = compositeNode.GetLabelVolumeID()
+#     yfgID = compositeNode.GetForegroundVolumeID()
+#     ylbID = compositeNode.GetLabelVolumeID()
     
     #green
     view = lm.sliceWidget('Green').sliceView()
@@ -384,29 +398,42 @@ class HelperBox2(VTKObservationMixin):
     sliceLogic = slicer.app.applicationLogic().GetSliceLogic(sliceNode)
     compositeNode = sliceLogic.GetSliceCompositeNode()
     gbgID = compositeNode.GetBackgroundVolumeID()
-    gfgID = compositeNode.GetForegroundVolumeID()
-    glbID = compositeNode.GetLabelVolumeID()
-    print(gbgID, gfgID, glbID)
+#     gfgID = compositeNode.GetForegroundVolumeID()
+#     glbID = compositeNode.GetLabelVolumeID()
 
-    self.tupVolumeIDs = [rbgID, rfgID, rlbID, ybgID, yfgID, ylbID, gbgID, gfgID, glbID]
+#     self.tupVolumeIDs = [rbgID, rfgID, rlbID, ybgID, yfgID, ylbID, gbgID, gfgID, glbID]
+    self.tupVolumeIDs = [rbgID, ybgID, gbgID]
     
     
   def RestoreImageDisplay(self):
     print('Restoring Display')
-    print(self.tupVolumeIDs[0])
     
     lm = slicer.app.layoutManager()
     
+    #red
+    view = lm.sliceWidget('Red').sliceView()
+    sliceNode = view.mrmlSliceNode()
+    sliceLogic = slicer.app.applicationLogic().GetSliceLogic(sliceNode)
+    compositeNode = sliceLogic.GetSliceCompositeNode()
+
+#     compositeNode.SetBackgroundVolumeID(self.tupVolumeIDs[0])
+#     compositeNode.SetForegroundVolumeID(self.tupVolumeIDs[1])
+#     compositeNode.SetLabelVolumeID(self.tupVolumeIDs[2])
+    compositeNode.SetForegroundVolumeID(self.tupVolumeIDs[0])
+
     
     #yellow
     view = lm.sliceWidget('Yellow').sliceView()
     sliceNode = view.mrmlSliceNode()
     sliceLogic = slicer.app.applicationLogic().GetSliceLogic(sliceNode)
     compositeNode = sliceLogic.GetSliceCompositeNode()
+    compositeNode.SetForegroundOpacity(1.0)
 
-    compositeNode.SetBackgroundVolumeID(self.tupVolumeIDs[3])
-    compositeNode.SetForegroundVolumeID(self.tupVolumeIDs[4])
-    compositeNode.SetLabelVolumeID(self.tupVolumeIDs[5])
+#     compositeNode.SetBackgroundVolumeID(self.tupVolumeIDs[3])
+#     compositeNode.SetForegroundVolumeID(self.tupVolumeIDs[4])
+#     compositeNode.SetLabelVolumeID(self.tupVolumeIDs[5])
+    compositeNode.SetForegroundVolumeID(self.tupVolumeIDs[1])
+    compositeNode.SetForegroundOpacity(1.0)
  
     #green
     view = lm.sliceWidget('Green').sliceView()
@@ -414,19 +441,16 @@ class HelperBox2(VTKObservationMixin):
     sliceLogic = slicer.app.applicationLogic().GetSliceLogic(sliceNode)
     compositeNode = sliceLogic.GetSliceCompositeNode()
 
-    compositeNode.SetBackgroundVolumeID(self.tupVolumeIDs[6])
-    compositeNode.SetForegroundVolumeID(self.tupVolumeIDs[7])
-    compositeNode.SetLabelVolumeID(self.tupVolumeIDs[8])
+#     compositeNode.SetBackgroundVolumeID(self.tupVolumeIDs[6])
+#     compositeNode.SetForegroundVolumeID(self.tupVolumeIDs[7])
+#     compositeNode.SetLabelVolumeID(self.tupVolumeIDs[8])
+    compositeNode.SetForegroundVolumeID(self.tupVolumeIDs[2])
+    compositeNode.SetForegroundOpacity(1.0)
 
-    #red
-    view = lm.sliceWidget('Red').sliceView()
-    sliceNode = view.mrmlSliceNode()
-    sliceLogic = slicer.app.applicationLogic().GetSliceLogic(sliceNode)
-    compositeNode = sliceLogic.GetSliceCompositeNode()
+#     mergeVolume = self.mergeVolume()
+#     mergeVolume.GetDisplayNode().SetAndObserveColorNodeID(self.colorNodeID)
+#     self.setMergeVolume(mergeVolume)
 
-    compositeNode.SetBackgroundVolumeID(self.tupVolumeIDs[0])
-    compositeNode.SetForegroundVolumeID(self.tupVolumeIDs[1])
-    compositeNode.SetLabelVolumeID(self.tupVolumeIDs[2])
       
 ############################################################
 
@@ -460,5 +484,8 @@ class HelperBox2(VTKObservationMixin):
     self.colorNodeID = piradsCTNode.GetID()
      
     self.createMerge()
+
+
+
 # ############################################################
 
