@@ -63,7 +63,9 @@ class HelperBox2(VTKObservationMixin):
     # - python callable that gets True or False
     self.selectCommand = None
     print("In HELPER2")
-    self.bInitalCaptureComplete = False
+
+    
+    EditUtil.setPropagateMode(1)
 
     if not parent:
       self.parent = slicer.qMRMLWidget()
@@ -130,15 +132,6 @@ class HelperBox2(VTKObservationMixin):
   def select(self, masterVolume=None, mergeVolume=None):
     """select master volume - load merge volume if one with the correct name exists"""
 
-############### Current State of Image Display ############
-    if self.bInitalCaptureComplete == False:
-      self.tupVolumeIDs = []
-      self.CaptureCurrentImageDisplay()
-      self.bInitalCaptureComplete = True
-############################################################
-
-
-
     if masterVolume is None:
         masterVolume = self.masterSelector.currentNode()
     self.master = masterVolume
@@ -160,6 +153,7 @@ class HelperBox2(VTKObservationMixin):
         slicer.util.errorDisplay( "Error: selected merge label volume is not a label volume" )
       else:
         EditUtil.setActiveVolumes(self.master, merge)
+#         self.ControlledSetActiveVolumes(self.master, merge)
         self.mergeSelector.setCurrentNode(merge)
 
 
@@ -182,6 +176,25 @@ class HelperBox2(VTKObservationMixin):
 
     if self.selectCommand:
       self.selectCommand()
+    
+
+
+#   def ControlledSetActiveVolumes(self, masterVolume, mergeVolume=None):
+#     if isinstance(masterVolume, str):
+#       masterVolume = slicer.mrmlScene.GetNodeByID(masterVolume)
+#     if isinstance(mergeVolume, str):
+#       mergeVolume = slicer.mrmlScene.GetNodeByID(mergeVolume)
+#     selectionNode = slicer.app.applicationLogic().GetSelectionNode()
+#     selectionNode.SetActiveVolumeID(masterVolume.GetID())
+#     if mergeVolume:
+#       selectionNode.SetActiveLabelVolumeID(mergeVolume.GetID())
+    
+    # set mode to 1 to match the Label layer
+    # 
+    # 
+    mode = 1
+    applicationLogic = slicer.app.applicationLogic()
+    applicationLogic.PropagateVolumeSelection(mode, 0)
     
       
 
@@ -304,11 +317,6 @@ class HelperBox2(VTKObservationMixin):
     self.mergeSelector.addMenuAction(self.newMergeVolumeAction)
     
     
-    self.btnResetDisplay = qt.QPushButton("Reset Display")
-    self.btnResetDisplay.setEnabled(True)
-    self.btnResetDisplay.connect('clicked(bool)', self.RestoreImageDisplay)
-    self.masterFrame.layout().addWidget(self.btnResetDisplay)
-
 ############### REMOVE PER STRUCTURE REFERENCES ############
 #     #
 #     # Structures Frame
@@ -358,98 +366,6 @@ class HelperBox2(VTKObservationMixin):
     print(self.pathQuizColorFiles)
 ############################################################
     
-
-  def CaptureCurrentImageDisplay(self):
-    print('Getting Images')
-    rbgID = 'None'
-#     rfgID = 'None'
-#     rlbID = 'None'
-    ybgID = 'None'
-#     yfgID = 'None'
-#     ylbID = 'None'
-    gbgID = 'None'
-#     gfgID = 'None'
-#     glbID = 'None'
-    
-    lm = slicer.app.layoutManager()
-
-    # red
-    view = lm.sliceWidget('Red').sliceView()
-    sliceNode = view.mrmlSliceNode()
-    sliceLogic = slicer.app.applicationLogic().GetSliceLogic(sliceNode)
-    compositeNode = sliceLogic.GetSliceCompositeNode()
-    rbgID = compositeNode.GetBackgroundVolumeID()
-#     rfgID = compositeNode.GetForegroundVolumeID()
-#     rlbID = compositeNode.GetLabelVolumeID()
-
-    
-    # yellow
-    view = lm.sliceWidget('Yellow').sliceView()
-    sliceNode = view.mrmlSliceNode()
-    sliceLogic = slicer.app.applicationLogic().GetSliceLogic(sliceNode)
-    compositeNode = sliceLogic.GetSliceCompositeNode()
-    ybgID = compositeNode.GetBackgroundVolumeID()
-#     yfgID = compositeNode.GetForegroundVolumeID()
-#     ylbID = compositeNode.GetLabelVolumeID()
-    
-    #green
-    view = lm.sliceWidget('Green').sliceView()
-    sliceNode = view.mrmlSliceNode()
-    sliceLogic = slicer.app.applicationLogic().GetSliceLogic(sliceNode)
-    compositeNode = sliceLogic.GetSliceCompositeNode()
-    gbgID = compositeNode.GetBackgroundVolumeID()
-#     gfgID = compositeNode.GetForegroundVolumeID()
-#     glbID = compositeNode.GetLabelVolumeID()
-
-#     self.tupVolumeIDs = [rbgID, rfgID, rlbID, ybgID, yfgID, ylbID, gbgID, gfgID, glbID]
-    self.tupVolumeIDs = [rbgID, ybgID, gbgID]
-    
-    
-  def RestoreImageDisplay(self):
-    print('Restoring Display')
-    
-    lm = slicer.app.layoutManager()
-    
-    #red
-    view = lm.sliceWidget('Red').sliceView()
-    sliceNode = view.mrmlSliceNode()
-    sliceLogic = slicer.app.applicationLogic().GetSliceLogic(sliceNode)
-    compositeNode = sliceLogic.GetSliceCompositeNode()
-
-#     compositeNode.SetBackgroundVolumeID(self.tupVolumeIDs[0])
-#     compositeNode.SetForegroundVolumeID(self.tupVolumeIDs[1])
-#     compositeNode.SetLabelVolumeID(self.tupVolumeIDs[2])
-    compositeNode.SetForegroundVolumeID(self.tupVolumeIDs[0])
-
-    
-    #yellow
-    view = lm.sliceWidget('Yellow').sliceView()
-    sliceNode = view.mrmlSliceNode()
-    sliceLogic = slicer.app.applicationLogic().GetSliceLogic(sliceNode)
-    compositeNode = sliceLogic.GetSliceCompositeNode()
-    compositeNode.SetForegroundOpacity(1.0)
-
-#     compositeNode.SetBackgroundVolumeID(self.tupVolumeIDs[3])
-#     compositeNode.SetForegroundVolumeID(self.tupVolumeIDs[4])
-#     compositeNode.SetLabelVolumeID(self.tupVolumeIDs[5])
-    compositeNode.SetForegroundVolumeID(self.tupVolumeIDs[1])
-    compositeNode.SetForegroundOpacity(1.0)
- 
-    #green
-    view = lm.sliceWidget('Green').sliceView()
-    sliceNode = view.mrmlSliceNode()
-    sliceLogic = slicer.app.applicationLogic().GetSliceLogic(sliceNode)
-    compositeNode = sliceLogic.GetSliceCompositeNode()
-
-#     compositeNode.SetBackgroundVolumeID(self.tupVolumeIDs[6])
-#     compositeNode.SetForegroundVolumeID(self.tupVolumeIDs[7])
-#     compositeNode.SetLabelVolumeID(self.tupVolumeIDs[8])
-    compositeNode.SetForegroundVolumeID(self.tupVolumeIDs[2])
-    compositeNode.SetForegroundOpacity(1.0)
-
-#     mergeVolume = self.mergeVolume()
-#     mergeVolume.GetDisplayNode().SetAndObserveColorNodeID(self.colorNodeID)
-#     self.setMergeVolume(mergeVolume)
 
       
 ############################################################

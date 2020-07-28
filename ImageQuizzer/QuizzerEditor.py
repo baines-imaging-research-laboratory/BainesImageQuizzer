@@ -198,7 +198,7 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   # sets up the widget
   def setup(self):
     # Message suggesting using Segment Editor
-    self.createSegmentEditorMessage()
+#     self.createSegmentEditorMessage()
 
     #
     # Editor Volumes

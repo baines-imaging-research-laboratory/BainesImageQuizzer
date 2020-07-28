@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Session>
+	<Page name="CL PT001" descriptor="Multiparametric_MRI">
+		<Image format="dicom" type="Volume" descriptor="MR" destination="Red">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>D:\BainesWork\ShareableData\MICCAI_TestData_as_DICOM\PT_01-Case00-05\Planning_00\1.2.826.0.1.3680043.2.1143.15696279501143722052270649132779842.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.2.1143.6244694518127065394794861602727859466</SeriesInstanceUID>
+		</Image>
+		<Image descriptor="Case00Prostate" destination="Yellow" format="mhd" type="Volume">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Prostate\Case00.mhd</Path>
+		</Image>
+		<Image format="dicom" type="Volume" descriptor="DCE" destination="Green">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>D:\BainesWork\ShareableData\SlicerData\DCE_series\DCE_series\000000.dcm</Path>
+			<SeriesInstanceUID>1.3.6.1.4.1.14519.5.2.1.3671.7001.907273378455725470787918387735</SeriesInstanceUID>
+		</Image>
+		<QuestionSet id="QS-PI-RADS" title="How to"  segmentrequired="y">
+			<Question type="InfoBox" descriptor="Segmentation Instructions">
+				<Option>Add segments</Option>
+			</Question>
+			<Question type="IntegerValue" descriptor="Overall PI-RADS" >
+				<Option>Enter overall PI-RADS score:</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>
