@@ -634,17 +634,22 @@ class DicomVolumeDetail(ViewNodeBase):
             tags['patientID'] = "0010,0020"
             tags['seriesUID'] = "0020,000E"
             tags['studyUID'] = "0020,000D"
+            tags['seriesDescription'] = "0008,103E"
             
             # using the path defined by the user to one of the files in the series,
             # access dicom information stored in that series
             
             sSeriesUIDToLoad = database.fileValue(self.sImagePath, tags['seriesUID'])
             sPatientName = database.fileValue(self.sImagePath , tags['patientName'])
+            if sPatientName == '':
+                sPatientName = 'No Name'
             sPatientID = database.fileValue(self.sImagePath , tags['patientID'])
+            sSeriesDescription = database.fileValue(self.sImagePath, tags['seriesDescription'])
 
             self.sStudyInstanceUID = database.fileValue(self.sImagePath, tags['studyUID'])
             sExpectedSubjectHierarchyName = sPatientName + ' (' + sPatientID + ')'
-#             print(' ~~~ Subject Hierarchy expected name : %s' % sExpectedSubjectHierarchyName)
+            print(' ~~~ Subject Hierarchy expected name : %s' % sExpectedSubjectHierarchyName)
+            
 
             
             # extract directory that stores the dicom series from defined image path
@@ -655,8 +660,9 @@ class DicomVolumeDetail(ViewNodeBase):
             for sImportedSeries in lAllSeriesUIDs:
                 if sImportedSeries == sSeriesUIDToLoad:
                     bSeriesFoundInDB = True
+                    break
                 
-            # if not already loaded, import from series directory 
+            # if not already in the database, import from series directory 
             #  NOTE: if more than one series is located in this directory, 
             #        all series will be imported
             if not bSeriesFoundInDB:
@@ -674,10 +680,24 @@ class DicomVolumeDetail(ViewNodeBase):
             else:
                 DICOMUtils.loadSeriesByUID([sSeriesUIDToLoad])
                 slNodeId = slSubjectHierarchyNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(),sSeriesUIDToLoad)
+                    
             
+            # if loaded volume does not appear under the SubjectHierarchy, search 
+            # for multivolume nodes containing SeriesDescription
+            if slNodeId == 0:
+                iNumNodes = slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLMultiVolumeNode')
+                
+                for idx in range(iNumNodes):
+                    slMultiVolumeNode = slicer.mrmlScene.GetNthNodeByClass(idx, 'vtkMRMLMultiVolumeNode')
+                    sNodeName = slMultiVolumeNode.GetName()
+                    if sSeriesDescription in sNodeName:
+                        self.slNode = slMultiVolumeNode
+                        break
 
-            # update the class properties with the slicer node and node name 
-            self.slNode = slSubjectHierarchyNode.GetItemDataNode(slNodeId)
+            else:
+                # update the class properties with the slicer node and node name 
+                self.slNode = slSubjectHierarchyNode.GetItemDataNode(slNodeId)
+
             self.sNodeName = self.slNode.GetName()
             
                         
