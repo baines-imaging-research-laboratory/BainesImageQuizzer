@@ -74,17 +74,17 @@
 	</Page>
 	<Page name="Patient2" descriptor="Mixed Displays" linkviews="y">
 		<Image format="nrrd" type="Volume"  descriptor="Brain CT" destination="Red">
-			<Layer>Foreground</Layer>
+			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
 		<Image format="nrrd" type="Volume" descriptor="Brain MR" destination="Green">
-			<Layer>Foreground</Layer>
+			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
 		<Image format="mhd" type="Volume" descriptor="Case00Prostate" destination="Yellow">
-			<Layer>Foreground</Layer>
+			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Prostate\Case00.mhd</Path>
 		</Image>
