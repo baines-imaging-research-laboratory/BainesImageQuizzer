@@ -1,3 +1,21 @@
+#####################################################
+#
+# Mods: C.Johnson  July 2020
+#
+# This is a copy of Slicer's HelperBox module class found in C:\...\AppData\Local\NA-MIC\Slicer xxx\lib\Slicer-4.11\qt-scripted-modules\EditorLib
+# This module class has been customized to accomodate the specific requirements 
+# of the ImageQuizzer project. 
+#
+# Modifications:
+#    - Remove the option to create segments on a 'Per Structure' basis
+#    - Load a customized color table for the segments
+#    - Change the propagation mode to only set the label layer as active
+#         leaving the background images to display what the user requested 
+#        in the XML of the quiz selected
+#
+#####################################################
+
+
 import os
 import qt
 import ctk
@@ -11,7 +29,8 @@ from EditorLib.EditUtil import EditUtil
 from EditorLib.LabelCreateDialog import LabelCreateDialog
 from EditorLib.LabelStructureListWidget import LabelStructureListWidget
 
-__all__ = ['HelperBox2']
+
+__all__ = ['QuizzerHelperBox']
 
 def _map_property(objfunc, name):
   """Creates a Python :class:`property` associated with an object
@@ -21,12 +40,14 @@ def _map_property(objfunc, name):
   return property(lambda self: getattr(objfunc(self), name),
                   lambda self, value: setattr(objfunc(self), name, value))
 
+
+
 #########################################################
 #
 #
 comment = """
 
-  HelperBox2 is a wrapper around a set of Qt widgets and other
+  QuizzerHelperBox is a wrapper around a set of Qt widgets and other
   structures to manage the slicer3 segmentation helper box.
 
 # TODO :
@@ -34,7 +55,7 @@ comment = """
 #
 #########################################################
 
-class HelperBox2(VTKObservationMixin):
+class QuizzerHelperBox(VTKObservationMixin):
 
 ############### REMOVE PER STRUCTURE REFERENCES ############
 #   mergeValidCommand = _map_property(lambda self: self.structureListWidget, "mergeValidCommand")
@@ -62,10 +83,31 @@ class HelperBox2(VTKObservationMixin):
     # pseudo signals
     # - python callable that gets True or False
     self.selectCommand = None
-    print("In HELPER2")
 
     
+    ########## Modify Propagation Mode #####################
+    #    
+    # Set mode to 1 to match the Label layer defined in Slicer's vtkMRMLApplicationLogic.h
+    # This allows the SetActiveVolumes method to connect only the label layer, the
+    # images shown in the background layer remain as defined by the user in the Quizzer XML.
+    # (Originally this mode = 5 which would set both the background and label layers).
+    # 
     EditUtil.setPropagateMode(1)
+    ########################################################
+
+    ########################################################
+    ###### CUSTOMIZE INITIALIZATION for ColorTable ############
+    # setup specifics for the customized segment editor
+    sQuizModuleName = 'ImageQuizzer'
+    self.sColorTableName = 'QuizzerColorTable'
+    self.sColorTableFilename = self.sColorTableName + '.txt'
+    scriptedModulesPath = eval('slicer.modules.%s.path' % sQuizModuleName.lower())
+    scriptedModulesPath = os.path.dirname(scriptedModulesPath)
+    self.pathQuizColorFiles = os.path.join(scriptedModulesPath, 'Resources', 'ColorFiles')
+    print(self.pathQuizColorFiles)
+    ############################################################
+
+
 
     if not parent:
       self.parent = slicer.qMRMLWidget()
@@ -105,7 +147,8 @@ class HelperBox2(VTKObservationMixin):
   def newMerge(self):
     """create a merge volume for the current master even if one exists"""
     self.createMergeOptions = "new"
-    self.labelCreateDialog()
+    self.SetCustomColorTable()
+#     self.labelCreateDialog()
 
   def createMerge(self):
     """create a merge volume for the current master"""
@@ -145,7 +188,8 @@ class HelperBox2(VTKObservationMixin):
     if self.master and not self.mergeVolume():
       # the master exists, but there is no merge volume yet
       # bring up dialog to create a merge with a user-selected color node
-      self.labelCreateDialog()
+      self.SetCustomColorTable()
+#       self.labelCreateDialog()
 
     merge = self.mergeVolume()
     if merge:
@@ -153,7 +197,6 @@ class HelperBox2(VTKObservationMixin):
         slicer.util.errorDisplay( "Error: selected merge label volume is not a label volume" )
       else:
         EditUtil.setActiveVolumes(self.master, merge)
-#         self.ControlledSetActiveVolumes(self.master, merge)
         self.mergeSelector.setCurrentNode(merge)
 
 
@@ -177,25 +220,9 @@ class HelperBox2(VTKObservationMixin):
     if self.selectCommand:
       self.selectCommand()
     
-
-
-#   def ControlledSetActiveVolumes(self, masterVolume, mergeVolume=None):
-#     if isinstance(masterVolume, str):
-#       masterVolume = slicer.mrmlScene.GetNodeByID(masterVolume)
-#     if isinstance(mergeVolume, str):
-#       mergeVolume = slicer.mrmlScene.GetNodeByID(mergeVolume)
-#     selectionNode = slicer.app.applicationLogic().GetSelectionNode()
-#     selectionNode.SetActiveVolumeID(masterVolume.GetID())
-#     if mergeVolume:
-#       selectionNode.SetActiveLabelVolumeID(mergeVolume.GetID())
-    
-    # set mode to 1 to match the Label layer
-    # 
-    # 
-    mode = 1
-    applicationLogic = slicer.app.applicationLogic()
-    applicationLogic.PropagateVolumeSelection(mode, 0)
-    
+#     mode = 1
+#     applicationLogic = slicer.app.applicationLogic()
+#     applicationLogic.PropagateVolumeSelection(mode, 0)
       
 
   def setVolumes(self,masterVolume,mergeVolume):
@@ -355,27 +382,12 @@ class HelperBox2(VTKObservationMixin):
 #     self.structureListWidget.selectStructure(idx)
 ############################################################
 
-############### PI-RADS INITIALIZATION #####################
-    # setup specifics for the PI-RADS segment editor
-    sQuizModuleName = 'ImageQuizzer'
-    self.sColorTableName = 'PI-RADS'
-    self.sColorTableFilename = self.sColorTableName + '.txt'
-    scriptedModulesPath = eval('slicer.modules.%s.path' % sQuizModuleName.lower())
-    scriptedModulesPath = os.path.dirname(scriptedModulesPath)
-    self.pathQuizColorFiles = os.path.join(scriptedModulesPath, 'Resources', 'ColorFiles')
-    print(self.pathQuizColorFiles)
-############################################################
-    
 
-      
-############################################################
-
-
-  def labelCreateDialog(self):
-    """label create dialog"""
-    if self.master is None:
-        return
 ############### REMOVE REQUEST FOR COLOR FILE ############
+#   def labelCreateDialog(self):
+#     """label create dialog"""
+#     if self.master is None:
+#         return
 #     dlg = LabelCreateDialog(slicer.util.mainWindow(), self.master, self.mergeVolumePostfix)
 #     colorLogic = slicer.modules.colors.logic()
 #     dlg.colorNodeID = colorLogic.GetDefaultEditorColorNodeID()
@@ -385,23 +397,26 @@ class HelperBox2(VTKObservationMixin):
 #       self.createMerge()
 ############################################################
 
-# ############### LOAD PI-RADS COLOR FILE ############
+################# LOAD CUSTOMIZED COLOR FILE ###############
+  def SetCustomColorTable(self):
+    """ Customized Color Table for Image Quizzer """
+
+    if self.master is None:
+        return
+
     colorLogic = slicer.modules.colors.logic()
      
-#     sUserColorPath = 'D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Resources\ColorFiles'
     colorLogic.SetUserColorFilePaths(self.pathQuizColorFiles)
     lsUserColorTables = colorLogic.FindUserColorFiles()
     
     for ind in range(len(lsUserColorTables)):
         head, tail = os.path.split(lsUserColorTables[ind])
         if tail == self.sColorTableFilename:
-            piradsCTNode = colorLogic.LoadColorFile(lsUserColorTables[ind], self.sColorTableName)
+            quizzerCTNode = colorLogic.LoadColorFile(lsUserColorTables[ind], self.sColorTableName)
 
-    self.colorNodeID = piradsCTNode.GetID()
+    self.colorNodeID = quizzerCTNode.GetID()
      
     self.createMerge()
+############################################################
 
-
-
-# ############################################################
 

@@ -113,20 +113,6 @@ class Session:
     def GetMultipleResponsesInQuiz(self):
         return self._bAllowMultipleResponseInQuiz
             
-#     #----------
-#     def AddSegmentationModule(self, bTF):
-#         if bTF == True:
-#             # add segment editor tab to quiz widget
-#             self.slicerTabWidget.addTab(slicer.modules.segmenteditor.widgetRepresentation(),"Segment Editor")
-#             self._bSegmentationModule = True
-#             self._iSegmentationTabIndex = self.slicerTabWidget.count - 1
-#             self.slicerTabWidget.setTabEnabled(self._iSegmentationTabIndex, True)
-#         else:
-#             self._bSegmentationModule = False
-#         
-#     #----------
-#     def SegmentationTabEnabler(self, bTF):
-#         self.slicerTabWidget.setTabEnabled(self.GetSegmentationTabIndex(), bTF)
 
     #----------
     def AddSegmentationModule(self, bTF):
@@ -144,8 +130,57 @@ class Session:
     def SegmentationTabEnabler(self, bTF):
         self.oQuizWidgets.qTabWidget.setTabEnabled(self.GetSegmentationTabIndex(), bTF)
 
+        if bTF == True:
+            # When setting up for segmentation, reset the master volume to None
+            # This forces the user to select a volume which in turn enables the 
+            # color selector when editing the segments
+            oParent = self.oQuizWidgets.qTabWidget.widget(self.GetSegmentationTabIndex())
+            self.iCounter = 0
+            bSuccess, oChild = self.SearchForChildWidget(oParent, 'qMRMLNodeComboBox', 'MasterVolumeNodeSelector')
+            if bSuccess == False or oChild == None:
+                print ('Did not work')
+            else:
+                print('FOUND !!!! : ', oChild.name)
+                self.SetVolumeSelectorToNone(oChild)
+    
+    #----------
+    def SearchForChildWidget(self, oParent, sSearchType, sSearchName):
+
+
+        if oParent != None:
+#             print(oParent.className(), '.....', oParent.name)
+            
+            iNumChildren = len(oParent.children())
+
+            # drill down through children recursively until the search object has been found
+            for idx in range(iNumChildren):
+                oChildren = oParent.children()
+                oChild = oChildren[idx]
+#                 print ('..............', oChild.className(),'...', oChild.name)
+                if oChild.className() == sSearchType:
+                    if oChild.name == sSearchName:
+                        return True, oChild
+                        
+                self.iCounter = self.iCounter + 1
+                if self.iCounter == 100:
+                    return False, None
+                    
+                
+                if len(oChild.children()) > 0:
+                    bFound, oFoundChild = self.SearchForChildWidget(oChild, sSearchType, sSearchName)
+                    if bFound:
+                        return True, oFoundChild
+            
+        else:
+            print('We have problems')
+            return False, None
     
     
+    #----------
+    def SetVolumeSelectorToNone(self, oSelectorWidget):
+        oSelectorWidget.setCurrentNodeIndex(-1)
+        
+            
     #----------
     def GetSegmentationTabIndex(self):
         return self._iSegmentationTabIndex
@@ -283,35 +318,10 @@ class Session:
     #-----------------------------------------------
 
     def SetupWidgets(self, slicerMainLayout):
-        
 
-###### BEFORE RESTRUCTURE
-#         self._oQuizWidgets = oQuizWidgets_Input
-    
-#         self.slicerLeftMainLayout = self._oQuizWidgets.GetSlicerLeftMainLayout()
-#         self.slicerQuizLayout = self._oQuizWidgets.GetSlicerQuizLayout()
-#         self.slicerTabWidget = self._oQuizWidgets.GetSlicerTabWidget()
 
-        
-        
-###### MID RESTRUCTURE        
-        # create the ImageQuizzer widget 
-#         self.oQuizWidgets = QuizWidgets()
-#         self.oQuizWidgets.CreateQuizzerLayoutWithTabs()
-# 
-# 
-#         # add to Slicer's main layout
-#         self.slicerLeftWidget = self.oQuizWidgets.GetSlicerLeftWidget()
-#         slicerMainLayout.addWidget(self.slicerLeftWidget)  
-# 
-# 
-#         self.slicerLeftMainLayout = self.oQuizWidgets.GetSlicerLeftMainLayout()
-#         self.slicerQuizLayout = self.oQuizWidgets.GetSlicerQuizLayout()
-#         self.slicerTabWidget = self.oQuizWidgets.GetSlicerTabWidget()
-        
-###### NEW STRUCTURE
         self.oQuizWidgets = QuizWidgets()
-        self.oQuizWidgets.CreateLeftLayoutsAndWidget()
+        self.oQuizWidgets.CreateLeftLayoutAndWidget()
 
         self.oQuizWidgets.AddQuizTitle()
         
@@ -356,8 +366,6 @@ class Session:
 
     def onNextButtonClicked(self):
 
-        sMsg = ''
-        
         ############################################    
         # work on saving responses for current page
         ############################################    
@@ -433,7 +441,6 @@ class Session:
         
         
         self.DisplayPage()
-#         self.DisplaySavedResponse() # ALREADY IN DISPLAY PAGE??
         
         
 
@@ -513,22 +520,6 @@ class Session:
         self.SetMultipleResponsesInQSetAllowed(oQuestionSet.GetMultipleResponseTF())
         
         
-
-        
-#         # first clear any previous widgets (except push buttons)
-#         for i in reversed(range(self.slicerQuizLayout.count())):
-# #             x = self.slicerQuizLayout.itemAt(i).widget()
-# #             if not(isinstance(x, qt.QPushButton)):
-#             self.slicerQuizLayout.itemAt(i).widget().setParent(None)
-# 
-#         
-#         bBuildSuccess, qWidgetQuestionSetForm = oQuestionSet.BuildQuestionSetForm()
-#         
-#         if bBuildSuccess:
-#             self.slicerQuizLayout.addWidget(qWidgetQuestionSetForm)
-#             self._loQuestionSets.append(oQuestionSet)
-#             qWidgetQuestionSetForm.setEnabled(True) # initialize
-
 
         # first clear any previous widgets (except push buttons)
         for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
@@ -1006,48 +997,10 @@ class QuizWidgets:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    def CreateQuizzerLayoutWithTabs(self):
-
-        #-------------------------------------------
-        # set up quiz widget
-
-        # create a layout for the quiz to go in Slicer's left widget
-        self._slicerLeftMainLayout = qt.QVBoxLayout()
-        
-        # add the quiz main layout to Slicer's left widget
-        self._slicerLeftWidget = qt.QWidget()
-        self._slicerLeftWidget.setLayout(self._slicerLeftMainLayout)
-        
-        qTitle = qt.QLabel('Baines Image Quizzer')
-        qTitle.setFont(qt.QFont('Arial',14, qt.QFont.Bold))
-
-        self._slicerLeftMainLayout.addWidget(qTitle)
-
-    
-        #-------------------------------------------
-        # setup the tab widget
-        self._slicerTabWidget = qt.QTabWidget()
-        qTabQuiz = qt.QWidget()
-        self._slicerTabWidget.addTab(qTabQuiz,"Quiz")
-        
-        # NOTE: Tab for segment editor is set up in Session - if a quiz question set requires it 
-
-        self._slicerLeftMainLayout.addWidget(self._slicerTabWidget)
-
-        
-        # Layout within the tab widget - form needs a frame
-
-        self._slicerQuizLayout = qt.QFormLayout(qTabQuiz)
-        self.quizFrame = qt.QFrame(qTabQuiz)
-        self.quizFrame.setLayout(qt.QVBoxLayout())
-        self._slicerQuizLayout.addWidget(self.quizFrame)
-
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def CreateLeftLayoutsAndWidget(self):
+    def CreateLeftLayoutAndWidget(self):
         
         # create a layout for the quiz to go in Slicer's left widget
         self.qLeftLayout = qt.QVBoxLayout()
@@ -1085,3 +1038,44 @@ class QuizWidgets:
     
         # add to left layout
         self.qLeftLayout.addWidget(self.qTabWidget)
+
+
+#########################################################
+#    NOTE: This was the layout before restructuring with tabs
+#    If we go back to no tabs, some of these details must change
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 
+# #     def CreateQuizzerLayout(self):
+# # 
+# #         print ("-------ImageQuizzer Widget SetUp--------")
+# # 
+# #         #-------------------------------------------
+# #         # set up quiz widget
+# #         self._slicerLeftWidget = qt.QWidget()
+# #         self._slicerLeftMainLayout = qt.QVBoxLayout()
+# #         self._slicerLeftWidget.setLayout(self._slicerLeftMainLayout)
+# #          
+# #         
+# #         
+# #         #### NOT YET IMPLEMENTED
+# #         # Status button
+# #         self.btnShowQuizProgress = qt.QPushButton("Show Quiz Progress")
+# #         self.btnShowQuizProgress.toolTip = "Display status of images."
+# #         self.btnShowQuizProgress.enabled = True
+# #         self._slicerLeftMainLayout.addWidget(self.btnShowQuizProgress)
+# #         
+# # 
+# #         
+# #         #-------------------------------------------
+# #         # Collapsible button
+# #         self.quizCollapsibleButton = ctk.ctkCollapsibleButton()
+# #         self.quizCollapsibleButton.text = "Baines Image Quizzer"
+# #         self._slicerLeftMainLayout.addWidget(self.quizCollapsibleButton)
+# #         
+# # 
+# #         
+# #         # Layout within the sample collapsible button - form needs a frame
+# #         self._slicerQuizLayout = qt.QFormLayout(self.quizCollapsibleButton)
+# #         self.quizFrame = qt.QFrame(self.quizCollapsibleButton)
+# #         self.quizFrame.setLayout(qt.QVBoxLayout())
+# #         self._slicerQuizLayout.addWidget(self.quizFrame)

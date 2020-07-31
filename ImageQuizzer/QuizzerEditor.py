@@ -1,3 +1,18 @@
+#####################################################
+#
+# Mods: C.Johnson  July 2020
+#
+# This is a copy of Slicer's Editor module found in C:\...\AppData\Local\NA-MIC\Slicer xxx\lib\Slicer-4.11\qt-scripted-modules
+# This loadable module has been customized to accomodate the specific requirements 
+# of the ImageQuizzer project. 
+#
+# Modifications:
+#    - turn off the information display to connect the user to the more sophisticated SegmentationEditor module
+#    - it now calls the customized HelperBox (QuizzerHelperBox)
+#
+#####################################################
+
+
 import os
 import slicer
 import qt, ctk, vtk
@@ -7,7 +22,8 @@ import slicer
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 
-from HelperBox2 import HelperBox2
+# special format to import a 'module class'
+from QuizzerHelperBox import QuizzerHelperBox
 
 #
 # Editor
@@ -17,9 +33,9 @@ class QuizzerEditor(ScriptedLoadableModule):
   def __init__(self, parent):
     ScriptedLoadableModule.__init__(self, parent)
     import string
-    parent.title = "PI-RADS Editor"
+    parent.title = "Image Quizzer Editor"
     parent.categories = ["Legacy"]
-    parent.contributors = ["Steve Pieper (Isomics)"]
+    parent.contributors = ["Steve Pieper (Isomics) .... modified C.Johnson (Baines Imaging Research Laboratories)"]
     parent.helpText = string.Template("""
 The Editor allows label maps to be created and edited. The active label map will be modified by the Editor.
 
@@ -218,7 +234,7 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     if self.showVolumesFrame:
 ############### SETUP FOR IMAGE QUIZZER - PI-Rads Editor ############
 #       self.helper = EditorLib.HelperBox(self.volumes)
-      self.helper = HelperBox2(self.volumes)
+      self.helper = QuizzerHelperBox(self.volumes)
       
       
       
@@ -307,7 +323,7 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.messageLayout.addSpacing(8)
 
     self.segmentEditorLabel = qt.QLabel(self.parent)
-    self.segmentEditorLabel.text = 'BAINES IMAGING RESEARCH ...Try the new <a href="#SwitchToSegmentEditor"><span style=" text-decoration: underline; color:#0000ff;">Segment Editor</span></a> module for more advanced editing!<br>Please help us improve the module by giving <a href="#Feedback"><span style=" text-decoration: underline; color:#0000ff;">feedback</span></a>.'
+    self.segmentEditorLabel.text = 'Try the new <a href="#SwitchToSegmentEditor"><span style=" text-decoration: underline; color:#0000ff;">Segment Editor</span></a> module for more advanced editing!<br>Please help us improve the module by giving <a href="#Feedback"><span style=" text-decoration: underline; color:#0000ff;">feedback</span></a>.'
     self.segmentEditorLabel.openExternalLinks = False
 
     # qt.QSizePolicy(qt.QSizePolicy.Expanding, qt.QSizePolicy.Preferred)
