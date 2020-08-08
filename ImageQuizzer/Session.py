@@ -44,8 +44,9 @@ class Session:
         self._bSegmentationModule = False
         self._iSegmentationTabIndex = -1   # default
         
-        self._oIOXml = None
         self._oFilesIO = None
+        self.oIOXml = UtilsIOXml()
+        self.oUtilsMsgs = UtilsMsgs()
 #         self._oQuizWidgets = None
         
         self._btnNext = None
@@ -54,7 +55,7 @@ class Session:
 
     def __del__(self):
         if not self.QuizComplete():
-            self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
+            self.oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
             self._oMsgUtil.DisplayInfo(' Image Quizzer Exiting - User file is saved.')
         
     #-------------------------------------------
@@ -66,8 +67,8 @@ class Session:
         self._oFilesIO = oFilesIO
 
     #----------
-    def SetIOXml(self, oIOXml):
-        self._oIOXml = oIOXml
+#     def SetIOXml(self, oIOXml):
+#         self.oIOXml = oIOXml
 
     #----------
     def SetQuizComplete(self, bInput):
@@ -128,20 +129,20 @@ class Session:
         
     #----------
     def SegmentationTabEnabler(self, bTF):
-        self.oQuizWidgets.qTabWidget.setTabEnabled(self.GetSegmentationTabIndex(), bTF)
 
-        if bTF == True:
-            # When setting up for segmentation, reset the master volume to None
-            # This forces the user to select a volume which in turn enables the 
-            # color selector when editing the segments
-            oParent = self.oQuizWidgets.qTabWidget.widget(self.GetSegmentationTabIndex())
-            self.iCounter = 0
-            bSuccess, oChild = self.SearchForChildWidget(oParent, 'qMRMLNodeComboBox', 'MasterVolumeNodeSelector')
-            if bSuccess == False or oChild == None:
-                print ('Did not work')
-            else:
-                print('FOUND !!!! : ', oChild.name)
-                self.SetVolumeSelectorToNone(oChild)
+        # When setting up for segmentation, reset the master volume to None
+        # This forces the user to select a volume which in turn enables the 
+        # color selector for editing the segments
+        oParent = self.oQuizWidgets.qTabWidget.widget(self.GetSegmentationTabIndex())
+        self.iRecursiveCounter = 0
+        bSuccess, oChild = self.SearchForChildWidget(oParent, 'qMRMLNodeComboBox', 'MasterVolumeNodeSelector')
+        if bSuccess == False or oChild == None:
+            sMsg = 'SegmentationTabEnabler:MasterVolumeSelector not found'
+            self.oUtilsMsgs.DisplayWarning(sMsg)
+        else:
+            self.SetVolumeSelectorToNone(oChild)
+
+        self.oQuizWidgets.qTabWidget.setTabEnabled(self.GetSegmentationTabIndex(), bTF)
     
     #----------
     def SearchForChildWidget(self, oParent, sSearchType, sSearchName):
@@ -161,8 +162,8 @@ class Session:
                     if oChild.name == sSearchName:
                         return True, oChild
                         
-                self.iCounter = self.iCounter + 1
-                if self.iCounter == 100:
+                self.iRecursiveCounter = self.iRecursiveCounter + 1
+                if self.iRecursiveCounter == 100:    # safeguard in recursive procedure
                     return False, None
                     
                 
@@ -172,7 +173,6 @@ class Session:
                         return True, oFoundChild
             
         else:
-            print('We have problems')
             return False, None
     
     
@@ -189,21 +189,21 @@ class Session:
     #----------
     #----------
     def GetAllQuestionSetsForNthPage(self, iPageIndex):
-        self._xPageNode = self._oIOXml.GetNthChild(self._oIOXml.GetRootNode(), 'Page', iPageIndex)
-        xNodesAllQuestionSets = self._oIOXml.GetChildren(self._xPageNode, 'QuestionSet')
+        self._xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
+        xNodesAllQuestionSets = self.oIOXml.GetChildren(self._xPageNode, 'QuestionSet')
         
         return xNodesAllQuestionSets
 
     #----------
     def GetAllQuestionSetNodesForCurrentPage(self):
         xPageNode = self.GetCurrentPageNode()
-        xAllQuestionSetNodes = self._oIOXml.GetChildren(xPageNode, 'QuestionSet')
+        xAllQuestionSetNodes = self.oIOXml.GetChildren(xPageNode, 'QuestionSet')
         
         return xAllQuestionSetNodes
     #----------
     def GetNthQuestionSetForPage(self, idx):
         xPageNode = self.GetCurrentPageNode()
-        xQuestionSetNode = self._oIOXml.GetNthChild(xPageNode, 'QuestionSet', idx)
+        xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', idx)
         
         return xQuestionSetNode
         
@@ -211,7 +211,7 @@ class Session:
         
     def GetCurrentPageNode(self):
         iPageIndex = self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][0]
-        xPageNode = self._oIOXml.GetNthChild(self._oIOXml.GetRootNode(), 'Page', iPageIndex)
+        xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
         
         return xPageNode
     
@@ -227,7 +227,7 @@ class Session:
     def GetCurrentQuestionSetNode(self):
         iQSetIndex = self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][1]
         xPageNode = self.GetCurrentPageNode()
-        xQuestionSetNode = self._oIOXml.GetNthChild(xPageNode, 'QuestionSet', iQSetIndex)
+        xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', iQSetIndex)
         
         return xQuestionSetNode
     
@@ -235,7 +235,7 @@ class Session:
     #----------
     def GetAllQuestionsForCurrentQuestionSet(self):
         xCurrentQuestionSetNode = self.GetCurrentQuestionSetNode()
-        xAllQuestionNodes = self._oIOXml.GetChildren(xCurrentQuestionSetNode, 'Question')
+        xAllQuestionNodes = self.oIOXml.GetChildren(xCurrentQuestionSetNode, 'Question')
         
         return xAllQuestionNodes
     
@@ -243,8 +243,8 @@ class Session:
     def GetNthOptionNode(self, indQuestion, indOption):
 
         xQuestionSetNode = self.GetCurrentQuestionSetNode()
-        xQuestionNode = self._oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
-        xOptionNode = self._oIOXml.GetNthChild(xQuestionNode, 'Option', indOption)
+        xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
+        xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', indOption)
         
         return xOptionNode
         
@@ -252,8 +252,8 @@ class Session:
     def GetAllOptionNodes(self, indQuestion):
 
         xQuestionSetNode = self.GetCurrentQuestionSetNode()
-        xQuestionNode = self._oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
-        xAllOptionNodes = self._oIOXml.GetChildren(xQuestionNode,'Option')
+        xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
+        xAllOptionNodes = self.oIOXml.GetChildren(xQuestionNode,'Option')
         
         return xAllOptionNodes
         
@@ -268,14 +268,14 @@ class Session:
 #     def RunSetup(self, oFilesIO, oQuizWidgets):
     def RunSetup(self, oFilesIO, slicerMainLayout):
         
-        self._oIOXml = UtilsIOXml()
+#         self.oIOXml = UtilsIOXml()
         self.SetFilesIO(oFilesIO)
 #         self.SetupButtons()
 # #         self.SetupWidgets(oQuizWidgets)
 #         self.SetupWidgets(slicerMainLayout)
 
         # open xml and check for root node
-        bSuccess, xRootNode = self._oIOXml.OpenXml(self._oFilesIO.GetUserQuizPath(),'Session')
+        bSuccess, xRootNode = self.oIOXml.OpenXml(self._oFilesIO.GetUserQuizPath(),'Session')
 
         if not bSuccess:
             sErrorMsg = "ERROR", "Not a valid quiz - Root node name was not 'Session'"
@@ -294,10 +294,10 @@ class Session:
             
             # turn on functionality if any of the question set attributes indicated they are required
             self.SetMultipleResponsesInQuiz( \
-                self._oIOXml.CheckForRequiredFunctionalityInAttribute( \
+                self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
                 './/Page/QuestionSet', 'allowmultipleresponse','y'))
             self.AddSegmentationModule( \
-                self._oIOXml.CheckForRequiredFunctionalityInAttribute( \
+                self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
                 './/Page/QuestionSet', 'segmentrequired','y'))
             
 
@@ -400,7 +400,7 @@ class Session:
                         self.AddSessionLoginTimestamp()
                     
                     self.WriteResponses()
-                    self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
+                    self.oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
                     self._bStartOfSession = False
             
 
@@ -491,13 +491,13 @@ class Session:
         #     of indeces for each page and the question sets within
         
         # get Page nodes
-        xPages = self._oIOXml.GetChildren(self._oIOXml.GetRootNode(), 'Page')
+        xPages = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
 
         for iPageIndex in range(len(xPages)):
             
             # for each page - get number of question sets
-            xPageNode = self._oIOXml.GetNthChild(self._oIOXml.GetRootNode(), 'Page', iPageIndex)
-            xQuestionSets = self._oIOXml.GetChildren(xPageNode,'QuestionSet')
+            xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
+            xQuestionSets = self.oIOXml.GetChildren(xPageNode,'QuestionSet')
             
             # append to composite indices list
             for iQuestionSetIndex in range(len(xQuestionSets)):
@@ -608,16 +608,16 @@ class Session:
 
                 # check if xml State element exists
                 xImage = oImageNode.GetXmlImageElement()
-                iNumStateElements = self._oIOXml.GetNumChildrenByName(xImage, 'State')
+                iNumStateElements = self.oIOXml.GetNumChildrenByName(xImage, 'State')
                 if iNumStateElements >0:
                     # update xml image/state element (first child)
-                    xStateElement = self._oIOXml.GetNthChild(xImage, 'State', 0)
+                    xStateElement = self.oIOXml.GetNthChild(xImage, 'State', 0)
                     self.UpdateAtributesInElement(xStateElement, dictAttribState)
                 # if no State element, add one
                 else:
                     self.AddImageStateElement(xImage, dictAttribState)
                     
-        self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
+        self.oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
     
     
     #-----------------------------------------------
@@ -627,8 +627,8 @@ class Session:
         for oImageView in self._loImageViews:
             if (oImageView.sImageType == 'Volume'):
         
-                xStateElement = self._oIOXml.GetNthChild(oImageView.GetXmlImageElement(), 'State', 0)
-                dictImageState = self._oIOXml.GetAttributes(xStateElement)
+                xStateElement = self.oIOXml.GetNthChild(oImageView.GetXmlImageElement(), 'State', 0)
+                dictImageState = self.oIOXml.GetAttributes(xStateElement)
                 
                 oImageView.SetImageState(dictImageState)
             
@@ -673,7 +673,7 @@ class Session:
         # get option node for the current question set , 1st question, 1st otpion
         xOptionNode = self.GetNthOptionNode( 0, 0)
         
-        iNumResponses = self._oIOXml.GetNumChildrenByName(xOptionNode,'Response')
+        iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode,'Response')
 #         print ('Number of responses: %i' %iNumResponses)
         if iNumResponses >0:
             bResponseExists = True
@@ -698,11 +698,11 @@ class Session:
         lsAllResponsesForQuestion = []
         for indQuestion in range(len(loQuestions)):
             oQuestion = loQuestions[indQuestion]
-            xQuestionNode = self._oIOXml.GetNthChild(xNodeQuestionSet, 'Question', indQuestion)
+            xQuestionNode = self.oIOXml.GetNthChild(xNodeQuestionSet, 'Question', indQuestion)
              
                  
             lsResponseValues = []                  
-            xAllOptions = self._oIOXml.GetChildren(xQuestionNode, 'Option')
+            xAllOptions = self.oIOXml.GetChildren(xQuestionNode, 'Option')
 
 
             xAllOptions = self.GetAllOptionNodes(indQuestion)
@@ -712,21 +712,21 @@ class Session:
                 dtLatestTimestamp = ''    # timestamp of type 'datetime'
                 sLatestResponse = ''
 
-                xAllResponseNodes = self._oIOXml.GetChildren(xOptionNode, 'Response')
+                xAllResponseNodes = self.oIOXml.GetChildren(xOptionNode, 'Response')
                 for xResponseNode in xAllResponseNodes:
-                    sResponseTime = self._oIOXml.GetValueOfNodeAttribute(xResponseNode, 'responsetime')
+                    sResponseTime = self.oIOXml.GetValueOfNodeAttribute(xResponseNode, 'responsetime')
                     dtResponseTimestamp = datetime.strptime(sResponseTime, self.sTimestampFormat)
 #                     print('*** TIME : %s' % sResponseTime)
                      
                     if dtLatestTimestamp == '':
                         dtLatestTimestamp = dtResponseTimestamp
-                        sLatestResponse = self._oIOXml.GetDataInNode(xResponseNode)
+                        sLatestResponse = self.oIOXml.GetDataInNode(xResponseNode)
                     else:
                         # compare with >= in order to capture 'last' response 
                         #    in case there are responses with the same timestamp
                         if dtResponseTimestamp >= dtLatestTimestamp:
                             dtLatestTimestamp = dtResponseTimestamp
-                            sLatestResponse = self._oIOXml.GetDataInNode(xResponseNode)
+                            sLatestResponse = self.oIOXml.GetDataInNode(xResponseNode)
                             
                     
     
@@ -784,7 +784,7 @@ class Session:
         
         dictAttrib = { 'logintime': self.LoginTime(), 'responsetime': sResponseTime}
         
-        self._oIOXml.AddElement(xOptionNode,'Response', sResponse, dictAttrib)
+        self.oIOXml.AddElement(xOptionNode,'Response', sResponse, dictAttrib)
         
     #-----------------------------------------------
 
@@ -792,7 +792,7 @@ class Session:
         
         sNullData = ''
 
-        self._oIOXml.AddElement(xImageNode,'State', sNullData, dictAttrib)
+        self.oIOXml.AddElement(xImageNode,'State', sNullData, dictAttrib)
         
         
     #-----------------------------------------------
@@ -801,7 +801,7 @@ class Session:
         
         # for each key, value in the dictionary, update the element attributes
         for sKey, sValue in dictAttrib.items():
-            self._oIOXml.UpdateAttribute(xElement, sKey, sValue)
+            self.oIOXml.UpdateAttribute(xElement, sKey, sValue)
         
     #-----------------------------------------------
 
@@ -816,9 +816,9 @@ class Session:
         
         sNullText = ''
         
-        self._oIOXml.AddElement(self._oIOXml.GetRootNode(),'Login', sNullText, dictAttrib)
+        self.oIOXml.AddElement(self.oIOXml.GetRootNode(),'Login', sNullText, dictAttrib)
         
-        self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
+        self.oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
             
     #-----------------------------------------------
 
@@ -855,22 +855,22 @@ class Session:
             # get page and question set nodes from indices
             indPage = self._l2iPageQuestionCompositeIndices[indCI][0]
             indQuestionSet = self._l2iPageQuestionCompositeIndices[indCI][1]
-            xPageNode = self._oIOXml.GetNthChild(self._oIOXml.GetRootNode(), 'Page', indPage)
-            xQuestionSetNode = self._oIOXml.GetNthChild(xPageNode, 'QuestionSet', indQuestionSet)
+            xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', indPage)
+            xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', indQuestionSet)
 #             print(indCI, 'Page:', indPage, 'QS:', indQuestionSet)
             
             # get first Option node of the first Question
-            xQuestionNode = self._oIOXml.GetNthChild(xQuestionSetNode, 'Question', 0)
-            xOptionNode = self._oIOXml.GetNthChild(xQuestionNode, 'Option', 0)
+            xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', 0)
+            xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', 0)
             
             # get number of Response nodes in the option
-            iNumResponses = self._oIOXml.GetNumChildrenByName(xOptionNode, 'Response')
+            iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode, 'Response')
             
                 
             # check each response tag for the time
             for indResp in range(iNumResponses):
-                xResponseNode = self._oIOXml.GetNthChild(xOptionNode, 'Response', indResp)
-                sTimestamp = self._oIOXml.GetValueOfNodeAttribute(xResponseNode, 'logintime')
+                xResponseNode = self.oIOXml.GetNthChild(xOptionNode, 'Response', indResp)
+                sTimestamp = self.oIOXml.GetValueOfNodeAttribute(xResponseNode, 'logintime')
 
                 dtLoginTimestamp = datetime.strptime(sTimestamp, self.sTimestampFormat)
                 if dtLoginTimestamp == dtLastLogin:
@@ -921,14 +921,14 @@ class Session:
 
 #         dtCurrentLogin = datetime.strptime(self.sLoginTime, self.sTimestampFormat)
         
-        xmlLoginNodes = self._oIOXml.GetChildren(self._oIOXml.GetRootNode(), 'Login')
+        xmlLoginNodes = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Login')
 
         # collect all login timestamps (type 'string')
         for indElem in range(len(xmlLoginNodes)):
             # get date/time from attribute
-            xmlLoginNode = self._oIOXml.GetNthChild(self._oIOXml.GetRootNode(), 'Login', indElem)
+            xmlLoginNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Login', indElem)
 
-            sTimestamp = self._oIOXml.GetValueOfNodeAttribute(xmlLoginNode, 'logintime')
+            sTimestamp = self.oIOXml.GetValueOfNodeAttribute(xmlLoginNode, 'logintime')
             lsTimestamps.append(sTimestamp)
             
 
@@ -958,7 +958,7 @@ class Session:
         # the last index in the composite indices list was reached
         # the quiz was completed - exit
         
-        self._oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
+        self.oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
         self.SetQuizComplete(True)
         self._oMsgUtil.DisplayInfo(sMsg)
         slicer.util.exit(status=EXIT_SUCCESS)

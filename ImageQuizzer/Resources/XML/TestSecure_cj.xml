@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session>
-	<Page name="IGPC1010" descriptor="Multiparametric_MRI">
+	<Page name="IGPC1010" descriptor="Multiparametric_MRI" linkviews="y">
 		<Image format="dicom" type="Volume" descriptor="ADC" destination="Red">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>K:\Secure\IGPC1010\ADC\1.2.840.113619.2.5.2424045.11941.1363868633.600.dcm</Path>
 			<SeriesInstanceUID>1.2.840.113619.2.5.24202200.303.1363868656.199</SeriesInstanceUID>
 		</Image>
-		<Image descriptor="In_Vivo_3D_T2" destination="Yellow" format="dicom" type="Volume">
+		<Image descriptor="In_Vivo_2D_T2" destination="Yellow" format="dicom" type="Volume">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>K:\Secure\IGPC1010\In_Vivo_3D_T2\1.2.840.113619.2.212.6945.1142338.750.1269871461.334.dcm</Path>
-			<SeriesInstanceUID>1.2.840.113619.2.212.6945.1142338.1406.1269871443.372</SeriesInstanceUID>
+			<Path>K:\Secure\IGPC1010\In_Vivo_2D_T2\1.2.840.113619.2.212.6945.1142338.750.1269871461.164.dcm</Path>
+			<SeriesInstanceUID>1.2.840.113619.2.212.6945.1142338.1406.1269871443.371</SeriesInstanceUID>
 		</Image>
 		<Image format="dicom" type="Volume" descriptor="DCE" destination="Green">
 			<Layer>Background</Layer>

@@ -66,6 +66,9 @@ class ImageView:
        
         self.BuildViewNodes()
         
+        # After segmenting creates a new label map volume, visibility is left on
+        # Turn off the visibility in the Subject Hierarchy when starting a new ImageView object
+        self.SetLabelMapVisibility(0)
         
 
         # Assign images to view with proper orientation
@@ -113,6 +116,10 @@ class ImageView:
             if bLoadSuccess and (oImageViewItem.slNode is not None):
                  
                 self._loImageViews.append(oImageViewItem)
+                
+            else:
+                sMsg = 'Image load Failed : ' + sPageID + ':' + oImageViewItem.sImagePath
+                self.oUtilsMsgs.DisplayWarning(sMsg)
                  
 
          
@@ -296,7 +303,28 @@ class ImageView:
         
     #-----------------------------------------------
 
-#     #-----------------------------------------------
+    #-----------------------------------------------
+    def SetLabelMapVisibility(self, iOnOff):
+        
+        # Set the label map volume visibility: on = 1; off = 0
+
+        # get list of all label map nodes
+        
+        lLabelMapNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLLabelMapVolumeNode')
+        
+        for indLabelMap in range(lLabelMapNodes.GetNumberOfItems()):
+            
+            slLabelMapNode = lLabelMapNodes.GetItemAsObject(indLabelMap)
+            slLabelMapNodeName = slLabelMapNode.GetName()
+            
+            # we need the subject hierarchy node id 
+            slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+            slSceneItemID = slSHNode.GetSceneItemID()
+            iLabelMapSubjectHierarchyId = slSHNode.GetItemChildWithName(slSceneItemID, slLabelMapNodeName)
+            
+            # using the slicer plugin, set the visibility
+            slLabelMapPlugin = slicer.qSlicerSubjectHierarchyLabelMapsPlugin()
+            slLabelMapPlugin.setDisplayVisibility(iLabelMapSubjectHierarchyId, iOnOff)
 
     
 ##########################################################################
@@ -635,6 +663,7 @@ class DicomVolumeDetail(ViewNodeBase):
             tags['seriesUID'] = "0020,000E"
             tags['studyUID'] = "0020,000D"
             tags['seriesDescription'] = "0008,103E"
+            tags['seriesNumber'] = "0020,0011"
             
             # using the path defined by the user to one of the files in the series,
             # access dicom information stored in that series
@@ -645,10 +674,16 @@ class DicomVolumeDetail(ViewNodeBase):
                 sPatientName = 'No Name'
             sPatientID = database.fileValue(self.sImagePath , tags['patientID'])
             sSeriesDescription = database.fileValue(self.sImagePath, tags['seriesDescription'])
+            if sSeriesDescription == '':
+                sSeriesDescription = 'Unnamed Series'
+            sSeriesNumber = database.fileValue(self.sImagePath, tags['seriesNumber'])
 
             self.sStudyInstanceUID = database.fileValue(self.sImagePath, tags['studyUID'])
-            sExpectedSubjectHierarchyName = sPatientName + ' (' + sPatientID + ')'
+#             sExpectedSubjectHierarchyName = sPatientName + ' (' + sPatientID + ')'
 #             print(' ~~~ Subject Hierarchy expected name : %s' % sExpectedSubjectHierarchyName)
+
+#             sExpectedSeriesSubjectHierarchyName = sSeriesNumber + ': ' + sSeriesDescription
+#             print(' ~~~ Subject Hierarchy Series expected name : %s' % sExpectedSeriesSubjectHierarchyName)
             
 
             
@@ -674,36 +709,51 @@ class DicomVolumeDetail(ViewNodeBase):
             
             
             slSubjectHierarchyNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+            
             slNodeId = slSubjectHierarchyNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(),sSeriesUIDToLoad)
             if slNodeId > 0:
                 bVolumeAlreadyLoaded = True
             else:
                 DICOMUtils.loadSeriesByUID([sSeriesUIDToLoad])
                 slNodeId = slSubjectHierarchyNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(),sSeriesUIDToLoad)
+                
+#                 slPlugin = slicer.qSlicerSubjectHierarchyVolumesPlugin()
+#                 iOnOrOff = slPlugin.getDisplayVisibility(slNodeId)
+#                 print('SH eye: ',iOnOrOff, slNodeId)
                     
             
-            # if loaded volume does not appear under the SubjectHierarchy, search 
-            # for multivolume nodes containing SeriesDescription
             if slNodeId == 0:
+                
+                # a multivolume type of node is not detected in the subject hierarchy using the GetItemByUID
+                # (because there are multiple UID's ???)
+                # if the the node ID is still 0 at this point,
+                # search for a multivolume node containing SeriesDescription
+
                 iNumNodes = slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLMultiVolumeNode')
                 
-                for idx in range(iNumNodes):
-                    slMultiVolumeNode = slicer.mrmlScene.GetNthNodeByClass(idx, 'vtkMRMLMultiVolumeNode')
-                    sNodeName = slMultiVolumeNode.GetName()
-                    if sSeriesDescription in sNodeName:
-                        self.slNode = slMultiVolumeNode
-                        break
+                if iNumNodes > 0:
+                    for idx in range(iNumNodes):
+                        slMultiVolumeNode = slicer.mrmlScene.GetNthNodeByClass(idx, 'vtkMRMLMultiVolumeNode')
+                        sNodeName = slMultiVolumeNode.GetName()
+                        if sSeriesDescription in sNodeName:
+                            self.slNode = slMultiVolumeNode
+                            self.sNodeName = self.slNode.GetName()
+                            bLoadSuccess = True
+                            break
+                else:
+                    bLoadSuccess = False
 
             else:
+                # load is complete with a valid node id
                 # update the class properties with the slicer node and node name 
                 self.slNode = slSubjectHierarchyNode.GetItemDataNode(slNodeId)
-
-            self.sNodeName = self.slNode.GetName()
-            
+                self.sNodeName = self.slNode.GetName()
+                bLoadSuccess = True
                         
-            bLoadSuccess = True
+            
         
         else:
+            bLoadSuccess = False
             sErrorMsg = ('Slicer Database is not open')
             self.oUtilsMsgs.DisplayError(sErrorMsg)
 
