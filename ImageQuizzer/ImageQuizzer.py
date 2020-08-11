@@ -144,12 +144,12 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         btnGetDBLocation.connect('clicked(bool)', self.onApplyQuizzerDataLocation)
         qDBGrpBoxLayout.addWidget(btnGetDBLocation)
  
-        self.qLblDBLocation = qt.QLabel('Selected data location')
-        qUserLoginLayout.addWidget(self.qLblDBLocation)
+        self.qLblDataLocation = qt.QLabel('Selected data location:')
+        qUserLoginLayout.addWidget(self.qLblDataLocation)
 
         
         # Add vertical spacer
-        qUserLoginLayout.addSpacing(20)
+        qUserLoginLayout.addSpacing(10)
         
         
         
@@ -175,10 +175,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.comboGetUserName = qt.QComboBox()
         self.comboGetUserName.setEditable(True)
         self.comboGetUserName.addItem('?') # default to special character to force user entry
-        
-#         sUserSubfolders = [ f.name for f in os.scandir(self.oFilesIO.GetUserDir()) if f.is_dir() ]
-#         for sUserName in list(sUserSubfolders):
-#             self.comboGetUserName.addItem(sUserName)
         
         self.comboGetUserName.currentTextChanged.connect(self.onUserComboboxChanged)
         self.qUserGrpBoxLayout.addWidget(self.comboGetUserName)
@@ -217,7 +213,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
  
  
         self.btnLaunchStudy = qt.QPushButton("Begin")
-#         self.btnLaunchStudy.setEnabled(False)
         self.btnLaunchStudy.connect('clicked(bool)', self.onApplyLaunchQuiz)
         self.qLaunchGrpBoxLayout.addWidget(self.btnLaunchStudy)
          
@@ -229,22 +224,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         # capture selected user name
         self.oFilesIO.SetUsername(self.comboGetUserName.currentText)
         
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#      
-#     def onApplyUseDefaultDB(self):
-#         
-#         # assign default DB location (captured on initialization)
-#         self.oFilesIO.SetDatabaseDir(self.oFilesIO.GetDefaultDatabaseDir())
-# 
-#         # complete the setup for the user's name and quiz selection
-#         self.CompleteDBAndUserSetup()
-#        
-#         ##### for debug... #####
-#         self.oFilesIO.PrintDirLocations()
-#         ########################
-# 
-#         self.qUserLoginWidget.raise_()
-      
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def onApplyQuizzerDataLocation(self):
@@ -257,6 +236,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         self.oFilesIO.SetupUserAndDataDirs(sDataLocation)
         
+        self.qLblDataLocation.setText(self.oFilesIO.GetDataParentDir())
         
         sUserSubfolders = [ f.name for f in os.scandir(self.oFilesIO.GetUsersParentDir()) if f.is_dir() ]
         for sUserName in list(sUserSubfolders):
@@ -274,37 +254,15 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         
         # if not populated, display warning message to have admin do this
-        sMsg = 'Database does not have pre-stored images. Continue?'
+        sMsg = 'Database does not have pre-stored images. \nQuiz will import images (progress may be slower).\nContinue?'
         qtAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
-        if qtAns == qt.QMessageBox.Yes:
-            self.oUtilsMsgs.DisplayWarning('Quiz will import images (progress may be slower).')
-        else:
+        if qtAns == qt.QMessageBox.No:
             self.oUtilsMsgs.DisplayError('Contact administrator to preload images into database.')
             slicer.util.exit(status=EXIT_SUCCESS)
-
         
         self.qUserLoginWidget.raise_()
         
         
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#         
-#     def CompleteDBAndUserSetup(self):
-# 
-#         self.qLblDataLocation.setText(self.oFilesIO.GetDataParentDir())
-#         
-#         self.oFilesIO.SetDICOMDatabaseDir(self.oFilesIO.GetDataParentDir() + '\SlicerDICOMDatabase')
-#         
-#         self.oFilesIO.SetUserDir(self.oFilesIO.GetDataParentDir() + 'Users')
-# 
-#         
-#         self.oFilesIO.SetUserDir(self.oFilesIO.GetDatabaseParentDir())
-#         sUserSubfolders = [ f.name for f in os.scandir(self.oFilesIO.GetUserDir()) if f.is_dir() ]
-#         for sUserName in list(sUserSubfolders):
-#             self.comboGetUserName.addItem(sUserName)
-# 
-#         self.qUserGrpBox.setEnabled(True)
-#         
-    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
     def onApplyOpenFile(self):
@@ -339,46 +297,45 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
  
     def onApplyLaunchQuiz(self):
         
-        # confirm username was entered
+        # open the database - if not successful, allow user to reselect
+        bDBSetupSuccess, sMsg = self.oFilesIO.OpenSelectedDatabase()
 
-        if (self.comboGetUserName.currentText == '' or self.comboGetUserName.currentText == '?' or "?" in self.comboGetUserName.currentText):
-            sMsg = 'No user or invalid name was entered'
+        if not bDBSetupSuccess:
             self.oUtilsMsgs.DisplayWarning(sMsg)
             self.qUserLoginWidget.raise_()
 
-            # open the database - if not successful, allow user to reselect
-            bDBSetupSuccess, sMsg = self.oFilesIO.OpenSelectedDatabase()
-
-            if not bDBSetupSuccess:
+        else:
+            
+            # confirm username was entered
+            if (self.comboGetUserName.currentText == '' or self.comboGetUserName.currentText == '?' or "?" in self.comboGetUserName.currentText):
+                sMsg = 'No user or invalid name was entered'
                 self.oUtilsMsgs.DisplayWarning(sMsg)
                 self.qUserLoginWidget.raise_()
-                
-                 
-            
-        else:
-
-            ##### for debug... #####
-            self.oFilesIO.PrintDirLocations()
-            ########################
-
-            # create user folder if it doesn't exist
-            self.oFilesIO.SetUserDir()
-
-            # copy file from Resource into user folder
-            if self.oFilesIO.PopulateUserQuizFolder(): # success
-
-                # start the session
-                oSession = Session()
-                oSession.RunSetup(self.oFilesIO, self.slicerMainLayout)
-
-                
-                try:
-                    #provide as much room as possible for the quiz
-                    qDataProbeCollapsibleButton = slicer.util.mainWindow().findChild("QWidget","DataProbeCollapsibleWidget")
-                    qDataProbeCollapsibleButton.collapsed = True
-                    self.reloadCollapsibleButton.collapsed = True
-                except:
-                    pass
+    
+            else:
+    
+                ##### for debug... #####
+                self.oFilesIO.PrintDirLocations()
+                ########################
+    
+                # create user folder if it doesn't exist
+                self.oFilesIO.SetUserDir()
+    
+                # copy file from Resource into user folder
+                if self.oFilesIO.PopulateUserQuizFolder(): # success
+    
+                    # start the session
+                    oSession = Session()
+                    oSession.RunSetup(self.oFilesIO, self.slicerMainLayout)
+    
+                    
+                    try:
+                        #provide as much room as possible for the quiz
+                        qDataProbeCollapsibleButton = slicer.util.mainWindow().findChild("QWidget","DataProbeCollapsibleWidget")
+                        qDataProbeCollapsibleButton.collapsed = True
+                        self.reloadCollapsibleButton.collapsed = True
+                    except:
+                        pass
                 
 #########################################################
 #    NOTE: This would be good if I could load these buttons onto the 
