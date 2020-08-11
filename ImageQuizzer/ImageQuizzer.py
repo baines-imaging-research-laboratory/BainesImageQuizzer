@@ -57,8 +57,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.oFilesIO.SetModuleDirs(sModuleName, sSourceDirForQuiz)
 #         self.oFilesIO.SetUserDir()
 
-        # capture Slicer's default database location
-        self.oFilesIO.SetDefaultDatabaseDir(slicer.dicomDatabase.databaseDirectory)
+#         # capture Slicer's default database location
+#         self.oFilesIO.SetDefaultDatabaseDir(slicer.dicomDatabase.databaseDirectory)
         
         
         self.slicerMainLayout = self.layout
@@ -122,29 +122,29 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         qUserLoginLayout.addSpacing(20)
 
         qDBGrpBox = qt.QGroupBox()
-        qDBGrpBox.setTitle('1. Select database location')
-        qDBGrpBoxLayout = qt.QHBoxLayout()
+        qDBGrpBox.setTitle('1. Select data location')
+        qDBGrpBoxLayout = qt.QVBoxLayout()
         qDBGrpBox.setLayout(qDBGrpBoxLayout)
 
         qUserLoginLayout.addWidget(qDBGrpBox)
 
-        btnUseDefaultDB = qt.QPushButton("Use default database location")
-        btnUseDefaultDB.setEnabled(True)
-        btnUseDefaultDB.toolTip = "Slicer's default database location will be used."
-        btnUseDefaultDB.connect('clicked(bool)', self.onApplyUseDefaultDB)
-        qDBGrpBoxLayout.addWidget(btnUseDefaultDB)
+#         btnUseDefaultDB = qt.QPushButton("Use default database location")
+#         btnUseDefaultDB.setEnabled(True)
+#         btnUseDefaultDB.toolTip = "Slicer's default database location will be used."
+#         btnUseDefaultDB.connect('clicked(bool)', self.onApplyUseDefaultDB)
+#         qDBGrpBoxLayout.addWidget(btnUseDefaultDB)
+# 
+#         
+#         qDBGrpBoxLayout.addSpacing(10)
 
         
-        qDBGrpBoxLayout.addSpacing(10)
-
-        
-        btnGetDBLocation = qt.QPushButton("Define custom database location")
+        btnGetDBLocation = qt.QPushButton("Define location for Image Quizzer data")
         btnGetDBLocation.setEnabled(True)
-        btnGetDBLocation.toolTip = "Select folder containing images database."
-        btnGetDBLocation.connect('clicked(bool)', self.onApplyCustomDBLocation)
+        btnGetDBLocation.toolTip = "Select folder for Image Quizzer data."
+        btnGetDBLocation.connect('clicked(bool)', self.onApplyQuizzerDataLocation)
         qDBGrpBoxLayout.addWidget(btnGetDBLocation)
  
-        self.qLblDBLocation = qt.QLabel('Selected database')
+        self.qLblDBLocation = qt.QLabel('Selected data location')
         qUserLoginLayout.addWidget(self.qLblDBLocation)
 
         
@@ -227,40 +227,46 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
     def onUserComboboxChanged(self):
         
         # capture selected user name
-        self.oFilesIO.SetQuizUsername(self.comboGetUserName.currentText)
+        self.oFilesIO.SetUsername(self.comboGetUserName.currentText)
         
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     
-    def onApplyUseDefaultDB(self):
-        
-        # assign default DB location (captured on initialization)
-        self.oFilesIO.SetDatabaseDir(self.oFilesIO.GetDefaultDatabaseDir())
-
-        # complete the setup for the user's name and quiz selection
-        self.CompleteDBAndUserSetup()
-       
-        ##### for debug... #####
-        self.oFilesIO.PrintDirLocations()
-        ########################
-
-        self.qUserLoginWidget.raise_()
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#      
+#     def onApplyUseDefaultDB(self):
+#         
+#         # assign default DB location (captured on initialization)
+#         self.oFilesIO.SetDatabaseDir(self.oFilesIO.GetDefaultDatabaseDir())
+# 
+#         # complete the setup for the user's name and quiz selection
+#         self.CompleteDBAndUserSetup()
+#        
+#         ##### for debug... #####
+#         self.oFilesIO.PrintDirLocations()
+#         ########################
+# 
+#         self.qUserLoginWidget.raise_()
       
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def onApplyCustomDBLocation(self):
+    def onApplyQuizzerDataLocation(self):
         
         # File Picker
         self.qDBLocationFileDialog = qt.QFileDialog()
         sDefaultWorkingDir = os.path.expanduser('~\Documents')
-        sDBLocation = self.qDBLocationFileDialog.getExistingDirectory(None, "Select Directory", sDefaultWorkingDir, qt.QFileDialog.ShowDirsOnly )
+        sDataLocation = self.qDBLocationFileDialog.getExistingDirectory(None, "Select Directory", sDefaultWorkingDir, qt.QFileDialog.ShowDirsOnly )
         
         
-        # assign DB location to IO class
-        self.oFilesIO.SetDatabaseDir(sDBLocation)
+        self.oFilesIO.SetupUserAndDataDirs(sDataLocation)
         
+        
+        sUserSubfolders = [ f.name for f in os.scandir(self.oFilesIO.GetUsersParentDir()) if f.is_dir() ]
+        for sUserName in list(sUserSubfolders):
+            self.comboGetUserName.addItem(sUserName)
+
+        self.qUserGrpBox.setEnabled(True)
+
         
         ##### for debug... #####
-        print('Setup custom DICOM DB')
+        print('Setup data folders')
         self.oFilesIO.PrintDirLocations()
         ########################
         
@@ -276,26 +282,28 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             self.oUtilsMsgs.DisplayError('Contact administrator to preload images into database.')
             slicer.util.exit(status=EXIT_SUCCESS)
 
-        # complete the setup for the user's name and quiz selection
-        self.CompleteDBAndUserSetup()
         
         self.qUserLoginWidget.raise_()
         
         
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        
-    def CompleteDBAndUserSetup(self):
-
-        self.qLblDBLocation.setText(self.oFilesIO.GetDatabaseDir())
-
-        
-        self.oFilesIO.SetUserDir(self.oFilesIO.GetDatabaseParentDir())
-        sUserSubfolders = [ f.name for f in os.scandir(self.oFilesIO.GetUserDir()) if f.is_dir() ]
-        for sUserName in list(sUserSubfolders):
-            self.comboGetUserName.addItem(sUserName)
-
-        self.qUserGrpBox.setEnabled(True)
-        
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#         
+#     def CompleteDBAndUserSetup(self):
+# 
+#         self.qLblDataLocation.setText(self.oFilesIO.GetDataParentDir())
+#         
+#         self.oFilesIO.SetDICOMDatabaseDir(self.oFilesIO.GetDataParentDir() + '\SlicerDICOMDatabase')
+#         
+#         self.oFilesIO.SetUserDir(self.oFilesIO.GetDataParentDir() + 'Users')
+# 
+#         
+#         self.oFilesIO.SetUserDir(self.oFilesIO.GetDatabaseParentDir())
+#         sUserSubfolders = [ f.name for f in os.scandir(self.oFilesIO.GetUserDir()) if f.is_dir() ]
+#         for sUserName in list(sUserSubfolders):
+#             self.comboGetUserName.addItem(sUserName)
+# 
+#         self.qUserGrpBox.setEnabled(True)
+#         
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
@@ -354,7 +362,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             ########################
 
             # create user folder if it doesn't exist
-            self.oFilesIO.SetUserDir(self.oFilesIO.GetDatabaseParentDir())
+            self.oFilesIO.SetUserDir()
 
             # copy file from Resource into user folder
             if self.oFilesIO.PopulateUserQuizFolder(): # success

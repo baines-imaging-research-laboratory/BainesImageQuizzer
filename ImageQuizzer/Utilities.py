@@ -416,18 +416,21 @@ class UtilsIO:
         self._sScriptedModulesPath = '' # location of quizzer module project
 
         self._sXmlResourcesDir = '' # folder - holds XML quiz files to copy to user
-        self._sUsersBaseDir = ''    # folder - parent dir to all user folders
+        self._sDataParentDir = ''   # parent folder to images, DICOM database and users folders
+        
+        self._sUsersParentDir = ''    # folder - parent dir to all user folders
+        self._sUsername = ''    # name of user taking the quiz
         self._sUserDir = ''         # folder - holds quiz for specific user
 
         self._sQuizFilename = ''    # quiz filename only (no dir)
-        self._sQuizUsername = ''    # name of user taking the quiz
 
         self._sResourcesQuizPath = ''   # full path (dir/file) of quiz to copy to user
         self._sUserQuizPath = ''        # full path (dir/file) for user's quiz
 
-        self._sDefaultDatabaseDir = ''
-        self._sDatabaseDir = ''
-        self._sDatabaseParentDir = ''
+#         self._sDefaultDatabaseDir = ''
+        self._sDICOMDatabaseDir = ''
+        self._sImageVolumeDataDir = ''
+#         self._sDatabaseParentDir = ''
 
 
     def setup(self):
@@ -437,23 +440,27 @@ class UtilsIO:
     #        Getters / Setters
     #-------------------------------------------
     
-    def SetDatabaseDir(self, sDBInput):
-        # user has option to define where the images database is located
-        # Especially used for encrypted external drive
-        self._sDatabaseDir = sDBInput
-
+    def SetDataParentDir(self, sDataDirInput):
+        self._sDataParentDir = sDataDirInput
         
-        # store parent folder
-        self._sDatabaseParentDir = os.path.abspath(os.path.join(self._sDatabaseDir, os.pardir))
         
-        # to accomodate running a quiz using an external hard drive, 
-        # set up the user's results files in a folder on this drive as well
-        self.SetUserDir(self._sDatabaseParentDir)
-        
+#     #----------
+#     def SetDICOMDatabaseDir(self, sDataParentInput):
+#         # user has option to define where the images database is located
+#         # Especially used for encrypted external drive
+#         self._sDICOMDatabaseDir = sDataParentInput + '\SlicerDICOMDatabase'
+# 
+#         
+# #         # store parent folder
+# #         self._sDatabaseParentDir = os.path.abspath(os.path.join(self._sDICOMDatabaseDir, os.pardir))
+#         
+#         # to accomodate running a quiz using an external hard drive, 
+#         # set up the user's results files in a folder on this drive as well
+#         self.SetUserDir(self._sDataParentDir)
+#         
     
-    #----------
-    def SetDefaultDatabaseDir(self, sDBDefaultInput):
-        self._sDefaultDatabaseDir = sDBDefaultInput
+#     def SetDefaultDICOMDatabaseDir(self, sDBDefaultInput):
+#         self._sDefaultDICOMDatabaseDir = sDBDefaultInput
 
     #----------
     def SetResourcesQuizPath(self, sSelectedQuiz):
@@ -461,12 +468,12 @@ class UtilsIO:
         self._sResourcesQuizPath = os.path.join(self._sXmlResourcesDir, sSelectedQuiz)
         
     #----------
-    def SetQuizUsername(self, sSelectedUser):
-        self._sQuizUsername = sSelectedUser
+    def SetUsername(self, sSelectedUser):
+        self._sUsername = sSelectedUser
         
     #----------
 #     def SetUserDir(self):
-#         self._sUserDir = os.path.join(self._sUsersBaseDir, self._sQuizUsername)
+#         self._sUserDir = os.path.join(self._sUsersParentDir, self._sQuizUsername)
 # 
 #         # check that the user folder exists - if not, create it
 #         if not os.path.exists(self._sUserDir):
@@ -483,33 +490,51 @@ class UtilsIO:
         self._sScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
         self._sScriptedModulesPath = os.path.dirname(self._sScriptedModulesPath)
         self._sXmlResourcesDir = os.path.join(self._sScriptedModulesPath, sSourceDirForQuiz)
-#         self._sUsersBaseDir = os.path.join(self._sScriptedModulesPath, 'ImageQuizzerUsers')
+#         self._sUsersParentDir = os.path.join(self._sScriptedModulesPath, 'ImageQuizzerUsers')
 
     
     #----------
-    def SetUserDir(self, sBaseDirInput):
+    def SetUserDir(self):
         
-        self._sUsersBaseDir = os.path.join(sBaseDirInput, 'ImageQuizzerUsers')
-
-        self._sUserDir = os.path.join(self._sUsersBaseDir, self._sQuizUsername)
+        self._sUserDir = os.path.join(self._sUsersParentDir, self._sUsername)
 
         # check that the user folder exists - if not, create it
         if not os.path.exists(self._sUserDir):
             os.makedirs(self._sUserDir)
         
-        
-    #----------
-    def GetDatabaseDir(self):
-        return self._sDatabaseDir
     
     #----------
-    def GetDefaultDatabaseDir(self):
-        return self._sDefaultDatabaseDir
+    def SetupUserAndDataDirs(self, sParentDirInput):    
+        self._sDataParentDir = sParentDirInput
+        self._sDICOMDatabaseDir = os.path.join(sParentDirInput, 'SlicerDICOMDatabase')
+        self._sUsersParentDir = os.path.join(sParentDirInput, 'Users')
+        self._sImageVolumeDataDir = os.path.join(sParentDirInput, 'ImageVolumes')
+    
+    
     
     #----------
-    def GetDatabaseParentDir(self):
-        return self._sDatabaseParentDir
+    #----------
+    #----------
+    def GetDataParentDir(self):
+        return self._sDataParentDir
+
+    #----------
+    def GetDICOMDatabaseDir(self):
+        return self._sDICOMDatabaseDir
     
+    #----------
+    def GetImageVolumeDataDir(self):
+        return self._sImageVolumeDataDir
+
+
+
+#     def GetDefaultDatabaseDir(self):
+#         return self._sDefaultDatabaseDir
+    
+#     #----------
+#     def GetDatabaseParentDir(self):
+#         return self._sDatabaseParentDir
+#     
     #----------
     def GetScriptedModulesPath(self):
         return self._sScriptedModulesPath
@@ -519,17 +544,19 @@ class UtilsIO:
         return self._sResourcesQuizPath
     
     #----------
-    def GetQuizUsername(self):
-        return self._sQuizUsername
+    def GetUsername(self):
+        return self._sUsername
 
-    #----------
-    def GetUsersBaseDir(self):
-        return self._sUsersBaseDir
-    
+#     #----------
+#     def GetUsersParentDir(self):
+#         return self._sUsersParentDir
+#     
     #----------
     def GetUserDir(self):
         return self._sUserDir
-    
+
+    def GetUsersParentDir(self):
+        return self._sUsersParentDir    
     #----------
     def GetUserQuizPath(self):
         return self._sUserQuizPath
@@ -540,8 +567,10 @@ class UtilsIO:
     
     #----------
     def PrintDirLocations(self):
-        print('DB dir: ', self.GetDatabaseDir())
-        print('User base dir:', self.GetUsersBaseDir())
+        print('Data parent dir:', self.GetDataParentDir())
+        print('Image Volume Data', self.GetImageVolumeDataDir())
+        print('DICOM DB dir: ', self.GetDICOMDatabaseDir())
+        print('User parent dir', self.GetUsersParentDir())
         print('User dir:', self.GetUserDir())
         print('User Quiz path: ', self.GetUserQuizPath())
         
@@ -555,7 +584,7 @@ class UtilsIO:
         
         sMsg = ''
         try:
-            DICOMUtils.openDatabase(self._sDatabaseDir)
+            DICOMUtils.openDatabase(self._sDICOMDatabaseDir)
             return True, sMsg
         
         except:

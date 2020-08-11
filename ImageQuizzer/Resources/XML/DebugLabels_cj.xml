@@ -16,9 +16,9 @@
 			<Orientation>Coronal</Orientation>
 			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-		<QuestionSet id="QS-Checkup" title="THow is it going?" segmentrequired="y"  allowmultipleresponse="n">
+		<QuestionSet id="QS-Checkup" title="How is it going?" segmentrequired="y"  allowmultipleresponse="n">
 			<Question type="Checkbox" descriptor="Project general health">
-				<Option>Found the bug.</Option>
+				<Option>Found a bug.</Option>
 				<Option>Keep looking...</Option>
 			</Question>
 		</QuestionSet>

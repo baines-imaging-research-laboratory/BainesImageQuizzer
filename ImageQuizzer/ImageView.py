@@ -326,6 +326,10 @@ class ImageView:
             slLabelMapPlugin = slicer.qSlicerSubjectHierarchyLabelMapsPlugin()
             slLabelMapPlugin.setDisplayVisibility(iLabelMapSubjectHierarchyId, iOnOff)
 
+        # clean up memory leaks
+        #    getting a node by ID (slSegDisplayNode) doesn't seem to cause a memory leak
+        #    getting nodes by class does create a memory leak so you have to unregister it!
+        lLabelMapNodes.UnRegister(slicer.mrmlScene)
     
 ##########################################################################
 #
