@@ -55,7 +55,11 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.oUtilsMsgs = UtilsMsgs()
         self.oFilesIO = UtilsIO()
         self.oFilesIO.SetModuleDirs(sModuleName, sSourceDirForQuiz)
-        self.oFilesIO.SetUserDir()
+#         self.oFilesIO.SetUserDir()
+
+        # capture Slicer's default database location
+        self.oFilesIO.SetDefaultDatabaseDir(slicer.dicomDatabase.databaseDirectory)
+        
         
         self.slicerMainLayout = self.layout
         
@@ -110,43 +114,91 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         qUserStudyWidgetTitle = qt.QLabel('Baines Image Quizzer - User Login')
         qUserLoginLayout.addWidget(qUserStudyWidgetTitle)
          
+        ################################
+        # Get Database location
+        ################################
+        
+        
+        qUserLoginLayout.addSpacing(20)
+
+        qDBGrpBox = qt.QGroupBox()
+        qDBGrpBox.setTitle('1. Select database location')
+        qDBGrpBoxLayout = qt.QHBoxLayout()
+        qDBGrpBox.setLayout(qDBGrpBoxLayout)
+
+        qUserLoginLayout.addWidget(qDBGrpBox)
+
+        btnUseDefaultDB = qt.QPushButton("Use default database location")
+        btnUseDefaultDB.setEnabled(True)
+        btnUseDefaultDB.toolTip = "Slicer's default database location will be used."
+        btnUseDefaultDB.connect('clicked(bool)', self.onApplyUseDefaultDB)
+        qDBGrpBoxLayout.addWidget(btnUseDefaultDB)
+
+        
+        qDBGrpBoxLayout.addSpacing(10)
+
+        
+        btnGetDBLocation = qt.QPushButton("Define custom database location")
+        btnGetDBLocation.setEnabled(True)
+        btnGetDBLocation.toolTip = "Select folder containing images database."
+        btnGetDBLocation.connect('clicked(bool)', self.onApplyCustomDBLocation)
+        qDBGrpBoxLayout.addWidget(btnGetDBLocation)
+ 
+        self.qLblDBLocation = qt.QLabel('Selected database')
+        qUserLoginLayout.addWidget(self.qLblDBLocation)
+
+        
+        # Add vertical spacer
+        qUserLoginLayout.addSpacing(20)
+        
+        
         
         ################################
         # Get/Create User folder
         ################################
 
         qUserLoginLayout.addSpacing(10) # Add vertical spacer
-        qUserComboLabel = qt.QLabel('Select user name. If not shown, enter new name.')
-        qUserLoginLayout.addWidget(qUserComboLabel)
+
+        self.qUserGrpBox = qt.QGroupBox()
+        self.qUserGrpBox.setTitle('2. Enter / select user name')
+        self.qUserGrpBoxLayout = qt.QVBoxLayout()
+        self.qUserGrpBox.setLayout(self.qUserGrpBoxLayout)
+        self.qUserGrpBox.setEnabled(False)
+
+        qUserLoginLayout.addWidget(self.qUserGrpBox)
+
+        
+        qUserComboLabel = qt.QLabel('Use drop down. If not shown, replace ? with your name.')
+        self.qUserGrpBoxLayout.addWidget(qUserComboLabel)
         
 
         self.comboGetUserName = qt.QComboBox()
         self.comboGetUserName.setEditable(True)
         self.comboGetUserName.addItem('?') # default to special character to force user entry
         
-        sUserSubfolders = [ f.name for f in os.scandir(self.oFilesIO.GetUserDir()) if f.is_dir() ]
-        for sUserName in list(sUserSubfolders):
-            self.comboGetUserName.addItem(sUserName)
+#         sUserSubfolders = [ f.name for f in os.scandir(self.oFilesIO.GetUserDir()) if f.is_dir() ]
+#         for sUserName in list(sUserSubfolders):
+#             self.comboGetUserName.addItem(sUserName)
         
         self.comboGetUserName.currentTextChanged.connect(self.onUserComboboxChanged)
-        qUserLoginLayout.addWidget(self.comboGetUserName)
+        self.qUserGrpBoxLayout.addWidget(self.comboGetUserName)
 
         
         # Add vertical spacer
-        qUserLoginLayout.addSpacing(20)
+        self.qUserGrpBoxLayout.addSpacing(10)
          
         ################################
         # Get study button
         ################################
         # File Picker
-        self.btnGetUserStudy = qt.QPushButton("Select Quiz")
+        self.btnGetUserStudy = qt.QPushButton("Select quiz:")
         self.btnGetUserStudy.setEnabled(True)
         self.btnGetUserStudy.toolTip = "Select Quiz xml file for launch "
         self.btnGetUserStudy.connect('clicked(bool)', self.onApplyOpenFile)
-        qUserLoginLayout.addWidget(self.btnGetUserStudy)
+        self.qUserGrpBoxLayout.addWidget(self.btnGetUserStudy)
  
         self.qLblQuizFilename = qt.QLabel('Selected quiz filename')
-        qUserLoginLayout.addWidget(self.qLblQuizFilename)
+        self.qUserGrpBoxLayout.addWidget(self.qLblQuizFilename)
          
         # Add vertical spacer
         qUserLoginLayout.addSpacing(20)
@@ -154,11 +206,20 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         ################################
         # Launch study button (not enabled until study is picked)
         ################################
+        
+        self.qLaunchGrpBox = qt.QGroupBox()
+        self.qLaunchGrpBox.setTitle('3. Launch Quiz')
+        self.qLaunchGrpBoxLayout = qt.QHBoxLayout()
+        self.qLaunchGrpBox.setLayout(self.qLaunchGrpBoxLayout)
+        self.qLaunchGrpBox.setEnabled(False)
+
+        qUserLoginLayout.addWidget(self.qLaunchGrpBox)
  
-        self.btnLaunchStudy = qt.QPushButton("Launch Quiz")
-        self.btnLaunchStudy.setEnabled(False)
+ 
+        self.btnLaunchStudy = qt.QPushButton("Begin")
+#         self.btnLaunchStudy.setEnabled(False)
         self.btnLaunchStudy.connect('clicked(bool)', self.onApplyLaunchQuiz)
-        qUserLoginLayout.addWidget(self.btnLaunchStudy)
+        self.qLaunchGrpBoxLayout.addWidget(self.btnLaunchStudy)
          
          
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -167,13 +228,82 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         # capture selected user name
         self.oFilesIO.SetQuizUsername(self.comboGetUserName.currentText)
-     
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      
+    def onApplyUseDefaultDB(self):
+        
+        # assign default DB location (captured on initialization)
+        self.oFilesIO.SetDatabaseDir(self.oFilesIO.GetDefaultDatabaseDir())
+
+        # complete the setup for the user's name and quiz selection
+        self.CompleteDBAndUserSetup()
+       
+        ##### for debug... #####
+        self.oFilesIO.PrintDirLocations()
+        ########################
+
+        self.qUserLoginWidget.raise_()
+      
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    def onApplyCustomDBLocation(self):
+        
+        # File Picker
+        self.qDBLocationFileDialog = qt.QFileDialog()
+        sDefaultWorkingDir = os.path.expanduser('~\Documents')
+        sDBLocation = self.qDBLocationFileDialog.getExistingDirectory(None, "Select Directory", sDefaultWorkingDir, qt.QFileDialog.ShowDirsOnly )
+        
+        
+        # assign DB location to IO class
+        self.oFilesIO.SetDatabaseDir(sDBLocation)
+        
+        
+        ##### for debug... #####
+        print('Setup custom DICOM DB')
+        self.oFilesIO.PrintDirLocations()
+        ########################
+        
+        # confirm db is populated
+        
+        
+        # if not populated, display warning message to have admin do this
+        sMsg = 'Database does not have pre-stored images. Continue?'
+        qtAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
+        if qtAns == qt.QMessageBox.Yes:
+            self.oUtilsMsgs.DisplayWarning('Quiz will import images (progress may be slower).')
+        else:
+            self.oUtilsMsgs.DisplayError('Contact administrator to preload images into database.')
+            slicer.util.exit(status=EXIT_SUCCESS)
+
+        # complete the setup for the user's name and quiz selection
+        self.CompleteDBAndUserSetup()
+        
+        self.qUserLoginWidget.raise_()
+        
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+    def CompleteDBAndUserSetup(self):
+
+        self.qLblDBLocation.setText(self.oFilesIO.GetDatabaseDir())
+
+        
+        self.oFilesIO.SetUserDir(self.oFilesIO.GetDatabaseParentDir())
+        sUserSubfolders = [ f.name for f in os.scandir(self.oFilesIO.GetUserDir()) if f.is_dir() ]
+        for sUserName in list(sUserSubfolders):
+            self.comboGetUserName.addItem(sUserName)
+
+        self.qUserGrpBox.setEnabled(True)
+        
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
     def onApplyOpenFile(self):
         
         # set to default
-        self.btnLaunchStudy.setEnabled(False)
+#         self.btnLaunchStudy.setEnabled(False)
+        self.qLaunchGrpBox.setEnabled(True)
         self.qLblQuizFilename.text = ""
  
         # get quiz filename
@@ -189,7 +319,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         else:
             # enable the launch button
             self.qLblQuizFilename.setText(sSelectedQuiz)
-            self.btnLaunchStudy.setEnabled(True)
+#             self.btnLaunchStudy.setEnabled(True)
+            self.qLaunchGrpBox.setEnabled(True)
             self.qUserLoginWidget.show()
             self.qUserLoginWidget.activateWindow()
             
@@ -201,15 +332,30 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
     def onApplyLaunchQuiz(self):
         
         # confirm username was entered
-        
-        if (self.comboGetUserName.currentText == '' or self.comboGetUserName.currentText == '?'):
-            sMsg = 'No user name was entered'
+
+        if (self.comboGetUserName.currentText == '' or self.comboGetUserName.currentText == '?' or "?" in self.comboGetUserName.currentText):
+            sMsg = 'No user or invalid name was entered'
             self.oUtilsMsgs.DisplayWarning(sMsg)
             self.qUserLoginWidget.raise_()
+
+            # open the database - if not successful, allow user to reselect
+            bDBSetupSuccess, sMsg = self.oFilesIO.OpenSelectedDatabase()
+
+            if not bDBSetupSuccess:
+                self.oUtilsMsgs.DisplayWarning(sMsg)
+                self.qUserLoginWidget.raise_()
+                
+                 
             
         else:
-            print(self.oFilesIO.GetQuizUsername())
-            
+
+            ##### for debug... #####
+            self.oFilesIO.PrintDirLocations()
+            ########################
+
+            # create user folder if it doesn't exist
+            self.oFilesIO.SetUserDir(self.oFilesIO.GetDatabaseParentDir())
+
             # copy file from Resource into user folder
             if self.oFilesIO.PopulateUserQuizFolder(): # success
 
