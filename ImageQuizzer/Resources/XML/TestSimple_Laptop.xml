@@ -4,22 +4,22 @@
 		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Red">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
 		<Image descriptor="Brain MR" destination="Red" format="nrrd" type="Volume">
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nrrd</Path>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
 		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Yellow">
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
 		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Green">
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
 		<QuestionSet id="QS-Intro" title="Introduction to Quiz"  segmentrequired="n" allowmultipleresponse="n">
 			<Question type="InfoBox" descriptor="Introduction">
@@ -39,17 +39,17 @@
 		<Image format="nii" type="Volume" descriptor="Moving Volume" destination="Red">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nii</Path>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nii</Path>
 		</Image>
 		<Image format="nii" type="Volume" descriptor="Moving Volume" destination="Yellow">
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nii</Path>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nii</Path>
 		</Image>
 		<Image format="nii" type="Volume" descriptor="Moving Volume" destination="Green">
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nii</Path>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nii</Path>
 		</Image>
 		<QuestionSet id="QS-Observation" title="What is your Assessment"  segmentrequired="y"  allowmultipleresponse="y">
 			<Question type="Radio" descriptor="Assessment">
@@ -76,21 +76,21 @@
 		<Image format="nrrd" type="Volume"  descriptor="Brain CT" destination="Red">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
 		<Image format="nrrd" type="Volume" descriptor="Brain MR" destination="Green">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nrrd</Path>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
 		<Image format="mhd" type="Volume" descriptor="Case00Prostate" destination="Yellow">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Prostate\Case00.mhd</Path>
+			<Path>ImageVolumes\Prostate\Case00.mhd</Path>
 		</Image>
 		<Image format="mhd" type="Labelmap" descriptor="Case00Prostate Segmentation" destination="Yellow">
 			<Layer>Label</Layer>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Prostate\Case00_segmentation.mhd</Path>
+			<Path>ImageVolumes\Prostate\Case00_segmentation.mhd</Path>
 		</Image>
 		<QuestionSet id="QS-Demo" title="Demo buttons" segmentrequired="y"  allowmultipleresponse="y">
 			<Question type="Checkbox"  descriptor="Demo Checks">
@@ -108,19 +108,19 @@
 		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Red">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
 		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Yellow">
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
 		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Green">
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
 		<QuestionSet id="QS-Checkup" title="Tell us how you feel" segmentrequired="n"  allowmultipleresponse="n">
@@ -136,24 +136,24 @@
 		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Red">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
 		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Yellow">
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
 		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Green">
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
 		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Red">
 			<Layer>Segmentation</Layer>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
 			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
 			<ROIs roiVisibilityCode="Select">
@@ -163,7 +163,7 @@
 		</Image>
 		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Yellow">
 			<Layer>Segmentation</Layer>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
 			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
 			<ROIs roiVisibilityCode="Select">
@@ -173,7 +173,7 @@
 		</Image>
 		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Green">
 			<Layer>Segmentation</Layer>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
 			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
 			<ROIs roiVisibilityCode="Select">
@@ -193,23 +193,23 @@
 		<Image format="dicom" type="Volume" descriptor="T1W MR" destination="Red">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\000000.dcm</Path>
+			<Path>ImageVolumes\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\000000.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7948263890.5300.3875531536.492</SeriesInstanceUID>
 		</Image>
 		<Image format="dicom" type="Volume" descriptor="T2W MR" destination="Yellow">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\000000.dcm</Path>
+			<Path>ImageVolumes\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\000000.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.8006916558.3791.7149983690.261</SeriesInstanceUID>
 		</Image>
 		<Image format="nrrd" type="Volume" descriptor="DWI" destination="Green">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\BrainDWI\dwi.nrrd</Path>
+			<Path>ImageVolumes\BrainDWI\dwi.nrrd</Path>
 		</Image>
 		<Image format="dicom" type="RTStruct" descriptor="Seg T2W" destination="Yellow">
 			<Layer>Segmentation</Layer>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\RT Struct.dcm</Path>
+			<Path>ImageVolumes\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\RT Struct.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7830722178.5575.6291913264.331</SeriesInstanceUID>
 			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.8006916558.3791.7149983690.261</RefSeriesInstanceUID>
 			<ROIs roiVisibilityCode="Select">
@@ -218,7 +218,7 @@
 		</Image>
 		<Image format="dicom" type="RTStruct" descriptor="Seg T1W" destination="Red">
 			<Layer>Segmentation</Layer>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\RT Struct.dcm</Path>
+			<Path>ImageVolumes\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\RT Struct.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.4766362084.1716.2453053177.382</SeriesInstanceUID>
 			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7948263890.5300.3875531536.492</RefSeriesInstanceUID>
 			<ROIs roiVisibilityCode="Select">
@@ -227,7 +227,7 @@
 		</Image>
 		<Image format="nrrd" type="Labelmap" descriptor="" destination="Green">
 			<Layer>Label</Layer>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\BrainDWI\Segment_1-label.nrrd</Path>
+			<Path>ImageVolumes\BrainDWI\Segment_1-label.nrrd</Path>
 		</Image>
 		<QuestionSet id="QS-Checkup" title="Your thoughts?" allowmultipleresponse="y">
 			<Question type="Checkbox" descriptor="Milestone checker">

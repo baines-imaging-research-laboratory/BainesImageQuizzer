@@ -4,22 +4,22 @@
 		<Image format="nrrd" type="Volume"  descriptor="Brain CT" destination="Red">
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
 		<Image format="nrrd" type="Volume" descriptor="Brain MR" destination="Green">
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nrrd</Path>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
 		<Image format="mhd" type="Volume" descriptor="Case00Prostate" destination="Yellow">
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Prostate\Case00.mhd</Path>
+			<Path>ImageVolumes\Prostate\Case00.mhd</Path>
 			<State window="4000" level="100"/>
 		</Image>
 		<Image format="mhd" type="Labelmap" descriptor="Case00Prostate Segmentation" destination="Yellow">
 			<Layer>Label</Layer>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Prostate\Case00_segmentation.mhd</Path>
+			<Path>ImageVolumes\Prostate\Case00_segmentation.mhd</Path>
 		</Image>
 		<QuestionSet id="QS-Demo" title="Demo buttons" segmentrequired="y"  allowmultipleresponse="y">
 			<Question type="Checkbox"  descriptor="Demo Checks">
@@ -37,17 +37,17 @@
 		<Image format="nii" type="Volume" descriptor="Moving Volume" destination="Red">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nii</Path>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nii</Path>
 		</Image>
 		<Image format="nii" type="Volume" descriptor="Moving Volume" destination="Yellow">
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nii</Path>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nii</Path>
 		</Image>
 		<Image format="nii" type="Volume" descriptor="Moving Volume" destination="Green">
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
-			<Path>D:\BainesWork\Slicer\SlicerProjectWeek2019\ImageQuizzerProject\ImageQuizzer\Testing\TestData\Brain\ManualRegistrationExample_moving.nii</Path>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nii</Path>
 		</Image>
 		<QuestionSet id="QS-Observation" title="What is your Assessment"  segmentrequired="y"  allowmultipleresponse="y">
 			<Question type="Radio" descriptor="Assessment">
