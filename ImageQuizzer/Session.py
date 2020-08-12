@@ -546,7 +546,7 @@ class Session:
                    
                     
         oImageView = ImageView()
-        oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm)
+        oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self._oFilesIO.GetDataParentDir())
 
         self.UpdateImageViewObjects(oImageView.GetImageViewList())
         self.SetSavedImageState()

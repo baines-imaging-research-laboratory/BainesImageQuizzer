@@ -32,6 +32,8 @@ class ImageView:
         self._loImageViews = []
         self.bLinkViews = False
         
+        self.sParentDataDir = ''
+        
         
     #----------
     def GetImageViewList(self):
@@ -40,11 +42,12 @@ class ImageView:
 
     #-----------------------------------------------
 
-    def RunSetup(self, xPageNode, quizLayout):
+    def RunSetup(self, xPageNode, quizLayout, sParentDataDir):
 
         self.quizLayout = quizLayout
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
+        self.sParentDataDir = sParentDataDir
 
 
         # get name and descriptor
@@ -106,9 +109,9 @@ class ImageView:
                 self.oUtilsMsgs.DisplayError(sErrorMsg)
             
             if (sVolumeFormat == 'dicom'):
-                oImageViewItem = DicomVolumeDetail(self.xImageNodes[indImage], sPageID)
+                oImageViewItem = DicomVolumeDetail(self.xImageNodes[indImage], sPageID, self.sParentDataDir)
             else:
-                oImageViewItem = DataVolumeDetail(self.xImageNodes[indImage], sPageID)
+                oImageViewItem = DataVolumeDetail(self.xImageNodes[indImage], sPageID, self.sParentDataDir)
                 
             bLoadSuccess = oImageViewItem.LoadVolume()
             
@@ -387,7 +390,7 @@ class ViewNodeBase:
 
     #-----------------------------------------------
 
-    def ExtractXMLNodeElements(self):
+    def ExtractXMLNodeElements(self, sParentDataDir):
         
         # Extract path element
         xPathNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Path')
@@ -396,7 +399,7 @@ class ViewNodeBase:
             sWarningMsg = sWarningMsg + self.sNodeName
             self.oUtilsMsgs.DisplayWarning( sWarningMsg )
 
-        self.sImagePath = self.oIOXml.GetDataInNode(xPathNodes[0])
+        self.sImagePath = os.path.join(sParentDataDir, self.oIOXml.GetDataInNode(xPathNodes[0]))
         
         # Extract destination layer (foreground, background, label)
         xLayerNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Layer')
@@ -503,7 +506,7 @@ class ViewNodeBase:
 class DataVolumeDetail(ViewNodeBase):
     
     
-    def __init__(self, xImage, sPageID):
+    def __init__(self, xImage, sPageID, sParentDataDir):
         self.sClassName = type(self).__name__
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
@@ -515,7 +518,7 @@ class DataVolumeDetail(ViewNodeBase):
         self.SetXmlImageElement(xImage)
         self.SetPageID(sPageID)
         self.ExtractImageAttributes()
-        self.ExtractXMLNodeElements()
+        self.ExtractXMLNodeElements(sParentDataDir)
         
 
     #-----------------------------------------------
@@ -585,7 +588,7 @@ class DataVolumeDetail(ViewNodeBase):
 class DicomVolumeDetail(ViewNodeBase):
     
     
-    def __init__(self, xImage, sPageID):
+    def __init__(self, xImage, sPageID, sParentDataDir):
         self.sClassName = type(self).__name__
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
@@ -603,7 +606,7 @@ class DicomVolumeDetail(ViewNodeBase):
         self.SetXmlImageElement(xImage)
         self.SetPageID(sPageID)
         self.ExtractImageAttributes()
-        self.ExtractXMLNodeElements()
+        self.ExtractXMLNodeElements(sParentDataDir)
         
         # specifics for Dicom volumes
         self.ExtractXMLDicomElements()
