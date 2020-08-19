@@ -386,7 +386,7 @@ class ViewNodeBase:
         self.sImageType = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'type')
         self.sDestination = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'destination')
     
-        self.sNodeName =  self.GetPageID() + '_' + self.sNodeDescriptor
+#         self.sNodeName =  self.GetPageID() + '_' + self.sNodeDescriptor
 
     #-----------------------------------------------
 
@@ -400,6 +400,9 @@ class ViewNodeBase:
             self.oUtilsMsgs.DisplayWarning( sWarningMsg )
 
         self.sImagePath = os.path.join(sParentDataDir, self.oIOXml.GetDataInNode(xPathNodes[0]))
+        sFilename_w_ext = os.path.basename(self.sImagePath)
+        sFilename, sFileExt = os.path.splitext(sFilename_w_ext)
+        self.sNodeName =  sFilename
         
         # Extract destination layer (foreground, background, label)
         xLayerNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Layer')
@@ -410,7 +413,7 @@ class ViewNodeBase:
 
         self.sViewLayer = self.oIOXml.GetDataInNode(xLayerNodes[0])
     
-        if (self.sImageType == 'Volume'):
+        if (self.sImageType == 'Volume' or self.sImageType == 'VolumeSequence'):
             # Only image volumes have an orientation, 
             # segmentation layer (RTStruct) follows the orientation of the display node
              
@@ -558,6 +561,16 @@ class DataVolumeDetail(ViewNodeBase):
                 dictProperties = {'labelmap' : True, 'show': False, 'name': self.sNodeName}
                 if not (bNodeExists):
                     self.slNode = slicer.util.loadLabelVolume(self.sImagePath, dictProperties)
+                else: # make sure a node exists
+                    if bNodeExists and (self.slNode is None):
+                        bLoadSuccess = False
+
+            elif (self.sImageType == 'VolumeSequence'):
+                
+                bNodeExists = self.CheckForNodeExists( 'vtkMRMLScalarVolumeNode')
+                if not (bNodeExists):
+                    self.slNode = slicer.util.loadNodeFromFile(self.sImagePath,'SequenceFile')
+#                     self.sOrientation = ''
                 else: # make sure a node exists
                     if bNodeExists and (self.slNode is None):
                         bLoadSuccess = False

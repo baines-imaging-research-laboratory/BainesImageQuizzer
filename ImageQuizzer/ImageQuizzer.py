@@ -250,19 +250,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.oFilesIO.PrintDirLocations()
         ########################
         
-        # confirm db is populated
-        
-        
-        # if not populated, display warning message to have admin do this
-        sMsg = 'Database does not have pre-stored images. \nQuiz will import images (progress may be slower).\nContinue?'
-        qtAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
-        if qtAns == qt.QMessageBox.No:
-            self.oUtilsMsgs.DisplayError('Contact administrator to preload images into database.')
-            slicer.util.exit(status=EXIT_SUCCESS)
-        
-        self.qUserLoginWidget.raise_()
-        
-        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
     def onApplyOpenFile(self):
