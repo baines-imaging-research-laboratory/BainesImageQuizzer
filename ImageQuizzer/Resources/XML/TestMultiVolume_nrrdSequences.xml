@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Session>
+	<Page name="CL PT001" descriptor="Multiparametric_MRI">
+		<Image format="nrrd" type="Volume" descriptor="Brain MR" destination="Red">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
+		</Image>
+		<Image descriptor="Case00Prostate" destination="Yellow" format="mhd" type="Volume">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Prostate\Case00.mhd</Path>
+		</Image>
+		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" destination="Green">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\DCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
+		</Image>
+		<QuestionSet id="QS-PI-RADS" title="How to"  segmentrequired="y">
+			<Question type="InfoBox" descriptor="Segmentation Instructions">
+				<Option>Add segments</Option>
+			</Question>
+			<Question type="IntegerValue" descriptor="Overall PI-RADS" >
+				<Option>Enter overall PI-RADS score:</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>

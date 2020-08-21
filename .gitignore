@@ -17,3 +17,7 @@ QuizProgress\.JPG
 ImageQuizzer/Testing/Python/__pycache__/
 
 ImageQuizzer/Users/
+
+ImageQuizzer/ImageQuizzerData/Users/
+
+ImageQuizzer/ImageQuizzerData/SlicerDICOMDatabase/

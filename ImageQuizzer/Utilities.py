@@ -6,6 +6,10 @@ import vtk, qt, ctk, slicer
 import xml.dom.minidom
 from shutil import copyfile
 
+import DICOMLib
+from DICOMLib import DICOMUtils
+
+
 
 
 try:
@@ -89,8 +93,7 @@ class UtilsIOXml:
         self._xRootNode = xNodeInput
         
         
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def OpenXml(self, sXmlPath, sRootNodeName):
         # given a path, open the xml document
          
@@ -129,8 +132,7 @@ class UtilsIOXml:
         return bSuccess, self._xRootNode
 
     
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetElementNodeName(self, xNode):
 
 #         # check for correct type of node  
@@ -147,8 +149,7 @@ class UtilsIOXml:
 
         return sNodeName
                 
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetNumChildrenByName(self, xParentNode, sChildTagName):
         # given an xml node, return the number of children with the specified tagname
         
@@ -159,8 +160,7 @@ class UtilsIOXml:
         iNumChildren = len(xParentNode.findall(sChildTagName))
         return iNumChildren
 
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetChildren(self, xParentNode, sChildTagName):
         # given an xml node, return the child nodes with the specified tagname
         
@@ -170,8 +170,7 @@ class UtilsIOXml:
         
         return xmlChildren
 
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetNthChild(self, xParentNode, sChildTagName, indElem):
         # given an xml node, return the nth child node with the specified tagname
         
@@ -193,8 +192,7 @@ class UtilsIOXml:
         
         return xmlChildNode
 
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetListOfNodeAttributes(self, xNode):
         # given a node, return a list of all its attributes
         
@@ -218,8 +216,7 @@ class UtilsIOXml:
             
         return listOfAttributes
         
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetValueOfNodeAttribute(self, xNode, sAttributeName):
         # given a node and an attribute name, get the value
         #   if the attribute did not exist, return null string
@@ -235,8 +232,7 @@ class UtilsIOXml:
         
         return sAttributeValue
 
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetDataInNode(self, xNode):
         # given a node get the value
         
@@ -265,8 +261,7 @@ class UtilsIOXml:
                 
         return sData
     
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddElement(self, xParentNode, sTagName, sText, dictAttrib):
         
         elem = xParentNode.makeelement(sTagName, dictAttrib)
@@ -278,13 +273,12 @@ class UtilsIOXml:
 #         elem.attrib = dictAttrib
 #         xParentNode.insert(1, elem)
 
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateAttribute(self, xParentNode, sAttribute, sInput):
         
         xParentNode.attrib[sAttribute] = sInput
-    #-----------------------------------------------
-    
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetAttributes(self, xParentNode):
         
         dictAttrib = {}
@@ -292,8 +286,8 @@ class UtilsIOXml:
             dictAttrib = xParentNode.attrib
             
         return dictAttrib
-    #-----------------------------------------------
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForRequiredFunctionalityInAttribute(self, sTreeLevel, sAttribute, sSetting):
         
         # query the Question Set elements in the selected quiz xml
@@ -312,8 +306,7 @@ class UtilsIOXml:
         return bRequired
         
     
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def prettify(self, elem):
         
         """Return a pretty-printed XML string for the Element.
@@ -340,8 +333,7 @@ class UtilsIOXml:
 
         return reparsed
 
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SaveXml(self, sXmlPath):
 
         # by using minidom to reparse the root, we can get a 'pretty' - more user friendly 
@@ -374,26 +366,22 @@ class UtilsMsgs:
         self.parent = parent
         self.msgBox = qt.QMessageBox()
     
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayError(self,sErrorMsg):
-        self.msgBox.critical(slicer.util.mainWindow(),"ERROR",sErrorMsg)
+        self.msgBox.critical(slicer.util.mainWindow(),"Image Quizzer: ERROR",sErrorMsg)
         exit()
 
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayWarning(self,sWarningMsg):
-        self.msgBox.warning(slicer.util.mainWindow(), 'Warning', sWarningMsg)
+        self.msgBox.warning(slicer.util.mainWindow(), 'Image Quizzer: Warning', sWarningMsg)
 
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayInfo(self, sTextMsg):
-        self.msgBox.information(slicer.util.mainWindow(), 'Information', sTextMsg)
+        self.msgBox.information(slicer.util.mainWindow(), 'Image Quizzer: Information', sTextMsg)
 
-    #-------------------------------------------
-    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayYesNo(self, sMsg):
-        qtAns = self.msgBox.question(slicer.util.mainWindow(),'Continue?',sMsg, qt.QMessageBox.Yes, qt.QMessageBox.No)
+        qtAns = self.msgBox.question(slicer.util.mainWindow(),'Image Quizzer: Continue?',sMsg, qt.QMessageBox.Yes, qt.QMessageBox.No)
         return qtAns
 
 ##########################################################################
@@ -410,19 +398,22 @@ class UtilsIO:
     def __init__(self, parent=None):
         self.parent = parent
         
+        self._sScriptedModulesPath = '' # location of quizzer module project
+
         self._sXmlResourcesDir = '' # folder - holds XML quiz files to copy to user
-        self._sUsersBaseDir = ''    # folder - parent dir to all user folders
+        self._sResourcesQuizPath = ''   # full path (dir/file) of quiz to copy to user
+
+        self._sDataParentDir = ''   # parent folder to images, DICOM database and users folders
+        
+        self._sUsersParentDir = ''    # folder - parent dir to all user folders
+        self._sUsername = ''    # name of user taking the quiz
         self._sUserDir = ''         # folder - holds quiz for specific user
 
         self._sQuizFilename = ''    # quiz filename only (no dir)
-        self._sQuizUsername = ''    # name of user taking the quiz
-
-        self._sResourcesQuizPath = ''   # full path (dir/file) of quiz to copy to user
         self._sUserQuizPath = ''        # full path (dir/file) for user's quiz
 
-        self._sTestDataBaseDir = ''
-        self._sTestDataFilename = ''
-
+        self._sDICOMDatabaseDir = ''
+        self._sImageVolumeDataDir = ''
 
 
     def setup(self):
@@ -431,53 +422,68 @@ class UtilsIO:
     #-------------------------------------------
     #        Getters / Setters
     #-------------------------------------------
-
+    
+    #----------
+    def SetDataParentDir(self, sDataDirInput):
+        self._sDataParentDir = sDataDirInput
+        
+    #----------
     def SetResourcesQuizPath(self, sSelectedQuiz):
 
         self._sResourcesQuizPath = os.path.join(self._sXmlResourcesDir, sSelectedQuiz)
         
     #----------
-    def SetQuizUsername(self, sSelectedUser):
-        self._sQuizUsername = sSelectedUser
+    def SetUsername(self, sSelectedUser):
+        self._sUsername = sSelectedUser
         
-    #----------
-    def SetUserDir(self):
-        self._sUserDir = os.path.join(self._sUsersBaseDir, self._sQuizUsername)
-
-        # check that the user folder exists - if not, create it
-        if not os.path.exists(self._sUserDir):
-            os.makedirs(self._sUserDir)
-
     #----------
     def SetUserQuizPath(self, sFilename):
         
         self._sUserQuizPath = os.path.join(self._sUserDir, sFilename)
         
+    #----------
+    def SetUserDir(self):
+        
+        self._sUserDir = os.path.join(self._sUsersParentDir, self._sUsername)
+
+        # check that the user folder exists - if not, create it
+        if not os.path.exists(self._sUserDir):
+            os.makedirs(self._sUserDir)
         
     #----------
-    def SetModuleDirs(self, sModuleName, sSourceDirForQuiz):
-        sScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
-        sScriptedModulesPath = os.path.dirname(sScriptedModulesPath)
-        self._sXmlResourcesDir = os.path.join(sScriptedModulesPath, sSourceDirForQuiz)
-        self._sUsersBaseDir = os.path.join(sScriptedModulesPath, 'Users')
-        
-        
+    #----------
+
+    #----------
+    def GetDataParentDir(self):
+        return self._sDataParentDir
+
+    #----------
+    def GetDICOMDatabaseDir(self):
+        return self._sDICOMDatabaseDir
+    
+    #----------
+    def GetImageVolumeDataDir(self):
+        return self._sImageVolumeDataDir
+
+    #----------
+    def GetScriptedModulesPath(self):
+        return self._sScriptedModulesPath
+    
     #----------
     def GetResourcesQuizPath(self):
         return self._sResourcesQuizPath
     
     #----------
-    def GetQuizUsername(self):
-        return self._sQuizUsername
-
-    #----------
-    def GetUsersBaseDir(self):
-        return self._sUsersBaseDir
-    
+    def GetUsername(self):
+        return self._sUsername
+     
     #----------
     def GetUserDir(self):
         return self._sUserDir
-    
+
+    def GetUsersParentDir(self):
+        return self._sUsersParentDir    
+
     #----------
     def GetUserQuizPath(self):
         return self._sUserQuizPath
@@ -486,17 +492,84 @@ class UtilsIO:
     def GetXmlResourcesDir(self):
         return self._sXmlResourcesDir
     
-
+    #----------
+    def PrintDirLocations(self):
+        
+        ##### For Debug #####
+        print('Data parent dir:', self.GetDataParentDir())
+        print('Image Volume Data', self.GetImageVolumeDataDir())
+        print('DICOM DB dir: ', self.GetDICOMDatabaseDir())
+        print('User parent dir', self.GetUsersParentDir())
+        print('User dir:', self.GetUserDir())
+        print('User Quiz path: ', self.GetUserQuizPath())
+        
     #-------------------------------------------
     #        Functions
     #-------------------------------------------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetModuleDirs(self, sModuleName, sSourceDirForQuiz):
+        self._sScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
+        self._sScriptedModulesPath = os.path.dirname(self._sScriptedModulesPath)
+        self._sXmlResourcesDir = os.path.join(self._sScriptedModulesPath, sSourceDirForQuiz)
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetupUserAndDataDirs(self, sParentDirInput):
+        
+        # user selected data directory - the parent
+        #    ImageVolumes subfolder will contain image volumes ready for import 
+        #    Quiz results in XML format are stored in the Users subfolders
+        #        as well as any saved label volumes
+        #    Slicer updates the dicom database in the SlicerDICOMDatabase subfolder
+        #        to coordinate import/load of images
+        
+        
+        self._sDataParentDir = sParentDirInput
+        
+        # all paths for images in the XML quiz files are relative
+        #     importing will use this directory as the root
+        self._sImageVolumeDataDir = os.path.join(sParentDirInput, 'ImageVolumes')
+
+        # if users directory does not exist yet, it will be created
+        self._sUsersParentDir = os.path.join(sParentDirInput, 'Users')
+        if not os.path.exists(self._sUsersParentDir):
+            os.makedirs(self._sUsersParentDir)
+    
+        # create the DICOM database if it is not there ready for importing
+        self._sDICOMDatabaseDir = os.path.join(sParentDirInput, 'SlicerDICOMDatabase')
+        if not os.path.exists(self._sDICOMDatabaseDir):
+            os.makedirs(self._sDICOMDatabaseDir)
+        
+        # assign the database directory to the browser widget
+        slDicomBrowser = slicer.modules.dicom.widgetRepresentation().self() 
+        slDicomBrowserWidget = slDicomBrowser.browserWidget
+        slDicomBrowserWidget.dicomBrowser.setDatabaseDirectory(self._sDICOMDatabaseDir)
+        
+        # update the database through the dicom browser 
+        # this clears out path entries that can no longer be resolved
+        #    (in the case of database location changes)
+        slDicomBrowserWidget.dicomBrowser.updateDatabase()
+        
+        # test opening the database
+        bSuccess, sMsg = self.OpenSelectedDatabase()
+        if not bSuccess:
+            self.oUtilsMsgs.DisplayWarning(sMsg)
+
+        
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def OpenSelectedDatabase(self):
+        
+        sMsg = ''
+        if DICOMUtils.openDatabase(self._sDICOMDatabaseDir):
+            return True, sMsg
+        else:
+            sMsg = 'Trouble opening SlicerDICOMDatabase in : ' + self._sDataParentDir + '\n Reselect Image Quizzer data directory or contact administrator.'
+            return False, sMsg
+            
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def PopulateUserQuizFolder(self):
-#         # create user folder if it doesn't exist
-
-        self.SetUserDir()
             
         # check if quiz file already exists in the user folder - if not, copy from Resources
 
@@ -510,7 +583,6 @@ class UtilsIO:
 
         else:
 
-                
             # create backup of existing file
             self.BackupUserQuiz()
                 
@@ -524,7 +596,6 @@ class UtilsIO:
                 return True
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
     def BackupUserQuiz(self):
         
         # get current date/time

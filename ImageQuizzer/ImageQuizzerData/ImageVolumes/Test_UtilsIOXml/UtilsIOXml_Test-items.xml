@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<rootNode>
+	<data id='001' descriptor='TestData Page1'>
+		<infoGroup descriptor = 'First Child Page1'>
+			<infoPiece descriptor="item1">item1abc</infoPiece>
+			<infoPiece descriptor="item2">item2abc</infoPiece>
+		</infoGroup>
+		<infoGroup descriptor = 'Second Child Page1'>
+			<infoPiece descriptor="item1">item1def</infoPiece>
+			<infoPiece descriptor="item2">item2def</infoPiece>
+		</infoGroup>
+		<infoGroup descriptor = 'Third Child Page1'>
+			<infoPiece descriptor="item1">item1ghi</infoPiece>
+			<infoPiece descriptor="item2">item2ghi</infoPiece>
+		</infoGroup>
+		<soloTag path='C:\Documents'></soloTag>
+	</data>
+	<data id='002' descriptor='TestData Page2'>
+		<infoGroup descriptor = 'First Child Page2'>
+			<infoPiece descriptor="item1">item1uvw</infoPiece>
+			<infoPiece descriptor="item2">item2uvw</infoPiece>
+		</infoGroup>
+		<infoGroup descriptor = 'Second Child Page2'>
+			<infoPiece descriptor="item1">item1xyz</infoPiece>
+			<infoPiece descriptor="item2">item2xyz</infoPiece>
+		</infoGroup>
+	</data>
+</rootNode>
