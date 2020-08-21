@@ -6,6 +6,7 @@ import vtk, qt, ctk, slicer
 import xml.dom.minidom
 from shutil import copyfile
 
+import DICOMLib
 from DICOMLib import DICOMUtils
 
 
@@ -92,8 +93,7 @@ class UtilsIOXml:
         self._xRootNode = xNodeInput
         
         
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def OpenXml(self, sXmlPath, sRootNodeName):
         # given a path, open the xml document
          
@@ -132,8 +132,7 @@ class UtilsIOXml:
         return bSuccess, self._xRootNode
 
     
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetElementNodeName(self, xNode):
 
 #         # check for correct type of node  
@@ -150,8 +149,7 @@ class UtilsIOXml:
 
         return sNodeName
                 
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetNumChildrenByName(self, xParentNode, sChildTagName):
         # given an xml node, return the number of children with the specified tagname
         
@@ -162,8 +160,7 @@ class UtilsIOXml:
         iNumChildren = len(xParentNode.findall(sChildTagName))
         return iNumChildren
 
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetChildren(self, xParentNode, sChildTagName):
         # given an xml node, return the child nodes with the specified tagname
         
@@ -173,8 +170,7 @@ class UtilsIOXml:
         
         return xmlChildren
 
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetNthChild(self, xParentNode, sChildTagName, indElem):
         # given an xml node, return the nth child node with the specified tagname
         
@@ -196,8 +192,7 @@ class UtilsIOXml:
         
         return xmlChildNode
 
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetListOfNodeAttributes(self, xNode):
         # given a node, return a list of all its attributes
         
@@ -221,8 +216,7 @@ class UtilsIOXml:
             
         return listOfAttributes
         
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetValueOfNodeAttribute(self, xNode, sAttributeName):
         # given a node and an attribute name, get the value
         #   if the attribute did not exist, return null string
@@ -238,8 +232,7 @@ class UtilsIOXml:
         
         return sAttributeValue
 
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetDataInNode(self, xNode):
         # given a node get the value
         
@@ -268,8 +261,7 @@ class UtilsIOXml:
                 
         return sData
     
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddElement(self, xParentNode, sTagName, sText, dictAttrib):
         
         elem = xParentNode.makeelement(sTagName, dictAttrib)
@@ -281,13 +273,12 @@ class UtilsIOXml:
 #         elem.attrib = dictAttrib
 #         xParentNode.insert(1, elem)
 
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateAttribute(self, xParentNode, sAttribute, sInput):
         
         xParentNode.attrib[sAttribute] = sInput
-    #-----------------------------------------------
-    
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetAttributes(self, xParentNode):
         
         dictAttrib = {}
@@ -295,8 +286,8 @@ class UtilsIOXml:
             dictAttrib = xParentNode.attrib
             
         return dictAttrib
-    #-----------------------------------------------
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForRequiredFunctionalityInAttribute(self, sTreeLevel, sAttribute, sSetting):
         
         # query the Question Set elements in the selected quiz xml
@@ -315,8 +306,7 @@ class UtilsIOXml:
         return bRequired
         
     
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def prettify(self, elem):
         
         """Return a pretty-printed XML string for the Element.
@@ -343,8 +333,7 @@ class UtilsIOXml:
 
         return reparsed
 
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SaveXml(self, sXmlPath):
 
         # by using minidom to reparse the root, we can get a 'pretty' - more user friendly 
@@ -377,24 +366,20 @@ class UtilsMsgs:
         self.parent = parent
         self.msgBox = qt.QMessageBox()
     
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayError(self,sErrorMsg):
         self.msgBox.critical(slicer.util.mainWindow(),"Image Quizzer: ERROR",sErrorMsg)
         exit()
 
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayWarning(self,sWarningMsg):
         self.msgBox.warning(slicer.util.mainWindow(), 'Image Quizzer: Warning', sWarningMsg)
 
-    #-------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayInfo(self, sTextMsg):
         self.msgBox.information(slicer.util.mainWindow(), 'Image Quizzer: Information', sTextMsg)
 
-    #-------------------------------------------
-    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayYesNo(self, sMsg):
         qtAns = self.msgBox.question(slicer.util.mainWindow(),'Image Quizzer: Continue?',sMsg, qt.QMessageBox.Yes, qt.QMessageBox.No)
         return qtAns
@@ -531,11 +516,12 @@ class UtilsIO:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupUserAndDataDirs(self, sParentDirInput):
         
-        # user selected data directory
-        #    Subfolder will contain image volumes ready for import 
-        #        and/or a loaded DICOM database.
+        # user selected data directory - the parent
+        #    ImageVolumes subfolder will contain image volumes ready for import 
         #    Quiz results in XML format are stored in the Users subfolders
         #        as well as any saved label volumes
+        #    Slicer updates the dicom database in the SlicerDICOMDatabase subfolder
+        #        to coordinate import/load of images
         
         
         self._sDataParentDir = sParentDirInput
@@ -546,12 +532,30 @@ class UtilsIO:
 
         # if users directory does not exist yet, it will be created
         self._sUsersParentDir = os.path.join(sParentDirInput, 'Users')
+        if not os.path.exists(self._sUsersParentDir):
+            os.makedirs(self._sUsersParentDir)
     
         # create the DICOM database if it is not there ready for importing
-        # A database with data already imported may exist here to speed up loading to Slicer 
         self._sDICOMDatabaseDir = os.path.join(sParentDirInput, 'SlicerDICOMDatabase')
         if not os.path.exists(self._sDICOMDatabaseDir):
             os.makedirs(self._sDICOMDatabaseDir)
+        
+        # assign the database directory to the browser widget
+        slDicomBrowser = slicer.modules.dicom.widgetRepresentation().self() 
+        slDicomBrowserWidget = slDicomBrowser.browserWidget
+        slDicomBrowserWidget.dicomBrowser.setDatabaseDirectory(self._sDICOMDatabaseDir)
+        
+        # update the database through the dicom browser 
+        # this clears out path entries that can no longer be resolved
+        #    (in the case of database location changes)
+        slDicomBrowserWidget.dicomBrowser.updateDatabase()
+        
+        # test opening the database
+        bSuccess, sMsg = self.OpenSelectedDatabase()
+        if not bSuccess:
+            self.oUtilsMsgs.DisplayWarning(sMsg)
+
+        
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def OpenSelectedDatabase(self):

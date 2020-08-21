@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session>
 	<Page name="IGPC1010" descriptor="Multiparametric_MRI" linkviews="y">
+		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" destination="Green">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC1010\DCE-Sequence\AX Dynamic Contrast - as a 7 frames MultiVolume by TriggerTime.nrrd</Path>
+		</Image>
 		<Image format="dicom" type="Volume" descriptor="ADC" destination="Red">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -13,12 +18,6 @@
 			<Path>ImageVolumes\IGPC1010\In_Vivo_2D_T2\1.2.840.113619.2.212.6945.1142338.750.1269871461.164.dcm</Path>
 			<SeriesInstanceUID>1.2.840.113619.2.212.6945.1142338.1406.1269871443.371</SeriesInstanceUID>
 		</Image>
-		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" destination="Green">
-			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC1010\DCE-Sequence\AX Dynamic Contrast - as a 7 frames MultiVolume by TriggerTime.nrrd</Path>
-			<SeriesInstanceUID>1.2.840.113619.2.212.6945.1142338.1406.1269871443.374</SeriesInstanceUID>
-		</Image>
 		<QuestionSet id="QS-PI-RADS" title="How to"  segmentrequired="y">
 			<Question type="InfoBox" descriptor="Segmentation Instructions">
 				<Option>Add segments</Option>
@@ -29,6 +28,11 @@
 		</QuestionSet>
 	</Page>
 	<Page name="IGPC2026" descriptor="Multiparametric_MRI" linkviews="y">
+		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" destination="Green">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\DCE-Sequence\dyn_VIBE DCE - as a 77 frames MultiVolume by AcquisitionTime.nrrd</Path>
+		</Image>
 		<Image format="dicom" type="Volume" descriptor="ADC" destination="Red">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -40,11 +44,6 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In_Vivo_2D_T2\IGPC2-026.MR.MMR_PELVIS_MMR.0010.0001.2016.05.11.12.40.24.890625.175588063.IMA</Path>
 			<SeriesInstanceUID>1.2.840.113619.2.212.6945.1142338.1406.1269871443.371</SeriesInstanceUID>
-		</Image>
-		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" destination="Green">
-			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\DCE-Sequence\dyn_VIBE DCE - as a 77 frames MultiVolume by AcquisitionTime.nrrd</Path>
 		</Image>
 		<QuestionSet id="QS-PI-RADS" title="How to"  segmentrequired="y">
 			<Question type="InfoBox" descriptor="Segmentation Instructions">
