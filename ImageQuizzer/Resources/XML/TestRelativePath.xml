@@ -2,17 +2,17 @@
 <Session>
 	<Page name="Patient2" descriptor="Mixed Displays" linkview="y">
 		<Image format="nrrd" type="Volume"  descriptor="Brain CT" destination="Red">
-			<Layer>Foreground</Layer>
+			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
 		<Image format="nrrd" type="Volume" descriptor="Brain MR" destination="Green">
-			<Layer>Foreground</Layer>
+			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
 		<Image format="mhd" type="Volume" descriptor="Case00Prostate" destination="Yellow">
-			<Layer>Foreground</Layer>
+			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Prostate\Case00.mhd</Path>
 			<State window="4000" level="100"/>

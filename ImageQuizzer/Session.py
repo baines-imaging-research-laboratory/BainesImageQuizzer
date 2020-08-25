@@ -13,7 +13,11 @@ from slicer.util import EXIT_SUCCESS
 from datetime import datetime
 
 
-#-----------------------------------------------
+##########################################################################
+#
+# class Session
+#
+##########################################################################
 
 class Session:
     
@@ -208,7 +212,6 @@ class Session:
         return xQuestionSetNode
         
     #----------
-        
     def GetCurrentPageNode(self):
         iPageIndex = self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][0]
         xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
@@ -261,10 +264,13 @@ class Session:
     def UpdateImageViewObjects(self, lInput):
         self._loImageViews = lInput
 
+
+    
     #-------------------------------------------
     #        Functions
     #-------------------------------------------
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #     def RunSetup(self, oFilesIO, oQuizWidgets):
     def RunSetup(self, oFilesIO, slicerMainLayout):
         
@@ -315,8 +321,7 @@ class Session:
             self.DisplayPage()
 
 
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupWidgets(self, slicerMainLayout):
 
 
@@ -334,8 +339,7 @@ class Session:
 
         
     
-    #-----------------------------------------------
-    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupButtons(self):
         
         # create buttons
@@ -362,8 +366,7 @@ class Session:
         self.qButtonGrpBoxLayout.addWidget(self._btnNext)
         
 
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onNextButtonClicked(self):
 
         ############################################    
@@ -419,13 +422,15 @@ class Session:
                 self.ExitOnQuizComplete("Quiz complete .... Exit")
     
             
+            # remove all data from the scene - only images for the current page to be displayed
+            slicer.mrmlScene.Clear()
+            
             self.EnableButtons()
    
             self.DisplayPage()
 
         
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onPreviousButtonClicked(self):
 
 
@@ -444,8 +449,7 @@ class Session:
         
         
 
-    #-----------------------------------------------
-    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
         
         # assume not at the end of the quiz
@@ -479,8 +483,7 @@ class Session:
 #             if not( self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][0] == self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex + 1][0]):
 #                 self._btnNext.setText("Save and Continue")
 
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def BuildPageQuestionCompositeIndexList(self):
         
         # This function sets up the page and question set indices which
@@ -504,8 +507,7 @@ class Session:
                 self._l2iPageQuestionCompositeIndices.append([iPageIndex, iQuestionSetIndex])
         
 
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayPage(self):
         # extract page and question set indices from the current composite index
         
@@ -551,8 +553,7 @@ class Session:
         self.UpdateImageViewObjects(oImageView.GetImageViewList())
         self.SetSavedImageState()
     
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForLastQuestionSetForPage(self):
         bLastQuestionSet = False
         
@@ -571,8 +572,7 @@ class Session:
             
         return bLastQuestionSet
         
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AdjustForPreviousQuestionSets(self):
         
         # if there are multiple question sets for a page, the list of question sets must
@@ -596,8 +596,7 @@ class Session:
                 self._loQuestionSets.append(oQuestionSet)
 
 
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureAndSaveImageState(self):
 
         # for each image, capture the slice, window and level settings
@@ -620,8 +619,7 @@ class Session:
         self.oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
     
     
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSavedImageState(self):
         
         for oImageView in self._loImageViews:
@@ -633,8 +631,7 @@ class Session:
                 oImageView.SetImageState(dictImageState)
             
             
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureResponsesForQuestionSet(self):
         
         # sMsg may be set in Question class function to capture the response
@@ -664,8 +661,7 @@ class Session:
                 
         return bResponseCaptured, lsAllResponses, sMsg
        
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForSavedResponse(self):
         
         bResponseExists = False
@@ -680,8 +676,7 @@ class Session:
         
         return bResponseExists
     
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplaySavedResponse(self):
 
 
@@ -746,8 +741,7 @@ class Session:
     
     #-----------------------------------------------
 
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def WriteResponses(self):
         
         
@@ -775,8 +769,7 @@ class Session:
                         self.AddResponseElement(xOptionNode, lsResponsesForOptions[indOption])
 
             
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddResponseElement(self, xOptionNode, sResponse):
         
         now = datetime.now()
@@ -786,8 +779,7 @@ class Session:
         
         self.oIOXml.AddElement(xOptionNode,'Response', sResponse, dictAttrib)
         
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddImageStateElement(self, xImageNode, dictAttrib):
         
         sNullData = ''
@@ -795,16 +787,14 @@ class Session:
         self.oIOXml.AddElement(xImageNode,'State', sNullData, dictAttrib)
         
         
-    #-----------------------------------------------
-        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateAtributesInElement(self, xElement, dictAttrib):
         
         # for each key, value in the dictionary, update the element attributes
         for sKey, sValue in dictAttrib.items():
             self.oIOXml.UpdateAttribute(xElement, sKey, sValue)
         
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddSessionLoginTimestamp(self):
         
 
@@ -820,8 +810,7 @@ class Session:
         
         self.oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
             
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetCompositeIndexIfResumeRequired(self):
         # Scan the user's quiz file for existing responses in case the user
         #     exited the quiz prematurely (before it was complete) on the last login
@@ -910,8 +899,7 @@ class Session:
         self.AdjustForPreviousQuestionSets()
 
 
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetLastLoginTimestamp(self):
         # function to scan the user's quiz file for all session login times
         # return the last session login time
@@ -951,8 +939,7 @@ class Session:
                             
         return dtLastTimestamp
             
-    #-----------------------------------------------
-            
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExitOnQuizComplete(self, sMsg):
 
         # the last index in the composite indices list was reached
@@ -999,7 +986,6 @@ class QuizWidgets:
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
     def CreateLeftLayoutAndWidget(self):
         
         # create a layout for the quiz to go in Slicer's left widget
@@ -1011,7 +997,6 @@ class QuizWidgets:
 
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
     def AddQuizTitle(self):
         
         qTitle = qt.QLabel('Baines Image Quizzer')
@@ -1021,7 +1006,6 @@ class QuizWidgets:
         self.qLeftLayout.addWidget(qTitle)
  
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
     def AddQuizLayoutWithTabs(self):
 
         # setup the tab widget
