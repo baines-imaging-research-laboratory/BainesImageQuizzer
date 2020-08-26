@@ -16,7 +16,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\DCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
 		</Image>
-		<QuestionSet id="QS-PI-RADS" title="How to"  segmentrequired="y">
+		<QuestionSet id="QS-PI-RADS" title="How to"  segmentrequired="y" allowmultipleresponse="y">
 			<Question type="InfoBox" descriptor="Segmentation Instructions">
 				<Option>Add segments</Option>
 			</Question>

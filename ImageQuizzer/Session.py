@@ -601,7 +601,7 @@ class Session:
 
         # for each image, capture the slice, window and level settings
         for oImageNode in self._loImageViews:
-            if (oImageNode.sImageType == 'Volume'):
+            if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
 
                 dictAttribState = oImageNode.GetViewState()
 
@@ -623,7 +623,7 @@ class Session:
     def SetSavedImageState(self):
         
         for oImageView in self._loImageViews:
-            if (oImageView.sImageType == 'Volume'):
+            if (oImageView.sImageType == 'Volume' or oImageView.sImageType == 'VolumeSequence'):
         
                 xStateElement = self.oIOXml.GetNthChild(oImageView.GetXmlImageElement(), 'State', 0)
                 dictImageState = self.oIOXml.GetAttributes(xStateElement)

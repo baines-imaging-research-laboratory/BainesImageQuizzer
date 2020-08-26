@@ -40,8 +40,7 @@ class ImageView:
         return self._loImageViews
 
 
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def RunSetup(self, xPageNode, quizLayout, sParentDataDir):
 
         self.quizLayout = quizLayout
@@ -92,6 +91,7 @@ class ImageView:
     #         Manage Data Loading
     #-----------------------------------------------
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def BuildViewNodes(self):
         
         bLoadSuccess = False
@@ -131,6 +131,7 @@ class ImageView:
     #-----------------------------------------------
  
          
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AssignNodesToView(self, oViewNode):
  
         slWidget = slicer.app.layoutManager().sliceWidget(oViewNode.sDestination)
@@ -161,8 +162,7 @@ class ImageView:
                 self.SetSegmentRoiVisibility(oViewNode)
         
 
-    #-----------------------------------------------
-    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AssignViewToNone(self, sScreenColor):
         
         slWidget = slicer.app.layoutManager().sliceWidget(sScreenColor)
@@ -173,8 +173,7 @@ class ImageView:
         slCompNode.SetLabelVolumeID('None')
         
 
-    #-----------------------------------------------
-    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ClearImagesAndSegmentations(self):
 
         # clear the images displayed
@@ -198,8 +197,7 @@ class ImageView:
         # unregister the nodes created by 'GetNodeByClass'otherwise you get a memory leak
         lSegNodes.UnRegister(slicer.mrmlScene) 
     
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSegmentRoiVisibility(self,oViewNode):
         # in order to set visibility, you have to traverse Slicer's subject hierarchy
         # accessing the segmentation node, its children (to get ROI names) and its data node
@@ -304,9 +302,8 @@ class ImageView:
         slViewingNode.UnRegister(slicer.mrmlScene)
     
         
-    #-----------------------------------------------
 
-    #-----------------------------------------------
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetLabelMapVisibility(self, iOnOff):
         
         # Set the label map volume visibility: on = 1; off = 0
@@ -378,8 +375,8 @@ class ViewNodeBase:
     def GetSlicerViewNode(self):
         return self.slNode
 
-    #-----------------------------------------------
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractImageAttributes(self):
 
         self.sNodeDescriptor = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'descriptor')
@@ -388,8 +385,7 @@ class ViewNodeBase:
     
 #         self.sNodeName =  self.GetPageID() + '_' + self.sNodeDescriptor
 
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractXMLNodeElements(self, sParentDataDir):
         
         # Extract path element
@@ -428,8 +424,7 @@ class ViewNodeBase:
             
             
 
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForNodeExists(self, sNodeClass):
         # If a node already exists in the mrmlScene, it should not be loaded again
         # This function checks to see if it has already been loaded
@@ -449,28 +444,32 @@ class ViewNodeBase:
         return bNodeExists
 
 
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetViewState(self):
         
         # given the view node, window and level
+        
+        # access the display node
         slDisplayNode = self.slNode.GetDisplayNode()
-        fLevel = slDisplayNode.GetLevel()
-        fWindow = slDisplayNode.GetWindow()
-
-        # get the slice offset position for the current widget in the layout manager
-        slWidget = slicer.app.layoutManager().sliceWidget(self.sDestination)
-        slWindowLogic = slWidget.sliceLogic()
+                
+        dictAttrib = {}
         
-        fSliceOffset = slWindowLogic.GetSliceOffset()
-        
-        dictAttrib = { 'window': str(fWindow), 'level':  str(fLevel),\
-                      'sliceoffset': str(fSliceOffset)}
+        if not slDisplayNode == None:
+            fLevel = slDisplayNode.GetLevel()
+            fWindow = slDisplayNode.GetWindow()
+    
+            # get the slice offset position for the current widget in the layout manager
+            slWidget = slicer.app.layoutManager().sliceWidget(self.sDestination)
+            slWindowLogic = slWidget.sliceLogic()
+            
+            fSliceOffset = slWindowLogic.GetSliceOffset()
+            
+            dictAttrib = { 'window': str(fWindow), 'level':  str(fLevel),\
+                          'sliceoffset': str(fSliceOffset)}
         
         return dictAttrib
 
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetImageState(self, dictImageState):
         
         
@@ -498,7 +497,7 @@ class ViewNodeBase:
                 
                 slWindowLogic.SetSliceOffset(fSliceOffset)
         
-    #-----------------------------------------------
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
 ##########################################################################
 #
@@ -524,16 +523,14 @@ class DataVolumeDetail(ViewNodeBase):
         self.ExtractXMLNodeElements(sParentDataDir)
         
 
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadVolume(self):
         bLoadSuccess = self.LoadDataVolume()
         return bLoadSuccess
             
 
 
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadDataVolume(self):
         
         # Load a 3D data volume file - check if already loaded (node exists)
@@ -569,8 +566,17 @@ class DataVolumeDetail(ViewNodeBase):
                 
                 bNodeExists = self.CheckForNodeExists( 'vtkMRMLScalarVolumeNode')
                 if not (bNodeExists):
-                    self.slNode = slicer.util.loadNodeFromFile(self.sImagePath,'SequenceFile')
-#                     self.sOrientation = ''
+                    # slicer loads the multi volume file as a sequence node
+                    # from the sequence node, slicer creates a ScalarVolumeNode in the subject hierarchy
+                    # access the data node through the subject hierarchy
+                    slSeqNode = slicer.util.loadNodeFromFile(self.sImagePath,'SequenceFile')
+#                     self.slNode = slSeqNode.GetDataNodeAtValue('0')
+                    slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+                    slSHItemID = slSHNode.GetItemChildWithName(slSHNode.GetSceneItemID(), slSeqNode.GetName())
+                    self.slNode = slSHNode.GetItemDataNode(slSHItemID)                
+
+                
+                
                 else: # make sure a node exists
                     if bNodeExists and (self.slNode is None):
                         bLoadSuccess = False
@@ -624,8 +630,7 @@ class DicomVolumeDetail(ViewNodeBase):
         # specifics for Dicom volumes
         self.ExtractXMLDicomElements()
         
-    #-----------------------------------------------
-        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractXMLDicomElements(self):
 
         # extract extra Dicom XML elements
@@ -655,8 +660,7 @@ class DicomVolumeDetail(ViewNodeBase):
             self.ReadXMLRoiElements()
             
             
-    #-----------------------------------------------
-        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadVolume(self):
         bLoadSuccess = self.LoadDicomVolume()
 #         if not (self.sRoiVisibilityCode == 'Empty'):
@@ -664,8 +668,7 @@ class DicomVolumeDetail(ViewNodeBase):
         return bLoadSuccess
         
 
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadDicomVolume(self):
         self.slNode = None
         bLoadSuccess = False
@@ -782,8 +785,7 @@ class DicomVolumeDetail(ViewNodeBase):
         return bLoadSuccess
 
         
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ReadXMLRoiElements(self):
         # if the Image type is RTStuct, XML holds a visibility code and (if applicable)
         # a list of ROI names
@@ -810,10 +812,7 @@ class DicomVolumeDetail(ViewNodeBase):
                 
         
 
-    
-
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForLabelMapNodeExists(self, sROIName):
         
         bNodeExists = False
@@ -874,8 +873,7 @@ class SubjectHierarchyDetail:
         self.lsSubjectHierarchyROINames = []
         
     
-    #-----------------------------------------------
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def TraverseSubjectHierarchy(self, sStudyInstanceUID, sSeriesInstanceUID):
         
         # get Slicer's subject hierarchy node (SHNode)
