@@ -450,7 +450,20 @@ class UtilsIO:
         if not os.path.exists(self._sUserDir):
             os.makedirs(self._sUserDir)
         
+    
     #----------
+    def CreatePageDir(self, sPageName):
+        # page dir stores label maps for the specified page
+        # store these in the user directory
+        sPageDir = os.path.join(self.GetUserDir(), sPageName)
+        
+        # check that the Page directory exists - if not create it
+        if not os.path.exists(sPageDir):
+            os.makedirs(sPageDir)
+    
+        return sPageDir
+
+    
     #----------
 
     #----------

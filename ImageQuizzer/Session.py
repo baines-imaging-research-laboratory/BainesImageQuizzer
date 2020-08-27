@@ -48,7 +48,7 @@ class Session:
         self._bSegmentationModule = False
         self._iSegmentationTabIndex = -1   # default
         
-        self._oFilesIO = None
+        self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
 #         self._oQuizWidgets = None
@@ -59,7 +59,7 @@ class Session:
 
     def __del__(self):
         if not self.QuizComplete():
-            self.oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
+            self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
             self._oMsgUtil.DisplayInfo(' Image Quizzer Exiting - User file is saved.')
         
     #-------------------------------------------
@@ -68,7 +68,7 @@ class Session:
 
     #----------
     def SetFilesIO(self, oFilesIO):
-        self._oFilesIO = oFilesIO
+        self.oFilesIO = oFilesIO
 
     #----------
 #     def SetIOXml(self, oIOXml):
@@ -281,7 +281,7 @@ class Session:
 #         self.SetupWidgets(slicerMainLayout)
 
         # open xml and check for root node
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self._oFilesIO.GetUserQuizPath(),'Session')
+        bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizPath(),'Session')
 
         if not bSuccess:
             sErrorMsg = "ERROR", "Not a valid quiz - Root node name was not 'Session'"
@@ -371,7 +371,9 @@ class Session:
 
         ############################################    
         # work on saving responses for current page
-        ############################################    
+        ############################################
+        
+        bLabelMapsSaved, sMsg = self.SaveLabelMaps()
 
         bResponsesCaptured, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet()
         self.CaptureAndSaveImageState()
@@ -403,7 +405,7 @@ class Session:
                         self.AddSessionLoginTimestamp()
                     
                     self.WriteResponses()
-                    self.oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
+                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
                     self._bStartOfSession = False
             
 
@@ -548,7 +550,7 @@ class Session:
                    
                     
         oImageView = ImageView()
-        oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self._oFilesIO.GetDataParentDir())
+        oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self.oFilesIO.GetDataParentDir())
 
         self.UpdateImageViewObjects(oImageView.GetImageViewList())
         self.SetSavedImageState()
@@ -616,7 +618,7 @@ class Session:
                 else:
                     self.AddImageStateElement(xImage, dictAttribState)
                     
-        self.oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
+        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
     
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -631,6 +633,68 @@ class Session:
                 oImageView.SetImageState(dictImageState)
             
             
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SaveLabelMaps(self):
+        
+        # if label maps were created, save to disk
+        bLabelMapsSaved = True
+        sMsg = ''
+
+        try:
+       
+            # get list of label maps to save
+            lLabelMaps = slicer.mrmlScene.GetNodesByClass('vtkMRMLLabelMapVolumeNode')
+            
+            # if list length > 0, create folder to hold labels
+            iNumLabelMaps =  lLabelMaps.GetNumberOfItems()
+            if iNumLabelMaps > 0:
+    
+                # get page name to create directory
+                xPageNode = self.GetCurrentPageNode()
+                sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'name')
+                sPageDir = self.oFilesIO.CreatePageDir(sPageName)
+    
+                # save each label map
+                for iLabelMap in range(iNumLabelMaps):
+                    slNodeLabelMap = lLabelMaps.GetItemAsObject(iLabelMap)
+                    sLabelMapFilename = slNodeLabelMap.GetName()
+                    sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
+                    sAssociatedVolumeName = slNodeLabelMap.GetNodeReference('AssociatedNodeID').GetName()
+                    
+                    print(sLabelMapFilename, sAssociatedVolumeName)
+                    
+                    # match label map file with xml image
+                    # update xml storing the label map file with the image element
+                    
+                    # save the label map file to the user's page directory
+                    sLabelMapPath = os.path.join(sPageDir, sLabelMapFilenameWithExt)
+                    print(sLabelMapPath)
+                    
+                    slStorageNode = slNodeLabelMap.CreateDefaultStorageNode()
+                    slStorageNode.SetFileName(sLabelMapPath)
+                    slStorageNode.WriteData(slNodeLabelMap)
+                
+                    bLabelMapsSaved = True
+                
+                
+                
+            else:
+                sMsg = 'No label maps to save'
+                bLabelMapsSaved = True
+                
+                
+        except:
+            sMsg = 'Failed to store label maps'
+            bLabelMapsSaved = False
+    
+        return bLabelMapsSaved, sMsg
+    
+    # when loading segmentations, associated it to the correct image
+#      n = slicer.mrmlScene.GetNodeByID('vtkMRMLLabelMapVolumeNode1')
+# >>> n.SetNodeReferenceID('vtkMRMLScalarVolumeNode1')
+# n.SetNodeReferenceID('AssociatedNodeID','vtkMRMLScalarVolumeNode1')
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureResponsesForQuestionSet(self):
         
@@ -808,7 +872,7 @@ class Session:
         
         self.oIOXml.AddElement(self.oIOXml.GetRootNode(),'Login', sNullText, dictAttrib)
         
-        self.oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
+        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetCompositeIndexIfResumeRequired(self):
@@ -945,7 +1009,7 @@ class Session:
         # the last index in the composite indices list was reached
         # the quiz was completed - exit
         
-        self.oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
+        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
         self.SetQuizComplete(True)
         self._oMsgUtil.DisplayInfo(sMsg)
         slicer.util.exit(status=EXIT_SUCCESS)
