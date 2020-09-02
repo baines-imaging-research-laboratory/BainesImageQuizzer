@@ -662,26 +662,35 @@ class Session:
                     sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
                     sAssociatedVolumeName = slNodeLabelMap.GetNodeReference('AssociatedNodeID').GetName()
                     
-                    print(sLabelMapFilename, sAssociatedVolumeName)
-                    
-                    # match label map file with xml image
-                    # update xml storing the label map file with the image element
                     
                     # save the label map file to the user's page directory
                     sLabelMapPath = os.path.join(sPageDir, sLabelMapFilenameWithExt)
-                    print(sLabelMapPath)
                     
                     slStorageNode = slNodeLabelMap.CreateDefaultStorageNode()
                     slStorageNode.SetFileName(sLabelMapPath)
                     slStorageNode.WriteData(slNodeLabelMap)
                 
+                    
+                    # from associated volume name, match with the xml image name
+                    for oImageNode in self._loImageViews:
+                         
+                        # match label map file with xml image
+                        if oImageNode.sNodeName == sAssociatedVolumeName:
+                            # update xml storing the path to the label map file with the image element
+                            self.AddLabelMapPathElement(oImageNode.GetXmlImageElement(), self.oFilesIO.GetRelativePath(sLabelMapPath))
+                    
                     bLabelMapsSaved = True
-                
                 
                 
             else:
                 sMsg = 'No label maps to save'
                 bLabelMapsSaved = True
+
+
+            # clean up memory leaks
+            #    getting a node by ID (slSegDisplayNode) doesn't seem to cause a memory leak
+            #    getting nodes by class does create a memory leak so you have to unregister it!
+            lLabelMaps.UnRegister(slicer.mrmlScene)
                 
                 
         except:
@@ -849,6 +858,13 @@ class Session:
         sNullData = ''
 
         self.oIOXml.AddElement(xImageNode,'State', sNullData, dictAttrib)
+        
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def AddLabelMapPathElement(self, xImageNode, sInputPath):
+        dictAttrib = {}
+        
+        self.oIOXml.AddElement(xImageNode,'LabelMapPath',sInputPath, dictAttrib)
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

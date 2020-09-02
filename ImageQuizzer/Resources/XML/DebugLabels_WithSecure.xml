@@ -39,7 +39,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Prostate\Case00.mhd</Path>
 		</Image>
-		<Image format="mhd" type="Labelmap" descriptor="Case00Prostate Segmentation" destination="Yellow">
+		<Image format="mhd" type="LabelMap" descriptor="Case00Prostate Segmentation" destination="Yellow">
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\Prostate\Case00_segmentation.mhd</Path>
 		</Image>

@@ -506,6 +506,12 @@ class UtilsIO:
         return self._sXmlResourcesDir
     
     #----------
+    def GetRelativePath(self, sInputPath):
+        # remove absolute path to data folders
+        return sInputPath.lstrip(self._sDataParentDir + '\\')
+
+    
+    #----------
     def PrintDirLocations(self):
         
         ##### For Debug #####

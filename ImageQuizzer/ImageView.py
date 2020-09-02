@@ -64,7 +64,8 @@ class ImageView:
         self.iNumImages = self.oIOXml.GetNumChildrenByName(xPageNode, 'Image')
         
         # clear views from previous page
-        self.ClearImagesAndSegmentations()
+        slicer.mrmlScene.Clear()
+#         self.ClearImagesAndSegmentations()
        
         self.BuildViewNodes()
         
@@ -174,28 +175,28 @@ class ImageView:
         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ClearImagesAndSegmentations(self):
-
-        # clear the images displayed
-        
-        self.AssignViewToNone('Red')
-        self.AssignViewToNone('Yellow')
-        self.AssignViewToNone('Green')
-        
-        
-        # get list of all segmentation nodes and turn off the visibility
-       
-        lSegNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSegmentationNode')
-         
-        for indSeg in range(lSegNodes.GetNumberOfItems()):
-
-            slSegNode = lSegNodes.GetItemAsObject(indSeg)
-            slSegDisplayNode = slSegNode.GetDisplayNode()
-            
-            slSegDisplayNode.SetVisibility(False)
-            
-        # unregister the nodes created by 'GetNodeByClass'otherwise you get a memory leak
-        lSegNodes.UnRegister(slicer.mrmlScene) 
+#     def ClearImagesAndSegmentations(self):
+#  
+#         # clear the images displayed
+#          
+#         self.AssignViewToNone('Red')
+#         self.AssignViewToNone('Yellow')
+#         self.AssignViewToNone('Green')
+#          
+#          
+#         # get list of all segmentation nodes and turn off the visibility
+#         
+#         lSegNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSegmentationNode')
+#           
+#         for indSeg in range(lSegNodes.GetNumberOfItems()):
+#  
+#             slSegNode = lSegNodes.GetItemAsObject(indSeg)
+#             slSegDisplayNode = slSegNode.GetDisplayNode()
+#              
+#             slSegDisplayNode.SetVisibility(False)
+#              
+#         # unregister the nodes created by 'GetNodeByClass'otherwise you get a memory leak
+#         lSegNodes.UnRegister(slicer.mrmlScene) 
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSegmentRoiVisibility(self,oViewNode):
@@ -371,7 +372,7 @@ class ViewNodeBase:
     def GetPageID(self):
         return self._sPageID
 
-    #-----------------------------------------------
+    #----------
     def GetSlicerViewNode(self):
         return self.slNode
 
@@ -552,7 +553,7 @@ class DataVolumeDetail(ViewNodeBase):
                     if bNodeExists and (self.slNode is None):
                         bLoadSuccess = False
             
-            elif (self.sImageType == 'Labelmap'):
+            elif (self.sImageType == 'LabelMap'):
                 
                 bNodeExists = self.CheckForNodeExists( 'vtkMRMLLabelMapVolumeNode')
                 dictProperties = {'labelmap' : True, 'show': False, 'name': self.sNodeName}
@@ -813,39 +814,39 @@ class DicomVolumeDetail(ViewNodeBase):
         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CheckForLabelMapNodeExists(self, sROIName):
-        
-        bNodeExists = False
-        
-        # get Slicer's subject hierarchy node (SHNode)
-        
-        slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-        
-        
-        # get the item ID for the Patient through the Study Series Instance UID
-        
-        slStudyItemID = slSHNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(), self.sStudyInstanceUID)
-
-
-        # using slicers vtk Item Id for the Volume, get the ROI names (children)
-        
-        slStudyChildren = vtk.vtkIdList()    # initialize to ItemId type
-        slSHNode.GetItemChildren(slStudyItemID, slStudyChildren) # populate children variable
-        
-        for indChild in range(slStudyChildren.GetNumberOfIds()):
-            # get id
-            slChildId = slStudyChildren.GetId(indChild)
-            # get datanode
-            slChildDataNode = slSHNode.GetItemDataNode(slChildId)
-            
-            #check if class name matches
-            if (slChildDataNode.GetClassName() == 'vtkMRMLLabelMapVolumeNode'):
-                # check if name matches
-                if (slChildDataNode.GetName() == sROIName):
-                    bNodeExists = True
-                    
-        
-        return bNodeExists
+#     def CheckForLabelMapNodeExists(self, sROIName):
+#         
+#         bNodeExists = False
+#         
+#         # get Slicer's subject hierarchy node (SHNode)
+#         
+#         slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+#         
+#         
+#         # get the item ID for the Patient through the Study Series Instance UID
+#         
+#         slStudyItemID = slSHNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(), self.sStudyInstanceUID)
+# 
+# 
+#         # using slicers vtk Item Id for the Volume, get the ROI names (children)
+#         
+#         slStudyChildren = vtk.vtkIdList()    # initialize to ItemId type
+#         slSHNode.GetItemChildren(slStudyItemID, slStudyChildren) # populate children variable
+#         
+#         for indChild in range(slStudyChildren.GetNumberOfIds()):
+#             # get id
+#             slChildId = slStudyChildren.GetId(indChild)
+#             # get datanode
+#             slChildDataNode = slSHNode.GetItemDataNode(slChildId)
+#             
+#             #check if class name matches
+#             if (slChildDataNode.GetClassName() == 'vtkMRMLLabelMapVolumeNode'):
+#                 # check if name matches
+#                 if (slChildDataNode.GetName() == sROIName):
+#                     bNodeExists = True
+#                     
+#         
+#         return bNodeExists
         
 
 ##########################################################################
