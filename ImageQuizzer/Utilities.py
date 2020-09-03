@@ -510,6 +510,18 @@ class UtilsIO:
         # remove absolute path to data folders
         return sInputPath.lstrip(self._sDataParentDir + '\\')
 
+    #----------
+    def GetAbsolutePath(self, sInputPath):
+        return os.path.join(self._sDataParentDir, sInputPath)
+    
+    #----------
+    def CleanFilename(self, sInputFilename):
+        sInvalid = '<>:"/\|?* '
+        
+        for char in sInvalid:
+            sOutputFilename = sInputFilename.replace(char,'')
+            
+        return sOutputFilename
     
     #----------
     def PrintDirLocations(self):

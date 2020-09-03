@@ -11,6 +11,7 @@ from ImageView import *
 
 from slicer.util import EXIT_SUCCESS
 from datetime import datetime
+from xml.dom.minidom import _nodeTypes_with_children
 
 
 ##########################################################################
@@ -554,6 +555,7 @@ class Session:
 
         self.UpdateImageViewObjects(oImageView.GetImageViewList())
         self.SetSavedImageState()
+        self.LoadSavedLabelMaps()
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForLastQuestionSetForPage(self):
@@ -658,6 +660,11 @@ class Session:
                 # save each label map
                 for iLabelMap in range(iNumLabelMaps):
                     slNodeLabelMap = lLabelMaps.GetItemAsObject(iLabelMap)
+#                     sNodeName = slNodeLabelMap.GetName()
+#                     
+#                     # remove invalid characters from filename
+#                     sLabelMapFilename = self.oFilesIO.CleanFilename(sNodeName)
+
                     sLabelMapFilename = slNodeLabelMap.GetName()
                     sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
                     sAssociatedVolumeName = slNodeLabelMap.GetNodeReference('AssociatedNodeID').GetName()
@@ -698,11 +705,78 @@ class Session:
             bLabelMapsSaved = False
     
         return bLabelMapsSaved, sMsg
+
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def LoadSavedLabelMaps(self):
     # when loading segmentations, associated it to the correct image
 #      n = slicer.mrmlScene.GetNodeByID('vtkMRMLLabelMapVolumeNode1')
 # >>> n.SetNodeReferenceID('vtkMRMLScalarVolumeNode1')
 # n.SetNodeReferenceID('AssociatedNodeID','vtkMRMLScalarVolumeNode1')
+
+        lLoadedLabelMaps = []
+
+        for oImageView in self._loImageViews:
+            
+            # for each image view, get list of labelmap files stored (may be more than one)
+            if (oImageView.sImageType == 'Volume' or oImageView.sImageType == 'VolumeSequence'):
+        
+                lxLabelMapPathElements = self.oIOXml.GetChildren(oImageView.GetXmlImageElement(), 'LabelMapPath')
+
+                # load labelmap file from stored path in XML                
+                for xLabelMap in lxLabelMapPathElements:
+                    sStoredRelativePath = self.oIOXml.GetDataInNode(xLabelMap)
+                    
+                    # only load the label map once
+                    #    same label map may have been stored multiple times in XML for the page
+                    #    (same image but different orientations)
+                    if not sStoredRelativePath in lLoadedLabelMaps:
+                        sAbsolutePath = self.oFilesIO.GetAbsolutePath(sStoredRelativePath)
+                        dictProperties = {'labelmap' : True, 'show': False}
+                        
+                        try:
+                            
+                            slLabelMapNode = slicer.util.loadLabelVolume(sAbsolutePath, dictProperties)
+                            lLoadedLabelMaps.append(sStoredRelativePath)
+                            
+                            # set associated volume to connect label map to master
+                            sLabelMapNodeName = slLabelMapNode.GetName()
+                            print(sLabelMapNodeName)
+                            sAssociatedName = sLabelMapNodeName.rstrip('-label')
+                            print(sAssociatedName)
+                            slAssociatedNodeCollection = slicer.mrmlScene.GetNodesByName(sAssociatedName)
+                            print(slAssociatedNodeCollection.GetNumberOfItems())
+                            slAssociatedNode = slAssociatedNodeCollection.GetItemAsObject(0)
+                            
+                            slLabelMapNode.SetNodeReferenceID('AssociatedNodeID',slAssociatedNode.GetID())
+                            
+                            # turn on 'eye' icon in subject hierarchy for Associated Volume
+                            slPlugin = slicer.qSlicerSubjectHierarchyVolumesPlugin()
+                            slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+                            slSceneItemID = slSHNode.GetSceneItemID()
+#                             slChildren = vtk.vtkIdList()
+#                             
+#                             slSHNode.GetItemChildren(slSceneItemID, slChildren)
+                            slAssociatedNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sAssociatedName)
+#                             slSHNode.GetItemChildren(slSubjectItemID, slChildren)
+#                             
+#                             slChild1ID = slChildren.GetID(0)
+                            
+                            
+#                             slAssociatedDataNode = slSHNode.GetItemDataNode(slSubjectItemID)
+                            
+                            
+#                             slAssociatedNodeID = slAssociatedDataNode.GetID()
+                            slPlugin.setDisplayVisibility( slAssociatedNodeID, 1)
+                            
+                            
+                            
+                            
+                        except:
+                            
+                            sMsg = 'Trouble loading label map file:' + sAbsolutePath
+                            self.oUtilsMsgs.DisplayWarning(sMsg)
+                    
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureResponsesForQuestionSet(self):
