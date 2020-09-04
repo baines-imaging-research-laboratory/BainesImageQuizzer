@@ -135,17 +135,18 @@ class Session:
     #----------
     def SegmentationTabEnabler(self, bTF):
 
-        # When setting up for segmentation, reset the master volume to None
-        # This forces the user to select a volume which in turn enables the 
-        # color selector for editing the segments
-        oParent = self.oQuizWidgets.qTabWidget.widget(self.GetSegmentationTabIndex())
-        self.iRecursiveCounter = 0
-        bSuccess, oChild = self.SearchForChildWidget(oParent, 'qMRMLNodeComboBox', 'MasterVolumeNodeSelector')
-        if bSuccess == False or oChild == None:
-            sMsg = 'SegmentationTabEnabler:MasterVolumeSelector not found'
-            self.oUtilsMsgs.DisplayWarning(sMsg)
-        else:
-            self.SetVolumeSelectorToNone(oChild)
+        if bTF == True:
+            # When setting up for segmentation, reset the master volume to None
+            # This forces the user to select a volume which in turn enables the 
+            # color selector for editing the segments
+            oParent = self.oQuizWidgets.qTabWidget.widget(self.GetSegmentationTabIndex())
+            self.iRecursiveCounter = 0
+            bSuccess, oChild = self.SearchForChildWidget(oParent, 'qMRMLNodeComboBox', 'MasterVolumeNodeSelector')
+            if bSuccess == False or oChild == None:
+                sMsg = 'SegmentationTabEnabler:MasterVolumeSelector not found'
+                self.oUtilsMsgs.DisplayWarning(sMsg)
+            else:
+                self.SetVolumeSelectorToNone(oChild)
 
         self.oQuizWidgets.qTabWidget.setTabEnabled(self.GetSegmentationTabIndex(), bTF)
     
@@ -519,10 +520,14 @@ class Session:
         oQuestionSet = QuestionSet()
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
         
-        if self.GetSegmentationTabIndex() > 0:
-            self.SegmentationTabEnabler(oQuestionSet.GetSegmentRequiredTF())
-
         self.SetMultipleResponsesInQSetAllowed(oQuestionSet.GetMultipleResponseTF())
+
+        if self.GetSegmentationTabIndex() > 0:
+            if oQuestionSet.GetMultipleResponseTF() == True:
+                self.SegmentationTabEnabler(oQuestionSet.GetSegmentRequiredTF())
+            else:
+                self.SegmentationTabEnabler(False)
+
         
         
 
