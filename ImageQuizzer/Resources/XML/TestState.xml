@@ -17,7 +17,7 @@
 			<Path>ImageVolumes\Prostate\Case00.mhd</Path>
 			<State window="4000" level="100"/>
 		</Image>
-		<Image format="mhd" type="Labelmap" descriptor="Case00Prostate Segmentation" destination="Yellow">
+		<Image format="mhd" type="LabelMap" descriptor="Case00Prostate Segmentation" destination="Yellow">
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\Prostate\Case00_segmentation.mhd</Path>
 		</Image>

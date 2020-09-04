@@ -11,6 +11,7 @@ from ImageView import *
 
 from slicer.util import EXIT_SUCCESS
 from datetime import datetime
+from xml.dom.minidom import _nodeTypes_with_children
 
 
 ##########################################################################
@@ -48,7 +49,7 @@ class Session:
         self._bSegmentationModule = False
         self._iSegmentationTabIndex = -1   # default
         
-        self._oFilesIO = None
+        self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
 #         self._oQuizWidgets = None
@@ -59,7 +60,7 @@ class Session:
 
     def __del__(self):
         if not self.QuizComplete():
-            self.oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
+            self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
             self._oMsgUtil.DisplayInfo(' Image Quizzer Exiting - User file is saved.')
         
     #-------------------------------------------
@@ -68,7 +69,7 @@ class Session:
 
     #----------
     def SetFilesIO(self, oFilesIO):
-        self._oFilesIO = oFilesIO
+        self.oFilesIO = oFilesIO
 
     #----------
 #     def SetIOXml(self, oIOXml):
@@ -134,17 +135,18 @@ class Session:
     #----------
     def SegmentationTabEnabler(self, bTF):
 
-        # When setting up for segmentation, reset the master volume to None
-        # This forces the user to select a volume which in turn enables the 
-        # color selector for editing the segments
-        oParent = self.oQuizWidgets.qTabWidget.widget(self.GetSegmentationTabIndex())
-        self.iRecursiveCounter = 0
-        bSuccess, oChild = self.SearchForChildWidget(oParent, 'qMRMLNodeComboBox', 'MasterVolumeNodeSelector')
-        if bSuccess == False or oChild == None:
-            sMsg = 'SegmentationTabEnabler:MasterVolumeSelector not found'
-            self.oUtilsMsgs.DisplayWarning(sMsg)
-        else:
-            self.SetVolumeSelectorToNone(oChild)
+        if bTF == True:
+            # When setting up for segmentation, reset the master volume to None
+            # This forces the user to select a volume which in turn enables the 
+            # color selector for editing the segments
+            oParent = self.oQuizWidgets.qTabWidget.widget(self.GetSegmentationTabIndex())
+            self.iRecursiveCounter = 0
+            bSuccess, oChild = self.SearchForChildWidget(oParent, 'qMRMLNodeComboBox', 'MasterVolumeNodeSelector')
+            if bSuccess == False or oChild == None:
+                sMsg = 'SegmentationTabEnabler:MasterVolumeSelector not found'
+                self.oUtilsMsgs.DisplayWarning(sMsg)
+            else:
+                self.SetVolumeSelectorToNone(oChild)
 
         self.oQuizWidgets.qTabWidget.setTabEnabled(self.GetSegmentationTabIndex(), bTF)
     
@@ -281,7 +283,7 @@ class Session:
 #         self.SetupWidgets(slicerMainLayout)
 
         # open xml and check for root node
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self._oFilesIO.GetUserQuizPath(),'Session')
+        bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizPath(),'Session')
 
         if not bSuccess:
             sErrorMsg = "ERROR", "Not a valid quiz - Root node name was not 'Session'"
@@ -371,7 +373,9 @@ class Session:
 
         ############################################    
         # work on saving responses for current page
-        ############################################    
+        ############################################
+        
+        bLabelMapsSaved, sMsg = self.SaveLabelMaps()
 
         bResponsesCaptured, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet()
         self.CaptureAndSaveImageState()
@@ -403,7 +407,7 @@ class Session:
                         self.AddSessionLoginTimestamp()
                     
                     self.WriteResponses()
-                    self.oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
+                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
                     self._bStartOfSession = False
             
 
@@ -516,10 +520,14 @@ class Session:
         oQuestionSet = QuestionSet()
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
         
-        if self.GetSegmentationTabIndex() > 0:
-            self.SegmentationTabEnabler(oQuestionSet.GetSegmentRequiredTF())
-
         self.SetMultipleResponsesInQSetAllowed(oQuestionSet.GetMultipleResponseTF())
+
+        if self.GetSegmentationTabIndex() > 0:
+            if oQuestionSet.GetMultipleResponseTF() == True:
+                self.SegmentationTabEnabler(oQuestionSet.GetSegmentRequiredTF())
+            else:
+                self.SegmentationTabEnabler(False)
+
         
         
 
@@ -548,10 +556,11 @@ class Session:
                    
                     
         oImageView = ImageView()
-        oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self._oFilesIO.GetDataParentDir())
+        oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self.oFilesIO.GetDataParentDir())
 
         self.UpdateImageViewObjects(oImageView.GetImageViewList())
         self.SetSavedImageState()
+        self.LoadSavedLabelMaps()
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForLastQuestionSetForPage(self):
@@ -616,7 +625,7 @@ class Session:
                 else:
                     self.AddImageStateElement(xImage, dictAttribState)
                     
-        self.oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
+        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
     
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -631,6 +640,149 @@ class Session:
                 oImageView.SetImageState(dictImageState)
             
             
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SaveLabelMaps(self):
+        
+        # if label maps were created, save to disk
+        bLabelMapsSaved = True
+        sMsg = ''
+
+        try:
+       
+            # get list of label maps to save
+            lLabelMaps = slicer.mrmlScene.GetNodesByClass('vtkMRMLLabelMapVolumeNode')
+            
+            # if list length > 0, create folder to hold labels
+            iNumLabelMaps =  lLabelMaps.GetNumberOfItems()
+            if iNumLabelMaps > 0:
+    
+                # get page name to create directory
+                xPageNode = self.GetCurrentPageNode()
+                sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'name')
+                sPageDir = self.oFilesIO.CreatePageDir(sPageName)
+    
+                # save each label map
+                for iLabelMap in range(iNumLabelMaps):
+                    slNodeLabelMap = lLabelMaps.GetItemAsObject(iLabelMap)
+#                     sNodeName = slNodeLabelMap.GetName()
+#                     
+#                     # remove invalid characters from filename
+#                     sLabelMapFilename = self.oFilesIO.CleanFilename(sNodeName)
+
+                    sLabelMapFilename = slNodeLabelMap.GetName()
+                    sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
+                    sAssociatedVolumeName = slNodeLabelMap.GetNodeReference('AssociatedNodeID').GetName()
+                    
+                    
+                    # save the label map file to the user's page directory
+                    sLabelMapPath = os.path.join(sPageDir, sLabelMapFilenameWithExt)
+                    
+                    slStorageNode = slNodeLabelMap.CreateDefaultStorageNode()
+                    slStorageNode.SetFileName(sLabelMapPath)
+                    slStorageNode.WriteData(slNodeLabelMap)
+                
+                    
+                    # from associated volume name, match with the xml image name
+                    for oImageNode in self._loImageViews:
+                         
+                        # match label map file with xml image
+                        if oImageNode.sNodeName == sAssociatedVolumeName:
+                            # update xml storing the path to the label map file with the image element
+                            self.AddLabelMapPathElement(oImageNode.GetXmlImageElement(), self.oFilesIO.GetRelativePath(sLabelMapPath))
+                    
+                    bLabelMapsSaved = True
+                
+                
+            else:
+                sMsg = 'No label maps to save'
+                bLabelMapsSaved = True
+
+
+            # clean up memory leaks
+            #    getting a node by ID (slSegDisplayNode) doesn't seem to cause a memory leak
+            #    getting nodes by class does create a memory leak so you have to unregister it!
+            lLabelMaps.UnRegister(slicer.mrmlScene)
+                
+                
+        except:
+            sMsg = 'Failed to store label maps'
+            bLabelMapsSaved = False
+    
+        return bLabelMapsSaved, sMsg
+
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def LoadSavedLabelMaps(self):
+    # when loading segmentations, associated it to the correct image
+#      n = slicer.mrmlScene.GetNodeByID('vtkMRMLLabelMapVolumeNode1')
+# >>> n.SetNodeReferenceID('vtkMRMLScalarVolumeNode1')
+# n.SetNodeReferenceID('AssociatedNodeID','vtkMRMLScalarVolumeNode1')
+
+        lLoadedLabelMaps = []
+
+        for oImageView in self._loImageViews:
+            
+            # for each image view, get list of labelmap files stored (may be more than one)
+            if (oImageView.sImageType == 'Volume' or oImageView.sImageType == 'VolumeSequence'):
+        
+                lxLabelMapPathElements = self.oIOXml.GetChildren(oImageView.GetXmlImageElement(), 'LabelMapPath')
+
+                # load labelmap file from stored path in XML                
+                for xLabelMap in lxLabelMapPathElements:
+                    sStoredRelativePath = self.oIOXml.GetDataInNode(xLabelMap)
+                    
+                    # only load the label map once
+                    #    same label map may have been stored multiple times in XML for the page
+                    #    (same image but different orientations)
+                    if not sStoredRelativePath in lLoadedLabelMaps:
+                        sAbsolutePath = self.oFilesIO.GetAbsolutePath(sStoredRelativePath)
+                        dictProperties = {'labelmap' : True, 'show': False}
+                        
+                        try:
+                            
+                            slLabelMapNode = slicer.util.loadLabelVolume(sAbsolutePath, dictProperties)
+                            lLoadedLabelMaps.append(sStoredRelativePath)
+                            
+                            # set associated volume to connect label map to master
+                            sLabelMapNodeName = slLabelMapNode.GetName()
+                            print(sLabelMapNodeName)
+                            sAssociatedName = sLabelMapNodeName.rstrip('-label')
+                            print(sAssociatedName)
+                            slAssociatedNodeCollection = slicer.mrmlScene.GetNodesByName(sAssociatedName)
+                            print(slAssociatedNodeCollection.GetNumberOfItems())
+                            slAssociatedNode = slAssociatedNodeCollection.GetItemAsObject(0)
+                            
+                            slLabelMapNode.SetNodeReferenceID('AssociatedNodeID',slAssociatedNode.GetID())
+                            
+                            # turn on 'eye' icon in subject hierarchy for Associated Volume
+                            slPlugin = slicer.qSlicerSubjectHierarchyVolumesPlugin()
+                            slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+                            slSceneItemID = slSHNode.GetSceneItemID()
+#                             slChildren = vtk.vtkIdList()
+#                             
+#                             slSHNode.GetItemChildren(slSceneItemID, slChildren)
+                            slAssociatedNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sAssociatedName)
+#                             slSHNode.GetItemChildren(slSubjectItemID, slChildren)
+#                             
+#                             slChild1ID = slChildren.GetID(0)
+                            
+                            
+#                             slAssociatedDataNode = slSHNode.GetItemDataNode(slSubjectItemID)
+                            
+                            
+#                             slAssociatedNodeID = slAssociatedDataNode.GetID()
+                            slPlugin.setDisplayVisibility( slAssociatedNodeID, 1)
+                            
+                            
+                            
+                            
+                        except:
+                            
+                            sMsg = 'Trouble loading label map file:' + sAbsolutePath
+                            self.oUtilsMsgs.DisplayWarning(sMsg)
+                    
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureResponsesForQuestionSet(self):
         
@@ -788,6 +940,13 @@ class Session:
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def AddLabelMapPathElement(self, xImageNode, sInputPath):
+        dictAttrib = {}
+        
+        self.oIOXml.AddElement(xImageNode,'LabelMapPath',sInputPath, dictAttrib)
+        
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateAtributesInElement(self, xElement, dictAttrib):
         
         # for each key, value in the dictionary, update the element attributes
@@ -808,7 +967,7 @@ class Session:
         
         self.oIOXml.AddElement(self.oIOXml.GetRootNode(),'Login', sNullText, dictAttrib)
         
-        self.oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
+        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetCompositeIndexIfResumeRequired(self):
@@ -945,7 +1104,7 @@ class Session:
         # the last index in the composite indices list was reached
         # the quiz was completed - exit
         
-        self.oIOXml.SaveXml(self._oFilesIO.GetUserQuizPath())
+        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
         self.SetQuizComplete(True)
         self._oMsgUtil.DisplayInfo(sMsg)
         slicer.util.exit(status=EXIT_SUCCESS)
