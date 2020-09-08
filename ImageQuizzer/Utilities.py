@@ -522,7 +522,30 @@ class UtilsIO:
             sOutputFilename = sInputFilename.replace(char,'')
             
         return sOutputFilename
-    
+
+    #----------
+    def getNodes(self):
+        
+        ##### For Debug #####
+        # return nodes in the mrmlScene
+        #    Can be used to flag differences in nodes before and after code
+        #    being investigated (example: for memory leaks)
+
+        nodes = slicer.mrmlScene.GetNodes()
+        return [nodes.GetItemAsObject(i).GetID() for i in range(0,nodes.GetNumberOfItems())]
+
+        ######################
+        # set the following line before code being investigated
+        #
+        #        nodes1 = self.oFilesIO.getNodes()
+        #
+        # set these lines after code being investigated
+        #
+        #        nodes2 = self.oFilesIO.getNodes()
+        #        filteredX = ' '.join((filter(lambda x: x not in nodes1, nodes2)))
+        #        print(':',filteredX)
+        ######################
+
     #----------
     def PrintDirLocations(self):
         

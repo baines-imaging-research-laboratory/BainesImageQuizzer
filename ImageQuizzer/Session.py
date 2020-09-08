@@ -11,7 +11,6 @@ from ImageView import *
 
 from slicer.util import EXIT_SUCCESS
 from datetime import datetime
-from xml.dom.minidom import _nodeTypes_with_children
 
 
 ##########################################################################
@@ -523,13 +522,17 @@ class Session:
         self.SetMultipleResponsesInQSetAllowed(oQuestionSet.GetMultipleResponseTF())
 
         if self.GetSegmentationTabIndex() > 0:
+            
             if oQuestionSet.GetMultipleResponseTF() == True:
                 self.SegmentationTabEnabler(oQuestionSet.GetSegmentRequiredTF())
             else:
-                self.SegmentationTabEnabler(False)
+                # When multiple responses are not allowed, enable the segmentation tab
+                #    only if there are no currently saved responses  
+                if (self.CheckForSavedResponse() == True):
+                    self.SegmentationTabEnabler(False)
+                else:
+                    self.SegmentationTabEnabler(True)
 
-        
-        
 
         # first clear any previous widgets (except push buttons)
         for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
@@ -692,8 +695,11 @@ class Session:
                             self.AddLabelMapPathElement(oImageNode.GetXmlImageElement(), self.oFilesIO.GetRelativePath(sLabelMapPath))
                     
                     bLabelMapsSaved = True
-                
-                
+
+                    # for memory leak problem
+#                     sAssociatedVolumeName.UnRegister(slicer.mrmlScene)
+#                     slNodeLabelMap.UnRegister(slicer.mrmlScene)
+#                     slStorageNode.UnRegister(None)
             else:
                 sMsg = 'No label maps to save'
                 bLabelMapsSaved = True
@@ -714,10 +720,11 @@ class Session:
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadSavedLabelMaps(self):
-    # when loading segmentations, associated it to the correct image
-#      n = slicer.mrmlScene.GetNodeByID('vtkMRMLLabelMapVolumeNode1')
-# >>> n.SetNodeReferenceID('vtkMRMLScalarVolumeNode1')
-# n.SetNodeReferenceID('AssociatedNodeID','vtkMRMLScalarVolumeNode1')
+        # when loading segmentations, associated it with the correct image
+
+        #      n = slicer.mrmlScene.GetNodeByID('vtkMRMLLabelMapVolumeNode1')
+        # >>> n.SetNodeReferenceID('vtkMRMLScalarVolumeNode1')
+        # n.SetNodeReferenceID('AssociatedNodeID','vtkMRMLScalarVolumeNode1')
 
         lLoadedLabelMaps = []
 
@@ -746,11 +753,8 @@ class Session:
                             
                             # set associated volume to connect label map to master
                             sLabelMapNodeName = slLabelMapNode.GetName()
-                            print(sLabelMapNodeName)
                             sAssociatedName = sLabelMapNodeName.rstrip('-label')
-                            print(sAssociatedName)
                             slAssociatedNodeCollection = slicer.mrmlScene.GetNodesByName(sAssociatedName)
-                            print(slAssociatedNodeCollection.GetNumberOfItems())
                             slAssociatedNode = slAssociatedNodeCollection.GetItemAsObject(0)
                             
                             slLabelMapNode.SetNodeReferenceID('AssociatedNodeID',slAssociatedNode.GetID())
@@ -763,18 +767,11 @@ class Session:
 #                             
 #                             slSHNode.GetItemChildren(slSceneItemID, slChildren)
                             slAssociatedNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sAssociatedName)
-#                             slSHNode.GetItemChildren(slSubjectItemID, slChildren)
-#                             
-#                             slChild1ID = slChildren.GetID(0)
-                            
-                            
-#                             slAssociatedDataNode = slSHNode.GetItemDataNode(slSubjectItemID)
-                            
-                            
-#                             slAssociatedNodeID = slAssociatedDataNode.GetID()
                             slPlugin.setDisplayVisibility( slAssociatedNodeID, 1)
                             
-                            
+                            # for memory leak problem
+#                             slAssociatedNodeCollection.UnRegister(slicer.mrmlScene)
+#                             slAssociatedNode.UnRegister(slicer.mrmlScene)
                             
                             
                         except:
