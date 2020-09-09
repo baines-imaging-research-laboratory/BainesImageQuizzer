@@ -16,7 +16,7 @@
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-		<QuestionSet id="QS-Checkup" title="How is it going?" segmentrequired="y"  allowmultipleresponse="n">
+		<QuestionSet id="QS-Checkup" title="How is it going?" segmentrequired="y"  allowmultipleresponse="y">
 			<Question type="Checkbox" descriptor="Project general health">
 				<Option>Found a bug.</Option>
 				<Option>Keep looking...</Option>

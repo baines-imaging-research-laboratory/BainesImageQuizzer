@@ -9,6 +9,7 @@
 # Modifications:
 #    - turn off the information display to connect the user to the more sophisticated SegmentationEditor module
 #    - it now calls the customized HelperBox (QuizzerHelperBox)
+#    - included a getter for the helper box
 #
 #####################################################
 
@@ -349,3 +350,9 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       qt.QDesktopServices.openUrl(qt.QUrl('http://massmail.spl.harvard.edu/mailman/listinfo/slicer-users'))
 
   #->> TODO: check to make sure editor module smoothly handles interactive changes to the master and merge nodes
+
+############### SETUP FOR IMAGE QUIZZER - Customize ############
+#     getter for helper box to access methods
+#
+  def GetHelperBox(self):
+      return self.helper

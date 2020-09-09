@@ -12,6 +12,9 @@
 #    - Change the propagation mode to only set the label layer as active
 #         leaving the background images to display what the user requested 
 #        in the XML of the quiz selected
+#    - Assign the customized color table to the display node
+#        for case when master and merge volumes are already assigned (eg. using Previous button)
+#
 #
 #####################################################
 
@@ -147,8 +150,11 @@ class QuizzerHelperBox(VTKObservationMixin):
   def newMerge(self):
     """create a merge volume for the current master even if one exists"""
     self.createMergeOptions = "new"
-    self.SetCustomColorTable()
+########## Customize for Image Quizzer ##########
 #     self.labelCreateDialog()
+    self.SetCustomColorTable()
+    self.createMerge()
+#################################################
 
   def createMerge(self):
     """create a merge volume for the current master"""
@@ -187,15 +193,22 @@ class QuizzerHelperBox(VTKObservationMixin):
 
     if self.master and not self.mergeVolume():
       # the master exists, but there is no merge volume yet
-      # bring up dialog to create a merge with a user-selected color node
-      self.SetCustomColorTable()
+########## Customize for Image Quizzer ##########
+#      # bring up dialog to create a merge with a user-selected color node
 #       self.labelCreateDialog()
+      self.SetCustomColorTable()
+      self.createMerge()
+#################################################
 
     merge = self.mergeVolume()
     if merge:
       if not merge.IsA("vtkMRMLLabelMapVolumeNode"):
         slicer.util.errorDisplay( "Error: selected merge label volume is not a label volume" )
       else:
+########## Customize for Image Quizzer ##########
+        self.SetCustomColorTable()
+        merge.GetDisplayNode().SetAndObserveColorNodeID( self.colorNodeID )
+#################################################
         EditUtil.setActiveVolumes(self.master, merge)
         self.mergeSelector.setCurrentNode(merge)
 
@@ -220,10 +233,6 @@ class QuizzerHelperBox(VTKObservationMixin):
     if self.selectCommand:
       self.selectCommand()
     
-#     mode = 1
-#     applicationLogic = slicer.app.applicationLogic()
-#     applicationLogic.PropagateVolumeSelection(mode, 0)
-      
 
   def setVolumes(self,masterVolume,mergeVolume):
     """set both volumes at the same time - trick the callback into
@@ -415,8 +424,6 @@ class QuizzerHelperBox(VTKObservationMixin):
             quizzerCTNode = colorLogic.LoadColorFile(lsUserColorTables[ind], self.sColorTableName)
 
     self.colorNodeID = quizzerCTNode.GetID()
-     
-    self.createMerge()
 ############################################################
 
 

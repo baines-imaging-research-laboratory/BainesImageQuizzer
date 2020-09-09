@@ -121,70 +121,77 @@ class Session:
 
     #----------
     def AddSegmentationModule(self, bTF):
+
         if bTF == True:
             # add segment editor tab to quiz widget
-#             self.oQuizWidgets.qTabWidget.addTab(slicer.modules.segmenteditor.widgetRepresentation(),"Segment Editor")
             self.oQuizWidgets.qTabWidget.addTab(slicer.modules.quizzereditor.widgetRepresentation(),"Segment Editor")
             self._bSegmentationModule = True
             self._iSegmentationTabIndex = self.oQuizWidgets.qTabWidget.count - 1
             self.oQuizWidgets.qTabWidget.setTabEnabled(self._iSegmentationTabIndex, True)
+            
         else:
             self._bSegmentationModule = False
         
     #----------
     def SegmentationTabEnabler(self, bTF):
 
-        if bTF == True:
-            # When setting up for segmentation, reset the master volume to None
-            # This forces the user to select a volume which in turn enables the 
-            # color selector for editing the segments
-            oParent = self.oQuizWidgets.qTabWidget.widget(self.GetSegmentationTabIndex())
-            self.iRecursiveCounter = 0
-            bSuccess, oChild = self.SearchForChildWidget(oParent, 'qMRMLNodeComboBox', 'MasterVolumeNodeSelector')
-            if bSuccess == False or oChild == None:
-                sMsg = 'SegmentationTabEnabler:MasterVolumeSelector not found'
-                self.oUtilsMsgs.DisplayWarning(sMsg)
-            else:
-                self.SetVolumeSelectorToNone(oChild)
+# NO LONGER NEEDED ... I CLEAR THE SCENE BETWEEN PAGES?
+#         if bTF == True:
+#             # When setting up for segmentation, reset the master volume to None
+#             # This forces the user to select a volume which in turn enables the 
+#             # color selector for editing the segments
+#             oParent = self.oQuizWidgets.qTabWidget.widget(self.GetSegmentationTabIndex())
+#             self.iRecursiveCounter = 0
+#             bSuccess, oChild = self.SearchForChildWidget(oParent, 'qMRMLNodeComboBox', 'MasterVolumeNodeSelector')
+#             if bSuccess == False or oChild == None:
+#                 sMsg = 'SegmentationTabEnabler:MasterVolumeSelector not found'
+#                 self.oUtilsMsgs.DisplayWarning(sMsg)
+#             else:
+#                 self.SetVolumeSelectorToNone(oChild)
 
         self.oQuizWidgets.qTabWidget.setTabEnabled(self.GetSegmentationTabIndex(), bTF)
-    
-    #----------
-    def SearchForChildWidget(self, oParent, sSearchType, sSearchName):
-
-
-        if oParent != None:
-#             print(oParent.className(), '.....', oParent.name)
-            
-            iNumChildren = len(oParent.children())
-
-            # drill down through children recursively until the search object has been found
-            for idx in range(iNumChildren):
-                oChildren = oParent.children()
-                oChild = oChildren[idx]
-#                 print ('..............', oChild.className(),'...', oChild.name)
-                if oChild.className() == sSearchType:
-                    if oChild.name == sSearchName:
-                        return True, oChild
-                        
-                self.iRecursiveCounter = self.iRecursiveCounter + 1
-                if self.iRecursiveCounter == 100:    # safeguard in recursive procedure
-                    return False, None
-                    
-                
-                if len(oChild.children()) > 0:
-                    bFound, oFoundChild = self.SearchForChildWidget(oChild, sSearchType, sSearchName)
-                    if bFound:
-                        return True, oFoundChild
-            
-        else:
-            return False, None
-    
-    
-    #----------
-    def SetVolumeSelectorToNone(self, oSelectorWidget):
-        oSelectorWidget.setCurrentNodeIndex(-1)
         
+    
+# NO LONGER NEEDED ... I CAN USE THE QUIZZER HELPER BOX FUNCTIONS TO SET VOLUMES
+#            oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetQuizzerHelperBox()
+#            oQuizzerEditorHelperBox.setVolumes(slAssociatedNode, slLabelMapNode)
+#    
+#     #----------
+#     def SearchForChildWidget(self, oParent, sSearchType, sSearchName):
+# 
+# 
+#         if oParent != None:
+# #             print(oParent.className(), '.....', oParent.name)
+#             
+#             iNumChildren = len(oParent.children())
+# 
+#             # drill down through children recursively until the search object has been found
+#             for idx in range(iNumChildren):
+#                 oChildren = oParent.children()
+#                 oChild = oChildren[idx]
+# #                 print ('..............', oChild.className(),'...', oChild.name)
+#                 if oChild.className() == sSearchType:
+#                     if oChild.name == sSearchName:
+#                         return True, oChild
+#                         
+#                 self.iRecursiveCounter = self.iRecursiveCounter + 1
+#                 if self.iRecursiveCounter == 100:    # safeguard in recursive procedure
+#                     return False, None
+#                     
+#                 
+#                 if len(oChild.children()) > 0:
+#                     bFound, oFoundChild = self.SearchForChildWidget(oChild, sSearchType, sSearchName)
+#                     if bFound:
+#                         return True, oFoundChild
+#             
+#         else:
+#             return False, None
+#     
+#     
+#     #----------
+#     def SetVolumeSelectorToNone(self, oSelectorWidget):
+#         oSelectorWidget.setCurrentNodeIndex(-1)
+#         
             
     #----------
     def GetSegmentationTabIndex(self):
@@ -370,9 +377,9 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onNextButtonClicked(self):
 
-        ############################################    
-        # work on saving responses for current page
-        ############################################
+        # before leaving the page, if the segmentation is enabled, restore mouse to default cursor
+        if self.GetSegmentationTabIndex() > 0:
+            slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
         
         bLabelMapsSaved, sMsg = self.SaveLabelMaps()
 
@@ -512,9 +519,9 @@ class Session:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayPage(self):
+
         # extract page and question set indices from the current composite index
         
-
         xNodeQuestionSet = self.GetCurrentQuestionSetNode()
         oQuestionSet = QuestionSet()
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
@@ -526,8 +533,8 @@ class Session:
             if oQuestionSet.GetMultipleResponseTF() == True:
                 self.SegmentationTabEnabler(oQuestionSet.GetSegmentRequiredTF())
             else:
-                # When multiple responses are not allowed, enable the segmentation tab
-                #    only if there are no currently saved responses  
+                # When multiple responses are not allowed, 
+                #    enable the segmentation tab only if there are no currently saved responses  
                 if (self.CheckForSavedResponse() == True):
                     self.SegmentationTabEnabler(False)
                 else:
@@ -557,6 +564,9 @@ class Session:
                 self.DisplaySavedResponse()
 
                    
+        # set the layout to default view four-up 
+        slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
+        
                     
         oImageView = ImageView()
         oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self.oFilesIO.GetDataParentDir())
@@ -696,7 +706,7 @@ class Session:
                     
                     bLabelMapsSaved = True
 
-                    # for memory leak problem
+                    # for memory leak problem ??
 #                     sAssociatedVolumeName.UnRegister(slicer.mrmlScene)
 #                     slNodeLabelMap.UnRegister(slicer.mrmlScene)
 #                     slStorageNode.UnRegister(None)
@@ -769,7 +779,14 @@ class Session:
                             slAssociatedNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sAssociatedName)
                             slPlugin.setDisplayVisibility( slAssociatedNodeID, 1)
                             
-                            # for memory leak problem
+
+                            oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
+                            oQuizzerEditorHelperBox.setVolumes(slAssociatedNode, slLabelMapNode)
+        
+                            
+                            
+                            
+                            # for memory leak problem ??
 #                             slAssociatedNodeCollection.UnRegister(slicer.mrmlScene)
 #                             slAssociatedNode.UnRegister(slicer.mrmlScene)
                             
