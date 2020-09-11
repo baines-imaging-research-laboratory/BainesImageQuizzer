@@ -712,10 +712,8 @@ class Session:
                     
                     bLabelMapsSaved = True
 
-                    # for memory leak problem ??
-#                     sAssociatedVolumeName.UnRegister(slicer.mrmlScene)
-#                     slNodeLabelMap.UnRegister(slicer.mrmlScene)
-#                     slStorageNode.UnRegister(None)
+                    # for memory leaks (as per Slicer's documentation)
+                    slStorageNode.UnRegister(slicer.mrmlScene)
             else:
                 sMsg = 'No label maps to save'
                 bLabelMapsSaved = True
@@ -791,10 +789,8 @@ class Session:
         
                             
                             
-                            
-                            # for memory leak problem ??
-#                             slAssociatedNodeCollection.UnRegister(slicer.mrmlScene)
-#                             slAssociatedNode.UnRegister(slicer.mrmlScene)
+                            # for memory leak problem
+                            slAssociatedNode.UnRegister(slicer.mrmlScene)
                             
                             
                         except:

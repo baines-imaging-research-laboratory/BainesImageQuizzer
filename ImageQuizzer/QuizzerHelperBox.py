@@ -14,6 +14,7 @@
 #        in the XML of the quiz selected
 #    - Assign the customized color table to the display node
 #        for case when master and merge volumes are already assigned (eg. using Previous button)
+#    - Unregister the colorNode created when exiting or you get memory leaks
 #
 #
 #####################################################
@@ -134,6 +135,9 @@ class QuizzerHelperBox(VTKObservationMixin):
 
   def onExit(self):
     self.removeObservers(method=self.structureListWidget.updateStructures)
+########## Customize for Image Quizzer ##########
+    self.quizzerCTNode.UnRegister(slicer.mrmlScene)
+#################################################
 
   def cleanup(self):
     self.onExit()
@@ -421,9 +425,9 @@ class QuizzerHelperBox(VTKObservationMixin):
     for ind in range(len(lsUserColorTables)):
         head, tail = os.path.split(lsUserColorTables[ind])
         if tail == self.sColorTableFilename:
-            quizzerCTNode = colorLogic.LoadColorFile(lsUserColorTables[ind], self.sColorTableName)
+            self.quizzerCTNode = colorLogic.LoadColorFile(lsUserColorTables[ind], self.sColorTableName)
 
-    self.colorNodeID = quizzerCTNode.GetID()
+    self.colorNodeID = self.quizzerCTNode.GetID()
 ############################################################
 
 
