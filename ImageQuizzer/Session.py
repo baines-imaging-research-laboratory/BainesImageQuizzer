@@ -59,7 +59,7 @@ class Session:
 
     def __del__(self):
         if not self.QuizComplete():
-            self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
+            self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
             self._oMsgUtil.DisplayInfo(' Image Quizzer Exiting - User file is saved.')
         
     #-------------------------------------------
@@ -289,7 +289,7 @@ class Session:
 #         self.SetupWidgets(slicerMainLayout)
 
         # open xml and check for root node
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizPath(),'Session')
+        bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizResultsPath(),'Session')
 
         if not bSuccess:
             sErrorMsg = "ERROR", "Not a valid quiz - Root node name was not 'Session'"
@@ -413,7 +413,7 @@ class Session:
                         self.AddSessionLoginTimestamp()
                     
                     self.WriteResponses()
-                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
+                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
                     self._bStartOfSession = False
             
 
@@ -638,7 +638,7 @@ class Session:
                 else:
                     self.AddImageStateElement(xImage, dictAttribState)
                     
-        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
+        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
     
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -672,8 +672,14 @@ class Session:
     
                 # get page name to create directory
                 xPageNode = self.GetCurrentPageNode()
+                sPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'id')
                 sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'name')
-                sPageDir = self.oFilesIO.CreatePageDir(sPageName)
+                sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'descriptor')
+                
+#                 sQuizFilename = self.oFilesIO.GetQuizFilename()
+            
+                sDirName = os.path.join(self.oFilesIO.GetUserQuizResultsDir(), sPageID + '-' + sPageName + '-' + sPageDescriptor)
+                sPageDir = self.oFilesIO.CreatePageDir(sDirName)
     
                 # save each label map
                 for iLabelMap in range(iNumLabelMaps):
@@ -981,7 +987,7 @@ class Session:
         
         self.oIOXml.AddElement(self.oIOXml.GetRootNode(),'Login', sNullText, dictAttrib)
         
-        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
+        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetCompositeIndexIfResumeRequired(self):
@@ -1118,7 +1124,7 @@ class Session:
         # the last index in the composite indices list was reached
         # the quiz was completed - exit
         
-        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
+        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
         self.SetQuizComplete(True)
         self._oMsgUtil.DisplayInfo(sMsg)
         slicer.util.exit(status=EXIT_SUCCESS)

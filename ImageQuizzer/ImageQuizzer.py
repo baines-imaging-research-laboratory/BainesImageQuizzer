@@ -55,7 +55,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.oUtilsMsgs = UtilsMsgs()
         self.oFilesIO = UtilsIO()
         self.oFilesIO.SetModuleDirs(sModuleName, sSourceDirForQuiz)
-#         self.oFilesIO.SetUserDir()
 
 #         # capture Slicer's default database location
 #         self.oFilesIO.SetDefaultDatabaseDir(slicer.dicomDatabase.databaseDirectory)
@@ -190,7 +189,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.btnGetUserStudy = qt.QPushButton("Select quiz:")
         self.btnGetUserStudy.setEnabled(True)
         self.btnGetUserStudy.toolTip = "Select Quiz xml file for launch "
-        self.btnGetUserStudy.connect('clicked(bool)', self.onApplyOpenFile)
+        self.btnGetUserStudy.connect('clicked(bool)', self.onApplyQuizSelection)
         self.qUserGrpBoxLayout.addWidget(self.btnGetUserStudy)
  
         self.qLblQuizFilename = qt.QLabel('Selected quiz filename')
@@ -222,7 +221,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
     def onUserComboboxChanged(self):
         
         # capture selected user name
-        self.oFilesIO.SetUsername(self.comboGetUserName.currentText)
+        self.oFilesIO.SetUsernameAndDir(self.comboGetUserName.currentText)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -245,14 +244,9 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.qUserGrpBox.setEnabled(True)
 
         
-        ##### for debug... #####
-        print('Setup data folders')
-        self.oFilesIO.PrintDirLocations()
-        ########################
-        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
-    def onApplyOpenFile(self):
+    def onApplyQuizSelection(self):
         
         # set to default
 #         self.btnLaunchStudy.setEnabled(False)
@@ -261,23 +255,23 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
  
         # get quiz filename
         self.quizInputFileDialog = qt.QFileDialog()
-        sSelectedQuiz = self.quizInputFileDialog.getOpenFileName(self.qUserLoginWidget, "Open File", self.oFilesIO.GetXmlResourcesDir(), "XML files (*.xml)" )
+        sSelectedQuizPath = self.quizInputFileDialog.getOpenFileName(self.qUserLoginWidget, "Open File", self.oFilesIO.GetXmlResourcesDir(), "XML files (*.xml)" )
  
         # check that file was selected
-        if not sSelectedQuiz:
+        if not sSelectedQuizPath:
             sMsg = 'No quiz was selected'
             self.oUtilsMsgs.DisplayWarning(sMsg)
             self.qUserLoginWidget.raise_()
 
         else:
             # enable the launch button
-            self.qLblQuizFilename.setText(sSelectedQuiz)
+            self.qLblQuizFilename.setText(sSelectedQuizPath)
 #             self.btnLaunchStudy.setEnabled(True)
             self.qLaunchGrpBox.setEnabled(True)
             self.qUserLoginWidget.show()
             self.qUserLoginWidget.activateWindow()
             
-            self.oFilesIO.SetResourcesQuizPath(sSelectedQuiz)
+            self.oFilesIO.SetResourcesQuizPathAndFilename(sSelectedQuizPath)
          
  
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -300,13 +294,15 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                 self.qUserLoginWidget.raise_()
     
             else:
-    
+                self.oFilesIO.SetUsernameAndDir(self.comboGetUserName.currentText)
+
+                # create user and results folders if it doesn't exist
+                self.oFilesIO.SetupForUserQuizResults()
+
                 ##### for debug... #####
                 self.oFilesIO.PrintDirLocations()
                 ########################
     
-                # create user folder if it doesn't exist
-                self.oFilesIO.SetUserDir()
     
                 # copy file from Resource into user folder
                 if self.oFilesIO.PopulateUserQuizFolder(): # success

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session>
-	<Page name="Patient1" descriptor="PlanningCT">
+	<Page id="1" name="Patient1" descriptor="PlanningCT">
 		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Red">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -35,7 +35,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page name="Patient1" descriptor="Follow-up 1">
+	<Page id="2" name="Patient1" descriptor="Follow-up 1">
 		<Image format="nii" type="Volume" descriptor="Moving Volume" destination="Red">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -72,7 +72,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page name="Patient2" descriptor="Mixed Displays" linkviews="y">
+	<Page id="3" name="Patient2" descriptor="Mixed Displays" linkviews="y">
 		<Image format="nrrd" type="Volume"  descriptor="Brain CT" destination="Red">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -104,7 +104,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page name="TinyPatient" descriptor="DicomSeries">
+	<Page id="4" name="TinyPatient" descriptor="DicomSeries">
 		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Red">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -132,7 +132,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page name="TinyPatient" descriptor="DicomSeries">
+	<Page id="5" name="TinyPatient" descriptor="DicomSeries">
 		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Red">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -189,7 +189,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page name="CL PT001" descriptor="Multiparametric_MRI">
+	<Page id="6" name="CL PT001" descriptor="Multiparametric_MRI">
 		<Image format="dicom" type="Volume" descriptor="T1W MR" destination="Red">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
