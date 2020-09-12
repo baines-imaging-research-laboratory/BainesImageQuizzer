@@ -212,6 +212,8 @@ class QuizzerHelperBox(VTKObservationMixin):
 ########## Customize for Image Quizzer ##########
         self.SetCustomColorTable()
         merge.GetDisplayNode().SetAndObserveColorNodeID( self.colorNodeID )
+        EditUtil.setPropagateMode(1)
+
 #################################################
         EditUtil.setActiveVolumes(self.master, merge)
         self.mergeSelector.setCurrentNode(merge)

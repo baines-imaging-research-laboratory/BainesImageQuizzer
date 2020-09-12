@@ -255,7 +255,9 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.editLabelMapsFrame.setLayout(qt.QVBoxLayout())
     self.editLabelMapsFrame.setText("Edit Selected Label Map")
     self.layout.addWidget(self.editLabelMapsFrame)
-    self.editLabelMapsFrame.collapsed = True
+#     self.editLabelMapsFrame.collapsed = True
+############### SETUP FOR IMAGE QUIZZER - open editor frame ############
+    self.editLabelMapsFrame.collapsed = False
 
     # create frame holding both the effect options and edit box:
     self.effectsToolsFrame = qt.QFrame(self.editLabelMapsFrame)
