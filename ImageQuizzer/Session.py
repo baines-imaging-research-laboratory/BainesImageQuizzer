@@ -333,7 +333,7 @@ class Session:
     def SetupWidgets(self, slicerMainLayout):
 
 
-        self.oQuizWidgets = QuizWidgets()
+        self.oQuizWidgets = QuizWidgets(self.oFilesIO)
         self.oQuizWidgets.CreateLeftLayoutAndWidget()
 
         self.oQuizWidgets.AddQuizTitle()
@@ -361,12 +361,14 @@ class Session:
         self._btnNext = qt.QPushButton("Save and Next")
         self._btnNext.toolTip = "Save responses and display next set of questions."
         self._btnNext.enabled = True
+        self._btnNext.setStyleSheet("QPushButton{ background-color: green }")
         self._btnNext.connect('clicked(bool)',self.onNextButtonClicked)
         
         # Back button
         self._btnPrevious = qt.QPushButton("Previous")
         self._btnPrevious.toolTip = "Display previous set of questions."
         self._btnPrevious.enabled = True
+        self._btnPrevious.setStyleSheet("QPushButton{ background-color: blue }")
         self._btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
 
 
@@ -444,8 +446,6 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onPreviousButtonClicked(self):
 
-
-
         self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
         if self._iCurrentCompositeIndex < 0:
             # reset to beginning
@@ -458,8 +458,6 @@ class Session:
         
         self.DisplayPage()
         
-        
-
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
         
@@ -1195,7 +1193,7 @@ class Session:
 
 class QuizWidgets:
     
-    def __init__(self,  parent=None):
+    def __init__(self, oFilesIOInput, parent=None):
         self.sClassName = type(self).__name__
         self.parent = parent
         print('Constructor for QuizWidgets')
@@ -1204,6 +1202,8 @@ class QuizWidgets:
         self._slicerQuizLayout = None
         self._slicerLeftWidget = None
         self._slicerTabWidget = None
+        
+        self.oFilesIO = oFilesIOInput
         
     def GetSlicerLeftMainLayout(self):
         return self._slicerLeftMainLayout
@@ -1234,6 +1234,18 @@ class QuizWidgets:
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddQuizTitle(self):
+        
+#         qLogoImg = qt.QLabel(self)
+#         sLogoName = 'BainesLogo.png'
+#         sLogoPath = os.path.join(self.oFilesIO.GetScriptedModulesPath(),'Icons',sLogoName)
+#         pixmap = qt.QPixmap(sLogoPath)
+#         qLogoImg.setPixmap(pixmap)
+# #         qLogoImg.resize(pixmap.width(), pixmap.height())
+#         qLogoImg.show()
+#         
+# #         pixmapTarget = pixmapTarget.scaled(size-5, size-5, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+#         
+#         self.qLeftLayout.addWidget(qLogoImg)
         
         qTitle = qt.QLabel('Baines Image Quizzer')
         qTitle.setFont(qt.QFont('Arial',14, qt.QFont.Bold))

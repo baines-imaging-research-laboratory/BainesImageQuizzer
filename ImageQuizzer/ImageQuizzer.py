@@ -180,7 +180,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
         
         # Add vertical spacer
-        self.qUserGrpBoxLayout.addSpacing(10)
+        self.qUserGrpBoxLayout.addSpacing(20)
          
         ################################
         # Get study button
