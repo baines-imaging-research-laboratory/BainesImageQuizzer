@@ -9,6 +9,8 @@ from Question import *
 from ImageView import *
 #from ImageQuizzer import *
 
+from PythonQt import QtCore
+
 from slicer.util import EXIT_SUCCESS
 from datetime import datetime
 
@@ -336,7 +338,8 @@ class Session:
         self.oQuizWidgets = QuizWidgets(self.oFilesIO)
         self.oQuizWidgets.CreateLeftLayoutAndWidget()
 
-        self.oQuizWidgets.AddQuizTitle()
+        qTitleGrpBox = self.oQuizWidgets.AddQuizTitle()
+        self.oQuizWidgets.qLeftLayout.addWidget(qTitleGrpBox)
         
         self.SetupButtons()
         self.oQuizWidgets.qLeftLayout.addWidget(self.qButtonGrpBox)
@@ -361,14 +364,14 @@ class Session:
         self._btnNext = qt.QPushButton("Save and Next")
         self._btnNext.toolTip = "Save responses and display next set of questions."
         self._btnNext.enabled = True
-        self._btnNext.setStyleSheet("QPushButton{ background-color: green }")
+        self._btnNext.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
         self._btnNext.connect('clicked(bool)',self.onNextButtonClicked)
         
         # Back button
         self._btnPrevious = qt.QPushButton("Previous")
         self._btnPrevious.toolTip = "Display previous set of questions."
         self._btnPrevious.enabled = True
-        self._btnPrevious.setStyleSheet("QPushButton{ background-color: blue }")
+        self._btnPrevious.setStyleSheet("QPushButton{ background-color: rgb(255,149,0) }")
         self._btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
 
 
@@ -1235,23 +1238,43 @@ class QuizWidgets:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddQuizTitle(self):
         
-#         qLogoImg = qt.QLabel(self)
-#         sLogoName = 'BainesLogo.png'
-#         sLogoPath = os.path.join(self.oFilesIO.GetScriptedModulesPath(),'Icons',sLogoName)
-#         pixmap = qt.QPixmap(sLogoPath)
-#         qLogoImg.setPixmap(pixmap)
-# #         qLogoImg.resize(pixmap.width(), pixmap.height())
-#         qLogoImg.show()
-#         
-# #         pixmapTarget = pixmapTarget.scaled(size-5, size-5, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-#         
-#         self.qLeftLayout.addWidget(qLogoImg)
-        
-        qTitle = qt.QLabel('Baines Image Quizzer')
-        qTitle.setFont(qt.QFont('Arial',14, qt.QFont.Bold))
+#         qTitle = qt.QLabel('Baines Image Quizzer')
+#         qTitle.setFont(qt.QFont('Arial',14, qt.QFont.Bold))
+# 
+#         # add to left layout
+#         self.qLeftLayout.addWidget(qTitle)
 
-        # add to left layout
-        self.qLeftLayout.addWidget(qTitle)
+        qTitleGroupBox = qt.QGroupBox()
+        qTitleGroupBoxLayout = qt.QHBoxLayout()
+        qTitleGroupBox.setLayout(qTitleGroupBoxLayout)
+                                
+        qLogoImg = qt.QLabel(self)
+        sLogoName = 'ImageQuizzer.png'
+        sLogoPath = os.path.join(self.oFilesIO.GetScriptedModulesPath(),'Resources','Icons',sLogoName)
+        pixmap = qt.QPixmap(sLogoPath)
+        pixmapTarget = pixmap.scaled(pixmap.height()-430, pixmap.width()-430, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation);
+        qLogoImg.setPixmap(pixmapTarget)
+        qLogoImg.setAlignment(QtCore.Qt.AlignCenter)
+
+        qTitle = qt.QLabel('Baines Image Quizzer')
+#         qTitle.setMinimumHeight(pixmap.height())
+        qTitle.setFont(qt.QFont('Arial',12, qt.QFont.Bold))
+        qTitle.setAlignment(QtCore.Qt.AlignCenter)
+
+        qTitleGroupBoxLayout.addWidget(qLogoImg)
+        qTitleGroupBoxLayout.addWidget(qTitle)
+        
+        qTitleGroupBoxLayout.setSpacing(20)
+        qTitleGroupBoxLayout.addStretch()
+        
+        
+        return qTitleGroupBox
+        
+        
+#         pixmapTarget = pixmapTarget.scaled(size-5, size-5, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+
+        
  
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddQuizLayoutWithTabs(self):
