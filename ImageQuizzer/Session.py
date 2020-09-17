@@ -1249,11 +1249,12 @@ class QuizWidgets:
         qTitleGroupBox.setLayout(qTitleGroupBoxLayout)
                                 
         qLogoImg = qt.QLabel(self)
-        sLogoName = 'ImageQuizzer.png'
+        sLogoName = 'BainesLogoSmall.png'
         sLogoPath = os.path.join(self.oFilesIO.GetScriptedModulesPath(),'Resources','Icons',sLogoName)
         pixmap = qt.QPixmap(sLogoPath)
-        pixmapTarget = pixmap.scaled(pixmap.height()-430, pixmap.width()-430, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation);
-        qLogoImg.setPixmap(pixmapTarget)
+#         pixmapTarget = pixmap.scaled(pixmap.height()-430, pixmap.width()-430, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation);
+#         qLogoImg.setPixmap(pixmapTarget)
+        qLogoImg.setPixmap(pixmap)
         qLogoImg.setAlignment(QtCore.Qt.AlignCenter)
 
         qTitle = qt.QLabel('Baines Image Quizzer')

@@ -110,9 +110,34 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         qUserLoginLayout = qt.QVBoxLayout()
         self.qUserLoginWidget = qt.QWidget()
         self.qUserLoginWidget.setLayout(qUserLoginLayout)
-        qUserStudyWidgetTitle = qt.QLabel('Baines Image Quizzer - User Login')
-        qUserLoginLayout.addWidget(qUserStudyWidgetTitle)
+#         qUserStudyWidgetTitle = qt.QLabel('Baines Image Quizzer - User Login')
+#         qUserLoginLayout.addWidget(qUserStudyWidgetTitle)
          
+
+        qTitleGroupBox = qt.QGroupBox()
+        qTitleGroupBoxLayout = qt.QHBoxLayout()
+        qTitleGroupBox.setLayout(qTitleGroupBoxLayout)
+                                
+        qLogoImg = qt.QLabel(self)
+        sLogoName = 'BainesLogoSmall.png'
+        sLogoPath = os.path.join(self.oFilesIO.GetScriptedModulesPath(),'Resources','Icons',sLogoName)
+        pixmap = qt.QPixmap(sLogoPath)
+#         pixmapTarget = pixmap.scaled(pixmap.height()-430, pixmap.width()-430, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation);
+#         qLogoImg.setPixmap(pixmapTarget)
+        qLogoImg.setPixmap(pixmap)
+        qLogoImg.setAlignment(QtCore.Qt.AlignCenter)
+
+        qTitle = qt.QLabel('Image Quizzer - User Login')
+#         qTitle.setMinimumHeight(pixmap.height())
+        qTitle.setFont(qt.QFont('Arial',12, qt.QFont.Bold))
+        qTitle.setAlignment(QtCore.Qt.AlignCenter)
+
+        qTitleGroupBoxLayout.addWidget(qLogoImg)
+        qTitleGroupBoxLayout.addWidget(qTitle)
+        
+        qUserLoginLayout.addWidget(qTitleGroupBox)
+        
+        
         ################################
         # Get Database location
         ################################
@@ -173,6 +198,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
 
         self.comboGetUserName = qt.QComboBox()
+        self.comboGetUserName.setStyleSheet("QComboBox{ background-color: rgba(0,179,246,.9) }")
+        
         self.comboGetUserName.setEditable(True)
         self.comboGetUserName.addItem('?') # default to special character to force user entry
         
@@ -186,17 +213,27 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         ################################
         # Get study button
         ################################
+        
+        self.qQuizSelectionGrpBox = qt.QGroupBox()
+        self.qQuizSelectionGrpBox.setTitle('3. Select Quiz')
+        self.qQuizSelectionGrpBoxLayout = qt.QVBoxLayout()
+        self.qQuizSelectionGrpBox.setLayout(self.qQuizSelectionGrpBoxLayout)
+        self.qQuizSelectionGrpBox.setEnabled(False)
+        
         # File Picker
-        self.btnGetUserStudy = qt.QPushButton("Select quiz:")
+        self.btnGetUserStudy = qt.QPushButton("Choose quiz to launch")
         self.btnGetUserStudy.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
         self.btnGetUserStudy.setEnabled(True)
         self.btnGetUserStudy.toolTip = "Select Quiz xml file for launch "
         self.btnGetUserStudy.connect('clicked(bool)', self.onApplyQuizSelection)
-        self.qUserGrpBoxLayout.addWidget(self.btnGetUserStudy)
+        self.qQuizSelectionGrpBoxLayout.addWidget(self.btnGetUserStudy)
  
         self.qLblQuizFilename = qt.QLabel('Selected quiz filename')
-        self.qUserGrpBoxLayout.addWidget(self.qLblQuizFilename)
-         
+        self.qQuizSelectionGrpBoxLayout.addWidget(self.qLblQuizFilename)
+        
+        qUserLoginLayout.addWidget(self.qQuizSelectionGrpBox)
+        
+        
         # Add vertical spacer
         qUserLoginLayout.addSpacing(20)
          
@@ -205,7 +242,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         ################################
         
         self.qLaunchGrpBox = qt.QGroupBox()
-        self.qLaunchGrpBox.setTitle('3. Launch Quiz')
+        self.qLaunchGrpBox.setTitle('4. Launch Quiz')
         self.qLaunchGrpBoxLayout = qt.QHBoxLayout()
         self.qLaunchGrpBox.setLayout(self.qLaunchGrpBoxLayout)
         self.qLaunchGrpBox.setEnabled(False)
@@ -225,6 +262,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         # capture selected user name
         self.oFilesIO.SetUsernameAndDir(self.comboGetUserName.currentText)
+        self.qQuizSelectionGrpBox.setEnabled(True)
+        
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
