@@ -110,8 +110,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         qUserLoginLayout = qt.QVBoxLayout()
         self.qUserLoginWidget = qt.QWidget()
         self.qUserLoginWidget.setLayout(qUserLoginLayout)
-#         qUserStudyWidgetTitle = qt.QLabel('Baines Image Quizzer - User Login')
-#         qUserLoginLayout.addWidget(qUserStudyWidgetTitle)
          
 
         qTitleGroupBox = qt.QGroupBox()
@@ -122,13 +120,10 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         sLogoName = 'BainesLogoSmall.png'
         sLogoPath = os.path.join(self.oFilesIO.GetScriptedModulesPath(),'Resources','Icons',sLogoName)
         pixmap = qt.QPixmap(sLogoPath)
-#         pixmapTarget = pixmap.scaled(pixmap.height()-430, pixmap.width()-430, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation);
-#         qLogoImg.setPixmap(pixmapTarget)
         qLogoImg.setPixmap(pixmap)
-        qLogoImg.setAlignment(QtCore.Qt.AlignCenter)
+        qLogoImg.setAlignment(QtCore.Qt.AlignLeft)
 
         qTitle = qt.QLabel('Image Quizzer - User Login')
-#         qTitle.setMinimumHeight(pixmap.height())
         qTitle.setFont(qt.QFont('Arial',12, qt.QFont.Bold))
         qTitle.setAlignment(QtCore.Qt.AlignCenter)
 
@@ -151,15 +146,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         qDBGrpBox.setLayout(qDBGrpBoxLayout)
 
         qUserLoginLayout.addWidget(qDBGrpBox)
-
-#         btnUseDefaultDB = qt.QPushButton("Use default database location")
-#         btnUseDefaultDB.setEnabled(True)
-#         btnUseDefaultDB.toolTip = "Slicer's default database location will be used."
-#         btnUseDefaultDB.connect('clicked(bool)', self.onApplyUseDefaultDB)
-#         qDBGrpBoxLayout.addWidget(btnUseDefaultDB)
-# 
-#         
-#         qDBGrpBoxLayout.addSpacing(10)
 
         
         btnGetDBLocation = qt.QPushButton("Define location for Image Quizzer data")

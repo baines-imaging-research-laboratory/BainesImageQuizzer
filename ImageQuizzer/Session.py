@@ -9,7 +9,7 @@ from Question import *
 from ImageView import *
 #from ImageQuizzer import *
 
-from PythonQt import QtCore
+from PythonQt import QtCore, QtGui
 
 from slicer.util import EXIT_SUCCESS
 from datetime import datetime
@@ -322,6 +322,9 @@ class Session:
         self.BuildPageQuestionCompositeIndexList()
         # check for partial or completed quiz
         self.SetCompositeIndexIfResumeRequired()
+        
+        self.progress.setMaximum(len(self._l2iPageQuestionCompositeIndices))
+        self.progress.setValue(self._iCurrentCompositeIndex)
 
         # if quiz is not complete, finish setup
         #    (the check for resuming the quiz may have found it was already complete)
@@ -353,6 +356,12 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupButtons(self):
         
+        qProgressLabel = qt.QLabel('Progress ')
+        self.progress = QtGui.QProgressBar()
+        self.progress.setGeometry(0, 0, 100, 20)
+        self.progress.setStyleSheet("QProgressBar{ text-align: center } QProgressBar::chunk{ background-color: rgb(0,179,246) }")
+ 
+
         # create buttons
         
         # add horizontal layout
@@ -375,9 +384,10 @@ class Session:
         self._btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
 
 
+        self.qButtonGrpBoxLayout.addWidget(qProgressLabel)
+        self.qButtonGrpBoxLayout.addWidget(self.progress)
         self.qButtonGrpBoxLayout.addWidget(self._btnPrevious)
         self.qButtonGrpBoxLayout.addWidget(self._btnNext)
-        
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onNextButtonClicked(self):
@@ -432,6 +442,7 @@ class Session:
                 self._loQuestionSets = []
         
             self._iCurrentCompositeIndex = self._iCurrentCompositeIndex + 1
+            self.progress.setValue(self._iCurrentCompositeIndex)
                 
             if self._iCurrentCompositeIndex > len(self._l2iPageQuestionCompositeIndices) -1:
                 # the last question was answered - exit Slicer
@@ -450,6 +461,8 @@ class Session:
     def onPreviousButtonClicked(self):
 
         self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
+        self.progress.setValue(self._iCurrentCompositeIndex)
+
         if self._iCurrentCompositeIndex < 0:
             # reset to beginning
             self._iCurrentCompositeIndex = 0
