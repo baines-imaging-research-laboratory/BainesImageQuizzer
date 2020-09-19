@@ -149,6 +149,7 @@ class ImageView:
         if oViewNode.sViewLayer == 'Background':
             slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
             slWidget.setSliceOrientation(oViewNode.sOrientation)
+            slWidget.fitSliceToBackground()
 
         elif oViewNode.sViewLayer == 'Foreground':
             slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
@@ -173,6 +174,14 @@ class ImageView:
         slCompNode.SetForegroundVolumeID('None')
         slCompNode.SetLabelVolumeID('None')
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ReassignNodesToFgBg(self, loViewNodes):
+        
+        for oViewNode in loViewNodes:
+            
+            if oViewNode.sViewLayer == 'Background' or oViewNode.sViewLayer == 'Foreground':
+                self.AssignNodesToView(oViewNode)
+            
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #     def ClearImagesAndSegmentations(self):
