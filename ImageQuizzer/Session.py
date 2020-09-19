@@ -588,7 +588,25 @@ class Session:
 
         self.UpdateImageViewObjects(oImageView.GetImageViewList())
         self.LoadSavedLabelMaps()
-        self.SetSavedImageState() # after loading label maps
+
+        oImageView.ReassignNodesToFgBg(oImageView.GetImageViewList())
+
+        self.SetSavedImageState() # after loading label maps and setting Fg / Bg views
+        
+        if self.GetSegmentationTabIndex() > 0:
+            # if Segmentation editor tab exists
+            # clear Master and Merge selector boxes
+            oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
+            oQuizzerEditorHelperBox.setMasterVolume(None)
+            oQuizzerEditorHelperBox.setMergeVolume(None)
+            
+            #collapse label editor to encourage selection of master volume
+            slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
+#             oQuizzerEditorHelperBox.SetCustomColorTable()
+            
+            # reset display to quiz tab
+            self.oQuizWidgets.qTabWidget.setCurrentIndex(0)
+
    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForLastQuestionSetForPage(self):
@@ -1262,7 +1280,7 @@ class QuizWidgets:
         qTitleGroupBox.setLayout(qTitleGroupBoxLayout)
                                 
         qLogoImg = qt.QLabel(self)
-        sLogoName = 'BainesLogoSmall.png'
+        sLogoName = 'BainesChevrons.png'
         sLogoPath = os.path.join(self.oFilesIO.GetScriptedModulesPath(),'Resources','Icons',sLogoName)
         pixmap = qt.QPixmap(sLogoPath)
 #         pixmapTarget = pixmap.scaled(pixmap.height()-430, pixmap.width()-430, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation);
