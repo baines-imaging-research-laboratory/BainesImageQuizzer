@@ -790,7 +790,7 @@ class Session:
                         
                             # get page name to create directory
                             xPageNode = self.GetCurrentPageNode()
-                            sPageIndex = str(self.GetCurrentPageIndex())
+                            sPageIndex = str(self.GetCurrentPageIndex() + 1)
                             sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'name')
                             sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'descriptor')
                              
