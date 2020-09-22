@@ -370,7 +370,8 @@ class QuizzerHelperBox(VTKObservationMixin):
 #     self.structuresFrame.setLayout(qt.QVBoxLayout())
 #     self.masterFrame.layout().addWidget(self.structuresFrame)
 # 
-#     self.structureListWidget = LabelStructureListWidget()
+    ########### For Image Quizzer - initialize but don't use
+    self.structureListWidget = LabelStructureListWidget()
 #     self.structureListWidget.mergeVolumePostfix = self.mergeVolumePostfix
 #     self.structuresFrame.layout().addWidget(self.structureListWidget)
 ############################################################

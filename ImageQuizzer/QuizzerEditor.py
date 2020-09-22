@@ -356,3 +356,14 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 #
   def GetHelperBox(self):
       return self.helper
+  
+  def TestForMaster(self, caller, event):
+    if self.toolsBox:
+        if self.helper:
+            
+          if self.helper.master == None and self.toolsBox.currentEffect != "DefaultTool" :
+            self.msgBox = qt.QMessageBox()
+            self.toolsBox.defaultEffect()
+            self.msgBox.warning(slicer.util.mainWindow(), 'Image Quizzer: Warning', 'No Master selected')
+
+      

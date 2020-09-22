@@ -790,11 +790,11 @@ class Session:
                         
                             # get page name to create directory
                             xPageNode = self.GetCurrentPageNode()
-                            sPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'id')
+                            sPageIndex = str(self.GetCurrentPageIndex())
                             sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'name')
                             sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'descriptor')
                              
-                            sDirName = os.path.join(self.oFilesIO.GetUserQuizResultsDir(), sPageID + '-' + sPageName + '-' + sPageDescriptor)
+                            sDirName = os.path.join(self.oFilesIO.GetUserQuizResultsDir(), sPageIndex + '-' + sPageName + '-' + sPageDescriptor)
                             sPageResultsDir = self.oFilesIO.CreatePageDir(sDirName)
 
                             sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
