@@ -527,13 +527,17 @@ class UtilsIO:
         return self._sXmlResourcesDir
     
     #----------
-    def GetRelativePath(self, sInputPath):
-        # remove absolute path to data folders
-        return sInputPath.lstrip(self._sDataParentDir + '\\')
+    def GetRelativeUserPath(self, sInputPath):
+        # remove absolute path to user folders
+        return sInputPath.replace(self.GetUserDir()+'\\','')
 
     #----------
-    def GetAbsolutePath(self, sInputPath):
+    def GetAbsoluteDataPath(self, sInputPath):
         return os.path.join(self._sDataParentDir, sInputPath)
+    
+    #----------
+    def GetAbsoluteUserPath(self, sInputPath):
+        return os.path.join(self.GetUserDir(), sInputPath)
     
     #----------
     def GetQuizFilename(self):
