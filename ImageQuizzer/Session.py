@@ -809,7 +809,7 @@ class Session:
                          
 
                             # update xml storing the path to the label map file with the image element
-                            self.AddLabelMapPathElement(oImageNode.GetXmlImageElement(), self.oFilesIO.GetRelativePath(sLabelMapPath))
+                            self.AddLabelMapPathElement(oImageNode.GetXmlImageElement(), self.oFilesIO.GetRelativeUserPath(sLabelMapPath))
 
     
                 bLabelMapsSaved = True
@@ -848,7 +848,7 @@ class Session:
                     #    same label map may have been stored multiple times in XML for the page
                     #    (same image but different orientations)
                     if not sStoredRelativePath in lLoadedLabelMaps:
-                        sAbsolutePath = self.oFilesIO.GetAbsolutePath(sStoredRelativePath)
+                        sAbsolutePath = self.oFilesIO.GetAbsoluteUserPath(sStoredRelativePath)
                         dictProperties = {'labelmap' : True, 'show': False}
                         
                         try:
