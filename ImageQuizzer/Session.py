@@ -9,6 +9,9 @@ from Question import *
 from ImageView import *
 #from ImageQuizzer import *
 
+import EditorLib
+from EditorLib import EditUtil
+
 from PythonQt import QtCore, QtGui
 
 from slicer.util import EXIT_SUCCESS
@@ -394,7 +397,18 @@ class Session:
 
         # before leaving the page, if the segmentation is enabled, restore mouse to default cursor
         if self.GetSegmentationTabIndex() > 0:
+            # if Segmentation editor tab exists
+            
+            #collapse label editor to encourage selection of master volume
+            slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
+#             oQuizzerEditorHelperBox.SetCustomColorTable()
+            
+            # reset display to quiz tab
+            self.oQuizWidgets.qTabWidget.setCurrentIndex(0)
             slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
+        
+
+        
         
         bLabelMapsSaved, sMsgSaveLableMaps = self.SaveLabelMaps()
 
@@ -594,18 +608,13 @@ class Session:
         self.SetSavedImageState() # after loading label maps and setting Fg / Bg views
         
         if self.GetSegmentationTabIndex() > 0:
-            # if Segmentation editor tab exists
             # clear Master and Merge selector boxes
             oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
             oQuizzerEditorHelperBox.setMasterVolume(None)
-            oQuizzerEditorHelperBox.setMergeVolume(None)
-            
-            #collapse label editor to encourage selection of master volume
-            slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
-#             oQuizzerEditorHelperBox.SetCustomColorTable()
-            
-            # reset display to quiz tab
-            self.oQuizWidgets.qTabWidget.setCurrentIndex(0)
+#             oQuizzerEditorHelperBox.setMergeVolume(None)
+
+            pn = EditUtil.getParameterNode()
+            pn.SetParameter('WarningSent','False')
 
    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

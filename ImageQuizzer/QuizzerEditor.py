@@ -199,6 +199,37 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   def updateGUIFromMRML(self, caller, event):
     if self.toolsBox:
       self.toolsBox.updateUndoRedoButtons()
+      
+    ########## Customize for Image Quizzer ##########
+    ###
+      # we are here because there has been a modified parameter trigger
+      # get the state of the WarningSent parameter
+      # NOTE: there is a trigger when the user tries to edit as well as
+      #    when resetting the tool to the default
+      sWarningSent = self.parameterNode.GetParameter('WarningSent')
+      print('************')
+      print('Warning : ', sWarningSent)
+      print('No Frame: ', self.editLabelMapsFrame.collapsed)
+
+      # if the user hasn't attempted an edit yet (ie the frame isn't even open)
+      #     we can ignore - reset the warning parameter
+      if self.editLabelMapsFrame.collapsed == True:
+
+          self.parameterNode.SetParameter('WarningSent','False')
+      
+      else:
+          if self.helper.master == None:
+            # user is attempting to edit a label map
+            if sWarningSent == 'False':
+
+              self.msgBox = qt.QMessageBox()
+              self.msgBox.warning(slicer.util.mainWindow(), 'Image Quizzer: Warning', 'Select Master')
+              self.parameterNode.SetParameter('WarningSent','True') # before resetting the tool
+              self.toolsBox.defaultEffect() # will trigger an event
+              self.editLabelMapsFrame.collapsed = True
+                
+    ###
+    #################################################
 
   # sets the node for the volume to be segmented
   def setMasterNode(self, newMasterNode):
@@ -217,6 +248,13 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Message suggesting using Segment Editor
 #     self.createSegmentEditorMessage()
 
+    ########## Customize for Image Quizzer ##########
+    ###
+    self.parameterNode = EditUtil.getParameterNode()
+    self.addObserver(self.parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGUIFromMRML)
+    ###
+    #################################################
+
     #
     # Editor Volumes
     #
@@ -233,9 +271,13 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # create the helper box - note this isn't a Qt widget
     #  but a helper class that creates Qt widgets in the given parent
     if self.showVolumesFrame:
-############### SETUP FOR IMAGE QUIZZER - PI-Rads Editor ############
+
+    ########## Customize for Image Quizzer ##########
+    ###
 #       self.helper = EditorLib.HelperBox(self.volumes)
       self.helper = QuizzerHelperBox(self.volumes)
+    ###
+    #################################################
       
       
       
@@ -351,19 +393,13 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
   #->> TODO: check to make sure editor module smoothly handles interactive changes to the master and merge nodes
 
+
 ############### SETUP FOR IMAGE QUIZZER - Customize ############
+###
 #     getter for helper box to access methods
 #
   def GetHelperBox(self):
       return self.helper
   
-  def TestForMaster(self, caller, event):
-    if self.toolsBox:
-        if self.helper:
-            
-          if self.helper.master == None and self.toolsBox.currentEffect != "DefaultTool" :
-            self.msgBox = qt.QMessageBox()
-            self.toolsBox.defaultEffect()
-            self.msgBox.warning(slicer.util.mainWindow(), 'Image Quizzer: Warning', 'No Master selected')
-
-      
+###
+#################################################

@@ -89,6 +89,7 @@ class QuizzerHelperBox(VTKObservationMixin):
     self.selectCommand = None
 
     
+    ########## Customize for Image Quizzer ##########
     ########## Modify Propagation Mode #####################
     #    
     # Set mode to 1 to match the Label layer defined in Slicer's vtkMRMLApplicationLogic.h
@@ -108,7 +109,7 @@ class QuizzerHelperBox(VTKObservationMixin):
     scriptedModulesPath = eval('slicer.modules.%s.path' % sQuizModuleName.lower())
     scriptedModulesPath = os.path.dirname(scriptedModulesPath)
     self.pathQuizColorFiles = os.path.join(scriptedModulesPath, 'Resources', 'ColorFiles')
-    print(self.pathQuizColorFiles)
+#     print(self.pathQuizColorFiles)
     ############################################################
 
 
@@ -124,24 +125,24 @@ class QuizzerHelperBox(VTKObservationMixin):
       self.create()
 
   def onEnter(self):
-
-    self.addObserver(slicer.mrmlScene,
-        slicer.vtkMRMLScene.NodeAddedEvent,
-        self.structureListWidget.updateStructures)
-
-    self.addObserver(slicer.mrmlScene,
-        slicer.vtkMRMLScene.NodeRemovedEvent,
-        self.structureListWidget.updateStructures)
+    pass
+#     self.addObserver(slicer.mrmlScene,
+#         slicer.vtkMRMLScene.NodeAddedEvent,
+#         self.structureListWidget.updateStructures)
+# 
+#     self.addObserver(slicer.mrmlScene,
+#         slicer.vtkMRMLScene.NodeRemovedEvent,
+#         self.structureListWidget.updateStructures)
 
   def onExit(self):
-    self.removeObservers(method=self.structureListWidget.updateStructures)
+#     self.removeObservers(method=self.structureListWidget.updateStructures)
 ########## Customize for Image Quizzer ##########
     self.quizzerCTNode.UnRegister(slicer.mrmlScene)
 #################################################
 
   def cleanup(self):
     self.onExit()
-    self.structureListWidget.cleanup()
+#     self.structureListWidget.cleanup()
 
   @property
   def merge(self):
@@ -210,10 +211,11 @@ class QuizzerHelperBox(VTKObservationMixin):
         slicer.util.errorDisplay( "Error: selected merge label volume is not a label volume" )
       else:
 ########## Customize for Image Quizzer ##########
+###
         self.SetCustomColorTable()
         merge.GetDisplayNode().SetAndObserveColorNodeID( self.colorNodeID )
         EditUtil.setPropagateMode(1)
-
+###
 #################################################
         EditUtil.setActiveVolumes(self.master, merge)
         self.mergeSelector.setCurrentNode(merge)
@@ -234,6 +236,7 @@ class QuizzerHelperBox(VTKObservationMixin):
         
     # trigger a modified event on the parameter node so that other parts of the GUI
     # (such as the EditColor) will know to update and enable themselves
+
     EditUtil.getParameterNode().Modified()
 
     if self.selectCommand:
@@ -358,7 +361,12 @@ class QuizzerHelperBox(VTKObservationMixin):
     self.newMergeVolumeAction.connect("triggered()", self.newMerge)
     self.mergeSelector.addMenuAction(self.newMergeVolumeAction)
     
-    
+    ########## Customize for Image Quizzer ##########
+    ###
+    self.mergeSelector.enabled = False
+    ###
+    #################################################
+   
 ############### REMOVE PER STRUCTURE REFERENCES ############
 #     #
 #     # Structures Frame
@@ -371,7 +379,7 @@ class QuizzerHelperBox(VTKObservationMixin):
 #     self.masterFrame.layout().addWidget(self.structuresFrame)
 # 
     ########### For Image Quizzer - initialize but don't use
-    self.structureListWidget = LabelStructureListWidget()
+#######    self.structureListWidget = LabelStructureListWidget()
 #     self.structureListWidget.mergeVolumePostfix = self.mergeVolumePostfix
 #     self.structuresFrame.layout().addWidget(self.structureListWidget)
 ############################################################
