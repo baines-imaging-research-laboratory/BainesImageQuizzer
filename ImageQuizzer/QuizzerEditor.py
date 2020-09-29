@@ -197,36 +197,35 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.toolsBox.cancelFloatingMode()
 
   def updateGUIFromMRML(self, caller, event):
+
     if self.toolsBox:
       self.toolsBox.updateUndoRedoButtons()
-      
-    ########## Customize for Image Quizzer ##########
-    ###
+
+      ########## Customize for Image Quizzer ##########
+      ###
       # we are here because there has been a modified parameter trigger
-      # get the state of the WarningSent parameter
       # NOTE: there is a trigger when the user tries to edit as well as
       #    when resetting the tool to the default
-      sWarningSent = self.parameterNode.GetParameter('WarningSent')
+
+      sCurrentTool = EditUtil.getCurrentEffect()
       print('************')
-      print('Warning : ', sWarningSent)
       print('No Frame: ', self.editLabelMapsFrame.collapsed)
+      print('Tool    : ',sCurrentTool)
 
       # if the user hasn't attempted an edit yet (ie the frame isn't even open)
-      #     we can ignore - reset the warning parameter
+      #     we can ignore 
       if self.editLabelMapsFrame.collapsed == True:
-
-          self.parameterNode.SetParameter('WarningSent','False')
+        pass
       
       else:
-          if self.helper.master == None:
+          if self.helper.master == None and sCurrentTool != 'DefaultTool':
             # user is attempting to edit a label map
-            if sWarningSent == 'False':
 
-              self.msgBox = qt.QMessageBox()
-              self.msgBox.warning(slicer.util.mainWindow(), 'Image Quizzer: Warning', 'Select Master')
-              self.parameterNode.SetParameter('WarningSent','True') # before resetting the tool
-              self.toolsBox.defaultEffect() # will trigger an event
-              self.editLabelMapsFrame.collapsed = True
+            self.msgBox = qt.QMessageBox()
+            self.msgBox.warning(slicer.util.mainWindow(), 'Image Quizzer: Warning', 'Select Master')
+              
+            self.editLabelMapsFrame.collapsed = True
+            self.toolsBox.defaultEffect() # will trigger an event
                 
     ###
     #################################################
