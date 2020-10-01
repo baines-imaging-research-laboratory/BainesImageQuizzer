@@ -697,82 +697,6 @@ class Session:
             
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def SaveLabelMaps(self):
-#         
-#         # if label maps were created, save to disk
-#         bLabelMapsSaved = True
-#         sMsg = ''
-# 
-#         try:
-#        
-#             # get list of label maps to save
-#             lLabelMaps = slicer.mrmlScene.GetNodesByClass('vtkMRMLLabelMapVolumeNode')
-#             
-#             # if list length > 0, create folder to hold labels
-#             iNumLabelMaps =  lLabelMaps.GetNumberOfItems()
-#             if iNumLabelMaps > 0:
-#     
-#                 # get page name to create directory
-#                 xPageNode = self.GetCurrentPageNode()
-#                 sPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'id')
-#                 sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'name')
-#                 sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'descriptor')
-#                 
-# #                 sQuizFilename = self.oFilesIO.GetQuizFilename()
-#             
-#                 sDirName = os.path.join(self.oFilesIO.GetUserQuizResultsDir(), sPageID + '-' + sPageName + '-' + sPageDescriptor)
-#                 sPageDir = self.oFilesIO.CreatePageDir(sDirName)
-#     
-#                 # save each label map
-#                 for iLabelMap in range(iNumLabelMaps):
-#                     slNodeLabelMap = lLabelMaps.GetItemAsObject(iLabelMap)
-# #                     sNodeName = slNodeLabelMap.GetName()
-# #                     
-# #                     # remove invalid characters from filename
-# #                     sLabelMapFilename = self.oFilesIO.CleanFilename(sNodeName)
-# 
-#                     sLabelMapFilename = slNodeLabelMap.GetName()
-#                     sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
-#                     sAssociatedVolumeName = slNodeLabelMap.GetNodeReference('AssociatedNodeID').GetName()
-#                     
-#                     
-#                     # save the label map file to the user's page directory
-#                     sLabelMapPath = os.path.join(sPageDir, sLabelMapFilenameWithExt)
-#                     
-#                     slStorageNode = slNodeLabelMap.CreateDefaultStorageNode()
-#                     slStorageNode.SetFileName(sLabelMapPath)
-#                     slStorageNode.WriteData(slNodeLabelMap)
-#                 
-#                     
-#                     # from associated volume name, match with the xml image name
-#                     for oImageNode in self._loImageViews:
-#                          
-#                         # match label map file with xml image
-#                         if oImageNode.sNodeName == sAssociatedVolumeName:
-#                             # update xml storing the path to the label map file with the image element
-#                             self.AddLabelMapPathElement(oImageNode.GetXmlImageElement(), self.oFilesIO.GetRelativePath(sLabelMapPath))
-#                     
-#                     bLabelMapsSaved = True
-# 
-#                     # for memory leaks (as per Slicer's documentation)
-# #                     slStorageNode.UnRegister(slicer.mrmlScene)
-#             else:
-#                 sMsg = 'No label maps to save'
-#                 bLabelMapsSaved = True
-# 
-# 
-#             # clean up memory leaks
-#             #    getting a node by ID (slSegDisplayNode) doesn't seem to cause a memory leak
-#             #    getting nodes by class does create a memory leak so you have to unregister it!
-#             lLabelMaps.UnRegister(slicer.mrmlScene)
-#                 
-#                 
-#         except:
-#             sMsg = 'Failed to store label maps'
-#             bLabelMapsSaved = False
-#     
-#         return bLabelMapsSaved, sMsg
-
     def SaveLabelMaps(self):
             
         # if label maps were created, save to disk
@@ -877,18 +801,8 @@ class Session:
                             slPlugin = slicer.qSlicerSubjectHierarchyVolumesPlugin()
                             slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
                             slSceneItemID = slSHNode.GetSceneItemID()
-#                             slChildren = vtk.vtkIdList()
-#                             
-#                             slSHNode.GetItemChildren(slSceneItemID, slChildren)
                             slAssociatedNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sAssociatedName)
                             slPlugin.setDisplayVisibility( slAssociatedNodeID, 1)
-                            
-                            ##### THIS IS ONLY GOOD IF THE PAGE HAS THE SAME IMAGE IN ALL VIEWS
-                            ##### IT DOESN'T WORK FOR MULTI-PARAMETRIC DISPLAYS  ???
-#                             # preset the master and merge volume names in the segment editor dropdown boxes 
-#                             oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
-#                             oQuizzerEditorHelperBox.setVolumes(slAssociatedNode, slLabelMapNode)
-        
                             
                             
                             # for memory leak problem
