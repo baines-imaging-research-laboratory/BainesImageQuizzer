@@ -56,6 +56,7 @@ class Session:
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
+        self.oUtilsIO = UtilsIO()
 #         self._oQuizWidgets = None
         
         self._btnNext = None
@@ -66,6 +67,11 @@ class Session:
         if not self.QuizComplete():
             self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
             self._oMsgUtil.DisplayInfo(' Image Quizzer Exiting - User file is saved.')
+
+        # clean up of editor observers and nodes that may cause memory leaks (color table?)
+        if self.GetSegmentationTabIndex() > 0:
+            slicer.modules.quizzereditor.widgetRepresentation().self().exit()
+
         
     #-------------------------------------------
     #        Getters / Setters
@@ -731,9 +737,14 @@ class Session:
                             sPageResultsDir = self.oFilesIO.CreatePageDir(sDirName)
 
                             sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
+                            sLabelMapFilenameWithExtCleaned = self.oUtilsIO.CleanFilename(sLabelMapFilenameWithExt)
                              
                             # save the label map file to the user's page directory
-                            sLabelMapPath = os.path.join(sPageResultsDir, sLabelMapFilenameWithExt)
+                            sLabelMapPath = os.path.join(sPageResultsDir, sLabelMapFilenameWithExtCleaned)
+                            print('LabelMap Path: ', sLabelMapPath)
+#                             sLabelMapPath = "K:\\ImageQuizzerData\\labelmap.nrrd"
+
+
                              
                             slStorageNode = slNodeLabelMap.CreateDefaultStorageNode()
                             slStorageNode.SetFileName(sLabelMapPath)

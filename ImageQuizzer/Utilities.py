@@ -545,12 +545,14 @@ class UtilsIO:
 
     #----------
     def CleanFilename(self, sInputFilename):
-        sInvalid = '<>:"/\|?* '
+#         sInvalid = '<>:"/\|?* '
+        sInvalid = '<>:"/\|?*'
+        sCleanName = sInputFilename
         
         for char in sInvalid:
-            sOutputFilename = sInputFilename.replace(char,'')
+            sCleanName = sCleanName.replace(char,'')
             
-        return sOutputFilename
+        return sCleanName
 
     #----------
     def getNodes(self):
