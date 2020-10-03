@@ -119,6 +119,7 @@ class ImageView:
                 
             if bLoadSuccess and (oImageViewItem.slNode is not None):
                  
+                oImageViewItem.slNode.SetName(oImageViewItem.sNodeName)
                 self._loImageViews.append(oImageViewItem)
                 
             else:
@@ -393,7 +394,7 @@ class ViewNodeBase:
         self.sImageType = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'type')
         self.sDestination = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'destination')
     
-#         self.sNodeName =  self.GetPageID() + '_' + self.sNodeDescriptor
+        self.sNodeName =  self.GetPageID() + '_' + self.sNodeDescriptor
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractXMLNodeElements(self, sParentDataDir):
@@ -408,7 +409,7 @@ class ViewNodeBase:
         self.sImagePath = os.path.join(sParentDataDir, self.oIOXml.GetDataInNode(xPathNodes[0]))
         sFilename_w_ext = os.path.basename(self.sImagePath)
         sFilename, sFileExt = os.path.splitext(sFilename_w_ext)
-        self.sNodeName =  sFilename
+#         self.sNodeName =  sFilename
         
         # Extract destination layer (foreground, background, label)
         xLayerNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Layer')
@@ -780,7 +781,7 @@ class DicomVolumeDetail(ViewNodeBase):
                 # load is complete with a valid node id
                 # update the class properties with the slicer node and node name 
                 self.slNode = slSubjectHierarchyNode.GetItemDataNode(slNodeId)
-                self.sNodeName = self.slNode.GetName()
+#                 self.sNodeName = self.slNode.GetName()
                 bLoadSuccess = True
                         
             

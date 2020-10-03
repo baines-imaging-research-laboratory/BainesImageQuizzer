@@ -802,7 +802,8 @@ class Session:
                             
                             # set associated volume to connect label map to master
                             sLabelMapNodeName = slLabelMapNode.GetName()
-                            sAssociatedName = sLabelMapNodeName.rstrip('-label')
+#                             sAssociatedName = sLabelMapNodeName.rstrip('-label')
+                            sAssociatedName = sLabelMapNodeName.replace('-label','')
                             slAssociatedNodeCollection = slicer.mrmlScene.GetNodesByName(sAssociatedName)
                             slAssociatedNode = slAssociatedNodeCollection.GetItemAsObject(0)
                             
