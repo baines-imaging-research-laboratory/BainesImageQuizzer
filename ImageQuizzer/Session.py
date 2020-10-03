@@ -350,8 +350,8 @@ class Session:
         self.oQuizWidgets = QuizWidgets(self.oFilesIO)
         self.oQuizWidgets.CreateLeftLayoutAndWidget()
 
-        qTitleGrpBox = self.oQuizWidgets.AddQuizTitle()
-        self.oQuizWidgets.qLeftLayout.addWidget(qTitleGrpBox)
+#         qTitleGrpBox = self.oQuizWidgets.AddQuizTitle()
+#         self.oQuizWidgets.qLeftLayout.addWidget(qTitleGrpBox)
         
         self.SetupButtons()
         self.oQuizWidgets.qLeftLayout.addWidget(self.qButtonGrpBox)
@@ -375,6 +375,8 @@ class Session:
         
         # add horizontal layout
         self.qButtonGrpBox = qt.QGroupBox()
+        self.qButtonGrpBox.setTitle('Baines Image Quizzer')
+        self.qButtonGrpBox.setStyleSheet("QGroupBox{ font-size: 14px; font-weight: bold}")
         self.qButtonGrpBoxLayout = qt.QHBoxLayout()
         self.qButtonGrpBox.setLayout(self.qButtonGrpBoxLayout)
 
@@ -1250,6 +1252,7 @@ class QuizWidgets:
         self.qTabWidget = qt.QTabWidget()
         qTabQuiz = qt.QWidget()
         self.qTabWidget.addTab(qTabQuiz,"Quiz")
+        self.qTabWidget.setStyleSheet("QTabBar{ font: bold 9pt}")
         
         
         # Layout within the tab widget - form needs a frame
