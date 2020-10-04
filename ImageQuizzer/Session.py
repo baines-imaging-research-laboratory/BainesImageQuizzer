@@ -411,58 +411,13 @@ class Session:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onNextButtonClicked(self):
-
-        # before leaving the page, if the segmentation is enabled, restore mouse to default cursor
-        if self.GetSegmentationTabIndex() > 0:
-            # if Segmentation editor tab exists
-            
-            #collapse label editor to encourage selection of master volume
-            slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
-#             oQuizzerEditorHelperBox.SetCustomColorTable()
-            
-            # reset display to quiz tab
-            self.oQuizWidgets.qTabWidget.setCurrentIndex(0)
-            slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
         
+        bSuccess = True
+        sMsg = ''
 
+        bSuccess, sMsg = self.PerformSave()
         
-        
-        bLabelMapsSaved, sMsgSaveLableMaps = self.SaveLabelMaps()
-
-        bResponsesCaptured, self._lsNewResponses, sMsgCaptureResponse = self.CaptureResponsesForQuestionSet()
-
-        self.CaptureAndSaveImageState()
-        
-        if bResponsesCaptured == False or bLabelMapsSaved == False:
-
-            self._oMsgUtil.DisplayWarning(sMsgSaveLableMaps + '   ' + sMsgCaptureResponse )
-
-        else:
-            
-            # only allow for writing of responses under certain conditions
-            #    - allow if the question set is marked for multiple responses
-            #    - allow if no responses were recorded yet
-            
-#             if ( self._bAllowMultipleResponse == True)  or \
-#                 ((self._bAllowMultipleResponse == False) and (self.CheckForSavedResponse() == False) ):
-            if ( self.GetMultipleResponsesInQsetAllowed() == True)  or \
-                ((self.GetMultipleResponsesInQsetAllowed() == False) and (self.CheckForSavedResponse() == False) ):
-
-                # check to see if the responses for the question set match 
-                #    what was previously captured
-                #    -only write responses if they have changed
-                if not self._lsNewResponses == self._lsPreviousResponses:
-                    # Responses have been captured, if it's the first set of responses
-                    #    for the session, add in the login timestamp
-                    #    The timestamp is added here in case the user exited without responding to anything,
-                    #    allowing for the resume check to function properly
-                    if self._bStartOfSession == True:
-                        self.AddSessionLoginTimestamp()
-                    
-                    self.WriteResponses()
-                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-                    self._bStartOfSession = False
-            
+        if bSuccess:
 
             ########################################    
             # set up for next page
@@ -490,26 +445,36 @@ class Session:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onPreviousButtonClicked(self):
+        
+        bSuccess = True
+        sMsg = ''
 
-        self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
-        self.progress.setValue(self._iCurrentCompositeIndex)
+        bSuccess, sMsg = self.PerformSave()
+        
+        if bSuccess:
 
-        if self._iCurrentCompositeIndex < 0:
-            # reset to beginning
-            self._iCurrentCompositeIndex = 0
-        
-        self.EnableButtons()
-        
-        self.AdjustForPreviousQuestionSets()
-        
-        
-        self.DisplayPage()
+            ########################################    
+            # set up for previous page
+            ########################################    
+
+            self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
+            self.progress.setValue(self._iCurrentCompositeIndex)
+    
+            if self._iCurrentCompositeIndex < 0:
+                # reset to beginning
+                self._iCurrentCompositeIndex = 0
+            
+            self.EnableButtons()
+            
+            self.AdjustForPreviousQuestionSets()
+            
+            
+            self.DisplayPage()
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onExitButtonClicked(self):
         self._oMsgUtil.DisplayOkCancel('Do you wish to exit? \nResponses will be saved. Quiz can be resumed. ')
 
-        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
         
@@ -683,27 +648,126 @@ class Session:
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def PerformSave(self):
+        sMsg = ''
+        bSuccess = True
+        
+        bSuccess, sMsg = self.ResetSegmentation()
+        
+        if bSuccess:
+            bSuccess, sMsg = self.SaveLabelMaps()
+            
+            if bSuccess:
+                bSuccess, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet()
+
+                if bSuccess:
+                    bSuccess, sMsg = self.CaptureAndSaveImageState()
+                    
+                    if bSuccess:
+                        bSuccess, sMsg = self.WriteResponsesToXml()
+
+            
+            
+        if bSuccess == False:
+            self._oMsgUtil.DisplayWarning( sMsg )
+                
+        
+        return bSuccess, sMsg
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ResetSegmentation(self):
+        
+        bSuccess = True
+        sMsg = ''
+
+        try:
+            # before leaving the page, if the segmentation is enabled, restore mouse to default cursor
+            if self.GetSegmentationTabIndex() > 0:
+                # if Segmentation editor tab exists
+                
+                #collapse label editor to encourage selection of master volume
+                slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
+    #             oQuizzerEditorHelperBox.SetCustomColorTable()
+                
+                # reset display to quiz tab
+                self.oQuizWidgets.qTabWidget.setCurrentIndex(0)
+                slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
+            
+        except:
+            bSuccess = False
+            sMsg = 'Reset segmentation state error'
+            
+        return bSuccess, sMsg
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def WriteResponsesToXml(self):
+        
+        bSuccess = True
+        sMsg = ''
+        
+        try:
+            
+            # only allow for writing of responses under certain conditions
+            #    - allow if the question set is marked for multiple responses
+            #    - allow if no responses were recorded yet
+            
+#             if ( self._bAllowMultipleResponse == True)  or \
+#                 ((self._bAllowMultipleResponse == False) and (self.CheckForSavedResponse() == False) ):
+            if ( self.GetMultipleResponsesInQsetAllowed() == True)  or \
+                ((self.GetMultipleResponsesInQsetAllowed() == False) and (self.CheckForSavedResponse() == False) ):
+
+                # check to see if the responses for the question set match 
+                #    what was previously captured
+                #    -only write responses if they have changed
+                if not self._lsNewResponses == self._lsPreviousResponses:
+                    # Responses have been captured, if it's the first set of responses
+                    #    for the session, add in the login timestamp
+                    #    The timestamp is added here in case the user exited without responding to anything,
+                    #    allowing for the resume check to function properly
+                    if self._bStartOfSession == True:
+                        self.AddSessionLoginTimestamp()
+                    
+                    self.WriteResponses()
+                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+                    self._bStartOfSession = False
+        
+        except:
+            bSuccess = False
+            sMsg = 'Error writing responses to Xml'
+            
+        return bSuccess, sMsg
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureAndSaveImageState(self):
 
-        # for each image, capture the slice, window and level settings
-        for oImageNode in self._loImageViews:
-            if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
-
-                dictAttribState = oImageNode.GetViewState()
-
-                # check if xml State element exists
-                xImage = oImageNode.GetXmlImageElement()
-                iNumStateElements = self.oIOXml.GetNumChildrenByName(xImage, 'State')
-                if iNumStateElements >0:
-                    # update xml image/state element (first child)
-                    xStateElement = self.oIOXml.GetNthChild(xImage, 'State', 0)
-                    self.UpdateAtributesInElement(xStateElement, dictAttribState)
-                # if no State element, add one
-                else:
-                    self.AddImageStateElement(xImage, dictAttribState)
-                    
-        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+        sMsg = ''
+        bSuccess = True
+        
+        try:
+            # for each image, capture the slice, window and level settings
+            for oImageNode in self._loImageViews:
+                if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
     
+                    dictAttribState = oImageNode.GetViewState()
+    
+                    # check if xml State element exists
+                    xImage = oImageNode.GetXmlImageElement()
+                    iNumStateElements = self.oIOXml.GetNumChildrenByName(xImage, 'State')
+                    if iNumStateElements >0:
+                        # update xml image/state element (first child)
+                        xStateElement = self.oIOXml.GetNthChild(xImage, 'State', 0)
+                        self.UpdateAtributesInElement(xStateElement, dictAttribState)
+                    # if no State element, add one
+                    else:
+                        self.AddImageStateElement(xImage, dictAttribState)
+                        
+            self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+    
+        except:
+            bSuccess = False
+            sMsg = 'Error saving the image state'
+            
+        return bSuccess, sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSavedImageState(self):
@@ -950,8 +1014,6 @@ class Session:
 
         self._lsPreviousResponses = lsAllResponsesForQuestion
             
-    
-    #-----------------------------------------------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def WriteResponses(self):
