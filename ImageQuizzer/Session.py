@@ -507,7 +507,7 @@ class Session:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onExitButtonClicked(self):
-        self._oMsgUtil.DisplayOkCancel(' Do you wish to exit? - Quiz responses will be saved.')
+        self._oMsgUtil.DisplayOkCancel('Do you wish to exit? \nResponses will be saved. Quiz can be resumed. ')
 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
