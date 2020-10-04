@@ -384,6 +384,13 @@ class UtilsMsgs:
         qtAns = self.msgBox.question(slicer.util.mainWindow(),'Image Quizzer: Continue?',sMsg, qt.QMessageBox.Yes, qt.QMessageBox.No)
         return qtAns
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def DisplayOkCancel(self,sMsg):
+        qtAns = self.msgBox.question(slicer.util.mainWindow(),"Image Quizzer: ",sMsg, qt.QMessageBox.Ok, qt.QMessageBox.Cancel)
+        if qtAns == qt.QMessageBox.Ok:
+            exit()
+
+
 ##########################################################################
 #
 #   class UtilsIO

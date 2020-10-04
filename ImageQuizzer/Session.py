@@ -381,7 +381,7 @@ class Session:
         self.qButtonGrpBox.setLayout(self.qButtonGrpBoxLayout)
 
         # Next button
-        self._btnNext = qt.QPushButton("Save and Next")
+        self._btnNext = qt.QPushButton("Next")
         self._btnNext.toolTip = "Save responses and display next set of questions."
         self._btnNext.enabled = True
         self._btnNext.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
@@ -395,6 +395,15 @@ class Session:
         self._btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
 
 
+        # Exit button
+        self._btnExit = qt.QPushButton("Exit")
+        self._btnExit.toolTip = "Save quiz and exit Slicer."
+        self._btnExit.enabled = True
+        self._btnExit.setStyleSheet("QPushButton{ background-color: rgb(255,0,0) }")
+        self._btnExit.connect('clicked(bool)',self.onExitButtonClicked)
+
+
+        self.qButtonGrpBoxLayout.addWidget(self._btnExit)
         self.qButtonGrpBoxLayout.addWidget(qProgressLabel)
         self.qButtonGrpBoxLayout.addWidget(self.progress)
         self.qButtonGrpBoxLayout.addWidget(self._btnPrevious)
@@ -495,6 +504,11 @@ class Session:
         
         
         self.DisplayPage()
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onExitButtonClicked(self):
+        self._oMsgUtil.DisplayOkCancel(' Do you wish to exit? - Quiz responses will be saved.')
+
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
