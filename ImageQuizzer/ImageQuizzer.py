@@ -94,12 +94,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.qUserLoginWidget.show()
 
 
-
-        #-------------------------------------------
-        # Connections (Not yet implemented)
-        #-------------------------------------------
-#         self.btnShowQuizProgress.connect('clicked(bool)', self.onShowQuizProgressClicked)
-        
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  
@@ -121,11 +115,11 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         sLogoPath = os.path.join(self.oFilesIO.GetScriptedModulesPath(),'Resources','Icons',sLogoName)
         pixmap = qt.QPixmap(sLogoPath)
         qLogoImg.setPixmap(pixmap)
-        qLogoImg.setAlignment(QtCore.Qt.AlignLeft)
+        qLogoImg.setAlignment(QtCore.Qt.AlignRight)
 
         qTitle = qt.QLabel('Baines Image Quizzer - User Login')
         qTitle.setFont(qt.QFont('Arial',12, qt.QFont.Bold))
-        qTitle.setAlignment(QtCore.Qt.AlignCenter)
+        qTitle.setAlignment(QtCore.Qt.AlignVCenter)
 
         qTitleGroupBoxLayout.addWidget(qLogoImg)
         qTitleGroupBoxLayout.addWidget(qTitle)
@@ -404,12 +398,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onShowQuizProgressClicked(self):
-        print('show progress')
-#         self.qtQuizProgressWidget.setText(self.docHtmlStudies)
-#         self.qtQuizProgressWidget.show()
-
-    
 
 
 

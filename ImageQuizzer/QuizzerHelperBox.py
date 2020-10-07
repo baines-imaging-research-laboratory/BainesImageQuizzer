@@ -215,6 +215,7 @@ class QuizzerHelperBox(VTKObservationMixin):
         self.SetCustomColorTable()
         merge.GetDisplayNode().SetAndObserveColorNodeID( self.colorNodeID )
         EditUtil.setPropagateMode(1)
+        self.TriggerReformatOrientation()
 ###
 #################################################
         EditUtil.setActiveVolumes(self.master, merge)
@@ -439,6 +440,22 @@ class QuizzerHelperBox(VTKObservationMixin):
             self.quizzerCTNode = colorLogic.LoadColorFile(lsUserColorTables[ind], self.sColorTableName)
 
     self.colorNodeID = self.quizzerCTNode.GetID()
+
+################## REFORMAT ORIENTATION ####################
+
+  def TriggerReformatOrientation(self):
+    # - trigger all views to be in the reformat orientation 
+
+    # - creating a LabelEffectTool triggers the 'rotateSliceToImage' method in the constructor
+    # - this tool requires the slice widget as a parameter
+      
+    slWidget = EditUtil.getSliceWidget('Red')
+    EditorLib.LabelEffectTool(slWidget)
+    slWidget = EditUtil.getSliceWidget('Green')
+    EditorLib.LabelEffectTool(slWidget)
+    slWidget = EditUtil.getSliceWidget('Yellow')
+    EditorLib.LabelEffectTool(slWidget)
+   
 ############################################################
 
 

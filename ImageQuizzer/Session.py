@@ -442,6 +442,9 @@ class Session:
    
             self.DisplayPage()
 
+        else:
+            self._oMsgUtil.DisplayWarning( sMsg )
+                
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onPreviousButtonClicked(self):
@@ -471,15 +474,21 @@ class Session:
             
             self.DisplayPage()
         
+        else:
+            self._oMsgUtil.DisplayWarning( sMsg )
+            
+                
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onExitButtonClicked(self):
-        self._oMsgUtil.DisplayOkCancel('Do you wish to exit? \nResponses will be saved. Quiz can be resumed. ')
+        qtAns = self._oMsgUtil.DisplayOkCancel('Do you wish to exit? \nResponses will be saved. Quiz can be resumed. ')
+        if qtAns == qt.QMessageBox.Ok:
+            slicer.util.exit(status=EXIT_SUCCESS)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
         
         # assume not at the end of the quiz
-        self._btnNext.setText("Save and Next")
+        self._btnNext.setText("Next")
         
         # beginning of quiz
         if (self._iCurrentCompositeIndex == 0):
@@ -500,7 +509,7 @@ class Session:
         # assign button description           
         if (self._iCurrentCompositeIndex == len(self._l2iPageQuestionCompositeIndices) - 1):
             # last question of last image view
-            self._btnNext.setText("Save and Finish")
+            self._btnNext.setText("Finish")
 # 
 #         else:
 #             # assume multiple questions in the question set
@@ -656,22 +665,17 @@ class Session:
         
         if bSuccess:
             bSuccess, sMsg = self.SaveLabelMaps()
-            
+        
             if bSuccess:
-                bSuccess, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet()
-
-                if bSuccess:
-                    bSuccess, sMsg = self.CaptureAndSaveImageState()
+                bSuccess, sMsg = self.CaptureAndSaveImageState()
                     
+                if bSuccess:
+                    bSuccess, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet()
+
                     if bSuccess:
                         bSuccess, sMsg = self.WriteResponsesToXml()
 
-            
-            
-        if bSuccess == False:
-            self._oMsgUtil.DisplayWarning( sMsg )
-                
-        
+                    
         return bSuccess, sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1228,8 +1232,12 @@ class Session:
         
         self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
         self.SetQuizComplete(True)
-        self._oMsgUtil.DisplayInfo(sMsg)
-        slicer.util.exit(status=EXIT_SUCCESS)
+        qtAns = self._oMsgUtil.DisplayOkCancel(sMsg)
+        if qtAns == qt.QMessageBox.Ok:
+            slicer.util.exit(status=EXIT_SUCCESS)
+        else:
+            self._iCurrentCompositeIndex = len(self._l2iPageQuestionCompositeIndices) - 1            
+
 
     
 ##########################################################################
@@ -1357,15 +1365,6 @@ class QuizWidgets:
 # #         self._slicerLeftWidget.setLayout(self._slicerLeftMainLayout)
 # #          
 # #         
-# #         
-# #         #### NOT YET IMPLEMENTED
-# #         # Status button
-# #         self.btnShowQuizProgress = qt.QPushButton("Show Quiz Progress")
-# #         self.btnShowQuizProgress.toolTip = "Display status of images."
-# #         self.btnShowQuizProgress.enabled = True
-# #         self._slicerLeftMainLayout.addWidget(self.btnShowQuizProgress)
-# #         
-# # 
 # #         
 # #         #-------------------------------------------
 # #         # Collapsible button
