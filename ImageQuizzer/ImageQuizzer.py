@@ -111,13 +111,15 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         qTitleGroupBox.setLayout(qTitleGroupBoxLayout)
                                 
         qLogoImg = qt.QLabel(self)
-        sLogoName = 'BainesChevrons.png'
+#         sLogoName = 'BainesChevrons.png'
+        sLogoName = 'BainesLogoSmall.png'
         sLogoPath = os.path.join(self.oFilesIO.GetScriptedModulesPath(),'Resources','Icons',sLogoName)
         pixmap = qt.QPixmap(sLogoPath)
         qLogoImg.setPixmap(pixmap)
-        qLogoImg.setAlignment(QtCore.Qt.AlignRight)
+#         qLogoImg.setAlignment(QtCore.Qt.AlignRight)
+        qLogoImg.setAlignment(QtCore.Qt.AlignLeft)
 
-        qTitle = qt.QLabel('Baines Image Quizzer - User Login')
+        qTitle = qt.QLabel('Image Quizzer - User Login')
         qTitle.setFont(qt.QFont('Arial',12, qt.QFont.Bold))
         qTitle.setAlignment(QtCore.Qt.AlignVCenter)
 

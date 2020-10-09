@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Session>
+	<Page name="Patient Dicom With ROIs" descriptor="DicomSeries">
+		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Red">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Yellow">
+			<Layer>Background</Layer>
+			<Orientation>Sagittal</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Green">
+			<Layer>Background</Layer>
+			<Orientation>Coronal</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Red">
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
+			<ROIs roiVisibilityCode="Select">
+				<ROI>Tumor_Contour</ROI>
+				<ROI>Body_Contour</ROI>
+			</ROIs>
+		</Image>
+		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Yellow">
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
+			<ROIs roiVisibilityCode="Select">
+				<ROI>Tumor_Contour</ROI>
+				<ROI>Body_Contour</ROI>
+			</ROIs>
+		</Image>
+		<Image format="dicom" type="RTStruct" descriptor="Segmentation" destination="Green">
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
+			<ROIs roiVisibilityCode="Select">
+				<ROI>Tumor_Contour</ROI>
+				<ROI>Body_Contour</ROI>
+			</ROIs>
+		</Image>
+		<QuestionSet id="Test Dicom With ROIs" title="Test dicom patient showing ROIs"  segmentrequired="n"  allowmultipleresponse="n">
+			<Question type="InfoBox" descriptor="Welcome to the Baines Image Quizzer">
+				<Option>This is a test quiz to ensure proper installation of the application.</Option>
+			</Question>
+			<Question type="Radio" descriptor="Phantom image visibility">
+				<Option>Yes</Option>
+				<Option>No</Option>
+			</Question>
+			<Question type="Radio" descriptor="Can you scroll through the slices">
+				<Option>Yes</Option>
+				<Option>No</Option>
+			</Question>
+			<Question type="InfoBox" descriptor="Changing your selection after Next or Previous buttons">
+				<Option>If this window is greyed out, you cannot change your selection.</Option>
+			</Question>
+		</QuestionSet>
+		<QuestionSet id="Test Dicom With ROIs" title="Test dicom patient showing ROIs"  segmentrequired="n"  allowmultipleresponse="n">
+			<Question type="Checkbox"  descriptor="Try the following:">
+				<Option>Click on the Exit button.</Option>
+			</Question>
+			<Question type="InfoBox" descriptor="Exiting the quiz:">
+				<Option>If you exit your responses will be saved.</Option>
+				<Option>Restarting the quiz will resume where you left off.</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page name="Patient Dicom" descriptor="DicomSeries">
+		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Red">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Yellow">
+			<Layer>Background</Layer>
+			<Orientation>Sagittal</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Green">
+			<Layer>Background</Layer>
+			<Orientation>Coronal</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<QuestionSet id="Test Dicom Read" title="Try the following:" segmentrequired="n"  allowmultipleresponse="y">
+			<Question type="Radio" descriptor="Zoom and Pan">
+				<Option>Yes</Option>
+				<Option>No</Option>
+			</Question>
+			<Question type="Radio" descriptor="Previous and Next buttons">
+				<Option>Yes</Option>
+				<Option>No</Option>
+			</Question>
+			<Question type="Checkbox"  descriptor="Try changing the viewing window configuration:">
+				<Option>Select a single viewing window (eg. Red only)</Option>
+				<Option>Return to Four Up view</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page name="Patient Volume" descriptor="PlanningCT">
+		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Red">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+		</Image>
+		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Yellow">
+			<Layer>Background</Layer>
+			<Orientation>Sagittal</Orientation>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+		</Image>
+		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Green">
+			<Layer>Background</Layer>
+			<Orientation>Coronal</Orientation>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+		</Image>
+		<QuestionSet id="QS-Checkup" title="Test more 3D Slicer features" segmentrequired="n"  allowmultipleresponse="y">
+			<Question type="Checkbox"  descriptor="Try the following:">
+				<Option>Adjust window-level</Option>
+				<Option>Return to default mouse pointer</Option>
+				<Option>Slice Intersections on/off</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page name="Patient Sequence" descriptor="Time Sequence">
+		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" destination="Red">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\DCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
+		</Image>
+		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" destination="Green">
+			<Layer>Background</Layer>
+			<Orientation>Sagittal</Orientation>
+			<Path>ImageVolumes\DCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
+		</Image>
+		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" destination="Yellow">
+			<Layer>Background</Layer>
+			<Orientation>Coronal</Orientation>
+			<Path>ImageVolumes\DCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
+		</Image>
+		<QuestionSet id="Test Volume Sequence" title="Test Sequence Volumes"  segmentrequired="n" allowmultipleresponse="y">
+			<Question type="InfoBox" descriptor="Dynamic Contrast Enhanced Imaging">
+				<Option>Try the controls to run the time sequence.</Option>
+			</Question>
+		</QuestionSet>
+		<QuestionSet id="Test Volume Sequence" title="Test Sequence Volumes"  segmentrequired="y" allowmultipleresponse="y">
+			<Question type="InfoBox" descriptor="Segmenting">
+				<Option>Move to the Segment Editor tab to begin creating segments.</Option>
+				<Option>   1. Select the Master Volume to edit.</Option>
+				<Option>   2. Open the editor tools collapsible button.</Option>
+				<Option>   3. Select the tool for editing (some are not available).</Option>
+			</Question>
+			<Question type="Checkbox"  descriptor="Try the following:">
+				<Option>Paint tool</Option>
+				<Option>Select color</Option>
+				<Option>Change pixel size</Option>
+				<Option>Draw tool (use Apply)</Option>
+				<Option>Undo/Redo</Option>
+				<Option>Erase</Option>
+			</Question>
+			<Question type="IntegerValue" descriptor="Sample numeric entry:" max="5">
+				<Option>Enter overall PI-RADS score:</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>
