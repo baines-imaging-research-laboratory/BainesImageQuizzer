@@ -64,7 +64,7 @@ class ImageView:
         self.iNumImages = self.oIOXml.GetNumChildrenByName(xPageNode, 'Image')
         
 #         # clearing views from previous page
-        slicer.mrmlScene.Clear()
+#         slicer.mrmlScene.Clear()
 #         self.ClearImagesAndSegmentations()
 
 #         # clearing views from previous page is handled by Next button click

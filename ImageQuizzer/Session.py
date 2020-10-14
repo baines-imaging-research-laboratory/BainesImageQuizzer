@@ -435,10 +435,14 @@ class Session:
                 # set up for next page
                 ########################################    
                 
-                # if last question set, clear list
+                # if last question set, clear list and scene
                 if self.CheckForLastQuestionSetForPage() == True:
                     self._loQuestionSets = []
                     slicer.mrmlScene.Clear()
+                else:
+                    # clear quiz widgets only
+                    for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
+                        self.oQuizWidgets.qQuizLayout.itemAt(i).widget().setParent(None)
             
                 self._iCurrentCompositeIndex = self._iCurrentCompositeIndex + 1
                 self.progress.setValue(self._iCurrentCompositeIndex)
@@ -836,16 +840,11 @@ class Session:
                              
                             # save the label map file to the user's page directory
                             sLabelMapPath = os.path.join(sPageResultsDir, sLabelMapFilenameWithExt)
-                            sLabelMapFilenameWithNiftiExt = sLabelMapFilename + '.nii' 
-                            sLabelMapNiftiPath = os.path.join(sPageResultsDir, sLabelMapFilenameWithNiftiExt)
 #                             print('LabelMap Path: ', sLabelMapPath)
-
 
                              
                             slStorageNode = slNodeLabelMap.CreateDefaultStorageNode()
                             slStorageNode.SetFileName(sLabelMapPath)
-                            slStorageNode.WriteData(slNodeLabelMap)
-                            slStorageNode.SetFileName(sLabelMapNiftiPath)
                             slStorageNode.WriteData(slNodeLabelMap)
                             slStorageNode.UnRegister(slicer.mrmlScene) # for memory leaks
                          
@@ -893,36 +892,41 @@ class Session:
                         sAbsolutePath = self.oFilesIO.GetAbsoluteUserPath(sStoredRelativePath)
                         dictProperties = {'labelmap' : True, 'show': False}
                         
-                        try:
+                        # check if label map already exists (if between question sets, label map will persisit)
+                        sLabelMapFilenameNoExt = self.oFilesIO.GetFilenameNoExtFromPath(sStoredRelativePath)
+                        bFoundLabelMap = self.CheckForLoadedLabelMap(sLabelMapFilenameNoExt)
+
+                        if not bFoundLabelMap:
+                            try:
                             
-                            slLabelMapNode = slicer.util.loadLabelVolume(sAbsolutePath, dictProperties)
-                            lLoadedLabelMaps.append(sStoredRelativePath)
+                                slLabelMapNode = slicer.util.loadLabelVolume(sAbsolutePath, dictProperties)
+                                lLoadedLabelMaps.append(sStoredRelativePath)
+                                
+                                # set associated volume to connect label map to master
+                                sLabelMapNodeName = slLabelMapNode.GetName()
+    #                             sAssociatedName = sLabelMapNodeName.rstrip('-label')
+                                sAssociatedName = sLabelMapNodeName.replace('-label','')
+                                slAssociatedNodeCollection = slicer.mrmlScene.GetNodesByName(sAssociatedName)
+                                slAssociatedNode = slAssociatedNodeCollection.GetItemAsObject(0)
+                                
+                                slLabelMapNode.SetNodeReferenceID('AssociatedNodeID',slAssociatedNode.GetID())
+                                
+                                # turn on 'eye' icon in subject hierarchy for Associated Volume
+                                slPlugin = slicer.qSlicerSubjectHierarchyVolumesPlugin()
+                                slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+                                slSceneItemID = slSHNode.GetSceneItemID()
+                                slAssociatedNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sAssociatedName)
+                                slPlugin.setDisplayVisibility( slAssociatedNodeID, 1)
+                                
+                                
+                                # for memory leak problem
+                                slAssociatedNode.UnRegister(slicer.mrmlScene)
                             
-                            # set associated volume to connect label map to master
-                            sLabelMapNodeName = slLabelMapNode.GetName()
-#                             sAssociatedName = sLabelMapNodeName.rstrip('-label')
-                            sAssociatedName = sLabelMapNodeName.replace('-label','')
-                            slAssociatedNodeCollection = slicer.mrmlScene.GetNodesByName(sAssociatedName)
-                            slAssociatedNode = slAssociatedNodeCollection.GetItemAsObject(0)
                             
-                            slLabelMapNode.SetNodeReferenceID('AssociatedNodeID',slAssociatedNode.GetID())
-                            
-                            # turn on 'eye' icon in subject hierarchy for Associated Volume
-                            slPlugin = slicer.qSlicerSubjectHierarchyVolumesPlugin()
-                            slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-                            slSceneItemID = slSHNode.GetSceneItemID()
-                            slAssociatedNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sAssociatedName)
-                            slPlugin.setDisplayVisibility( slAssociatedNodeID, 1)
-                            
-                            
-                            # for memory leak problem
-                            slAssociatedNode.UnRegister(slicer.mrmlScene)
-                            
-                            
-                        except:
-                            
-                            sMsg = 'Trouble loading label map file:' + sAbsolutePath
-                            self.oUtilsMsgs.DisplayWarning(sMsg)
+                            except:
+                                
+                                sMsg = 'Trouble loading label map file:' + sAbsolutePath
+                                self.oUtilsMsgs.DisplayWarning(sMsg)
                     
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -955,6 +959,18 @@ class Session:
                 
         return bResponseCaptured, lsAllResponses, sMsg
        
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CheckForLoadedLabelMap(self, sFilenameNoExt):
+        bFound = False
+        
+        slNode = slicer.mrmlScene.GetNodesByName(sFilenameNoExt)
+        if slNode.GetNumberOfItems() == 1:
+            bFound = True
+        
+        return bFound
+    
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForSavedResponse(self):
         

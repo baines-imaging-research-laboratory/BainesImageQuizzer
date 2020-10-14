@@ -549,6 +549,20 @@ class UtilsIO:
         return self._sQuizFilename
 
     #----------
+    def GetFilenameWithExtFromPath(self, sFilePath):
+        sDir,sFilenameWithExt = os.path.split(sFilePath)
+
+        return sFilenameWithExt
+    
+    #----------
+    def GetFilenameNoExtFromPath(self, sFilePath):
+        sDir, sFilenameExt = os.path.split(sFilePath)
+        sFilenameNoExt = os.path.splitext(sFilenameExt)[0]
+
+        return sFilenameNoExt
+    
+    
+    #----------
     def CleanFilename(self, sInputFilename):
 #         sInvalid = '<>:"/\|?* '
         sInvalid = '<>:"/\|?*'
