@@ -66,10 +66,8 @@
 			</Question>
 		</QuestionSet>
 		<QuestionSet id="Test Dicom With ROIs" title="Test dicom patient showing ROIs"  segmentrequired="n"  allowmultipleresponse="n">
-			<Question type="Checkbox"  descriptor="Try the following:">
-				<Option>Click on the Exit button.</Option>
-			</Question>
 			<Question type="InfoBox" descriptor="Exiting the quiz:">
+				<Option>Click on the Exit button.</Option>
 				<Option>If you exit your responses will be saved.</Option>
 				<Option>Restarting the quiz will resume where you left off.</Option>
 			</Question>
@@ -130,6 +128,7 @@
 				<Option>Adjust window-level</Option>
 				<Option>Return to default mouse pointer</Option>
 				<Option>Slice Intersections on/off</Option>
+				<Option>Explore Data Probe</Option>
 			</Question>
 		</QuestionSet>
 	</Page>

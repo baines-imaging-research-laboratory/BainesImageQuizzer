@@ -415,35 +415,40 @@ class Session:
         bSuccess = True
         sMsg = ''
 
-        bSuccess, sMsg = self.PerformSave()
-        
-        if bSuccess:
+        if self._iCurrentCompositeIndex + 1 == len(self._l2iPageQuestionCompositeIndices):
+            # the last question was answered - check if user is ready to exit
+            self.progress.setValue(self._iCurrentCompositeIndex + 1)
 
-            ########################################    
-            # set up for next page
-            ########################################    
+            self.onExitButtonClicked() # a save is done in here
             
-            # if last question set, clear list
-            if self.CheckForLastQuestionSetForPage() == True:
-                self._loQuestionSets = []
-        
-            self._iCurrentCompositeIndex = self._iCurrentCompositeIndex + 1
-            self.progress.setValue(self._iCurrentCompositeIndex)
-                
-            if self._iCurrentCompositeIndex > len(self._l2iPageQuestionCompositeIndices) -1:
-                # the last question was answered - exit Slicer
-                self.ExitOnQuizComplete("Quiz complete .... Exit")
-    
-            
-            # remove all data from the scene - only images for the current page to be displayed
-            slicer.mrmlScene.Clear()
-            
-            self.EnableButtons()
-   
-            self.DisplayPage()
+            # the user may have cancelled the 'finish'
+            # bypass remainder of the 'next' button code
 
         else:
-            self._oMsgUtil.DisplayWarning( sMsg )
+            # this is not the last question set, do a save and display the next page
+            bSuccess, sMsg = self.PerformSave()
+            
+            if bSuccess:
+    
+    
+                ########################################    
+                # set up for next page
+                ########################################    
+                
+                # if last question set, clear list
+                if self.CheckForLastQuestionSetForPage() == True:
+                    self._loQuestionSets = []
+                    slicer.mrmlScene.Clear()
+            
+                self._iCurrentCompositeIndex = self._iCurrentCompositeIndex + 1
+                self.progress.setValue(self._iCurrentCompositeIndex)
+                    
+                self.EnableButtons()
+       
+                self.DisplayPage()
+    
+            else:
+                self._oMsgUtil.DisplayWarning( sMsg )
                 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -460,7 +465,20 @@ class Session:
             # set up for previous page
             ########################################    
 
-            self.SetupPreviousPage()
+            self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
+            self.progress.setValue(self._iCurrentCompositeIndex)
+    
+            if self._iCurrentCompositeIndex < 0:
+                # reset to beginning
+                self._iCurrentCompositeIndex = 0
+            
+            self.EnableButtons()
+            
+            self.AdjustForPreviousQuestionSets()
+            
+            
+            self.DisplayPage()
+               
         
         else:
             self._oMsgUtil.DisplayWarning( sMsg )
@@ -475,36 +493,11 @@ class Session:
                 slicer.util.exit(status=EXIT_SUCCESS)
             else:
                 self._oMsgUtil.DisplayWarning( sMsg )
-        
-        
-#         qtAns = self._oMsgUtil.DisplaySaveCloseCancel('Do you wish to exit? \nYou may save or discard this page. \nQuiz can be resumed. ')
-#         if qtAns == qt.QMessageBox.Save:
-#             bSuccess, sMsg = self.PerformSave()
-#             if bSuccess:
-#                 slicer.util.exit(status=EXIT_SUCCESS)
-#             else:
-#                 self._oMsgUtil.DisplayWarning( sMsg )
-#         else:
-#             if qtAns == qt.QMessageBox.Close:
-#                 slicer.util.exit(status=EXIT_SUCCESS)
-            
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetupPreviousPage(self): 
-        
-        self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
-        self.progress.setValue(self._iCurrentCompositeIndex)
+        else:
+            # cancelled - reset the progress bar
+            self.progress.setValue(self._iCurrentCompositeIndex)
 
-        if self._iCurrentCompositeIndex < 0:
-            # reset to beginning
-            self._iCurrentCompositeIndex = 0
         
-        self.EnableButtons()
-        
-        self.AdjustForPreviousQuestionSets()
-        
-        
-        self.DisplayPage()
-               
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
         
@@ -1177,6 +1170,9 @@ class Session:
                 break   # exit the reversed loop through the composite indices
             
         if bLastLoginResponseFound == True:
+            
+            # check if the last response found was entered on the last question set. 
+            #    (i.e. was the quiz completed)
             if indCI == (len(self._l2iPageQuestionCompositeIndices) - 1):
                 
                 # if one question set allows a multiple response, user has option to redo response
@@ -1188,8 +1184,11 @@ class Session:
                     if qtAns == qt.QMessageBox.Yes:
                         iResumeCompIndex = 0
                     else:
+                        # user decided not to change responses - exit
                         self.ExitOnQuizComplete("This quiz was already completed. Exiting")
+                        
                 else:
+                    # quiz does not allow for changing responses - exit
                     self.ExitOnQuizComplete("This quiz was already completed. Exiting")
             else:
                 iResumeCompIndex = indCI + 1
@@ -1248,29 +1247,15 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExitOnQuizComplete(self, sMsg):
 
-        # the last index in the composite indices list was reached using the Next button
+        # the last index in the composite indices list was reached
         # the quiz was completed - exit
         
         self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
         self.SetQuizComplete(True)
         
-        # allow user to cancel the exit - last page will be redisplayed
-        qtAns = self._oMsgUtil.DisplayOkCancel(sMsg)
-        if qtAns == qt.QMessageBox.Ok:
-            slicer.util.exit(status=EXIT_SUCCESS)
-        else:
-#             self.SetupPreviousPage()
-            self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
-            self.progress.setValue(self._iCurrentCompositeIndex)
-    
-            if self._iCurrentCompositeIndex < 0:
-                # reset to beginning
-                self._iCurrentCompositeIndex = 0
-            
-            self.EnableButtons()
-            
-            self.DisplayPage()
-
+        self._oMsgUtil.DisplayInfo('Quiz Complete - Exiting')
+        slicer.util.exit(status=EXIT_SUCCESS)
+        
     
 ##########################################################################
 #

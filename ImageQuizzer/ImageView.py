@@ -63,9 +63,14 @@ class ImageView:
         self.xImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
         self.iNumImages = self.oIOXml.GetNumChildrenByName(xPageNode, 'Image')
         
-        # clear views from previous page
+#         # clearing views from previous page
         slicer.mrmlScene.Clear()
 #         self.ClearImagesAndSegmentations()
+
+#         # clearing views from previous page is handled by Next button click
+#         # remove and label maps that were created
+#         self.ClearLabelMapNodes()
+
        
         self.BuildViewNodes()
         
@@ -206,7 +211,21 @@ class ImageView:
 #             slSegDisplayNode.SetVisibility(False)
 #              
 #         # unregister the nodes created by 'GetNodeByClass'otherwise you get a memory leak
-#         lSegNodes.UnRegister(slicer.mrmlScene) 
+#         lSegNodes.UnRegister(slicer.mrmlScene)
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ClearLabelMapNodes(self):
+
+        # get list of all label map nodes
+        lLabelMapNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLLabelMapVolumeNode')
+           
+        for indLabelMap in range(lLabelMapNodes.GetNumberOfItems()):
+  
+            slLabelMapNode = lLabelMapNodes.GetItemAsObject(indLabelMap)
+            slicer.mrmlScene.RemoveNode(slLabelMapNode)
+              
+        # unregister the nodes created by 'GetNodeByClass'otherwise you get a memory leak
+        lLabelMapNodes.UnRegister(slicer.mrmlScene)
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSegmentRoiVisibility(self,oViewNode):
