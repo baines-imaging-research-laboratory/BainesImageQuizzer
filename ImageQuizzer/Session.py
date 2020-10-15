@@ -893,42 +893,50 @@ class Session:
                         dictProperties = {'labelmap' : True, 'show': False}
                         
                         # check if label map already exists (if between question sets, label map will persisit)
-                        sLabelMapFilenameNoExt = self.oFilesIO.GetFilenameNoExtFromPath(sStoredRelativePath)
-                        bFoundLabelMap = self.CheckForLoadedLabelMap(sLabelMapFilenameNoExt)
+                        sLabelMapNodeName = self.oFilesIO.GetFilenameNoExtFromPath(sStoredRelativePath)
+                        bFoundLabelMap, slLabelMapNode = self.CheckForLoadedLabelMap(sLabelMapNodeName)
 
-                        if not bFoundLabelMap:
-                            try:
+                        try:
+
+                            if not bFoundLabelMap:
                             
                                 slLabelMapNode = slicer.util.loadLabelVolume(sAbsolutePath, dictProperties)
-                                lLoadedLabelMaps.append(sStoredRelativePath)
-                                
-                                # set associated volume to connect label map to master
-                                sLabelMapNodeName = slLabelMapNode.GetName()
-    #                             sAssociatedName = sLabelMapNodeName.rstrip('-label')
-                                sAssociatedName = sLabelMapNodeName.replace('-label','')
-                                slAssociatedNodeCollection = slicer.mrmlScene.GetNodesByName(sAssociatedName)
-                                slAssociatedNode = slAssociatedNodeCollection.GetItemAsObject(0)
-                                
-                                slLabelMapNode.SetNodeReferenceID('AssociatedNodeID',slAssociatedNode.GetID())
-                                
-                                # turn on 'eye' icon in subject hierarchy for Associated Volume
-                                slPlugin = slicer.qSlicerSubjectHierarchyVolumesPlugin()
-                                slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-                                slSceneItemID = slSHNode.GetSceneItemID()
-                                slAssociatedNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sAssociatedName)
-                                slPlugin.setDisplayVisibility( slAssociatedNodeID, 1)
-                                
-                                
-                                # for memory leak problem
-                                slAssociatedNode.UnRegister(slicer.mrmlScene)
                             
                             
-                            except:
-                                
-                                sMsg = 'Trouble loading label map file:' + sAbsolutePath
-                                self.oUtilsMsgs.DisplayWarning(sMsg)
-                    
+                            lLoadedLabelMaps.append(sStoredRelativePath)
     
+                            # set associated volume to connect label map to master
+                            sLabelMapNodeName = slLabelMapNode.GetName()
+                            sAssociatedName = sLabelMapNodeName.replace('-label','')
+                            slAssociatedNodeCollection = slicer.mrmlScene.GetNodesByName(sAssociatedName)
+                            slAssociatedNode = slAssociatedNodeCollection.GetItemAsObject(0)
+                            
+                            slLabelMapNode.SetNodeReferenceID('AssociatedNodeID',slAssociatedNode.GetID())
+
+    
+                            # turn on visibility for volume and label map
+                            slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+                            slSceneItemID = slSHNode.GetSceneItemID()
+
+                            slAssociatedNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sAssociatedName)
+                            slVolPlugin = slicer.qSlicerSubjectHierarchyVolumesPlugin()
+                            slVolPlugin.setDisplayVisibility( slAssociatedNodeID, 1)
+
+                            slLabelMapNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sLabelMapNodeName)
+                            slLabelPlugin = slicer.qSlicerSubjectHierarchyLabelMapsPlugin()
+                            slLabelPlugin.setDisplayVisibility( slLabelMapNodeID, 1)
+                            
+                             
+                            # for memory leak problem
+                            slAssociatedNode.UnRegister(slicer.mrmlScene)
+                            
+                        except:
+                             
+                            sMsg = 'Trouble loading label map file:' + sAbsolutePath
+                            self.oUtilsMsgs.DisplayWarning(sMsg)
+                           
+                                
+            
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureResponsesForQuestionSet(self):
         
@@ -963,12 +971,14 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForLoadedLabelMap(self, sFilenameNoExt):
         bFound = False
+        slNode = None
         
-        slNode = slicer.mrmlScene.GetNodesByName(sFilenameNoExt)
-        if slNode.GetNumberOfItems() == 1:
+        slNodesCollection = slicer.mrmlScene.GetNodesByName(sFilenameNoExt)
+        if slNodesCollection.GetNumberOfItems() == 1:
             bFound = True
+            slNode = slNodesCollection.GetItemAsObject(0)
         
-        return bFound
+        return bFound, slNode
     
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
