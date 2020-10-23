@@ -123,9 +123,10 @@ class ImageView:
             
                 
             if bLoadSuccess and (oImageViewItem.slNode is not None):
-                 
-                oImageViewItem.slNode.SetName(oImageViewItem.sNodeName)
-                self._loImageViews.append(oImageViewItem)
+                
+                if oImageViewItem.sImageType != 'Segmentation': 
+                    oImageViewItem.slNode.SetName(oImageViewItem.sNodeName)
+                    self._loImageViews.append(oImageViewItem)
                 
             else:
                 sMsg = 'Image load Failed : ' + sPageID + ':' + oImageViewItem.sImagePath
@@ -578,6 +579,15 @@ class DataVolumeDetail(ViewNodeBase):
                 bNodeExists = self.CheckForNodeExists('vtkMRMLScalarVolumeNode')
                 if not (bNodeExists):
                     self.slNode = slicer.util.loadVolume(self.sImagePath, {'show': False, 'name': self.sNodeName})
+                else: # make sure a node exists
+                    if bNodeExists and (self.slNode is None):
+                        bLoadSuccess = False
+            
+            elif (self.sImageType == 'Segmentation'):
+                
+                bNodeExists = self.CheckForNodeExists('vtkMRMLSegmentationNode')
+                if not (bNodeExists):
+                    self.slNode = slicer.util.loadSegmentation(self.sImagePath, {'show': False, 'name': self.sNodeName})
                 else: # make sure a node exists
                     if bNodeExists and (self.slNode is None):
                         bLoadSuccess = False

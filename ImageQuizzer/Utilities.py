@@ -339,9 +339,10 @@ class UtilsIOXml:
         # by using minidom to reparse the root, we can get a 'pretty' - more user friendly 
         #    xml document output with indents and newlines using writexml
         
-        reparsedRoot = self.prettify(self._xRootNode)
- 
         try:
+
+            reparsedRoot = self.prettify(self._xRootNode)
+ 
             with open(sXmlPath, 'w') as xml_outfile:
                 reparsedRoot.writexml(xml_outfile, encoding="utf-8", indent="\t", addindent="\t", newl="\n")
                 xml_outfile.flush()

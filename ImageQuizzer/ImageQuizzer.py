@@ -7,7 +7,7 @@ from slicer.util import findChild
 
 from Utilities import *
 
-
+from slicer import qSlicerMainWindow #for custom eventFilter
 #
 
 ##########################################################################################
@@ -48,7 +48,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
     """
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
     def __init__(self, parent):
         ScriptedLoadableModuleWidget.__init__(self,parent)
         
@@ -58,35 +57,24 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.oUtilsMsgs = UtilsMsgs()
         self.oFilesIO = UtilsIO()
         self.oFilesIO.SetModuleDirs(sModuleName, sSourceDirForQuiz)
-
+        
 #         # capture Slicer's default database location
 #         self.oFilesIO.SetDefaultDatabaseDir(slicer.dicomDatabase.databaseDirectory)
 
 
-        # comes after confirmation
-#         slicer.app.aboutToQuit.connect(self.myCloseEvent)  # comes after confirmation
-
-        # comes after confirmation  - endless loop unless you do a specific exit in the close module
-#         slicer.app.moduleManager().connect('moduleAboutToBeUnloaded(QString)', self.myCloseEvent)
-
-#         oMainWindow = SlicerMainWindowForClose()
-
-        self.customEventFilter = customEventFilter()
-#         slicer.app.installEventFilter(self.customEventFilter)
-        slicer.util.mainWindow().installEventFilter(self.customEventFilter)        
-        
+#         self.oCustomEventFilter = customEventFilter()
+#         slicer.util.mainWindow().installEventFilter(self.oCustomEventFilter)        
+         
         
         self.slicerMainLayout = self.layout
         
-#     def myCloseEvent(self):
-#         self.oUtilsMsgs.DisplayInfo('***** Closing *****')
-
-    def __del__(self):
-        slicer.util.mainWindow().removeEventFilter(self.customEventFilter)
- 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def __del__(self):
+#         slicer.util.mainWindow().removeEventFilter(self.customEventFilter)
+#  
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def setup(self):
         ScriptedLoadableModuleWidget.setup(self)
         
@@ -105,11 +93,11 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 #         slicer.util.setToolbarsVisible(False) # for live runs
         slicer.util.setToolbarsVisible(True) # while developing
         
-##########################################################
-# --------TESTING A LAYOUT CHANGE ----------
-#         # create button layout
-#         self.CreateModuleButtons()
-##########################################################
+
+        self.oSession = Session()                    
+        self.oCustomEventFilter = customEventFilter(self.oSession, self.oFilesIO)
+        slicer.util.mainWindow().installEventFilter(self.oCustomEventFilter)        
+        
 
 
         self.BuildUserLoginWidget()
@@ -118,7 +106,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 
     def BuildUserLoginWidget(self):
          
         # create the widget for user login
@@ -261,7 +248,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
          
          
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    
     def onUserComboboxChanged(self):
         
         # capture selected user name
@@ -291,7 +277,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        
     def onApplyQuizSelection(self):
         
         # set to default
@@ -321,7 +306,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
          
  
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 
     def onApplyLaunchQuiz(self):
         
         # open the database - if not successful, allow user to reselect
@@ -354,8 +338,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                 if self.oFilesIO.PopulateUserQuizFolder(): # success
     
                     # start the session
-                    oSession = Session()
-                    oSession.RunSetup(self.oFilesIO, self.slicerMainLayout)
+#                     self.oSession = Session()
+                    self.oSession.RunSetup(self.oFilesIO, self.slicerMainLayout)
     
                     
                     try:
@@ -366,58 +350,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                     except:
                         pass
                 
-#########################################################
-#    NOTE: This would be good if I could load these buttons onto the 
-#        Slicer's main layout so they would exist if the user drifted
-#        off the quiz module
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def CreateModuleButtons(self):
-# 
-#         self.qModuleBtnGrpBox = qt.QGroupBox()
-#         self.qModuleBtnGrpBoxLayout = qt.QHBoxLayout()
-#         self.qModuleBtnGrpBox.setLayout(self.qModuleBtnGrpBoxLayout)
-# 
-#         # Login button
-#         self.btnLogin = qt.QPushButton("Login")
-#         self.btnLogin.toolTip = "Login and select quiz"
-#         self.btnLogin.enabled = True
-#         self.btnLogin.connect('clicked(bool)', self.onLoginButtonClicked)
-#          
-#         # Quiz Button
-#         self.btnQuizzer = qt.QPushButton("Baines Image Quizzer")
-#         self.btnQuizzer.enabled = True
-#         self.btnQuizzer.connect('clicked(bool)', self.onQuizButtonClicked)
-#          
-#         # Segment Editor Button
-#         self.btnSegEditor = qt.QPushButton("Segment Editor")
-#         self.btnSegEditor.enabled = True
-#         self.btnSegEditor.connect('clicked(bool)', self.onSegEditorButtonClicked)
-#  
-#         self.qModuleBtnGrpBoxLayout.addWidget(self.btnLogin)
-#         self.qModuleBtnGrpBoxLayout.addSpacing(20)
-#         self.qModuleBtnGrpBoxLayout.addWidget(self.btnQuizzer)
-#         self.qModuleBtnGrpBoxLayout.addSpacing(20)
-#         self.qModuleBtnGrpBoxLayout.addWidget(self.btnSegEditor)
-#  
-#         self.layout.addWidget(self.qModuleBtnGrpBox)  
-# 
-# 
-# ############################################################
-#        
-#     def onLoginButtonClicked(self):
-#         self.qUserLoginWidget.show()
-#         self.qUserLoginWidget.raise_()
-# 
-#         
-#     def onQuizButtonClicked(self):
-#         self.oUtilsMsgs.DisplayInfo('Return to Quiz')
-#         slicer.util.selectModule('ImageQuizzer')
-#     
-#     def onSegEditorButtonClicked(self):
-# #         self.oUtilsMsgs.DisplayInfo('Start Segment Editor Module')
-# #         slicer.modules.segmenteditor.widgetRepresentation().show()
-#         slicer.util.selectModule('SegmentEditor')
-
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -444,65 +376,57 @@ class ImageQuizzerLogic(ScriptedLoadableModuleLogic):
         ScriptedLoadableModuleLogic.__init__(self)
         self.interface = interface
 
-# ##########################################################################
-# #
-# # SlicerMainWindowForClose
-# #
-# ##########################################################################
-# 
-# class SlicerMainWindowForClose(qSlicerMainWindow):
-# 
-#     def __init__(self, parent=None):
-#         qSlicerMainWindow.__init__(self,parent)
-#         print('***** MyMainWindow *****')
-#         
-#     def closeEvent(self, event):
-#         
-#         self.oUtilsMsgs.DisplayInfo('**** Closing MyMainWindow ****')
-#         event.accept()        
-# 
-# 
-#     def on_FileExitAction_triggered(self):
-#         
-#         self.oUtilsMsgs.DisplayInfo('**** Closing MyMainWindow FileExitAction****')
-# 
-# 
-#     def confirmCloseApplication(self, event):
-#         
-#         self.oUtilsMsgs.DisplayInfo('**** Closing MyMainWindow ****')
-# #         event.accept()        
-
 
 ##########################################################################
 #
-# CustomEventFilter
+# customEventFilter
 #
 ##########################################################################
+ 
 class customEventFilter(qt.QObject):
     """ Custom event filter set up to capture when the user presses the 'X'
-        button on the main window to exit the application
-        
-        Note: you can't have a constructor here
+        button on the main window to exit the application. We can display
+        appropriate exit messages for the quiz.
+         
     """
-    
+     
+    def __init__(self, oSession, oFilesIO):
+        qSlicerMainWindow.__init__(self)
+        self.mainWindow = qSlicerMainWindow
+        self.oSession = oSession
+        self.oFilesIO = oFilesIO
+     
     def eventFilter(self, obj, event):
-        
-        self.oFilesIO = UtilsIO()
-        self.oIOXml = UtilsIOXml()
+         
         self.oUtilsMsgs = UtilsMsgs()
-        
+        sSlicerExitWarning = 'The Sicer exit confirmation window will follow.\
+         \n\nSelect: "Cancel exit" to return to the application.\
+           \n   or   "Exit (Discard modifications)" to exit.\
+           \n   (The option to "Save" is not relevant to this quiz.)'
+         
         if event.type() == qt.QEvent.Close:
-            print('type: ', event.type())
-            print('closeEvent: ', qt.QEvent.Close)
-
-            qtAns = self.oUtilsMsgs.DisplayOkCancel('Image Quizzer Exiting \n Results will be saved. \n Restarting the quiz will resume where you left off.')
+#             print('type: ', event.type())
+#             print('closeEvent: ', qt.QEvent.Close)
+ 
+            qtAns = self.oUtilsMsgs.DisplayOkCancel('Image Quizzer Exiting \
+                    \n   Results will be saved.\
+                    \n   Restarting the quiz will resume where you left off.')
             if qtAns == qt.QMessageBox.Ok:
                 sUserQuizResultsPath = self.oFilesIO.GetUserQuizResultsPath()
-                if not sUserQuizResultsPath == '':
-                    self.oIOXml.SaveXml(sUserQuizResultsPath)
-                slicer.util.exit(status=EXIT_SUCCESS)
+                if sUserQuizResultsPath != '':
+                    bSuccess, sMsg = self.oSession.PerformSave()
+                    if bSuccess == True:
+                        slicer.util.exit(status=EXIT_SUCCESS)
+                    else:
+                        self.oUtilsMsgs.DisplayWarning(sMsg)
+                        self.oUtilsMsgs.DisplayWarning(sSlicerExitWarning)
+                else:
+                    slicer.util.exit(status=EXIT_SUCCESS)
+                    
             else:
                 if qtAns == qt.QMessageBox.Cancel:
-                    self.oUtilsMsgs.DisplayWarning('The Sicer application confirmation will follow. \nSelect Slicer option: "Cancel exit" to return or "Exit (Discard modifications)" to exit')
-     
+                    self.oUtilsMsgs.DisplayWarning(sSlicerExitWarning)
+#                     event.ignore() # didn't work
+                    
+      
 
