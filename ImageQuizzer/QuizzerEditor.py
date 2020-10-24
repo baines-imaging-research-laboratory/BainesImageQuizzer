@@ -9,6 +9,7 @@
 # Modifications:
 #    - turn off the information display to connect the user to the more sophisticated SegmentationEditor module
 #    - it now calls the customized HelperBox (QuizzerHelperBox)
+#    - included a getter for the helper box
 #
 #####################################################
 
@@ -196,8 +197,45 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       self.toolsBox.cancelFloatingMode()
 
   def updateGUIFromMRML(self, caller, event):
+
     if self.toolsBox:
       self.toolsBox.updateUndoRedoButtons()
+
+      ########## Customize for Image Quizzer ##########
+      ###
+      # we are here because there has been a modified parameter trigger
+      # NOTE: there is a trigger when the user tries to edit as well as
+      #    when resetting the tool to the default
+
+      sCurrentTool = EditUtil.getCurrentEffect()
+#       print('************')
+#       print('No Frame: ', self.editLabelMapsFrame.collapsed)
+#       print('Tool    : ',sCurrentTool)
+
+      # if the user hasn't attempted an edit yet (ie the frame isn't even open)
+      #     we can ignore 
+      if self.editLabelMapsFrame.collapsed == True:
+        pass
+      
+      else:
+          if self.helper.master == None and sCurrentTool != 'DefaultTool':
+            # user is attempting to edit a label map
+
+            self.msgBox = qt.QMessageBox()
+            self.msgBox.warning(slicer.util.mainWindow(), 'Image Quizzer: Warning', 'Select Master')
+              
+            self.editLabelMapsFrame.collapsed = True
+            self.toolsBox.defaultEffect() # will trigger an event
+            
+          else:
+            if self.helper.master != None and sCurrentTool not in ('DefaultTool', 'PaintEffect', 'EraseLabel', 'DrawEffect'):
+              self.msgBox = qt.QMessageBox()
+              self.msgBox.warning(slicer.util.mainWindow(), 'Image Quizzer: Warning', 'This tool is unavailable.')
+              self.toolsBox.defaultEffect() # will trigger an event
+              
+                
+        ###
+        #################################################
 
   # sets the node for the volume to be segmented
   def setMasterNode(self, newMasterNode):
@@ -216,6 +254,13 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Message suggesting using Segment Editor
 #     self.createSegmentEditorMessage()
 
+    ########## Customize for Image Quizzer ##########
+    ###
+    self.parameterNode = EditUtil.getParameterNode()
+    self.addObserver(self.parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGUIFromMRML)
+    ###
+    #################################################
+
     #
     # Editor Volumes
     #
@@ -232,9 +277,13 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # create the helper box - note this isn't a Qt widget
     #  but a helper class that creates Qt widgets in the given parent
     if self.showVolumesFrame:
-############### SETUP FOR IMAGE QUIZZER - PI-Rads Editor ############
+
+    ########## Customize for Image Quizzer ##########
+    ###
 #       self.helper = EditorLib.HelperBox(self.volumes)
       self.helper = QuizzerHelperBox(self.volumes)
+    ###
+    #################################################
       
       
       
@@ -349,3 +398,14 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       qt.QDesktopServices.openUrl(qt.QUrl('http://massmail.spl.harvard.edu/mailman/listinfo/slicer-users'))
 
   #->> TODO: check to make sure editor module smoothly handles interactive changes to the master and merge nodes
+
+
+############### SETUP FOR IMAGE QUIZZER - Customize ############
+###
+#     getter for helper box to access methods
+#
+  def GetHelperBox(self):
+      return self.helper
+  
+###
+#################################################

@@ -339,9 +339,10 @@ class UtilsIOXml:
         # by using minidom to reparse the root, we can get a 'pretty' - more user friendly 
         #    xml document output with indents and newlines using writexml
         
-        reparsedRoot = self.prettify(self._xRootNode)
- 
         try:
+
+            reparsedRoot = self.prettify(self._xRootNode)
+ 
             with open(sXmlPath, 'w') as xml_outfile:
                 reparsedRoot.writexml(xml_outfile, encoding="utf-8", indent="\t", addindent="\t", newl="\n")
                 xml_outfile.flush()
@@ -384,6 +385,11 @@ class UtilsMsgs:
         qtAns = self.msgBox.question(slicer.util.mainWindow(),'Image Quizzer: Continue?',sMsg, qt.QMessageBox.Yes, qt.QMessageBox.No)
         return qtAns
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def DisplayOkCancel(self,sMsg):
+        qtAns = self.msgBox.question(slicer.util.mainWindow(),"Image Quizzer: ",sMsg, qt.QMessageBox.Ok, qt.QMessageBox.Cancel)
+        return qtAns
+
 ##########################################################################
 #
 #   class UtilsIO
@@ -398,22 +404,23 @@ class UtilsIO:
     def __init__(self, parent=None):
         self.parent = parent
         
-        self._sScriptedModulesPath = '' # location of quizzer module project
+        self._sScriptedModulesPath = ''     # location of quizzer module project
 
-        self._sXmlResourcesDir = '' # folder - holds XML quiz files to copy to user
-        self._sResourcesQuizPath = ''   # full path (dir/file) of quiz to copy to user
+        self._sXmlResourcesDir = ''         # folder - holds XML quiz files to copy to user
+        self._sResourcesQuizPath = ''       # full path (dir/file) of quiz to copy to user
+        self._sQuizFilename = ''            # quiz filename only (no dir)
 
-        self._sDataParentDir = ''   # parent folder to images, DICOM database and users folders
+        self._sDataParentDir = ''           # parent folder to images, DICOM database and users folders
         
-        self._sUsersParentDir = ''    # folder - parent dir to all user folders
-        self._sUsername = ''    # name of user taking the quiz
-        self._sUserDir = ''         # folder - holds quiz for specific user
+        self._sUsersParentDir = ''          # folder - parent dir to all user folders
+        self._sUsername = ''                # name of user taking the quiz
+        self._sUserDir = ''                 # folder - holds quiz subfolders for specific user
 
-        self._sQuizFilename = ''    # quiz filename only (no dir)
-        self._sUserQuizPath = ''        # full path (dir/file) for user's quiz
+        self._sUserQuizResultsDir = ''      # folder for quiz results
+        self._sUserQuizResultsPath = ''     # full path (dir/file) for user's quiz results
 
         self._sDICOMDatabaseDir = ''
-        self._sImageVolumeDataDir = ''
+#         self._sImageVolumeDataDir = ''
 
 
     def setup(self):
@@ -428,27 +435,43 @@ class UtilsIO:
         self._sDataParentDir = sDataDirInput
         
     #----------
-    def SetResourcesQuizPath(self, sSelectedQuiz):
+    def SetResourcesQuizPathAndFilename(self, sSelectedQuizPath):
 
-        self._sResourcesQuizPath = os.path.join(self._sXmlResourcesDir, sSelectedQuiz)
+        self._sResourcesQuizPath = os.path.join(self._sXmlResourcesDir, sSelectedQuizPath)
+        self._sDir, self._sQuizFilename = os.path.split(self._sResourcesQuizPath)
         
     #----------
-    def SetUsername(self, sSelectedUser):
+    def SetUsernameAndDir(self, sSelectedUser):
         self._sUsername = sSelectedUser
+        self._sUserDir = os.path.join(self.GetUsersParentDir(), self._sUsername)
         
+    
+    
+#     ###################
+#     #----------
+#     def SetUserQuizResultsDir(self, sFilename):
+#         self._sUserQuizResultsDir = os.path.join(self.GetUserDir(), sFilename)
+#         
+#     #----------
+#     def SetUserQuizResultsPath(self, sFilename):
+#         
+#         self._sUserQuizResultsPath = os.path.join(self.GetUserQuizResultsDir(), sFilename)
+#     #####################
+    
+    
+    
     #----------
-    def SetUserQuizPath(self, sFilename):
+    def SetupForUserQuizResults(self):
         
-        self._sUserQuizPath = os.path.join(self._sUserDir, sFilename)
+
+        sQuizFileRoot, sExt = os.path.splitext(self.GetQuizFilename())
         
-    #----------
-    def SetUserDir(self):
-        
-        self._sUserDir = os.path.join(self._sUsersParentDir, self._sUsername)
+        self._sUserQuizResultsDir = os.path.join(self.GetUserDir(), sQuizFileRoot)
+        self._sUserQuizResultsPath = os.path.join(self.GetUserQuizResultsDir(), self.GetQuizFilename())
 
         # check that the user folder exists - if not, create it
-        if not os.path.exists(self._sUserDir):
-            os.makedirs(self._sUserDir)
+        if not os.path.exists(self._sUserQuizResultsDir):
+            os.makedirs(self._sUserQuizResultsDir)
         
     
     #----------
@@ -474,9 +497,9 @@ class UtilsIO:
     def GetDICOMDatabaseDir(self):
         return self._sDICOMDatabaseDir
     
-    #----------
-    def GetImageVolumeDataDir(self):
-        return self._sImageVolumeDataDir
+#     #----------
+#     def GetImageVolumeDataDir(self):
+#         return self._sImageVolumeDataDir
 
     #----------
     def GetScriptedModulesPath(self):
@@ -498,41 +521,92 @@ class UtilsIO:
         return self._sUsersParentDir    
 
     #----------
-    def GetUserQuizPath(self):
-        return self._sUserQuizPath
+    def GetUserQuizResultsDir(self):
+        return self._sUserQuizResultsDir
+
+    #----------
+    def GetUserQuizResultsPath(self):
+        return self._sUserQuizResultsPath
     
     #----------
     def GetXmlResourcesDir(self):
         return self._sXmlResourcesDir
     
     #----------
-    def GetRelativePath(self, sInputPath):
-        # remove absolute path to data folders
-        return sInputPath.lstrip(self._sDataParentDir + '\\')
+    def GetRelativeUserPath(self, sInputPath):
+        # remove absolute path to user folders
+        return sInputPath.replace(self.GetUserDir()+'\\','')
 
     #----------
-    def GetAbsolutePath(self, sInputPath):
+    def GetAbsoluteDataPath(self, sInputPath):
         return os.path.join(self._sDataParentDir, sInputPath)
     
     #----------
+    def GetAbsoluteUserPath(self, sInputPath):
+        return os.path.join(self.GetUserDir(), sInputPath)
+    
+    #----------
+    def GetQuizFilename(self):
+        return self._sQuizFilename
+
+    #----------
+    def GetFilenameWithExtFromPath(self, sFilePath):
+        sDir,sFilenameWithExt = os.path.split(sFilePath)
+
+        return sFilenameWithExt
+    
+    #----------
+    def GetFilenameNoExtFromPath(self, sFilePath):
+        sDir, sFilenameExt = os.path.split(sFilePath)
+        sFilenameNoExt = os.path.splitext(sFilenameExt)[0]
+
+        return sFilenameNoExt
+    
+    
+    #----------
     def CleanFilename(self, sInputFilename):
-        sInvalid = '<>:"/\|?* '
+#         sInvalid = '<>:"/\|?* '
+        sInvalid = '<>:"/\|?*'
+        sCleanName = sInputFilename
         
         for char in sInvalid:
-            sOutputFilename = sInputFilename.replace(char,'')
+            sCleanName = sCleanName.replace(char,'')
             
-        return sOutputFilename
-    
+        return sCleanName
+
+    #----------
+    def getNodes(self):
+        
+        ##### For Debug #####
+        # return nodes in the mrmlScene
+        #    Can be used to flag differences in nodes before and after code
+        #    being investigated (example: for memory leaks)
+
+        nodes = slicer.mrmlScene.GetNodes()
+        return [nodes.GetItemAsObject(i).GetID() for i in range(0,nodes.GetNumberOfItems())]
+
+        ######################
+        # set the following line before code being investigated
+        #
+        #        nodes1 = self.oFilesIO.getNodes()
+        #
+        # set these lines after code being investigated
+        #
+        #        nodes2 = self.oFilesIO.getNodes()
+        #        filteredX = ' '.join((filter(lambda x: x not in nodes1, nodes2)))
+        #        print(':',filteredX)
+        ######################
+
     #----------
     def PrintDirLocations(self):
         
         ##### For Debug #####
-        print('Data parent dir:', self.GetDataParentDir())
-        print('Image Volume Data', self.GetImageVolumeDataDir())
-        print('DICOM DB dir: ', self.GetDICOMDatabaseDir())
-        print('User parent dir', self.GetUsersParentDir())
-        print('User dir:', self.GetUserDir())
-        print('User Quiz path: ', self.GetUserQuizPath())
+        print('Data parent dir:      ', self.GetDataParentDir())
+        print('DICOM DB dir:         ', self.GetDICOMDatabaseDir())
+        print('User parent dir:      ', self.GetUsersParentDir())
+        print('User dir:             ', self.GetUserDir())
+        print('User Quiz Results Dir:', self.GetUserQuizResultsDir())
+        print('User Quiz Reults path:', self.GetUserQuizResultsPath())
         
     #-------------------------------------------
     #        Functions
@@ -557,15 +631,16 @@ class UtilsIO:
         
         self._sDataParentDir = sParentDirInput
         
-        # all paths for images in the XML quiz files are relative
-        #     importing will use this directory as the root
-        self._sImageVolumeDataDir = os.path.join(sParentDirInput, 'ImageVolumes')
+        # all paths for images in the XML quiz files are relative to the data parent directory
+        
+#         #  importing will use this directory as the root
+#         self._sImageVolumeDataDir = os.path.join(sParentDirInput, 'ImageVolumes')
 
         # if users directory does not exist yet, it will be created
         self._sUsersParentDir = os.path.join(sParentDirInput, 'Users')
         if not os.path.exists(self._sUsersParentDir):
             os.makedirs(self._sUsersParentDir)
-    
+            
         # create the DICOM database if it is not there ready for importing
         self._sDICOMDatabaseDir = os.path.join(sParentDirInput, 'SlicerDICOMDatabase')
         if not os.path.exists(self._sDICOMDatabaseDir):
@@ -604,21 +679,21 @@ class UtilsIO:
             
         # check if quiz file already exists in the user folder - if not, copy from Resources
 
-        # setup for new location
-        sPath, self._sQuizFilename = os.path.split(self._sResourcesQuizPath)
-        self._sUserQuizPath = os.path.join(self._sUserDir, self._sQuizFilename)
-        if not os.path.isfile(self._sUserQuizPath):
+#         # setup for new location
+#         self._sUserQuizResultsPath = os.path.join(self._sUserDir, self._sQuizFilename)
+
+        if not os.path.isfile(self.GetUserQuizResultsPath()):
             # file not found, copy file from Resources to User folder
-            copyfile(self._sResourcesQuizPath, self._sUserQuizPath)
+            copyfile(self.GetResourcesQuizPath(), self.GetUserQuizResultsPath())
             return True
 
         else:
 
             # create backup of existing file
-            self.BackupUserQuiz()
+            self.BackupUserQuizResults()
                 
             # file exists - make sure it is readable
-            if not os.access(self._sUserQuizPath, os.R_OK):
+            if not os.access(self.GetUserQuizResultsPath(), os.R_OK):
                 # existing file is unreadable
                 sErrorMsg = 'Quiz file is not readable'
                 self.oUtilsMsgs.DisplayWarning(sErrorMsg)     
@@ -627,22 +702,22 @@ class UtilsIO:
                 return True
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def BackupUserQuiz(self):
+    def BackupUserQuizResults(self):
         
         # get current date/time
         from datetime import datetime
         now = datetime.now()
         sSuffix = now.strftime("%b-%d-%Y-%H-%M-%S")
         
-        sFileRoot, sExt = os.path.splitext(self._sQuizFilename)
+        sFileRoot, sExt = os.path.splitext(self.GetQuizFilename())
         
         sNewFileRoot = '_'.join([sFileRoot, sSuffix])
         sNewFilename = ''.join([sNewFileRoot, sExt])
         
-        sBackupQuizPath = os.path.join(self._sUserDir, sNewFilename)
+        sBackupQuizResultsPath = os.path.join(self.GetUserQuizResultsDir(), sNewFilename)
         
         # create copy with data/time stamp as suffix
-        copyfile(self._sUserQuizPath, sBackupQuizPath)
+        copyfile(self.GetUserQuizResultsPath(), sBackupQuizResultsPath)
         
         
         

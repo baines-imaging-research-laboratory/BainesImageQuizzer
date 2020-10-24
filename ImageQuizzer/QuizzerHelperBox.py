@@ -12,6 +12,10 @@
 #    - Change the propagation mode to only set the label layer as active
 #         leaving the background images to display what the user requested 
 #        in the XML of the quiz selected
+#    - Assign the customized color table to the display node
+#        for case when master and merge volumes are already assigned (eg. using Previous button)
+#    - Unregister the colorNode created when exiting or you get memory leaks
+#
 #
 #####################################################
 
@@ -85,6 +89,7 @@ class QuizzerHelperBox(VTKObservationMixin):
     self.selectCommand = None
 
     
+    ########## Customize for Image Quizzer ##########
     ########## Modify Propagation Mode #####################
     #    
     # Set mode to 1 to match the Label layer defined in Slicer's vtkMRMLApplicationLogic.h
@@ -104,7 +109,7 @@ class QuizzerHelperBox(VTKObservationMixin):
     scriptedModulesPath = eval('slicer.modules.%s.path' % sQuizModuleName.lower())
     scriptedModulesPath = os.path.dirname(scriptedModulesPath)
     self.pathQuizColorFiles = os.path.join(scriptedModulesPath, 'Resources', 'ColorFiles')
-    print(self.pathQuizColorFiles)
+#     print(self.pathQuizColorFiles)
     ############################################################
 
 
@@ -120,21 +125,24 @@ class QuizzerHelperBox(VTKObservationMixin):
       self.create()
 
   def onEnter(self):
-
-    self.addObserver(slicer.mrmlScene,
-        slicer.vtkMRMLScene.NodeAddedEvent,
-        self.structureListWidget.updateStructures)
-
-    self.addObserver(slicer.mrmlScene,
-        slicer.vtkMRMLScene.NodeRemovedEvent,
-        self.structureListWidget.updateStructures)
+    pass
+#     self.addObserver(slicer.mrmlScene,
+#         slicer.vtkMRMLScene.NodeAddedEvent,
+#         self.structureListWidget.updateStructures)
+# 
+#     self.addObserver(slicer.mrmlScene,
+#         slicer.vtkMRMLScene.NodeRemovedEvent,
+#         self.structureListWidget.updateStructures)
 
   def onExit(self):
-    self.removeObservers(method=self.structureListWidget.updateStructures)
+#     self.removeObservers(method=self.structureListWidget.updateStructures)
+########## Customize for Image Quizzer ##########
+    self.quizzerCTNode.UnRegister(slicer.mrmlScene)
+#################################################
 
   def cleanup(self):
     self.onExit()
-    self.structureListWidget.cleanup()
+#     self.structureListWidget.cleanup()
 
   @property
   def merge(self):
@@ -147,8 +155,11 @@ class QuizzerHelperBox(VTKObservationMixin):
   def newMerge(self):
     """create a merge volume for the current master even if one exists"""
     self.createMergeOptions = "new"
-    self.SetCustomColorTable()
+########## Customize for Image Quizzer ##########
 #     self.labelCreateDialog()
+    self.SetCustomColorTable()
+    self.createMerge()
+#################################################
 
   def createMerge(self):
     """create a merge volume for the current master"""
@@ -187,15 +198,26 @@ class QuizzerHelperBox(VTKObservationMixin):
 
     if self.master and not self.mergeVolume():
       # the master exists, but there is no merge volume yet
-      # bring up dialog to create a merge with a user-selected color node
-      self.SetCustomColorTable()
+########## Customize for Image Quizzer ##########
+#      # bring up dialog to create a merge with a user-selected color node
 #       self.labelCreateDialog()
+      self.SetCustomColorTable()
+      self.createMerge()
+#################################################
 
     merge = self.mergeVolume()
     if merge:
       if not merge.IsA("vtkMRMLLabelMapVolumeNode"):
         slicer.util.errorDisplay( "Error: selected merge label volume is not a label volume" )
       else:
+########## Customize for Image Quizzer ##########
+###
+        self.SetCustomColorTable()
+        merge.GetDisplayNode().SetAndObserveColorNodeID( self.colorNodeID )
+        EditUtil.setPropagateMode(1)
+        self.TriggerReformatOrientation()
+###
+#################################################
         EditUtil.setActiveVolumes(self.master, merge)
         self.mergeSelector.setCurrentNode(merge)
 
@@ -215,15 +237,12 @@ class QuizzerHelperBox(VTKObservationMixin):
         
     # trigger a modified event on the parameter node so that other parts of the GUI
     # (such as the EditColor) will know to update and enable themselves
+
     EditUtil.getParameterNode().Modified()
 
     if self.selectCommand:
       self.selectCommand()
     
-#     mode = 1
-#     applicationLogic = slicer.app.applicationLogic()
-#     applicationLogic.PropagateVolumeSelection(mode, 0)
-      
 
   def setVolumes(self,masterVolume,mergeVolume):
     """set both volumes at the same time - trick the callback into
@@ -343,7 +362,12 @@ class QuizzerHelperBox(VTKObservationMixin):
     self.newMergeVolumeAction.connect("triggered()", self.newMerge)
     self.mergeSelector.addMenuAction(self.newMergeVolumeAction)
     
-    
+    ########## Customize for Image Quizzer ##########
+    ###
+    self.mergeSelector.enabled = False
+    ###
+    #################################################
+   
 ############### REMOVE PER STRUCTURE REFERENCES ############
 #     #
 #     # Structures Frame
@@ -355,7 +379,8 @@ class QuizzerHelperBox(VTKObservationMixin):
 #     self.structuresFrame.setLayout(qt.QVBoxLayout())
 #     self.masterFrame.layout().addWidget(self.structuresFrame)
 # 
-#     self.structureListWidget = LabelStructureListWidget()
+    ########### For Image Quizzer - initialize but don't use
+#######    self.structureListWidget = LabelStructureListWidget()
 #     self.structureListWidget.mergeVolumePostfix = self.mergeVolumePostfix
 #     self.structuresFrame.layout().addWidget(self.structureListWidget)
 ############################################################
@@ -412,11 +437,25 @@ class QuizzerHelperBox(VTKObservationMixin):
     for ind in range(len(lsUserColorTables)):
         head, tail = os.path.split(lsUserColorTables[ind])
         if tail == self.sColorTableFilename:
-            quizzerCTNode = colorLogic.LoadColorFile(lsUserColorTables[ind], self.sColorTableName)
+            self.quizzerCTNode = colorLogic.LoadColorFile(lsUserColorTables[ind], self.sColorTableName)
 
-    self.colorNodeID = quizzerCTNode.GetID()
-     
-    self.createMerge()
+    self.colorNodeID = self.quizzerCTNode.GetID()
+
+################## REFORMAT ORIENTATION ####################
+
+  def TriggerReformatOrientation(self):
+    # - trigger all views to be in the reformat orientation 
+
+    # - creating a LabelEffectTool triggers the 'rotateSliceToImage' method in the constructor
+    # - this tool requires the slice widget as a parameter
+      
+    slWidget = EditUtil.getSliceWidget('Red')
+    EditorLib.LabelEffectTool(slWidget)
+    slWidget = EditUtil.getSliceWidget('Green')
+    EditorLib.LabelEffectTool(slWidget)
+    slWidget = EditUtil.getSliceWidget('Yellow')
+    EditorLib.LabelEffectTool(slWidget)
+   
 ############################################################
 
 

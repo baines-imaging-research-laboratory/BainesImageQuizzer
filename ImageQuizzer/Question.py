@@ -172,6 +172,7 @@ class QuestionSet():
             question = self._loQuestions[i]
             bBuildQuestion, qGrpboxWidget = question.BuildQuestion()
             if bBuildQuestion :
+                self.qQuizWidgetLayout.addSpacing(5)
                 self.qQuizWidgetLayout.addWidget(qGrpboxWidget)
                 bBuildSuccess = bBuildSuccess * bBuildQuestion
 
@@ -186,6 +187,7 @@ class QuestionSet():
         self.qQuizWidgetLayout = qt.QVBoxLayout()
         self.qQuizWidget.setLayout(self.qQuizWidgetLayout)
         self.qQuizTitle = qt.QLabel(self.title)
+        self.qQuizTitle.setStyleSheet("QLabel{ font: bold}")
         self.qQuizWidgetLayout.addWidget(self.qQuizTitle)
         
 #========================================================================================

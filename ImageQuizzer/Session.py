@@ -9,9 +9,13 @@ from Question import *
 from ImageView import *
 #from ImageQuizzer import *
 
+import EditorLib
+from EditorLib import EditUtil
+
+from PythonQt import QtCore, QtGui
+
 from slicer.util import EXIT_SUCCESS
 from datetime import datetime
-from xml.dom.minidom import _nodeTypes_with_children
 
 
 ##########################################################################
@@ -52,6 +56,7 @@ class Session:
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
+        self.oUtilsIO = UtilsIO()
 #         self._oQuizWidgets = None
         
         self._btnNext = None
@@ -60,8 +65,13 @@ class Session:
 
     def __del__(self):
         if not self.QuizComplete():
-            self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
+            self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
             self._oMsgUtil.DisplayInfo(' Image Quizzer Exiting - User file is saved.')
+
+        # clean up of editor observers and nodes that may cause memory leaks (color table?)
+        if self.GetSegmentationTabIndex() > 0:
+            slicer.modules.quizzereditor.widgetRepresentation().self().exit()
+
         
     #-------------------------------------------
     #        Getters / Setters
@@ -122,70 +132,77 @@ class Session:
 
     #----------
     def AddSegmentationModule(self, bTF):
+
         if bTF == True:
             # add segment editor tab to quiz widget
-#             self.oQuizWidgets.qTabWidget.addTab(slicer.modules.segmenteditor.widgetRepresentation(),"Segment Editor")
             self.oQuizWidgets.qTabWidget.addTab(slicer.modules.quizzereditor.widgetRepresentation(),"Segment Editor")
             self._bSegmentationModule = True
             self._iSegmentationTabIndex = self.oQuizWidgets.qTabWidget.count - 1
             self.oQuizWidgets.qTabWidget.setTabEnabled(self._iSegmentationTabIndex, True)
+            
         else:
             self._bSegmentationModule = False
         
     #----------
     def SegmentationTabEnabler(self, bTF):
 
-        if bTF == True:
-            # When setting up for segmentation, reset the master volume to None
-            # This forces the user to select a volume which in turn enables the 
-            # color selector for editing the segments
-            oParent = self.oQuizWidgets.qTabWidget.widget(self.GetSegmentationTabIndex())
-            self.iRecursiveCounter = 0
-            bSuccess, oChild = self.SearchForChildWidget(oParent, 'qMRMLNodeComboBox', 'MasterVolumeNodeSelector')
-            if bSuccess == False or oChild == None:
-                sMsg = 'SegmentationTabEnabler:MasterVolumeSelector not found'
-                self.oUtilsMsgs.DisplayWarning(sMsg)
-            else:
-                self.SetVolumeSelectorToNone(oChild)
+# NO LONGER NEEDED ... I CLEAR THE SCENE BETWEEN PAGES?
+#         if bTF == True:
+#             # When setting up for segmentation, reset the master volume to None
+#             # This forces the user to select a volume which in turn enables the 
+#             # color selector for editing the segments
+#             oParent = self.oQuizWidgets.qTabWidget.widget(self.GetSegmentationTabIndex())
+#             self.iRecursiveCounter = 0
+#             bSuccess, oChild = self.SearchForChildWidget(oParent, 'qMRMLNodeComboBox', 'MasterVolumeNodeSelector')
+#             if bSuccess == False or oChild == None:
+#                 sMsg = 'SegmentationTabEnabler:MasterVolumeSelector not found'
+#                 self.oUtilsMsgs.DisplayWarning(sMsg)
+#             else:
+#                 self.SetVolumeSelectorToNone(oChild)
 
         self.oQuizWidgets.qTabWidget.setTabEnabled(self.GetSegmentationTabIndex(), bTF)
-    
-    #----------
-    def SearchForChildWidget(self, oParent, sSearchType, sSearchName):
-
-
-        if oParent != None:
-#             print(oParent.className(), '.....', oParent.name)
-            
-            iNumChildren = len(oParent.children())
-
-            # drill down through children recursively until the search object has been found
-            for idx in range(iNumChildren):
-                oChildren = oParent.children()
-                oChild = oChildren[idx]
-#                 print ('..............', oChild.className(),'...', oChild.name)
-                if oChild.className() == sSearchType:
-                    if oChild.name == sSearchName:
-                        return True, oChild
-                        
-                self.iRecursiveCounter = self.iRecursiveCounter + 1
-                if self.iRecursiveCounter == 100:    # safeguard in recursive procedure
-                    return False, None
-                    
-                
-                if len(oChild.children()) > 0:
-                    bFound, oFoundChild = self.SearchForChildWidget(oChild, sSearchType, sSearchName)
-                    if bFound:
-                        return True, oFoundChild
-            
-        else:
-            return False, None
-    
-    
-    #----------
-    def SetVolumeSelectorToNone(self, oSelectorWidget):
-        oSelectorWidget.setCurrentNodeIndex(-1)
         
+    
+# NO LONGER NEEDED ... I CAN USE THE QUIZZER HELPER BOX FUNCTIONS TO SET VOLUMES
+#            oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetQuizzerHelperBox()
+#            oQuizzerEditorHelperBox.setVolumes(slAssociatedNode, slLabelMapNode)
+#    
+#     #----------
+#     def SearchForChildWidget(self, oParent, sSearchType, sSearchName):
+# 
+# 
+#         if oParent != None:
+# #             print(oParent.className(), '.....', oParent.name)
+#             
+#             iNumChildren = len(oParent.children())
+# 
+#             # drill down through children recursively until the search object has been found
+#             for idx in range(iNumChildren):
+#                 oChildren = oParent.children()
+#                 oChild = oChildren[idx]
+# #                 print ('..............', oChild.className(),'...', oChild.name)
+#                 if oChild.className() == sSearchType:
+#                     if oChild.name == sSearchName:
+#                         return True, oChild
+#                         
+#                 self.iRecursiveCounter = self.iRecursiveCounter + 1
+#                 if self.iRecursiveCounter == 100:    # safeguard in recursive procedure
+#                     return False, None
+#                     
+#                 
+#                 if len(oChild.children()) > 0:
+#                     bFound, oFoundChild = self.SearchForChildWidget(oChild, sSearchType, sSearchName)
+#                     if bFound:
+#                         return True, oFoundChild
+#             
+#         else:
+#             return False, None
+#     
+#     
+#     #----------
+#     def SetVolumeSelectorToNone(self, oSelectorWidget):
+#         oSelectorWidget.setCurrentNodeIndex(-1)
+#         
             
     #----------
     def GetSegmentationTabIndex(self):
@@ -283,7 +300,7 @@ class Session:
 #         self.SetupWidgets(slicerMainLayout)
 
         # open xml and check for root node
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizPath(),'Session')
+        bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizResultsPath(),'Session')
 
         if not bSuccess:
             sErrorMsg = "ERROR", "Not a valid quiz - Root node name was not 'Session'"
@@ -314,6 +331,9 @@ class Session:
         self.BuildPageQuestionCompositeIndexList()
         # check for partial or completed quiz
         self.SetCompositeIndexIfResumeRequired()
+        
+        self.progress.setMaximum(len(self._l2iPageQuestionCompositeIndices))
+        self.progress.setValue(self._iCurrentCompositeIndex)
 
         # if quiz is not complete, finish setup
         #    (the check for resuming the quiz may have found it was already complete)
@@ -327,10 +347,11 @@ class Session:
     def SetupWidgets(self, slicerMainLayout):
 
 
-        self.oQuizWidgets = QuizWidgets()
+        self.oQuizWidgets = QuizWidgets(self.oFilesIO)
         self.oQuizWidgets.CreateLeftLayoutAndWidget()
 
-        self.oQuizWidgets.AddQuizTitle()
+#         qTitleGrpBox = self.oQuizWidgets.AddQuizTitle()
+#         self.oQuizWidgets.qLeftLayout.addWidget(qTitleGrpBox)
         
         self.SetupButtons()
         self.oQuizWidgets.qLeftLayout.addWidget(self.qButtonGrpBox)
@@ -344,120 +365,148 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupButtons(self):
         
+        qProgressLabel = qt.QLabel('Progress ')
+        self.progress = QtGui.QProgressBar()
+        self.progress.setGeometry(0, 0, 100, 20)
+        self.progress.setStyleSheet("QProgressBar{ text-align: center } QProgressBar::chunk{ background-color: rgb(0,179,246) }")
+ 
+
         # create buttons
         
         # add horizontal layout
         self.qButtonGrpBox = qt.QGroupBox()
+        self.qButtonGrpBox.setTitle('Baines Image Quizzer')
+        self.qButtonGrpBox.setStyleSheet("QGroupBox{ font-size: 14px; font-weight: bold}")
         self.qButtonGrpBoxLayout = qt.QHBoxLayout()
         self.qButtonGrpBox.setLayout(self.qButtonGrpBoxLayout)
 
         # Next button
-        self._btnNext = qt.QPushButton("Save and Next")
+        self._btnNext = qt.QPushButton("Next")
         self._btnNext.toolTip = "Save responses and display next set of questions."
         self._btnNext.enabled = True
+        self._btnNext.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
         self._btnNext.connect('clicked(bool)',self.onNextButtonClicked)
         
         # Back button
         self._btnPrevious = qt.QPushButton("Previous")
         self._btnPrevious.toolTip = "Display previous set of questions."
         self._btnPrevious.enabled = True
+        self._btnPrevious.setStyleSheet("QPushButton{ background-color: rgb(255,149,0) }")
         self._btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
 
 
+        # Exit button
+        self._btnExit = qt.QPushButton("Exit")
+        self._btnExit.toolTip = "Save quiz and exit Slicer."
+        self._btnExit.enabled = True
+        self._btnExit.setStyleSheet("QPushButton{ background-color: rgb(255,0,0) }")
+        self._btnExit.connect('clicked(bool)',self.onExitButtonClicked)
+
+
+        self.qButtonGrpBoxLayout.addWidget(self._btnExit)
+        self.qButtonGrpBoxLayout.addWidget(qProgressLabel)
+        self.qButtonGrpBoxLayout.addWidget(self.progress)
         self.qButtonGrpBoxLayout.addWidget(self._btnPrevious)
         self.qButtonGrpBoxLayout.addWidget(self._btnNext)
-        
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onNextButtonClicked(self):
-
-        ############################################    
-        # work on saving responses for current page
-        ############################################
         
-        bLabelMapsSaved, sMsg = self.SaveLabelMaps()
+        bSuccess = True
+        sMsg = ''
 
-        bResponsesCaptured, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet()
-        self.CaptureAndSaveImageState()
-        
-        if (bResponsesCaptured == False):
+        if self._iCurrentCompositeIndex + 1 == len(self._l2iPageQuestionCompositeIndices):
+            # the last question was answered - check if user is ready to exit
+            self.progress.setValue(self._iCurrentCompositeIndex + 1)
 
-            self._oMsgUtil.DisplayWarning(sMsg)
+            self.onExitButtonClicked() # a save is done in here
+            
+            # the user may have cancelled the 'finish'
+            # bypass remainder of the 'next' button code
 
         else:
+            # this is not the last question set, do a save and display the next page
+            bSuccess, sMsg = self.PerformSave()
             
-            # only allow for writing of responses under certain conditions
-            #    - allow if the question set is marked for multiple responses
-            #    - allow if no responses were recorded yet
-            
-#             if ( self._bAllowMultipleResponse == True)  or \
-#                 ((self._bAllowMultipleResponse == False) and (self.CheckForSavedResponse() == False) ):
-            if ( self.GetMultipleResponsesInQsetAllowed() == True)  or \
-                ((self.GetMultipleResponsesInQsetAllowed() == False) and (self.CheckForSavedResponse() == False) ):
-
-                # check to see if the responses for the question set match 
-                #    what was previously captured
-                #    -only write responses if they have changed
-                if not self._lsNewResponses == self._lsPreviousResponses:
-                    # Responses have been captured, if it's the first set of responses
-                    #    for the session, add in the login timestamp
-                    #    The timestamp is added here in case the user exited without responding to anything,
-                    #    allowing for the resume check to function properly
-                    if self._bStartOfSession == True:
-                        self.AddSessionLoginTimestamp()
-                    
-                    self.WriteResponses()
-                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
-                    self._bStartOfSession = False
-            
-
-            ########################################    
-            # set up for next page
-            ########################################    
-            
-            # if last question set, clear list
-            if self.CheckForLastQuestionSetForPage() == True:
-                self._loQuestionSets = []
-        
-            self._iCurrentCompositeIndex = self._iCurrentCompositeIndex + 1
-                
-            if self._iCurrentCompositeIndex > len(self._l2iPageQuestionCompositeIndices) -1:
-                # the last question was answered - exit Slicer
-                self.ExitOnQuizComplete("Quiz complete .... Exit")
+            if bSuccess:
     
+    
+                ########################################    
+                # set up for next page
+                ########################################    
+                
+                # if last question set, clear list and scene
+                if self.CheckForLastQuestionSetForPage() == True:
+                    self._loQuestionSets = []
+                    slicer.mrmlScene.Clear()
+                else:
+                    # clear quiz widgets only
+                    for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
+                        self.oQuizWidgets.qQuizLayout.itemAt(i).widget().setParent(None)
             
-            # remove all data from the scene - only images for the current page to be displayed
-            slicer.mrmlScene.Clear()
-            
-            self.EnableButtons()
-   
-            self.DisplayPage()
-
+                self._iCurrentCompositeIndex = self._iCurrentCompositeIndex + 1
+                self.progress.setValue(self._iCurrentCompositeIndex)
+                    
+                self.EnableButtons()
+       
+                self.DisplayPage()
+    
+            else:
+                self._oMsgUtil.DisplayWarning( sMsg )
+                
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onPreviousButtonClicked(self):
+        
+        bSuccess = True
+        sMsg = ''
 
+        bSuccess, sMsg = self.PerformSave()
+        
+        if bSuccess:
 
+            ########################################    
+            # set up for previous page
+            ########################################    
 
-        self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
-        if self._iCurrentCompositeIndex < 0:
-            # reset to beginning
-            self._iCurrentCompositeIndex = 0
+            self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
+            self.progress.setValue(self._iCurrentCompositeIndex)
+    
+            if self._iCurrentCompositeIndex < 0:
+                # reset to beginning
+                self._iCurrentCompositeIndex = 0
+            
+            self.EnableButtons()
+            
+            self.AdjustForPreviousQuestionSets()
+            
+            
+            self.DisplayPage()
+               
         
-        self.EnableButtons()
-        
-        self.AdjustForPreviousQuestionSets()
-        
-        
-        self.DisplayPage()
-        
-        
+        else:
+            self._oMsgUtil.DisplayWarning( sMsg )
+            
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onExitButtonClicked(self):
 
+        qtAns = self._oMsgUtil.DisplayOkCancel('Do you wish to exit? \nYour responses will be saved. Quiz may be resumed.')
+        if qtAns == qt.QMessageBox.Ok:
+            bSuccess, sMsg = self.PerformSave()
+            if bSuccess:
+                slicer.util.exit(status=EXIT_SUCCESS)
+            else:
+                self._oMsgUtil.DisplayWarning( sMsg )
+        else:
+            # cancelled - reset the progress bar
+            self.progress.setValue(self._iCurrentCompositeIndex)
+
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
         
         # assume not at the end of the quiz
-        self._btnNext.setText("Save and Next")
+        self._btnNext.setText("Next")
         
         # beginning of quiz
         if (self._iCurrentCompositeIndex == 0):
@@ -478,7 +527,7 @@ class Session:
         # assign button description           
         if (self._iCurrentCompositeIndex == len(self._l2iPageQuestionCompositeIndices) - 1):
             # last question of last image view
-            self._btnNext.setText("Save and Finish")
+            self._btnNext.setText("Finish")
 # 
 #         else:
 #             # assume multiple questions in the question set
@@ -513,9 +562,9 @@ class Session:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayPage(self):
+
         # extract page and question set indices from the current composite index
         
-
         xNodeQuestionSet = self.GetCurrentQuestionSetNode()
         oQuestionSet = QuestionSet()
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
@@ -523,13 +572,17 @@ class Session:
         self.SetMultipleResponsesInQSetAllowed(oQuestionSet.GetMultipleResponseTF())
 
         if self.GetSegmentationTabIndex() > 0:
+            
             if oQuestionSet.GetMultipleResponseTF() == True:
                 self.SegmentationTabEnabler(oQuestionSet.GetSegmentRequiredTF())
             else:
-                self.SegmentationTabEnabler(False)
+                # When multiple responses are not allowed, 
+                #    enable the segmentation tab only if there are no currently saved responses and the segments are required
+                if (self.CheckForSavedResponse() == True):
+                    self.SegmentationTabEnabler(False)
+                else:
+                    self.SegmentationTabEnabler(oQuestionSet.GetSegmentRequiredTF())
 
-        
-        
 
         # first clear any previous widgets (except push buttons)
         for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
@@ -554,14 +607,27 @@ class Session:
                 self.DisplaySavedResponse()
 
                    
+        # set the layout to default view four-up 
+        slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
+        
                     
         oImageView = ImageView()
         oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self.oFilesIO.GetDataParentDir())
 
         self.UpdateImageViewObjects(oImageView.GetImageViewList())
-        self.SetSavedImageState()
         self.LoadSavedLabelMaps()
-    
+
+        oImageView.ReassignNodesToFgBg(oImageView.GetImageViewList())
+
+        self.SetSavedImageState() # after loading label maps and setting Fg / Bg views
+        
+        if self.GetSegmentationTabIndex() > 0:
+            # clear Master and Merge selector boxes
+            oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
+            oQuizzerEditorHelperBox.setMasterVolume(None)
+#             oQuizzerEditorHelperBox.setMergeVolume(None)
+
+   
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForLastQuestionSetForPage(self):
         bLastQuestionSet = False
@@ -606,27 +672,121 @@ class Session:
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def PerformSave(self):
+        sMsg = ''
+        bSuccess = True
+        
+        bSuccess, sMsg = self.ResetSegmentation()
+        
+        if bSuccess:
+            bSuccess, sMsg = self.SaveLabelMaps()
+        
+            if bSuccess:
+                bSuccess, sMsg = self.CaptureAndSaveImageState()
+                    
+                if bSuccess:
+                    bSuccess, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet()
+
+                    if bSuccess:
+                        bSuccess, sMsg = self.WriteResponsesToXml()
+
+        # let calling program handle display of message if not successful            
+        return bSuccess, sMsg
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ResetSegmentation(self):
+        
+        bSuccess = True
+        sMsg = ''
+
+        try:
+            # before leaving the page, if the segmentation is enabled, restore mouse to default cursor
+            if self.GetSegmentationTabIndex() > 0:
+                # if Segmentation editor tab exists
+                
+                #collapse label editor to encourage selection of master volume
+                slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
+    #             oQuizzerEditorHelperBox.SetCustomColorTable()
+                
+                # reset display to quiz tab
+                self.oQuizWidgets.qTabWidget.setCurrentIndex(0)
+                slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
+            
+        except:
+            bSuccess = False
+            sMsg = 'Reset segmentation state error'
+            
+        return bSuccess, sMsg
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def WriteResponsesToXml(self):
+        
+        bSuccess = True
+        sMsg = ''
+        
+        try:
+            
+            # only allow for writing of responses under certain conditions
+            #    - allow if the question set is marked for multiple responses
+            #    - allow if no responses were recorded yet
+            
+#             if ( self._bAllowMultipleResponse == True)  or \
+#                 ((self._bAllowMultipleResponse == False) and (self.CheckForSavedResponse() == False) ):
+            if ( self.GetMultipleResponsesInQsetAllowed() == True)  or \
+                ((self.GetMultipleResponsesInQsetAllowed() == False) and (self.CheckForSavedResponse() == False) ):
+
+                # check to see if the responses for the question set match 
+                #    what was previously captured
+                #    -only write responses if they have changed
+                if not self._lsNewResponses == self._lsPreviousResponses:
+                    # Responses have been captured, if it's the first set of responses
+                    #    for the session, add in the login timestamp
+                    #    The timestamp is added here in case the user exited without responding to anything,
+                    #    allowing for the resume check to function properly
+                    if self._bStartOfSession == True:
+                        self.AddSessionLoginTimestamp()
+                    
+                    self.WriteResponses()
+                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+                    self._bStartOfSession = False
+        
+        except:
+            bSuccess = False
+            sMsg = 'Error writing responses to Xml'
+            
+        return bSuccess, sMsg
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureAndSaveImageState(self):
 
-        # for each image, capture the slice, window and level settings
-        for oImageNode in self._loImageViews:
-            if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
-
-                dictAttribState = oImageNode.GetViewState()
-
-                # check if xml State element exists
-                xImage = oImageNode.GetXmlImageElement()
-                iNumStateElements = self.oIOXml.GetNumChildrenByName(xImage, 'State')
-                if iNumStateElements >0:
-                    # update xml image/state element (first child)
-                    xStateElement = self.oIOXml.GetNthChild(xImage, 'State', 0)
-                    self.UpdateAtributesInElement(xStateElement, dictAttribState)
-                # if no State element, add one
-                else:
-                    self.AddImageStateElement(xImage, dictAttribState)
-                    
-        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
+        sMsg = ''
+        bSuccess = True
+        
+        try:
+            # for each image, capture the slice, window and level settings
+            for oImageNode in self._loImageViews:
+                if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
     
+                    dictAttribState = oImageNode.GetViewState()
+    
+                    # check if xml State element exists
+                    xImage = oImageNode.GetXmlImageElement()
+                    iNumStateElements = self.oIOXml.GetNumChildrenByName(xImage, 'State')
+                    if iNumStateElements >0:
+                        # update xml image/state element (first child)
+                        xStateElement = self.oIOXml.GetNthChild(xImage, 'State', 0)
+                        self.UpdateAtributesInElement(xStateElement, dictAttribState)
+                    # if no State element, add one
+                    else:
+                        self.AddImageStateElement(xImage, dictAttribState)
+                        
+            self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+    
+        except:
+            bSuccess = False
+            sMsg = 'Error saving the image state'
+            
+        return bSuccess, sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSavedImageState(self):
@@ -643,81 +803,74 @@ class Session:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SaveLabelMaps(self):
-        
+            
         # if label maps were created, save to disk
         bLabelMapsSaved = True
         sMsg = ''
-
+ 
         try:
-       
+        
             # get list of label maps to save
             lLabelMaps = slicer.mrmlScene.GetNodesByClass('vtkMRMLLabelMapVolumeNode')
-            
+             
             # if list length > 0, create folder to hold labels
             iNumLabelMaps =  lLabelMaps.GetNumberOfItems()
             if iNumLabelMaps > 0:
-    
-                # get page name to create directory
-                xPageNode = self.GetCurrentPageNode()
-                sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'name')
-                sPageDir = self.oFilesIO.CreatePageDir(sPageName)
-    
-                # save each label map
-                for iLabelMap in range(iNumLabelMaps):
-                    slNodeLabelMap = lLabelMaps.GetItemAsObject(iLabelMap)
-#                     sNodeName = slNodeLabelMap.GetName()
-#                     
-#                     # remove invalid characters from filename
-#                     sLabelMapFilename = self.oFilesIO.CleanFilename(sNodeName)
+     
+                for oImageNode in self._loImageViews:
+                      
+                    for iLabelMap in range(iNumLabelMaps):
+                        slNodeLabelMap = lLabelMaps.GetItemAsObject(iLabelMap)
 
-                    sLabelMapFilename = slNodeLabelMap.GetName()
-                    sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
-                    sAssociatedVolumeName = slNodeLabelMap.GetNodeReference('AssociatedNodeID').GetName()
-                    
-                    
-                    # save the label map file to the user's page directory
-                    sLabelMapPath = os.path.join(sPageDir, sLabelMapFilenameWithExt)
-                    
-                    slStorageNode = slNodeLabelMap.CreateDefaultStorageNode()
-                    slStorageNode.SetFileName(sLabelMapPath)
-                    slStorageNode.WriteData(slNodeLabelMap)
-                
-                    
-                    # from associated volume name, match with the xml image name
-                    for oImageNode in self._loImageViews:
-                         
                         # match label map file with xml image
-                        if oImageNode.sNodeName == sAssociatedVolumeName:
+                        sLabelMapFilename = slNodeLabelMap.GetName()
+                        if oImageNode.sNodeName + '-label' == sLabelMapFilename:
+                        
+                            # get page name to create directory
+                            xPageNode = self.GetCurrentPageNode()
+                            sPageIndex = str(self.GetCurrentPageIndex() + 1)
+                            sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'name')
+                            sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'descriptor')
+                             
+                            sDirName = os.path.join(self.oFilesIO.GetUserQuizResultsDir(), sPageIndex + '-' + sPageName + '-' + sPageDescriptor)
+                            sPageResultsDir = self.oFilesIO.CreatePageDir(sDirName)
+
+                            sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
+#                             sLabelMapFilenameWithExtCleaned = self.oUtilsIO.CleanFilename(sLabelMapFilenameWithExt)
+                             
+                            # save the label map file to the user's page directory
+                            sLabelMapPath = os.path.join(sPageResultsDir, sLabelMapFilenameWithExt)
+#                             print('LabelMap Path: ', sLabelMapPath)
+
+                             
+                            slStorageNode = slNodeLabelMap.CreateDefaultStorageNode()
+                            slStorageNode.SetFileName(sLabelMapPath)
+                            slStorageNode.WriteData(slNodeLabelMap)
+                            slStorageNode.UnRegister(slicer.mrmlScene) # for memory leaks
+                         
+
                             # update xml storing the path to the label map file with the image element
-                            self.AddLabelMapPathElement(oImageNode.GetXmlImageElement(), self.oFilesIO.GetRelativePath(sLabelMapPath))
-                    
-                    bLabelMapsSaved = True
-                
-                
-            else:
-                sMsg = 'No label maps to save'
+                            self.AddLabelMapPathElement(oImageNode.GetXmlImageElement(), self.oFilesIO.GetRelativeUserPath(sLabelMapPath))
+
+    
                 bLabelMapsSaved = True
-
-
-            # clean up memory leaks
-            #    getting a node by ID (slSegDisplayNode) doesn't seem to cause a memory leak
-            #    getting nodes by class does create a memory leak so you have to unregister it!
-            lLabelMaps.UnRegister(slicer.mrmlScene)
-                
-                
+    
+    
         except:
             sMsg = 'Failed to store label maps'
             bLabelMapsSaved = False
+     
     
         return bLabelMapsSaved, sMsg
-
+   
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadSavedLabelMaps(self):
-    # when loading segmentations, associated it to the correct image
-#      n = slicer.mrmlScene.GetNodeByID('vtkMRMLLabelMapVolumeNode1')
-# >>> n.SetNodeReferenceID('vtkMRMLScalarVolumeNode1')
-# n.SetNodeReferenceID('AssociatedNodeID','vtkMRMLScalarVolumeNode1')
+        # when loading segmentations, associated it with the correct image
+
+        #      n = slicer.mrmlScene.GetNodeByID('vtkMRMLLabelMapVolumeNode1')
+        # >>> n.SetNodeReferenceID('vtkMRMLScalarVolumeNode1')
+        # n.SetNodeReferenceID('AssociatedNodeID','vtkMRMLScalarVolumeNode1')
 
         lLoadedLabelMaps = []
 
@@ -736,53 +889,54 @@ class Session:
                     #    same label map may have been stored multiple times in XML for the page
                     #    (same image but different orientations)
                     if not sStoredRelativePath in lLoadedLabelMaps:
-                        sAbsolutePath = self.oFilesIO.GetAbsolutePath(sStoredRelativePath)
+                        sAbsolutePath = self.oFilesIO.GetAbsoluteUserPath(sStoredRelativePath)
                         dictProperties = {'labelmap' : True, 'show': False}
                         
+                        # check if label map already exists (if between question sets, label map will persisit)
+                        sLabelMapNodeName = self.oFilesIO.GetFilenameNoExtFromPath(sStoredRelativePath)
+                        bFoundLabelMap, slLabelMapNode = self.CheckForLoadedLabelMap(sLabelMapNodeName)
+
                         try:
+
+                            if not bFoundLabelMap:
                             
-                            slLabelMapNode = slicer.util.loadLabelVolume(sAbsolutePath, dictProperties)
+                                slLabelMapNode = slicer.util.loadLabelVolume(sAbsolutePath, dictProperties)
+                            
+                            
                             lLoadedLabelMaps.append(sStoredRelativePath)
-                            
+    
                             # set associated volume to connect label map to master
                             sLabelMapNodeName = slLabelMapNode.GetName()
-                            print(sLabelMapNodeName)
-                            sAssociatedName = sLabelMapNodeName.rstrip('-label')
-                            print(sAssociatedName)
+                            sAssociatedName = sLabelMapNodeName.replace('-label','')
                             slAssociatedNodeCollection = slicer.mrmlScene.GetNodesByName(sAssociatedName)
-                            print(slAssociatedNodeCollection.GetNumberOfItems())
                             slAssociatedNode = slAssociatedNodeCollection.GetItemAsObject(0)
                             
                             slLabelMapNode.SetNodeReferenceID('AssociatedNodeID',slAssociatedNode.GetID())
-                            
-                            # turn on 'eye' icon in subject hierarchy for Associated Volume
-                            slPlugin = slicer.qSlicerSubjectHierarchyVolumesPlugin()
+
+    
+                            # turn on visibility for volume and label map
                             slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
                             slSceneItemID = slSHNode.GetSceneItemID()
-#                             slChildren = vtk.vtkIdList()
-#                             
-#                             slSHNode.GetItemChildren(slSceneItemID, slChildren)
+
                             slAssociatedNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sAssociatedName)
-#                             slSHNode.GetItemChildren(slSubjectItemID, slChildren)
-#                             
-#                             slChild1ID = slChildren.GetID(0)
+                            slVolPlugin = slicer.qSlicerSubjectHierarchyVolumesPlugin()
+                            slVolPlugin.setDisplayVisibility( slAssociatedNodeID, 1)
+
+                            slLabelMapNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sLabelMapNodeName)
+                            slLabelPlugin = slicer.qSlicerSubjectHierarchyLabelMapsPlugin()
+                            slLabelPlugin.setDisplayVisibility( slLabelMapNodeID, 1)
                             
-                            
-#                             slAssociatedDataNode = slSHNode.GetItemDataNode(slSubjectItemID)
-                            
-                            
-#                             slAssociatedNodeID = slAssociatedDataNode.GetID()
-                            slPlugin.setDisplayVisibility( slAssociatedNodeID, 1)
-                            
-                            
-                            
+                             
+                            # for memory leak problem
+                            slAssociatedNode.UnRegister(slicer.mrmlScene)
                             
                         except:
-                            
+                             
                             sMsg = 'Trouble loading label map file:' + sAbsolutePath
                             self.oUtilsMsgs.DisplayWarning(sMsg)
-                    
-    
+                           
+                                
+            
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureResponsesForQuestionSet(self):
         
@@ -813,6 +967,20 @@ class Session:
                 
         return bResponseCaptured, lsAllResponses, sMsg
        
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CheckForLoadedLabelMap(self, sFilenameNoExt):
+        bFound = False
+        slNode = None
+        
+        slNodesCollection = slicer.mrmlScene.GetNodesByName(sFilenameNoExt)
+        if slNodesCollection.GetNumberOfItems() == 1:
+            bFound = True
+            slNode = slNodesCollection.GetItemAsObject(0)
+        
+        return bFound, slNode
+    
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForSavedResponse(self):
         
@@ -890,8 +1058,6 @@ class Session:
 
         self._lsPreviousResponses = lsAllResponsesForQuestion
             
-    
-    #-----------------------------------------------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def WriteResponses(self):
@@ -967,7 +1133,7 @@ class Session:
         
         self.oIOXml.AddElement(self.oIOXml.GetRootNode(),'Login', sNullText, dictAttrib)
         
-        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
+        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetCompositeIndexIfResumeRequired(self):
@@ -1030,6 +1196,9 @@ class Session:
                 break   # exit the reversed loop through the composite indices
             
         if bLastLoginResponseFound == True:
+            
+            # check if the last response found was entered on the last question set. 
+            #    (i.e. was the quiz completed)
             if indCI == (len(self._l2iPageQuestionCompositeIndices) - 1):
                 
                 # if one question set allows a multiple response, user has option to redo response
@@ -1041,8 +1210,11 @@ class Session:
                     if qtAns == qt.QMessageBox.Yes:
                         iResumeCompIndex = 0
                     else:
+                        # user decided not to change responses - exit
                         self.ExitOnQuizComplete("This quiz was already completed. Exiting")
+                        
                 else:
+                    # quiz does not allow for changing responses - exit
                     self.ExitOnQuizComplete("This quiz was already completed. Exiting")
             else:
                 iResumeCompIndex = indCI + 1
@@ -1104,11 +1276,12 @@ class Session:
         # the last index in the composite indices list was reached
         # the quiz was completed - exit
         
-        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizPath())
+        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
         self.SetQuizComplete(True)
-        self._oMsgUtil.DisplayInfo(sMsg)
+        
+        self._oMsgUtil.DisplayInfo('Quiz Complete - Exiting')
         slicer.util.exit(status=EXIT_SUCCESS)
-
+        
     
 ##########################################################################
 #
@@ -1118,7 +1291,7 @@ class Session:
 
 class QuizWidgets:
     
-    def __init__(self,  parent=None):
+    def __init__(self, oFilesIOInput, parent=None):
         self.sClassName = type(self).__name__
         self.parent = parent
         print('Constructor for QuizWidgets')
@@ -1127,6 +1300,8 @@ class QuizWidgets:
         self._slicerQuizLayout = None
         self._slicerLeftWidget = None
         self._slicerTabWidget = None
+        
+        self.oFilesIO = oFilesIOInput
         
     def GetSlicerLeftMainLayout(self):
         return self._slicerLeftMainLayout
@@ -1158,11 +1333,44 @@ class QuizWidgets:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddQuizTitle(self):
         
-        qTitle = qt.QLabel('Baines Image Quizzer')
-        qTitle.setFont(qt.QFont('Arial',14, qt.QFont.Bold))
+#         qTitle = qt.QLabel('Baines Image Quizzer')
+#         qTitle.setFont(qt.QFont('Arial',14, qt.QFont.Bold))
+# 
+#         # add to left layout
+#         self.qLeftLayout.addWidget(qTitle)
 
-        # add to left layout
-        self.qLeftLayout.addWidget(qTitle)
+        qTitleGroupBox = qt.QGroupBox()
+        qTitleGroupBoxLayout = qt.QHBoxLayout()
+        qTitleGroupBox.setLayout(qTitleGroupBoxLayout)
+                                
+        qLogoImg = qt.QLabel(self)
+        sLogoName = 'BainesChevrons.png'
+        sLogoPath = os.path.join(self.oFilesIO.GetScriptedModulesPath(),'Resources','Icons',sLogoName)
+        pixmap = qt.QPixmap(sLogoPath)
+#         pixmapTarget = pixmap.scaled(pixmap.height()-430, pixmap.width()-430, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation);
+#         qLogoImg.setPixmap(pixmapTarget)
+        qLogoImg.setPixmap(pixmap)
+        qLogoImg.setAlignment(QtCore.Qt.AlignCenter)
+
+        qTitle = qt.QLabel('Baines Image Quizzer')
+#         qTitle.setMinimumHeight(pixmap.height())
+        qTitle.setFont(qt.QFont('Arial',12, qt.QFont.Bold))
+        qTitle.setAlignment(QtCore.Qt.AlignCenter)
+
+        qTitleGroupBoxLayout.addWidget(qLogoImg)
+        qTitleGroupBoxLayout.addWidget(qTitle)
+        
+        qTitleGroupBoxLayout.setSpacing(20)
+        qTitleGroupBoxLayout.addStretch()
+        
+        
+        return qTitleGroupBox
+        
+        
+#         pixmapTarget = pixmapTarget.scaled(size-5, size-5, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+
+        
  
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddQuizLayoutWithTabs(self):
@@ -1171,6 +1379,7 @@ class QuizWidgets:
         self.qTabWidget = qt.QTabWidget()
         qTabQuiz = qt.QWidget()
         self.qTabWidget.addTab(qTabQuiz,"Quiz")
+        self.qTabWidget.setStyleSheet("QTabBar{ font: bold 9pt}")
         
         
         # Layout within the tab widget - form needs a frame
@@ -1199,15 +1408,6 @@ class QuizWidgets:
 # #         self._slicerLeftWidget.setLayout(self._slicerLeftMainLayout)
 # #          
 # #         
-# #         
-# #         #### NOT YET IMPLEMENTED
-# #         # Status button
-# #         self.btnShowQuizProgress = qt.QPushButton("Show Quiz Progress")
-# #         self.btnShowQuizProgress.toolTip = "Display status of images."
-# #         self.btnShowQuizProgress.enabled = True
-# #         self._slicerLeftMainLayout.addWidget(self.btnShowQuizProgress)
-# #         
-# # 
 # #         
 # #         #-------------------------------------------
 # #         # Collapsible button

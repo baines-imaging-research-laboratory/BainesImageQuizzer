@@ -63,9 +63,14 @@ class ImageView:
         self.xImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
         self.iNumImages = self.oIOXml.GetNumChildrenByName(xPageNode, 'Image')
         
-        # clear views from previous page
-        slicer.mrmlScene.Clear()
+#         # clearing views from previous page
+#         slicer.mrmlScene.Clear()
 #         self.ClearImagesAndSegmentations()
+
+#         # clearing views from previous page is handled by Next button click
+#         # remove and label maps that were created
+#         self.ClearLabelMapNodes()
+
        
         self.BuildViewNodes()
         
@@ -118,8 +123,10 @@ class ImageView:
             
                 
             if bLoadSuccess and (oImageViewItem.slNode is not None):
-                 
-                self._loImageViews.append(oImageViewItem)
+                
+                if oImageViewItem.sImageType != 'Segmentation': 
+                    oImageViewItem.slNode.SetName(oImageViewItem.sNodeName)
+                    self._loImageViews.append(oImageViewItem)
                 
             else:
                 sMsg = 'Image load Failed : ' + sPageID + ':' + oImageViewItem.sImagePath
@@ -149,6 +156,7 @@ class ImageView:
         if oViewNode.sViewLayer == 'Background':
             slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
             slWidget.setSliceOrientation(oViewNode.sOrientation)
+            slWidget.fitSliceToBackground()
 
         elif oViewNode.sViewLayer == 'Foreground':
             slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
@@ -173,6 +181,14 @@ class ImageView:
         slCompNode.SetForegroundVolumeID('None')
         slCompNode.SetLabelVolumeID('None')
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ReassignNodesToFgBg(self, loViewNodes):
+        
+        for oViewNode in loViewNodes:
+            
+            if oViewNode.sViewLayer == 'Background' or oViewNode.sViewLayer == 'Foreground':
+                self.AssignNodesToView(oViewNode)
+            
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #     def ClearImagesAndSegmentations(self):
@@ -196,7 +212,21 @@ class ImageView:
 #             slSegDisplayNode.SetVisibility(False)
 #              
 #         # unregister the nodes created by 'GetNodeByClass'otherwise you get a memory leak
-#         lSegNodes.UnRegister(slicer.mrmlScene) 
+#         lSegNodes.UnRegister(slicer.mrmlScene)
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ClearLabelMapNodes(self):
+
+        # get list of all label map nodes
+        lLabelMapNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLLabelMapVolumeNode')
+           
+        for indLabelMap in range(lLabelMapNodes.GetNumberOfItems()):
+  
+            slLabelMapNode = lLabelMapNodes.GetItemAsObject(indLabelMap)
+            slicer.mrmlScene.RemoveNode(slLabelMapNode)
+              
+        # unregister the nodes created by 'GetNodeByClass'otherwise you get a memory leak
+        lLabelMapNodes.UnRegister(slicer.mrmlScene)
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSegmentRoiVisibility(self,oViewNode):
@@ -384,7 +414,7 @@ class ViewNodeBase:
         self.sImageType = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'type')
         self.sDestination = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'destination')
     
-#         self.sNodeName =  self.GetPageID() + '_' + self.sNodeDescriptor
+        self.sNodeName =  self.GetPageID() + '_' + self.sNodeDescriptor
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractXMLNodeElements(self, sParentDataDir):
@@ -399,7 +429,7 @@ class ViewNodeBase:
         self.sImagePath = os.path.join(sParentDataDir, self.oIOXml.GetDataInNode(xPathNodes[0]))
         sFilename_w_ext = os.path.basename(self.sImagePath)
         sFilename, sFileExt = os.path.splitext(sFilename_w_ext)
-        self.sNodeName =  sFilename
+#         self.sNodeName =  sFilename
         
         # Extract destination layer (foreground, background, label)
         xLayerNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Layer')
@@ -549,6 +579,15 @@ class DataVolumeDetail(ViewNodeBase):
                 bNodeExists = self.CheckForNodeExists('vtkMRMLScalarVolumeNode')
                 if not (bNodeExists):
                     self.slNode = slicer.util.loadVolume(self.sImagePath, {'show': False, 'name': self.sNodeName})
+                else: # make sure a node exists
+                    if bNodeExists and (self.slNode is None):
+                        bLoadSuccess = False
+            
+            elif (self.sImageType == 'Segmentation'):
+                
+                bNodeExists = self.CheckForNodeExists('vtkMRMLSegmentationNode')
+                if not (bNodeExists):
+                    self.slNode = slicer.util.loadSegmentation(self.sImagePath, {'show': False, 'name': self.sNodeName})
                 else: # make sure a node exists
                     if bNodeExists and (self.slNode is None):
                         bLoadSuccess = False
@@ -771,7 +810,7 @@ class DicomVolumeDetail(ViewNodeBase):
                 # load is complete with a valid node id
                 # update the class properties with the slicer node and node name 
                 self.slNode = slSubjectHierarchyNode.GetItemDataNode(slNodeId)
-                self.sNodeName = self.slNode.GetName()
+#                 self.sNodeName = self.slNode.GetName()
                 bLoadSuccess = True
                         
             
