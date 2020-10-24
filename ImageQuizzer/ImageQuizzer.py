@@ -385,48 +385,30 @@ class ImageQuizzerLogic(ScriptedLoadableModuleLogic):
  
 class customEventFilter(qt.QObject):
     """ Custom event filter set up to capture when the user presses the 'X'
-        button on the main window to exit the application. We can display
-        appropriate exit messages for the quiz.
-         
+        button on the main window to exit the application.
     """
      
     def __init__(self, oSession, oFilesIO):
-        qSlicerMainWindow.__init__(self)
-        self.mainWindow = qSlicerMainWindow
+        qSlicerMainWindow.__init__(self) # required for event filter
+        
         self.oSession = oSession
         self.oFilesIO = oFilesIO
      
     def eventFilter(self, obj, event):
          
         self.oUtilsMsgs = UtilsMsgs()
-        sSlicerExitWarning = 'The Sicer exit confirmation window will follow.\
-         \n\nSelect: "Cancel exit" to return to the application.\
-           \n   or   "Exit (Discard modifications)" to exit.\
-           \n   (The option to "Save" is not relevant to this quiz.)'
-         
         if event.type() == qt.QEvent.Close:
-#             print('type: ', event.type())
-#             print('closeEvent: ', qt.QEvent.Close)
- 
-            qtAns = self.oUtilsMsgs.DisplayOkCancel('Image Quizzer Exiting \
+            
+            self.oUtilsMsgs.DisplayInfo('Image Quizzer Exiting \
                     \n   Results will be saved.\
                     \n   Restarting the quiz will resume where you left off.')
-            if qtAns == qt.QMessageBox.Ok:
-                sUserQuizResultsPath = self.oFilesIO.GetUserQuizResultsPath()
-                if sUserQuizResultsPath != '':
-                    bSuccess, sMsg = self.oSession.PerformSave()
-                    if bSuccess == True:
-                        slicer.util.exit(status=EXIT_SUCCESS)
-                    else:
-                        self.oUtilsMsgs.DisplayWarning(sMsg)
-                        self.oUtilsMsgs.DisplayWarning(sSlicerExitWarning)
-                else:
-                    slicer.util.exit(status=EXIT_SUCCESS)
+            
+            sUserQuizResultsPath = self.oFilesIO.GetUserQuizResultsPath()
+            
+            if sUserQuizResultsPath != '':
+                bSuccess, sMsg = self.oSession.PerformSave()
+                if bSuccess == False:
+                    self.oUtilsMsgs.DisplayWarning(sMsg)
                     
-            else:
-                if qtAns == qt.QMessageBox.Cancel:
-                    self.oUtilsMsgs.DisplayWarning(sSlicerExitWarning)
-#                     event.ignore() # didn't work
+            slicer.util.exit(status=EXIT_SUCCESS)
                     
-      
-
