@@ -70,9 +70,9 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def __del__(self):
-#         slicer.util.mainWindow().removeEventFilter(self.customEventFilter)
-#  
+    def __del__(self):
+        slicer.util.mainWindow().removeEventFilter(self.customEventFilter)
+  
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def setup(self):
@@ -139,11 +139,32 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         
         ################################
+        # Define User folder
+        ################################
+ 
+        # Add vertical spacer
+        qUserLoginLayout.addSpacing(10)
+        
+        self.qUserGrpBox = qt.QGroupBox()
+        self.qUserGrpBox.setTitle('User name')
+        self.qUserGrpBoxLayout = qt.QVBoxLayout()
+        self.qUserGrpBox.setLayout(self.qUserGrpBoxLayout)
+
+        self.lineGetUserName = qt.QLineEdit()
+        self.lineGetUserName.setText(os.getlogin())
+        self.lineGetUserName.setReadOnly(True)
+        self.qUserGrpBoxLayout.addWidget(self.lineGetUserName)
+        self.qUserGrpBox.setEnabled(True)
+        
+        qUserLoginLayout.addWidget(self.qUserGrpBox)
+
+        
+        ################################
         # Get Database location
         ################################
         
         
-        qUserLoginLayout.addSpacing(20)
+        qUserLoginLayout.addSpacing(10)
 
         qDBGrpBox = qt.QGroupBox()
         qDBGrpBox.setTitle('1. Select data location')
@@ -161,7 +182,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         qDBGrpBoxLayout.addWidget(btnGetDBLocation)
  
         self.qLblDataLocation = qt.QLabel('Selected data location:')
-        qUserLoginLayout.addWidget(self.qLblDataLocation)
+        qDBGrpBoxLayout.addWidget(self.qLblDataLocation)
 
         
         # Add vertical spacer
@@ -169,44 +190,43 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         
         
-        ################################
-        # Get/Create User folder
-        ################################
-
-        qUserLoginLayout.addSpacing(10) # Add vertical spacer
-
-        self.qUserGrpBox = qt.QGroupBox()
-        self.qUserGrpBox.setTitle('2. Enter / select user name')
-        self.qUserGrpBoxLayout = qt.QVBoxLayout()
-        self.qUserGrpBox.setLayout(self.qUserGrpBoxLayout)
-        self.qUserGrpBox.setEnabled(False)
-
-        qUserLoginLayout.addWidget(self.qUserGrpBox)
-
-        
-        qUserComboLabel = qt.QLabel('Use drop down. If not shown, replace ? with your name.')
-        self.qUserGrpBoxLayout.addWidget(qUserComboLabel)
-        
-
-        self.comboGetUserName = qt.QComboBox()
-        self.comboGetUserName.setStyleSheet("QComboBox{ background-color: rgba(0,179,246,.9) }")
-        
-        self.comboGetUserName.setEditable(True)
-        self.comboGetUserName.addItem('?') # default to special character to force user entry
-        
-        self.comboGetUserName.currentTextChanged.connect(self.onUserComboboxChanged)
-        self.qUserGrpBoxLayout.addWidget(self.comboGetUserName)
-
-        
-        # Add vertical spacer
-        self.qUserGrpBoxLayout.addSpacing(20)
+#         ################################
+#         # Get/Create User folder
+#         ################################
+# 
+#         qUserLoginLayout.addSpacing(10) # Add vertical spacer
+# 
+#         self.qUserGrpBox = qt.QGroupBox()
+#         self.qUserGrpBox.setTitle('2. Enter / select user name')
+#         self.qUserGrpBoxLayout = qt.QVBoxLayout()
+#         self.qUserGrpBox.setLayout(self.qUserGrpBoxLayout)
+#         self.qUserGrpBox.setEnabled(False)
+# 
+#         qUserLoginLayout.addWidget(self.qUserGrpBox)
+# 
+#         
+#         qUserComboLabel = qt.QLabel('Use drop down. If not shown, replace ? with your name.')
+#         self.qUserGrpBoxLayout.addWidget(qUserComboLabel)
+#         
+# 
+#         self.comboGetUserName = qt.QComboBox()
+#         self.comboGetUserName.setStyleSheet("QComboBox{ background-color: rgba(0,179,246,.9) }")
+#         
+#         self.comboGetUserName.setEditable(True)
+#         self.comboGetUserName.addItem('?') # default to special character to force user entry
+#         
+#         self.comboGetUserName.currentTextChanged.connect(self.onUserNameChanged)
+#         self.qUserGrpBoxLayout.addWidget(self.comboGetUserName)
+# 
+#         # Add vertical spacer
+#         self.qUserGrpBoxLayout.addSpacing(20)
          
         ################################
         # Get study button
         ################################
         
         self.qQuizSelectionGrpBox = qt.QGroupBox()
-        self.qQuizSelectionGrpBox.setTitle('3. Select Quiz')
+        self.qQuizSelectionGrpBox.setTitle('2. Select Quiz')
         self.qQuizSelectionGrpBoxLayout = qt.QVBoxLayout()
         self.qQuizSelectionGrpBox.setLayout(self.qQuizSelectionGrpBoxLayout)
         self.qQuizSelectionGrpBox.setEnabled(False)
@@ -233,7 +253,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         ################################
         
         self.qLaunchGrpBox = qt.QGroupBox()
-        self.qLaunchGrpBox.setTitle('4. Launch Quiz')
+        self.qLaunchGrpBox.setTitle('3. Launch Quiz')
         self.qLaunchGrpBoxLayout = qt.QHBoxLayout()
         self.qLaunchGrpBox.setLayout(self.qLaunchGrpBoxLayout)
         self.qLaunchGrpBox.setEnabled(False)
@@ -247,13 +267,13 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.qLaunchGrpBoxLayout.addWidget(self.btnLaunchStudy)
          
          
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onUserComboboxChanged(self):
-        
-        # capture selected user name
-        self.oFilesIO.SetUsernameAndDir(self.comboGetUserName.currentText)
-        self.qQuizSelectionGrpBox.setEnabled(True)
-        
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def onUserNameChanged(self):
+#          
+#         # capture selected user name
+#         self.oFilesIO.SetUsernameAndDir(self.comboGetUserName.currentText)
+#         self.qQuizSelectionGrpBox.setEnabled(True)
+#         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -269,12 +289,13 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         self.qLblDataLocation.setText(self.oFilesIO.GetDataParentDir())
         
-        sUserSubfolders = [ f.name for f in os.scandir(self.oFilesIO.GetUsersParentDir()) if f.is_dir() ]
-        for sUserName in list(sUserSubfolders):
-            self.comboGetUserName.addItem(sUserName)
+#         sUserSubfolders = [ f.name for f in os.scandir(self.oFilesIO.GetUsersParentDir()) if f.is_dir() ]
+#         for sUserName in list(sUserSubfolders):
+#             self.comboGetUserName.addItem(sUserName)
 
-        self.qUserGrpBox.setEnabled(True)
+#         self.qUserGrpBox.setEnabled(True)
 
+        self.qQuizSelectionGrpBox.setEnabled(True)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onApplyQuizSelection(self):
@@ -312,43 +333,43 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         bDBSetupSuccess, sMsg = self.oFilesIO.OpenSelectedDatabase()
 
         if not bDBSetupSuccess:
-            self.oUtilsMsgs.DisplayWarning(sMsg)
+            self.oUtilsMsgs.DisplayError(sMsg)
             self.qUserLoginWidget.raise_()
 
         else:
             
             # confirm username was entered
-            if (self.comboGetUserName.currentText == '' or self.comboGetUserName.currentText == '?' or "?" in self.comboGetUserName.currentText):
-                sMsg = 'No user or invalid name was entered'
-                self.oUtilsMsgs.DisplayWarning(sMsg)
-                self.qUserLoginWidget.raise_()
-    
-            else:
-                self.oFilesIO.SetUsernameAndDir(self.comboGetUserName.currentText)
+#             if (self.comboGetUserName.currentText == '' or self.comboGetUserName.currentText == '?' or "?" in self.comboGetUserName.currentText):
+#                 sMsg = 'No user or invalid name was entered'
+#                 self.oUtilsMsgs.DisplayWarning(sMsg)
+#                 self.qUserLoginWidget.raise_()
+#     
+#             else:
+#                 self.oFilesIO.SetUsernameAndDir(self.comboGetUserName.currentText)
+            self.oFilesIO.SetUsernameAndDir(self.lineGetUserName.text)
 
-                # create user and results folders if it doesn't exist
-                self.oFilesIO.SetupForUserQuizResults()
+            # create user and results folders if it doesn't exist
+            self.oFilesIO.SetupForUserQuizResults()
 
-                ##### for debug... #####
-                self.oFilesIO.PrintDirLocations()
-                ########################
-    
-    
-                # copy file from Resource into user folder
-                if self.oFilesIO.PopulateUserQuizFolder(): # success
-    
-                    # start the session
-#                     self.oSession = Session()
-                    self.oSession.RunSetup(self.oFilesIO, self.slicerMainLayout)
-    
-                    
-                    try:
-                        #provide as much room as possible for the quiz
-                        qDataProbeCollapsibleButton = slicer.util.mainWindow().findChild("QWidget","DataProbeCollapsibleWidget")
-                        qDataProbeCollapsibleButton.collapsed = True
-                        self.reloadCollapsibleButton.collapsed = True
-                    except:
-                        pass
+            ##### for debug... #####
+            self.oFilesIO.PrintDirLocations()
+            ########################
+
+
+            # copy file from Resource into user folder
+            if self.oFilesIO.PopulateUserQuizFolder(): # success
+
+                # start the session
+                self.oSession.RunSetup(self.oFilesIO, self.slicerMainLayout)
+
+                
+                try:
+                    #provide as much room as possible for the quiz
+                    qDataProbeCollapsibleButton = slicer.util.mainWindow().findChild("QWidget","DataProbeCollapsibleWidget")
+                    qDataProbeCollapsibleButton.collapsed = True
+                    self.reloadCollapsibleButton.collapsed = True
+                except:
+                    pass
                 
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -388,12 +409,14 @@ class customEventFilter(qt.QObject):
         button on the main window to exit the application.
     """
      
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def __init__(self, oSession, oFilesIO):
         qSlicerMainWindow.__init__(self) # required for event filter
         
         self.oSession = oSession
         self.oFilesIO = oFilesIO
      
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def eventFilter(self, obj, event):
          
         self.oUtilsMsgs = UtilsMsgs()
