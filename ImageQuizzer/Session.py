@@ -811,10 +811,10 @@ class Session:
         try:
         
             # get list of label maps to save
-            lLabelMaps = slicer.mrmlScene.GetNodesByClass('vtkMRMLLabelMapVolumeNode')
+            lLabelMaps = slicer.util.getNodesByClass('vtkMRMLLabelMapVolumeNode')
              
             # if list length > 0, create folder to hold labels
-            iNumLabelMaps =  lLabelMaps.GetNumberOfItems()
+            iNumLabelMaps =  len(lLabelMaps)
             if iNumLabelMaps > 0:
      
                 for oImageNode in self._loImageViews:
@@ -976,8 +976,13 @@ class Session:
         slNodesCollection = slicer.mrmlScene.GetNodesByName(sFilenameNoExt)
         if slNodesCollection.GetNumberOfItems() == 1:
             bFound = True
+            # look at first instance only
+            #   - if user saved more than once, it will have the same filename
             slNode = slNodesCollection.GetItemAsObject(0)
-        
+
+        # for memory leak
+        slNodesCollection.UnRegister(slicer.mrmlScene)
+              
         return bFound, slNode
     
     
