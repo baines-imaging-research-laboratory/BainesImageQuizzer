@@ -399,7 +399,8 @@ class Session:
         self._btnExit = qt.QPushButton("Exit")
         self._btnExit.toolTip = "Save quiz and exit Slicer."
         self._btnExit.enabled = True
-        self._btnExit.setStyleSheet("QPushButton{ background-color: rgb(255,0,0) }")
+#         self._btnExit.setStyleSheet("QPushButton{ background-color: rgb(255,0,0) }")
+        self._btnExit.setStyleSheet("QPushButton{ background-color: rgb(255,255,0) }")
         self._btnExit.connect('clicked(bool)',self.onExitButtonClicked)
 
 
