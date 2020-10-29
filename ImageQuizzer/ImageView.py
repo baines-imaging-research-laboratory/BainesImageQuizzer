@@ -86,6 +86,8 @@ class ImageView:
             for i in range(len(self._loImageViews)):
                 
                 self.AssignNodesToView(self._loImageViews[i])
+                if self._loImageViews[i].sColorTableName != '':
+                    self._loImageViews[i].AssignColorTable(self._loImageViews[i].sColorTableName)
                 
         # reset field of view to maximize background
         slicer.util.resetSliceViews()
@@ -384,6 +386,7 @@ class ViewNodeBase:
         self.sNodeName = ''
         self._xImage = None
         self._sPageID = ''
+        self.sColorTableName = ''
         
 
     #----------
@@ -413,6 +416,7 @@ class ViewNodeBase:
         self.sNodeDescriptor = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'descriptor')
         self.sImageType = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'type')
         self.sDestination = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'destination')
+        self.sColorTableName = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'colortable')
     
         self.sNodeName =  self.GetPageID() + '_' + self.sNodeDescriptor
 
@@ -500,6 +504,13 @@ class ViewNodeBase:
         
         return dictAttrib
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def AssignColorTable(self, sColorTableInput):
+        
+        slViewNode = self.GetSlicerViewNode()
+        slDisplayNode = slViewNode.GetDisplayNode()
+        slDisplayNode.SetAndObserveColorNodeID(sColorTableInput)
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetImageState(self, dictImageState):
         

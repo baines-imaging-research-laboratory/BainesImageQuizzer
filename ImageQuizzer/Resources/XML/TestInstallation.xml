@@ -74,19 +74,19 @@
 		</QuestionSet>
 	</Page>
 	<Page name="Patient Dicom" descriptor="DicomSeries">
-		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Red">
+		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Red" colortable="PET Heat">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Yellow">
+		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Yellow" colortable="PET Heat">
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Green">
+		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Green" colortable="PET Heat">
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
