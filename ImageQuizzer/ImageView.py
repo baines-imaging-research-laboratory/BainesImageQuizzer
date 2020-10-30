@@ -86,6 +86,12 @@ class ImageView:
             for i in range(len(self._loImageViews)):
                 
                 self.AssignNodesToView(self._loImageViews[i])
+                # apply xml defined color table map if requested - else default to Grey
+                if self._loImageViews[i].sColorTableName == '':
+                    self._loImageViews[i].sColorTableName = 'Grey'
+                self._loImageViews[i].AssignColorTable()
+
+                    
                 
         # reset field of view to maximize background
         slicer.util.resetSliceViews()
@@ -384,6 +390,7 @@ class ViewNodeBase:
         self.sNodeName = ''
         self._xImage = None
         self._sPageID = ''
+        self.sColorTableName = ''
         
 
     #----------
@@ -413,6 +420,7 @@ class ViewNodeBase:
         self.sNodeDescriptor = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'descriptor')
         self.sImageType = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'type')
         self.sDestination = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'destination')
+        self.sColorTableName = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'colortable')
     
         self.sNodeName =  self.GetPageID() + '_' + self.sNodeDescriptor
 
@@ -500,6 +508,26 @@ class ViewNodeBase:
         
         return dictAttrib
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def AssignColorTable(self):
+        
+        # assign defined color table map to the node
+        
+        # get the list of color table nodes for the requested map
+        slColorTableNodeList = slicer.mrmlScene.GetNodesByName(self.sColorTableName)
+        
+        # get the ID of the first node in the list of color table nodes
+        if slColorTableNodeList.GetNumberOfItems() >= 1:
+            slColorTableNode = slColorTableNodeList.GetItemAsObject(0)
+            slColorTableNodeID = slColorTableNode.GetID()
+          
+            # assign the color table node ID to the volume's display node
+            slDisplayNode = self.slNode.GetDisplayNode()
+            slDisplayNode.SetAndObserveColorNodeID(slColorTableNodeID)
+            
+        # for memory leaks
+        slColorTableNodeList.UnRegister(slicer.mrmlScene)
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetImageState(self, dictImageState):
         
