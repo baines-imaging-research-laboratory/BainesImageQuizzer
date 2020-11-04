@@ -452,7 +452,8 @@ class Session:
                 self.DisplayPage()
     
             else:
-                self._oMsgUtil.DisplayWarning( sMsg )
+                if sMsg != '':
+                    self._oMsgUtil.DisplayWarning( sMsg )
                 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -485,7 +486,8 @@ class Session:
                
         
         else:
-            self._oMsgUtil.DisplayWarning( sMsg )
+            if sMsg != '':
+                self._oMsgUtil.DisplayWarning( sMsg )
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onExitButtonClicked(self):
@@ -496,7 +498,8 @@ class Session:
             if bSuccess:
                 slicer.util.exit(status=EXIT_SUCCESS)
             else:
-                self._oMsgUtil.DisplayWarning( sMsg )
+                if sMsg != '':
+                    self._oMsgUtil.DisplayWarning( sMsg )
         else:
             # cancelled - reset the progress bar
             self.progress.setValue(self._iCurrentCompositeIndex)
@@ -672,14 +675,14 @@ class Session:
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def PerformSave(self):
+    def PerformSave(self, bFromEventFilter=False):
         sMsg = ''
         bSuccess = True
         
-        bSuccess, sMsg = self.ResetSegmentation()
+        bSuccess, sMsg = self.ResetDisplay()
         
         if bSuccess:
-            bSuccess, sMsg = self.SaveLabelMaps()
+            bSuccess, sMsg = self.SaveLabelMaps(bFromEventFilter)
         
             if bSuccess:
                 bSuccess, sMsg = self.CaptureAndSaveImageState()
@@ -694,7 +697,7 @@ class Session:
         return bSuccess, sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ResetSegmentation(self):
+    def ResetDisplay(self):
         
         bSuccess = True
         sMsg = ''
@@ -802,7 +805,7 @@ class Session:
             
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SaveLabelMaps(self):
+    def SaveLabelMaps(self, bFromEventFilter=False):
             
         # if label maps were created, save to disk
         bLabelMapsSaved = True
@@ -856,9 +859,23 @@ class Session:
     
                 bLabelMapsSaved = True
     
+            else:
+                # user doesn't get the option to cancel if the call was initiated from the Close event filter
+                if bFromEventFilter == False:
+                    if self._bSegmentationModule == True:
+                        qtAns = self.oUtilsMsgs.DisplayOkCancel('No label maps were created. Do you want to continue?')
+                        if qtAns == qt.QMessageBox.Ok:
+                            # user did not create a label map but there may be no lesions to segment
+                            # continue with the save
+                            bLabelMapsSaved = True
+                        else:
+                            # user wants to resume work on this page
+                            bLabelMapsSaved = False
+                
+                    
     
         except:
-            sMsg = 'Failed to store label maps'
+            sMsg = 'Failed to store label maps ' + sLabelMapPath
             bLabelMapsSaved = False
      
     

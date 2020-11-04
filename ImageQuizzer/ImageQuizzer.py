@@ -429,9 +429,11 @@ class customEventFilter(qt.QObject):
             sUserQuizResultsPath = self.oFilesIO.GetUserQuizResultsPath()
             
             if sUserQuizResultsPath != '':
-                bSuccess, sMsg = self.oSession.PerformSave()
+                bFromEventFilter = True
+                bSuccess, sMsg = self.oSession.PerformSave(bFromEventFilter)
                 if bSuccess == False:
-                    self.oUtilsMsgs.DisplayWarning(sMsg)
+                    if sMsg != '':
+                        self.oUtilsMsgs.DisplayWarning(sMsg)
                     
             slicer.util.exit(status=EXIT_SUCCESS)
                     
