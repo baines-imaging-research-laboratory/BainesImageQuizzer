@@ -208,8 +208,11 @@ class Session:
     def GetSegmentationTabIndex(self):
         return self._iSegmentationTabIndex
         
-        
     #----------
+    def GetSegmentationTabEnabled(self):
+        bTF = self.oQuizWidgets.qTabWidget.isTabEnabled(self.GetSegmentationTabIndex())
+        return bTF
+    
     #----------
     def GetAllQuestionSetsForNthPage(self, iPageIndex):
         self._xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
@@ -862,15 +865,16 @@ class Session:
             else:
                 # user doesn't get the option to cancel if the call was initiated from the Close event filter
                 if bFromEventFilter == False:
-                    if self._bSegmentationModule == True:
-                        qtAns = self.oUtilsMsgs.DisplayOkCancel('No label maps were created. Do you want to continue?')
-                        if qtAns == qt.QMessageBox.Ok:
-                            # user did not create a label map but there may be no lesions to segment
-                            # continue with the save
-                            bLabelMapsSaved = True
-                        else:
-                            # user wants to resume work on this page
-                            bLabelMapsSaved = False
+                    if self._bSegmentationModule == True:   # if there is a segmentation module
+                        if self.GetSegmentationTabEnabled() == True:    # if the tab is enabled
+                            qtAns = self.oUtilsMsgs.DisplayOkCancel('No label maps were created. Do you want to continue?')
+                            if qtAns == qt.QMessageBox.Ok:
+                                # user did not create a label map but there may be no lesions to segment
+                                # continue with the save
+                                bLabelMapsSaved = True
+                            else:
+                                # user wants to resume work on this page
+                                bLabelMapsSaved = False
                 
                     
     
