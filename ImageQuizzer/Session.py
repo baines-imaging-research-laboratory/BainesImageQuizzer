@@ -429,7 +429,7 @@ class Session:
 
         else:
             # this is not the last question set, do a save and display the next page
-            bSuccess, sMsg = self.PerformSave()
+            bSuccess, sMsg = self.PerformSave('NextBtn')
             
             if bSuccess:
     
@@ -465,7 +465,7 @@ class Session:
         bSuccess = True
         sMsg = ''
 
-        bSuccess, sMsg = self.PerformSave()
+        bSuccess, sMsg = self.PerformSave('PreviousBtn')
         
         if bSuccess:
 
@@ -497,7 +497,7 @@ class Session:
 
         qtAns = self._oMsgUtil.DisplayOkCancel('Do you wish to exit? \nYour responses will be saved. Quiz may be resumed.')
         if qtAns == qt.QMessageBox.Ok:
-            bSuccess, sMsg = self.PerformSave()
+            bSuccess, sMsg = self.PerformSave('ExitBtn')
             if bSuccess:
                 slicer.util.exit(status=EXIT_SUCCESS)
             else:
@@ -678,14 +678,15 @@ class Session:
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def PerformSave(self, bFromEventFilter=False):
+#     def PerformSave(self, bFromEventFilter=False):
+    def PerformSave(self, sCaller):
         sMsg = ''
         bSuccess = True
         
         bSuccess, sMsg = self.ResetDisplay()
         
         if bSuccess:
-            bSuccess, sMsg = self.SaveLabelMaps(bFromEventFilter)
+            bSuccess, sMsg = self.SaveLabelMaps(sCaller)
         
             if bSuccess:
                 bSuccess, sMsg = self.CaptureAndSaveImageState()
@@ -808,11 +809,15 @@ class Session:
             
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SaveLabelMaps(self, bFromEventFilter=False):
+#     def SaveLabelMaps(self, bFromEventFilter=False):
+    def SaveLabelMaps(self, sCaller):
+
             
         # if label maps were created, save to disk
         bLabelMapsSaved = True
         sMsg = ''
+        
+        bLabelMapFound = False
  
         try:
         
@@ -832,7 +837,12 @@ class Session:
                         # match label map file with xml image
                         sLabelMapFilename = slNodeLabelMap.GetName()
                         if oImageNode.sNodeName + '-label' == sLabelMapFilename:
+                            
+                            bLabelMapFound = True  # -label suffix is associated with an image on the page
                         
+
+                            # store the path name in the xml file and the label map in the directory
+                            
                             # get page name to create directory
                             xPageNode = self.GetCurrentPageNode()
                             sPageIndex = str(self.GetCurrentPageIndex() + 1)
@@ -859,12 +869,24 @@ class Session:
                             # update xml storing the path to the label map file with the image element
                             self.AddLabelMapPathElement(oImageNode.GetXmlImageElement(), self.oFilesIO.GetRelativeUserPath(sLabelMapPath))
 
+                            
+                            bLabelMapsSaved = True  # at least one label map was saved
+
     
-                bLabelMapsSaved = True
+#                 bLabelMapsSaved = True
+                    
     
-            else:
+#             else:
+
+            # If there were no label map volume nodes - check if the segmentation was required
+            # OR if there were label map volume nodes, but there wasn't a -label suffix to match an image on the page,
+            #    ie. the labelMaps found flag was left as false
+            # present the warning
+            if iNumLabelMaps == 0 or (iNumLabelMaps > 0 and bLabelMapFound == False):    
+                
                 # user doesn't get the option to cancel if the call was initiated from the Close event filter
-                if bFromEventFilter == False:
+#                 if bFromEventFilter == False:
+                if sCaller != 'EventFilter':
                     if self._bSegmentationModule == True:   # if there is a segmentation module
                         if self.GetSegmentationTabEnabled() == True:    # if the tab is enabled
                             qtAns = self.oUtilsMsgs.DisplayOkCancel('No label maps were created. Do you want to continue?')

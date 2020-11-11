@@ -429,8 +429,10 @@ class customEventFilter(qt.QObject):
             sUserQuizResultsPath = self.oFilesIO.GetUserQuizResultsPath()
             
             if sUserQuizResultsPath != '':
-                bFromEventFilter = True
-                bSuccess, sMsg = self.oSession.PerformSave(bFromEventFilter)
+#                 bFromEventFilter = True
+#                 bSuccess, sMsg = self.oSession.PerformSave(bFromEventFilter)
+                sCaller = 'EventFilter'
+                bSuccess, sMsg = self.oSession.PerformSave(sCaller)
                 if bSuccess == False:
                     if sMsg != '':
                         self.oUtilsMsgs.DisplayWarning(sMsg)
