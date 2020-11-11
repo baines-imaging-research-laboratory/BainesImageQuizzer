@@ -691,11 +691,35 @@ class Session:
             if bSuccess:
                 bSuccess, sMsg = self.CaptureAndSaveImageState()
                     
-                if bSuccess:
-                    bSuccess, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet(sCaller)
+#                 if bSuccess:
+#                     bSuccess, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet(sCaller)
+# 
+#                     if bSuccess:
+#                         bSuccess, sMsg = self.WriteResponsesToXml()
 
-                    if bSuccess:
-                        bSuccess, sMsg = self.WriteResponsesToXml()
+
+
+                if bSuccess:
+                    sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet(sCaller)
+
+                    if sCaller == 'NextBtn':
+                        # only write to xml if all responses were captured
+                        if sCaptureSuccessLevel == 'All':
+                            bSuccess, sMsg = self.WriteResponsesToXml()
+                        else:
+                            bSuccess = False
+                            
+                    else:  
+                        # caller must have been Previous or Exit buttons or from the event filter
+                        # only write if there were responses captured
+                        if sCaptureSuccessLevel == 'All' or sCaptureSuccessLevel == 'Partial':
+                            bSuccess, sMsg = self.WriteResponsesToXml()
+                        else:
+                            # if no responses were captured 
+                            if sCaptureSuccessLevel == 'None':
+                                # this isn't the Next button so it is allowed
+                                bSuccess = True
+                        
 
         # let calling program handle display of message if not successful            
         return bSuccess, sMsg
@@ -725,44 +749,6 @@ class Session:
             
         return bSuccess, sMsg
         
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def WriteResponsesToXml(self):
-        
-        bSuccess = True
-        sMsg = ''
-        
-        try:
-            
-            # only allow for writing of responses under certain conditions
-            #    - allow if the question set is marked for multiple responses
-            #    - allow if no responses were recorded yet
-            
-#             if ( self._bAllowMultipleResponse == True)  or \
-#                 ((self._bAllowMultipleResponse == False) and (self.CheckForSavedResponse() == False) ):
-            if ( self.GetMultipleResponsesInQsetAllowed() == True)  or \
-                ((self.GetMultipleResponsesInQsetAllowed() == False) and (self.CheckForSavedResponse() == False) ):
-
-                # check to see if the responses for the question set match 
-                #    what was previously captured
-                #    -only write responses if they have changed
-                if not self._lsNewResponses == self._lsPreviousResponses:
-                    # Responses have been captured, if it's the first set of responses
-                    #    for the session, add in the login timestamp
-                    #    The timestamp is added here in case the user exited without responding to anything,
-                    #    allowing for the resume check to function properly
-                    if self._bStartOfSession == True:
-                        self.AddSessionLoginTimestamp()
-                    
-                    self.WriteResponses()
-                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-                    self._bStartOfSession = False
-        
-        except:
-            bSuccess = False
-            sMsg = 'Error writing responses to Xml'
-            
-        return bSuccess, sMsg
-    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureAndSaveImageState(self):
 
@@ -999,6 +985,7 @@ class Session:
         
         # sMsg may be set in Question class function to capture the response
         sMsg = ''
+        sAllMsgs = ''
         
         # get list of questions from current question set
         
@@ -1010,19 +997,39 @@ class Session:
             
         lsAllResponses = []
         lsResponsesForOptions = []
+        iNumMissingResponses = 0
+        
         for indQuestion in range(len(loQuestions)):
             oQuestion = loQuestions[indQuestion]
             bResponseCaptured = False
             
             bResponseCaptured, lsResponsesForOptions, sMsg = oQuestion.CaptureResponse()
 
-            if bResponseCaptured == False:
-                break   # exit from loop - question is missing response
-            else:
-                lsAllResponses.append(lsResponsesForOptions)
 
+            # append all captured lists - even if it was empty (partial responses)
+            lsAllResponses.append(lsResponsesForOptions)
+            
+            # string together all missing response messages
+            if sMsg != '':
+                if sAllMsgs == '':
+                    sAllMsgs = sMsg
+                else:
+                    sAllMsgs = sAllMsgs + '\n' + sMsg 
+            
+            # keep track if a question was missed
+            if bResponseCaptured == False:
+                iNumMissingResponses = iNumMissingResponses + 1
                 
-        return bResponseCaptured, lsAllResponses, sMsg
+        # define success level
+        if iNumMissingResponses == 0:
+            sCaptureSuccessLevel = 'All'
+        elif iNumMissingResponses == len(lsAllResponses):
+            sCaptureSuccessLevel = 'None'
+        else:
+            sCaptureSuccessLevel = 'Partial'
+            
+                
+        return sCaptureSuccessLevel, lsAllResponses, sAllMsgs
        
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1122,33 +1129,46 @@ class Session:
             
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def WriteResponses(self):
+    def WriteResponsesToXml(self):
         
+        bSuccess = True
+        sMsg = ''
         
-#         indQSet = self.GetCurrentQuestionSetIndex()
-#  
-#         oQuestionSet = self._loQuestionSets[indQSet]
-# 
-# 
-#         loQuestions = oQuestionSet.GetQuestionList()
-#         
-#         lsResponsesForOptions = []
-#         for indQuestion in range(len(loQuestions)):
-#             oQuestion = loQuestions[indQuestion]
-#             bResponseCaptured = False
-#             
-#             bResponseCaptured, lsResponsesForOptions, sMsg = oQuestion.CaptureResponse()
-# 
-# 
-#             if bResponseCaptured == True:                
-#                 # add response element to proper option node
-#                 for indOption in range(len(lsResponsesForOptions)):
-#                     xOptionNode = self.GetNthOptionNode( indQuestion, indOption)
-#                     
-#                     if not xOptionNode == None:
-#                         self.AddResponseElement(xOptionNode, lsResponsesForOptions[indOption])
+        try:
+            
+            # only allow for writing of responses under certain conditions
+            #    - allow if the question set is marked for multiple responses
+            #    - allow if no responses were recorded yet
+            
+#             if ( self._bAllowMultipleResponse == True)  or \
+#                 ((self._bAllowMultipleResponse == False) and (self.CheckForSavedResponse() == False) ):
+            if ( self.GetMultipleResponsesInQsetAllowed() == True)  or \
+                ((self.GetMultipleResponsesInQsetAllowed() == False) and (self.CheckForSavedResponse() == False) ):
 
-
+                # check to see if the responses for the question set match 
+                #    what was previously captured
+                #    -only write responses if they have changed
+                if not self._lsNewResponses == self._lsPreviousResponses:
+                    # Responses have been captured, if it's the first set of responses
+                    #    for the session, add in the login timestamp
+                    #    The timestamp is added here in case the user exited without responding to anything,
+                    #    allowing for the resume check to function properly
+                    if self._bStartOfSession == True:
+                        self.AddSessionLoginTimestamp()
+                    
+                    self.AddXmlElements()
+                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+                    self._bStartOfSession = False
+        
+        except:
+            bSuccess = False
+            sMsg = 'Error writing responses to Xml'
+            
+        return bSuccess, sMsg
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def AddXmlElements(self):
+        
         # using the list of question set responses, isolate respones for each question
         iNumQuestions = len(self._lsNewResponses)
 
@@ -1158,20 +1178,21 @@ class Session:
             # get the option responses for that question 
             #    (eg. for a checkbox question, there may be 3 options 'yes' 'no' 'maybe')
             lsQuestionResponses = self._lsNewResponses[indQuestion]
+
+
+            # if the list of responses was empty (only a partial number of questions were answered), don't write
+            if len(lsQuestionResponses) > 0:
             
-            # for each option in the question
-            for indOption in range(len(lsQuestionResponses)):
+                # for each option in the question
+                for indOption in range(len(lsQuestionResponses)):
+                    
+                    # capture the xml node for the option
+                    xOptionNode = self.GetNthOptionNode( indQuestion, indOption)
+                     
+                    if not xOptionNode == None:
+                        # write the response to the xml 
+                        self.AddResponseElement(xOptionNode, lsQuestionResponses[indOption])
                 
-                # capture the xml node for the option
-                xOptionNode = self.GetNthOptionNode( indQuestion, indOption)
-                 
-                if not xOptionNode == None:
-                    # write the response to the xml 
-                    self.AddResponseElement(xOptionNode, lsQuestionResponses[indOption])
-                
-                
-        
-        
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddResponseElement(self, xOptionNode, sResponse):

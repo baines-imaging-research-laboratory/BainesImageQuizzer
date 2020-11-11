@@ -406,6 +406,8 @@ class RadioQuestion(Question):
             bSuccess = True
         else:
             sMsg = 'Missing radio option for: ' + self._sGrpBoxTitle_getter()
+            # if no responses were found, reset the response list to empty (to accomodate partial responses)
+            lsResponses = []
 
         return bSuccess, lsResponses, sMsg
     
@@ -497,6 +499,8 @@ class CheckBoxQuestion(Question):
             bSuccess = True
         else:
             sMsg = 'Missing check box option for: ' + self._sGrpBoxTitle_getter()
+            # if no responses were found, reset the response list to empty (to accomodate partial responses)
+            lsResponses = []
 
         return bSuccess, lsResponses, sMsg
 
@@ -591,6 +595,8 @@ class TextQuestion(Question):
             bSuccess = True
         else:
             sMsg = 'Missing text response for: ' + self._sGrpBoxTitle_getter()
+            # if no responses were found, reset the response list to empty (to accomodate partial responses)
+            lsResponses = []
             
         return bSuccess, lsResponses, sMsg
 
@@ -727,6 +733,8 @@ class IntegerValueQuestion(Question):
             bSuccess = True
         else:
             sMsg = 'Invalid integer value response for: ' + self._sGrpBoxTitle_getter() + sRangeMsg
+            # if no responses were found, reset the response list to empty (to accomodate partial responses)
+            lsResponses = []
 
                     
         return bSuccess, lsResponses, sMsg
@@ -867,6 +875,8 @@ class FloatValueQuestion(Question):
             bSuccess = True
         else:
             sMsg = 'Invalid decimal value response for: ' + self._sGrpBoxTitle_getter() + sRangeMsg
+            # if no responses were found, reset the response list to empty (to accomodate partial responses)
+            lsResponses = []
 
 
         return bSuccess, lsResponses, sMsg
