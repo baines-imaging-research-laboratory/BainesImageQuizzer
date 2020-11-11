@@ -692,7 +692,7 @@ class Session:
                 bSuccess, sMsg = self.CaptureAndSaveImageState()
                     
                 if bSuccess:
-                    bSuccess, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet()
+                    bSuccess, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet(sCaller)
 
                     if bSuccess:
                         bSuccess, sMsg = self.WriteResponsesToXml()
@@ -812,12 +812,26 @@ class Session:
 #     def SaveLabelMaps(self, bFromEventFilter=False):
     def SaveLabelMaps(self, sCaller):
 
+        """ 
+            label map volume nodes may exist in the mrmlScene if the user created a label map
+            (in which case it is named with a '-label' suffix), or if a label map or segmentation
+            was loaded in through the xml quiz file.
+            
+            This function looks for label maps created by the user (-label suffix) and if found,
+            saves them as a .nrrd file in the specified directory. The path to this saved file is
+            then stored in the xml file within the associated image element.
+            
+            A warning is presented if the xml question set had the 'segmentrequired' flag set to 'y'
+            but no label maps (with -label suffix) were found. The user purposely may not have created
+            a label map if there were no lesions to segment. This is acceptable.
+             
+        """
             
         # if label maps were created, save to disk
         bLabelMapsSaved = True
         sMsg = ''
         
-        bLabelMapFound = False
+        bLabelMapFound = False  # to detect if label map was created by user
  
         try:
         
@@ -853,7 +867,6 @@ class Session:
                             sPageResultsDir = self.oFilesIO.CreatePageDir(sDirName)
 
                             sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
-#                             sLabelMapFilenameWithExtCleaned = self.oUtilsIO.CleanFilename(sLabelMapFilenameWithExt)
                              
                             # save the label map file to the user's page directory
                             sLabelMapPath = os.path.join(sPageResultsDir, sLabelMapFilenameWithExt)
@@ -878,10 +891,10 @@ class Session:
     
 #             else:
 
-            # If there were no label map volume nodes - check if the segmentation was required
+            # If there were no label map volume nodes 
             # OR if there were label map volume nodes, but there wasn't a -label suffix to match an image on the page,
             #    ie. the labelMaps found flag was left as false
-            # present the warning
+            # Check if the segmentation was required and if enabled present the warning
             if iNumLabelMaps == 0 or (iNumLabelMaps > 0 and bLabelMapFound == False):    
                 
                 # user doesn't get the option to cancel if the call was initiated from the Close event filter
@@ -982,7 +995,7 @@ class Session:
                                 
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CaptureResponsesForQuestionSet(self):
+    def CaptureResponsesForQuestionSet(self, sCaller):
         
         # sMsg may be set in Question class function to capture the response
         sMsg = ''
@@ -1112,29 +1125,53 @@ class Session:
     def WriteResponses(self):
         
         
-        indQSet = self.GetCurrentQuestionSetIndex()
- 
-        oQuestionSet = self._loQuestionSets[indQSet]
+#         indQSet = self.GetCurrentQuestionSetIndex()
+#  
+#         oQuestionSet = self._loQuestionSets[indQSet]
+# 
+# 
+#         loQuestions = oQuestionSet.GetQuestionList()
+#         
+#         lsResponsesForOptions = []
+#         for indQuestion in range(len(loQuestions)):
+#             oQuestion = loQuestions[indQuestion]
+#             bResponseCaptured = False
+#             
+#             bResponseCaptured, lsResponsesForOptions, sMsg = oQuestion.CaptureResponse()
+# 
+# 
+#             if bResponseCaptured == True:                
+#                 # add response element to proper option node
+#                 for indOption in range(len(lsResponsesForOptions)):
+#                     xOptionNode = self.GetNthOptionNode( indQuestion, indOption)
+#                     
+#                     if not xOptionNode == None:
+#                         self.AddResponseElement(xOptionNode, lsResponsesForOptions[indOption])
 
 
-        loQuestions = oQuestionSet.GetQuestionList()
-        
-        lsResponsesForOptions = []
-        for indQuestion in range(len(loQuestions)):
-            oQuestion = loQuestions[indQuestion]
-            bResponseCaptured = False
+        # using the list of question set responses, isolate respones for each question
+        iNumQuestions = len(self._lsNewResponses)
+
+        # for each question in the question set responses        
+        for indQuestion in range(len(self._lsNewResponses)):
             
-            bResponseCaptured, lsResponsesForOptions, sMsg = oQuestion.CaptureResponse()
-
-
-            if bResponseCaptured == True:                
-                # add response element to proper option node
-                for indOption in range(len(lsResponsesForOptions)):
-                    xOptionNode = self.GetNthOptionNode( indQuestion, indOption)
-                    
-                    if not xOptionNode == None:
-                        self.AddResponseElement(xOptionNode, lsResponsesForOptions[indOption])
-
+            # get the option responses for that question 
+            #    (eg. for a checkbox question, there may be 3 options 'yes' 'no' 'maybe')
+            lsQuestionResponses = self._lsNewResponses[indQuestion]
+            
+            # for each option in the question
+            for indOption in range(len(lsQuestionResponses)):
+                
+                # capture the xml node for the option
+                xOptionNode = self.GetNthOptionNode( indQuestion, indOption)
+                 
+                if not xOptionNode == None:
+                    # write the response to the xml 
+                    self.AddResponseElement(xOptionNode, lsQuestionResponses[indOption])
+                
+                
+        
+        
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddResponseElement(self, xOptionNode, sResponse):
@@ -1343,7 +1380,7 @@ class QuizWidgets:
     def __init__(self, oFilesIOInput, parent=None):
         self.sClassName = type(self).__name__
         self.parent = parent
-        print('Constructor for QuizWidgets')
+#         print('Constructor for QuizWidgets')
 
         self._slicerLeftMainLayout = None
         self._slicerQuizLayout = None
