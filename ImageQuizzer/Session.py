@@ -1260,6 +1260,26 @@ class Session:
         #    Add one to the current index to resume.
         
 
+        # Scan the user's quiz file for existing responses in case the user
+        #     exited the quiz prematurely (before it was complete) on the last login
+        #
+        # The following assumptions are made based on the quiz flow:
+        #    - the quiz pages and question sets are presented sequentially 
+        #        as laid out in the quiz file
+        #    - it is possible to exit the quiz with not all questions answered (a partial response)
+        #        we have to find the first question set that has all questions answered
+        #    - if a question was answered, all options within the question have a response tag
+        #        but, there may be more than one response tag
+        #
+        # By looping through the page/question set indices stored in the
+        #    composite index array in reverse, we scan all questions for an existing response
+        #    that matches the last login session time.
+        #    If the number of questions with the correct response times = total number of questions,
+        #    add one to the current index to resume (all questions were answered).
+        #    Otherwise, only a partial number of questions were answered so stay on this index.
+
+
+
         # initialize
         dtLastLogin = self.GetLastLoginTimestamp() # value in datetime format
         iResumeCompIndex = 0
@@ -1269,7 +1289,7 @@ class Session:
         #    last login time (prior to current login)
 
         for indCI in reversed(range(len(self._l2iPageQuestionCompositeIndices))):
-#             print(indCI)
+            print(indCI)
             
             bLastLoginResponseFound = False # default
             
@@ -1278,35 +1298,76 @@ class Session:
             indQuestionSet = self._l2iPageQuestionCompositeIndices[indCI][1]
             xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', indPage)
             xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', indQuestionSet)
-#             print(indCI, 'Page:', indPage, 'QS:', indQuestionSet)
+            print(indCI, 'Page:', indPage, 'QS:', indQuestionSet)
             
-            # get first Option node of the first Question
-            xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', 0)
-            xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', 0)
+
+
+
+#             # get first Option node of the first Question
+#             xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', 0)
+#             xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', 0)
+#             
+#             # get number of Response nodes in the option
+#             iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode, 'Response')
+#             
+#                 
+#             # check each response tag for the time
+#             for indResp in range(iNumResponses):
+#                 xResponseNode = self.oIOXml.GetNthChild(xOptionNode, 'Response', indResp)
+#                 sTimestamp = self.oIOXml.GetValueOfNodeAttribute(xResponseNode, 'logintime')
+# 
+#                 dtLoginTimestamp = datetime.strptime(sTimestamp, self.sTimestampFormat)
+#                 if dtLoginTimestamp == dtLastLogin:
+#                     # found a response for last login at this composite index
+#                     bLastLoginResponseFound = True
+#                     break   # exit checking each response
+#             
+#             if bLastLoginResponseFound == True:
+#                 break   # exit the reversed loop through the composite indices
+
+
+            # get number of questions in the question set node
+            iNumQuestions = self.oIOXml.GetNumChildrenByName(xQuestionSetNode, 'Question')
+            iNumLastLoginResponses = 0
             
-            # get number of Response nodes in the option
-            iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode, 'Response')
+            # scan all questions
+            for indQuestion in range(iNumQuestions):
+
+                # get first Option node of each Question
+                xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
+                xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', 0)
+                
+                # get number of Response nodes in the option
+                iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode, 'Response')
             
                 
-            # check each response tag for the time
-            for indResp in range(iNumResponses):
-                xResponseNode = self.oIOXml.GetNthChild(xOptionNode, 'Response', indResp)
-                sTimestamp = self.oIOXml.GetValueOfNodeAttribute(xResponseNode, 'logintime')
-
-                dtLoginTimestamp = datetime.strptime(sTimestamp, self.sTimestampFormat)
-                if dtLoginTimestamp == dtLastLogin:
-                    # found a response for last login at this composite index
-                    bLastLoginResponseFound = True
-                    break   # exit checking each response
-            
+                # check each response tag for the time
+                for indResp in range(iNumResponses):
+                    xResponseNode = self.oIOXml.GetNthChild(xOptionNode, 'Response', indResp)
+                    sTimestamp = self.oIOXml.GetValueOfNodeAttribute(xResponseNode, 'logintime')
+    
+                    dtLoginTimestamp = datetime.strptime(sTimestamp, self.sTimestampFormat)
+                    if dtLoginTimestamp == dtLastLogin:
+                        # found a response for last login at this composite index
+                        bLastLoginResponseFound = True
+                        iNumLastLoginResponses = iNumLastLoginResponses + 1
+                        break   # exit checking each response
+                
+                
+                
             if bLastLoginResponseFound == True:
                 break   # exit the reversed loop through the composite indices
+
+
+
             
         if bLastLoginResponseFound == True:
             
             # check if the last response found was entered on the last question set. 
             #    (i.e. was the quiz completed)
-            if indCI == (len(self._l2iPageQuestionCompositeIndices) - 1):
+#             if indCI == (len(self._l2iPageQuestionCompositeIndices) - 1):
+            if indCI == (len(self._l2iPageQuestionCompositeIndices) - 1) and\
+                iNumLastLoginResponses == iNumQuestions:
                 
                 # if one question set allows a multiple response, user has option to redo response
                 if self.GetMultipleResponsesInQuiz() == True:
@@ -1324,8 +1385,12 @@ class Session:
                     # quiz does not allow for changing responses - exit
                     self.ExitOnQuizComplete("This quiz was already completed. Exiting")
             else:
-                iResumeCompIndex = indCI + 1
-#             print(iResumeCompIndex, '...', self._l2iPageQuestionCompositeIndices[iResumeCompIndex][0], '...',self._l2iPageQuestionCompositeIndices[iResumeCompIndex][1] )
+                if iNumLastLoginResponses == iNumQuestions:
+                    iResumeCompIndex = indCI + 1    # all questions were answered
+                else:
+                    iResumeCompIndex = indCI        # not all questions were answered - stay here
+                    
+                print(iResumeCompIndex, '...', self._l2iPageQuestionCompositeIndices[iResumeCompIndex][0], '...',self._l2iPageQuestionCompositeIndices[iResumeCompIndex][1] )
             
         # Display a message to user if resuming
         if not iResumeCompIndex == self._iCurrentCompositeIndex:
