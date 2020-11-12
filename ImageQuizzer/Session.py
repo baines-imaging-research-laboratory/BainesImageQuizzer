@@ -575,6 +575,7 @@ class Session:
         oQuestionSet = QuestionSet()
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
         
+        sQuestionsWithRecordedResponses = self.CheckForSavedResponse()
         self.SetMultipleResponsesInQSetAllowed(oQuestionSet.GetMultipleResponseTF())
 
         if self.GetSegmentationTabIndex() > 0:
@@ -583,8 +584,10 @@ class Session:
                 self.SegmentationTabEnabler(oQuestionSet.GetSegmentRequiredTF())
             else:
                 # When multiple responses are not allowed, 
-                #    enable the segmentation tab only if there are no currently saved responses and the segments are required
-                if (self.CheckForSavedResponse() == True):
+                #    enable the segmentation tab only if the segments are required and
+                #    the number of questions with responses is not All (ie. either None or Partial)
+                
+                if (sQuestionsWithRecordedResponses == 'All'):
                     self.SegmentationTabEnabler(False)
                 else:
                     self.SegmentationTabEnabler(oQuestionSet.GetSegmentRequiredTF())
@@ -606,10 +609,11 @@ class Session:
 
 
 
-            # enable widget if no response exists or if user is allowed to 
+            # enable widget if not all questions have responses or if user is allowed to 
             # input multiple responses
-            if self.CheckForSavedResponse() == True:
+            if sQuestionsWithRecordedResponses == 'All':
                 qWidgetQuestionSetForm.setEnabled(self.GetMultipleResponsesInQsetAllowed())
+            if sQuestionsWithRecordedResponses == 'All' or sQuestionsWithRecordedResponses == 'Partial':
                 self.DisplaySavedResponse()
 
                    
@@ -1052,18 +1056,54 @@ class Session:
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForSavedResponse(self):
+
+        ''' Check through all questions for the question set looking for a response.
+            If the Question Set has a "segmentrequired='y'" attribute, 
+            check for a saved label map path element. 
+
+            Assume: All options have a response if the question was answered so we just query the first.
+        '''
+        bLabelMapRequirementFilled = False
+        iNumAnsweredQuestions = 0
         
-        bResponseExists = False
+        xNodeQuestionSet = self.GetCurrentQuestionSetNode()
         
-        # get option node for the current question set , 1st question, 1st otpion
-        xOptionNode = self.GetNthOptionNode( 0, 0)
+        bLabelMapRequired = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'segmentrequired')
+
+        # search for labelmap path in the xml image nodes if segmentation was required
+        if bLabelMapRequired == True:
+            xImageNodes = self.oIOXml.GetChildren(xNodeQuestionSet, 'Image')
+            for xImageNode in xImageNodes:
+                iNumLabelMapPaths = self.oIOXml.GetNumChildrenByName(xImageNode, 'LabelMapPath')
+                if iNumLabelMapPaths > 0:
+                    bLabelMapRequirementFilled = True
+                    break
+        else:
+            bLabelMapRequirementFilled = True   # user not required to create label map
         
-        iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode,'Response')
-#         print ('Number of responses: %i' %iNumResponses)
-        if iNumResponses >0:
-            bResponseExists = True
-        
-        return bResponseExists
+
+
+        iNumQuestions = self.oIOXml.GetNumChildrenByName(xNodeQuestionSet, 'Question')
+
+        for indQuestion in range(iNumQuestions):
+             
+            xOptionNode = self.GetNthOptionNode( indQuestion, 0)
+         
+            iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode,'Response')
+            if iNumResponses >0:
+                iNumAnsweredQuestions = iNumAnsweredQuestions + 1
+                 
+                
+        if iNumAnsweredQuestions == 0:
+            sQuestionswithResponses = 'None'
+        elif  iNumAnsweredQuestions < iNumQuestions:
+            sQuestionswithResponses = 'Partial'
+        elif iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == True:
+            sQuestionswithResponses = 'All'
+        elif iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == False:
+            sQuestionswithResponses = 'Partial'
+            
+        return sQuestionswithResponses
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplaySavedResponse(self):
@@ -1138,12 +1178,12 @@ class Session:
             
             # only allow for writing of responses under certain conditions
             #    - allow if the question set is marked for multiple responses
-            #    - allow if no responses were recorded yet
+            #    - allow if the number of questions with responses recorded is none or partial (not all)
             
-#             if ( self._bAllowMultipleResponse == True)  or \
-#                 ((self._bAllowMultipleResponse == False) and (self.CheckForSavedResponse() == False) ):
+            sQuestionsWithRecordedResponses = self.CheckForSavedResponse()
+
             if ( self.GetMultipleResponsesInQsetAllowed() == True)  or \
-                ((self.GetMultipleResponsesInQsetAllowed() == False) and (self.CheckForSavedResponse() == False) ):
+                ((self.GetMultipleResponsesInQsetAllowed() == False) and (sQuestionsWithRecordedResponses != 'All') ):
 
                 # check to see if the responses for the question set match 
                 #    what was previously captured
@@ -1289,7 +1329,7 @@ class Session:
         #    last login time (prior to current login)
 
         for indCI in reversed(range(len(self._l2iPageQuestionCompositeIndices))):
-            print(indCI)
+#             print(indCI)
             
             bLastLoginResponseFound = False # default
             
@@ -1298,32 +1338,8 @@ class Session:
             indQuestionSet = self._l2iPageQuestionCompositeIndices[indCI][1]
             xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', indPage)
             xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', indQuestionSet)
-            print(indCI, 'Page:', indPage, 'QS:', indQuestionSet)
+#             print(indCI, 'Page:', indPage, 'QS:', indQuestionSet)
             
-
-
-
-#             # get first Option node of the first Question
-#             xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', 0)
-#             xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', 0)
-#             
-#             # get number of Response nodes in the option
-#             iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode, 'Response')
-#             
-#                 
-#             # check each response tag for the time
-#             for indResp in range(iNumResponses):
-#                 xResponseNode = self.oIOXml.GetNthChild(xOptionNode, 'Response', indResp)
-#                 sTimestamp = self.oIOXml.GetValueOfNodeAttribute(xResponseNode, 'logintime')
-# 
-#                 dtLoginTimestamp = datetime.strptime(sTimestamp, self.sTimestampFormat)
-#                 if dtLoginTimestamp == dtLastLogin:
-#                     # found a response for last login at this composite index
-#                     bLastLoginResponseFound = True
-#                     break   # exit checking each response
-#             
-#             if bLastLoginResponseFound == True:
-#                 break   # exit the reversed loop through the composite indices
 
 
             # get number of questions in the question set node
@@ -1390,7 +1406,7 @@ class Session:
                 else:
                     iResumeCompIndex = indCI        # not all questions were answered - stay here
                     
-                print(iResumeCompIndex, '...', self._l2iPageQuestionCompositeIndices[iResumeCompIndex][0], '...',self._l2iPageQuestionCompositeIndices[iResumeCompIndex][1] )
+#                 print(iResumeCompIndex, '...', self._l2iPageQuestionCompositeIndices[iResumeCompIndex][0], '...',self._l2iPageQuestionCompositeIndices[iResumeCompIndex][1] )
             
         # Display a message to user if resuming
         if not iResumeCompIndex == self._iCurrentCompositeIndex:
