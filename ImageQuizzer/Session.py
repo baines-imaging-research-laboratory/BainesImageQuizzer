@@ -286,8 +286,8 @@ class Session:
     def UpdateImageViewObjects(self, lInput):
         self._loImageViews = lInput
 
+    #----------
 
-    
     #-------------------------------------------
     #        Functions
     #-------------------------------------------
@@ -575,7 +575,8 @@ class Session:
         oQuestionSet = QuestionSet()
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
         
-        sQuestionsWithRecordedResponses = self.CheckForSavedResponse()
+#         sQuestionsWithRecordedResponses = self.CheckForSavedResponse()
+        sQuestionsWithRecordedResponses = self.GetQuestionSetResponseCompletionLevel()
         self.SetMultipleResponsesInQSetAllowed(oQuestionSet.GetMultipleResponseTF())
 
         if self.GetSegmentationTabIndex() > 0:
@@ -1067,13 +1068,15 @@ class Session:
         iNumAnsweredQuestions = 0
         
         xNodeQuestionSet = self.GetCurrentQuestionSetNode()
+        xNodePage = self.GetCurrentPageNode()
         
-        bLabelMapRequired = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'segmentrequired')
+        sLabelMapRequired = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'segmentrequired')
 
         # search for labelmap path in the xml image nodes if segmentation was required
-        if bLabelMapRequired == True:
-            xImageNodes = self.oIOXml.GetChildren(xNodeQuestionSet, 'Image')
-            for xImageNode in xImageNodes:
+        if sLabelMapRequired == 'y':
+            iNumImages = self.oIOXml.GetNumChildrenByName(xNodePage, 'Image')
+            for indImage in range(iNumImages):
+                xImageNode = self.oIOXml.GetNthChild(xNodePage, 'Image', indImage)
                 iNumLabelMapPaths = self.oIOXml.GetNumChildrenByName(xImageNode, 'LabelMapPath')
                 if iNumLabelMapPaths > 0:
                     bLabelMapRequirementFilled = True
@@ -1100,11 +1103,77 @@ class Session:
             sQuestionswithResponses = 'Partial'
         elif iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == True:
             sQuestionswithResponses = 'All'
-        elif iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == False:
-            sQuestionswithResponses = 'Partial'
+        else:
+            if iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == False:
+                sQuestionswithResponses = 'Partial'
             
         return sQuestionswithResponses
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetQuestionSetResponseCompletionLevel(self, indCI=None):
+        
+        ''' Check through all questions for the question set looking for a response.
+            If the Question Set has a "segmentrequired='y'" attribute, 
+            check for a saved label map path element. 
+
+            Assume: All options have a response if the question was answered so we just query the first.
+        '''
+        
+        if indCI == None:
+            indCI = self._iCurrentCompositeIndex
+        
+        bLabelMapRequirementFilled = False
+        iNumAnsweredQuestions = 0
+        
+        indPage = self._l2iPageQuestionCompositeIndices[indCI][0]
+        indQuestionSet = self._l2iPageQuestionCompositeIndices[indCI][1]
+        
+        xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', indPage)
+        xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', indQuestionSet)
+        
+        
+        sLabelMapRequired = self.oIOXml.GetValueOfNodeAttribute(xQuestionSetNode, 'segmentrequired')
+
+        # search for labelmap path in the xml image nodes if segmentation was required
+        if sLabelMapRequired == 'y':
+            iNumImages = self.oIOXml.GetNumChildrenByName(xPageNode, 'Image')
+            for indImage in range(iNumImages):
+                xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', indImage)
+                iNumLabelMapPaths = self.oIOXml.GetNumChildrenByName(xImageNode, 'LabelMapPath')
+                if iNumLabelMapPaths > 0:
+                    bLabelMapRequirementFilled = True
+                    break
+        else:
+            bLabelMapRequirementFilled = True   # user not required to create label map
+        
+
+
+        iNumQuestions = self.oIOXml.GetNumChildrenByName(xQuestionSetNode, 'Question')
+
+        for indQuestion in range(iNumQuestions):
+            # get first option for the question (all (or none) options have a response so just check the first)
+            xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
+            xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', 0)
+         
+            iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode,'Response')
+            if iNumResponses >0:
+                iNumAnsweredQuestions = iNumAnsweredQuestions + 1
+                 
+                
+        if iNumAnsweredQuestions == 0:
+            sQuestionswithResponses = 'None'
+        elif  iNumAnsweredQuestions < iNumQuestions:
+            sQuestionswithResponses = 'Partial'
+        elif iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == True:
+            sQuestionswithResponses = 'All'
+        else:
+            if iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == False:
+                sQuestionswithResponses = 'Partial'
+            
+        return sQuestionswithResponses
+        
+        
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplaySavedResponse(self):
 
@@ -1180,7 +1249,8 @@ class Session:
             #    - allow if the question set is marked for multiple responses
             #    - allow if the number of questions with responses recorded is none or partial (not all)
             
-            sQuestionsWithRecordedResponses = self.CheckForSavedResponse()
+#             sQuestionsWithRecordedResponses = self.CheckForSavedResponse()
+            sQuestionsWithRecordedResponses = self.GetQuestionSetResponseCompletionLevel()
 
             if ( self.GetMultipleResponsesInQsetAllowed() == True)  or \
                 ((self.GetMultipleResponsesInQsetAllowed() == False) and (sQuestionsWithRecordedResponses != 'All') ):
@@ -1290,22 +1360,6 @@ class Session:
         # The following assumptions are made based on the quiz flow:
         #    - the quiz pages and question sets are presented sequentially 
         #        as laid out in the quiz file
-        #    - during one session login, if any questions in the question set were unanswered,
-        #        no responses for that question set were saved (so we only have
-        #        to inspect the first option of the first question in the question set)
-        #
-        # By looping through the page/question set indices stored in the
-        #    composite index array in reverse, we look for the first question with an existing response
-        #    that matches the last login session time.
-        #    Add one to the current index to resume.
-        
-
-        # Scan the user's quiz file for existing responses in case the user
-        #     exited the quiz prematurely (before it was complete) on the last login
-        #
-        # The following assumptions are made based on the quiz flow:
-        #    - the quiz pages and question sets are presented sequentially 
-        #        as laid out in the quiz file
         #    - it is possible to exit the quiz with not all questions answered (a partial response)
         #        we have to find the first question set that has all questions answered
         #    - if a question was answered, all options within the question have a response tag
@@ -1379,11 +1433,15 @@ class Session:
             
         if bLastLoginResponseFound == True:
             
+            sQSetCompletionState = self.GetQuestionSetResponseCompletionLevel(indCI)
+            
             # check if the last response found was entered on the last question set. 
             #    (i.e. was the quiz completed)
 #             if indCI == (len(self._l2iPageQuestionCompositeIndices) - 1):
+#             if indCI == (len(self._l2iPageQuestionCompositeIndices) - 1) and\
+#                 iNumLastLoginResponses == iNumQuestions:
             if indCI == (len(self._l2iPageQuestionCompositeIndices) - 1) and\
-                iNumLastLoginResponses == iNumQuestions:
+                sQSetCompletionState == 'All':
                 
                 # if one question set allows a multiple response, user has option to redo response
                 if self.GetMultipleResponsesInQuiz() == True:
@@ -1401,7 +1459,8 @@ class Session:
                     # quiz does not allow for changing responses - exit
                     self.ExitOnQuizComplete("This quiz was already completed. Exiting")
             else:
-                if iNumLastLoginResponses == iNumQuestions:
+#                 if iNumLastLoginResponses == iNumQuestions:
+                if sQSetCompletionState == 'All':
                     iResumeCompIndex = indCI + 1    # all questions were answered
                 else:
                     iResumeCompIndex = indCI        # not all questions were answered - stay here
