@@ -805,15 +805,15 @@ class Session:
 
         """ 
             label map volume nodes may exist in the mrmlScene if the user created a label map
-            (in which case it is named with a '-label' suffix), or if a label map or segmentation
+            (in which case it is named with a '-bainesquizlabel' suffix), or if a label map or segmentation
             was loaded in through the xml quiz file.
             
-            This function looks for label maps created by the user (-label suffix) and if found,
+            This function looks for label maps created by the user (-bainesquizlabel suffix) and if found,
             saves them as a .nrrd file in the specified directory. The path to this saved file is
             then stored in the xml file within the associated image element.
             
             A warning is presented if the xml question set had the 'segmentrequired' flag set to 'y'
-            but no label maps (with -label suffix) were found. The user purposely may not have created
+            but no label maps (with -bainesquizlabel suffix) were found. The user purposely may not have created
             a label map if there were no lesions to segment. This is acceptable.
              
         """
@@ -841,9 +841,9 @@ class Session:
 
                         # match label map file with xml image
                         sLabelMapFilename = slNodeLabelMap.GetName()
-                        if oImageNode.sNodeName + '-label' == sLabelMapFilename:
+                        if oImageNode.sNodeName + '-bainesquizlabel' == sLabelMapFilename:
                             
-                            bLabelMapFound = True  # -label suffix is associated with an image on the page
+                            bLabelMapFound = True  # -bainesquizlabel suffix is associated with an image on the page
                         
 
                             # store the path name in the xml file and the label map in the directory
@@ -883,7 +883,7 @@ class Session:
 #             else:
 
             # If there were no label map volume nodes 
-            # OR if there were label map volume nodes, but there wasn't a -label suffix to match an image on the page,
+            # OR if there were label map volume nodes, but there wasn't a -bainesquizlabel suffix to match an image on the page,
             #    ie. the labelMaps found flag was left as false
             # Check if the segmentation was required and if enabled present the warning
             if iNumLabelMaps == 0 or (iNumLabelMaps > 0 and bLabelMapFound == False):    
@@ -955,7 +955,7 @@ class Session:
     
                             # set associated volume to connect label map to master
                             sLabelMapNodeName = slLabelMapNode.GetName()
-                            sAssociatedName = sLabelMapNodeName.replace('-label','')
+                            sAssociatedName = sLabelMapNodeName.replace('-bainesquizlabel','')
                             slAssociatedNodeCollection = slicer.mrmlScene.GetNodesByName(sAssociatedName)
                             slAssociatedNode = slAssociatedNodeCollection.GetItemAsObject(0)
                             
