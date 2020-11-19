@@ -86,10 +86,12 @@ class ImageView:
             for i in range(len(self._loImageViews)):
                 
                 self.AssignNodesToView(self._loImageViews[i])
-                # apply xml defined color table map if requested - else default to Grey
-                if self._loImageViews[i].sColorTableName == '':
-                    self._loImageViews[i].sColorTableName = 'Grey'
-                self._loImageViews[i].AssignColorTable()
+                # color tables are not applied to label maps or segmentation volumes
+                if (self._loImageViews[i].sViewLayer == 'Foreground' or self._loImageViews[i].sViewLayer == 'Background'):
+                    # apply xml defined color table map if requested - else default to Grey
+                    if self._loImageViews[i].sColorTableName == '':
+                        self._loImageViews[i].sColorTableName = 'Grey'
+                    self._loImageViews[i].AssignColorTable()
 
                     
                 
