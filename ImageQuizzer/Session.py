@@ -44,7 +44,6 @@ class Session:
         self._lsPreviousResponses = []
         self._lsNewResponses = []
         
-        self._loImageViews = []
         
         self._bStartOfSession = True
         self._bQuizComplete = False
@@ -57,7 +56,6 @@ class Session:
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
         self.oUtilsIO = UtilsIO()
-#         self._oQuizWidgets = None
 
         self.oImageView = None
         
@@ -285,9 +283,6 @@ class Session:
         return xAllOptionNodes
         
     #----------
-    def UpdateImageViewObjects(self, lInput):
-        self._loImageViews = lInput
-
     #----------
 
     #-------------------------------------------
@@ -624,13 +619,12 @@ class Session:
         slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
         
                     
-        oImageView = ImageView()
-        oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self.oFilesIO.GetDataParentDir())
+        self.oImageView = ImageView()
+        self.oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self.oFilesIO.GetDataParentDir())
 
-        self.UpdateImageViewObjects(oImageView.GetImageViewList())
         self.LoadSavedLabelMaps()
 
-        oImageView.ReassignNodesToFgBg(oImageView.GetImageViewList())
+        self.oImageView.ReassignNodesToFgBg()
 
         self.SetSavedImageState() # after loading label maps and setting Fg / Bg views
         
@@ -764,7 +758,7 @@ class Session:
         
         try:
             # for each image, capture the slice, window and level settings
-            for oImageNode in self._loImageViews:
+            for oImageNode in self.oImageView.GetImageViewList():
                 if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
     
                     dictAttribState = oImageNode.GetViewState()
@@ -791,7 +785,7 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSavedImageState(self):
         
-        for oImageNode in self._loImageViews:
+        for oImageNode in self.oImageView.GetImageViewList():
             if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
         
                 xStateElement = self.oIOXml.GetNthChild(oImageNode.GetXmlImageElement(), 'State', 0)
@@ -835,7 +829,7 @@ class Session:
             iNumLabelMaps =  len(lLabelMaps)
             if iNumLabelMaps > 0:
      
-                for oImageNode in self._loImageViews:
+                for oImageNode in self.oImageView.GetImageViewList():
                       
                     for iLabelMap in range(iNumLabelMaps):
 #                         slNodeLabelMap = lLabelMaps.GetItemAsObject(iLabelMap)
@@ -924,12 +918,12 @@ class Session:
 
         lLoadedLabelMaps = []
 
-        for oImageView in self._loImageViews:
+        for oImageNode in self.oImageView.GetImageViewList():
             
             # for each image view, get list of labelmap files stored (may be more than one)
-            if (oImageView.sImageType == 'Volume' or oImageView.sImageType == 'VolumeSequence'):
+            if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
         
-                lxLabelMapPathElements = self.oIOXml.GetChildren(oImageView.GetXmlImageElement(), 'LabelMapPath')
+                lxLabelMapPathElements = self.oIOXml.GetChildren(oImageNode.GetXmlImageElement(), 'LabelMapPath')
 
                 # load labelmap file from stored path in XML                
                 for xLabelMap in lxLabelMapPathElements:
@@ -950,7 +944,13 @@ class Session:
 
                             if not bFoundLabelMap:
                             
-                                slLabelMapNode = slicer.util.loadLabelVolume(sAbsolutePath, dictProperties)
+                                if os.path.exists(sAbsolutePath):
+                                    slLabelMapNode = slicer.util.loadLabelVolume(sAbsolutePath, dictProperties)
+                                else:
+                                    sMsg = 'Stored path to lable map file does not exist. Label map will not be loaded.\n' \
+                                        + sAbsolutePath
+                                    self.oUtilsMsgs.DisplayWarning(sMsg)
+                                    break 
                             
                             
                             lLoadedLabelMaps.append(sStoredRelativePath)
@@ -1672,7 +1672,4 @@ class QuizWidgets:
 # #         self.quizFrame.setLayout(qt.QVBoxLayout())
 # #         self._slicerQuizLayout.addWidget(self.quizFrame)
 
-#                              self.AssignLabelNodeToWidget(slLabelMapNode, oImageView.sDestination)
-#                             oImageView.AssignLabelNodeToWidget(oImageView, slLabelMapNode)
-#                             
 

@@ -198,9 +198,9 @@ class ImageView:
         slCompNode.SetLabelVolumeID('None')
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ReassignNodesToFgBg(self, loViewNodes):
+    def ReassignNodesToFgBg(self):
         
-        for oViewNode in loViewNodes:
+        for oViewNode in self._loImageViews:
             
             if oViewNode.sViewLayer == 'Background' or oViewNode.sViewLayer == 'Foreground':
                 self.AssignNodesToView(oViewNode)
