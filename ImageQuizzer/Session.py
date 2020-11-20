@@ -470,6 +470,8 @@ class Session:
             # set up for previous page
             ########################################    
 
+            slicer.mrmlScene.Clear()
+
             self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
             self.progress.setValue(self._iCurrentCompositeIndex)
     
