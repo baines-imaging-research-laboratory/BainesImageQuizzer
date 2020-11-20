@@ -146,6 +146,14 @@ class ImageView:
     #         Manage Views
     #-----------------------------------------------
  
+
+    def AssignLabelNodeToWidget(self, oViewNode, slNode):
+        
+        slWidget = slicer.app.layoutManager().sliceWidget(oViewNode.sDestination)
+        slWindowLogic = slWidget.sliceLogic()
+        slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
+ 
+        slWindowCompositeNode.SetLabelVolumeID(slNode.GetID())
          
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AssignNodesToView(self, oViewNode):

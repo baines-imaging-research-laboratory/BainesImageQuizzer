@@ -58,6 +58,8 @@ class Session:
         self.oUtilsMsgs = UtilsMsgs()
         self.oUtilsIO = UtilsIO()
 #         self._oQuizWidgets = None
+
+        self.oImageView = None
         
         self._btnNext = None
         self._btnPrevious = None
@@ -789,13 +791,13 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSavedImageState(self):
         
-        for oImageView in self._loImageViews:
-            if (oImageView.sImageType == 'Volume' or oImageView.sImageType == 'VolumeSequence'):
+        for oImageNode in self._loImageViews:
+            if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
         
-                xStateElement = self.oIOXml.GetNthChild(oImageView.GetXmlImageElement(), 'State', 0)
+                xStateElement = self.oIOXml.GetNthChild(oImageNode.GetXmlImageElement(), 'State', 0)
                 dictImageState = self.oIOXml.GetAttributes(xStateElement)
                 
-                oImageView.SetImageState(dictImageState)
+                oImageNode.SetImageState(dictImageState)
             
             
 
@@ -1669,3 +1671,8 @@ class QuizWidgets:
 # #         self.quizFrame = qt.QFrame(self.quizCollapsibleButton)
 # #         self.quizFrame.setLayout(qt.QVBoxLayout())
 # #         self._slicerQuizLayout.addWidget(self.quizFrame)
+
+#                              self.AssignLabelNodeToWidget(slLabelMapNode, oImageView.sDestination)
+#                             oImageView.AssignLabelNodeToWidget(oImageView, slLabelMapNode)
+#                             
+
