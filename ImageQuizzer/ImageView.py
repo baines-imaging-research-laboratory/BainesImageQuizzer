@@ -186,6 +186,10 @@ class ImageView:
             if not (oViewNode.sRoiVisibilityCode == 'Empty'):
                 self.SetSegmentRoiVisibility(oViewNode)
         
+        if oViewNode.slQuizLabelMapNode != None:
+            slWindowCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
+        else:
+            slWindowCompositeNode.SetLabelVolumeID('None')
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AssignViewToNone(self, sScreenColor):
@@ -206,6 +210,17 @@ class ImageView:
                 self.AssignNodesToView(oViewNode)
             
 
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def AssignLabelMapToViewWidget(self, oViewNode, slLabelMapNode):
+# 
+#         slWidget = slicer.app.layoutManager().sliceWidget(oViewNode.sDestination)
+#         slWindowLogic = slWidget.sliceLogic()
+#         slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
+#         
+#         slWindowCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
+# 
+#     
+#     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #     def ClearImagesAndSegmentations(self):
 #  
@@ -402,6 +417,8 @@ class ViewNodeBase:
         self._sPageID = ''
         self.sColorTableName = ''
         
+        self.slQuizLabelMapNode = None
+        
 
     #----------
     def SetXmlImageElement(self, xInput):
@@ -423,7 +440,11 @@ class ViewNodeBase:
     def GetSlicerViewNode(self):
         return self.slNode
 
+    #----------
+    def SetQuizLabelMapNode(self, slNodeInput):
+        self.slQuizLabelMapNode = slNodeInput
 
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractImageAttributes(self):
 
@@ -577,7 +598,7 @@ class ViewNodeBase:
 class DataVolumeDetail(ViewNodeBase):
     
     
-    def __init__(self, xImage, sPageID, sParentDataDir):
+    def __init__(self, xImage, sPageID, sParentDataDir, slLabelMapNode=None):
         self.sClassName = type(self).__name__
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
@@ -590,6 +611,7 @@ class DataVolumeDetail(ViewNodeBase):
         self.SetPageID(sPageID)
         self.ExtractImageAttributes()
         self.ExtractXMLNodeElements(sParentDataDir)
+        self.SetQuizLabelMapNode(slLabelMapNode)
         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -674,8 +696,6 @@ class DataVolumeDetail(ViewNodeBase):
     
 
 
-
-
 ##########################################################################
 #
 #   Class DicomVolumeDetail
@@ -685,7 +705,7 @@ class DataVolumeDetail(ViewNodeBase):
 class DicomVolumeDetail(ViewNodeBase):
     
     
-    def __init__(self, xImage, sPageID, sParentDataDir):
+    def __init__(self, xImage, sPageID, sParentDataDir, slLabelMapNode=None):
         self.sClassName = type(self).__name__
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
@@ -704,6 +724,7 @@ class DicomVolumeDetail(ViewNodeBase):
         self.SetPageID(sPageID)
         self.ExtractImageAttributes()
         self.ExtractXMLNodeElements(sParentDataDir)
+        self.SetQuizLabelMapNode(slLabelMapNode)
         
         # specifics for Dicom volumes
         self.ExtractXMLDicomElements()

@@ -912,11 +912,10 @@ class Session:
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadSavedLabelMaps(self):
-        # when loading segmentations, associated it with the correct image
+        # when loading label maps created in the quiz, associated it with the correct 
+        #    image node in the subject hierarchy
+        # add it to the slquizlabelmap property of the image node 
 
-        #      n = slicer.mrmlScene.GetNodeByID('vtkMRMLLabelMapVolumeNode1')
-        # >>> n.SetNodeReferenceID('vtkMRMLScalarVolumeNode1')
-        # n.SetNodeReferenceID('AssociatedNodeID','vtkMRMLScalarVolumeNode1')
 
         lLoadedLabelMaps = []
 
@@ -926,11 +925,16 @@ class Session:
             if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
         
                 lxLabelMapPathElements = self.oIOXml.GetChildren(oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                slLabelMapNode = None # initialize
 
                 # load labelmap file from stored path in XML                
                 for xLabelMap in lxLabelMapPathElements:
                     sStoredRelativePath = self.oIOXml.GetDataInNode(xLabelMap)
                     
+                    # check if label map was already loaded (if between question sets, label map will persisit)
+                    sLabelMapNodeName = self.oFilesIO.GetFilenameNoExtFromPath(sStoredRelativePath)
+                    bFoundLabelMap, slLabelMapNode = self.CheckForLoadedLabelMapInScene(sLabelMapNodeName)
+
                     # only load the label map once
                     #    same label map may have been stored multiple times in XML for the page
                     #    (same image but different orientations)
@@ -938,21 +942,17 @@ class Session:
                         sAbsolutePath = self.oFilesIO.GetAbsoluteUserPath(sStoredRelativePath)
                         dictProperties = {'labelmap' : True, 'show': False}
                         
-                        # check if label map already exists (if between question sets, label map will persisit)
-                        sLabelMapNodeName = self.oFilesIO.GetFilenameNoExtFromPath(sStoredRelativePath)
-                        bFoundLabelMap, slLabelMapNode = self.CheckForLoadedLabelMap(sLabelMapNodeName)
-
                         try:
 
                             if not bFoundLabelMap:
-                            
                                 if os.path.exists(sAbsolutePath):
+                                    # load label map into the scene
                                     slLabelMapNode = slicer.util.loadLabelVolume(sAbsolutePath, dictProperties)
                                 else:
-                                    sMsg = 'Stored path to lable map file does not exist. Label map will not be loaded.\n' \
+                                    sMsg = 'Stored path to label map file does not exist. Label map will not be loaded.\n' \
                                         + sAbsolutePath
                                     self.oUtilsMsgs.DisplayWarning(sMsg)
-                                    break 
+                                    break # continue in for loop for next label map path element
                             
                             
                             lLoadedLabelMaps.append(sStoredRelativePath)
@@ -966,28 +966,32 @@ class Session:
                             slLabelMapNode.SetNodeReferenceID('AssociatedNodeID',slAssociatedNode.GetID())
 
     
-                            # turn on visibility for volume and label map
-                            slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-                            slSceneItemID = slSHNode.GetSceneItemID()
-
-                            slAssociatedNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sAssociatedName)
-                            slVolPlugin = slicer.qSlicerSubjectHierarchyVolumesPlugin()
-                            slVolPlugin.setDisplayVisibility( slAssociatedNodeID, 1)
-
-                            slLabelMapNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sLabelMapNodeName)
-                            slLabelPlugin = slicer.qSlicerSubjectHierarchyLabelMapsPlugin()
-                            slLabelPlugin.setDisplayVisibility( slLabelMapNodeID, 1)
-                            
-                             
-                            # for memory leak problem
-                            slAssociatedNode.UnRegister(slicer.mrmlScene)
+#                             # turn on visibility for volume and label map
+#                             slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+#                             slSceneItemID = slSHNode.GetSceneItemID()
+# 
+#                             slAssociatedNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sAssociatedName)
+#                             slVolPlugin = slicer.qSlicerSubjectHierarchyVolumesPlugin()
+#                             slVolPlugin.setDisplayVisibility( slAssociatedNodeID, 1)
+# 
+#                             slLabelMapNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sLabelMapNodeName)
+#                             slLabelPlugin = slicer.qSlicerSubjectHierarchyLabelMapsPlugin()
+#                             slLabelPlugin.setDisplayVisibility( slLabelMapNodeID, 1)
+#
+#                             # for memory leak problem
+#                             slAssociatedNode.UnRegister(slicer.mrmlScene)
                             
                         except:
                              
                             sMsg = 'Trouble loading label map file:' + sAbsolutePath
                             self.oUtilsMsgs.DisplayWarning(sMsg)
                            
-                                
+
+                # add the label map node to the image property so that it gets
+                #    set when assigning nodes to the viewing widgets (red, green, yellow)
+                # the node may be None (no label map path was stored)
+                oImageNode.SetQuizLabelMapNode(slLabelMapNode)
+
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureResponsesForQuestionSet(self, sCaller):
@@ -1042,7 +1046,7 @@ class Session:
        
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CheckForLoadedLabelMap(self, sFilenameNoExt):
+    def CheckForLoadedLabelMapInScene(self, sFilenameNoExt):
         bFound = False
         slNode = None
         
