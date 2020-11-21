@@ -147,14 +147,6 @@ class ImageView:
     #-----------------------------------------------
  
 
-    def AssignLabelNodeToWidget(self, oViewNode, slNode):
-        
-        slWidget = slicer.app.layoutManager().sliceWidget(oViewNode.sDestination)
-        slWindowLogic = slWidget.sliceLogic()
-        slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
- 
-        slWindowCompositeNode.SetLabelVolumeID(slNode.GetID())
-         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AssignNodesToView(self, oViewNode):
  
@@ -186,6 +178,8 @@ class ImageView:
             if not (oViewNode.sRoiVisibilityCode == 'Empty'):
                 self.SetSegmentRoiVisibility(oViewNode)
         
+        # if there is a label map created by the user through the quiz  
+        #    that is associated with this image node, assign it in the widget
         if oViewNode.slQuizLabelMapNode != None:
             slWindowCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
         else:
@@ -209,42 +203,6 @@ class ImageView:
             if oViewNode.sViewLayer == 'Background' or oViewNode.sViewLayer == 'Foreground':
                 self.AssignNodesToView(oViewNode)
             
-
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def AssignLabelMapToViewWidget(self, oViewNode, slLabelMapNode):
-# 
-#         slWidget = slicer.app.layoutManager().sliceWidget(oViewNode.sDestination)
-#         slWindowLogic = slWidget.sliceLogic()
-#         slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
-#         
-#         slWindowCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
-# 
-#     
-#     
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def ClearImagesAndSegmentations(self):
-#  
-#         # clear the images displayed
-#          
-#         self.AssignViewToNone('Red')
-#         self.AssignViewToNone('Yellow')
-#         self.AssignViewToNone('Green')
-#          
-#          
-#         # get list of all segmentation nodes and turn off the visibility
-#         
-#         lSegNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSegmentationNode')
-#           
-#         for indSeg in range(lSegNodes.GetNumberOfItems()):
-#  
-#             slSegNode = lSegNodes.GetItemAsObject(indSeg)
-#             slSegDisplayNode = slSegNode.GetDisplayNode()
-#              
-#             slSegDisplayNode.SetVisibility(False)
-#              
-#         # unregister the nodes created by 'GetNodeByClass'otherwise you get a memory leak
-#         lSegNodes.UnRegister(slicer.mrmlScene)
-
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ClearLabelMapNodes(self):
 

@@ -146,64 +146,8 @@ class Session:
     #----------
     def SegmentationTabEnabler(self, bTF):
 
-# NO LONGER NEEDED ... I CLEAR THE SCENE BETWEEN PAGES?
-#         if bTF == True:
-#             # When setting up for segmentation, reset the master volume to None
-#             # This forces the user to select a volume which in turn enables the 
-#             # color selector for editing the segments
-#             oParent = self.oQuizWidgets.qTabWidget.widget(self.GetSegmentationTabIndex())
-#             self.iRecursiveCounter = 0
-#             bSuccess, oChild = self.SearchForChildWidget(oParent, 'qMRMLNodeComboBox', 'MasterVolumeNodeSelector')
-#             if bSuccess == False or oChild == None:
-#                 sMsg = 'SegmentationTabEnabler:MasterVolumeSelector not found'
-#                 self.oUtilsMsgs.DisplayWarning(sMsg)
-#             else:
-#                 self.SetVolumeSelectorToNone(oChild)
-
         self.oQuizWidgets.qTabWidget.setTabEnabled(self.GetSegmentationTabIndex(), bTF)
         
-    
-# NO LONGER NEEDED ... I CAN USE THE QUIZZER HELPER BOX FUNCTIONS TO SET VOLUMES
-#            oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetQuizzerHelperBox()
-#            oQuizzerEditorHelperBox.setVolumes(slAssociatedNode, slLabelMapNode)
-#    
-#     #----------
-#     def SearchForChildWidget(self, oParent, sSearchType, sSearchName):
-# 
-# 
-#         if oParent != None:
-# #             print(oParent.className(), '.....', oParent.name)
-#             
-#             iNumChildren = len(oParent.children())
-# 
-#             # drill down through children recursively until the search object has been found
-#             for idx in range(iNumChildren):
-#                 oChildren = oParent.children()
-#                 oChild = oChildren[idx]
-# #                 print ('..............', oChild.className(),'...', oChild.name)
-#                 if oChild.className() == sSearchType:
-#                     if oChild.name == sSearchName:
-#                         return True, oChild
-#                         
-#                 self.iRecursiveCounter = self.iRecursiveCounter + 1
-#                 if self.iRecursiveCounter == 100:    # safeguard in recursive procedure
-#                     return False, None
-#                     
-#                 
-#                 if len(oChild.children()) > 0:
-#                     bFound, oFoundChild = self.SearchForChildWidget(oChild, sSearchType, sSearchName)
-#                     if bFound:
-#                         return True, oFoundChild
-#             
-#         else:
-#             return False, None
-#     
-#     
-#     #----------
-#     def SetVolumeSelectorToNone(self, oSelectorWidget):
-#         oSelectorWidget.setCurrentNodeIndex(-1)
-#         
-            
     #----------
     def GetSegmentationTabIndex(self):
         return self._iSegmentationTabIndex
@@ -290,14 +234,10 @@ class Session:
     #-------------------------------------------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def RunSetup(self, oFilesIO, oQuizWidgets):
     def RunSetup(self, oFilesIO, slicerMainLayout):
         
 #         self.oIOXml = UtilsIOXml()
         self.SetFilesIO(oFilesIO)
-#         self.SetupButtons()
-# #         self.SetupWidgets(oQuizWidgets)
-#         self.SetupWidgets(slicerMainLayout)
 
         # open xml and check for root node
         bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizResultsPath(),'Session')
@@ -574,7 +514,6 @@ class Session:
         oQuestionSet = QuestionSet()
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
         
-#         sQuestionsWithRecordedResponses = self.CheckForSavedResponse()
         sQuestionsWithRecordedResponses = self.GetQuestionSetResponseCompletionLevel()
         self.SetMultipleResponsesInQSetAllowed(oQuestionSet.GetMultipleResponseTF())
 
@@ -681,7 +620,6 @@ class Session:
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def PerformSave(self, bFromEventFilter=False):
     def PerformSave(self, sCaller):
         sMsg = ''
         bSuccess = True
@@ -694,13 +632,6 @@ class Session:
             if bSuccess:
                 bSuccess, sMsg = self.CaptureAndSaveImageState()
                     
-#                 if bSuccess:
-#                     bSuccess, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet(sCaller)
-# 
-#                     if bSuccess:
-#                         bSuccess, sMsg = self.WriteResponsesToXml()
-
-
 
                 if bSuccess:
                     sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet(sCaller)
@@ -798,7 +729,6 @@ class Session:
             
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def SaveLabelMaps(self, bFromEventFilter=False):
     def SaveLabelMaps(self, sCaller):
 
         """ 
@@ -875,11 +805,6 @@ class Session:
                             bLabelMapsSaved = True  # at least one label map was saved
 
     
-#                 bLabelMapsSaved = True
-                    
-    
-#             else:
-
             # If there were no label map volume nodes 
             # OR if there were label map volume nodes, but there wasn't a -bainesquizlabel suffix to match an image on the page,
             #    ie. the labelMaps found flag was left as false
@@ -887,7 +812,6 @@ class Session:
             if iNumLabelMaps == 0 or (iNumLabelMaps > 0 and bLabelMapFound == False):    
                 
                 # user doesn't get the option to cancel if the call was initiated from the Close event filter
-#                 if bFromEventFilter == False:
                 if sCaller != 'EventFilter':
                     if self._bSegmentationModule == True:   # if there is a segmentation module
                         if self.GetSegmentationTabEnabled() == True:    # if the tab is enabled
@@ -1445,9 +1369,6 @@ class Session:
             
             # check if the last response found was entered on the last question set. 
             #    (i.e. was the quiz completed)
-#             if indCI == (len(self._l2iPageQuestionCompositeIndices) - 1):
-#             if indCI == (len(self._l2iPageQuestionCompositeIndices) - 1) and\
-#                 iNumLastLoginResponses == iNumQuestions:
             if indCI == (len(self._l2iPageQuestionCompositeIndices) - 1) and\
                 sQSetCompletionState == 'All':
                 
@@ -1493,7 +1414,6 @@ class Session:
         lsTimestamps = []
         dtLastTimestamp = ''    # timestamp of type 'datetime'
 
-#         dtCurrentLogin = datetime.strptime(self.sLoginTime, self.sTimestampFormat)
         
         xmlLoginNodes = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Login')
 
@@ -1588,12 +1508,6 @@ class QuizWidgets:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddQuizTitle(self):
         
-#         qTitle = qt.QLabel('Baines Image Quizzer')
-#         qTitle.setFont(qt.QFont('Arial',14, qt.QFont.Bold))
-# 
-#         # add to left layout
-#         self.qLeftLayout.addWidget(qTitle)
-
         qTitleGroupBox = qt.QGroupBox()
         qTitleGroupBoxLayout = qt.QHBoxLayout()
         qTitleGroupBox.setLayout(qTitleGroupBoxLayout)
@@ -1620,11 +1534,6 @@ class QuizWidgets:
         
         
         return qTitleGroupBox
-        
-        
-#         pixmapTarget = pixmapTarget.scaled(size-5, size-5, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-
-
         
  
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1678,4 +1587,38 @@ class QuizWidgets:
 # #         self.quizFrame.setLayout(qt.QVBoxLayout())
 # #         self._slicerQuizLayout.addWidget(self.quizFrame)
 
+##################################################
+#    DON'T WANT TO LOSE THIS SEQUENCE - may come in handy
+#     #----------
+#     def SearchForChildWidget(self, oParent, sSearchType, sSearchName):
+# 
+# 
+#         if oParent != None:
+# #             print(oParent.className(), '.....', oParent.name)
+#             
+#             iNumChildren = len(oParent.children())
+# 
+#             # drill down through children recursively until the search object has been found
+#             for idx in range(iNumChildren):
+#                 oChildren = oParent.children()
+#                 oChild = oChildren[idx]
+# #                 print ('..............', oChild.className(),'...', oChild.name)
+#                 if oChild.className() == sSearchType:
+#                     if oChild.name == sSearchName:
+#                         return True, oChild
+#                         
+#                 self.iRecursiveCounter = self.iRecursiveCounter + 1
+#                 if self.iRecursiveCounter == 100:    # safeguard in recursive procedure
+#                     return False, None
+#                     
+#                 
+#                 if len(oChild.children()) > 0:
+#                     bFound, oFoundChild = self.SearchForChildWidget(oChild, sSearchType, sSearchName)
+#                     if bFound:
+#                         return True, oFoundChild
+#             
+#         else:
+#             return False, None
+#     
+            
 
