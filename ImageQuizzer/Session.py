@@ -736,8 +736,8 @@ class Session:
                     if xHistoricalStateElement != None:
                         dictImageState = self.oIOXml.GetAttributes(xHistoricalStateElement)
                     
-                
-                oImageNode.SetImageState(dictImageState)
+                if len(dictImageState) > 0:
+                    oImageNode.SetImageState(dictImageState)
             
             
 
@@ -1127,19 +1127,19 @@ class Session:
         xHistoricalChildElement = None
         
         xPathElement = self.oIOXml.GetNthChild(xImageNodeToMatch, 'Path', 0)
-        sPathToMatch = self.oIOXml.GetAttributes(xPathElement)
+        sPathToMatch = self.oIOXml.GetDataInNode(xPathElement)
         
         # check if there is a SeriesInstanceUID element (in the case of a dicom type of image)
         sSeriesInstanceUIDToMatch = ''
         xSeriesInstanceUIDElement = self.oIOXml.GetNthChild(xImageNodeToMatch, 'SeriesInstanceUID', 0)
         if xSeriesInstanceUIDElement != None:
-            sSeriesInstanceUIDToMatch = self.oIOXml.GetAttributes(xSeriesInstanceUIDElement)
+            sSeriesInstanceUIDToMatch = self.oIOXml.GetDataInNode(xSeriesInstanceUIDElement)
         
         
         # start searching pages in reverse order - to get most recent setting
         # first match will break the search
         
-        for iPageIndex in range(self.GetCurrentPageIndex()-1, 0, -1):
+        for iPageIndex in range(self.GetCurrentPageIndex()-1, -1, -1):
             xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
             
             #get all Image children
@@ -1149,13 +1149,13 @@ class Session:
                 for xImageNode in lxImageElementsToSearch:
 
                     xPotentialPathElement = self.oIOXml.GetNthChild(xImageNode, 'Path', 0)
-                    sPotentialPath = self.oIOXml.GetAttributes(xPotentialPathElement)
+                    sPotentialPath = self.oIOXml.GetDataInNode(xPotentialPathElement)
                     
                     # get series instance UID if it exists
                     sPotentialSeriesInstanceUID = ''
                     xPotentialSeriesInstanceUID = self.oIOXml.GetNthChild(xImageNode, 'SeriesInstanceUID', 0)
                     if xPotentialSeriesInstanceUID != None:
-                        sPotentialSeriesInstanceUID = self.oIOXml.GetAttributes(xPotentialSeriesInstanceUID)
+                        sPotentialSeriesInstanceUID = self.oIOXml.GetDataInNode(xPotentialSeriesInstanceUID)
                     
                     # test for match of both the Path and Series Instance UID
                     if sPotentialPath == sPathToMatch and sPotentialSeriesInstanceUID == sSeriesInstanceUIDToMatch:
