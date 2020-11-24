@@ -702,7 +702,7 @@ class Session:
                     if iNumStateElements >0:
                         # update xml image/state element (first child)
                         xStateElement = self.oIOXml.GetNthChild(xImage, 'State', 0)
-                        self.UpdateAtributesInElement(xStateElement, dictAttribState)
+                        self.oIOXml.UpdateAtributesInElement(xStateElement, dictAttribState)
                     # if no State element, add one
                     else:
                         self.AddImageStateElement(xImage, dictAttribState)
@@ -717,12 +717,25 @@ class Session:
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSavedImageState(self):
+        ''' From the xml file, get the image state element. If there was no state element, 
+            check the xml for a previously stored state for this image. (eg. if clinician
+            set the window/level for an image on one page, and that same image is loaded on a subsequent page,
+            the same window/level should be applied. 
+        '''
         
         for oImageNode in self.oImageView.GetImageViewList():
+            dictImageState = {}
             if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
         
                 xStateElement = self.oIOXml.GetNthChild(oImageNode.GetXmlImageElement(), 'State', 0)
-                dictImageState = self.oIOXml.GetAttributes(xStateElement)
+                
+                if xStateElement != None:
+                    dictImageState = self.oIOXml.GetAttributes(xStateElement)
+                else:
+                    xHistoricalStateElement = self.CheckXmlImageHistoryForMatch('State', oImageNode.GetXmlImageElement())
+                    if xHistoricalStateElement != None:
+                        dictImageState = self.oIOXml.GetAttributes(xHistoricalStateElement)
+                    
                 
                 oImageNode.SetImageState(dictImageState)
             
@@ -1105,6 +1118,55 @@ class Session:
         return sQuestionswithResponses
         
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CheckXmlImageHistoryForMatch(self, sChildTagName, xImageNodeToMatch):  
+        ''' Start searching the xml file for a matching image on a previous page
+            (based on path and series instance UID (if applicable),
+            and extract the required child.
+        '''
+        xHistoricalChildElement = None
+        
+        xPathElement = self.oIOXml.GetNthChild(xImageNodeToMatch, 'Path', 0)
+        sPathToMatch = self.oIOXml.GetAttributes(xPathElement)
+        
+        # check if there is a SeriesInstanceUID element (in the case of a dicom type of image)
+        sSeriesInstanceUIDToMatch = ''
+        xSeriesInstanceUIDElement = self.oIOXml.GetNthChild(xImageNodeToMatch, 'SeriesInstanceUID', 0)
+        if xSeriesInstanceUIDElement != None:
+            sSeriesInstanceUIDToMatch = self.oIOXml.GetAttributes(xSeriesInstanceUIDElement)
+        
+        
+        # start searching pages in reverse order - to get most recent setting
+        # first match will break the search
+        
+        for iPageIndex in range(self.GetCurrentPageIndex()-1, 0, -1):
+            xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
+            
+            #get all Image children
+            lxImageElementsToSearch = self.oIOXml.GetChildren(xPageNode, 'Image')
+            if len(lxImageElementsToSearch) > 0:
+
+                for xImageNode in lxImageElementsToSearch:
+
+                    xPotentialPathElement = self.oIOXml.GetNthChild(xImageNode, 'Path', 0)
+                    sPotentialPath = self.oIOXml.GetAttributes(xPotentialPathElement)
+                    
+                    # get series instance UID if it exists
+                    sPotentialSeriesInstanceUID = ''
+                    xPotentialSeriesInstanceUID = self.oIOXml.GetNthChild(xImageNode, 'SeriesInstanceUID', 0)
+                    if xPotentialSeriesInstanceUID != None:
+                        sPotentialSeriesInstanceUID = self.oIOXml.GetAttributes(xPotentialSeriesInstanceUID)
+                    
+                    # test for match of both the Path and Series Instance UID
+                    if sPotentialPath == sPathToMatch and sPotentialSeriesInstanceUID == sSeriesInstanceUIDToMatch:
+                        print('found prior image instance: ', iPageIndex, ' ', sPotentialPath)
+                        # capture historical element of interest
+                        xHistoricalChildElement = self.oIOXml.GetNthChild(xImageNode, sChildTagName, 0)
+                        break
+                        
+        
+        return xHistoricalChildElement
+
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplaySavedResponse(self):
@@ -1260,13 +1322,6 @@ class Session:
         
         self.oIOXml.AddElement(xImageNode,'LabelMapPath',sInputPath, dictAttrib)
         
-        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def UpdateAtributesInElement(self, xElement, dictAttrib):
-        
-        # for each key, value in the dictionary, update the element attributes
-        for sKey, sValue in dictAttrib.items():
-            self.oIOXml.UpdateAttribute(xElement, sKey, sValue)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddSessionLoginTimestamp(self):
