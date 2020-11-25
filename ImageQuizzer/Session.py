@@ -745,8 +745,7 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SaveLabelMaps(self, sCaller):
 
-        """ 
-            label map volume nodes may exist in the mrmlScene if the user created a label map
+        """ label map volume nodes may exist in the mrmlScene if the user created a label map
             (in which case it is named with a '-bainesquizlabel' suffix), or if a label map or segmentation
             was loaded in through the xml quiz file.
             
@@ -757,7 +756,6 @@ class Session:
             A warning is presented if the xml question set had the 'segmentrequired' flag set to 'y'
             but no label maps (with -bainesquizlabel suffix) were found. The user purposely may not have created
             a label map if there were no lesions to segment. This is acceptable.
-             
         """
             
         # if label maps were created, save to disk
@@ -1138,32 +1136,33 @@ class Session:
         
         
         # start searching pages in reverse order - to get most recent setting
-        # first match will break the search
-        
+        # first match will end the search
+        bHistoricalElementFound = False
         for iPageIndex in range(self.GetCurrentPageIndex()-1, -1, -1):
             xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
             
-            #get all Image children
-            lxImageElementsToSearch = self.oIOXml.GetChildren(xPageNode, 'Image')
-            if len(lxImageElementsToSearch) > 0:
-
-                for xImageNode in lxImageElementsToSearch:
-
-                    xPotentialPathElement = self.oIOXml.GetNthChild(xImageNode, 'Path', 0)
-                    sPotentialPath = self.oIOXml.GetDataInNode(xPotentialPathElement)
-                    
-                    # get series instance UID if it exists
-                    sPotentialSeriesInstanceUID = ''
-                    xPotentialSeriesInstanceUID = self.oIOXml.GetNthChild(xImageNode, 'SeriesInstanceUID', 0)
-                    if xPotentialSeriesInstanceUID != None:
-                        sPotentialSeriesInstanceUID = self.oIOXml.GetDataInNode(xPotentialSeriesInstanceUID)
-                    
-                    # test for match of both the Path and Series Instance UID
-                    if sPotentialPath == sPathToMatch and sPotentialSeriesInstanceUID == sSeriesInstanceUIDToMatch:
-                        print('found prior image instance: ', iPageIndex, ' ', sPotentialPath)
-                        # capture historical element of interest
-                        xHistoricalChildElement = self.oIOXml.GetNthChild(xImageNode, sChildTagName, 0)
-                        break
+            if bHistoricalElementFound == False:
+                #get all Image children
+                lxImageElementsToSearch = self.oIOXml.GetChildren(xPageNode, 'Image')
+                if len(lxImageElementsToSearch) > 0:
+    
+                    for xImageNode in lxImageElementsToSearch:
+    
+                        xPotentialPathElement = self.oIOXml.GetNthChild(xImageNode, 'Path', 0)
+                        sPotentialPath = self.oIOXml.GetDataInNode(xPotentialPathElement)
+                        
+                        # get series instance UID if it exists
+                        sPotentialSeriesInstanceUID = ''
+                        xPotentialSeriesInstanceUID = self.oIOXml.GetNthChild(xImageNode, 'SeriesInstanceUID', 0)
+                        if xPotentialSeriesInstanceUID != None:
+                            sPotentialSeriesInstanceUID = self.oIOXml.GetDataInNode(xPotentialSeriesInstanceUID)
+                        
+                        # test for match of both the Path and Series Instance UID
+                        if sPotentialPath == sPathToMatch and sPotentialSeriesInstanceUID == sSeriesInstanceUIDToMatch:
+                            print('found prior image instance: ', iPageIndex, ' ', sPotentialPath)
+                            # capture historical element of interest
+                            xHistoricalChildElement = self.oIOXml.GetNthChild(xImageNode, sChildTagName, 0)
+                            bHistoricalElementFound = True
                         
         
         return xHistoricalChildElement
