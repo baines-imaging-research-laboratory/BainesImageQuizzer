@@ -63,14 +63,6 @@ class ImageView:
         self.xImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
         self.iNumImages = self.oIOXml.GetNumChildrenByName(xPageNode, 'Image')
         
-#         # clearing views from previous page
-#         slicer.mrmlScene.Clear()
-#         self.ClearImagesAndSegmentations()
-
-#         # clearing views from previous page is handled by Next button click
-#         # remove and label maps that were created
-#         self.ClearLabelMapNodes()
-
        
         self.BuildViewNodes()
         
@@ -85,7 +77,7 @@ class ImageView:
             # assign nodes for current page to views
             for i in range(len(self._loImageViews)):
                 
-                self.AssignNodesToView(self._loImageViews[i])
+#                 self.AssignNodesToView(self._loImageViews[i])
                 # color tables are not applied to label maps or segmentation volumes
                 if (self._loImageViews[i].sViewLayer == 'Foreground' or self._loImageViews[i].sViewLayer == 'Background'):
                     # apply xml defined color table map if requested - else default to Grey
@@ -148,75 +140,51 @@ class ImageView:
  
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def AssignNodesToView(self, oViewNode):
+    def AssignNodesToView(self):
+        ''' For each image node in the list, assign it to the destination widget (Red, Yellow, Green)
+            If the background image has a corresponding label map created by the user in the quiz,
+                assign the widget's label map setting otherwise set it to None.
+            If the image node has the viewing layer set to  'Label'  (ie it was loaded in directly from the XML),
+                it will only get assigned if there were no quiz label maps created and assigned to that widget.
+                (User created quiz label maps take priority). 
+        '''
  
-        slWidget = slicer.app.layoutManager().sliceWidget(oViewNode.sDestination)
-        slWindowLogic = slWidget.sliceLogic()
-        slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
-        slWidgetController = slWidget.sliceController()
-        
-        if self.bLinkViews == True:
-            slWindowCompositeNode.LinkedControlOn()
-        else:
-            slWindowCompositeNode.LinkedControlOff()
-        
-        
-        if oViewNode.sViewLayer == 'Background':
-            slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
-            slWidget.setSliceOrientation(oViewNode.sOrientation)
-            slWidget.fitSliceToBackground()
-
-        elif oViewNode.sViewLayer == 'Foreground':
-            slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
-            slWidget.setSliceOrientation(oViewNode.sOrientation)
-            slWidgetController.setForegroundOpacity(0.5)
-
-        elif oViewNode.sViewLayer == 'Label':
-            slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
-
-        elif oViewNode.sViewLayer == 'Segmentation':
-            if not (oViewNode.sRoiVisibilityCode == 'Empty'):
-                self.SetSegmentRoiVisibility(oViewNode)
-        
-        # if there is a label map created by the user through the quiz  
-        #    that is associated with this image node, assign it in the widget
-        if oViewNode.slQuizLabelMapNode != None:
-            slWindowCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
-        else:
-            slWindowCompositeNode.SetLabelVolumeID('None')
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def AssignViewToNone(self, sScreenColor):
-        
-        slWidget = slicer.app.layoutManager().sliceWidget(sScreenColor)
-        slLogic = slWidget.sliceLogic()
-        slCompNode = slLogic.GetSliceCompositeNode()
-        slCompNode.SetBackgroundVolumeID('None')
-        slCompNode.SetForegroundVolumeID('None')
-        slCompNode.SetLabelVolumeID('None')
-        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ReassignNodesToFgBg(self):
-        
         for oViewNode in self._loImageViews:
-            
-            if oViewNode.sViewLayer == 'Background' or oViewNode.sViewLayer == 'Foreground':
-                self.AssignNodesToView(oViewNode)
-            
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ClearLabelMapNodes(self):
 
-        # get list of all label map nodes
-        lLabelMapNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLLabelMapVolumeNode')
-           
-        for indLabelMap in range(lLabelMapNodes.GetNumberOfItems()):
-  
-            slLabelMapNode = lLabelMapNodes.GetItemAsObject(indLabelMap)
-            slicer.mrmlScene.RemoveNode(slLabelMapNode)
-              
-        # unregister the nodes created by 'GetNodeByClass'otherwise you get a memory leak
-        lLabelMapNodes.UnRegister(slicer.mrmlScene)
+            slWidget = slicer.app.layoutManager().sliceWidget(oViewNode.sDestination)
+            slWindowLogic = slWidget.sliceLogic()
+            slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
+            slWidgetController = slWidget.sliceController()
+            
+            if self.bLinkViews == True:
+                slWindowCompositeNode.LinkedControlOn()
+            else:
+                slWindowCompositeNode.LinkedControlOff()
+            
+            
+            if oViewNode.sViewLayer == 'Background':
+                slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
+                slWidget.setSliceOrientation(oViewNode.sOrientation)
+                slWidget.fitSliceToBackground()
+                if oViewNode.slQuizLabelMapNode != None:
+                    slWindowCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
+                else:
+                    slWindowCompositeNode.SetLabelVolumeID('None')
     
+            elif oViewNode.sViewLayer == 'Foreground':
+                slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
+                slWidget.setSliceOrientation(oViewNode.sOrientation)
+                slWidgetController.setForegroundOpacity(0.5)
+    
+            elif oViewNode.sViewLayer == 'Label':
+                if slWindowCompositeNode.GetLabelVolumeID() == 'None':
+                    slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
+    
+            elif oViewNode.sViewLayer == 'Segmentation':
+                if not (oViewNode.sRoiVisibilityCode == 'Empty'):
+                    self.SetSegmentRoiVisibility(oViewNode)
+ 
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSegmentRoiVisibility(self,oViewNode):
         # in order to set visibility, you have to traverse Slicer's subject hierarchy
