@@ -36,20 +36,20 @@
 		</QuestionSet>
 	</Page>
 	<Page name="Patient1" descriptor="Follow-up 1">
-		<Image format="nii" type="Volume" descriptor="Moving Volume" destination="Red">
+		<Image format="nrrd" type="Volume" descriptor="Moving Volume" destination="Red">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nii</Path>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<Image format="nii" type="Volume" descriptor="Moving Volume" destination="Yellow">
+		<Image format="nrrd" type="Volume" descriptor="Moving Volume" destination="Yellow">
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nii</Path>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<Image format="nii" type="Volume" descriptor="Moving Volume" destination="Green">
+		<Image format="nrrd" type="Volume" descriptor="Moving Volume" destination="Green">
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nii</Path>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
 		<QuestionSet id="QS-Observation" title="What is your Assessment"  segmentrequired="y"  allowmultipleresponse="y">
 			<Question type="Radio" descriptor="Assessment">

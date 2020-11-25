@@ -80,7 +80,7 @@
 		</Image>
 		<Image format="nrrd" type="LabelMap" descriptor="User-label" destination="Yellow">
 			<Layer>Label</Layer>
-			<Path>Users\c\TestSecure\2-IGPC2026-Multiparametric_MRI\IGPC2026_Multiparametric_MRI_In_Vivo_2D_T2-label.nrrd</Path>
+			<Path>Users\Carol\TestSecure\2-IGPC2026-Multiparametric_MRI\IGPC2026_Multiparametric_MRI_In_Vivo_2D_T2-label.nrrd</Path>
 		</Image>
 		<QuestionSet id="Segmentation" title="How did you do?"  segmentrequired="n" allowmultipleresponse="n">
 			<Question type="Radio" descriptor="Self-Assessment">
