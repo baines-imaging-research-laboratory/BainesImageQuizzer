@@ -1163,7 +1163,7 @@ class Session:
                         
                         # test for match of both the Path and Series Instance UID
                         if sPotentialPath == sPathToMatch and sPotentialSeriesInstanceUID == sSeriesInstanceUIDToMatch:
-                            print('found prior image instance: ', iPageIndex, ' ', sPotentialPath)
+#                             print('found prior image instance: ', iPageIndex, ' ', sPotentialPath)
                             # capture historical element of interest
                             xHistoricalChildElement = self.oIOXml.GetNthChild(xImageNode, sChildTagName, 0)
                             bHistoricalElementFound = True

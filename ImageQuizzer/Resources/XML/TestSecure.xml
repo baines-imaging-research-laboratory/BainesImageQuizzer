@@ -54,7 +54,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page name="IGPC2026" descriptor="Multiparametric_MRI" linkviews="y">
+	<Page name="IGPC2026" descriptor="Multiparametric_MRI" linkviews="y" usepreviouslabelmap='y'>
 		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" destination="Green">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -77,10 +77,6 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\PELVIS_MRAC_PET\IGPC2-026.PT.MMR_PELVIS_MMR.0014.0001.2016.05.11.12.40.24.890625.175593827.IMA</Path>
 			<SeriesInstanceUID>1.3.12.2.1107.5.2.38.51018.2016031815242123437500578</SeriesInstanceUID>
-		</Image>
-		<Image format="nrrd" type="LabelMap" descriptor="User-label" destination="Yellow">
-			<Layer>Label</Layer>
-			<Path>Users\Carol\TestSecure\2-IGPC2026-Multiparametric_MRI\IGPC2026_Multiparametric_MRI_In_Vivo_2D_T2-label.nrrd</Path>
 		</Image>
 		<QuestionSet id="Segmentation" title="How did you do?"  segmentrequired="n" allowmultipleresponse="n">
 			<Question type="Radio" descriptor="Self-Assessment">
