@@ -864,72 +864,72 @@ class DicomVolumeDetail(ViewNodeBase):
 #         return bNodeExists
         
 
-##########################################################################
-#
-#   Class SubjectHierarchyDetail
-#
-##########################################################################
-
-class SubjectHierarchyDetail:
-    
-    def __init__(self,  parent=None):
-        
-        self.slSHNode = None
-        self.slSegDisplayNode = None
-        self.slSegDataNode = None
-        
-        self.slStudyItemId = ''
-        self.slRTStructItemId = ''
-        self.slSegDisplayNodeId = ''
-
-        
-        self.slRTStructChildren = None
-        self.slStudyChildren = None
-        
-        self.lsSubjectHierarchyROINames = []
-        
-    
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def TraverseSubjectHierarchy(self, sStudyInstanceUID, sSeriesInstanceUID):
-        
-        # get Slicer's subject hierarchy node (SHNode)
-        
-        self.slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-        
-        
-        # get the item ID for the Patient study through the Study Series Instance UID
-        
-        self.slStudyItemID = self.slSHNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(), sStudyInstanceUID)
-
-
-        # using slicers vtk Item Id for the Volume, get the ROI names (children)
-        
-        self.slStudyChildren = vtk.vtkIdList()    # initialize to ItemId type
-        self.slSHNode.GetItemChildren(self.slStudyItemID, self.slStudyChildren) # populate children variable
-
-        # get the item ID for the RTStruct through the RTStruct Series Instance UID
-        
-        self.slRTStructItemId = self.slSHNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(), sSeriesInstanceUID)
-
-
-        # using slicers vtk Item Id for the RTStruct, get the ROI names (children)
-        
-        self.slRTStructChildren = vtk.vtkIdList()    # initialize to ItemId type
-        self.slSHNode.GetItemChildren(self.slRTStructItemId, self.slRTStructChildren) # populate children variable
-        
-        
-        # get ROI child Item ID and store the child (ROI) name
-        
-        self.lsSubjectHierarchyROINames = []
-        for indROI in range(self.slRTStructChildren.GetNumberOfIds()):
-            slROIItemId = self.slRTStructChildren.GetId(indROI)
-            sROIName = self.slSHNode.GetItemName(slROIItemId)
-            self.lsSubjectHierarchyROINames.append(sROIName)
-        
-        
-        # get segmentation node name from data node
-        
-        self.slSegDataNode = self.slSHNode.GetItemDataNode(self.slRTStructItemId)
-        self.slSegDisplayNodeId = self.slSegDataNode.GetDisplayNodeID()
-        self.slSegDisplayNode = slicer.mrmlScene.GetNodeByID(self.slSegDisplayNodeId)
+# ##########################################################################
+# #
+# #   Class SubjectHierarchyDetail
+# #
+# ##########################################################################
+# 
+# class SubjectHierarchyDetail:
+#     
+#     def __init__(self,  parent=None):
+#         
+#         self.slSHNode = None
+#         self.slSegDisplayNode = None
+#         self.slSegDataNode = None
+#         
+#         self.slStudyItemId = ''
+#         self.slRTStructItemId = ''
+#         self.slSegDisplayNodeId = ''
+# 
+#         
+#         self.slRTStructChildren = None
+#         self.slStudyChildren = None
+#         
+#         self.lsSubjectHierarchyROINames = []
+#         
+#     
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def TraverseSubjectHierarchy(self, sStudyInstanceUID, sSeriesInstanceUID):
+#         
+#         # get Slicer's subject hierarchy node (SHNode)
+#         
+#         self.slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+#         
+#         
+#         # get the item ID for the Patient study through the Study Series Instance UID
+#         
+#         self.slStudyItemID = self.slSHNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(), sStudyInstanceUID)
+# 
+# 
+#         # using slicers vtk Item Id for the Volume, get the ROI names (children)
+#         
+#         self.slStudyChildren = vtk.vtkIdList()    # initialize to ItemId type
+#         self.slSHNode.GetItemChildren(self.slStudyItemID, self.slStudyChildren) # populate children variable
+# 
+#         # get the item ID for the RTStruct through the RTStruct Series Instance UID
+#         
+#         self.slRTStructItemId = self.slSHNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(), sSeriesInstanceUID)
+# 
+# 
+#         # using slicers vtk Item Id for the RTStruct, get the ROI names (children)
+#         
+#         self.slRTStructChildren = vtk.vtkIdList()    # initialize to ItemId type
+#         self.slSHNode.GetItemChildren(self.slRTStructItemId, self.slRTStructChildren) # populate children variable
+#         
+#         
+#         # get ROI child Item ID and store the child (ROI) name
+#         
+#         self.lsSubjectHierarchyROINames = []
+#         for indROI in range(self.slRTStructChildren.GetNumberOfIds()):
+#             slROIItemId = self.slRTStructChildren.GetId(indROI)
+#             sROIName = self.slSHNode.GetItemName(slROIItemId)
+#             self.lsSubjectHierarchyROINames.append(sROIName)
+#         
+#         
+#         # get segmentation node name from data node
+#         
+#         self.slSegDataNode = self.slSHNode.GetItemDataNode(self.slRTStructItemId)
+#         self.slSegDisplayNodeId = self.slSegDataNode.GetDisplayNodeID()
+#         self.slSegDisplayNode = slicer.mrmlScene.GetNodeByID(self.slSegDisplayNodeId)
 
