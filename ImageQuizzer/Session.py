@@ -565,9 +565,10 @@ class Session:
 
         self.LoadSavedLabelMaps()
 
-        self.oImageView.ReassignNodesToFgBg()
-
-        self.SetSavedImageState() # after loading label maps and setting Fg / Bg views
+        # assign each image node and its label map (if applicable) to the viewing widget
+        self.oImageView.AssignNodesToView()
+        
+        self.SetSavedImageState() # after loading label maps and setting assigning views
         
         if self.GetSegmentationTabIndex() > 0:
             # clear Master and Merge selector boxes
