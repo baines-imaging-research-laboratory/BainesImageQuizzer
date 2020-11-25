@@ -63,14 +63,6 @@ class ImageView:
         self.xImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
         self.iNumImages = self.oIOXml.GetNumChildrenByName(xPageNode, 'Image')
         
-#         # clearing views from previous page
-#         slicer.mrmlScene.Clear()
-#         self.ClearImagesAndSegmentations()
-
-#         # clearing views from previous page is handled by Next button click
-#         # remove and label maps that were created
-#         self.ClearLabelMapNodes()
-
        
         self.BuildViewNodes()
         
@@ -78,20 +70,6 @@ class ImageView:
         # Turn off the visibility in the Subject Hierarchy when starting a new ImageView object
         self.SetLabelMapVisibility(0)
         
-
-        # Assign images to view with proper orientation
-        if len(self._loImageViews) > 0:
-            
-            # assign nodes for current page to views
-            for i in range(len(self._loImageViews)):
-                
-                self.AssignNodesToView(self._loImageViews[i])
-                # apply xml defined color table map if requested - else default to Grey
-                if self._loImageViews[i].sColorTableName == '':
-                    self._loImageViews[i].sColorTableName = 'Grey'
-                self._loImageViews[i].AssignColorTable()
-
-                    
                 
         # reset field of view to maximize background
         slicer.util.resetSliceViews()
@@ -144,96 +122,60 @@ class ImageView:
     #         Manage Views
     #-----------------------------------------------
  
-         
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def AssignNodesToView(self, oViewNode):
+    def AssignNodesToView(self):
+        ''' For each image node in the list, assign it to the destination widget (Red, Yellow, Green)
+            If the background image has a corresponding label map created by the user in the quiz,
+                assign the widget's label map setting otherwise set it to None.
+            Foreground and Background images will have the color table applied (default Grey)
+            If the image node has the viewing layer set to  'Label'  (ie it was loaded in directly from the XML),
+                it will only get assigned if there were no quiz label maps created and assigned to that widget.
+                (User created quiz label maps take priority). 
+        '''
  
-        slWidget = slicer.app.layoutManager().sliceWidget(oViewNode.sDestination)
-        slWindowLogic = slWidget.sliceLogic()
-        slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
-        slWidgetController = slWidget.sliceController()
-        
-        if self.bLinkViews == True:
-            slWindowCompositeNode.LinkedControlOn()
-        else:
-            slWindowCompositeNode.LinkedControlOff()
-        
-        
-        if oViewNode.sViewLayer == 'Background':
-            slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
-            slWidget.setSliceOrientation(oViewNode.sOrientation)
-            slWidget.fitSliceToBackground()
+        for oViewNode in self._loImageViews:
 
-        elif oViewNode.sViewLayer == 'Foreground':
-            slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
-            slWidget.setSliceOrientation(oViewNode.sOrientation)
-            slWidgetController.setForegroundOpacity(0.5)
-
-        elif oViewNode.sViewLayer == 'Label':
-            slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
-
-        elif oViewNode.sViewLayer == 'Segmentation':
-            if not (oViewNode.sRoiVisibilityCode == 'Empty'):
-                self.SetSegmentRoiVisibility(oViewNode)
-        
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def AssignViewToNone(self, sScreenColor):
-        
-        slWidget = slicer.app.layoutManager().sliceWidget(sScreenColor)
-        slLogic = slWidget.sliceLogic()
-        slCompNode = slLogic.GetSliceCompositeNode()
-        slCompNode.SetBackgroundVolumeID('None')
-        slCompNode.SetForegroundVolumeID('None')
-        slCompNode.SetLabelVolumeID('None')
-        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ReassignNodesToFgBg(self, loViewNodes):
-        
-        for oViewNode in loViewNodes:
+            slWidget = slicer.app.layoutManager().sliceWidget(oViewNode.sDestination)
+            slWindowLogic = slWidget.sliceLogic()
+            slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
+            slWidgetController = slWidget.sliceController()
             
-            if oViewNode.sViewLayer == 'Background' or oViewNode.sViewLayer == 'Foreground':
-                self.AssignNodesToView(oViewNode)
+            if self.bLinkViews == True:
+                slWindowCompositeNode.LinkedControlOn()
+            else:
+                slWindowCompositeNode.LinkedControlOff()
+
+            #setup for color tables if defined in the xml attributes for foreground and background images
+            if oViewNode.sColorTableName == '':
+                oViewNode.sColorTableName = 'Grey' # default
             
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def ClearImagesAndSegmentations(self):
-#  
-#         # clear the images displayed
-#          
-#         self.AssignViewToNone('Red')
-#         self.AssignViewToNone('Yellow')
-#         self.AssignViewToNone('Green')
-#          
-#          
-#         # get list of all segmentation nodes and turn off the visibility
-#         
-#         lSegNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSegmentationNode')
-#           
-#         for indSeg in range(lSegNodes.GetNumberOfItems()):
-#  
-#             slSegNode = lSegNodes.GetItemAsObject(indSeg)
-#             slSegDisplayNode = slSegNode.GetDisplayNode()
-#              
-#             slSegDisplayNode.SetVisibility(False)
-#              
-#         # unregister the nodes created by 'GetNodeByClass'otherwise you get a memory leak
-#         lSegNodes.UnRegister(slicer.mrmlScene)
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ClearLabelMapNodes(self):
-
-        # get list of all label map nodes
-        lLabelMapNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLLabelMapVolumeNode')
-           
-        for indLabelMap in range(lLabelMapNodes.GetNumberOfItems()):
-  
-            slLabelMapNode = lLabelMapNodes.GetItemAsObject(indLabelMap)
-            slicer.mrmlScene.RemoveNode(slLabelMapNode)
-              
-        # unregister the nodes created by 'GetNodeByClass'otherwise you get a memory leak
-        lLabelMapNodes.UnRegister(slicer.mrmlScene)
+            
+            if oViewNode.sViewLayer == 'Background':
+                slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
+                slWidget.setSliceOrientation(oViewNode.sOrientation)
+                slWidget.fitSliceToBackground()
+                oViewNode.AssignColorTable()
+                if oViewNode.slQuizLabelMapNode != None:
+                    slWindowCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
+                else:
+                    slWindowCompositeNode.SetLabelVolumeID('None')
     
+            elif oViewNode.sViewLayer == 'Foreground':
+                slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
+                slWidget.setSliceOrientation(oViewNode.sOrientation)
+                slWidgetController.setForegroundOpacity(0.5)
+                oViewNode.AssignColorTable()
+    
+            elif oViewNode.sViewLayer == 'Label':
+                if slWindowCompositeNode.GetLabelVolumeID() == 'None':
+                    slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
+    
+            elif oViewNode.sViewLayer == 'Segmentation':
+                if not (oViewNode.sRoiVisibilityCode == 'Empty'):
+                    self.SetSegmentRoiVisibility(oViewNode)
+ 
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSegmentRoiVisibility(self,oViewNode):
         # in order to set visibility, you have to traverse Slicer's subject hierarchy
@@ -392,6 +334,8 @@ class ViewNodeBase:
         self._sPageID = ''
         self.sColorTableName = ''
         
+        self.slQuizLabelMapNode = None
+        
 
     #----------
     def SetXmlImageElement(self, xInput):
@@ -413,7 +357,11 @@ class ViewNodeBase:
     def GetSlicerViewNode(self):
         return self.slNode
 
+    #----------
+    def SetQuizLabelMapNode(self, slNodeInput):
+        self.slQuizLabelMapNode = slNodeInput
 
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractImageAttributes(self):
 
@@ -567,7 +515,7 @@ class ViewNodeBase:
 class DataVolumeDetail(ViewNodeBase):
     
     
-    def __init__(self, xImage, sPageID, sParentDataDir):
+    def __init__(self, xImage, sPageID, sParentDataDir, slLabelMapNode=None):
         self.sClassName = type(self).__name__
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
@@ -580,6 +528,7 @@ class DataVolumeDetail(ViewNodeBase):
         self.SetPageID(sPageID)
         self.ExtractImageAttributes()
         self.ExtractXMLNodeElements(sParentDataDir)
+        self.SetQuizLabelMapNode(slLabelMapNode)
         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -664,8 +613,6 @@ class DataVolumeDetail(ViewNodeBase):
     
 
 
-
-
 ##########################################################################
 #
 #   Class DicomVolumeDetail
@@ -675,7 +622,7 @@ class DataVolumeDetail(ViewNodeBase):
 class DicomVolumeDetail(ViewNodeBase):
     
     
-    def __init__(self, xImage, sPageID, sParentDataDir):
+    def __init__(self, xImage, sPageID, sParentDataDir, slLabelMapNode=None):
         self.sClassName = type(self).__name__
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
@@ -694,6 +641,7 @@ class DicomVolumeDetail(ViewNodeBase):
         self.SetPageID(sPageID)
         self.ExtractImageAttributes()
         self.ExtractXMLNodeElements(sParentDataDir)
+        self.SetQuizLabelMapNode(slLabelMapNode)
         
         # specifics for Dicom volumes
         self.ExtractXMLDicomElements()

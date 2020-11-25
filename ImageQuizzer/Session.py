@@ -44,7 +44,6 @@ class Session:
         self._lsPreviousResponses = []
         self._lsNewResponses = []
         
-        self._loImageViews = []
         
         self._bStartOfSession = True
         self._bQuizComplete = False
@@ -57,7 +56,8 @@ class Session:
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
         self.oUtilsIO = UtilsIO()
-#         self._oQuizWidgets = None
+
+        self.oImageView = None
         
         self._btnNext = None
         self._btnPrevious = None
@@ -146,70 +146,17 @@ class Session:
     #----------
     def SegmentationTabEnabler(self, bTF):
 
-# NO LONGER NEEDED ... I CLEAR THE SCENE BETWEEN PAGES?
-#         if bTF == True:
-#             # When setting up for segmentation, reset the master volume to None
-#             # This forces the user to select a volume which in turn enables the 
-#             # color selector for editing the segments
-#             oParent = self.oQuizWidgets.qTabWidget.widget(self.GetSegmentationTabIndex())
-#             self.iRecursiveCounter = 0
-#             bSuccess, oChild = self.SearchForChildWidget(oParent, 'qMRMLNodeComboBox', 'MasterVolumeNodeSelector')
-#             if bSuccess == False or oChild == None:
-#                 sMsg = 'SegmentationTabEnabler:MasterVolumeSelector not found'
-#                 self.oUtilsMsgs.DisplayWarning(sMsg)
-#             else:
-#                 self.SetVolumeSelectorToNone(oChild)
-
         self.oQuizWidgets.qTabWidget.setTabEnabled(self.GetSegmentationTabIndex(), bTF)
         
-    
-# NO LONGER NEEDED ... I CAN USE THE QUIZZER HELPER BOX FUNCTIONS TO SET VOLUMES
-#            oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetQuizzerHelperBox()
-#            oQuizzerEditorHelperBox.setVolumes(slAssociatedNode, slLabelMapNode)
-#    
-#     #----------
-#     def SearchForChildWidget(self, oParent, sSearchType, sSearchName):
-# 
-# 
-#         if oParent != None:
-# #             print(oParent.className(), '.....', oParent.name)
-#             
-#             iNumChildren = len(oParent.children())
-# 
-#             # drill down through children recursively until the search object has been found
-#             for idx in range(iNumChildren):
-#                 oChildren = oParent.children()
-#                 oChild = oChildren[idx]
-# #                 print ('..............', oChild.className(),'...', oChild.name)
-#                 if oChild.className() == sSearchType:
-#                     if oChild.name == sSearchName:
-#                         return True, oChild
-#                         
-#                 self.iRecursiveCounter = self.iRecursiveCounter + 1
-#                 if self.iRecursiveCounter == 100:    # safeguard in recursive procedure
-#                     return False, None
-#                     
-#                 
-#                 if len(oChild.children()) > 0:
-#                     bFound, oFoundChild = self.SearchForChildWidget(oChild, sSearchType, sSearchName)
-#                     if bFound:
-#                         return True, oFoundChild
-#             
-#         else:
-#             return False, None
-#     
-#     
-#     #----------
-#     def SetVolumeSelectorToNone(self, oSelectorWidget):
-#         oSelectorWidget.setCurrentNodeIndex(-1)
-#         
-            
     #----------
     def GetSegmentationTabIndex(self):
         return self._iSegmentationTabIndex
         
-        
     #----------
+    def GetSegmentationTabEnabled(self):
+        bTF = self.oQuizWidgets.qTabWidget.isTabEnabled(self.GetSegmentationTabIndex())
+        return bTF
+    
     #----------
     def GetAllQuestionSetsForNthPage(self, iPageIndex):
         self._xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
@@ -280,24 +227,17 @@ class Session:
         return xAllOptionNodes
         
     #----------
-    def UpdateImageViewObjects(self, lInput):
-        self._loImageViews = lInput
+    #----------
 
-
-    
     #-------------------------------------------
     #        Functions
     #-------------------------------------------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def RunSetup(self, oFilesIO, oQuizWidgets):
     def RunSetup(self, oFilesIO, slicerMainLayout):
         
 #         self.oIOXml = UtilsIOXml()
         self.SetFilesIO(oFilesIO)
-#         self.SetupButtons()
-# #         self.SetupWidgets(oQuizWidgets)
-#         self.SetupWidgets(slicerMainLayout)
 
         # open xml and check for root node
         bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizResultsPath(),'Session')
@@ -426,7 +366,7 @@ class Session:
 
         else:
             # this is not the last question set, do a save and display the next page
-            bSuccess, sMsg = self.PerformSave()
+            bSuccess, sMsg = self.PerformSave('NextBtn')
             
             if bSuccess:
     
@@ -452,7 +392,8 @@ class Session:
                 self.DisplayPage()
     
             else:
-                self._oMsgUtil.DisplayWarning( sMsg )
+                if sMsg != '':
+                    self._oMsgUtil.DisplayWarning( sMsg )
                 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -461,13 +402,15 @@ class Session:
         bSuccess = True
         sMsg = ''
 
-        bSuccess, sMsg = self.PerformSave()
+        bSuccess, sMsg = self.PerformSave('PreviousBtn')
         
         if bSuccess:
 
             ########################################    
             # set up for previous page
             ########################################    
+
+            slicer.mrmlScene.Clear()
 
             self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
             self.progress.setValue(self._iCurrentCompositeIndex)
@@ -485,18 +428,20 @@ class Session:
                
         
         else:
-            self._oMsgUtil.DisplayWarning( sMsg )
+            if sMsg != '':
+                self._oMsgUtil.DisplayWarning( sMsg )
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onExitButtonClicked(self):
 
         qtAns = self._oMsgUtil.DisplayOkCancel('Do you wish to exit? \nYour responses will be saved. Quiz may be resumed.')
         if qtAns == qt.QMessageBox.Ok:
-            bSuccess, sMsg = self.PerformSave()
+            bSuccess, sMsg = self.PerformSave('ExitBtn')
             if bSuccess:
                 slicer.util.exit(status=EXIT_SUCCESS)
             else:
-                self._oMsgUtil.DisplayWarning( sMsg )
+                if sMsg != '':
+                    self._oMsgUtil.DisplayWarning( sMsg )
         else:
             # cancelled - reset the progress bar
             self.progress.setValue(self._iCurrentCompositeIndex)
@@ -569,6 +514,7 @@ class Session:
         oQuestionSet = QuestionSet()
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
         
+        sQuestionsWithRecordedResponses = self.GetQuestionSetResponseCompletionLevel()
         self.SetMultipleResponsesInQSetAllowed(oQuestionSet.GetMultipleResponseTF())
 
         if self.GetSegmentationTabIndex() > 0:
@@ -577,8 +523,10 @@ class Session:
                 self.SegmentationTabEnabler(oQuestionSet.GetSegmentRequiredTF())
             else:
                 # When multiple responses are not allowed, 
-                #    enable the segmentation tab only if there are no currently saved responses and the segments are required
-                if (self.CheckForSavedResponse() == True):
+                #    enable the segmentation tab only if the segments are required and
+                #    the number of questions with responses is not All (ie. either None or Partial)
+                
+                if (sQuestionsWithRecordedResponses == 'All'):
                     self.SegmentationTabEnabler(False)
                 else:
                     self.SegmentationTabEnabler(oQuestionSet.GetSegmentRequiredTF())
@@ -600,10 +548,11 @@ class Session:
 
 
 
-            # enable widget if no response exists or if user is allowed to 
+            # enable widget if not all questions have responses or if user is allowed to 
             # input multiple responses
-            if self.CheckForSavedResponse() == True:
+            if sQuestionsWithRecordedResponses == 'All':
                 qWidgetQuestionSetForm.setEnabled(self.GetMultipleResponsesInQsetAllowed())
+            if sQuestionsWithRecordedResponses == 'All' or sQuestionsWithRecordedResponses == 'Partial':
                 self.DisplaySavedResponse()
 
                    
@@ -611,15 +560,15 @@ class Session:
         slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
         
                     
-        oImageView = ImageView()
-        oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self.oFilesIO.GetDataParentDir())
+        self.oImageView = ImageView()
+        self.oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self.oFilesIO.GetDataParentDir())
 
-        self.UpdateImageViewObjects(oImageView.GetImageViewList())
         self.LoadSavedLabelMaps()
 
-        oImageView.ReassignNodesToFgBg(oImageView.GetImageViewList())
-
-        self.SetSavedImageState() # after loading label maps and setting Fg / Bg views
+        # assign each image node and its label map (if applicable) to the viewing widget
+        self.oImageView.AssignNodesToView()
+        
+        self.SetSavedImageState() # after loading label maps and setting assigning views
         
         if self.GetSegmentationTabIndex() > 0:
             # clear Master and Merge selector boxes
@@ -672,29 +621,46 @@ class Session:
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def PerformSave(self):
+    def PerformSave(self, sCaller):
         sMsg = ''
         bSuccess = True
         
-        bSuccess, sMsg = self.ResetSegmentation()
+        bSuccess, sMsg = self.ResetDisplay()
         
         if bSuccess:
-            bSuccess, sMsg = self.SaveLabelMaps()
+            bSuccess, sMsg = self.SaveLabelMaps(sCaller)
         
             if bSuccess:
                 bSuccess, sMsg = self.CaptureAndSaveImageState()
                     
-                if bSuccess:
-                    bSuccess, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet()
 
-                    if bSuccess:
-                        bSuccess, sMsg = self.WriteResponsesToXml()
+                if bSuccess:
+                    sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet(sCaller)
+
+                    if sCaller == 'NextBtn':
+                        # only write to xml if all responses were captured
+                        if sCaptureSuccessLevel == 'All':
+                            bSuccess, sMsg = self.WriteResponsesToXml()
+                        else:
+                            bSuccess = False
+                            
+                    else:  
+                        # caller must have been Previous or Exit buttons or from the event filter
+                        # only write if there were responses captured
+                        if sCaptureSuccessLevel == 'All' or sCaptureSuccessLevel == 'Partial':
+                            bSuccess, sMsg = self.WriteResponsesToXml()
+                        else:
+                            # if no responses were captured 
+                            if sCaptureSuccessLevel == 'None':
+                                # this isn't the Next button so it is allowed
+                                bSuccess = True
+                        
 
         # let calling program handle display of message if not successful            
         return bSuccess, sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ResetSegmentation(self):
+    def ResetDisplay(self):
         
         bSuccess = True
         sMsg = ''
@@ -719,44 +685,6 @@ class Session:
         return bSuccess, sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def WriteResponsesToXml(self):
-        
-        bSuccess = True
-        sMsg = ''
-        
-        try:
-            
-            # only allow for writing of responses under certain conditions
-            #    - allow if the question set is marked for multiple responses
-            #    - allow if no responses were recorded yet
-            
-#             if ( self._bAllowMultipleResponse == True)  or \
-#                 ((self._bAllowMultipleResponse == False) and (self.CheckForSavedResponse() == False) ):
-            if ( self.GetMultipleResponsesInQsetAllowed() == True)  or \
-                ((self.GetMultipleResponsesInQsetAllowed() == False) and (self.CheckForSavedResponse() == False) ):
-
-                # check to see if the responses for the question set match 
-                #    what was previously captured
-                #    -only write responses if they have changed
-                if not self._lsNewResponses == self._lsPreviousResponses:
-                    # Responses have been captured, if it's the first set of responses
-                    #    for the session, add in the login timestamp
-                    #    The timestamp is added here in case the user exited without responding to anything,
-                    #    allowing for the resume check to function properly
-                    if self._bStartOfSession == True:
-                        self.AddSessionLoginTimestamp()
-                    
-                    self.WriteResponses()
-                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-                    self._bStartOfSession = False
-        
-        except:
-            bSuccess = False
-            sMsg = 'Error writing responses to Xml'
-            
-        return bSuccess, sMsg
-    
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureAndSaveImageState(self):
 
         sMsg = ''
@@ -764,7 +692,7 @@ class Session:
         
         try:
             # for each image, capture the slice, window and level settings
-            for oImageNode in self._loImageViews:
+            for oImageNode in self.oImageView.GetImageViewList():
                 if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
     
                     dictAttribState = oImageNode.GetViewState()
@@ -775,7 +703,7 @@ class Session:
                     if iNumStateElements >0:
                         # update xml image/state element (first child)
                         xStateElement = self.oIOXml.GetNthChild(xImage, 'State', 0)
-                        self.UpdateAtributesInElement(xStateElement, dictAttribState)
+                        self.oIOXml.UpdateAtributesInElement(xStateElement, dictAttribState)
                     # if no State element, add one
                     else:
                         self.AddImageStateElement(xImage, dictAttribState)
@@ -790,23 +718,51 @@ class Session:
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSavedImageState(self):
+        ''' From the xml file, get the image state element. If there was no state element, 
+            check the xml for a previously stored state for this image. (eg. if clinician
+            set the window/level for an image on one page, and that same image is loaded on a subsequent page,
+            the same window/level should be applied. 
+        '''
         
-        for oImageView in self._loImageViews:
-            if (oImageView.sImageType == 'Volume' or oImageView.sImageType == 'VolumeSequence'):
+        for oImageNode in self.oImageView.GetImageViewList():
+            dictImageState = {}
+            if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
         
-                xStateElement = self.oIOXml.GetNthChild(oImageView.GetXmlImageElement(), 'State', 0)
-                dictImageState = self.oIOXml.GetAttributes(xStateElement)
+                xStateElement = self.oIOXml.GetNthChild(oImageNode.GetXmlImageElement(), 'State', 0)
                 
-                oImageView.SetImageState(dictImageState)
+                if xStateElement != None:
+                    dictImageState = self.oIOXml.GetAttributes(xStateElement)
+                else:
+                    xHistoricalStateElement = self.CheckXmlImageHistoryForMatch('State', oImageNode.GetXmlImageElement())
+                    if xHistoricalStateElement != None:
+                        dictImageState = self.oIOXml.GetAttributes(xHistoricalStateElement)
+                    
+                if len(dictImageState) > 0:
+                    oImageNode.SetImageState(dictImageState)
             
             
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SaveLabelMaps(self):
+    def SaveLabelMaps(self, sCaller):
+
+        """ label map volume nodes may exist in the mrmlScene if the user created a label map
+            (in which case it is named with a '-bainesquizlabel' suffix), or if a label map or segmentation
+            was loaded in through the xml quiz file.
+            
+            This function looks for label maps created by the user (-bainesquizlabel suffix) and if found,
+            saves them as a .nrrd file in the specified directory. The path to this saved file is
+            then stored in the xml file within the associated image element.
+            
+            A warning is presented if the xml question set had the 'segmentrequired' flag set to 'y'
+            but no label maps (with -bainesquizlabel suffix) were found. The user purposely may not have created
+            a label map if there were no lesions to segment. This is acceptable.
+        """
             
         # if label maps were created, save to disk
         bLabelMapsSaved = True
         sMsg = ''
+        
+        bLabelMapFound = False  # to detect if label map was created by user
  
         try:
         
@@ -817,15 +773,21 @@ class Session:
             iNumLabelMaps =  len(lLabelMaps)
             if iNumLabelMaps > 0:
      
-                for oImageNode in self._loImageViews:
+                for oImageNode in self.oImageView.GetImageViewList():
                       
                     for iLabelMap in range(iNumLabelMaps):
-                        slNodeLabelMap = lLabelMaps.GetItemAsObject(iLabelMap)
+#                         slNodeLabelMap = lLabelMaps.GetItemAsObject(iLabelMap)
+                        slNodeLabelMap = lLabelMaps[iLabelMap]
 
                         # match label map file with xml image
                         sLabelMapFilename = slNodeLabelMap.GetName()
-                        if oImageNode.sNodeName + '-label' == sLabelMapFilename:
+                        if oImageNode.sNodeName + '-bainesquizlabel' == sLabelMapFilename:
+                            
+                            bLabelMapFound = True  # -bainesquizlabel suffix is associated with an image on the page
                         
+
+                            # store the path name in the xml file and the label map in the directory
+                            
                             # get page name to create directory
                             xPageNode = self.GetCurrentPageNode()
                             sPageIndex = str(self.GetCurrentPageIndex() + 1)
@@ -836,7 +798,6 @@ class Session:
                             sPageResultsDir = self.oFilesIO.CreatePageDir(sDirName)
 
                             sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
-#                             sLabelMapFilenameWithExtCleaned = self.oUtilsIO.CleanFilename(sLabelMapFilenameWithExt)
                              
                             # save the label map file to the user's page directory
                             sLabelMapPath = os.path.join(sPageResultsDir, sLabelMapFilenameWithExt)
@@ -852,12 +813,33 @@ class Session:
                             # update xml storing the path to the label map file with the image element
                             self.AddLabelMapPathElement(oImageNode.GetXmlImageElement(), self.oFilesIO.GetRelativeUserPath(sLabelMapPath))
 
+                            
+                            bLabelMapsSaved = True  # at least one label map was saved
+
     
-                bLabelMapsSaved = True
-    
+            # If there were no label map volume nodes 
+            # OR if there were label map volume nodes, but there wasn't a -bainesquizlabel suffix to match an image on the page,
+            #    ie. the labelMaps found flag was left as false
+            # Check if the segmentation was required and if enabled present the warning
+            if iNumLabelMaps == 0 or (iNumLabelMaps > 0 and bLabelMapFound == False):    
+                
+                # user doesn't get the option to cancel if the call was initiated from the Close event filter
+                if sCaller != 'EventFilter':
+                    if self._bSegmentationModule == True:   # if there is a segmentation module
+                        if self.GetSegmentationTabEnabled() == True:    # if the tab is enabled
+                            qtAns = self.oUtilsMsgs.DisplayOkCancel('No label maps were created. Do you want to continue?')
+                            if qtAns == qt.QMessageBox.Ok:
+                                # user did not create a label map but there may be no lesions to segment
+                                # continue with the save
+                                bLabelMapsSaved = True
+                            else:
+                                # user wants to resume work on this page
+                                bLabelMapsSaved = False
+                
+                    
     
         except:
-            sMsg = 'Failed to store label maps'
+            sMsg = 'Failed to store label maps ' + sLabelMapPath
             bLabelMapsSaved = False
      
     
@@ -866,25 +848,29 @@ class Session:
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadSavedLabelMaps(self):
-        # when loading segmentations, associated it with the correct image
+        # when loading label maps created in the quiz, associated it with the correct 
+        #    image node in the subject hierarchy
+        # add it to the slquizlabelmap property of the image node 
 
-        #      n = slicer.mrmlScene.GetNodeByID('vtkMRMLLabelMapVolumeNode1')
-        # >>> n.SetNodeReferenceID('vtkMRMLScalarVolumeNode1')
-        # n.SetNodeReferenceID('AssociatedNodeID','vtkMRMLScalarVolumeNode1')
 
         lLoadedLabelMaps = []
 
-        for oImageView in self._loImageViews:
+        for oImageNode in self.oImageView.GetImageViewList():
             
             # for each image view, get list of labelmap files stored (may be more than one)
-            if (oImageView.sImageType == 'Volume' or oImageView.sImageType == 'VolumeSequence'):
+            if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
         
-                lxLabelMapPathElements = self.oIOXml.GetChildren(oImageView.GetXmlImageElement(), 'LabelMapPath')
+                lxLabelMapPathElements = self.oIOXml.GetChildren(oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                slLabelMapNode = None # initialize
 
                 # load labelmap file from stored path in XML                
                 for xLabelMap in lxLabelMapPathElements:
                     sStoredRelativePath = self.oIOXml.GetDataInNode(xLabelMap)
                     
+                    # check if label map was already loaded (if between question sets, label map will persisit)
+                    sLabelMapNodeName = self.oFilesIO.GetFilenameNoExtFromPath(sStoredRelativePath)
+                    bFoundLabelMap, slLabelMapNode = self.CheckForLoadedLabelMapInScene(sLabelMapNodeName)
+
                     # only load the label map once
                     #    same label map may have been stored multiple times in XML for the page
                     #    (same image but different orientations)
@@ -892,56 +878,63 @@ class Session:
                         sAbsolutePath = self.oFilesIO.GetAbsoluteUserPath(sStoredRelativePath)
                         dictProperties = {'labelmap' : True, 'show': False}
                         
-                        # check if label map already exists (if between question sets, label map will persisit)
-                        sLabelMapNodeName = self.oFilesIO.GetFilenameNoExtFromPath(sStoredRelativePath)
-                        bFoundLabelMap, slLabelMapNode = self.CheckForLoadedLabelMap(sLabelMapNodeName)
-
                         try:
 
                             if not bFoundLabelMap:
-                            
-                                slLabelMapNode = slicer.util.loadLabelVolume(sAbsolutePath, dictProperties)
+                                if os.path.exists(sAbsolutePath):
+                                    # load label map into the scene
+                                    slLabelMapNode = slicer.util.loadLabelVolume(sAbsolutePath, dictProperties)
+                                else:
+                                    sMsg = 'Stored path to label map file does not exist. Label map will not be loaded.\n' \
+                                        + sAbsolutePath
+                                    self.oUtilsMsgs.DisplayWarning(sMsg)
+                                    break # continue in for loop for next label map path element
                             
                             
                             lLoadedLabelMaps.append(sStoredRelativePath)
     
                             # set associated volume to connect label map to master
                             sLabelMapNodeName = slLabelMapNode.GetName()
-                            sAssociatedName = sLabelMapNodeName.replace('-label','')
+                            sAssociatedName = sLabelMapNodeName.replace('-bainesquizlabel','')
                             slAssociatedNodeCollection = slicer.mrmlScene.GetNodesByName(sAssociatedName)
                             slAssociatedNode = slAssociatedNodeCollection.GetItemAsObject(0)
                             
                             slLabelMapNode.SetNodeReferenceID('AssociatedNodeID',slAssociatedNode.GetID())
 
     
-                            # turn on visibility for volume and label map
-                            slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-                            slSceneItemID = slSHNode.GetSceneItemID()
-
-                            slAssociatedNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sAssociatedName)
-                            slVolPlugin = slicer.qSlicerSubjectHierarchyVolumesPlugin()
-                            slVolPlugin.setDisplayVisibility( slAssociatedNodeID, 1)
-
-                            slLabelMapNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sLabelMapNodeName)
-                            slLabelPlugin = slicer.qSlicerSubjectHierarchyLabelMapsPlugin()
-                            slLabelPlugin.setDisplayVisibility( slLabelMapNodeID, 1)
-                            
-                             
-                            # for memory leak problem
-                            slAssociatedNode.UnRegister(slicer.mrmlScene)
+#                             # turn on visibility for volume and label map
+#                             slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+#                             slSceneItemID = slSHNode.GetSceneItemID()
+# 
+#                             slAssociatedNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sAssociatedName)
+#                             slVolPlugin = slicer.qSlicerSubjectHierarchyVolumesPlugin()
+#                             slVolPlugin.setDisplayVisibility( slAssociatedNodeID, 1)
+# 
+#                             slLabelMapNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sLabelMapNodeName)
+#                             slLabelPlugin = slicer.qSlicerSubjectHierarchyLabelMapsPlugin()
+#                             slLabelPlugin.setDisplayVisibility( slLabelMapNodeID, 1)
+#
+#                             # for memory leak problem
+#                             slAssociatedNode.UnRegister(slicer.mrmlScene)
                             
                         except:
                              
                             sMsg = 'Trouble loading label map file:' + sAbsolutePath
                             self.oUtilsMsgs.DisplayWarning(sMsg)
                            
-                                
+
+                # add the label map node to the image property so that it gets
+                #    set when assigning nodes to the viewing widgets (red, green, yellow)
+                # the node may be None (no label map path was stored)
+                oImageNode.SetQuizLabelMapNode(slLabelMapNode)
+
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CaptureResponsesForQuestionSet(self):
+    def CaptureResponsesForQuestionSet(self, sCaller):
         
         # sMsg may be set in Question class function to capture the response
         sMsg = ''
+        sAllMsgs = ''
         
         # get list of questions from current question set
         
@@ -953,23 +946,43 @@ class Session:
             
         lsAllResponses = []
         lsResponsesForOptions = []
+        iNumMissingResponses = 0
+        
         for indQuestion in range(len(loQuestions)):
             oQuestion = loQuestions[indQuestion]
             bResponseCaptured = False
             
             bResponseCaptured, lsResponsesForOptions, sMsg = oQuestion.CaptureResponse()
 
-            if bResponseCaptured == False:
-                break   # exit from loop - question is missing response
-            else:
-                lsAllResponses.append(lsResponsesForOptions)
 
+            # append all captured lists - even if it was empty (partial responses)
+            lsAllResponses.append(lsResponsesForOptions)
+            
+            # string together all missing response messages
+            if sMsg != '':
+                if sAllMsgs == '':
+                    sAllMsgs = sMsg
+                else:
+                    sAllMsgs = sAllMsgs + '\n' + sMsg 
+            
+            # keep track if a question was missed
+            if bResponseCaptured == False:
+                iNumMissingResponses = iNumMissingResponses + 1
                 
-        return bResponseCaptured, lsAllResponses, sMsg
+        # define success level
+        if iNumMissingResponses == 0:
+            sCaptureSuccessLevel = 'All'
+        elif iNumMissingResponses == len(lsAllResponses):
+            sCaptureSuccessLevel = 'None'
+        else:
+            sCaptureSuccessLevel = 'Partial'
+            
+                
+        return sCaptureSuccessLevel, lsAllResponses, sAllMsgs
        
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CheckForLoadedLabelMap(self, sFilenameNoExt):
+    def CheckForLoadedLabelMapInScene(self, sFilenameNoExt):
         bFound = False
         slNode = None
         
@@ -988,19 +1001,173 @@ class Session:
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForSavedResponse(self):
+
+        ''' Check through all questions for the question set looking for a response.
+            If the Question Set has a "segmentrequired='y'" attribute, 
+            check for a saved label map path element. 
+
+            Assume: All options have a response if the question was answered so we just query the first.
+        '''
+        bLabelMapRequirementFilled = False
+        iNumAnsweredQuestions = 0
         
-        bResponseExists = False
+        xNodeQuestionSet = self.GetCurrentQuestionSetNode()
+        xNodePage = self.GetCurrentPageNode()
         
-        # get option node for the current question set , 1st question, 1st otpion
-        xOptionNode = self.GetNthOptionNode( 0, 0)
+        sLabelMapRequired = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'segmentrequired')
+
+        # search for labelmap path in the xml image nodes if segmentation was required
+        if sLabelMapRequired == 'y':
+            iNumImages = self.oIOXml.GetNumChildrenByName(xNodePage, 'Image')
+            for indImage in range(iNumImages):
+                xImageNode = self.oIOXml.GetNthChild(xNodePage, 'Image', indImage)
+                iNumLabelMapPaths = self.oIOXml.GetNumChildrenByName(xImageNode, 'LabelMapPath')
+                if iNumLabelMapPaths > 0:
+                    bLabelMapRequirementFilled = True
+                    break
+        else:
+            bLabelMapRequirementFilled = True   # user not required to create label map
         
-        iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode,'Response')
-#         print ('Number of responses: %i' %iNumResponses)
-        if iNumResponses >0:
-            bResponseExists = True
-        
-        return bResponseExists
+
+
+        iNumQuestions = self.oIOXml.GetNumChildrenByName(xNodeQuestionSet, 'Question')
+
+        for indQuestion in range(iNumQuestions):
+             
+            xOptionNode = self.GetNthOptionNode( indQuestion, 0)
+         
+            iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode,'Response')
+            if iNumResponses >0:
+                iNumAnsweredQuestions = iNumAnsweredQuestions + 1
+                 
+                
+        if iNumAnsweredQuestions == 0:
+            sQuestionswithResponses = 'None'
+        elif  iNumAnsweredQuestions < iNumQuestions:
+            sQuestionswithResponses = 'Partial'
+        elif iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == True:
+            sQuestionswithResponses = 'All'
+        else:
+            if iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == False:
+                sQuestionswithResponses = 'Partial'
+            
+        return sQuestionswithResponses
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetQuestionSetResponseCompletionLevel(self, indCI=None):
+        
+        ''' Check through all questions for the question set looking for a response.
+            If the Question Set has a "segmentrequired='y'" attribute, 
+            check for a saved label map path element. 
+
+            Assume: All options have a response if the question was answered so we just query the first.
+        '''
+        
+        if indCI == None:
+            indCI = self._iCurrentCompositeIndex
+        
+        bLabelMapRequirementFilled = False
+        iNumAnsweredQuestions = 0
+        
+        indPage = self._l2iPageQuestionCompositeIndices[indCI][0]
+        indQuestionSet = self._l2iPageQuestionCompositeIndices[indCI][1]
+        
+        xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', indPage)
+        xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', indQuestionSet)
+        
+        
+        sLabelMapRequired = self.oIOXml.GetValueOfNodeAttribute(xQuestionSetNode, 'segmentrequired')
+
+        # search for labelmap path in the xml image nodes if segmentation was required
+        if sLabelMapRequired == 'y':
+            iNumImages = self.oIOXml.GetNumChildrenByName(xPageNode, 'Image')
+            for indImage in range(iNumImages):
+                xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', indImage)
+                iNumLabelMapPaths = self.oIOXml.GetNumChildrenByName(xImageNode, 'LabelMapPath')
+                if iNumLabelMapPaths > 0:
+                    bLabelMapRequirementFilled = True
+                    break
+        else:
+            bLabelMapRequirementFilled = True   # user not required to create label map
+        
+
+
+        iNumQuestions = self.oIOXml.GetNumChildrenByName(xQuestionSetNode, 'Question')
+
+        for indQuestion in range(iNumQuestions):
+            # get first option for the question (all (or none) options have a response so just check the first)
+            xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
+            xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', 0)
+         
+            iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode,'Response')
+            if iNumResponses >0:
+                iNumAnsweredQuestions = iNumAnsweredQuestions + 1
+                 
+                
+        if iNumAnsweredQuestions == 0:
+            sQuestionswithResponses = 'None'
+        elif  iNumAnsweredQuestions < iNumQuestions:
+            sQuestionswithResponses = 'Partial'
+        elif iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == True:
+            sQuestionswithResponses = 'All'
+        else:
+            if iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == False:
+                sQuestionswithResponses = 'Partial'
+            
+        return sQuestionswithResponses
+        
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CheckXmlImageHistoryForMatch(self, sChildTagName, xImageNodeToMatch):  
+        ''' Start searching the xml file for a matching image on a previous page
+            (based on path and series instance UID (if applicable),
+            and extract the required child.
+        '''
+        xHistoricalChildElement = None
+        
+        xPathElement = self.oIOXml.GetNthChild(xImageNodeToMatch, 'Path', 0)
+        sPathToMatch = self.oIOXml.GetDataInNode(xPathElement)
+        
+        # check if there is a SeriesInstanceUID element (in the case of a dicom type of image)
+        sSeriesInstanceUIDToMatch = ''
+        xSeriesInstanceUIDElement = self.oIOXml.GetNthChild(xImageNodeToMatch, 'SeriesInstanceUID', 0)
+        if xSeriesInstanceUIDElement != None:
+            sSeriesInstanceUIDToMatch = self.oIOXml.GetDataInNode(xSeriesInstanceUIDElement)
+        
+        
+        # start searching pages in reverse order - to get most recent setting
+        # first match will end the search
+        bHistoricalElementFound = False
+        for iPageIndex in range(self.GetCurrentPageIndex()-1, -1, -1):
+            xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
+            
+            if bHistoricalElementFound == False:
+                #get all Image children
+                lxImageElementsToSearch = self.oIOXml.GetChildren(xPageNode, 'Image')
+                if len(lxImageElementsToSearch) > 0:
+    
+                    for xImageNode in lxImageElementsToSearch:
+    
+                        xPotentialPathElement = self.oIOXml.GetNthChild(xImageNode, 'Path', 0)
+                        sPotentialPath = self.oIOXml.GetDataInNode(xPotentialPathElement)
+                        
+                        # get series instance UID if it exists
+                        sPotentialSeriesInstanceUID = ''
+                        xPotentialSeriesInstanceUID = self.oIOXml.GetNthChild(xImageNode, 'SeriesInstanceUID', 0)
+                        if xPotentialSeriesInstanceUID != None:
+                            sPotentialSeriesInstanceUID = self.oIOXml.GetDataInNode(xPotentialSeriesInstanceUID)
+                        
+                        # test for match of both the Path and Series Instance UID
+                        if sPotentialPath == sPathToMatch and sPotentialSeriesInstanceUID == sSeriesInstanceUIDToMatch:
+                            print('found prior image instance: ', iPageIndex, ' ', sPotentialPath)
+                            # capture historical element of interest
+                            xHistoricalChildElement = self.oIOXml.GetNthChild(xImageNode, sChildTagName, 0)
+                            bHistoricalElementFound = True
+                        
+        
+        return xHistoricalChildElement
+
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplaySavedResponse(self):
 
@@ -1065,32 +1232,71 @@ class Session:
             
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def WriteResponses(self):
+    def WriteResponsesToXml(self):
         
+        bSuccess = True
+        sMsg = ''
         
-        indQSet = self.GetCurrentQuestionSetIndex()
- 
-        oQuestionSet = self._loQuestionSets[indQSet]
-
-
-        loQuestions = oQuestionSet.GetQuestionList()
-        
-        lsResponsesForOptions = []
-        for indQuestion in range(len(loQuestions)):
-            oQuestion = loQuestions[indQuestion]
-            bResponseCaptured = False
+        try:
             
-            bResponseCaptured, lsResponsesForOptions, sMsg = oQuestion.CaptureResponse()
+            # only allow for writing of responses under certain conditions
+            #    - allow if the question set is marked for multiple responses
+            #    - allow if the number of questions with responses recorded is none or partial (not all)
+            
+#             sQuestionsWithRecordedResponses = self.CheckForSavedResponse()
+            sQuestionsWithRecordedResponses = self.GetQuestionSetResponseCompletionLevel()
 
+            if ( self.GetMultipleResponsesInQsetAllowed() == True)  or \
+                ((self.GetMultipleResponsesInQsetAllowed() == False) and (sQuestionsWithRecordedResponses != 'All') ):
 
-            if bResponseCaptured == True:                
-                # add response element to proper option node
-                for indOption in range(len(lsResponsesForOptions)):
-                    xOptionNode = self.GetNthOptionNode( indQuestion, indOption)
+                # check to see if the responses for the question set match 
+                #    what was previously captured
+                #    -only write responses if they have changed
+                if not self._lsNewResponses == self._lsPreviousResponses:
+                    # Responses have been captured, if it's the first set of responses
+                    #    for the session, add in the login timestamp
+                    #    The timestamp is added here in case the user exited without responding to anything,
+                    #    allowing for the resume check to function properly
+                    if self._bStartOfSession == True:
+                        self.AddSessionLoginTimestamp()
                     
-                    if not xOptionNode == None:
-                        self.AddResponseElement(xOptionNode, lsResponsesForOptions[indOption])
+                    self.AddXmlElements()
+                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+                    self._bStartOfSession = False
+        
+        except:
+            bSuccess = False
+            sMsg = 'Error writing responses to Xml'
+            
+        return bSuccess, sMsg
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def AddXmlElements(self):
+        
+        # using the list of question set responses, isolate respones for each question
+        iNumQuestions = len(self._lsNewResponses)
 
+        # for each question in the question set responses        
+        for indQuestion in range(len(self._lsNewResponses)):
+            
+            # get the option responses for that question 
+            #    (eg. for a checkbox question, there may be 3 options 'yes' 'no' 'maybe')
+            lsQuestionResponses = self._lsNewResponses[indQuestion]
+
+
+            # if the list of responses was empty (only a partial number of questions were answered), don't write
+            if len(lsQuestionResponses) > 0:
+            
+                # for each option in the question
+                for indOption in range(len(lsQuestionResponses)):
+                    
+                    # capture the xml node for the option
+                    xOptionNode = self.GetNthOptionNode( indQuestion, indOption)
+                     
+                    if not xOptionNode == None:
+                        # write the response to the xml 
+                        self.AddResponseElement(xOptionNode, lsQuestionResponses[indOption])
+                
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddResponseElement(self, xOptionNode, sResponse):
@@ -1118,13 +1324,6 @@ class Session:
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def UpdateAtributesInElement(self, xElement, dictAttrib):
-        
-        # for each key, value in the dictionary, update the element attributes
-        for sKey, sValue in dictAttrib.items():
-            self.oIOXml.UpdateAttribute(xElement, sKey, sValue)
-        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddSessionLoginTimestamp(self):
         
 
@@ -1148,15 +1347,19 @@ class Session:
         # The following assumptions are made based on the quiz flow:
         #    - the quiz pages and question sets are presented sequentially 
         #        as laid out in the quiz file
-        #    - during one session login, if any questions in the question set were unanswered,
-        #        no responses for that question set were saved (so we only have
-        #        to inspect the first option of the first question in the question set)
+        #    - it is possible to exit the quiz with not all questions answered (a partial response)
+        #        we have to find the first question set that has all questions answered
+        #    - if a question was answered, all options within the question have a response tag
+        #        but, there may be more than one response tag
         #
         # By looping through the page/question set indices stored in the
-        #    composite index array in reverse, we look for the first question with an existing response
+        #    composite index array in reverse, we scan all questions for an existing response
         #    that matches the last login session time.
-        #    Add one to the current index to resume.
-        
+        #    If the number of questions with the correct response times = total number of questions,
+        #    add one to the current index to resume (all questions were answered).
+        #    Otherwise, only a partial number of questions were answered so stay on this index.
+
+
 
         # initialize
         dtLastLogin = self.GetLastLoginTimestamp() # value in datetime format
@@ -1178,33 +1381,51 @@ class Session:
             xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', indQuestionSet)
 #             print(indCI, 'Page:', indPage, 'QS:', indQuestionSet)
             
-            # get first Option node of the first Question
-            xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', 0)
-            xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', 0)
+
+
+            # get number of questions in the question set node
+            iNumQuestions = self.oIOXml.GetNumChildrenByName(xQuestionSetNode, 'Question')
+            iNumLastLoginResponses = 0
             
-            # get number of Response nodes in the option
-            iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode, 'Response')
+            # scan all questions
+            for indQuestion in range(iNumQuestions):
+
+                # get first Option node of each Question
+                xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
+                xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', 0)
+                
+                # get number of Response nodes in the option
+                iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode, 'Response')
             
                 
-            # check each response tag for the time
-            for indResp in range(iNumResponses):
-                xResponseNode = self.oIOXml.GetNthChild(xOptionNode, 'Response', indResp)
-                sTimestamp = self.oIOXml.GetValueOfNodeAttribute(xResponseNode, 'logintime')
-
-                dtLoginTimestamp = datetime.strptime(sTimestamp, self.sTimestampFormat)
-                if dtLoginTimestamp == dtLastLogin:
-                    # found a response for last login at this composite index
-                    bLastLoginResponseFound = True
-                    break   # exit checking each response
-            
+                # check each response tag for the time
+                for indResp in range(iNumResponses):
+                    xResponseNode = self.oIOXml.GetNthChild(xOptionNode, 'Response', indResp)
+                    sTimestamp = self.oIOXml.GetValueOfNodeAttribute(xResponseNode, 'logintime')
+    
+                    dtLoginTimestamp = datetime.strptime(sTimestamp, self.sTimestampFormat)
+                    if dtLoginTimestamp == dtLastLogin:
+                        # found a response for last login at this composite index
+                        bLastLoginResponseFound = True
+                        iNumLastLoginResponses = iNumLastLoginResponses + 1
+                        break   # exit checking each response
+                
+                
+                
             if bLastLoginResponseFound == True:
                 break   # exit the reversed loop through the composite indices
+
+
+
             
         if bLastLoginResponseFound == True:
             
+            sQSetCompletionState = self.GetQuestionSetResponseCompletionLevel(indCI)
+            
             # check if the last response found was entered on the last question set. 
             #    (i.e. was the quiz completed)
-            if indCI == (len(self._l2iPageQuestionCompositeIndices) - 1):
+            if indCI == (len(self._l2iPageQuestionCompositeIndices) - 1) and\
+                sQSetCompletionState == 'All':
                 
                 # if one question set allows a multiple response, user has option to redo response
                 if self.GetMultipleResponsesInQuiz() == True:
@@ -1222,8 +1443,13 @@ class Session:
                     # quiz does not allow for changing responses - exit
                     self.ExitOnQuizComplete("This quiz was already completed. Exiting")
             else:
-                iResumeCompIndex = indCI + 1
-#             print(iResumeCompIndex, '...', self._l2iPageQuestionCompositeIndices[iResumeCompIndex][0], '...',self._l2iPageQuestionCompositeIndices[iResumeCompIndex][1] )
+#                 if iNumLastLoginResponses == iNumQuestions:
+                if sQSetCompletionState == 'All':
+                    iResumeCompIndex = indCI + 1    # all questions were answered
+                else:
+                    iResumeCompIndex = indCI        # not all questions were answered - stay here
+                    
+#                 print(iResumeCompIndex, '...', self._l2iPageQuestionCompositeIndices[iResumeCompIndex][0], '...',self._l2iPageQuestionCompositeIndices[iResumeCompIndex][1] )
             
         # Display a message to user if resuming
         if not iResumeCompIndex == self._iCurrentCompositeIndex:
@@ -1243,7 +1469,6 @@ class Session:
         lsTimestamps = []
         dtLastTimestamp = ''    # timestamp of type 'datetime'
 
-#         dtCurrentLogin = datetime.strptime(self.sLoginTime, self.sTimestampFormat)
         
         xmlLoginNodes = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Login')
 
@@ -1299,7 +1524,7 @@ class QuizWidgets:
     def __init__(self, oFilesIOInput, parent=None):
         self.sClassName = type(self).__name__
         self.parent = parent
-        print('Constructor for QuizWidgets')
+#         print('Constructor for QuizWidgets')
 
         self._slicerLeftMainLayout = None
         self._slicerQuizLayout = None
@@ -1338,12 +1563,6 @@ class QuizWidgets:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddQuizTitle(self):
         
-#         qTitle = qt.QLabel('Baines Image Quizzer')
-#         qTitle.setFont(qt.QFont('Arial',14, qt.QFont.Bold))
-# 
-#         # add to left layout
-#         self.qLeftLayout.addWidget(qTitle)
-
         qTitleGroupBox = qt.QGroupBox()
         qTitleGroupBoxLayout = qt.QHBoxLayout()
         qTitleGroupBox.setLayout(qTitleGroupBoxLayout)
@@ -1370,11 +1589,6 @@ class QuizWidgets:
         
         
         return qTitleGroupBox
-        
-        
-#         pixmapTarget = pixmapTarget.scaled(size-5, size-5, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-
-
         
  
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1427,3 +1641,39 @@ class QuizWidgets:
 # #         self.quizFrame = qt.QFrame(self.quizCollapsibleButton)
 # #         self.quizFrame.setLayout(qt.QVBoxLayout())
 # #         self._slicerQuizLayout.addWidget(self.quizFrame)
+
+##################################################
+#    DON'T WANT TO LOSE THIS SEQUENCE - may come in handy
+#     #----------
+#     def SearchForChildWidget(self, oParent, sSearchType, sSearchName):
+# 
+# 
+#         if oParent != None:
+# #             print(oParent.className(), '.....', oParent.name)
+#             
+#             iNumChildren = len(oParent.children())
+# 
+#             # drill down through children recursively until the search object has been found
+#             for idx in range(iNumChildren):
+#                 oChildren = oParent.children()
+#                 oChild = oChildren[idx]
+# #                 print ('..............', oChild.className(),'...', oChild.name)
+#                 if oChild.className() == sSearchType:
+#                     if oChild.name == sSearchName:
+#                         return True, oChild
+#                         
+#                 self.iRecursiveCounter = self.iRecursiveCounter + 1
+#                 if self.iRecursiveCounter == 100:    # safeguard in recursive procedure
+#                     return False, None
+#                     
+#                 
+#                 if len(oChild.children()) > 0:
+#                     bFound, oFoundChild = self.SearchForChildWidget(oChild, sSearchType, sSearchName)
+#                     if bFound:
+#                         return True, oFoundChild
+#             
+#         else:
+#             return False, None
+#     
+            
+
