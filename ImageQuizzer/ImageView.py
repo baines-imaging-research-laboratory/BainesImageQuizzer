@@ -70,22 +70,6 @@ class ImageView:
         # Turn off the visibility in the Subject Hierarchy when starting a new ImageView object
         self.SetLabelMapVisibility(0)
         
-
-        # Assign images to view with proper orientation
-        if len(self._loImageViews) > 0:
-            
-            # assign nodes for current page to views
-            for i in range(len(self._loImageViews)):
-                
-#                 self.AssignNodesToView(self._loImageViews[i])
-                # color tables are not applied to label maps or segmentation volumes
-                if (self._loImageViews[i].sViewLayer == 'Foreground' or self._loImageViews[i].sViewLayer == 'Background'):
-                    # apply xml defined color table map if requested - else default to Grey
-                    if self._loImageViews[i].sColorTableName == '':
-                        self._loImageViews[i].sColorTableName = 'Grey'
-                    self._loImageViews[i].AssignColorTable()
-
-                    
                 
         # reset field of view to maximize background
         slicer.util.resetSliceViews()
@@ -144,6 +128,7 @@ class ImageView:
         ''' For each image node in the list, assign it to the destination widget (Red, Yellow, Green)
             If the background image has a corresponding label map created by the user in the quiz,
                 assign the widget's label map setting otherwise set it to None.
+            Foreground and Background images will have the color table applied (default Grey)
             If the image node has the viewing layer set to  'Label'  (ie it was loaded in directly from the XML),
                 it will only get assigned if there were no quiz label maps created and assigned to that widget.
                 (User created quiz label maps take priority). 
@@ -160,12 +145,17 @@ class ImageView:
                 slWindowCompositeNode.LinkedControlOn()
             else:
                 slWindowCompositeNode.LinkedControlOff()
+
+            #setup for color tables if defined in the xml attributes for foreground and background images
+            if oViewNode.sColorTableName == '':
+                oViewNode.sColorTableName = 'Grey' # default
             
             
             if oViewNode.sViewLayer == 'Background':
                 slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
                 slWidget.setSliceOrientation(oViewNode.sOrientation)
                 slWidget.fitSliceToBackground()
+                oViewNode.AssignColorTable()
                 if oViewNode.slQuizLabelMapNode != None:
                     slWindowCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
                 else:
@@ -175,6 +165,7 @@ class ImageView:
                 slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
                 slWidget.setSliceOrientation(oViewNode.sOrientation)
                 slWidgetController.setForegroundOpacity(0.5)
+                oViewNode.AssignColorTable()
     
             elif oViewNode.sViewLayer == 'Label':
                 if slWindowCompositeNode.GetLabelVolumeID() == 'None':
