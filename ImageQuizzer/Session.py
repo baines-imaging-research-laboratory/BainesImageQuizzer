@@ -576,6 +576,7 @@ class Session:
             oQuizzerEditorHelperBox.setMasterVolume(None)
 #             oQuizzerEditorHelperBox.setMergeVolume(None)
 
+        self.oImageView.RotateSliceToImage()
    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForLastQuestionSetForPage(self):

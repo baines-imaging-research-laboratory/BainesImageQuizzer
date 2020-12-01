@@ -175,7 +175,28 @@ class ImageView:
                 if not (oViewNode.sRoiVisibilityCode == 'Empty'):
                     self.SetSegmentRoiVisibility(oViewNode)
  
+          
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def RotateSliceToImage(self):
+        # for each viewing window,        
+        #    adjust slice node to align with the native space of the image data
+        #     from EditorLib/LabelEffect.py
+        lViewingWidgets = ['Red', 'Green', 'Yellow']
+        
+        for slView in lViewingWidgets:
+            
+            slWidget = slicer.app.layoutManager().sliceWidget(slView)
+            slWindowLogic = slWidget.sliceLogic()
+            
+            slSliceNode = slWidget.mrmlSliceNode()
+            slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
+            slSliceNode.RotateToVolumePlane(slVolumeNode)
+            # make sure the slice plane does not lie on an index boundary
+            # - (to avoid rounding issues)
+            slWindowLogic.SnapSliceOffsetToIJK()
+            slSliceNode.UpdateMatrices()
 
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSegmentRoiVisibility(self,oViewNode):
         # in order to set visibility, you have to traverse Slicer's subject hierarchy
