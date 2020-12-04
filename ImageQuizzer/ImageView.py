@@ -141,10 +141,10 @@ class ImageView:
             slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
             slWidgetController = slWidget.sliceController()
             
-            if self.bLinkViews == True:
-                slWindowCompositeNode.LinkedControlOn()
-            else:
-                slWindowCompositeNode.LinkedControlOff()
+#             if self.bLinkViews == True:
+#                 slWindowCompositeNode.LinkedControlOn()
+#             else:
+#                 slWindowCompositeNode.LinkedControlOff()
 
             #setup for color tables if defined in the xml attributes for foreground and background images
             if oViewNode.sColorTableName == '':
@@ -153,6 +153,13 @@ class ImageView:
             
             if oViewNode.sViewLayer == 'Background':
                 slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
+                if oViewNode.sOrientation == 'Acquisition':
+#                     slWidget.setSliceOrientation(oViewNode.sClosestAcquisitionPlane)
+#                     self.RotateSliceToImage(oViewNode.sDestination)
+                    slWidget.setSliceOrientation(self.GetAcquisitionVolumePlane(oViewNode.slNode))
+                    slWidget.mrmlSliceNode().RotateToVolumePlane(oViewNode.slNode)
+                else:
+                    slWidget.setSliceOrientation(oViewNode.sOrientation)
                 slWidget.setSliceOrientation(oViewNode.sOrientation)
                 slWidget.fitSliceToBackground()
                 oViewNode.AssignColorTable()
@@ -174,27 +181,83 @@ class ImageView:
             elif oViewNode.sViewLayer == 'Segmentation':
                 if not (oViewNode.sRoiVisibilityCode == 'Empty'):
                     self.SetSegmentRoiVisibility(oViewNode)
- 
+
+            # set link control on (if required) after assigning images to their widget
+            #     this preserves the rotation to the volume acquisition
+            if self.bLinkViews == True:
+                slWindowCompositeNode.LinkedControlOn()
+            else:
+                slWindowCompositeNode.LinkedControlOff() 
           
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def RotateSliceToImage(self):
-        # for each viewing window,        
-        #    adjust slice node to align with the native space of the image data
-        #     from EditorLib/LabelEffect.py
-        lViewingWidgets = ['Red', 'Green', 'Yellow']
+    def GetAcquisitionVolumePlane(self, slInputNode):
         
-        for slView in lViewingWidgets:
-            
-            slWidget = slicer.app.layoutManager().sliceWidget(slView)
-            slWindowLogic = slWidget.sliceLogic()
-            
-            slSliceNode = slWidget.mrmlSliceNode()
-            slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
-            slSliceNode.RotateToVolumePlane(slVolumeNode)
-            # make sure the slice plane does not lie on an index boundary
-            # - (to avoid rounding issues)
-            slWindowLogic.SnapSliceOffsetToIJK()
-            slSliceNode.UpdateMatrices()
+        # extract the scan order from the volume's IJKToRASMatrix in order to determine 
+        # the original plane of acquisition for the volume
+        m4ijkToRAS = vtk.vtkMatrix4x4() # initialize
+        
+        slInputNode.GetIJKToRASMatrix(m4ijkToRAS)
+        
+        sScanOrder = slInputNode.ComputeScanOrderFromIJKToRAS(m4ijkToRAS)
+        
+        # order abbreviations:
+        #    I: inferior
+        #    S: superior
+        #    A: anterior
+        #    P: posterior
+        #    R: right
+        #    L: left
+        
+        if sScanOrder == 'IS' or sScanOrder == 'SI':
+            return 'Axial'
+        elif sScanOrder == 'PA' or sScanOrder == 'AP':
+            return 'Coronal'
+        elif sScanOrder == 'LR' or sScanOrder == 'RL':
+            return 'Sagittal'
+        
+         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
+        
+        
+#     def RotateSliceToImage(self):
+#         # for each viewing window,        
+#         #    adjust slice node to align with the native space of the image data
+#         #     from EditorLib/LabelEffect.py
+#         lViewingWidgets = ['Red', 'Green', 'Yellow']
+#         
+#         for slView in lViewingWidgets:
+#             
+#             slWidget = slicer.app.layoutManager().sliceWidget(slView)
+#             slWindowLogic = slWidget.sliceLogic()
+#             
+#             slSliceNode = slWidget.mrmlSliceNode()
+#             slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
+#             slSliceNode.RotateToVolumePlane(slVolumeNode)
+#             # make sure the slice plane does not lie on an index boundary
+#             # - (to avoid rounding issues)
+#             slWindowLogic.SnapSliceOffsetToIJK()
+#             slSliceNode.UpdateMatrices()
+
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def RotateSliceToImage(self, sViewDestination):
+#         # for each viewing window,        
+#         #    adjust slice node to align with the native space of the image data
+#         #     from EditorLib/LabelEffect.py
+# #         lViewingWidgets = ['Red', 'Green', 'Yellow']
+#          
+# #         for slView in lViewingWidgets:
+#              
+#         slWidget = slicer.app.layoutManager().sliceWidget(sViewDestination)
+#         slWindowLogic = slWidget.sliceLogic()
+#          
+#         slSliceNode = slWidget.mrmlSliceNode()
+#         slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
+#         slSliceNode.RotateToVolumePlane(slVolumeNode)
+#         # make sure the slice plane does not lie on an index boundary
+#         # - (to avoid rounding issues)
+#         slWindowLogic.SnapSliceOffsetToIJK()
+#         slSliceNode.UpdateMatrices()
 
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
