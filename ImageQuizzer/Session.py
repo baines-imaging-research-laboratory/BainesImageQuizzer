@@ -574,9 +574,7 @@ class Session:
             # clear Master and Merge selector boxes
             oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
             oQuizzerEditorHelperBox.setMasterVolume(None)
-#             oQuizzerEditorHelperBox.setMergeVolume(None)
 
-   
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForLastQuestionSetForPage(self):
         bLastQuestionSet = False
