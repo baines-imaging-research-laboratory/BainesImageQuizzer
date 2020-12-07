@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Session>
+	<Page name="1010CorScan" descriptor="Brain_MR" linkviews="y">
+		<Image format="nrrd" type="Volume" descriptor="OffAxis" destination="Green">
+			<Layer>Background</Layer>
+			<Orientation>Acquisition</Orientation>
+			<Path>ImageVolumes\Brain_MR\1010_brain_mr_CorScan2_offAxis.nrrd</Path>
+		</Image>
+		<Image format="nrrd" type="Volume" descriptor="OffAxis" destination="Red">
+			<Layer>Background</Layer>
+			<Orientation>Acquisition</Orientation>
+			<Path>ImageVolumes\Brain_MR\1010_brain_mr_CorScan2_offAxis.nrrd</Path>
+		</Image>
+		<Image descriptor="OffAxis" destination="Yellow" format="nrrd" type="Volume">
+			<Layer>Background</Layer>
+			<Orientation>Acquisition</Orientation>
+			<Path>ImageVolumes\Brain_MR\1010_brain_mr_CorScan2_offAxis.nrrd</Path>
+		</Image>
+		<QuestionSet id="QS-PI-RADS" title="How to"  segmentrequired="y" allowmultipleresponse="n">
+			<Question type="InfoBox" descriptor="Segmentation Instructions">
+				<Option>Add segments</Option>
+			</Question>
+			<Question type="IntegerValue" descriptor="Overall PI-RADS" >
+				<Option>Enter overall PI-RADS score:</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page name="1010SagScan" descriptor="Brain_MR" linkviews="y">
+		<Image format="nii" type="Volume" descriptor="OffAxis" destination="Green">
+			<Layer>Background</Layer>
+			<Orientation>Acquisition</Orientation>
+			<Path>ImageVolumes\Brain_MR\1010_brain_mr_SagScan_offAxis.nii</Path>
+		</Image>
+		<Image format="nii" type="Volume" descriptor="OffAxis" destination="Red">
+			<Layer>Background</Layer>
+			<Orientation>Acquisition</Orientation>
+			<Path>ImageVolumes\Brain_MR\1010_brain_mr_SagScan_offAxis.nii</Path>
+		</Image>
+		<Image descriptor="OffAxis" destination="Yellow" format="nii" type="Volume">
+			<Layer>Background</Layer>
+			<Orientation>Acquisition</Orientation>
+			<Path>ImageVolumes\Brain_MR\1010_brain_mr_SagScan_offAxis.nii</Path>
+		</Image>
+		<QuestionSet id="QS-PI-RADS" title="How to"  segmentrequired="y" allowmultipleresponse="n">
+			<Question type="InfoBox" descriptor="Segmentation Instructions">
+				<Option>Add segments</Option>
+			</Question>
+			<Question type="IntegerValue" descriptor="Overall PI-RADS" >
+				<Option>Enter overall PI-RADS score:</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>

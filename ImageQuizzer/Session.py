@@ -574,9 +574,7 @@ class Session:
             # clear Master and Merge selector boxes
             oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
             oQuizzerEditorHelperBox.setMasterVolume(None)
-#             oQuizzerEditorHelperBox.setMergeVolume(None)
 
-   
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForLastQuestionSetForPage(self):
         bLastQuestionSet = False
@@ -848,9 +846,19 @@ class Session:
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadSavedLabelMaps(self):
-        # when loading label maps created in the quiz, associated it with the correct 
+        # when loading label maps created in the quiz, associate it with the correct 
         #    image node in the subject hierarchy
         # add it to the slquizlabelmap property of the image node 
+
+
+        # read attribute from xml file whether to use label maps previously created
+        #    by the user in the quiz for this page
+        xPageNode = self.GetCurrentPageNode()
+        if (self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'usepreviouslabelmap') == 'y'):
+            bUsePreviousLabelMaps = True
+        else:
+            bUsePreviousLabelMaps = False
+
 
 
         lLoadedLabelMaps = []
@@ -863,6 +871,14 @@ class Session:
                 lxLabelMapPathElements = self.oIOXml.GetChildren(oImageNode.GetXmlImageElement(), 'LabelMapPath')
                 slLabelMapNode = None # initialize
 
+                # if there were no label map paths stored with the image, and xml attribute has flag 
+                #    to use a previous label map, check previous pages for the first matching image
+                if len(lxLabelMapPathElements) == 0 and bUsePreviousLabelMaps == True:
+                    xHistoricalLabelMapElement = self.CheckXmlImageHistoryForMatch('LabelMapPath', oImageNode.GetXmlImageElement())
+                    # if match is found, adjust the list of label map path elements to load
+                    if xHistoricalLabelMapElement != None:
+                        lxLabelMapPathElements.append(xHistoricalLabelMapElement)
+                
                 # load labelmap file from stored path in XML                
                 for xLabelMap in lxLabelMapPathElements:
                     sStoredRelativePath = self.oIOXml.GetDataInNode(xLabelMap)
@@ -895,28 +911,14 @@ class Session:
     
                             # set associated volume to connect label map to master
                             sLabelMapNodeName = slLabelMapNode.GetName()
-                            sAssociatedName = sLabelMapNodeName.replace('-bainesquizlabel','')
+#                             sAssociatedName = sLabelMapNodeName.replace('-bainesquizlabel','')
+                            sAssociatedName = oImageNode.sNodeName
                             slAssociatedNodeCollection = slicer.mrmlScene.GetNodesByName(sAssociatedName)
                             slAssociatedNode = slAssociatedNodeCollection.GetItemAsObject(0)
                             
                             slLabelMapNode.SetNodeReferenceID('AssociatedNodeID',slAssociatedNode.GetID())
 
     
-#                             # turn on visibility for volume and label map
-#                             slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-#                             slSceneItemID = slSHNode.GetSceneItemID()
-# 
-#                             slAssociatedNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sAssociatedName)
-#                             slVolPlugin = slicer.qSlicerSubjectHierarchyVolumesPlugin()
-#                             slVolPlugin.setDisplayVisibility( slAssociatedNodeID, 1)
-# 
-#                             slLabelMapNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sLabelMapNodeName)
-#                             slLabelPlugin = slicer.qSlicerSubjectHierarchyLabelMapsPlugin()
-#                             slLabelPlugin.setDisplayVisibility( slLabelMapNodeID, 1)
-#
-#                             # for memory leak problem
-#                             slAssociatedNode.UnRegister(slicer.mrmlScene)
-                            
                         except:
                              
                             sMsg = 'Trouble loading label map file:' + sAbsolutePath
@@ -1159,7 +1161,7 @@ class Session:
                         
                         # test for match of both the Path and Series Instance UID
                         if sPotentialPath == sPathToMatch and sPotentialSeriesInstanceUID == sSeriesInstanceUIDToMatch:
-                            print('found prior image instance: ', iPageIndex, ' ', sPotentialPath)
+#                             print('found prior image instance: ', iPageIndex, ' ', sPotentialPath)
                             # capture historical element of interest
                             xHistoricalChildElement = self.oIOXml.GetNthChild(xImageNode, sChildTagName, 0)
                             bHistoricalElementFound = True
