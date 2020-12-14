@@ -141,10 +141,10 @@ class ImageView:
             slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
             slWidgetController = slWidget.sliceController()
             
-#             if self.bLinkViews == True:
-#                 slWindowCompositeNode.LinkedControlOn()
-#             else:
-#                 slWindowCompositeNode.LinkedControlOff()
+            if self.bLinkViews == True:
+                slWindowCompositeNode.LinkedControlOn()
+            else:
+                slWindowCompositeNode.LinkedControlOff()
 
             #setup for color tables if defined in the xml attributes for foreground and background images
             if oViewNode.sColorTableName == '':
@@ -182,12 +182,12 @@ class ImageView:
                 if not (oViewNode.sRoiVisibilityCode == 'Empty'):
                     self.SetSegmentRoiVisibility(oViewNode)
 
-            # set link control on (if required) after assigning images to their widget
-            #     this preserves the rotation to the volume acquisition
-            if self.bLinkViews == True:
-                slWindowCompositeNode.LinkedControlOn()
-            else:
-                slWindowCompositeNode.LinkedControlOff() 
+#             # set link control on (if required) after assigning images to their widget
+#             #     this preserves the rotation to the volume acquisition
+#             if self.bLinkViews == True:
+#                 slWindowCompositeNode.LinkedControlOn()
+#             else:
+#                 slWindowCompositeNode.LinkedControlOff() 
           
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetAcquisitionVolumePlane(self, slInputNode):
