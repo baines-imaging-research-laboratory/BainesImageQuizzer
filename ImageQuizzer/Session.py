@@ -17,6 +17,8 @@ from PythonQt import QtCore, QtGui
 from slicer.util import EXIT_SUCCESS
 from datetime import datetime
 
+import shutil
+
 
 ##########################################################################
 #
@@ -45,7 +47,7 @@ class Session:
         self._lsNewResponses = []
         
         
-        self._bStartOfSession = True
+#         self._bStartOfSession = True
         self._bQuizComplete = False
         self._bAllowMultipleResponseInQuiz = False
         self._bAllowMultipleResponseInQSet = False      # for question set
@@ -252,6 +254,8 @@ class Session:
 #             self.SetupWidgets(slicerMainLayout)
 #             self.slicerLeftMainLayout.addWidget(self.qButtonGrpBox)
 #             self.slicerLeftWidget.activateWindow()
+
+            self.AddSessionLoginTimestamp()
 
             self.SetupWidgets(slicerMainLayout)
             self.oQuizWidgets.qLeftWidget.activateWindow()
@@ -698,13 +702,17 @@ class Session:
                     # check if xml State element exists
                     xImage = oImageNode.GetXmlImageElement()
                     iNumStateElements = self.oIOXml.GetNumChildrenByName(xImage, 'State')
-                    if iNumStateElements >0:
-                        # update xml image/state element (first child)
-                        xStateElement = self.oIOXml.GetNthChild(xImage, 'State', 0)
-                        self.oIOXml.UpdateAtributesInElement(xStateElement, dictAttribState)
-                    # if no State element, add one
-                    else:
-                        self.AddImageStateElement(xImage, dictAttribState)
+#                     if iNumStateElements >0:
+#                         # update xml image/state element (first child)
+#                         xStateElement = self.oIOXml.GetNthChild(xImage, 'State', 0)
+#                         self.oIOXml.UpdateAtributesInElement(xStateElement, dictAttribState)
+#                     # if no State element, add one
+#                     else:
+#                         self.AddImageStateElement(xImage, dictAttribState)
+
+
+                    # add image state element (tagged with response time)
+                    self.AddImageStateElement(xImage, dictAttribState)
                         
             self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
     
@@ -726,12 +734,13 @@ class Session:
             dictImageState = {}
             if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
         
-                xStateElement = self.oIOXml.GetNthChild(oImageNode.GetXmlImageElement(), 'State', 0)
+#                 xStateElement = self.oIOXml.GetNthChild(oImageNode.GetXmlImageElement(), 'State', 0)
+                xStateElement = self.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'State')
                 
                 if xStateElement != None:
                     dictImageState = self.oIOXml.GetAttributes(xStateElement)
                 else:
-                    xHistoricalStateElement = self.CheckXmlImageHistoryForMatch('State', oImageNode.GetXmlImageElement())
+                    xHistoricalStateElement = self.CheckXmlImageHistoryForMatch(oImageNode.GetXmlImageElement(), 'State')
                     if xHistoricalStateElement != None:
                         dictImageState = self.oIOXml.GetAttributes(xHistoricalStateElement)
                     
@@ -785,20 +794,13 @@ class Session:
                         
 
                             # store the path name in the xml file and the label map in the directory
-                            
-                            # get page name to create directory
-                            xPageNode = self.GetCurrentPageNode()
-                            sPageIndex = str(self.GetCurrentPageIndex() + 1)
-                            sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'name')
-                            sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'descriptor')
-                             
-                            sDirName = os.path.join(self.oFilesIO.GetUserQuizResultsDir(), sPageIndex + '-' + sPageName + '-' + sPageDescriptor)
-                            sPageResultsDir = self.oFilesIO.CreatePageDir(sDirName)
+                            sDirName = self.GetFolderNameForLabelMaps()
+                            sPageLabelMapDir = self.oFilesIO.CreatePageDir(sDirName)
 
                             sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
                              
                             # save the label map file to the user's page directory
-                            sLabelMapPath = os.path.join(sPageResultsDir, sLabelMapFilenameWithExt)
+                            sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
 #                             print('LabelMap Path: ', sLabelMapPath)
 
                              
@@ -851,15 +853,6 @@ class Session:
         # add it to the slquizlabelmap property of the image node 
 
 
-        # read attribute from xml file whether to use label maps previously created
-        #    by the user in the quiz for this page
-        xPageNode = self.GetCurrentPageNode()
-        if (self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'usepreviouslabelmap') == 'y'):
-            bUsePreviousLabelMaps = True
-        else:
-            bUsePreviousLabelMaps = False
-
-
 
         lLoadedLabelMaps = []
 
@@ -867,21 +860,35 @@ class Session:
             
             # for each image view, get list of labelmap files stored (may be more than one)
             if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
+
+                # read attribute from xml file whether to use label maps previously created
+                #    by the user in the quiz for this image
+                if (self.oIOXml.GetValueOfNodeAttribute(oImageNode.GetXmlImageElement(), 'usepreviouslabelmap') == 'y'):
+                    bUsePreviousLabelMap = True
+                else:
+                    bUsePreviousLabelMap = False
+
         
-                lxLabelMapPathElements = self.oIOXml.GetChildren(oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                xLabelMapPathElement = self.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
                 slLabelMapNode = None # initialize
 
                 # if there were no label map paths stored with the image, and xml attribute has flag 
                 #    to use a previous label map, check previous pages for the first matching image
-                if len(lxLabelMapPathElements) == 0 and bUsePreviousLabelMaps == True:
-                    xHistoricalLabelMapElement = self.CheckXmlImageHistoryForMatch('LabelMapPath', oImageNode.GetXmlImageElement())
-                    # if match is found, adjust the list of label map path elements to load
-                    if xHistoricalLabelMapElement != None:
-                        lxLabelMapPathElements.append(xHistoricalLabelMapElement)
+                if xLabelMapPathElement == None and bUsePreviousLabelMap == True:
+                    xHistoricalLabelMapMatch = self.CheckXmlImageHistoryForMatch( oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                    
+                    if xHistoricalLabelMapMatch != None:
+                        # found a label map for this image in history
+                        # copy to disk and store it in xml for the current image
+                        self.CopyAndStoreLabelMapFromHistory(xHistoricalLabelMapMatch, oImageNode)
+
+                        #    assign newly stored xml element to xLabelMapPathElement
+                        xLabelMapPathElement = self.GetLatestChildElement( oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                    
                 
                 # load labelmap file from stored path in XML                
-                for xLabelMap in lxLabelMapPathElements:
-                    sStoredRelativePath = self.oIOXml.GetDataInNode(xLabelMap)
+                if xLabelMapPathElement != None:
+                    sStoredRelativePath = self.oIOXml.GetDataInNode(xLabelMapPathElement)
                     
                     # check if label map was already loaded (if between question sets, label map will persisit)
                     sLabelMapNodeName = self.oFilesIO.GetFilenameNoExtFromPath(sStoredRelativePath)
@@ -915,7 +922,6 @@ class Session:
                             sAssociatedName = oImageNode.sNodeName
                             slAssociatedNodeCollection = slicer.mrmlScene.GetNodesByName(sAssociatedName)
                             slAssociatedNode = slAssociatedNodeCollection.GetItemAsObject(0)
-                            
                             slLabelMapNode.SetNodeReferenceID('AssociatedNodeID',slAssociatedNode.GetID())
 
     
@@ -929,6 +935,7 @@ class Session:
                 #    set when assigning nodes to the viewing widgets (red, green, yellow)
                 # the node may be None (no label map path was stored)
                 oImageNode.SetQuizLabelMapNode(slLabelMapNode)
+
 
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -983,6 +990,33 @@ class Session:
         return sCaptureSuccessLevel, lsAllResponses, sAllMsgs
        
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CopyAndStoreLabelMapFromHistory(self, xHistoricalLabelMapElement, oImageNode):
+
+        # define source for copy
+        sStoredRelativePathForSource = self.oIOXml.GetDataInNode(xHistoricalLabelMapElement)
+        sAbsolutePathForSource = self.oFilesIO.GetAbsoluteUserPath(sStoredRelativePathForSource)
+
+        # create new folder for destination based on current page information
+        sCurrentLabelMapFolderName = self.GetFolderNameForLabelMaps()
+        sLabelMapDirForDest = self.oFilesIO.CreatePageDir(sCurrentLabelMapFolderName)
+        
+        # create new file name to which the historical label map is to be copied
+        sLabelMapFilenameWithExtForDest = oImageNode.sNodeName + '-bainesquizlabel' + '.nrrd'
+        
+        # define destination path
+        sLabelMapPathForDest = os.path.join(sLabelMapDirForDest, sLabelMapFilenameWithExtForDest)
+
+        # check if exists
+        if not os.path.exists(sLabelMapPathForDest):
+        
+            # copy source to dest
+            shutil.copy(sAbsolutePathForSource, sLabelMapPathForDest)
+
+        # update xml storing the path to the label map file with the image element
+        self.AddLabelMapPathElement(oImageNode.GetXmlImageElement(), self.oFilesIO.GetRelativeUserPath(sLabelMapPathForDest))
+
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForLoadedLabelMapInScene(self, sFilenameNoExt):
         bFound = False
@@ -1120,10 +1154,24 @@ class Session:
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CheckXmlImageHistoryForMatch(self, sChildTagName, xImageNodeToMatch):  
+    def GetFolderNameForLabelMaps(self):
+        
+        # get page info to create directory
+        xPageNode = self.GetCurrentPageNode()
+        sPageIndex = str(self.GetCurrentPageIndex() + 1)
+        sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'name')
+        sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'descriptor')
+         
+        sDirName = os.path.join(self.oFilesIO.GetUserQuizResultsDir(), sPageIndex + '_' + sPageName + '_' + sPageDescriptor)
+
+        return sDirName
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CheckXmlImageHistoryForMatch(self, xImageNodeToMatch, sChildTagName):  
         ''' Start searching the xml file for a matching image on a previous page
             (based on path and series instance UID (if applicable),
             and extract the required child.
+            The most recent element will be returned.
         '''
         xHistoricalChildElement = None
         
@@ -1162,8 +1210,9 @@ class Session:
                         # test for match of both the Path and Series Instance UID
                         if sPotentialPath == sPathToMatch and sPotentialSeriesInstanceUID == sSeriesInstanceUIDToMatch:
 #                             print('found prior image instance: ', iPageIndex, ' ', sPotentialPath)
-                            # capture historical element of interest
-                            xHistoricalChildElement = self.oIOXml.GetNthChild(xImageNode, sChildTagName, 0)
+                            
+                            # capture most recent (based on response time) historical element of interest
+                            xHistoricalChildElement = self.GetLatestChildElement(xImageNode, sChildTagName)
                             bHistoricalElementFound = True
                         
         
@@ -1198,26 +1247,29 @@ class Session:
             for xOptionNode in xAllOptions:
                 
                 
-                dtLatestTimestamp = ''    # timestamp of type 'datetime'
-                sLatestResponse = ''
-
-                xAllResponseNodes = self.oIOXml.GetChildren(xOptionNode, 'Response')
-                for xResponseNode in xAllResponseNodes:
-                    sResponseTime = self.oIOXml.GetValueOfNodeAttribute(xResponseNode, 'responsetime')
-                    dtResponseTimestamp = datetime.strptime(sResponseTime, self.sTimestampFormat)
-#                     print('*** TIME : %s' % sResponseTime)
-                     
-                    if dtLatestTimestamp == '':
-                        dtLatestTimestamp = dtResponseTimestamp
-                        sLatestResponse = self.oIOXml.GetDataInNode(xResponseNode)
-                    else:
-                        # compare with >= in order to capture 'last' response 
-                        #    in case there are responses with the same timestamp
-                        if dtResponseTimestamp >= dtLatestTimestamp:
-                            dtLatestTimestamp = dtResponseTimestamp
-                            sLatestResponse = self.oIOXml.GetDataInNode(xResponseNode)
+#                 dtLatestTimestamp = ''    # timestamp of type 'datetime'
+#                 sLatestResponse = ''
+# 
+#                 xAllResponseNodes = self.oIOXml.GetChildren(xOptionNode, 'Response')
+#                 for xResponseNode in xAllResponseNodes:
+#                     sResponseTime = self.oIOXml.GetValueOfNodeAttribute(xResponseNode, 'responsetime')
+#                     dtResponseTimestamp = datetime.strptime(sResponseTime, self.sTimestampFormat)
+# #                     print('*** TIME : %s' % sResponseTime)
+#                      
+#                     if dtLatestTimestamp == '':
+#                         dtLatestTimestamp = dtResponseTimestamp
+#                         sLatestResponse = self.oIOXml.GetDataInNode(xResponseNode)
+#                     else:
+#                         # compare with >= in order to capture 'last' response 
+#                         #    in case there are responses with the same timestamp
+#                         if dtResponseTimestamp >= dtLatestTimestamp:
+#                             dtLatestTimestamp = dtResponseTimestamp
+#                             sLatestResponse = self.oIOXml.GetDataInNode(xResponseNode)
                             
-                    
+                sLatestResponse = ''
+                xLatestResponseNode = self.GetLatestChildElement(xOptionNode, 'Response')
+                if xLatestResponseNode != None:
+                    sLatestResponse = self.oIOXml.GetDataInNode(xLatestResponseNode)
     
                 # search for 'latest' response completed - update the list
 #                 print('************Data...%s***END***' % sLatestResponse)
@@ -1232,7 +1284,6 @@ class Session:
 
         self._lsPreviousResponses = lsAllResponsesForQuestion
             
-
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def WriteResponsesToXml(self):
         
@@ -1259,12 +1310,12 @@ class Session:
                     #    for the session, add in the login timestamp
                     #    The timestamp is added here in case the user exited without responding to anything,
                     #    allowing for the resume check to function properly
-                    if self._bStartOfSession == True:
-                        self.AddSessionLoginTimestamp()
+#                     if self._bStartOfSession == True:
+#                         self.AddSessionLoginTimestamp()
                     
                     self.AddXmlElements()
                     self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-                    self._bStartOfSession = False
+#                     self._bStartOfSession = False
         
         except:
             bSuccess = False
@@ -1315,12 +1366,49 @@ class Session:
         
         sNullData = ''
 
+        # add login and response times to the existing state attributes
+        now = datetime.now()
+        sResponseTime = now.strftime(self.sTimestampFormat)
+        
+        dictTimeAttributes = { 'logintime': self.LoginTime(), 'responsetime': sResponseTime} 
+        dictAttrib.update(dictTimeAttributes)
+
         self.oIOXml.AddElement(xImageNode,'State', sNullData, dictAttrib)
         
-        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetLatestChildElement(self, xInputElement, sChildTagName):
+ 
+        # retrieve the latest child with the tag name given, from the xml input element
+                 
+        dtLatestTimestamp = ''    # timestamp of type 'datetime'
+        xLatestChildElement = None
+ 
+        xAllChildren = self.oIOXml.GetChildren(xInputElement, sChildTagName)
+        for xChild in xAllChildren:
+            sResponseTime = self.oIOXml.GetValueOfNodeAttribute(xChild, 'responsetime')
+            dtResponseTimestamp = datetime.strptime(sResponseTime, self.sTimestampFormat)
+#             print('*** TIME : %s' % sResponseTime)
+              
+            if dtLatestTimestamp == '':
+                dtLatestTimestamp = dtResponseTimestamp
+                xLatestChildElement = xChild
+            else:
+                # compare with >= in order to capture 'last' response 
+                #    in case there are responses with the same timestamp
+                if dtResponseTimestamp >= dtLatestTimestamp:
+                    dtLatestTimestamp = dtResponseTimestamp
+                    xLatestChildElement = xChild
+ 
+        return xLatestChildElement
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddLabelMapPathElement(self, xImageNode, sInputPath):
-        dictAttrib = {}
+        
+        # add login and response times to the label map path element
+        now = datetime.now()
+        sResponseTime = now.strftime(self.sTimestampFormat)
+        
+        dictAttrib = { 'logintime': self.LoginTime(), 'responsetime': sResponseTime} 
         
         self.oIOXml.AddElement(xImageNode,'LabelMapPath',sInputPath, dictAttrib)
         
@@ -1611,6 +1699,7 @@ class QuizWidgets:
     
         # add to left layout
         self.qLeftLayout.addWidget(self.qTabWidget)
+
 
 
 #########################################################
