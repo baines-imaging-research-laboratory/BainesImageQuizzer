@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Session>
+	<Page name="Patient1" descriptor="PlanningCT">
+		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Red">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+		</Image>
+		<Image descriptor="Moving Volume" destination="Red" format="nrrd" type="Volume">
+			<Layer>Foreground</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
+		</Image>
+		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Yellow">
+			<Layer>Background</Layer>
+			<Orientation>Sagittal</Orientation>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+		</Image>
+		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Green">
+			<Layer>Background</Layer>
+			<Orientation>Coronal</Orientation>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+		</Image>
+		<QuestionSet id="QS-Intro" title="Introduction to Quiz"  segmentrequired="n" allowmultipleresponse="n">
+			<Question type="InfoBox" descriptor="Introduction">
+				<Option>Lots of text describing something</Option>
+			</Question>
+		</QuestionSet>
+		<QuestionSet id="QS-Intro #2" title="How to - Instructions"  segmentrequired="n"  allowmultipleresponse="n">
+			<Question type="InfoBox" descriptor="Instructions">
+				<Option>This is how to run the quiz : .....</Option>
+			</Question>
+			<Question type="IntegerValue" descriptor="Food Order" max="5">
+				<Option>Enter number of pizzas:</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page name="Patient1" descriptor="Follow-up 1">
+		<Image format="nrrd" type="Volume" descriptor="Moving Volume" destination="Red">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
+		</Image>
+		<Image format="nrrd" type="Volume" descriptor="Moving Volume" destination="Yellow">
+			<Layer>Background</Layer>
+			<Orientation>Sagittal</Orientation>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
+		</Image>
+		<Image format="nrrd" type="Volume" descriptor="Moving Volume" destination="Green">
+			<Layer>Background</Layer>
+			<Orientation>Coronal</Orientation>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
+		</Image>
+		<QuestionSet id="QS-Observation" title="What is your Assessment"  segmentrequired="y"  allowmultipleresponse="y">
+			<Question type="Radio" descriptor="Assessment">
+				<Option>Injury</Option>
+				<Option>Recurrence</Option>
+			</Question>
+			<Question type="Radio" descriptor="Confidence">
+				<Option>Yes</Option>
+				<Option>Maybe</Option>
+				<Option>No</Option>
+			</Question>
+			<Question type="IntegerValue" descriptor="Tumour Observation" min="-5" max="5">
+				<Option>Enter number of tumours:</Option>
+			</Question>
+			<Question type="FloatValue" descriptor="Tumour Measurment" max="50">
+				<Option>Enter RECIST of largest tumour:</Option>
+			</Question>
+			<Question type="Text" descriptor="First Impressions">
+				<Option>Enter your thoughts : </Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page name="Patient3" descriptor="Mixed Displays - First Showing" linkviews="n">
+		<Image format="nrrd" type="Volume"  descriptor="Fixed Volume" destination="Red" usepreviouslabelmap="y">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+		</Image>
+		<Image format="nrrd" type="Volume" descriptor="Moving Volume" destination="Green" usepreviouslabelmap="y">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
+		</Image>
+		<Image format="mhd" type="Volume" descriptor="Case00Prostate" destination="Yellow">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Prostate\Case00.mhd</Path>
+		</Image>
+		<Image format="mhd" type="LabelMap" descriptor="Case00Prostate Segmentation" destination="Yellow">
+			<Layer>Label</Layer>
+			<Path>ImageVolumes\Prostate\Case00_segmentation.mhd</Path>
+		</Image>
+		<QuestionSet id="QS-Demo" title="Demo buttons" segmentrequired="y"  allowmultipleresponse="y">
+			<Question type="Checkbox"  descriptor="Demo Checks">
+				<Option>Check 1</Option>
+				<Option>Check 2</Option>
+			</Question>
+			<Question type="Radio" descriptor="Demo Radios">
+				<Option>Yes</Option>
+				<Option>Maybe</Option>
+				<Option>No</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page name="Patient3" descriptor="Mixed Displays Reassessment" linkviews="n">
+		<Image format="nrrd" type="Volume"  descriptor="Fixed Volume" destination="Red">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+		</Image>
+		<Image format="nrrd" type="Volume" descriptor="Moving Volume" destination="Green">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
+		</Image>
+		<Image format="mhd" type="Volume" descriptor="Case00Prostate" destination="Yellow" usepreviouslabelmap="y">
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Prostate\Case00.mhd</Path>
+		</Image>
+		<Image format="mhd" type="LabelMap" descriptor="Case00Prostate Segmentation" destination="Yellow">
+			<Layer>Label</Layer>
+			<Path>ImageVolumes\Prostate\Case00_segmentation.mhd</Path>
+		</Image>
+		<QuestionSet id="QS-Demo" title="Demo buttons" segmentrequired="y"  allowmultipleresponse="y">
+			<Question type="Checkbox"  descriptor="Demo Checks">
+				<Option>Check 1</Option>
+				<Option>Check 2</Option>
+			</Question>
+			<Question type="Radio" descriptor="Demo Radios">
+				<Option>Yes</Option>
+				<Option>Maybe</Option>
+				<Option>No</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>
