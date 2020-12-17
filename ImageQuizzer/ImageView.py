@@ -182,12 +182,6 @@ class ImageView:
                 if not (oViewNode.sRoiVisibilityCode == 'Empty'):
                     self.SetSegmentRoiVisibility(oViewNode)
 
-#             # set link control on (if required) after assigning images to their widget
-#             #     this preserves the rotation to the volume acquisition
-#             if self.bLinkViews == True:
-#                 slWindowCompositeNode.LinkedControlOn()
-#             else:
-#                 slWindowCompositeNode.LinkedControlOff() 
           
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetAcquisitionVolumePlane(self, slInputNode):
@@ -414,7 +408,7 @@ class ViewNodeBase:
         self.sImageType = ''
         self.sImagePath = ''
         self.sNodeName = ''
-        self._xImage = None
+        self._xImageElement = None
         self._sPageID = ''
         self.sColorTableName = ''
         
@@ -423,11 +417,11 @@ class ViewNodeBase:
 
     #----------
     def SetXmlImageElement(self, xInput):
-        self._xImage = xInput
+        self._xImageElement = xInput
         
     #----------
     def GetXmlImageElement(self):
-        return self._xImage
+        return self._xImageElement
     
     #----------
     def SetPageID(self, sInput):
