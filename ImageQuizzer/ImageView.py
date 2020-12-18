@@ -153,14 +153,14 @@ class ImageView:
             
             if oViewNode.sViewLayer == 'Background':
                 slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
-                if oViewNode.sOrientation == 'Acquisition':
-#                     slWidget.setSliceOrientation(oViewNode.sClosestAcquisitionPlane)
-#                     self.RotateSliceToImage(oViewNode.sDestination)
-                    slWidget.setSliceOrientation(self.GetAcquisitionVolumePlane(oViewNode.slNode))
-                    slWidget.mrmlSliceNode().RotateToVolumePlane(oViewNode.slNode)
-                else:
-                    slWidget.setSliceOrientation(oViewNode.sOrientation)
+
+                # after defining the inital desired orientation, 
+                #    if the rotatetoacquisition attribute was set,
+                #    rotate the image to the volume plane
                 slWidget.setSliceOrientation(oViewNode.sOrientation)
+                if oViewNode.bRotateToAcquisition == True:
+                    slWidget.mrmlSliceNode().RotateToVolumePlane(oViewNode.slNode)
+
                 slWidget.fitSliceToBackground()
                 oViewNode.AssignColorTable()
                 if oViewNode.slQuizLabelMapNode != None:
@@ -183,33 +183,33 @@ class ImageView:
                     self.SetSegmentRoiVisibility(oViewNode)
 
           
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetAcquisitionVolumePlane(self, slInputNode):
-        
-        # extract the scan order from the volume's IJKToRASMatrix in order to determine 
-        # the original plane of acquisition for the volume
-        m4ijkToRAS = vtk.vtkMatrix4x4() # initialize
-        
-        slInputNode.GetIJKToRASMatrix(m4ijkToRAS)
-        
-        sScanOrder = slInputNode.ComputeScanOrderFromIJKToRAS(m4ijkToRAS)
-        
-        # order abbreviations:
-        #    I: inferior
-        #    S: superior
-        #    A: anterior
-        #    P: posterior
-        #    R: right
-        #    L: left
-        
-        if sScanOrder == 'IS' or sScanOrder == 'SI':
-            return 'Axial'
-        elif sScanOrder == 'PA' or sScanOrder == 'AP':
-            return 'Coronal'
-        elif sScanOrder == 'LR' or sScanOrder == 'RL':
-            return 'Sagittal'
-        
-         
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def GetAcquisitionVolumePlane(self, slInputNode):
+#         
+#         # extract the scan order from the volume's IJKToRASMatrix in order to determine 
+#         # the original plane of acquisition for the volume
+#         m4ijkToRAS = vtk.vtkMatrix4x4() # initialize
+#         
+#         slInputNode.GetIJKToRASMatrix(m4ijkToRAS)
+#         
+#         sScanOrder = slInputNode.ComputeScanOrderFromIJKToRAS(m4ijkToRAS)
+#         
+#         # order abbreviations:
+#         #    I: inferior
+#         #    S: superior
+#         #    A: anterior
+#         #    P: posterior
+#         #    R: right
+#         #    L: left
+#         
+#         if sScanOrder == 'IS' or sScanOrder == 'SI':
+#             return 'Axial'
+#         elif sScanOrder == 'PA' or sScanOrder == 'AP':
+#             return 'Coronal'
+#         elif sScanOrder == 'LR' or sScanOrder == 'RL':
+#             return 'Sagittal'
+#         
+#          
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
         
@@ -411,6 +411,7 @@ class ViewNodeBase:
         self._xImageElement = None
         self._sPageID = ''
         self.sColorTableName = ''
+        self.bRotateToAcquisition = False
         
         self.slQuizLabelMapNode = None
         
@@ -447,6 +448,12 @@ class ViewNodeBase:
         self.sImageType = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'type')
         self.sDestination = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'destination')
         self.sColorTableName = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'colortable')
+
+        sRotateToAcquisition = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'rotatetoacquisition')
+        if sRotateToAcquisition == 'y':
+            self.bRotateToAcquisition = True
+        else:
+            self.bRotateToAcquisition = False
     
         self.sNodeName =  self.GetPageID() + '_' + self.sNodeDescriptor
 
