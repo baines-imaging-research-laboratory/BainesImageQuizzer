@@ -36,17 +36,17 @@
 		</QuestionSet>
 	</Page>
 	<Page name="Patient1" descriptor="Follow-up 1">
-		<Image format="nrrd" type="Volume" descriptor="Moving Volume" destination="Red">
+		<Image format="nrrd" type="Volume" descriptor="Moving Volume" destination="Red" rotatetoacquisition="y">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="Moving Volume" destination="Yellow">
+		<Image format="nrrd" type="Volume" descriptor="Moving Volume" destination="Yellow" rotatetoacquisition="y">
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="Moving Volume" destination="Green">
+		<Image format="nrrd" type="Volume" descriptor="Moving Volume" destination="Green" rotatetoacquisition="y">
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
@@ -72,18 +72,18 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page name="Patient2" descriptor="Mixed Displays" linkviews="n" usepreviouslabelmap="y">
-		<Image format="nrrd" type="Volume"  descriptor="Brain CT" destination="Red">
+	<Page name="Patient2" descriptor="Mixed Displays" linkviews="n">
+		<Image format="nrrd" type="Volume"  descriptor="Brain CT" destination="Red" usepreviouslabelmap="y" rotatetoacquisition="y">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="Brain MR" destination="Green">
+		<Image format="nrrd" type="Volume" descriptor="Brain MR" destination="Green" usepreviouslabelmap="y" rotatetoacquisition="y">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<Image format="mhd" type="Volume" descriptor="Case00Prostate" destination="Yellow">
+		<Image format="mhd" type="Volume" descriptor="Case00Prostate" destination="Yellow" usepreviouslabelmap="y" rotatetoacquisition="y">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Prostate\Case00.mhd</Path>
