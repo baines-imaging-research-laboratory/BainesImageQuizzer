@@ -160,8 +160,7 @@ class ImageView:
                 if oViewNode.bRotateToAcquisition == True:
                     slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
                     slWidget.mrmlSliceNode().RotateToVolumePlane(slVolumeNode)
-#                     slWidget.mrmlSliceNode().RotateToVolumePlane(oViewNode.slNode)
-#                     self.RotateSliceToImage(oViewNode.sDestination)
+                    self.RotateSliceToImage(oViewNode.sDestination)
 
                 slWidget.fitSliceToBackground()
                 oViewNode.AssignColorTable()
@@ -179,10 +178,7 @@ class ImageView:
                 slWidgetController.setForegroundOpacity(0.5)
                 oViewNode.AssignColorTable()
                 if oViewNode.bRotateToAcquisition == True:
-                    slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
-                    slWidget.mrmlSliceNode().RotateToVolumePlane(slVolumeNode)
-#                     slWidget.mrmlSliceNode().RotateToVolumePlane(oViewNode.slNode)
-#                     self.RotateSliceToImage(oViewNode.sDestination)
+                    self.RotateSliceToImage(oViewNode.sDestination)
 
     
             elif oViewNode.sViewLayer == 'Label':
@@ -203,64 +199,11 @@ class ImageView:
                 slWindowCompositeNode.LinkedControlOff()
 
           
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def GetAcquisitionVolumePlane(self, slInputNode):
-#         
-#         # extract the scan order from the volume's IJKToRASMatrix in order to determine 
-#         # the original plane of acquisition for the volume
-#         m4ijkToRAS = vtk.vtkMatrix4x4() # initialize
-#         
-#         slInputNode.GetIJKToRASMatrix(m4ijkToRAS)
-#         
-#         sScanOrder = slInputNode.ComputeScanOrderFromIJKToRAS(m4ijkToRAS)
-#         
-#         # order abbreviations:
-#         #    I: inferior
-#         #    S: superior
-#         #    A: anterior
-#         #    P: posterior
-#         #    R: right
-#         #    L: left
-#         
-#         if sScanOrder == 'IS' or sScanOrder == 'SI':
-#             return 'Axial'
-#         elif sScanOrder == 'PA' or sScanOrder == 'AP':
-#             return 'Coronal'
-#         elif sScanOrder == 'LR' or sScanOrder == 'RL':
-#             return 'Sagittal'
-#         
-#          
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        
-        
-        
-#     def RotateSliceToImage(self):
-#         # for each viewing window,        
-#         #    adjust slice node to align with the native space of the image data
-#         #     from EditorLib/LabelEffect.py
-#         lViewingWidgets = ['Red', 'Green', 'Yellow']
-#         
-#         for slView in lViewingWidgets:
-#             
-#             slWidget = slicer.app.layoutManager().sliceWidget(slView)
-#             slWindowLogic = slWidget.sliceLogic()
-#             
-#             slSliceNode = slWidget.mrmlSliceNode()
-#             slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
-#             slSliceNode.RotateToVolumePlane(slVolumeNode)
-#             # make sure the slice plane does not lie on an index boundary
-#             # - (to avoid rounding issues)
-#             slWindowLogic.SnapSliceOffsetToIJK()
-#             slSliceNode.UpdateMatrices()
-
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def RotateSliceToImage(self, sViewDestination):
         # for each viewing window,        
         #    adjust slice node to align with the native space of the image data
         #     from EditorLib/LabelEffect.py
-#         lViewingWidgets = ['Red', 'Green', 'Yellow']
-          
-#         for slView in lViewingWidgets:
               
         slWidget = slicer.app.layoutManager().sliceWidget(sViewDestination)
         slWindowLogic = slWidget.sliceLogic()
@@ -934,6 +877,35 @@ class DicomVolumeDetail(ViewNodeBase):
         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def GetAcquisitionVolumePlane(self, slInputNode):
+#         
+#         # extract the scan order from the volume's IJKToRASMatrix in order to determine 
+#         # the original plane of acquisition for the volume
+#         m4ijkToRAS = vtk.vtkMatrix4x4() # initialize
+#         
+#         slInputNode.GetIJKToRASMatrix(m4ijkToRAS)
+#         
+#         sScanOrder = slInputNode.ComputeScanOrderFromIJKToRAS(m4ijkToRAS)
+#         
+#         # order abbreviations:
+#         #    I: inferior
+#         #    S: superior
+#         #    A: anterior
+#         #    P: posterior
+#         #    R: right
+#         #    L: left
+#         
+#         if sScanOrder == 'IS' or sScanOrder == 'SI':
+#             return 'Axial'
+#         elif sScanOrder == 'PA' or sScanOrder == 'AP':
+#             return 'Coronal'
+#         elif sScanOrder == 'LR' or sScanOrder == 'RL':
+#             return 'Sagittal'
+#         
+#          
+
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #     def CheckForLabelMapNodeExists(self, sROIName):
 #         
 #         bNodeExists = False
