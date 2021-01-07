@@ -129,22 +129,21 @@ class ImageView:
             If the background image has a corresponding label map created by the user in the quiz,
                 assign the widget's label map setting otherwise set it to None.
             Foreground and Background images will have the color table applied (default Grey)
-            If the image node has the viewing layer set to  'Label'  (ie it was loaded in directly from the XML),
+            If the image node in the quiz xml has the viewing layer set to  'Label'  (ie it was loaded in directly from the XML),
                 it will only get assigned if there were no quiz label maps created and assigned to that widget.
-                (User created quiz label maps take priority). 
+                (User created label maps segmented as part of the quiz take priority). 
         '''
  
         for oViewNode in self._loImageViews:
 
+            # get slicer control objects for the widget
             slWidget = slicer.app.layoutManager().sliceWidget(oViewNode.sDestination)
             slWindowLogic = slWidget.sliceLogic()
             slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
             slWidgetController = slWidget.sliceController()
             
-#             if self.bLinkViews == True:
-#                 slWindowCompositeNode.LinkedControlOn()
-#             else:
-#                 slWindowCompositeNode.LinkedControlOff()
+            # turn off link control until all images have been assigned to their destinations
+            slWindowCompositeNode.LinkedControlOff()
 
             #setup for color tables if defined in the xml attributes for foreground and background images
             if oViewNode.sColorTableName == '':
@@ -159,37 +158,49 @@ class ImageView:
                 #    rotate the image to the volume plane
                 slWidget.setSliceOrientation(oViewNode.sOrientation)
                 if oViewNode.bRotateToAcquisition == True:
-                    slWidget.mrmlSliceNode().RotateToVolumePlane(oViewNode.slNode)
+                    slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
+                    slWidget.mrmlSliceNode().RotateToVolumePlane(slVolumeNode)
+#                     slWidget.mrmlSliceNode().RotateToVolumePlane(oViewNode.slNode)
 #                     self.RotateSliceToImage(oViewNode.sDestination)
 
                 slWidget.fitSliceToBackground()
                 oViewNode.AssignColorTable()
 
-                if self.bLinkViews == True:
-                    slWindowCompositeNode.LinkedControlOn()
-                else:
-                    slWindowCompositeNode.LinkedControlOff()
-                
-                
-                
+                # turn on label map volume if a label map was loaded for the background image                
                 if oViewNode.slQuizLabelMapNode != None:
                     slWindowCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
                 else:
                     slWindowCompositeNode.SetLabelVolumeID('None')
+
     
             elif oViewNode.sViewLayer == 'Foreground':
                 slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
                 slWidget.setSliceOrientation(oViewNode.sOrientation)
                 slWidgetController.setForegroundOpacity(0.5)
                 oViewNode.AssignColorTable()
+                if oViewNode.bRotateToAcquisition == True:
+                    slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
+                    slWidget.mrmlSliceNode().RotateToVolumePlane(slVolumeNode)
+#                     slWidget.mrmlSliceNode().RotateToVolumePlane(oViewNode.slNode)
+#                     self.RotateSliceToImage(oViewNode.sDestination)
+
     
             elif oViewNode.sViewLayer == 'Label':
                 if slWindowCompositeNode.GetLabelVolumeID() == 'None':
                     slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
+                print('after set Label Volume ID',slWidget.sliceOrientation)
     
+
             elif oViewNode.sViewLayer == 'Segmentation':
                 if not (oViewNode.sRoiVisibilityCode == 'Empty'):
                     self.SetSegmentRoiVisibility(oViewNode)
+                print('after set Segmentation Volume ID',slWidget.sliceOrientation)
+
+            # after all images and their label maps have been assigned, adjust the link control
+            if self.bLinkViews == True:
+                slWindowCompositeNode.LinkedControlOn()
+            else:
+                slWindowCompositeNode.LinkedControlOff()
 
           
 #     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

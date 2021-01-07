@@ -105,7 +105,7 @@
 		</QuestionSet>
 	</Page>
 	<Page name="Patient3" descriptor="Mixed Displays Reassessment" linkviews="n">
-		<Image format="nrrd" type="Volume"  descriptor="Fixed Volume" destination="Red" rotatetoacquisition="y">
+		<Image format="nrrd" type="Volume"  descriptor="Fixed Volume" destination="Red" usepreviouslabelmap="y" rotatetoacquisition="y">
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
