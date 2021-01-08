@@ -563,10 +563,18 @@ class Session:
         # set the layout to default view four-up 
         slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
         
+        # add page name/descriptor to the progress bar
+        xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
+        sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'descriptor')
+        sPageName = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'name')
+        iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l2iPageQuestionCompositeIndices) * 100)
+        self.progress.setFormat(sPageName + ' ' + sPageDescriptor + '    ' + str(iProgressPercent) + '%')
                     
+        # set up the images on the page
         self.oImageView = ImageView()
         self.oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self.oFilesIO.GetDataParentDir())
 
+        # if load label maps if a labelmap path has been stored in the xml for the images on this page
         self.LoadSavedLabelMaps()
 
         # assign each image node and its label map (if applicable) to the viewing widget
@@ -1615,26 +1623,9 @@ class QuizWidgets:
         self.sClassName = type(self).__name__
         self.parent = parent
 #         print('Constructor for QuizWidgets')
-
-        self._slicerLeftMainLayout = None
-        self._slicerQuizLayout = None
-        self._slicerLeftWidget = None
-        self._slicerTabWidget = None
         
         self.oFilesIO = oFilesIOInput
         
-    def GetSlicerLeftMainLayout(self):
-        return self._slicerLeftMainLayout
-
-    def GetSlicerQuizLayout(self):
-        return self._slicerQuizLayout
-    
-    def GetSlicerLeftWidget(self):
-        return self._slicerLeftWidget
-    
-    def GetSlicerTabWidget(self):
-        return self._slicerTabWidget
-
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -1707,6 +1698,22 @@ class QuizWidgets:
 #    If we go back to no tabs, some of these details must change
 #     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 
+#         self._slicerLeftMainLayout = None
+#         self._slicerQuizLayout = None
+#         self._slicerLeftWidget = None
+#         self._slicerTabWidget = None
+#     def GetSlicerLeftMainLayout(self):
+#         return self._slicerLeftMainLayout
+# 
+#     def GetSlicerQuizLayout(self):
+#         return self._slicerQuizLayout
+#     
+#     def GetSlicerLeftWidget(self):
+#         return self._slicerLeftWidget
+#     
+#     def GetSlicerTabWidget(self):
+#         return self._slicerTabWidget
+
 # #     def CreateQuizzerLayout(self):
 # # 
 # #         print ("-------ImageQuizzer Widget SetUp--------")

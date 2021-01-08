@@ -129,22 +129,21 @@ class ImageView:
             If the background image has a corresponding label map created by the user in the quiz,
                 assign the widget's label map setting otherwise set it to None.
             Foreground and Background images will have the color table applied (default Grey)
-            If the image node has the viewing layer set to  'Label'  (ie it was loaded in directly from the XML),
+            If the image node in the quiz xml has the viewing layer set to  'Label'  (ie it was loaded in directly from the XML),
                 it will only get assigned if there were no quiz label maps created and assigned to that widget.
-                (User created quiz label maps take priority). 
+                (User created label maps segmented as part of the quiz take priority). 
         '''
  
         for oViewNode in self._loImageViews:
 
+            # get slicer control objects for the widget
             slWidget = slicer.app.layoutManager().sliceWidget(oViewNode.sDestination)
             slWindowLogic = slWidget.sliceLogic()
             slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
             slWidgetController = slWidget.sliceController()
             
-            if self.bLinkViews == True:
-                slWindowCompositeNode.LinkedControlOn()
-            else:
-                slWindowCompositeNode.LinkedControlOff()
+            # turn off link control until all images have been assigned to their destinations
+            slWindowCompositeNode.LinkedControlOff()
 
             #setup for color tables if defined in the xml attributes for foreground and background images
             if oViewNode.sColorTableName == '':
@@ -153,105 +152,69 @@ class ImageView:
             
             if oViewNode.sViewLayer == 'Background':
                 slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
-                if oViewNode.sOrientation == 'Acquisition':
-#                     slWidget.setSliceOrientation(oViewNode.sClosestAcquisitionPlane)
-#                     self.RotateSliceToImage(oViewNode.sDestination)
-                    slWidget.setSliceOrientation(self.GetAcquisitionVolumePlane(oViewNode.slNode))
-                    slWidget.mrmlSliceNode().RotateToVolumePlane(oViewNode.slNode)
-                else:
-                    slWidget.setSliceOrientation(oViewNode.sOrientation)
+
+                # after defining the inital desired orientation, 
+                #    if the rotatetoacquisition attribute was set,
+                #    rotate the image to the volume plane
                 slWidget.setSliceOrientation(oViewNode.sOrientation)
+                if oViewNode.bRotateToAcquisition == True:
+                    slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
+                    slWidget.mrmlSliceNode().RotateToVolumePlane(slVolumeNode)
+                    self.RotateSliceToImage(oViewNode.sDestination)
+
                 slWidget.fitSliceToBackground()
                 oViewNode.AssignColorTable()
+
+                # turn on label map volume if a label map was loaded for the background image                
                 if oViewNode.slQuizLabelMapNode != None:
                     slWindowCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
                 else:
                     slWindowCompositeNode.SetLabelVolumeID('None')
+
     
             elif oViewNode.sViewLayer == 'Foreground':
                 slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
                 slWidget.setSliceOrientation(oViewNode.sOrientation)
                 slWidgetController.setForegroundOpacity(0.5)
                 oViewNode.AssignColorTable()
+                if oViewNode.bRotateToAcquisition == True:
+                    self.RotateSliceToImage(oViewNode.sDestination)
+
     
             elif oViewNode.sViewLayer == 'Label':
                 if slWindowCompositeNode.GetLabelVolumeID() == 'None':
                     slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
+                print('after set Label Volume ID',slWidget.sliceOrientation)
     
+
             elif oViewNode.sViewLayer == 'Segmentation':
                 if not (oViewNode.sRoiVisibilityCode == 'Empty'):
                     self.SetSegmentRoiVisibility(oViewNode)
+                print('after set Segmentation Volume ID',slWidget.sliceOrientation)
+
+            # after all images and their label maps have been assigned, adjust the link control
+            if self.bLinkViews == True:
+                slWindowCompositeNode.LinkedControlOn()
+            else:
+                slWindowCompositeNode.LinkedControlOff()
 
           
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetAcquisitionVolumePlane(self, slInputNode):
-        
-        # extract the scan order from the volume's IJKToRASMatrix in order to determine 
-        # the original plane of acquisition for the volume
-        m4ijkToRAS = vtk.vtkMatrix4x4() # initialize
-        
-        slInputNode.GetIJKToRASMatrix(m4ijkToRAS)
-        
-        sScanOrder = slInputNode.ComputeScanOrderFromIJKToRAS(m4ijkToRAS)
-        
-        # order abbreviations:
-        #    I: inferior
-        #    S: superior
-        #    A: anterior
-        #    P: posterior
-        #    R: right
-        #    L: left
-        
-        if sScanOrder == 'IS' or sScanOrder == 'SI':
-            return 'Axial'
-        elif sScanOrder == 'PA' or sScanOrder == 'AP':
-            return 'Coronal'
-        elif sScanOrder == 'LR' or sScanOrder == 'RL':
-            return 'Sagittal'
-        
-         
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        
-        
-        
-#     def RotateSliceToImage(self):
-#         # for each viewing window,        
-#         #    adjust slice node to align with the native space of the image data
-#         #     from EditorLib/LabelEffect.py
-#         lViewingWidgets = ['Red', 'Green', 'Yellow']
-#         
-#         for slView in lViewingWidgets:
-#             
-#             slWidget = slicer.app.layoutManager().sliceWidget(slView)
-#             slWindowLogic = slWidget.sliceLogic()
-#             
-#             slSliceNode = slWidget.mrmlSliceNode()
-#             slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
-#             slSliceNode.RotateToVolumePlane(slVolumeNode)
-#             # make sure the slice plane does not lie on an index boundary
-#             # - (to avoid rounding issues)
-#             slWindowLogic.SnapSliceOffsetToIJK()
-#             slSliceNode.UpdateMatrices()
-
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def RotateSliceToImage(self, sViewDestination):
-#         # for each viewing window,        
-#         #    adjust slice node to align with the native space of the image data
-#         #     from EditorLib/LabelEffect.py
-# #         lViewingWidgets = ['Red', 'Green', 'Yellow']
-#          
-# #         for slView in lViewingWidgets:
-#              
-#         slWidget = slicer.app.layoutManager().sliceWidget(sViewDestination)
-#         slWindowLogic = slWidget.sliceLogic()
-#          
-#         slSliceNode = slWidget.mrmlSliceNode()
-#         slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
-#         slSliceNode.RotateToVolumePlane(slVolumeNode)
-#         # make sure the slice plane does not lie on an index boundary
-#         # - (to avoid rounding issues)
-#         slWindowLogic.SnapSliceOffsetToIJK()
-#         slSliceNode.UpdateMatrices()
+    def RotateSliceToImage(self, sViewDestination):
+        # for each viewing window,        
+        #    adjust slice node to align with the native space of the image data
+        #     from EditorLib/LabelEffect.py
+              
+        slWidget = slicer.app.layoutManager().sliceWidget(sViewDestination)
+        slWindowLogic = slWidget.sliceLogic()
+          
+        slSliceNode = slWidget.mrmlSliceNode()
+        slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
+        slSliceNode.RotateToVolumePlane(slVolumeNode)
+        # make sure the slice plane does not lie on an index boundary
+        # - (to avoid rounding issues)
+        slWindowLogic.SnapSliceOffsetToIJK()
+        slSliceNode.UpdateMatrices()
 
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -411,6 +374,7 @@ class ViewNodeBase:
         self._xImageElement = None
         self._sPageID = ''
         self.sColorTableName = ''
+        self.bRotateToAcquisition = False
         
         self.slQuizLabelMapNode = None
         
@@ -447,6 +411,12 @@ class ViewNodeBase:
         self.sImageType = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'type')
         self.sDestination = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'destination')
         self.sColorTableName = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'colortable')
+
+        sRotateToAcquisition = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'rotatetoacquisition')
+        if sRotateToAcquisition == 'y':
+            self.bRotateToAcquisition = True
+        else:
+            self.bRotateToAcquisition = False
     
         self.sNodeName =  self.GetPageID() + '_' + self.sNodeDescriptor
 
@@ -907,6 +877,35 @@ class DicomVolumeDetail(ViewNodeBase):
         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def GetAcquisitionVolumePlane(self, slInputNode):
+#         
+#         # extract the scan order from the volume's IJKToRASMatrix in order to determine 
+#         # the original plane of acquisition for the volume
+#         m4ijkToRAS = vtk.vtkMatrix4x4() # initialize
+#         
+#         slInputNode.GetIJKToRASMatrix(m4ijkToRAS)
+#         
+#         sScanOrder = slInputNode.ComputeScanOrderFromIJKToRAS(m4ijkToRAS)
+#         
+#         # order abbreviations:
+#         #    I: inferior
+#         #    S: superior
+#         #    A: anterior
+#         #    P: posterior
+#         #    R: right
+#         #    L: left
+#         
+#         if sScanOrder == 'IS' or sScanOrder == 'SI':
+#             return 'Axial'
+#         elif sScanOrder == 'PA' or sScanOrder == 'AP':
+#             return 'Coronal'
+#         elif sScanOrder == 'LR' or sScanOrder == 'RL':
+#             return 'Sagittal'
+#         
+#          
+
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #     def CheckForLabelMapNodeExists(self, sROIName):
 #         
 #         bNodeExists = False

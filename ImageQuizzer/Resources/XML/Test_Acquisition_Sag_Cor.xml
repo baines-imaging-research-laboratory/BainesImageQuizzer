@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session>
 	<Page name="1010CorScan" descriptor="Brain_MR" linkviews="y">
-		<Image format="nrrd" type="Volume" descriptor="OffAxis" destination="Green">
+		<Image format="nrrd" type="Volume" descriptor="OffAxis" destination="Green" rotatetoacquisition="y">
 			<Layer>Background</Layer>
-			<Orientation>Acquisition</Orientation>
+			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\Brain_MR\1010_brain_mr_CorScan2_offAxis.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="OffAxis" destination="Red">
+		<Image format="nrrd" type="Volume" descriptor="OffAxis" destination="Red" rotatetoacquisition="y">
 			<Layer>Background</Layer>
-			<Orientation>Acquisition</Orientation>
+			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain_MR\1010_brain_mr_CorScan2_offAxis.nrrd</Path>
 		</Image>
-		<Image descriptor="OffAxis" destination="Yellow" format="nrrd" type="Volume">
+		<Image descriptor="OffAxis" destination="Yellow" format="nrrd" type="Volume" rotatetoacquisition="y">
 			<Layer>Background</Layer>
-			<Orientation>Acquisition</Orientation>
+			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\Brain_MR\1010_brain_mr_CorScan2_offAxis.nrrd</Path>
 		</Image>
 		<QuestionSet id="QS-PI-RADS" title="How to"  segmentrequired="y" allowmultipleresponse="n">
@@ -26,20 +26,20 @@
 		</QuestionSet>
 	</Page>
 	<Page name="1010SagScan" descriptor="Brain_MR" linkviews="y">
-		<Image format="nii" type="Volume" descriptor="OffAxis" destination="Green">
+		<Image format="nrrd" type="Volume" descriptor="OffAxis" destination="Green" rotatetoacquisition="y">
 			<Layer>Background</Layer>
-			<Orientation>Acquisition</Orientation>
-			<Path>ImageVolumes\Brain_MR\1010_brain_mr_SagScan_offAxis.nii</Path>
+			<Orientation>Coronal</Orientation>
+			<Path>ImageVolumes\Brain_MR\1010_brain_mr_SagScan_offAxis.nrrd</Path>
 		</Image>
-		<Image format="nii" type="Volume" descriptor="OffAxis" destination="Red">
+		<Image format="nii" type="Volume" descriptor="OffAxis" destination="Red" rotatetoacquisition="y">
 			<Layer>Background</Layer>
-			<Orientation>Acquisition</Orientation>
-			<Path>ImageVolumes\Brain_MR\1010_brain_mr_SagScan_offAxis.nii</Path>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Brain_MR\1010_brain_mr_SagScan_offAxis.nrrd</Path>
 		</Image>
-		<Image descriptor="OffAxis" destination="Yellow" format="nii" type="Volume">
+		<Image descriptor="OffAxis" destination="Yellow" format="nii" type="Volume" rotatetoacquisition="y">
 			<Layer>Background</Layer>
-			<Orientation>Acquisition</Orientation>
-			<Path>ImageVolumes\Brain_MR\1010_brain_mr_SagScan_offAxis.nii</Path>
+			<Orientation>Sagittal</Orientation>
+			<Path>ImageVolumes\Brain_MR\1010_brain_mr_SagScan_offAxis.nrrd</Path>
 		</Image>
 		<QuestionSet id="QS-PI-RADS" title="How to"  segmentrequired="y" allowmultipleresponse="n">
 			<Question type="InfoBox" descriptor="Segmentation Instructions">
