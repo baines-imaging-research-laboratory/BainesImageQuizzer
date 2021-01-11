@@ -9,6 +9,7 @@ from shutil import copyfile
 import DICOMLib
 from DICOMLib import DICOMUtils
 
+from datetime import datetime
 
 
 
@@ -79,6 +80,7 @@ class UtilsIOXml:
         self._xTree = None
         self._xRootNode = None
         
+        self.sTimestampFormat = "%Y%m%d_%H:%M:%S"
     
     #----------
     def GetXmlTree(self):
@@ -95,7 +97,9 @@ class UtilsIOXml:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def OpenXml(self, sXmlPath, sRootNodeName):
-        # given a path, open the xml document
+        """
+        given a path, open the xml document
+        """
          
          
         # initialize a document node
@@ -134,12 +138,9 @@ class UtilsIOXml:
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetElementNodeName(self, xNode):
-
-#         # check for correct type of node  
-#         if xNode.nodeType == xml.dom.Node.ELEMENT_NODE:
-#             sNodeName = xNode.nodeName
-#         else:
-#             raise TypeError('Invalid XML node type: should be Element type of node')
+        """
+        get the name of the xml node
+        """
 
         try:
             sNodeName = xNode.tag
@@ -151,7 +152,9 @@ class UtilsIOXml:
                 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetNumChildrenByName(self, xParentNode, sChildTagName):
-        # given an xml node, return the number of children with the specified tagname
+        """
+        given an xml node, return the number of children with the specified tagname
+        """
         
 #         iNumChildren = xParentNode.getElementsByTagName(sChildTagName).length
 
@@ -162,7 +165,9 @@ class UtilsIOXml:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetChildren(self, xParentNode, sChildTagName):
-        # given an xml node, return the child nodes with the specified tagname
+        """
+        given an xml node, return the child nodes with the specified tagname
+        """
         
 #         xmlChildren = xParentNode.getElementsByTagName(sChildTagName)
 
@@ -172,7 +177,9 @@ class UtilsIOXml:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetNthChild(self, xParentNode, sChildTagName, indElem):
-        # given an xml node, return the nth child node with the specified tagname
+        """
+        given an xml node, return the nth child node with the specified tagname
+        """
         
 #         xmlChildNode = xParentNode.getElementsByTagName(sChildTagName)[iIndex]
 
@@ -192,6 +199,33 @@ class UtilsIOXml:
         
         return xmlChildNode
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetLatestChildElement(self, xParentNode, sChildTagName):
+        """
+        retrieve the latest child with the tag name given, from 
+        the parent xml input element
+        """
+                 
+        dtLatestTimestamp = ''    # timestamp of type 'datetime'
+        xLatestChildElement = None
+ 
+        xAllChildren = self.GetChildren(xParentNode, sChildTagName)
+        for xChild in xAllChildren:
+            sResponseTime = self.GetValueOfNodeAttribute(xChild, 'responsetime')
+            dtResponseTimestamp = datetime.strptime(sResponseTime, self.sTimestampFormat)
+#             print('*** TIME : %s' % sResponseTime)
+              
+            if dtLatestTimestamp == '':
+                dtLatestTimestamp = dtResponseTimestamp
+                xLatestChildElement = xChild
+            else:
+                # compare with >= in order to capture 'last' response 
+                #    in case there are responses with the same timestamp
+                if dtResponseTimestamp >= dtLatestTimestamp:
+                    dtLatestTimestamp = dtResponseTimestamp
+                    xLatestChildElement = xChild
+ 
+        return xLatestChildElement
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetListOfNodeAttributes(self, xNode):
         # given a node, return a list of all its attributes
