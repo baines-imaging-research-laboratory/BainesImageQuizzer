@@ -267,7 +267,9 @@ class Question(ABC):
         self.qGrpBoxLayout = qt.QVBoxLayout()
         self.qGrpBox.setLayout(self.qGrpBoxLayout)
         self.qGrpBox.setStyleSheet("QGroupBox {background-color: \
-            rgb(255, 255, 255); margin: 10px; border: 1px solid gray; }")
+            rgb(255, 255, 255); margin: 10px; border: 1px solid gray;\
+            border-top-style:solid; border-bottom-style:none;\
+            border-left-style:solid; border-right-style:none; }")
         
         return self.qGrpBox
 
