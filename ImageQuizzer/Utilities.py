@@ -458,9 +458,14 @@ class UtilsIO:
         self._sDICOMDatabaseDir = ''
 #         self._sImageVolumeDataDir = ''
 
+        self._sResourcesROIColorFilesDir = ''  # folder to the Quizzer specific roi color files
+        self._sQuizzerROIColorTableNameWithExt = 'QuizzerROIColorTable.txt'
+        self._sDefaultROIColorTableName = 'GenericColors'
 
-    def setup(self):
         self.oUtilsMsgs = UtilsMsgs()
+
+#     def setup(self):
+#         self.oUtilsMsgs = UtilsMsgs()
         
     #-------------------------------------------
     #        Getters / Setters
@@ -481,8 +486,22 @@ class UtilsIO:
         self._sUsername = sSelectedUser
         self._sUserDir = os.path.join(self.GetUsersParentDir(), self._sUsername)
         
+    #----------
+    def SetResourcesROIColorFilesDir(self):
+        self._sResourcesROIColorFilesDir = os.path.join(self.GetScriptedModulesPath(),\
+                                                        'Resources','ColorFiles')
+        
+    #----------
+    def GetResourcesROIColorFilesDir(self):
+        return self._sResourcesROIColorFilesDir
     
+    #----------
+    def GetQuizzerROIColorTableNameWithExt(self):
+        return self._sQuizzerROIColorTableNameWithExt
     
+    #----------
+    def GetDefaultROIColorTableName(self):
+        return self._sDefaultROIColorTableName
 #     ###################
 #     #----------
 #     def SetUserQuizResultsDir(self, sFilename):
@@ -653,7 +672,7 @@ class UtilsIO:
         self._sScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
         self._sScriptedModulesPath = os.path.dirname(self._sScriptedModulesPath)
         self._sXmlResourcesDir = os.path.join(self._sScriptedModulesPath, sSourceDirForQuiz)
-
+        self.SetResourcesROIColorFilesDir()
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupUserAndDataDirs(self, sParentDirInput):
         
@@ -706,7 +725,9 @@ class UtilsIO:
         if DICOMUtils.openDatabase(self._sDICOMDatabaseDir):
             return True, sMsg
         else:
-            sMsg = 'Trouble opening SlicerDICOMDatabase in : ' + self._sDataParentDir + '\n Reselect Image Quizzer data directory or contact administrator.'
+            sMsg = 'Trouble opening SlicerDICOMDatabase in : '\
+                 + self._sDataParentDir\
+                 + '\n Reselect Image Quizzer data directory or contact administrator.'
             return False, sMsg
             
     
@@ -755,7 +776,32 @@ class UtilsIO:
         # create copy with data/time stamp as suffix
         copyfile(self.GetUserQuizResultsPath(), sBackupQuizResultsPath)
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetupROIColorFile(self, sInputROIColorFile):
+        """ If quiz has a custom color table for segmenting ROI's, move this 
+            into the color table file that is read in by the QuizzerHelperBox
+        """
+        # set up for default
+        if sInputROIColorFile == '' or sInputROIColorFile == 'default':
+            sInputROIColorFile = self.GetDefaultROIColorTableName()
         
+        sInputROIColorFileWithExt = sInputROIColorFile + '.txt'   
+        
+        # get resources dir and join to requested color file
+        sROIColorFileDir = self.GetResourcesROIColorFilesDir()
+        sROIColorFilePath = os.path.join(sROIColorFileDir, sInputROIColorFileWithExt)
+        sQuizzerROIColorTablePath = os.path.join(sROIColorFileDir, \
+                                                 self.GetQuizzerROIColorTableNameWithExt())
+        
+        # check if requested table exists
+        if not os.path.isfile(sROIColorFilePath):
+            sMsg = 'ROI Color file "' + sInputROIColorFileWithExt + '" does not exist in :' + sROIColorFileDir
+            self.oUtilsMsgs.DisplayError(sMsg)
+        else:
+            # if yes - overwrite QuizzerColorTable
+            copyfile(sROIColorFilePath, sQuizzerROIColorTablePath)
+                
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
 #     def CloseFiles(self):
 #         self.msgBox.information(slicer.util.mainWindow(), 'Information', 'Closing Time')

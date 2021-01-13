@@ -104,7 +104,7 @@ class QuizzerHelperBox(VTKObservationMixin):
     ###### CUSTOMIZE INITIALIZATION for ColorTable ############
     # setup specifics for the customized segment editor
     sQuizModuleName = 'ImageQuizzer'
-    self.sColorTableName = 'QuizzerColorTable'
+    self.sColorTableName = 'QuizzerROIColorTable'
     self.sColorTableFilename = self.sColorTableName + '.txt'
     scriptedModulesPath = eval('slicer.modules.%s.path' % sQuizModuleName.lower())
     scriptedModulesPath = os.path.dirname(scriptedModulesPath)

@@ -55,7 +55,6 @@ class Session:
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
-        self.oUtilsIO = UtilsIO()
 
         self.oImageView = None
         
@@ -262,7 +261,10 @@ class Session:
                 self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
                 './/Page/QuestionSet', 'segmentrequired','y'))
             
-
+            # set up ROI colors for segmenting
+#             self.oUtilsIO.SetResourcesROIColorFilesDir()
+            sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'roicolorfile')
+            self.oFilesIO.SetupROIColorFile(sColorFileName)
 
 
         self.BuildPageQuestionCompositeIndexList()
