@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Session>
+<Session roicolorfile="PiRadsStudy">
 	<Page name="IGPC2026" descriptor="Multiparametric_MRI" linkviews="y">
 		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" destination="Green" rotatetoacquisition="y">
 			<Layer>Background</Layer>
