@@ -352,7 +352,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             self.oFilesIO.SetupForUserQuizResults()
 
             ##### for debug... #####
-            self.oFilesIO.PrintDirLocations()
+#             self.oFilesIO.PrintDirLocations()
             ########################
 
 
