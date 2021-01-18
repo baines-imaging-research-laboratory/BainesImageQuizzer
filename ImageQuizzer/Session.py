@@ -46,7 +46,7 @@ class Session:
         self._lsNewResponses = []
         
         
-        self._bFirstChangeRecordedInXml = False
+        self._bFirstResponsesRecordedInXml = False
         self._bQuizComplete = False
         self._bAllowMultipleResponseInQuiz = False
         self._bAllowMultipleResponseInQSet = False      # for question set
@@ -338,7 +338,8 @@ class Session:
         self._btnExit.toolTip = "Save quiz and exit Slicer."
         self._btnExit.enabled = True
         self._btnExit.setStyleSheet("QPushButton{ background-color: rgb(255,0,0) }")
-        self._btnExit.connect('clicked(bool)',self.onExitButtonClicked)
+        # use lambda to pass argument to this PyQt slot without invoking the function on setup
+        self._btnExit.connect('clicked(bool)',lambda: self.onExitButtonClicked('ExitBtn'))
 
 
         self.qButtonGrpBoxLayout.addWidget(self._btnExit)
@@ -357,12 +358,7 @@ class Session:
             # the last question was answered - check if user is ready to exit
             self.progress.setValue(self._iCurrentCompositeIndex + 1)
 
-            bSuccess, sMsg = self.PerformSave('Finish')
-            if bSuccess:
-                self.onExitButtonClicked() # a save is done in here
-            else:
-                if sMsg != '':
-                    self._oMsgUtil.DisplayWarning( sMsg )
+            self.onExitButtonClicked('Finish') # a save is done in here
             
             # the user may have cancelled the 'finish'
             # bypass remainder of the 'next' button code
@@ -435,11 +431,15 @@ class Session:
                 self._oMsgUtil.DisplayWarning( sMsg )
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onExitButtonClicked(self):
+    def onExitButtonClicked(self,sCaller):
 
-        qtAns = self._oMsgUtil.DisplayOkCancel('Do you wish to exit? \nYour responses will be saved. Quiz may be resumed.')
+        sMsg = 'Do you wish to exit?'
+        if sCaller == 'ExitBtn':
+            sMsg = sMsg + ' \nYour responses will be saved. Quiz may be resumed.'
+
+        qtAns = self._oMsgUtil.DisplayOkCancel(sMsg)
         if qtAns == qt.QMessageBox.Ok:
-            bSuccess, sMsg = self.PerformSave('ExitBtn')
+            bSuccess, sMsg = self.PerformSave(sCaller)
             if bSuccess:
                 slicer.util.exit(status=EXIT_SUCCESS)
             else:
@@ -631,6 +631,12 @@ class Session:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def PerformSave(self, sCaller):
+        """ Actions performed here include:
+            - save the label maps (done before saving the collected quiz responses)
+            - write the collected responses to the xml
+            - capture and write the state of the images (window/level and slice offset) to xml
+        """
+        
         sMsg = ''
         bSuccess = True
         
@@ -644,36 +650,32 @@ class Session:
             # prior to capturing the responses
             bSuccess, sMsg = self.SaveLabelMaps(sCaller)
         
-            if bSuccess:
-                bSuccess, sMsg = self.CaptureAndSaveImageState()
-                    
 
-                if bSuccess:
-                    sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet(sCaller)
-    
-                    if sCaller == 'NextBtn' or sCaller == 'Finish':
-                        # only write to xml if all responses were captured
-                        if sCaptureSuccessLevel == 'All':
-                            bSuccess, sMsg = self.WriteResponsesToXml()
-    #                         if bSuccess:
-    #                             bSuccess, sMsg = self.CaptureAndSaveImageState()
-                        else:
-                            bSuccess = False
-                            
-                    else:  
-                        # Caller must have been the Previous or Exit buttons ora close was requested 
-                        # triggering the event filter
-                        # Only write if there were responses captured
-                        if sCaptureSuccessLevel == 'All' or sCaptureSuccessLevel == 'Partial':
-                            bSuccess, sMsg = self.WriteResponsesToXml()
-    #                         if bSuccess:
-    #                             bSuccess, sMsg = self.CaptureAndSaveImageState()
-                        else:
-                            # if no responses were captured 
-                            if sCaptureSuccessLevel == 'None':
-                                # this isn't the Next button so it is allowed
-                                bSuccess = True
+            if bSuccess:
+                sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet(sCaller)
+
+                if sCaller == 'NextBtn' or sCaller == 'Finish':
+                    # only write to xml if all responses were captured
+                    if sCaptureSuccessLevel == 'All':
+                        bSuccess, sMsg = self.WriteResponsesToXml()
+                    else:
+                        bSuccess = False
                         
+                else:  
+                    # Caller must have been the Previous or Exit buttons or a close was 
+                    #     requested (which triggers the event filter)
+                    # Only write if there were responses captured
+                    if sCaptureSuccessLevel == 'All' or sCaptureSuccessLevel == 'Partial':
+                        bSuccess, sMsg = self.WriteResponsesToXml()
+                    else:
+                        # if no responses were captured 
+                        if sCaptureSuccessLevel == 'None':
+                            # this isn't the Next button so it is allowed
+                            bSuccess = True
+                        
+                if bSuccess:
+                    #after writing responses, record the image state
+                    bSuccess, sMsg = self.CaptureAndSaveImageState()
 
         # let calling program handle display of message if not successful            
         return bSuccess, sMsg
@@ -880,6 +882,7 @@ class Session:
                     bUsePreviousLabelMap = False
 
         
+                # look at latest instance of the label map elements stored in the xml
                 xLabelMapPathElement = self.oIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
                 slLabelMapNode = None # initialize
 
@@ -1030,14 +1033,17 @@ class Session:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForLoadedLabelMapInScene(self, sFilenameNoExt):
+        """ A label map is stored on disk with the same name as the node in the mrmlScene.
+            Using the filename for the label map (with no extension) check if it is already
+            loaded into the scene.
+        """
         bFound = False
         slNode = None
         
         slNodesCollection = slicer.mrmlScene.GetNodesByName(sFilenameNoExt)
+
         if slNodesCollection.GetNumberOfItems() == 1:
             bFound = True
-            # look at first instance only
-            #   - if user saved more than once, it will have the same filename
             slNode = slNodesCollection.GetItemAsObject(0)
 
         # for memory leak
@@ -1290,9 +1296,9 @@ class Session:
         try:
             
             # only allow for writing of responses under certain conditions
-            #    - allow if the question set is marked for multiple responses
-            #    - allow if the number of questions with responses recorded is
-            #      'none' or 'partial' (not 'all')
+            #    - allow if the question set is marked for multiple responses allowed
+            #    - OR allow if the number of questions with responses already 
+            #      recorded is 'none' or 'partial' (not 'all')
             
 #             sQuestionsWithRecordedResponses = self.CheckForSavedResponse()
             sQuestionsWithRecordedResponses = self.GetQuestionSetResponseCompletionLevel()
@@ -1308,9 +1314,9 @@ class Session:
                     #    for the session, add in the login timestamp
                     #    The timestamp is added here in case the user exited without responding to anything,
                     #    allowing for the resume check to function properly
-                    if self._bFirstChangeRecordedInXml == False:
+                    if self._bFirstResponsesRecordedInXml == False:
                         self.AddSessionLoginTimestamp()
-                        self._bFirstChangeRecordedInXml = True
+                        self._bFirstResponsesRecordedInXml = True
                     self.AddXmlElements()
                     self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
                     
@@ -1398,7 +1404,7 @@ class Session:
         
 
         now = datetime.now()
-#         self.sLoginTime = now.strftime("%b-%d-%Y-%H-%M-%S")
+
         self.SetLoginTime( now.strftime(self.oIOXml.sTimestampFormat) )
         
         dictAttrib = {'logintime': self.LoginTime()}
