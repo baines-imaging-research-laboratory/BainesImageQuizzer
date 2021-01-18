@@ -46,6 +46,7 @@ class Session:
         self._lsNewResponses = []
         
         
+        self._bFirstResponsesRecordedInXml = False
         self._bQuizComplete = False
         self._bAllowMultipleResponseInQuiz = False
         self._bAllowMultipleResponseInQSet = False      # for question set
@@ -247,7 +248,7 @@ class Session:
 
         else:
 
-            self.AddSessionLoginTimestamp()
+#             self.AddSessionLoginTimestamp()
 
             self.SetupWidgets(slicerMainLayout)
             self.oQuizWidgets.qLeftWidget.activateWindow()
@@ -337,7 +338,8 @@ class Session:
         self._btnExit.toolTip = "Save quiz and exit Slicer."
         self._btnExit.enabled = True
         self._btnExit.setStyleSheet("QPushButton{ background-color: rgb(255,0,0) }")
-        self._btnExit.connect('clicked(bool)',self.onExitButtonClicked)
+        # use lambda to pass argument to this PyQt slot without invoking the function on setup
+        self._btnExit.connect('clicked(bool)',lambda: self.onExitButtonClicked('ExitBtn'))
 
 
         self.qButtonGrpBoxLayout.addWidget(self._btnExit)
@@ -356,7 +358,7 @@ class Session:
             # the last question was answered - check if user is ready to exit
             self.progress.setValue(self._iCurrentCompositeIndex + 1)
 
-            self.onExitButtonClicked() # a save is done in here
+            self.onExitButtonClicked('Finish') # a save is done in here
             
             # the user may have cancelled the 'finish'
             # bypass remainder of the 'next' button code
@@ -429,11 +431,15 @@ class Session:
                 self._oMsgUtil.DisplayWarning( sMsg )
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onExitButtonClicked(self):
+    def onExitButtonClicked(self,sCaller):
 
-        qtAns = self._oMsgUtil.DisplayOkCancel('Do you wish to exit? \nYour responses will be saved. Quiz may be resumed.')
+        sMsg = 'Do you wish to exit?'
+        if sCaller == 'ExitBtn':
+            sMsg = sMsg + ' \nYour responses will be saved. Quiz may be resumed.'
+
+        qtAns = self._oMsgUtil.DisplayOkCancel(sMsg)
         if qtAns == qt.QMessageBox.Ok:
-            bSuccess, sMsg = self.PerformSave('ExitBtn')
+            bSuccess, sMsg = self.PerformSave(sCaller)
             if bSuccess:
                 slicer.util.exit(status=EXIT_SUCCESS)
             else:
@@ -625,39 +631,51 @@ class Session:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def PerformSave(self, sCaller):
+        """ Actions performed here include:
+            - save the label maps (done before saving the collected quiz responses)
+            - write the collected responses to the xml
+            - capture and write the state of the images (window/level and slice offset) to xml
+        """
+        
         sMsg = ''
         bSuccess = True
         
         bSuccess, sMsg = self.ResetDisplay()
         
         if bSuccess:
+            
+            # Saving the label maps becomes part of the success level ('all', 'partial' 
+            # or 'none) for capturing all of the required pieces for the question set
+            # (responses and label maps). The label maps therefore must be saved
+            # prior to capturing the responses
             bSuccess, sMsg = self.SaveLabelMaps(sCaller)
         
+
             if bSuccess:
-                bSuccess, sMsg = self.CaptureAndSaveImageState()
-                    
+                sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet(sCaller)
 
-                if bSuccess:
-                    sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureResponsesForQuestionSet(sCaller)
-
-                    if sCaller == 'NextBtn':
-                        # only write to xml if all responses were captured
-                        if sCaptureSuccessLevel == 'All':
-                            bSuccess, sMsg = self.WriteResponsesToXml()
-                        else:
-                            bSuccess = False
-                            
-                    else:  
-                        # caller must have been Previous or Exit buttons or from the event filter
-                        # only write if there were responses captured
-                        if sCaptureSuccessLevel == 'All' or sCaptureSuccessLevel == 'Partial':
-                            bSuccess, sMsg = self.WriteResponsesToXml()
-                        else:
-                            # if no responses were captured 
-                            if sCaptureSuccessLevel == 'None':
-                                # this isn't the Next button so it is allowed
-                                bSuccess = True
+                if sCaller == 'NextBtn' or sCaller == 'Finish':
+                    # only write to xml if all responses were captured
+                    if sCaptureSuccessLevel == 'All':
+                        bSuccess, sMsg = self.WriteResponsesToXml()
+                    else:
+                        bSuccess = False
                         
+                else:  
+                    # Caller must have been the Previous or Exit buttons or a close was 
+                    #     requested (which triggers the event filter)
+                    # Only write if there were responses captured
+                    if sCaptureSuccessLevel == 'All' or sCaptureSuccessLevel == 'Partial':
+                        bSuccess, sMsg = self.WriteResponsesToXml()
+                    else:
+                        # if no responses were captured 
+                        if sCaptureSuccessLevel == 'None':
+                            # this isn't the Next button so it is allowed
+                            bSuccess = True
+                        
+                if bSuccess:
+                    #after writing responses, record the image state
+                    bSuccess, sMsg = self.CaptureAndSaveImageState()
 
         # let calling program handle display of message if not successful            
         return bSuccess, sMsg
@@ -745,20 +763,20 @@ class Session:
     def SaveLabelMaps(self, sCaller):
 
         """ label map volume nodes may exist in the mrmlScene if the user created a label map
-            (in which case it is named with a '-bainesquizlabel' suffix), or if a label map or segmentation
-            was loaded in through the xml quiz file.
+            (in which case it is named with a '-bainesquizlabel' suffix), or if a label map 
+            or segmentation was loaded in through the xml quiz file.
             
-            This function looks for label maps created by the user (-bainesquizlabel suffix) and if found,
-            saves them as a .nrrd file in the specified directory. The path to this saved file is
-            then stored in the xml file within the associated image element.
+            This function looks for label maps created by the user (-bainesquizlabel suffix) 
+            and if found, saves them as a .nrrd file in the specified directory. x
+            and if found, then stored in the xml file within the associated image element.
             
             A warning is presented if the xml question set had the 'segmentrequired' flag set to 'y'
-            but no label maps (with -bainesquizlabel suffix) were found. The user purposely may not have created
-            a label map if there were no lesions to segment. This is acceptable.
+            but no label maps (with -bainesquizlabel suffix) were found. The user purposely may 
+            not have created a label map if there were no lesions to segment. This is acceptable.
         """
             
         # if label maps were created, save to disk
-        bLabelMapsSaved = True
+        bLabelMapsSaved = True #initialize
         sMsg = ''
         
         bLabelMapFound = False  # to detect if label map was created by user
@@ -803,23 +821,26 @@ class Session:
                          
 
                             # update xml storing the path to the label map file with the image element
-                            self.AddLabelMapPathElement(oImageNode.GetXmlImageElement(), self.oFilesIO.GetRelativeUserPath(sLabelMapPath))
+                            self.AddLabelMapPathElement(oImageNode.GetXmlImageElement(),\
+                                                 self.oFilesIO.GetRelativeUserPath(sLabelMapPath))
 
                             
                             bLabelMapsSaved = True  # at least one label map was saved
 
     
             # If there were no label map volume nodes 
-            # OR if there were label map volume nodes, but there wasn't a -bainesquizlabel suffix to match an image on the page,
-            #    ie. the labelMaps found flag was left as false
+            # OR if there were label map volume nodes, but there wasn't a -bainesquizlabel suffix 
+            #    to match an image on the page, ie. the labelMaps found flag was left as false
             # Check if the segmentation was required and if enabled present the warning
             if iNumLabelMaps == 0 or (iNumLabelMaps > 0 and bLabelMapFound == False):    
                 
-                # user doesn't get the option to cancel if the call was initiated from the Close event filter
+                # user doesn't get the option to cancel if the call was initiated 
+                # from the Close event filter
                 if sCaller != 'EventFilter':
                     if self._bSegmentationModule == True:   # if there is a segmentation module
                         if self.GetSegmentationTabEnabled() == True:    # if the tab is enabled
-                            qtAns = self.oUtilsMsgs.DisplayOkCancel('No label maps were created. Do you want to continue?')
+                            qtAns = self.oUtilsMsgs.DisplayOkCancel(\
+                                                'No label maps were created. Do you want to continue?')
                             if qtAns == qt.QMessageBox.Ok:
                                 # user did not create a label map but there may be no lesions to segment
                                 # continue with the save
@@ -861,6 +882,7 @@ class Session:
                     bUsePreviousLabelMap = False
 
         
+                # look at latest instance of the label map elements stored in the xml
                 xLabelMapPathElement = self.oIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
                 slLabelMapNode = None # initialize
 
@@ -1011,14 +1033,17 @@ class Session:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForLoadedLabelMapInScene(self, sFilenameNoExt):
+        """ A label map is stored on disk with the same name as the node in the mrmlScene.
+            Using the filename for the label map (with no extension) check if it is already
+            loaded into the scene.
+        """
         bFound = False
         slNode = None
         
         slNodesCollection = slicer.mrmlScene.GetNodesByName(sFilenameNoExt)
+
         if slNodesCollection.GetNumberOfItems() == 1:
             bFound = True
-            # look at first instance only
-            #   - if user saved more than once, it will have the same filename
             slNode = slNodesCollection.GetItemAsObject(0)
 
         # for memory leak
@@ -1088,7 +1113,8 @@ class Session:
             If the Question Set has a "segmentrequired='y'" attribute, 
             check for a saved label map path element. 
 
-            Assume: All options have a response if the question was answered so we just query the first.
+            Assumption: All options have a response if the question was answered
+            so we just query the first.
         """
         
         if indCI == None:
@@ -1259,6 +1285,10 @@ class Session:
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def WriteResponsesToXml(self):
+        """ Write captured responses to xml. If this is the first write to the xml
+            with responses, the login timestamp is also added.
+            After responses are added, record the image state in the xml file.
+        """
         
         bSuccess = True
         sMsg = ''
@@ -1266,8 +1296,9 @@ class Session:
         try:
             
             # only allow for writing of responses under certain conditions
-            #    - allow if the question set is marked for multiple responses
-            #    - allow if the number of questions with responses recorded is none or partial (not all)
+            #    - allow if the question set is marked for multiple responses allowed
+            #    - OR allow if the number of questions with responses already 
+            #      recorded is 'none' or 'partial' (not 'all')
             
 #             sQuestionsWithRecordedResponses = self.CheckForSavedResponse()
             sQuestionsWithRecordedResponses = self.GetQuestionSetResponseCompletionLevel()
@@ -1283,12 +1314,12 @@ class Session:
                     #    for the session, add in the login timestamp
                     #    The timestamp is added here in case the user exited without responding to anything,
                     #    allowing for the resume check to function properly
-#                     if self._bStartOfSession == True:
-#                         self.AddSessionLoginTimestamp()
-                    
+                    if self._bFirstResponsesRecordedInXml == False:
+                        self.AddSessionLoginTimestamp()
+                        self._bFirstResponsesRecordedInXml = True
                     self.AddXmlElements()
                     self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-#                     self._bStartOfSession = False
+                    
         
         except:
             bSuccess = False
@@ -1336,7 +1367,14 @@ class Session:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddImageStateElement(self, xImageNode, dictAttrib):
-        
+        """ Add the image state element to the xml file including window/level
+            and slice offset. 
+        """
+#             Only add if user has already made a change to the quiz responses. 
+#             (ie. ignore if user briefly opens quiz and closes it again)
+#         """
+#         if self._bFirstChangeRecordedInXml:
+
         sNullData = ''
 
         # add login and response times to the existing state attributes
@@ -1366,7 +1404,7 @@ class Session:
         
 
         now = datetime.now()
-#         self.sLoginTime = now.strftime("%b-%d-%Y-%H-%M-%S")
+
         self.SetLoginTime( now.strftime(self.oIOXml.sTimestampFormat) )
         
         dictAttrib = {'logintime': self.LoginTime()}
