@@ -20,8 +20,8 @@ class QuestionSet():
     
     def __init__(self):
         self.sClassName = type(self).__name__
-        self.id = ''
-        self.title = ''
+        self.name = ''
+        self.descriptor = ''
         self._bSegmentRequired = False
         self._bAllowMultipleResponse = False
         
@@ -76,8 +76,8 @@ class QuestionSet():
             # for each child named 'Question' extract labels and options
             iNumQuestions = self.oIOXml.GetNumChildrenByName(xNodeQuestionSet, "Question")
             
-            self.id = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'id')
-            self.title = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'title')
+            self.name = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'name')
+            self.descriptor = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'descriptor')
             self.SetSegmentRequiredTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'segmentrequired'))
             self.SetMultipleResponseTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'allowmultipleresponse'))
             
@@ -186,7 +186,7 @@ class QuestionSet():
         self.qQuizWidget = qt.QWidget()
         self.qQuizWidgetLayout = qt.QVBoxLayout()
         self.qQuizWidget.setLayout(self.qQuizWidgetLayout)
-        self.qQuizTitle = qt.QLabel(self.id + ' ' + self.title)
+        self.qQuizTitle = qt.QLabel(self.name + ' ' + self.descriptor)
         self.qQuizTitle.setStyleSheet("QLabel{ font: bold}")
         self.qQuizWidgetLayout.addWidget(self.qQuizTitle)
         
@@ -954,8 +954,16 @@ class InfoBox(Question):
 
         bSuccess = True
         sMsg = ''
-
-        lsResponses = ['']
+ 
+        lsResponses = []
+        
+        # set response for each info box option to null quotes
+        #     each option needs a response for the check on whether 
+        #     the question set was answered completely or partially
+        lsStoredOptions = self._lsOptions_getter()
+        for x in range( len(lsStoredOptions) ):
+            lsResponses.append('')
+                
         
         return bSuccess, lsResponses, sMsg
         

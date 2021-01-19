@@ -445,9 +445,10 @@ class Session:
             else:
                 if sMsg != '':
                     self._oMsgUtil.DisplayWarning( sMsg )
-        else:
-            # cancelled - reset the progress bar
-            self.progress.setValue(self._iCurrentCompositeIndex)
+
+        # if code reaches here, either the exit was cancelled or there was 
+        # an error in the save
+        self.progress.setValue(self._iCurrentCompositeIndex)
 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
