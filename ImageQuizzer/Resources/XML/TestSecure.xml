@@ -1,29 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session roicolorfile="PiRadsStudy">
 	<Page name="IGPC2028" descriptor="Multiparametric_MRI" linkviews="y">
-		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" destination="Green" rotatetoacquisition="y">
+		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" rotatetoacquisition="y">
+			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2028\DCE-Sequence\dyn_VIBE DCE - as a 77 frames MultiVolume by AcquisitionTime.nrrd</Path>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="ADC" destination="Red" rotatetoacquisition="y">
+		<Image format="dicom" type="Volume" descriptor="ADC" rotatetoacquisition="y">
+			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2028\ADC\IGPC-2028.MR.MMR_PELVIS_MMR.0021.0001.2016.06.09.10.31.24.640625.180007919.IMA</Path>
 			<SeriesInstanceUID>1.3.12.2.1107.5.2.38.51018.2016040115300463814224747.0.0.0</SeriesInstanceUID>
 		</Image>
-		<Image descriptor="In_Vivo_2D_T2" destination="Yellow" format="dicom" type="Volume" rotatetoacquisition="y">
+		<Image descriptor="In_Vivo_2D_T2" format="dicom" type="Volume" rotatetoacquisition="y">
+			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2028\In_Vivo_2D_T2\IGPC-2028.MR.MMR_PELVIS_MMR.0014.0001.2016.05.11.12.46.05.93750.179992518.IMA</Path>
 			<SeriesInstanceUID>1.3.12.2.1107.5.2.38.51018.2016040115272779268524358.0.0.0</SeriesInstanceUID>
 		</Image>
-		<QuestionSet id="PI-RADS" title="Contouring Exercise"  segmentrequired="y" allowmultipleresponse="n">
+		<QuestionSet name="PI-RADS" descriptor="Contouring Exercise"  segmentrequired="y" allowmultipleresponse="n">
 			<Question type="InfoBox" descriptor="Segmentation Instructions">
 				<Option>In Segment Editor tab, select volume to create segments.</Option>
-				<Option>Click Edit Selected Label map collapsible button to access the segmenting tools.
-				<Option>Select label map color to match PI-RADS category.
-				<Option></Option>
+				<Option>     Click Edit Selected Label map collapsible button to access the segmenting tools.</Option>
+				<Option>     Select label map color to match PI-RADS category.</Option>
 				<Option>This may be repeated if segments are to be created on different volumes.</Option>
 			</Question>
 			<Question type="IntegerValue" descriptor="Overall PI-RADS" >
@@ -32,30 +34,34 @@
 		</QuestionSet>
 	</Page>
 	<Page name="IGPC2028" descriptor="Multiparametric_MRI" linkviews="y">
-		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" destination="Green" rotatetoacquisition="y" usepreviouslabelmap="y">
+		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" rotatetoacquisition="y" usepreviouslabelmap="y">
+			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2028\DCE-Sequence\dyn_VIBE DCE - as a 77 frames MultiVolume by AcquisitionTime.nrrd</Path>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="ADC" destination="Red" rotatetoacquisition="y" usepreviouslabelmap="y">
+		<Image format="dicom" type="Volume" descriptor="ADC" rotatetoacquisition="y" usepreviouslabelmap="y">
+			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2028\ADC\IGPC-2028.MR.MMR_PELVIS_MMR.0021.0001.2016.06.09.10.31.24.640625.180007919.IMA</Path>
 			<SeriesInstanceUID>1.3.12.2.1107.5.2.38.51018.2016040115300463814224747.0.0.0</SeriesInstanceUID>
 		</Image>
-		<Image descriptor="In_Vivo_2D_T2" destination="Yellow" format="dicom" type="Volume" rotatetoacquisition="y" usepreviouslabelmap="y">
+		<Image descriptor="In_Vivo_2D_T2" format="dicom" type="Volume" rotatetoacquisition="y" usepreviouslabelmap="y">
+			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2028\In_Vivo_2D_T2\IGPC-2028.MR.MMR_PELVIS_MMR.0014.0001.2016.05.11.12.46.05.93750.179992518.IMA</Path>
 			<SeriesInstanceUID>1.3.12.2.1107.5.2.38.51018.2016040115272779268524358.0.0.0</SeriesInstanceUID>
 		</Image>
-		<Image descriptor="PELVIS_MRAC_PET" destination="Yellow" format="dicom" type="Volume" colortable='PET-Heat' rotatetoacquisition="y">
+		<Image descriptor="PELVIS_MRAC_PET" format="dicom" type="Volume" colortable='PET-Heat' rotatetoacquisition="y">
+			<Destination>Yellow</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2028\PSMA PET\IGPC-2028.PT.MMR_PELVIS_MMR.0019.0001.2016.05.11.12.46.05.93750.180002363.IMA</Path>
 			<SeriesInstanceUID>1.3.12.2.1107.5.2.38.51018.2016040115312359375004600</SeriesInstanceUID>
 		</Image>
-		<QuestionSet id="Segmentation" title="Self-Assessment"  segmentrequired="y" allowmultipleresponse="n">
+		<QuestionSet name="Segmentation" descriptor="Self-Assessment"  segmentrequired="y" allowmultipleresponse="n">
 			<Question type="Radio" descriptor="How did you do?">
 				<Option>Great</Option>
 				<Option>Not bad</Option>
@@ -65,29 +71,31 @@
 		</QuestionSet>
 	</Page>
 	<Page name="IGPC2026" descriptor="Multiparametric_MRI" linkviews="y">
-		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" destination="Green" rotatetoacquisition="y">
+		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" rotatetoacquisition="y">
+			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\DCE-Sequence\dyn_VIBE DCE - as a 77 frames MultiVolume by AcquisitionTime.nrrd</Path>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="ADC" destination="Red" rotatetoacquisition="y">
+		<Image format="dicom" type="Volume" descriptor="ADC" rotatetoacquisition="y">
+			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\ADC\IGPC2-026.MR.MMR_PELVIS_MMR.0016.0001.2016.06.09.10.31.44.687500.175599235.IMA</Path>
 			<SeriesInstanceUID>1.3.12.2.1107.5.2.38.51018.2016031815221364180073693.0.0.0</SeriesInstanceUID>
 		</Image>
-		<Image descriptor="In_Vivo_2D_T2" destination="Yellow" format="dicom" type="Volume" rotatetoacquisition="y">
+		<Image descriptor="In_Vivo_2D_T2" format="dicom" type="Volume" rotatetoacquisition="y">
+			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In_Vivo_2D_T2\IGPC2-026.MR.MMR_PELVIS_MMR.0010.0001.2016.05.11.12.40.24.890625.175588063.IMA</Path>
 			<SeriesInstanceUID>1.2.840.113619.2.212.6945.1142338.1406.1269871443.371</SeriesInstanceUID>
 		</Image>
-		<QuestionSet id="PI-RADS" title="Contouring Exercise"  segmentrequired="y" allowmultipleresponse="n">
+		<QuestionSet name="PI-RADS" descriptor="Contouring Exercise"  segmentrequired="y" allowmultipleresponse="n">
 			<Question type="InfoBox" descriptor="Segmentation Instructions">
 				<Option>In Segment Editor tab, select volume to create segments.</Option>
-				<Option>Click Edit Selected Label map collapsible button to access the segmenting tools.
-				<Option>Select label map color to match PI-RADS category.
-				<Option></Option>
+				<Option>     Click Edit Selected Label map collapsible button to access the segmenting tools.</Option>
+				<Option>     Select label map color to match PI-RADS category.</Option>
 				<Option>This may be repeated if segments are to be created on different volumes.</Option>
 			</Question>
 			<Question type="IntegerValue" descriptor="Overall PI-RADS" >
@@ -96,30 +104,34 @@
 		</QuestionSet>
 	</Page>
 	<Page name="IGPC2026" descriptor="Multiparametric_MRI" linkviews="y">
-		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" destination="Green" usepreviouslabelmap='y' rotatetoacquisition="y">
+		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" usepreviouslabelmap='y' rotatetoacquisition="y">
+			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\DCE-Sequence\dyn_VIBE DCE - as a 77 frames MultiVolume by AcquisitionTime.nrrd</Path>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="ADC" destination="Red" usepreviouslabelmap='y' rotatetoacquisition="y">
+		<Image format="dicom" type="Volume" descriptor="ADC" usepreviouslabelmap='y' rotatetoacquisition="y">
+			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\ADC\IGPC2-026.MR.MMR_PELVIS_MMR.0016.0001.2016.06.09.10.31.44.687500.175599235.IMA</Path>
 			<SeriesInstanceUID>1.3.12.2.1107.5.2.38.51018.2016031815221364180073693.0.0.0</SeriesInstanceUID>
 		</Image>
-		<Image descriptor="In_Vivo_2D_T2" destination="Yellow" format="dicom" type="Volume" usepreviouslabelmap='y' rotatetoacquisition="y">
+		<Image descriptor="In_Vivo_2D_T2" format="dicom" type="Volume" usepreviouslabelmap='y' rotatetoacquisition="y">
+			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In_Vivo_2D_T2\IGPC2-026.MR.MMR_PELVIS_MMR.0010.0001.2016.05.11.12.40.24.890625.175588063.IMA</Path>
 			<SeriesInstanceUID>1.2.840.113619.2.212.6945.1142338.1406.1269871443.371</SeriesInstanceUID>
 		</Image>
-		<Image descriptor="PELVIS_MRAC_PET" destination="Yellow" format="dicom" type="Volume" colortable='PET-Heat' rotatetoacquisition="y">
+		<Image descriptor="PELVIS_MRAC_PET" format="dicom" type="Volume" colortable='PET-Heat' rotatetoacquisition="y">
+			<Destination>Yellow</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\PELVIS_MRAC_PET\IGPC2-026.PT.MMR_PELVIS_MMR.0014.0001.2016.05.11.12.40.24.890625.175593827.IMA</Path>
 			<SeriesInstanceUID>1.3.12.2.1107.5.2.38.51018.2016031815242123437500578</SeriesInstanceUID>
 		</Image>
-		<QuestionSet id="Segmentation" title="Self-Assessment"  segmentrequired="y" allowmultipleresponse="n">
+		<QuestionSet name="Segmentation" descriptor="Self-Assessment"  segmentrequired="y" allowmultipleresponse="n">
 			<Question type="Radio" descriptor="How did you do?">
 				<Option>Great</Option>
 				<Option>Not bad</Option>
@@ -129,29 +141,31 @@
 		</QuestionSet>
 	</Page>
 	<Page name="IGPC1010" descriptor="Multiparametric_MRI" linkviews="y">
-		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" destination="Green" rotatetoacquisition="y">
+		<Image format="nrrd" type="VolumeSequence" descriptor="DCE" rotatetoacquisition="y">
+			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC1010\DCE-Sequence\AX Dynamic Contrast - as a 7 frames MultiVolume by TriggerTime.nrrd</Path>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="ADC" destination="Red" rotatetoacquisition="y">
+		<Image format="dicom" type="Volume" descriptor="ADC" rotatetoacquisition="y">
+			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC1010\ADC\1.2.840.113619.2.5.2424045.11941.1363868633.600.dcm</Path>
 			<SeriesInstanceUID>1.2.840.113619.2.5.24202200.303.1363868656.199</SeriesInstanceUID>
 		</Image>
-		<Image descriptor="In_Vivo_2D_T2" destination="Yellow" format="dicom" type="Volume" rotatetoacquisition="y">
+		<Image descriptor="In_Vivo_2D_T2" format="dicom" type="Volume" rotatetoacquisition="y">
+			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC1010\In_Vivo_2D_T2\1.2.840.113619.2.212.6945.1142338.750.1269871461.164.dcm</Path>
 			<SeriesInstanceUID>1.2.840.113619.2.212.6945.1142338.1406.1269871443.371</SeriesInstanceUID>
 		</Image>
-		<QuestionSet id="PI-RADS" title="Contouring Exercise"  segmentrequired="y" allowmultipleresponse="n">
+		<QuestionSet name="PI-RADS" descriptor="Contouring Exercise"  segmentrequired="y" allowmultipleresponse="n">
 			<Question type="InfoBox" descriptor="Segmentation Instructions">
 				<Option>In Segment Editor tab, select volume to create segments.</Option>
-				<Option>Click Edit Selected Label map collapsible button to access the segmenting tools.
-				<Option>Select label map color to match PI-RADS category.
-				<Option></Option>
+				<Option>     Click Edit Selected Label map collapsible button to access the segmenting tools.</Option>
+				<Option>     Select label map color to match PI-RADS category.</Option>
 				<Option>This may be repeated if segments are to be created on different volumes.</Option>
 			</Question>
 			<Question type="IntegerValue" descriptor="Overall PI-RADS" >

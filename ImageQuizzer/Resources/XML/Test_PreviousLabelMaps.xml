@@ -1,32 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session>
 	<Page name="Patient1" descriptor="PlanningCT">
-		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Red">
+		<Image format="nrrd" type="Volume" descriptor="Fixed Volume">
+			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-		<Image descriptor="Moving Volume" destination="Red" format="nrrd" type="Volume">
+		<Image descriptor="Moving Volume" format="nrrd" type="Volume">
+			<Destination>Red</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Yellow">
+		<Image format="nrrd" type="Volume" descriptor="Fixed Volume">
+			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="Fixed Volume" destination="Green">
+		<Image format="nrrd" type="Volume" descriptor="Fixed Volume">
+			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-		<QuestionSet id="QS-Intro" title="Introduction to Quiz"  segmentrequired="n" allowmultipleresponse="n">
+		<QuestionSet name="QS-Intro" descriptor="Introduction to Quiz"  segmentrequired="n" allowmultipleresponse="n">
 			<Question type="InfoBox" descriptor="Introduction">
 				<Option>Lots of text describing something</Option>
 			</Question>
 		</QuestionSet>
-		<QuestionSet id="QS-Intro #2" title="How to - Instructions"  segmentrequired="n"  allowmultipleresponse="n">
+		<QuestionSet name="QS-Intro #2" descriptor="How to - Instructions"  segmentrequired="n"  allowmultipleresponse="n">
 			<Question type="InfoBox" descriptor="Instructions">
 				<Option>This is how to run the quiz : .....</Option>
 			</Question>
@@ -36,22 +40,25 @@
 		</QuestionSet>
 	</Page>
 	<Page name="Patient1" descriptor="Follow-up 1">
-		<Image format="nrrd" type="Volume" descriptor="Moving Volume" destination="Red" rotatetoacquisition="y">
+		<Image format="nrrd" type="Volume" descriptor="Moving Volume" rotatetoacquisition="y">
+			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="Moving Volume" destination="Yellow" rotatetoacquisition="y">
+		<Image format="nrrd" type="Volume" descriptor="Moving Volume" rotatetoacquisition="y">
+			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="Moving Volume" destination="Green" rotatetoacquisition="y">
+		<Image format="nrrd" type="Volume" descriptor="Moving Volume" rotatetoacquisition="y">
+			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<QuestionSet id="QS-Observation" title="What is your Assessment"  segmentrequired="y"  allowmultipleresponse="y">
+		<QuestionSet name="QS-Observation" descriptor="What is your Assessment"  segmentrequired="y"  allowmultipleresponse="y">
 			<Question type="Radio" descriptor="Assessment">
 				<Option>Injury</Option>
 				<Option>Recurrence</Option>
@@ -73,26 +80,30 @@
 		</QuestionSet>
 	</Page>
 	<Page name="Patient3" descriptor="Mixed Displays - First Showing" linkviews="n">
-		<Image format="nrrd" type="Volume"  descriptor="Fixed Volume" destination="Red" usepreviouslabelmap="y" rotatetoacquisition="y">
+		<Image format="nrrd" type="Volume"  descriptor="Fixed Volume" usepreviouslabelmap="y" rotatetoacquisition="y">
+			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="Moving Volume" destination="Green" usepreviouslabelmap="y" rotatetoacquisition="y">
+		<Image format="nrrd" type="Volume" descriptor="Moving Volume" usepreviouslabelmap="y" rotatetoacquisition="y">
+			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<Image format="mhd" type="Volume" descriptor="Case00Prostate" destination="Yellow" rotatetoacquisition="y">
+		<Image format="mhd" type="Volume" descriptor="Case00Prostate" rotatetoacquisition="y">
+			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Prostate\Case00.mhd</Path>
 		</Image>
-		<Image format="mhd" type="LabelMap" descriptor="Case00Prostate Segmentation" destination="Yellow">
+		<Image format="mhd" type="LabelMap" descriptor="Case00Prostate Segmentation">
+			<Destination>Yellow</Destination>
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\Prostate\Case00_segmentation.mhd</Path>
 		</Image>
-		<QuestionSet id="QS-Demo" title="Demo buttons" segmentrequired="y"  allowmultipleresponse="y">
+		<QuestionSet name="QS-Demo" descriptor="Demo buttons" segmentrequired="y"  allowmultipleresponse="y">
 			<Question type="Checkbox"  descriptor="Demo Checks">
 				<Option>Check 1</Option>
 				<Option>Check 2</Option>
@@ -105,26 +116,30 @@
 		</QuestionSet>
 	</Page>
 	<Page name="Patient3" descriptor="Mixed Displays Reassessment" linkviews="n">
-		<Image format="nrrd" type="Volume"  descriptor="Fixed Volume" destination="Red" usepreviouslabelmap="y" rotatetoacquisition="y">
+		<Image format="nrrd" type="Volume"  descriptor="Fixed Volume" usepreviouslabelmap="y" rotatetoacquisition="y">
+			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="Moving Volume" destination="Green" rotatetoacquisition="y">
+		<Image format="nrrd" type="Volume" descriptor="Moving Volume" rotatetoacquisition="y">
+			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<Image format="mhd" type="Volume" descriptor="Case00Prostate" destination="Yellow" usepreviouslabelmap="y" rotatetoacquisition="y">
+		<Image format="mhd" type="Volume" descriptor="Case00Prostate" usepreviouslabelmap="y" rotatetoacquisition="y">
+			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Prostate\Case00.mhd</Path>
 		</Image>
-		<Image format="mhd" type="LabelMap" descriptor="Case00Prostate Segmentation" destination="Yellow">
+		<Image format="mhd" type="LabelMap" descriptor="Case00Prostate Segmentation">
+			<Destination>Yellow</Destination>
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\Prostate\Case00_segmentation.mhd</Path>
 		</Image>
-		<QuestionSet id="QS-Demo" title="Demo buttons" segmentrequired="y"  allowmultipleresponse="y">
+		<QuestionSet name="QS-Demo" descriptor="Demo buttons" segmentrequired="y"  allowmultipleresponse="y">
 			<Question type="Checkbox"  descriptor="Demo Checks">
 				<Option>Check 1</Option>
 				<Option>Check 2</Option>

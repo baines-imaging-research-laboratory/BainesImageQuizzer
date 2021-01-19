@@ -409,7 +409,7 @@ class ViewNodeBase:
 
         self.sNodeDescriptor = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'descriptor')
         self.sImageType = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'type')
-        self.sDestination = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'destination')
+#         self.sDestination = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'destination')
         self.sColorTableName = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'colortable')
 
         sRotateToAcquisition = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'rotatetoacquisition')
@@ -435,10 +435,19 @@ class ViewNodeBase:
         sFilename, sFileExt = os.path.splitext(sFilename_w_ext)
 #         self.sNodeName =  sFilename
         
-        # Extract destination layer (foreground, background, label)
+        # Extract viewing layer (foreground, background, label)
+        xDestinationNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Destination')
+        if len(xDestinationNodes) > 1:
+            sWarningMsg = 'There can only be one viewing destination (Axial, Sagittal or Coronal) per image. \nThe first defined destination in the XML will be used.   '
+            sWarningMsg = sWarningMsg + self.sNodeName
+            self.oUtilsMsgs.DisplayWarning(sWarningMsg)
+
+        self.sDestination = self.oIOXml.GetDataInNode(xDestinationNodes[0])
+
+        # Extract viewing layer (foreground, background, label)
         xLayerNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Layer')
         if len(xLayerNodes) > 1:
-            sWarningMsg = 'There can only be one destination layer (foreground, background or label) per image. \nThe first defined destination in the XML will be used.   '
+            sWarningMsg = 'There can only be one viewing layer (foreground, background or label) per image. \nThe first defined layer in the XML will be used.   '
             sWarningMsg = sWarningMsg + self.sNodeName
             self.oUtilsMsgs.DisplayWarning(sWarningMsg)
 
