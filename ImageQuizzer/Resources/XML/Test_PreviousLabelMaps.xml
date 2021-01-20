@@ -104,7 +104,7 @@
 			<Path>ImageVolumes\Prostate\Case00_segmentation.mhd</Path>
 		</Image>
 		<QuestionSet name="QS-Demo" descriptor="Demo buttons" segmentrequired="y"  allowmultipleresponse="y">
-			<Question type="Checkbox"  descriptor="Demo Checks">
+			<Question type="CheckBox"  descriptor="Demo Checks">
 				<Option>Check 1</Option>
 				<Option>Check 2</Option>
 			</Question>
@@ -140,7 +140,7 @@
 			<Path>ImageVolumes\Prostate\Case00_segmentation.mhd</Path>
 		</Image>
 		<QuestionSet name="QS-Demo" descriptor="Demo buttons" segmentrequired="y"  allowmultipleresponse="y">
-			<Question type="Checkbox"  descriptor="Demo Checks">
+			<Question type="CheckBox"  descriptor="Demo Checks">
 				<Option>Check 1</Option>
 				<Option>Check 2</Option>
 			</Question>

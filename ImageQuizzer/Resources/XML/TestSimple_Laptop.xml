@@ -104,7 +104,7 @@
 			<Path>ImageVolumes\Prostate\Case00_segmentation.mhd</Path>
 		</Image>
 		<QuestionSet name="QS-Demo" descriptor="Demo buttons" segmentrequired="y"  allowmultipleresponse="y">
-			<Question type="Checkbox"  descriptor="Demo Checks">
+			<Question type="CheckBox"  descriptor="Demo Checks">
 				<Option>Check 1</Option>
 				<Option>Check 2</Option>
 			</Question>
@@ -138,7 +138,7 @@
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
 		<QuestionSet name="QS-Checkup" descriptor="Tell us how you feel" segmentrequired="n"  allowmultipleresponse="n">
-			<Question type="Checkbox" descriptor="Patient general health">
+			<Question type="CheckBox" descriptor="Patient general health">
 				<Option>I need sleep.</Option>
 				<Option>I need a vacation.</Option>
 				<Option>I need help.</Option>
@@ -256,7 +256,7 @@
 			<Path>ImageVolumes\BrainDWI\Segment_1-label.nrrd</Path>
 		</Image>
 		<QuestionSet name="QS-Checkup" descriptor="Your thoughts?" allowmultipleresponse="y">
-			<Question type="Checkbox" descriptor="Milestone checker">
+			<Question type="CheckBox" descriptor="Milestone checker">
 				<Option>Working at home is comfortable.</Option>
 				<Option>Dan needs a hobby.</Option>
 				<Option>Buddy thinks life can't get any better.</Option>

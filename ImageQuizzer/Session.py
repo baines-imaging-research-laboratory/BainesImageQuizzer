@@ -48,8 +48,8 @@ class Session:
         
         self._bFirstResponsesRecordedInXml = False
         self._bQuizComplete = False
-        self._bAllowMultipleResponseInQuiz = False
-        self._bAllowMultipleResponseInQSet = False      # for question set
+        self._bAllowMultipleResponseInQuiz = True
+        self._bAllowMultipleResponseInQSet = True      # for question set
         self._bSegmentationModule = False
         self._iSegmentationTabIndex = -1   # default
         

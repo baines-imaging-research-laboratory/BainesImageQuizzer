@@ -55,10 +55,10 @@ class QuestionSet():
     
     #----------
     def SetMultipleResponseTF(self, sYN):
-        if sYN == 'y' or sYN == 'Y':
-            self._bAllowMultipleResponse = True
-        else:
+        if sYN == 'n' or sYN == 'N':
             self._bAllowMultipleResponse = False
+        else: # default
+            self._bAllowMultipleResponse = True
     
     #----------
     #----------
@@ -97,7 +97,7 @@ class QuestionSet():
                 if (sQuestionType == 'Radio'):
                     oQuestion = RadioQuestion()
 
-                elif (sQuestionType == 'Checkbox'):
+                elif (sQuestionType == 'CheckBox'):
                     oQuestion = CheckBoxQuestion()
 
                 elif (sQuestionType == 'Text'):
@@ -155,12 +155,8 @@ class QuestionSet():
         
     def BuildQuestionSetForm(self):
         # for each item in the list of Questions
-        #    - parse the tuple into question items:
-        #        0: question type (string)
-        #        1: question descriptor (string)
-        #        2: list of question options (list of strings)
-        #      [ 3: dictionary of modifiers (eg. min, max) for certain question types ] 
-        #    - create the appropriate group box
+        #    - create the appropriate question widget based on the 
+        #        the type of question object stored in the list
         #    - add to layout
         sFnName = sys._getframe().f_code.co_name
 

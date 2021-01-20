@@ -423,49 +423,69 @@ class ViewNodeBase:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractXMLNodeElements(self, sParentDataDir):
         
-        # Extract path element
-        xPathNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Path')
-        if len(xPathNodes) > 1:
-            sWarningMsg = 'There can only be one path per image.  The first defined path will be used.   '
-            sWarningMsg = sWarningMsg + self.sNodeName
-            self.oUtilsMsgs.DisplayWarning( sWarningMsg )
-
-        self.sImagePath = os.path.join(sParentDataDir, self.oIOXml.GetDataInNode(xPathNodes[0]))
-        sFilename_w_ext = os.path.basename(self.sImagePath)
-        sFilename, sFileExt = os.path.splitext(sFilename_w_ext)
-#         self.sNodeName =  sFilename
+        sWarningMsg = ''
         
-        # Extract viewing layer (foreground, background, label)
-        xDestinationNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Destination')
-        if len(xDestinationNodes) > 1:
-            sWarningMsg = 'There can only be one viewing destination (Axial, Sagittal or Coronal) per image. \nThe first defined destination in the XML will be used.   '
-            sWarningMsg = sWarningMsg + self.sNodeName
-            self.oUtilsMsgs.DisplayWarning(sWarningMsg)
 
-        self.sDestination = self.oIOXml.GetDataInNode(xDestinationNodes[0])
+        # Extract Destination (Red, Green, Yellow)
+        xDestinationNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Destination')
+        if len(xDestinationNodes) == 0:
+            self.sDestination = 'Red'
+            sWarningMsg = sWarningMsg + '\n' + 'Missing XML element: Destination . The default "Red" viewing window will be used.   '
+        else:
+            self.sDestination = self.oIOXml.GetDataInNode(xDestinationNodes[0])
+            
+            if len(xDestinationNodes) > 1:
+                sWarningMsg = sWarningMsg + '\n' + 'There can only be one viewing destination (Red, Green, Yellow) per image. The first defined destination in the XML will be used.   '
+
 
         # Extract viewing layer (foreground, background, label)
         xLayerNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Layer')
-        if len(xLayerNodes) > 1:
-            sWarningMsg = 'There can only be one viewing layer (foreground, background or label) per image. \nThe first defined layer in the XML will be used.   '
-            sWarningMsg = sWarningMsg + self.sNodeName
-            self.oUtilsMsgs.DisplayWarning(sWarningMsg)
+        if len(xLayerNodes) == 0: # default
+            self.sViewLayer = 'Background'
+            sWarningMsg = sWarningMsg + '\n' + 'Missing XML element: Layer. The default "Background" will be used.   '
+        else:
+            self.sViewLayer = self.oIOXml.GetDataInNode(xLayerNodes[0])
 
-        self.sViewLayer = self.oIOXml.GetDataInNode(xLayerNodes[0])
+            if len(xLayerNodes) > 1:
+                sWarningMsg = sWarningMsg + '\n' + 'There can only be one viewing layer (foreground, background or label) per image. The first defined layer in the XML will be used.   '
     
+
+        # Extract orientation (axial, sagittal, coronal)
         if (self.sImageType == 'Volume' or self.sImageType == 'VolumeSequence'):
             # Only image volumes have an orientation, 
             # segmentation layer (RTStruct) follows the orientation of the display node
              
-            # Extract orientation (axial, sagittal, coronal)
             xOrientationNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Orientation')
-            if len(xOrientationNodes) > 1:
-                sWarningMsg = 'There can only be one orientation (axial, sagittal, coronal) per image. \nThe first defined orientation in the XML will be used.   '
-                sWarningMsg = sWarningMsg + self.sNodeName
-                self.oUtilsMsgs.DisplayWarning(sWarningMsg)
-    
-            self.sOrientation = self.oIOXml.GetDataInNode(xOrientationNodes[0])
+            if len(xOrientationNodes) == 0:
+                self.sOrientation = 'Axial'
+                sWarningMsg = sWarningMsg + '\n' + 'Missing XML element: Orientation . The default "Axial" will be used.   '
+                
+            else:
+                self.sOrientation = self.oIOXml.GetDataInNode(xOrientationNodes[0])
+
+                if len(xOrientationNodes) > 1:
+                    sWarningMsg = sWarningMsg + '\n' + 'There can only be one orientation (axial, sagittal, coronal) per image. \nThe first defined orientation in the XML will be used.   '
             
+        # Extract path element
+        xPathNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Path')
+
+        if len(xPathNodes) == 0:
+            sWarningMsg = sWarningMsg + '\n' + 'Missing XML element: Path . No image will be displayed.'
+            self.sImagePath = ''
+        else:
+            self.sImagePath = os.path.join(sParentDataDir, self.oIOXml.GetDataInNode(xPathNodes[0]))
+            
+            if len(xPathNodes) > 1:
+                sWarningMsg = sWarningMsg + '\n' + 'There can only be one path per image.  The first defined path will be used.   '
+
+#         sFilename_w_ext = os.path.basename(self.sImagePath)
+#         sFilename, sFileExt = os.path.splitext(sFilename_w_ext)
+        
+
+        # display warnings
+        if sWarningMsg != '':
+            sWarningMsg = sWarningMsg + '\n' +  self.sNodeName
+            self.oUtilsMsgs.DisplayWarning( sWarningMsg )
             
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
