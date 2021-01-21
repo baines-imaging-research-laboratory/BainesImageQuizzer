@@ -294,23 +294,23 @@ class ImageView:
         
         # adjust visibility of each ROI as per user's request
         
-        if (oViewNode.sRoiVisibilityCode == 'All'):
+        if (oViewNode.sRoiVisibilityCode == 'all'):
             for indSHList in range(len(lsSubjectHierarchyROINames)):
                 slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],True)
                 
-        if (oViewNode.sRoiVisibilityCode == 'None'):
+        if (oViewNode.sRoiVisibilityCode == 'none'):
             for indSHList in range(len(lsSubjectHierarchyROINames)):
                 slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],False)
             
         # turn ON all ROI's and then turn OFF user's list    
-        if (oViewNode.sRoiVisibilityCode == 'Ignore'):
+        if (oViewNode.sRoiVisibilityCode == 'ignore'):
             for indSHList in range(len(lsSubjectHierarchyROINames)):
                 slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],True)
             for indUserList in range(len(oViewNode.lsRoiList)):
                 slSegDisplayNode.SetSegmentVisibility(oViewNode.lsRoiList[indUserList], False)
 
         # turn OFF all ROI's and then turn ON user's list    
-        if (oViewNode.sRoiVisibilityCode == 'Select'):
+        if (oViewNode.sRoiVisibilityCode == 'select'):
             for indSHList in range(len(lsSubjectHierarchyROINames)):
                 slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],False)
             for indUserList in range(len(oViewNode.lsRoiList)):
@@ -892,9 +892,9 @@ class DicomVolumeDetail(ViewNodeBase):
         xRoisNode = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'ROIs')
         
         # get visibility code from the attribute
-        self.sRoiVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(xRoisNode[0], 'roiVisibilityCode')
+        self.sRoiVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(xRoisNode[0], 'roivisibilitycode')
 
-        if (self.sRoiVisibilityCode == 'Select' or self.sRoiVisibilityCode == 'Ignore'):
+        if (self.sRoiVisibilityCode == 'select' or self.sRoiVisibilityCode == 'ignore'):
             
             # get list of ROI children
             xRoiChildren = self.oIOXml.GetChildren(xRoisNode[0], 'ROI')
