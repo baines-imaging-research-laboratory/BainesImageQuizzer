@@ -1,144 +1,144 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session>
-	<Page name="Patient1" descriptor="PlanningCT">
-		<Image format="nrrd" type="Volume" descriptor="Fixed Volume">
+	<Page Name="Patient1" Descriptor="PlanningCT">
+		<Image Format="NRRD" Type="Volume" Descriptor="Fixed Volume">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-		<Image descriptor="Brain MR" format="nrrd" type="Volume">
+		<Image Descriptor="Brain MR" Format="NRRD" Type="Volume">
 			<Destination>Red</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="Fixed Volume">
+		<Image Format="NRRD" Type="Volume" Descriptor="Fixed Volume">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="Fixed Volume">
+		<Image Format="NRRD" Type="Volume" Descriptor="Fixed Volume">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-		<QuestionSet name="QS-Intro" descriptor="Introduction to Quiz"  segmentrequired="n" allowmultipleresponse="n">
-			<Question type="InfoBox" descriptor="Introduction">
+		<QuestionSet Name="QS-Intro" Descriptor="Introduction to Quiz"  SegmentRequired="N" AllowMultipleResponse="N">
+			<Question Type="InfoBox" Descriptor="Introduction">
 				<Option>Lots of text describing something</Option>
 			</Question>
 		</QuestionSet>
-		<QuestionSet name="QS-Intro #2" descriptor="How to - Instructions"  segmentrequired="n"  allowmultipleresponse="n">
-			<Question type="InfoBox" descriptor="Instructions">
+		<QuestionSet Name="QS-Intro #2" Descriptor="How to - Instructions"  SegmentRequired="N"  AllowMultipleResponse="N">
+			<Question Type="InfoBox" Descriptor="Instructions">
 				<Option>This is how to run the quiz : .....</Option>
 			</Question>
-			<Question type="IntegerValue" descriptor="Food Order" max="5">
+			<Question Type="IntegerValue" Descriptor="Food Order" Max="5">
 				<Option>Enter number of pizzas:</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page name="Patient1" descriptor="Follow-up 1">
-		<Image format="nrrd" type="Volume" descriptor="Moving Volume" rotatetoacquisition="y">
+	<Page Name="Patient1" Descriptor="Follow-up 1">
+		<Image Format="NRRD" Type="Volume" Descriptor="Moving Volume" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="Moving Volume" rotatetoacquisition="y">
+		<Image Format="NRRD" Type="Volume" Descriptor="Moving Volume" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="Moving Volume" rotatetoacquisition="y">
+		<Image Format="NRRD" Type="Volume" Descriptor="Moving Volume" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<QuestionSet name="QS-Observation" descriptor="What is your Assessment"  segmentrequired="y"  allowmultipleresponse="y">
-			<Question type="Radio" descriptor="Assessment">
+		<QuestionSet Name="QS-Observation" Descriptor="What is your Assessment"  SegmentRequired="Y"  AllowMultipleResponse="Y">
+			<Question Type="Radio" Descriptor="Assessment">
 				<Option>Injury</Option>
 				<Option>Recurrence</Option>
 			</Question>
-			<Question type="Radio" descriptor="Confidence">
+			<Question Type="Radio" Descriptor="Confidence">
 				<Option>Yes</Option>
 				<Option>Maybe</Option>
 				<Option>No</Option>
 			</Question>
-			<Question type="IntegerValue" descriptor="Tumour Observation" min="-5" max="5">
+			<Question Type="IntegerValue" Descriptor="Tumour Observation" Min="-5" Max="5">
 				<Option>Enter number of tumours:</Option>
 			</Question>
-			<Question type="FloatValue" descriptor="Tumour Measurment" max="50">
+			<Question Type="FloatValue" Descriptor="Tumour Measurment" Max="50">
 				<Option>Enter RECIST of largest tumour:</Option>
 			</Question>
-			<Question type="Text" descriptor="First Impressions">
+			<Question Type="Text" Descriptor="First Impressions">
 				<Option>Enter your thoughts : </Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page name="Patient2" descriptor="Mixed Displays" linkviews="n">
-		<Image format="nrrd" type="Volume"  descriptor="Brain CT" usepreviouslabelmap="y" rotatetoacquisition="y">
+	<Page Name="Patient2" Descriptor="Mixed Displays" LinkViews="N">
+		<Image Format="NRRD" Type="Volume"  Descriptor="Brain CT" UsePreviousLabelMap="Y" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="Brain MR" usepreviouslabelmap="y" rotatetoacquisition="y">
+		<Image Format="NRRD" Type="Volume" Descriptor="Brain MR" UsePreviousLabelMap="Y" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
 		</Image>
-		<Image format="mhd" type="Volume" descriptor="Case00Prostate" usepreviouslabelmap="y" rotatetoacquisition="y">
+		<Image Format="MHD" Type="Volume" Descriptor="Case00Prostate" UsePreviousLabelMap="Y" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Prostate\Case00.mhd</Path>
 		</Image>
-		<Image format="mhd" type="LabelMap" descriptor="Case00Prostate Segmentation">
+		<Image Format="MHD" Type="LabelMap" Descriptor="Case00Prostate Segmentation">
 			<Destination>Yellow</Destination>
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\Prostate\Case00_segmentation.mhd</Path>
 		</Image>
-		<QuestionSet name="QS-Demo" descriptor="Demo buttons" segmentrequired="y"  allowmultipleresponse="y">
-			<Question type="CheckBox"  descriptor="Demo Checks">
+		<QuestionSet Name="QS-Demo" Descriptor="Demo buttons" SegmentRequired="Y"  AllowMultipleResponse="Y">
+			<Question Type="CheckBox"  Descriptor="Demo Checks">
 				<Option>Check 1</Option>
 				<Option>Check 2</Option>
 			</Question>
-			<Question type="Radio" descriptor="Demo Radios">
+			<Question Type="Radio" Descriptor="Demo Radios">
 				<Option>Yes</Option>
 				<Option>Maybe</Option>
 				<Option>No</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page name="TinyPatient" descriptor="DicomSeries">
-		<Image format="dicom" type="Volume" descriptor="CTSeries">
+	<Page Name="TinyPatient" Descriptor="DicomSeries">
+		<Image Format="DICOM" Type="Volume" Descriptor="CTSeries">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="CTSeries">
+		<Image Format="DICOM" Type="Volume" Descriptor="CTSeries">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="CTSeries">
+		<Image Format="DICOM" Type="Volume" Descriptor="CTSeries">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<QuestionSet name="QS-Checkup" descriptor="Tell us how you feel" segmentrequired="n"  allowmultipleresponse="n">
-			<Question type="CheckBox" descriptor="Patient general health">
+		<QuestionSet Name="QS-Checkup" Descriptor="Tell us how you feel" SegmentRequired="N"  AllowMultipleResponse="N">
+			<Question Type="CheckBox" Descriptor="Patient general health">
 				<Option>I need sleep.</Option>
 				<Option>I need a vacation.</Option>
 				<Option>I need help.</Option>
@@ -146,29 +146,29 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page name="TinyPatient" descriptor="DicomSeries">
-		<Image format="dicom" type="Volume" descriptor="CTSeries">
+	<Page Name="TinyPatient" Descriptor="DicomSeries">
+		<Image Format="DICOM" Type="Volume" Descriptor="CTSeries">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="CTSeries">
+		<Image Format="DICOM" Type="Volume" Descriptor="CTSeries">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="CTSeries">
+		<Image Format="DICOM" Type="Volume" Descriptor="CTSeries">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="RTStruct" descriptor="Segmentation">
+		<Image Format="DICOM" Type="RTStruct" Descriptor="Segmentation">
 			<Destination>Red</Destination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
@@ -179,84 +179,84 @@
 				<ROI>Body_Contour</ROI>
 			</ROIs>
 		</Image>
-		<Image format="dicom" type="RTStruct" descriptor="Segmentation">
+		<Image Format="DICOM" Type="RTStruct" Descriptor="Segmentation">
 			<Destination>Yellow</Destination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
 			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
-			<ROIs roiVisibilityCode="Select">
+			<ROIs ROIVisibilityCode="Select">
 				<ROI>Tumor_Contour</ROI>
 				<ROI>Body_Contour</ROI>
 			</ROIs>
 		</Image>
-		<Image format="dicom" type="RTStruct" descriptor="Segmentation">
+		<Image Format="DICOM" Type="RTStruct" Descriptor="Segmentation">
 			<Destination>Green</Destination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
 			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
-			<ROIs roiVisibilityCode="Select">
+			<ROIs ROIVisibilityCode="Select">
 				<ROI>Tumor_Contour</ROI>
 				<ROI>Body_Contour</ROI>
 			</ROIs>
 		</Image>
-		<QuestionSet name="QS-Checkup" descriptor="What's your progress"  segmentrequired="y"  allowmultipleresponse="n">
-			<Question type="Radio" descriptor="Milestone checker">
+		<QuestionSet Name="QS-Checkup" Descriptor="What's your progress"  SegmentRequired="Y"  AllowMultipleResponse="N">
+			<Question Type="Radio" Descriptor="Milestone checker">
 				<Option>Cooking with gas.</Option>
 				<Option>On track.</Option>
 				<Option>Long way to go.</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page name="CL PT001" descriptor="Multiparametric_MRI">
-		<Image format="dicom" type="Volume" descriptor="T1W MR">
+	<Page Name="CL PT001" Descriptor="Multiparametric_MRI">
+		<Image Format="DICOM" Type="Volume" Descriptor="T1W MR">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\000000.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7948263890.5300.3875531536.492</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="T2W MR">
+		<Image Format="DICOM" Type="Volume" Descriptor="T2W MR">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\000000.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.8006916558.3791.7149983690.261</SeriesInstanceUID>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="DWI">
+		<Image Format="NRRD" Type="Volume" Descriptor="DWI">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\BrainDWI\dwi.nrrd</Path>
 		</Image>
-		<Image format="dicom" type="RTStruct" descriptor="Seg T2W">
+		<Image Format="DICOM" Type="RTStruct" Descriptor="Seg T2W">
 			<Destination>Yellow</Destination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\RT Struct.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7830722178.5575.6291913264.331</SeriesInstanceUID>
 			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.8006916558.3791.7149983690.261</RefSeriesInstanceUID>
-			<ROIs roiVisibilityCode="Select">
+			<ROIs ROIVisibilityCode="Select">
 				<ROI>1</ROI>
 			</ROIs>
 		</Image>
-		<Image format="dicom" type="RTStruct" descriptor="Seg T1W">
+		<Image Format="DICOM" Type="RTStruct" Descriptor="Seg T1W">
 			<Destination>Red</Destination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\RT Struct.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.4766362084.1716.2453053177.382</SeriesInstanceUID>
 			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7948263890.5300.3875531536.492</RefSeriesInstanceUID>
-			<ROIs roiVisibilityCode="Select">
+			<ROIs ROIVisibilityCode="Select">
 				<ROI>1</ROI>
 			</ROIs>
 		</Image>
-		<Image format="nrrd" type="LabelMap" descriptor="">
+		<Image Format="NRRD" Type="LabelMap" Descriptor="">
 			<Destination>Green</Destination>
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\BrainDWI\Segment_1-label.nrrd</Path>
 		</Image>
-		<QuestionSet name="QS-Checkup" descriptor="Your thoughts?" allowmultipleresponse="y">
-			<Question type="CheckBox" descriptor="Milestone checker">
+		<QuestionSet Name="QS-Checkup" Descriptor="Your thoughts?" AllowMultipleResponse="Y">
+			<Question Type="CheckBox" Descriptor="Milestone checker">
 				<Option>Working at home is comfortable.</Option>
 				<Option>Dan needs a hobby.</Option>
 				<Option>Buddy thinks life can't get any better.</Option>

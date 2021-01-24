@@ -257,14 +257,14 @@ class Session:
             # turn on functionality if any of the question set attributes indicated they are required
             self.SetMultipleResponsesInQuiz( \
                 self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
-                './/Page/QuestionSet', 'allowmultipleresponse','y'))
+                './/Page/QuestionSet', 'AllowMultipleResponse','Y'))
             self.AddSegmentationModule( \
                 self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
-                './/Page/QuestionSet', 'segmentrequired','y'))
+                './/Page/QuestionSet', 'SegmentRequired','Y'))
             
             # set up ROI colors for segmenting
 #             self.oUtilsIO.SetResourcesROIColorFilesDir()
-            sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'roicolorfile')
+            sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RoiColorFile')
             self.oFilesIO.SetupROIColorFile(sColorFileName)
 
 
@@ -565,8 +565,8 @@ class Session:
         
         # add page name/descriptor to the progress bar
         xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
-        sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'descriptor')
-        sPageName = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'name')
+        sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
+        sPageName = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Name')
         iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l2iPageQuestionCompositeIndices) * 100)
         self.progress.setFormat(sPageName + ' ' + sPageDescriptor + '    ' + str(iProgressPercent) + '%')
                     
@@ -877,7 +877,7 @@ class Session:
 
                 # read attribute from xml file whether to use label maps previously created
                 #    by the user in the quiz for this image
-                if (self.oIOXml.GetValueOfNodeAttribute(oImageNode.GetXmlImageElement(), 'usepreviouslabelmap') == 'y'):
+                if (self.oIOXml.GetValueOfNodeAttribute(oImageNode.GetXmlImageElement(), 'UsePreviousLabelMap') == 'Y'):
                     bUsePreviousLabelMap = True
                 else:
                     bUsePreviousLabelMap = False
@@ -914,7 +914,8 @@ class Session:
                     #    (same image but different orientations)
                     if not sStoredRelativePath in lLoadedLabelMaps:
                         sAbsolutePath = self.oFilesIO.GetAbsoluteUserPath(sStoredRelativePath)
-                        dictProperties = {'labelmap' : True, 'show': False}
+#                         dictProperties = {'LabelMap' : True, 'show': False}
+                        dictProperties = {'LabelMap' : True}
                         
                         try:
 
@@ -1057,7 +1058,7 @@ class Session:
     def CheckForSavedResponse(self):
 
         """ Check through all questions for the question set looking for a response.
-            If the Question Set has a "segmentrequired='y'" attribute, 
+            If the Question Set has a "SegmentRequired='Y'" attribute, 
             check for a saved label map path element. 
 
             Assume: All options have a response if the question was answered so we just query the first.
@@ -1068,7 +1069,7 @@ class Session:
         xNodeQuestionSet = self.GetCurrentQuestionSetNode()
         xNodePage = self.GetCurrentPageNode()
         
-        sLabelMapRequired = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'segmentrequired')
+        sLabelMapRequired = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'SegmentRequired')
 
         # search for labelmap path in the xml image nodes if segmentation was required
         if sLabelMapRequired == 'y':
@@ -1111,11 +1112,16 @@ class Session:
     def GetQuestionSetResponseCompletionLevel(self, indCI=None):
         
         """ Check through all questions for the question set looking for a response.
-            If the Question Set has a "segmentrequired='y'" attribute, 
+            If the Question Set has a "SegmentRequired='Y'" attribute, 
             check for a saved label map path element. 
 
             Assumption: All options have a response if the question was answered
-            so we just query the first.
+            so we just query the first. 
+            eg: Radio Question     Success?
+                    Opt 1            yes
+                        response:       y (checked)
+                    Opt 2            no
+                        response:       n (not checked)
         """
         
         if indCI == None:
@@ -1131,7 +1137,7 @@ class Session:
         xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', indQuestionSet)
         
         
-        sLabelMapRequired = self.oIOXml.GetValueOfNodeAttribute(xQuestionSetNode, 'segmentrequired')
+        sLabelMapRequired = self.oIOXml.GetValueOfNodeAttribute(xQuestionSetNode, 'SegmentRequired')
 
         # search for labelmap path in the xml image nodes if segmentation was required
         if sLabelMapRequired == 'y':
@@ -1178,8 +1184,8 @@ class Session:
         # get page info to create directory
         xPageNode = self.GetCurrentPageNode()
         sPageIndex = str(self.GetCurrentPageIndex() + 1)
-        sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'name')
-        sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'descriptor')
+        sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Name')
+        sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
          
         sDirName = os.path.join(self.oFilesIO.GetUserQuizResultsDir(), sPageIndex + '_' + sPageName + '_' + sPageDescriptor)
 
@@ -1362,7 +1368,7 @@ class Session:
         now = datetime.now()
         sResponseTime = now.strftime(self.oIOXml.sTimestampFormat)
         
-        dictAttrib = { 'logintime': self.LoginTime(), 'responsetime': sResponseTime}
+        dictAttrib = { 'LoginTime': self.LoginTime(), 'ResponseTime': sResponseTime}
         
         self.oIOXml.AddElement(xOptionNode,'Response', sResponse, dictAttrib)
         
@@ -1382,7 +1388,7 @@ class Session:
         now = datetime.now()
         sResponseTime = now.strftime(self.oIOXml.sTimestampFormat)
         
-        dictTimeAttributes = { 'logintime': self.LoginTime(), 'responsetime': sResponseTime} 
+        dictTimeAttributes = { 'LoginTime': self.LoginTime(), 'ResponseTime': sResponseTime} 
         dictAttrib.update(dictTimeAttributes)
 
         self.oIOXml.AddElement(xImageNode,'State', sNullData, dictAttrib)
@@ -1395,7 +1401,7 @@ class Session:
         now = datetime.now()
         sResponseTime = now.strftime(self.oIOXml.sTimestampFormat)
         
-        dictAttrib = { 'logintime': self.LoginTime(), 'responsetime': sResponseTime} 
+        dictAttrib = { 'LoginTime': self.LoginTime(), 'ResponseTime': sResponseTime} 
         
         self.oIOXml.AddElement(xImageNode,'LabelMapPath',sInputPath, dictAttrib)
         
@@ -1408,7 +1414,7 @@ class Session:
 
         self.SetLoginTime( now.strftime(self.oIOXml.sTimestampFormat) )
         
-        dictAttrib = {'logintime': self.LoginTime()}
+        dictAttrib = {'LoginTime': self.LoginTime()}
         
         sNullText = ''
         
@@ -1478,7 +1484,7 @@ class Session:
                 # check each response tag for the time
                 for indResp in range(iNumResponses):
                     xResponseNode = self.oIOXml.GetNthChild(xOptionNode, 'Response', indResp)
-                    sTimestamp = self.oIOXml.GetValueOfNodeAttribute(xResponseNode, 'logintime')
+                    sTimestamp = self.oIOXml.GetValueOfNodeAttribute(xResponseNode, 'LoginTime')
     
                     dtLoginTimestamp = datetime.strptime(sTimestamp, self.oIOXml.sTimestampFormat)
                     if dtLoginTimestamp == dtLastLogin:
@@ -1554,7 +1560,7 @@ class Session:
             # get date/time from attribute
             xmlLoginNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Login', indElem)
 
-            sTimestamp = self.oIOXml.GetValueOfNodeAttribute(xmlLoginNode, 'logintime')
+            sTimestamp = self.oIOXml.GetValueOfNodeAttribute(xmlLoginNode, 'LoginTime')
             lsTimestamps.append(sTimestamp)
             
 

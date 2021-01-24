@@ -211,7 +211,7 @@ class UtilsIOXml:
  
         xAllChildren = self.GetChildren(xParentNode, sChildTagName)
         for xChild in xAllChildren:
-            sResponseTime = self.GetValueOfNodeAttribute(xChild, 'responsetime')
+            sResponseTime = self.GetValueOfNodeAttribute(xChild, 'ResponseTime')
             dtResponseTimestamp = datetime.strptime(sResponseTime, self.sTimestampFormat)
 #             print('*** TIME : %s' % sResponseTime)
               
