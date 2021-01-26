@@ -28,7 +28,7 @@ class ImageView:
         self.sPageName = ''
         self.sPageDescriptor = ''
         
-        self.lValidVolumeFormats = ['NRRD', 'NII', 'MHD', 'DICOM']
+        self.lValidVolumeFormats = ['NRRD', 'NIFTI', 'MHD', 'DICOM']
         self._loImageViews = []
         self.bLinkViews = False
         
@@ -186,13 +186,13 @@ class ImageView:
             elif oViewNode.sViewLayer == 'Label':
                 if slWindowCompositeNode.GetLabelVolumeID() == 'None':
                     slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
-                print('after set Label Volume ID',slWidget.sliceOrientation)
+#                 print('after set Label Volume ID',slWidget.sliceOrientation)
     
 
             elif oViewNode.sViewLayer == 'Segmentation':
                 if not (oViewNode.sRoiVisibilityCode == 'Empty'):
                     self.SetSegmentRoiVisibility(oViewNode)
-                print('after set Segmentation Volume ID',slWidget.sliceOrientation)
+#                 print('after set Segmentation Volume ID',slWidget.sliceOrientation)
 
             # after all images and their label maps have been assigned, adjust the link control
             if self.bLinkViews == True:
@@ -409,7 +409,7 @@ class ViewNodeBase:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractImageAttributes(self):
 
-        self.sNodeDescriptor = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'Descriptor')
+        sImageID = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'ID')
         self.sImageType = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'Type')
 #         self.sDestination = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'destination')
         self.sColorTableName = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'ColorTable')
@@ -420,7 +420,7 @@ class ViewNodeBase:
         else:
             self.bRotateToAcquisition = False
     
-        self.sNodeName =  self.GetPageID() + '_' + self.sNodeDescriptor
+        self.sNodeName =  self.GetPageID() + '_' + sImageID
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractXMLNodeElements(self, sParentDataDir):
@@ -635,7 +635,7 @@ class DataVolumeDetail(ViewNodeBase):
                 bNodeExists = self.CheckForNodeExists('vtkMRMLScalarVolumeNode')
                 if not (bNodeExists):
                     self.slNode = slicer.util.loadVolume(self.sImagePath, {'show': False, 'name': self.sNodeName})
-                else: # make sure a node exists
+                else: # make sure a node exists after load
                     if bNodeExists and (self.slNode is None):
                         bLoadSuccess = False
             
@@ -644,7 +644,7 @@ class DataVolumeDetail(ViewNodeBase):
                 bNodeExists = self.CheckForNodeExists('vtkMRMLSegmentationNode')
                 if not (bNodeExists):
                     self.slNode = slicer.util.loadSegmentation(self.sImagePath, {'show': False, 'name': self.sNodeName})
-                else: # make sure a node exists
+                else: # make sure a node exists after load
                     if bNodeExists and (self.slNode is None):
                         bLoadSuccess = False
             
@@ -654,7 +654,7 @@ class DataVolumeDetail(ViewNodeBase):
                 dictProperties = {'labelmap' : True, 'show': False, 'name': self.sNodeName}
                 if not (bNodeExists):
                     self.slNode = slicer.util.loadLabelVolume(self.sImagePath, dictProperties)
-                else: # make sure a node exists
+                else: # make sure a node exists after load
                     if bNodeExists and (self.slNode is None):
                         bLoadSuccess = False
 
@@ -673,7 +673,7 @@ class DataVolumeDetail(ViewNodeBase):
 
                 
                 
-                else: # make sure a node exists
+                else: # make sure a node exists after load
                     if bNodeExists and (self.slNode is None):
                         bLoadSuccess = False
                     

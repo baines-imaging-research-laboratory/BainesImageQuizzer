@@ -264,7 +264,7 @@ class Session:
             
             # set up ROI colors for segmenting
 #             self.oUtilsIO.SetResourcesROIColorFilesDir()
-            sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RoiColorFile')
+            sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
             self.oFilesIO.SetupROIColorFile(sColorFileName)
 
 

@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session>
 	<Page Name="Patient1" Descriptor="PlanningCT">
-		<Image Format="NRRD" Type="Volume" Descriptor="Fixed Volume">
+		<Image Format="NRRD" Type="Volume" ID="Fixed Volume">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<Image Descriptor="Moving Volume" Format="NRRD" Type="Volume">
+		<Image ID="Moving Volume" Format="NRRD" Type="Volume">
 			<Destination>Red</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" Descriptor="Fixed Volume">
+		<Image Format="NRRD" Type="Volume" ID="Fixed Volume">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" Descriptor="Fixed Volume">
+		<Image Format="NRRD" Type="Volume" ID="Fixed Volume">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
 		<QuestionSet Name="QS-Intro" Descriptor="Introduction to Quiz"  SegmentRequired="N" AllowMultipleResponse="N">
 			<Question Type="InfoBox" Descriptor="Introduction">
@@ -40,23 +40,23 @@
 		</QuestionSet>
 	</Page>
 	<Page Name="Patient1" Descriptor="Follow-up 1">
-		<Image Format="NRRD" Type="Volume" Descriptor="Moving Volume" RotateToAcquisition="Y">
+		<Image Format="NRRD" Type="Volume" ID="Moving Volume" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" Descriptor="Moving Volume" RotateToAcquisition="Y">
+		<Image Format="NRRD" Type="Volume" ID="Moving Volume" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" Descriptor="Moving Volume" RotateToAcquisition="Y">
+		<Image Format="NRRD" Type="Volume" ID="Moving Volume" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
 		<QuestionSet Name="QS-Observation" Descriptor="What is your Assessment"  SegmentRequired="Y"  AllowMultipleResponse="Y">
 			<Question Type="Radio" Descriptor="Assessment">
@@ -80,25 +80,25 @@
 		</QuestionSet>
 	</Page>
 	<Page Name="Patient3" Descriptor="Mixed Displays - First Showing" LinkViews="N">
-		<Image Format="NRRD" Type="Volume"  Descriptor="Fixed Volume" UsePreviousLabelMap="Y" RotateToAcquisition="Y">
+		<Image Format="NRRD" Type="Volume"  ID="Fixed Volume" UsePreviousLabelMap="Y" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" Descriptor="Moving Volume" UsePreviousLabelMap="Y" RotateToAcquisition="Y">
+		<Image Format="NRRD" Type="Volume" ID="Moving Volume" UsePreviousLabelMap="Y" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
-		<Image Format="MHD" Type="Volume" Descriptor="Case00Prostate" RotateToAcquisition="Y">
+		<Image Format="MHD" Type="Volume" ID="Case00Prostate" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Prostate\Case00.mhd</Path>
 		</Image>
-		<Image Format="MHD" Type="LabelMap" Descriptor="Case00Prostate Segmentation">
+		<Image Format="MHD" Type="LabelMap" ID="Case00Prostate Segmentation">
 			<Destination>Yellow</Destination>
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\Prostate\Case00_segmentation.mhd</Path>
@@ -116,25 +116,25 @@
 		</QuestionSet>
 	</Page>
 	<Page Name="Patient3" Descriptor="Mixed Displays Reassessment" LinkViews="N">
-		<Image Format="NRRD" Type="Volume"  Descriptor="Fixed Volume" UsePreviousLabelMap="Y" RotateToAcquisition="Y">
+		<Image Format="NRRD" Type="Volume"  ID="Fixed Volume" UsePreviousLabelMap="Y" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" Descriptor="Moving Volume" RotateToAcquisition="Y">
+		<Image Format="NRRD" Type="Volume" ID="Moving Volume" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
-		<Image Format="MHD" Type="Volume" Descriptor="Case00Prostate" UsePreviousLabelMap="Y" RotateToAcquisition="Y">
+		<Image Format="MHD" Type="Volume" ID="Case00Prostate" UsePreviousLabelMap="Y" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Prostate\Case00.mhd</Path>
 		</Image>
-		<Image Format="MHD" Type="LabelMap" Descriptor="Case00Prostate Segmentation">
+		<Image Format="MHD" Type="LabelMap" ID="Case00Prostate Segmentation">
 			<Destination>Yellow</Destination>
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\Prostate\Case00_segmentation.mhd</Path>

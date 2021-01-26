@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session>
 	<Page Name="Patient1" Descriptor="PlanningCT">
-		<Image Format="NRRD" Type="Volume" Descriptor="Fixed Volume">
+		<Image Format="NRRD" Type="Volume" ID="Fixed Volume">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<Image Descriptor="Brain MR" Format="NRRD" Type="Volume">
+		<Image ID="Unregistered" Format="NIFTI" Type="Volume">
 			<Destination>Red</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nii</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" Descriptor="Fixed Volume">
+		<Image Format="NRRD" Type="Volume" ID="Fixed Volume">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" Descriptor="Fixed Volume">
+		<Image Format="NRRD" Type="Volume" ID="Fixed Volume">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
 		<QuestionSet Name="QS-Intro" Descriptor="Introduction to Quiz"  SegmentRequired="N" AllowMultipleResponse="N">
 			<Question Type="InfoBox" Descriptor="Introduction">
@@ -40,23 +40,23 @@
 		</QuestionSet>
 	</Page>
 	<Page Name="Patient1" Descriptor="Follow-up 1">
-		<Image Format="NRRD" Type="Volume" Descriptor="Moving Volume" RotateToAcquisition="Y">
+		<Image Format="NRRD" Type="Volume" ID="Moving Volume" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" Descriptor="Moving Volume" RotateToAcquisition="Y">
+		<Image Format="NRRD" Type="Volume" ID="Moving Volume" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" Descriptor="Moving Volume" RotateToAcquisition="Y">
+		<Image Format="NRRD" Type="Volume" ID="Moving Volume" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
 		<QuestionSet Name="QS-Observation" Descriptor="What is your Assessment"  SegmentRequired="Y"  AllowMultipleResponse="Y">
 			<Question Type="Radio" Descriptor="Assessment">
@@ -80,25 +80,25 @@
 		</QuestionSet>
 	</Page>
 	<Page Name="Patient2" Descriptor="Mixed Displays" LinkViews="N">
-		<Image Format="NRRD" Type="Volume"  Descriptor="Brain CT" UsePreviousLabelMap="Y" RotateToAcquisition="Y">
+		<Image Format="NRRD" Type="Volume"  ID="Brain CT" UsePreviousLabelMap="Y" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" Descriptor="Brain MR" UsePreviousLabelMap="Y" RotateToAcquisition="Y">
+		<Image Format="NRRD" Type="Volume" ID="Unregistered" UsePreviousLabelMap="Y" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_moving.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
-		<Image Format="MHD" Type="Volume" Descriptor="Case00Prostate" UsePreviousLabelMap="Y" RotateToAcquisition="Y">
+		<Image Format="MHD" Type="Volume" ID="Case00Prostate" UsePreviousLabelMap="Y" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Prostate\Case00.mhd</Path>
 		</Image>
-		<Image Format="MHD" Type="LabelMap" Descriptor="Case00Prostate Segmentation">
+		<Image Format="MHD" Type="LabelMap" ID="Case00Prostate Segmentation">
 			<Destination>Yellow</Destination>
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\Prostate\Case00_segmentation.mhd</Path>
@@ -116,21 +116,21 @@
 		</QuestionSet>
 	</Page>
 	<Page Name="TinyPatient" Descriptor="DicomSeries">
-		<Image Format="DICOM" Type="Volume" Descriptor="CTSeries">
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image Format="DICOM" Type="Volume" Descriptor="CTSeries">
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image Format="DICOM" Type="Volume" Descriptor="CTSeries">
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
@@ -147,28 +147,28 @@
 		</QuestionSet>
 	</Page>
 	<Page Name="TinyPatient" Descriptor="DicomSeries">
-		<Image Format="DICOM" Type="Volume" Descriptor="CTSeries">
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image Format="DICOM" Type="Volume" Descriptor="CTSeries">
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image Format="DICOM" Type="Volume" Descriptor="CTSeries">
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image Format="DICOM" Type="RTStruct" Descriptor="Segmentation">
+		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
 			<Destination>Red</Destination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
@@ -179,7 +179,7 @@
 				<ROI>Body_Contour</ROI>
 			</ROIs>
 		</Image>
-		<Image Format="DICOM" Type="RTStruct" Descriptor="Segmentation">
+		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
 			<Destination>Yellow</Destination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
@@ -190,7 +190,7 @@
 				<ROI>Body_Contour</ROI>
 			</ROIs>
 		</Image>
-		<Image Format="DICOM" Type="RTStruct" Descriptor="Segmentation">
+		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
 			<Destination>Green</Destination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
@@ -210,27 +210,27 @@
 		</QuestionSet>
 	</Page>
 	<Page Name="CL PT001" Descriptor="Multiparametric_MRI">
-		<Image Format="DICOM" Type="Volume" Descriptor="T1W MR">
+		<Image Format="DICOM" Type="Volume" ID="T1W MR">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\000000.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7948263890.5300.3875531536.492</SeriesInstanceUID>
 		</Image>
-		<Image Format="DICOM" Type="Volume" Descriptor="T2W MR">
+		<Image Format="DICOM" Type="Volume" ID="T2W MR">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\000000.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.8006916558.3791.7149983690.261</SeriesInstanceUID>
 		</Image>
-		<Image Format="NRRD" Type="Volume" Descriptor="DWI">
+		<Image Format="NRRD" Type="Volume" ID="DWI">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\BrainDWI\dwi.nrrd</Path>
 		</Image>
-		<Image Format="DICOM" Type="RTStruct" Descriptor="Seg T2W">
+		<Image Format="DICOM" Type="RTStruct" ID="Seg T2W">
 			<Destination>Yellow</Destination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\RT Struct.dcm</Path>
@@ -240,7 +240,7 @@
 				<ROI>1</ROI>
 			</ROIs>
 		</Image>
-		<Image Format="DICOM" Type="RTStruct" Descriptor="Seg T1W">
+		<Image Format="DICOM" Type="RTStruct" ID="Seg T1W">
 			<Destination>Red</Destination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\RT Struct.dcm</Path>
@@ -250,7 +250,7 @@
 				<ROI>1</ROI>
 			</ROIs>
 		</Image>
-		<Image Format="NRRD" Type="LabelMap" Descriptor="">
+		<Image Format="NRRD" Type="LabelMap" ID="Contour1">
 			<Destination>Green</Destination>
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\BrainDWI\Segment_1-label.nrrd</Path>
