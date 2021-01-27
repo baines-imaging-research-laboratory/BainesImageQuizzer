@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Session ROIColorFile="PiRadsStudy">
+	<Page Name="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y">
+		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y">
+			<Destination>Green</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\ProstateDCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
+		</Image>
+		<Image Format="NRRD" Type="Volume" ID="ADC" RotateToAcquisition="Y">
+			<Destination>Red</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\{286306cb-946c-441c-8ed2-630283a455d4}\Data\adc.nrrd</Path>
+		</Image>
+		<Image ID="T2-N4" Format="NRRD" Type="Volume" RotateToAcquisition="Y">
+			<Destination>Yellow</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\{286306cb-946c-441c-8ed2-630283a455d4}\Data\t2ax-N4.nrrd</Path>
+		</Image>
+		<QuestionSet Name="PI-RADS" Descriptor="Contouring Exercise"  SegmentRequired="Y" AllowMultipleResponse="Y">
+			<Question Type="InfoBox" Descriptor="Segmentation Instructions">
+				<Option>In Segment Editor tab, select volume to create segments.</Option>
+				<Option>     Click Edit Selected Label Map collapsible button to access the segmenting tools.</Option>
+				<Option>     Select contour color to match PI-RADS category.</Option>
+				<Option>This may be repeated if segments are to be created on different volumes.</Option>
+			</Question>
+			<Question Type="IntegerValue" Descriptor="Overall PI-RADS" >
+				<Option>Enter overall PI-RADS score:</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page Name="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y">
+		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" UsePreviousLabelMap='Y'>
+			<Destination>Green</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\ProstateDCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
+		</Image>
+		<Image Format="NRRD" Type="Volume" ID="ADC" RotateToAcquisition="Y" UsePreviousLabelMap='Y'>
+			<Destination>Red</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\{286306cb-946c-441c-8ed2-630283a455d4}\Data\adc.nrrd</Path>
+		</Image>
+		<Image ID="T2-N4" Format="NRRD" Type="Volume" RotateToAcquisition="Y" UsePreviousLabelMap='Y'>
+			<Destination>Yellow</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\{286306cb-946c-441c-8ed2-630283a455d4}\Data\t2ax-N4.nrrd</Path>
+		</Image>
+		<Image ID="K-Trans" Format="NRRD" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
+			<Destination>Yellow</Destination>
+			<Layer>Foreground</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\{286306cb-946c-441c-8ed2-630283a455d4}\Data\ktrans.nrrd</Path>
+		</Image>
+		<QuestionSet Name="Segmentation" Descriptor="Self-Assessment"  SegmentRequired="Y" AllowMultipleResponse="Y">
+			<Question Type="Radio" Descriptor="How did you do?">
+				<Option>Great</Option>
+				<Option>Not bad</Option>
+				<Option>Could be better</Option>
+				<Option>Terrible</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>

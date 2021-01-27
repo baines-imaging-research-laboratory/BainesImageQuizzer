@@ -90,14 +90,19 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         
         slicer.util.setMenuBarsVisible(True)
-#         slicer.util.setToolbarsVisible(False) # for live runs
-        slicer.util.setToolbarsVisible(True) # while developing
+        slicer.util.setToolbarsVisible(True)
+        
+#         slicer.util.setPythonConsoleVisible(True)
+
+        # live runs
+        slicer.util.setPythonConsoleVisible(False)
+        slicer.util.setModuleHelpSectionVisible(False)
+        slicer.modules.welcome.widgetRepresentation().setVisible(False)
         
 
         self.oSession = Session()                    
         self.oCustomEventFilter = customEventFilter(self.oSession, self.oFilesIO)
         slicer.util.mainWindow().installEventFilter(self.oCustomEventFilter)        
-        
 
 
         self.BuildUserLoginWidget()
