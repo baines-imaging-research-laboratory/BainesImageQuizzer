@@ -26,7 +26,7 @@
 				<Option>     Select contour color to match PI-RADS category.</Option>
 				<Option>This may be repeated if segments are to be created on different volumes.</Option>
 			</Question>
-			<Question Type="IntegerValue" Descriptor="Overall PI-RADS" >
+			<Question Type="IntegerValue" Descriptor="Overall PI-RADS" Min="1" Max="5">
 				<Option>Enter overall PI-RADS score:</Option>
 			</Question>
 		</QuestionSet>
