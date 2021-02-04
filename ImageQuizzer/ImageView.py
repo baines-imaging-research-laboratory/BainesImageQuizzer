@@ -28,7 +28,7 @@ class ImageView:
         self.sPageName = ''
         self.sPageDescriptor = ''
         
-        self.lValidVolumeFormats = ['nrrd', 'nii', 'mhd', 'dicom']
+        self.lValidVolumeFormats = ['NRRD', 'NIFTI', 'MHD', 'DICOM']
         self._loImageViews = []
         self.bLinkViews = False
         
@@ -50,11 +50,11 @@ class ImageView:
 
 
         # get name and descriptor
-        self.sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'name')
-        self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'descriptor')
+        self.sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Name')
+        self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
         
         # assign link views
-        if (self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'linkviews') == 'y'):
+        if (self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'LinkViews') == 'Y'):
             self.bLinkViews = True
         else:
             self.bLinkViews = False
@@ -92,16 +92,18 @@ class ImageView:
             sPageID = self.sPageName + '_' + self.sPageDescriptor
             
             # Extract volume attribute
-            sVolumeFormat = self.oIOXml.GetValueOfNodeAttribute(self.xImageNodes[indImage], 'format')
+            sVolumeFormat = self.oIOXml.GetValueOfNodeAttribute(self.xImageNodes[indImage], 'Format')
             if not (sVolumeFormat in self.lValidVolumeFormats):
                 sErrorMsg = 'Invalid data format defined for patient in XML : '
                 sErrorMsg = sErrorMsg + sPageID
                 self.oUtilsMsgs.DisplayError(sErrorMsg)
             
-            if (sVolumeFormat == 'dicom'):
+            if (sVolumeFormat == 'DICOM'):
                 oImageViewItem = DicomVolumeDetail(self.xImageNodes[indImage], sPageID, self.sParentDataDir)
+            
             else:
                 oImageViewItem = DataVolumeDetail(self.xImageNodes[indImage], sPageID, self.sParentDataDir)
+                    
                 
             bLoadSuccess = oImageViewItem.LoadVolume()
             
@@ -184,13 +186,13 @@ class ImageView:
             elif oViewNode.sViewLayer == 'Label':
                 if slWindowCompositeNode.GetLabelVolumeID() == 'None':
                     slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
-                print('after set Label Volume ID',slWidget.sliceOrientation)
+#                 print('after set Label Volume ID',slWidget.sliceOrientation)
     
 
             elif oViewNode.sViewLayer == 'Segmentation':
                 if not (oViewNode.sRoiVisibilityCode == 'Empty'):
                     self.SetSegmentRoiVisibility(oViewNode)
-                print('after set Segmentation Volume ID',slWidget.sliceOrientation)
+#                 print('after set Segmentation Volume ID',slWidget.sliceOrientation)
 
             # after all images and their label maps have been assigned, adjust the link control
             if self.bLinkViews == True:
@@ -294,23 +296,23 @@ class ImageView:
         
         # adjust visibility of each ROI as per user's request
         
-        if (oViewNode.sRoiVisibilityCode == 'all'):
+        if (oViewNode.sRoiVisibilityCode == 'All'):
             for indSHList in range(len(lsSubjectHierarchyROINames)):
                 slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],True)
                 
-        if (oViewNode.sRoiVisibilityCode == 'none'):
+        if (oViewNode.sRoiVisibilityCode == 'None'):
             for indSHList in range(len(lsSubjectHierarchyROINames)):
                 slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],False)
             
         # turn ON all ROI's and then turn OFF user's list    
-        if (oViewNode.sRoiVisibilityCode == 'ignore'):
+        if (oViewNode.sRoiVisibilityCode == 'Ignore'):
             for indSHList in range(len(lsSubjectHierarchyROINames)):
                 slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],True)
             for indUserList in range(len(oViewNode.lsRoiList)):
                 slSegDisplayNode.SetSegmentVisibility(oViewNode.lsRoiList[indUserList], False)
 
         # turn OFF all ROI's and then turn ON user's list    
-        if (oViewNode.sRoiVisibilityCode == 'select'):
+        if (oViewNode.sRoiVisibilityCode == 'Select'):
             for indSHList in range(len(lsSubjectHierarchyROINames)):
                 slSegDisplayNode.SetSegmentVisibility(lsSubjectHierarchyROINames[indSHList],False)
             for indUserList in range(len(oViewNode.lsRoiList)):
@@ -407,18 +409,18 @@ class ViewNodeBase:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractImageAttributes(self):
 
-        self.sNodeDescriptor = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'descriptor')
-        self.sImageType = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'type')
+        sImageID = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'ID')
+        self.sImageType = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'Type')
 #         self.sDestination = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'destination')
-        self.sColorTableName = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'colortable')
+        self.sColorTableName = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'ColorTable')
 
-        sRotateToAcquisition = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'rotatetoacquisition')
-        if sRotateToAcquisition == 'y':
+        sRotateToAcquisition = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'RotateToAcquisition')
+        if sRotateToAcquisition == 'Y':
             self.bRotateToAcquisition = True
         else:
             self.bRotateToAcquisition = False
     
-        self.sNodeName =  self.GetPageID() + '_' + self.sNodeDescriptor
+        self.sNodeName =  self.GetPageID() + '_' + sImageID
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractXMLNodeElements(self, sParentDataDir):
@@ -528,8 +530,8 @@ class ViewNodeBase:
             
             fSliceOffset = slWindowLogic.GetSliceOffset()
             
-            dictAttrib = { 'window': str(fWindow), 'level':  str(fLevel),\
-                          'sliceoffset': str(fSliceOffset)}
+            dictAttrib = { 'Window': str(fWindow), 'Level':  str(fLevel),\
+                          'SliceOffset': str(fSliceOffset)}
         
         return dictAttrib
 
@@ -563,21 +565,21 @@ class ViewNodeBase:
             
         if len(dictImageState) > 0:
 
-            if 'level' in dictImageState.keys() and 'window' in dictImageState.keys():
-                fLevel = float(dictImageState['level'])
-                fWindow = float(dictImageState['window'])
+            if 'Level' in dictImageState.keys() and 'Window' in dictImageState.keys():
+                fLevel = float(dictImageState['Level'])
+                fWindow = float(dictImageState['Window'])
             
                 # get display node for slicer image element
                 slDisplayNode.AutoWindowLevelOff()
                 slDisplayNode.SetLevel(fLevel)
                 slDisplayNode.SetWindow(fWindow)
 
-            if 'sliceoffset' in dictImageState.keys():
+            if 'SliceOffset' in dictImageState.keys():
                 # set the slice offset position for the current widget
                 slWidget = slicer.app.layoutManager().sliceWidget(self.sDestination)
                 slWindowLogic = slWidget.sliceLogic()
                 
-                fSliceOffset = float(dictImageState['sliceoffset'])
+                fSliceOffset = float(dictImageState['SliceOffset'])
                 
                 slWindowLogic.SetSliceOffset(fSliceOffset)
         
@@ -633,7 +635,7 @@ class DataVolumeDetail(ViewNodeBase):
                 bNodeExists = self.CheckForNodeExists('vtkMRMLScalarVolumeNode')
                 if not (bNodeExists):
                     self.slNode = slicer.util.loadVolume(self.sImagePath, {'show': False, 'name': self.sNodeName})
-                else: # make sure a node exists
+                else: # make sure a node exists after load
                     if bNodeExists and (self.slNode is None):
                         bLoadSuccess = False
             
@@ -642,7 +644,7 @@ class DataVolumeDetail(ViewNodeBase):
                 bNodeExists = self.CheckForNodeExists('vtkMRMLSegmentationNode')
                 if not (bNodeExists):
                     self.slNode = slicer.util.loadSegmentation(self.sImagePath, {'show': False, 'name': self.sNodeName})
-                else: # make sure a node exists
+                else: # make sure a node exists after load
                     if bNodeExists and (self.slNode is None):
                         bLoadSuccess = False
             
@@ -652,7 +654,7 @@ class DataVolumeDetail(ViewNodeBase):
                 dictProperties = {'labelmap' : True, 'show': False, 'name': self.sNodeName}
                 if not (bNodeExists):
                     self.slNode = slicer.util.loadLabelVolume(self.sImagePath, dictProperties)
-                else: # make sure a node exists
+                else: # make sure a node exists after load
                     if bNodeExists and (self.slNode is None):
                         bLoadSuccess = False
 
@@ -671,7 +673,7 @@ class DataVolumeDetail(ViewNodeBase):
 
                 
                 
-                else: # make sure a node exists
+                else: # make sure a node exists after load
                     if bNodeExists and (self.slNode is None):
                         bLoadSuccess = False
                     
@@ -892,9 +894,9 @@ class DicomVolumeDetail(ViewNodeBase):
         xRoisNode = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'ROIs')
         
         # get visibility code from the attribute
-        self.sRoiVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(xRoisNode[0], 'roivisibilitycode')
+        self.sRoiVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(xRoisNode[0], 'ROIVisibilityCode')
 
-        if (self.sRoiVisibilityCode == 'select' or self.sRoiVisibilityCode == 'ignore'):
+        if (self.sRoiVisibilityCode == 'Select' or self.sRoiVisibilityCode == 'Ignore'):
             
             # get list of ROI children
             xRoiChildren = self.oIOXml.GetChildren(xRoisNode[0], 'ROI')

@@ -76,10 +76,10 @@ class QuestionSet():
             # for each child named 'Question' extract labels and options
             iNumQuestions = self.oIOXml.GetNumChildrenByName(xNodeQuestionSet, "Question")
             
-            self.name = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'name')
-            self.descriptor = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'descriptor')
-            self.SetSegmentRequiredTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'segmentrequired'))
-            self.SetMultipleResponseTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'allowmultipleresponse'))
+            self.name = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'Name')
+            self.descriptor = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'Descriptor')
+            self.SetSegmentRequiredTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'SegmentRequired'))
+            self.SetMultipleResponseTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'AllowMultipleResponse'))
             
             
             xQuestions = self.oIOXml.GetChildren(xNodeQuestionSet, 'Question')
@@ -88,8 +88,8 @@ class QuestionSet():
 
                 dictModifiers = {}
 
-                sQuestionType = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'type')
-                sQuestionDescriptor = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'descriptor')
+                sQuestionType = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Type')
+                sQuestionDescriptor = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Descriptor')
 
 
                 bQuestionTypeGood = True
@@ -302,11 +302,11 @@ class Question(ABC):
         oIOXml = UtilsIOXml()
         dictModifiers = {}
 
-        sMin = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'min')               
-        sMax = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'max')
+        sMin = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Min')               
+        sMax = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Max')
 
-        dictModifiers['min'] = sMin
-        dictModifiers['max'] = sMax
+        dictModifiers['Min'] = sMin
+        dictModifiers['Max'] = sMax
 
         return dictModifiers
     
@@ -397,10 +397,10 @@ class RadioQuestion(Question):
 #             sText = qBtn.text
 #             print(sText)
             if qBtn.isChecked():
-                lsResponses.append('y')
+                lsResponses.append('Y')
                 bResponseFound = True
             else:
-                lsResponses.append('n')
+                lsResponses.append('N')
 
         if bResponseFound:
             bSuccess = True
@@ -420,10 +420,10 @@ class RadioQuestion(Question):
         i = 0
         for qBtn in self.qGrpBox.findChildren(qt.QRadioButton):
             
-            if lsValues[i] == 'n':
+            if lsValues[i] == 'N':
                 qBtn.setChecked(False)
             else:
-                if lsValues[i] == 'y':
+                if lsValues[i] == 'Y':
                     qBtn.setChecked(True)
             i = i + 1
             
@@ -490,10 +490,10 @@ class CheckBoxQuestion(Question):
 #             sText = qBtn.text
 #             print(sText)
             if qChBox.isChecked():
-                lsResponses.append('y')
+                lsResponses.append('Y')
                 bResponseFound = True
             else:
-                lsResponses.append('n')
+                lsResponses.append('N')
                 
         if bResponseFound:
             bSuccess = True
@@ -511,10 +511,10 @@ class CheckBoxQuestion(Question):
         i = 0
         for qBox in self.qGrpBox.findChildren(qt.QCheckBox):
             
-            if lsValues[i] == 'n':
+            if lsValues[i] == 'N':
                 qBox.setChecked(False)
             else:
-                if lsValues[i] == 'y':
+                if lsValues[i] == 'Y':
                     qBox.setChecked(True)
             i = i + 1
         
@@ -661,8 +661,8 @@ class IntegerValueQuestion(Question):
         i = 0
         while i < length:
             element1 = lsStoredOptions[i]
-            self.sMin = self.dictModifiers.get('min')
-            self.sMax = self.dictModifiers.get('max')
+            self.sMin = self.dictModifiers.get('Min')
+            self.sMax = self.dictModifiers.get('Max')
             
             sRangeMsg = self.CreateRangePrompt()
             sPlaceholderMsg = 'Enter integer value' + sRangeMsg
@@ -801,8 +801,8 @@ class FloatValueQuestion(Question):
         while i < length:
             element1 = lsStoredOptions[i]
 
-            self.sMin = self.dictModifiers.get('min')
-            self.sMax = self.dictModifiers.get('max')
+            self.sMin = self.dictModifiers.get('Min')
+            self.sMax = self.dictModifiers.get('Max')
             
 
             sRangeMsg = self.CreateRangePrompt()

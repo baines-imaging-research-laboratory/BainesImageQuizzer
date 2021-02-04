@@ -1,0 +1,236 @@
+<Session>
+	<Page Name="TinyPatient" Descriptor="DicomSeries">
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
+			<Destination>Red</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
+			<Destination>Yellow</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Sagittal</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
+			<Destination>Green</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Coronal</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
+			<Destination>Red</Destination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
+			<ROIs roivisibilitycode="Select">
+				<ROI>Tumor_Contour</ROI>
+			</ROIs>
+		</Image>
+		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
+			<Destination>Yellow</Destination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>Tumor_Contour</ROI>
+			</ROIs>
+		</Image>
+		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
+			<Destination>Green</Destination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>Tumor_Contour</ROI>
+			</ROIs>
+		</Image>
+		<QuestionSet Name="QS-Checkup" Descriptor="What's your progress"  SegmentRequired="Y"  AllowMultipleResponse="N">
+			<Question Type="Radio" Descriptor="Milestone checker">
+				<Option>Cooking with gas.</Option>
+				<Option>On track.</Option>
+				<Option>Long way to go.</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page Name="TinyPatient" Descriptor="DicomSeries">
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
+			<Destination>Red</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
+			<Destination>Yellow</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Sagittal</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
+			<Destination>Green</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Coronal</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
+			<Destination>Red</Destination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
+			<ROIs roivisibilitycode="Ignore">
+				<ROI>Tumor_Contour</ROI>
+			</ROIs>
+		</Image>
+		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
+			<Destination>Yellow</Destination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
+			<ROIs ROIVisibilityCode="Ignore">
+				<ROI>Tumor_Contour</ROI>
+			</ROIs>
+		</Image>
+		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
+			<Destination>Green</Destination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
+			<ROIs ROIVisibilityCode="Ignore">
+				<ROI>Tumor_Contour</ROI>
+			</ROIs>
+		</Image>
+		<QuestionSet Name="QS-Checkup" Descriptor="What's your progress"  SegmentRequired="Y"  AllowMultipleResponse="N">
+			<Question Type="Radio" Descriptor="Milestone checker">
+				<Option>Cooking with gas.</Option>
+				<Option>On track.</Option>
+				<Option>Long way to go.</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page Name="TinyPatient" Descriptor="DicomSeries">
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
+			<Destination>Red</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
+			<Destination>Yellow</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Sagittal</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
+			<Destination>Green</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Coronal</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
+			<Destination>Red</Destination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
+			<ROIs roivisibilitycode="All">
+			</ROIs>
+		</Image>
+		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
+			<Destination>Yellow</Destination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
+			<ROIs ROIVisibilityCode="All">
+			</ROIs>
+		</Image>
+		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
+			<Destination>Green</Destination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
+			<ROIs ROIVisibilityCode="All">
+			</ROIs>
+		</Image>
+		<QuestionSet Name="QS-Checkup" Descriptor="What's your progress"  SegmentRequired="Y"  AllowMultipleResponse="N">
+			<Question Type="Radio" Descriptor="Milestone checker">
+				<Option>Cooking with gas.</Option>
+				<Option>On track.</Option>
+				<Option>Long way to go.</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page Name="TinyPatient" Descriptor="DicomSeries">
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
+			<Destination>Red</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
+			<Destination>Yellow</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Sagittal</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
+			<Destination>Green</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Coronal</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
+		</Image>
+		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
+			<Destination>Red</Destination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
+			<ROIs roivisibilitycode="None">
+			</ROIs>
+		</Image>
+		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
+			<Destination>Yellow</Destination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
+			<ROIs ROIVisibilityCode="None">
+			</ROIs>
+		</Image>
+		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
+			<Destination>Green</Destination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
+			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
+			<ROIs ROIVisibilityCode="None">
+			</ROIs>
+		</Image>
+		<QuestionSet Name="QS-Checkup" Descriptor="What's your progress"  SegmentRequired="Y"  AllowMultipleResponse="N">
+			<Question Type="Radio" Descriptor="Milestone checker">
+				<Option>Cooking with gas.</Option>
+				<Option>On track.</Option>
+				<Option>Long way to go.</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>

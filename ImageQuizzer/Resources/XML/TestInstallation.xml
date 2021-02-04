@@ -1,142 +1,142 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session>
-	<Page name="Patient Dicom With ROIs" descriptor="DicomSeries">
-		<Image format="dicom" type="Volume" descriptor="CTSeries">
+	<Page Name="Patient Dicom With ROIs" Descriptor="DicomSeries">
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="CTSeries">
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="CTSeries" destination="Green">
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="RTStruct" descriptor="Segmentation">
+		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
 			<Destination>Red</Destination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
 			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
-			<ROIs roiVisibilityCode="Select">
+			<ROIs ROIVisibilityCode="Select">
 				<ROI>Tumor_Contour</ROI>
 				<ROI>Body_Contour</ROI>
 			</ROIs>
 		</Image>
-		<Image format="dicom" type="RTStruct" descriptor="Segmentation">
+		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
 			<Destination>Yellow</Destination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
 			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
-			<ROIs roiVisibilityCode="Select">
+			<ROIs ROIVisibilityCode="Select">
 				<ROI>Tumor_Contour</ROI>
 				<ROI>Body_Contour</ROI>
 			</ROIs>
 		</Image>
-		<Image format="dicom" type="RTStruct" descriptor="Segmentation">
+		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
 			<Destination>Green</Destination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
 			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
-			<ROIs roiVisibilityCode="Select">
+			<ROIs ROIVisibilityCode="Select">
 				<ROI>Tumor_Contour</ROI>
 				<ROI>Body_Contour</ROI>
 			</ROIs>
 		</Image>
-		<QuestionSet name="Test Dicom With ROIs" descriptor="Test dicom patient showing ROIs"  segmentrequired="n"  allowmultipleresponse="n">
-			<Question type="InfoBox" descriptor="Welcome to the Baines Image Quizzer">
+		<QuestionSet Name="Test Dicom With ROIs" Descriptor="Test dicom patient showing ROIs"  SegmentRequired="N"  AllowMultipleResponse="N">
+			<Question Type="InfoBox" Descriptor="Welcome to the Baines Image Quizzer">
 				<Option>This is a test quiz to ensure proper installation of the application.</Option>
 			</Question>
-			<Question type="Radio" descriptor="Phantom image visibility">
+			<Question Type="Radio" Descriptor="Phantom image visibility">
 				<Option>Yes</Option>
 				<Option>No</Option>
 			</Question>
-			<Question type="Radio" descriptor="Can you scroll through the slices">
+			<Question Type="Radio" Descriptor="Can you scroll through the slices">
 				<Option>Yes</Option>
 				<Option>No</Option>
 			</Question>
-			<Question type="InfoBox" descriptor="Changing your selection after Next or Previous buttons">
+			<Question Type="InfoBox" Descriptor="Changing your selection after Next or Previous buttons">
 				<Option>If this window is greyed out, you cannot change your selection.</Option>
 			</Question>
 		</QuestionSet>
-		<QuestionSet name="Test Dicom With ROIs" descriptor="Test dicom patient showing ROIs"  segmentrequired="n"  allowmultipleresponse="n">
-			<Question type="InfoBox" descriptor="Exiting the quiz:">
+		<QuestionSet Name="Test Dicom With ROIs" Descriptor="Test dicom patient showing ROIs"  SegmentRequired="N"  AllowMultipleResponse="N">
+			<Question Type="InfoBox" Descriptor="Exiting the quiz:">
 				<Option>Click on the Exit button.</Option>
 				<Option>If you exit your responses will be saved.</Option>
 				<Option>Restarting the quiz will resume where you left off.</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page name="Patient Dicom" descriptor="DicomSeries">
-		<Image format="dicom" type="Volume" descriptor="CTSeries">
+	<Page Name="Patient Dicom" Descriptor="DicomSeries">
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="CTSeries">
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<Image format="dicom" type="Volume" descriptor="CTSeries">
+		<Image Format="DICOM" Type="Volume" ID="CTSeries">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</SeriesInstanceUID>
 		</Image>
-		<QuestionSet name="Test Dicom Read" descriptor="Try the following:" segmentrequired="n"  allowmultipleresponse="y">
-			<Question type="Radio" descriptor="Zoom and Pan">
+		<QuestionSet Name="Test Dicom Read" Descriptor="Try the following:" SegmentRequired="N"  AllowMultipleResponse="Y">
+			<Question Type="Radio" Descriptor="Zoom and Pan">
 				<Option>Yes</Option>
 				<Option>No</Option>
 			</Question>
-			<Question type="Radio" descriptor="Previous and Next buttons">
+			<Question Type="Radio" Descriptor="Previous and Next buttons">
 				<Option>Yes</Option>
 				<Option>No</Option>
 			</Question>
-			<Question type="CheckBox"  descriptor="Try changing the viewing window configuration:">
+			<Question Type="CheckBox"  Descriptor="Try changing the viewing window configuration:">
 				<Option>Select a single viewing window (eg. Red only)</Option>
 				<Option>Return to Four Up view</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page name="Patient Volume" descriptor="PlanningCT">
-		<Image format="nrrd" type="Volume" descriptor="Fixed Volume">
+	<Page Name="Patient Volume" Descriptor="PlanningCT">
+		<Image Format="NRRD" Type="Volume" ID="Fixed Volume">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="Fixed Volume">
+		<Image Format="NRRD" Type="Volume" ID="Fixed Volume">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="Volume" descriptor="Fixed Volume">
+		<Image Format="NRRD" Type="Volume" ID="Fixed Volume">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
-			<Path>ImageVolumes\Brain\ManualRegistrationExample_fixed.nrrd</Path>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<QuestionSet name="QS-Checkup" descriptor="Test more 3D Slicer features" segmentrequired="n"  allowmultipleresponse="y">
-			<Question type="CheckBox"  descriptor="Try the following:">
+		<QuestionSet Name="QS-Checkup" Descriptor="Test more 3D Slicer features" SegmentRequired="N"  AllowMultipleResponse="Y">
+			<Question Type="CheckBox"  Descriptor="Try the following:">
 				<Option>Adjust window-level</Option>
 				<Option>Return to default mouse pointer</Option>
 				<Option>Slice Intersections on/off</Option>
@@ -144,38 +144,38 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page name="Patient Sequence" descriptor="Time Sequence">
-		<Image format="nrrd" type="VolumeSequence" descriptor="DCE">
+	<Page Name="Patient Sequence" Descriptor="Time Sequence">
+		<Image Format="NRRD" Type="VolumeSequence" ID="DCE">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\DCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="VolumeSequence" descriptor="DCE">
+		<Image Format="NRRD" Type="VolumeSequence" ID="DCE">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\DCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
 		</Image>
-		<Image format="nrrd" type="VolumeSequence" descriptor="DCE">
+		<Image Format="NRRD" Type="VolumeSequence" ID="DCE">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\DCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
 		</Image>
-		<QuestionSet name="Test Volume Sequence" descriptor="Test Sequence Volumes"  segmentrequired="n" allowmultipleresponse="y">
-			<Question type="InfoBox" descriptor="Dynamic Contrast Enhanced Imaging">
+		<QuestionSet Name="Test Volume Sequence" Descriptor="Test Sequence Volumes"  SegmentRequired="N" AllowMultipleResponse="Y">
+			<Question Type="InfoBox" Descriptor="Dynamic Contrast Enhanced Imaging">
 				<Option>Try the controls to run the time sequence.</Option>
 			</Question>
 		</QuestionSet>
-		<QuestionSet name="Test Volume Sequence" descriptor="Test Sequence Volumes"  segmentrequired="y" allowmultipleresponse="y">
-			<Question type="InfoBox" descriptor="Segmenting">
+		<QuestionSet Name="Test Volume Sequence" Descriptor="Test Sequence Volumes"  SegmentRequired="Y" AllowMultipleResponse="Y">
+			<Question Type="InfoBox" Descriptor="Segmenting">
 				<Option>Move to the Segment Editor tab to begin creating segments.</Option>
 				<Option>   1. Select the Master Volume to edit.</Option>
 				<Option>   2. Open the editor tools collapsible button.</Option>
 				<Option>   3. Select the tool for editing (some are not available).</Option>
 			</Question>
-			<Question type="CheckBox"  descriptor="Try the following:">
+			<Question Type="CheckBox"  Descriptor="Try the following:">
 				<Option>Paint tool</Option>
 				<Option>Select color</Option>
 				<Option>Change pixel size</Option>
@@ -183,7 +183,7 @@
 				<Option>Undo/Redo</Option>
 				<Option>Erase</Option>
 			</Question>
-			<Question type="IntegerValue" descriptor="Sample numeric entry:" max="5">
+			<Question Type="IntegerValue" Descriptor="Sample numeric entry:" Max="5">
 				<Option>Enter an integer value (characters not accepted):</Option>
 			</Question>
 		</QuestionSet>
