@@ -40,6 +40,8 @@ class Session:
         self._l2iPageQuestionCompositeIndices = []
 
         self._xPageNode = None
+        self.sPageName = ''
+        self.sPageDescriptor = ''
         
         self._loQuestionSets = []
         self._lsPreviousResponses = []
@@ -355,9 +357,8 @@ class Session:
         sMsg = ''
 
         if self._iCurrentCompositeIndex + 1 == len(self._l2iPageQuestionCompositeIndices):
-            # the last question was answered - check if user is ready to exit
-            self.progress.setValue(self._iCurrentCompositeIndex + 1)
 
+            # the last question was answered - check if user is ready to exit
             self.onExitButtonClicked('Finish') # a save is done in here
             
             # the user may have cancelled the 'finish'
@@ -433,6 +434,10 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onExitButtonClicked(self,sCaller):
 
+        self.progress.setValue(self._iCurrentCompositeIndex + 1)
+        iProgressPercent = int((self._iCurrentCompositeIndex + 1) / len(self._l2iPageQuestionCompositeIndices) * 100)
+        self.progress.setFormat(self.sPageName + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
+        
         sMsg = 'Do you wish to exit?'
         if sCaller == 'ExitBtn':
             sMsg = sMsg + ' \nYour responses will be saved. Quiz may be resumed.'
@@ -449,6 +454,8 @@ class Session:
         # if code reaches here, either the exit was cancelled or there was 
         # an error in the save
         self.progress.setValue(self._iCurrentCompositeIndex)
+        iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l2iPageQuestionCompositeIndices) * 100)
+        self.progress.setFormat(self.sPageName + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -565,10 +572,10 @@ class Session:
         
         # add page name/descriptor to the progress bar
         xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
-        sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
-        sPageName = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Name')
+        self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
+        self.sPageName = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Name')
         iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l2iPageQuestionCompositeIndices) * 100)
-        self.progress.setFormat(sPageName + ' ' + sPageDescriptor + '    ' + str(iProgressPercent) + '%')
+        self.progress.setFormat(self.sPageName + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
                     
         # set up the images on the page
         self.oImageView = ImageView()
