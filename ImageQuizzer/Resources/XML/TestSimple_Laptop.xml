@@ -174,7 +174,7 @@
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<SeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258</SeriesInstanceUID>
 			<RefSeriesInstanceUID>1.2.826.0.1.3680043.8.274.1.1.7054475782.98839.4969411277.617</RefSeriesInstanceUID>
-			<ROIs roivisibilitycode="Select">
+			<ROIs ROIVisibilityCode="Select">
 				<ROI>Tumor_Contour</ROI>
 				<ROI>Body_Contour</ROI>
 			</ROIs>
