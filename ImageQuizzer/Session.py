@@ -567,8 +567,9 @@ class Session:
                 self.DisplaySavedResponse()
 
                    
-        # set the layout to default view four-up 
-        slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
+        # set the layout to default view 
+#         slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
+        slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
         
         # add page name/descriptor to the progress bar
         xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())

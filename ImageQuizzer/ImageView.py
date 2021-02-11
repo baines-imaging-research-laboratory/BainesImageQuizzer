@@ -29,6 +29,7 @@ class ImageView:
         self.sPageDescriptor = ''
         
         self.lValidVolumeFormats = ['NRRD', 'NIFTI', 'MHD', 'DICOM']
+        self.lValidSliceWidgets = ['Red', 'Green', 'Yellow', 'Slice4'] # for two over two layout
         self._loImageViews = []
         self.bLinkViews = False
         
@@ -127,7 +128,7 @@ class ImageView:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AssignNodesToView(self):
-        ''' For each image node in the list, assign it to the destination widget (Red, Yellow, Green)
+        ''' For each image node in the list, assign it to the destination widget (from list of valid widgets)
             If the background image has a corresponding label map created by the user in the quiz,
                 assign the widget's label map setting otherwise set it to None.
             Foreground and Background images will have the color table applied (default Grey)
@@ -136,6 +137,18 @@ class ImageView:
                 (User created label maps segmented as part of the quiz take priority). 
         '''
  
+        # initialize all layers to None
+        # make sure the widget exists in case the default layout changes
+        for sWidgetName in self.lValidSliceWidgets:
+            slWidget = slicer.app.layoutManager().sliceWidget(sWidgetName)
+            if slWidget != None:
+                slWindowLogic = slWidget.sliceLogic()
+                slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
+                slWindowCompositeNode.SetBackgroundVolumeID('None')
+                slWindowCompositeNode.SetForegroundVolumeID('None')
+                slWindowCompositeNode.SetLabelVolumeID('None')
+
+
         for oViewNode in self._loImageViews:
 
             # get slicer control objects for the widget
@@ -428,7 +441,7 @@ class ViewNodeBase:
         sWarningMsg = ''
         
 
-        # Extract Destination (Red, Green, Yellow)
+        # Extract Destination (Red, Green, Yellow, Slice4)
         xDestinationNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Destination')
         if len(xDestinationNodes) == 0:
             self.sDestination = 'Red'
@@ -437,7 +450,7 @@ class ViewNodeBase:
             self.sDestination = self.oIOXml.GetDataInNode(xDestinationNodes[0])
             
             if len(xDestinationNodes) > 1:
-                sWarningMsg = sWarningMsg + '\n' + 'There can only be one viewing destination (Red, Green, Yellow) per image. The first defined destination in the XML will be used.   '
+                sWarningMsg = sWarningMsg + '\n' + 'There can only be one viewing destination (Red, Green, Yellow, or Slice4) per image. The first defined destination in the XML will be used.   '
 
 
         # Extract viewing layer (foreground, background, label)
