@@ -23,7 +23,7 @@
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="Select">
-				<ROI>Tumor_Contour</ROI>
+			<ROI>Tumor_Contour</ROI>
 			</ROIs>
 		</Image>
 		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
@@ -43,10 +43,8 @@
 			</ROIs>
 		</Image>
 		<QuestionSet Name="QS-Checkup" Descriptor="What's your progress"  SegmentRequired="Y"  AllowMultipleResponse="N">
-			<Question Type="Radio" Descriptor="Milestone checker">
-				<Option>Cooking with gas.</Option>
-				<Option>On track.</Option>
-				<Option>Long way to go.</Option>
+			<Question Type="CheckBox" Descriptor="Test Description">
+				<Option>Select Tumor only</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
@@ -74,7 +72,7 @@
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="Ignore">
-				<ROI>Tumor_Contour</ROI>
+			<ROI>Tumor_Contour</ROI>
 			</ROIs>
 		</Image>
 		<Image Format="DICOM" Type="RTStruct" ID="Segmentation">
@@ -94,10 +92,8 @@
 			</ROIs>
 		</Image>
 		<QuestionSet Name="QS-Checkup" Descriptor="What's your progress"  SegmentRequired="Y"  AllowMultipleResponse="N">
-			<Question Type="Radio" Descriptor="Milestone checker">
-				<Option>Cooking with gas.</Option>
-				<Option>On track.</Option>
-				<Option>Long way to go.</Option>
+			<Question Type="CheckBox" Descriptor="Test Description">
+				<Option>Ignore Tumor - Body should show</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
@@ -142,10 +138,8 @@
 			</ROIs>
 		</Image>
 		<QuestionSet Name="QS-Checkup" Descriptor="What's your progress"  SegmentRequired="Y"  AllowMultipleResponse="N">
-			<Question Type="Radio" Descriptor="Milestone checker">
-				<Option>Cooking with gas.</Option>
-				<Option>On track.</Option>
-				<Option>Long way to go.</Option>
+			<Question Type="CheckBox" Descriptor="Test Description">
+				<Option>All selected</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
@@ -190,10 +184,8 @@
 			</ROIs>
 		</Image>
 		<QuestionSet Name="QS-Checkup" Descriptor="What's your progress"  SegmentRequired="Y"  AllowMultipleResponse="N">
-			<Question Type="Radio" Descriptor="Milestone checker">
-				<Option>Cooking with gas.</Option>
-				<Option>On track.</Option>
-				<Option>Long way to go.</Option>
+			<Question Type="CheckBox" Descriptor="Test Description">
+				<Option>None selected</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
