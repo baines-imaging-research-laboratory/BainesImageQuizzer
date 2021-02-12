@@ -13,6 +13,8 @@ from DICOMLib import DICOMUtils
 import ssl
 from DICOMLib.DICOMUtils import loadPatientByUID
 
+import pydicom
+
 
 ##########################################################################
 #
@@ -151,6 +153,22 @@ class ImageView:
 
         for oViewNode in self._loImageViews:
 
+            # if image type is an RTStruct, ensure that the referenced volume 
+            #    SeriesInstanceUID exists in the list of images to be loaded
+            if oViewNode.sImageType == 'RTStruct':
+                bFoundReferencedVolume = False
+                for oImage in self._loImageViews:
+                    if oViewNode.sVolumeReferenceSeriesUID == oImage.sSeriesInstanceUID:
+                        bFoundReferencedVolume = True
+                        break
+                if bFoundReferencedVolume == False:
+                    sErrorMsg = 'Invalid RTStruct - Referenced Volume SeriesInstanceUID ' \
+                                'does not match any of the image volumes being loaded \n' \
+                                + oViewNode.sImagePath
+                    
+                    self.oUtilsMsgs.DisplayError(sErrorMsg)         
+            
+            
             # get slicer control objects for the widget
             slWidget = slicer.app.layoutManager().sliceWidget(oViewNode.sDestination)
             slWindowLogic = slWidget.sliceLogic()
@@ -736,38 +754,33 @@ class DicomVolumeDetail(ViewNodeBase):
         self.SetQuizLabelMapNode(slLabelMapNode)
         
         # specifics for Dicom volumes
-        self.ExtractXMLDicomElements()
+#         self.ExtractXMLDicomElements()
         
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ExtractXMLDicomElements(self):
+        self.ExtractSeriesInstanceUIDs()
 
-        # extract extra Dicom XML elements
-        
-        
-        # extract Series Instance UID nodes
-        xSeriesUIDNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'SeriesInstanceUID')
-        if len(xSeriesUIDNodes) > 1:
-            sWarningMsg = 'There can only be one SeriesInstanceUID element per Dicom element. \nThe first defined SeriesInstanceUID in the XML will be used.   '
-            sWarningMsg = sWarningMsg + self.sNodeName
-            self.oUtilsMsgs.DisplayWarning(sWarningMsg)
-        self.sSeriesInstanceUID = self.oIOXml.GetDataInNode(xSeriesUIDNodes[0])
-        
-        
-        if (self.sImageType == 'RTStruct'):
-
-
-            # extract Reference Volume Series UID nodes
-            xRefSeriesUIDNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'RefSeriesInstanceUID')
-            if len(xRefSeriesUIDNodes) > 1:
-                sWarningMsg = 'There can only be one Volume Reference SeriesInstanceUID element per image. \nThe first defined Series UID in the XML will be used.   '
-                sWarningMsg = sWarningMsg + self.sNodeName
-                self.oUtilsMsgs.DisplayWarning(sWarningMsg)
-            self.sVolumeReferenceSeriesUID = self.oIOXml.GetDataInNode(xRefSeriesUIDNodes[0])
-
-            
+        # get list of ROIs to be displayed
+        if self.sImageType == 'RTStruct':
             self.ReadXMLRoiElements()
             
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ExtractSeriesInstanceUIDs(self):
+        ''' Using pydicom, extract the SeriesInstanceUID from the given dcm file
+            If this is an RTStruct, extract the referenced volume SeriesInstanceUID 
+            that the contours are associated.
+        '''
+        
+        dcmDataset = pydicom.dcmread(self.sImagePath)
+        self.sSeriesInstanceUID = dcmDataset.SeriesInstanceUID
+        
+        # access the referenced volume series instance UID that the contours are associated with
+        if self.sImageType == 'RTStruct':
+            dcmReferencedFrameOfRefenceSequence = dcmDataset.ReferencedFrameOfReferenceSequence[0]
+            dcmRTReferencedStudySequence = dcmReferencedFrameOfRefenceSequence.RTReferencedStudySequence[0]
+            dcmRTReferencedSeriesSequence = dcmRTReferencedStudySequence.RTReferencedSeriesSequence[0]
             
+            self.sVolumeReferenceSeriesUID = dcmRTReferencedSeriesSequence.SeriesInstanceUID
+            
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadVolume(self):
         bLoadSuccess = self.LoadDicomVolume()
@@ -895,13 +908,15 @@ class DicomVolumeDetail(ViewNodeBase):
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ReadXMLRoiElements(self):
-        # if the Image type is RTStuct, XML holds a visibility code and (if applicable)
-        # a list of ROI names
-        # The visibility code is as follows: 
-        #    'All' : turn on visibility of all ROIs in RTStruct
-        #    'None': turn off visibility of all ROIs in RTStruct
-        #    'Ignore' : turn on all ROIs except the ones listed
-        #    'Select' : turn on visibility of only ROIs listed
+        ''' For Image type is RTStuct, XML holds a visibility code and (if applicable)
+            a list of ROI names
+            
+            The visibility code is as follows: 
+           'All' : turn on visibility of all ROIs in RTStruct
+           'None': turn off visibility of all ROIs in RTStruct
+           'Ignore' : turn on all ROIs except the ones listed
+           'Select' : turn on visibility of only ROIs listed
+        '''
         
         # get XML ROIs element
         xRoisNode = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'ROIs')
