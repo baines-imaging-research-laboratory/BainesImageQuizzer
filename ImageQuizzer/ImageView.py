@@ -88,10 +88,20 @@ class ImageView:
     def BuildViewNodes(self):
         
         bLoadSuccess = False
+        
+        # progress bar set up for long image loads 
+        # initialize to 1% to get the bar to display, then reset to the proper maximum
+        progressBar = slicer.util.createProgressDialog( windowTitle="Progress", autoClose=True)
+        progressBar.labelText = 'Loading images'
+        progressBar.setMaximum(100)
+        progressBar.setValue(1) 
+        slicer.app.processEvents() # force display
+        progressBar.setMaximum(len(self.xImageNodes)) # reset for this case
+        
         # for each image
         for indImage in range(len(self.xImageNodes)):
 
-
+            
             sPageID = self.sPageName + '_' + self.sPageDescriptor
             
             # Extract volume attribute
@@ -121,6 +131,8 @@ class ImageView:
                 sMsg = 'Image load Failed : ' + sPageID + ':' + oImageViewItem.sImagePath
                 self.oUtilsMsgs.DisplayWarning(sMsg)
                  
+            progressBar.setValue(indImage + 1)
+            slicer.app.processEvents()
 
          
     #-----------------------------------------------
