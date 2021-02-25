@@ -228,7 +228,11 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.toolsBox.defaultEffect() # will trigger an event
             
           else:
-            if self.helper.master != None and sCurrentTool not in ('DefaultTool', 'PaintEffect', 'EraseLabel', 'DrawEffect'):
+            # only allow specific tools to be enabled for Image Quizzer
+            # see Slicer/Modules/Scripted/EditorLib/EditBox.py
+            #     Slicer/Modules/Scripted/EditorLib/LabelEffect.py
+            #     Slicer/Modules/Scripted/EditorLib/ChangeLabelEffect.py
+            if self.helper.master != None and sCurrentTool not in ('DefaultTool', 'PaintEffect', 'EraseLabel', 'DrawEffect', 'ChangeLabelEffect'):
               self.msgBox = qt.QMessageBox()
               self.msgBox.warning(slicer.util.mainWindow(), 'Image Quizzer: Warning', 'This tool is unavailable.')
               self.toolsBox.defaultEffect() # will trigger an event

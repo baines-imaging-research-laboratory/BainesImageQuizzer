@@ -91,7 +91,7 @@ class ImageView:
         
         # progress bar set up for long image loads 
         # initialize to 1% to get the bar to display, then reset to the proper maximum
-        progressBar = slicer.util.createProgressDialog( windowTitle="Progress", autoClose=True)
+        progressBar = slicer.util.createProgressDialog( windowTitle="Working", autoClose=True)
         progressBar.labelText = 'Loading images'
         progressBar.setMaximum(100)
         progressBar.setValue(1) 
