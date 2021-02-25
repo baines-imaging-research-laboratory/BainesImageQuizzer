@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Session>
-	<Page Name="ANON39859" Descriptor="PET Study">
+<Session ROIColorFile="PET_PSMA">
+	<Page Name="ANON39859" Descriptor="BIGDATA Study">
 		<Image Format="DICOM" Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -18,6 +17,24 @@
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\PETStudy\ANON39859\CT.2.16.840.1.114362.1.11972228.23569092000.570231973.103.1136.dcm</Path>
+		</Image>
+		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+			<Destination>Red</Destination>
+			<Layer>Foreground</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\PETStudy\ANON39859\PE.2.16.840.1.114362.1.11972228.23569092000.570231982.822.1667.dcm</Path>
+		</Image>
+		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+			<Destination>Green</Destination>
+			<Layer>Foreground</Layer>
+			<Orientation>Sagittal</Orientation>
+			<Path>ImageVolumes\PETStudy\ANON39859\PE.2.16.840.1.114362.1.11972228.23569092000.570231982.822.1667.dcm</Path>
+		</Image>
+		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+			<Destination>Yellow</Destination>
+			<Layer>Foreground</Layer>
+			<Orientation>Coronal</Orientation>
+			<Path>ImageVolumes\PETStudy\ANON39859\PE.2.16.840.1.114362.1.11972228.23569092000.570231982.822.1667.dcm</Path>
 		</Image>
 		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Slice4</Destination>
@@ -25,70 +42,58 @@
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\PETStudy\ANON39859\PE.2.16.840.1.114362.1.11972228.23569092000.570231982.822.1667.dcm</Path>
 		</Image>
-		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
-			<Destination>Red</Destination>
-			<Layer>Foreground</Layer>
-			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\PETStudy\ANON39859\PE.2.16.840.1.114362.1.11972228.23569092000.570231982.822.1667.dcm</Path>
-		</Image>
-		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
-			<Destination>Green</Destination>
-			<Layer>Foreground</Layer>
-			<Orientation>Sagittal</Orientation>
-			<Path>ImageVolumes\PETStudy\ANON39859\PE.2.16.840.1.114362.1.11972228.23569092000.570231982.822.1667.dcm</Path>
-		</Image>
-		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
-			<Destination>Yellow</Destination>
-			<Layer>Foreground</Layer>
-			<Orientation>Coronal</Orientation>
-			<Path>ImageVolumes\PETStudy\ANON39859\PE.2.16.840.1.114362.1.11972228.23569092000.570231982.822.1667.dcm</Path>
-		</Image>
-		<QuestionSet Name="PET Study" Descriptor="Descriptor here???"  SegmentRequired="Y">
-			<Question Type="Radio" Descriptor="PET QUESTION HERE???">
+		<QuestionSet Name="BIGDATA Study" Descriptor="     Image Annotation"  SegmentRequired="Y">
+			<Question Type="Radio" Descriptor="PET Reading">
 				<Option>Positive</Option>
 				<Option>Negative</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page Name="ANON96850" Descriptor="PET Study" LinkViews="Y">
+	<Page Name="ANON96850" Descriptor="BIGDATA Study">
 		<Image Format="DICOM" Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\PETStudy\ANON96850\CT.2.16.840.1.114362.1.11972228.24271053948.570842158.949.1.dcm</Path>
 		</Image>
+		<Image Format="DICOM" Type="Volume" ID="CT" RotateToAcquisition="Y">
+			<Destination>Green</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Sagittal</Orientation>
+			<Path>ImageVolumes\PETStudy\ANON96850\CT.2.16.840.1.114362.1.11972228.24271053948.570842158.949.1.dcm</Path>
+		</Image>
+		<Image Format="DICOM" Type="Volume" ID="CT" RotateToAcquisition="Y">
+			<Destination>Yellow</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Coronal</Orientation>
+			<Path>ImageVolumes\PETStudy\ANON96850\CT.2.16.840.1.114362.1.11972228.24271053948.570842158.949.1.dcm</Path>
+		</Image>
+		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+			<Destination>Red</Destination>
+			<Layer>Foreground</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\PETStudy\ANON96850\PE.2.16.840.1.114362.1.11972228.24271054222.570842169.910.557.dcm</Path>
+		</Image>
+		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+			<Destination>Green</Destination>
+			<Layer>Foreground</Layer>
+			<Orientation>Sagittal</Orientation>
+			<Path>ImageVolumes\PETStudy\ANON96850\PE.2.16.840.1.114362.1.11972228.24271054222.570842169.910.557.dcm</Path>
+		</Image>
+		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+			<Destination>Yellow</Destination>
+			<Layer>Foreground</Layer>
+			<Orientation>Coronal</Orientation>
+			<Path>ImageVolumes\PETStudy\ANON96850\PE.2.16.840.1.114362.1.11972228.24271054222.570842169.910.557.dcm</Path>
+		</Image>
 		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Slice4</Destination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\PETStudy\ANON96850\PE.2.16.840.1.114362.1.11972228.24271054222.570842169.910.557.dcm</Path>
-		</Image>
-		<Image Format="DICOM" Type="Volume" ID="CT" RotateToAcquisition="Y">
-			<Destination>Green</Destination>
-			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\PETStudy\ANON96850\CT.2.16.840.1.114362.1.11972228.24271053948.570842158.949.1.dcm</Path>
-		</Image>
-		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
-			<Destination>Green</Destination>
-			<Layer>Foreground</Layer>
-			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\PETStudy\ANON96850\PE.2.16.840.1.114362.1.11972228.24271054222.570842169.910.557.dcm</Path>
-		</Image>
-		<Image Format="DICOM" Type="Volume" ID="CT" RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
-			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
-			<Path>ImageVolumes\PETStudy\ANON96850\CT.2.16.840.1.114362.1.11972228.24271053948.570842158.949.1.dcm</Path>
-		</Image>
-		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
-			<Destination>Yellow</Destination>
-			<Layer>Foreground</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\PETStudy\ANON96850\PE.2.16.840.1.114362.1.11972228.24271054222.570842169.910.557.dcm</Path>
 		</Image>
-		<QuestionSet Name="PET Study" Descriptor="Descriptor here???"  SegmentRequired="Y">
-			<Question Type="Radio" Descriptor="PET QUESTION HERE???">
+		<QuestionSet Name="BIGDATA Study" Descriptor="     Image Annotation"  SegmentRequired="Y">
+			<Question Type="Radio" Descriptor="PET Reading">
 				<Option>Positive</Option>
 				<Option>Negative</Option>
 			</Question>
