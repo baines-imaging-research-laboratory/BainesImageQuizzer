@@ -1,0 +1,4 @@
+1 Physiological_uptake 128 174 128 255
+2 Low_suspension 241 214 145 255
+3 Moderate_suspension 89 101 194 255
+4 High_suspension 237 116 136 255
