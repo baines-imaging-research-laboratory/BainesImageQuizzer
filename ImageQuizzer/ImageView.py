@@ -221,9 +221,16 @@ class ImageView:
                 slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
                 slWidget.setSliceOrientation(oViewNode.sOrientation)
                 slWidgetController.setForegroundOpacity(0.5)
-                oViewNode.AssignColorTable()
                 if oViewNode.bRotateToAcquisition == True:
                     self.RotateSliceToImage(oViewNode.sDestination)
+
+                oViewNode.AssignColorTable()
+
+                # turn on label map volume if a label map was loaded for the background image                
+                if oViewNode.slQuizLabelMapNode != None:
+                    slWindowCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
+                else:
+                    slWindowCompositeNode.SetLabelVolumeID('None')
 
     
             elif oViewNode.sViewLayer == 'Label':
