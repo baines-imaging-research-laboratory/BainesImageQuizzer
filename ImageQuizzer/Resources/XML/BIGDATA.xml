@@ -1,5 +1,5 @@
 <Session ROIColorFile="PET_PSMA">
-	<Page Name="ANON39859" Descriptor="BIGDATA Study">
+	<Page Name="BIGDATA001" Descriptor="">
 		<Image Format="DICOM" Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -42,14 +42,14 @@
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\PETStudy\ANON39859\PE.2.16.840.1.114362.1.11972228.23569092000.570231982.822.1667.dcm</Path>
 		</Image>
-		<QuestionSet Name="BIGDATA Study" Descriptor="     Image Annotation"  SegmentRequired="Y">
+		<QuestionSet Name="BIGDATA Study" Descriptor="Image Annotation"  SegmentRequired="Y">
 			<Question Type="Radio" Descriptor="PET Reading">
 				<Option>Positive</Option>
 				<Option>Negative</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page Name="ANON96850" Descriptor="BIGDATA Study">
+	<Page Name="BIGDATA002" Descriptor="">
 		<Image Format="DICOM" Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -92,7 +92,7 @@
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\PETStudy\ANON96850\PE.2.16.840.1.114362.1.11972228.24271054222.570842169.910.557.dcm</Path>
 		</Image>
-		<QuestionSet Name="BIGDATA Study" Descriptor="     Image Annotation"  SegmentRequired="Y">
+		<QuestionSet Name="BIGDATA Study" Descriptor="Image Annotation"  SegmentRequired="Y">
 			<Question Type="Radio" Descriptor="PET Reading">
 				<Option>Positive</Option>
 				<Option>Negative</Option>
