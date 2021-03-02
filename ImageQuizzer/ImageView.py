@@ -64,8 +64,7 @@ class ImageView:
 
         # display Images
         self.xImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
-        self.iNumImages = self.oIOXml.GetNumChildrenByName(xPageNode, 'Image')
-        
+#         self.iNumImages = self.oIOXml.GetNumChildrenByName(xPageNode, 'Image')
        
         self.BuildViewNodes()
         
