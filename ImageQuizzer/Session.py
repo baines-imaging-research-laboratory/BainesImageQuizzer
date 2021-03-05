@@ -906,8 +906,8 @@ class Session:
          
         # if list length > 0, create folder to hold labels
         if len(lSlicerLabelMapNodes) > 0:
- 
-            for oImageNode in self.oImageView.GetImageViewList():
+            
+            for oImageNode in self.oImageView.GetUniqueImageObjectList():
                   
 #                 for iLabelMap in range(len(lSlicerLabelMapNodes)):
 # #                         slNodeLabelMap = lSlicerLabelMapNodes.GetItemAsObject(iLabelMap)
@@ -947,7 +947,7 @@ class Session:
                             bLabelMapsSaved = True  # at least one label map was saved
                         else:
                             bLabelMapsSaved = False
-                            sMsg = sNRRDMsg + sRTStructMsg + '\n' + oImageNode.sNodeName
+                            sMsg = sNRRDMsg + sRTStructMsg
                             self.oUtilsMsgs.DisplayError(sMsg)
 
 
@@ -1023,60 +1023,38 @@ class Session:
             slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(slLabelMapVolumeNode, slLabelMapSegNode)
 
 
-            # create new patient and study in the subject hierarchy
-            #    add suffix of node name to the NewPatient name to keep exports unique if looping for 
-            #    multiple labels
+            # Associate segmentation node with a reference volume node
             shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-            slPtItemID = shNode.CreateSubjectItem(shNode.GetSceneItemID(),'NewPatient' + oPrimaryImageNode.sNodeName)
-            slStudyItemID = shNode.CreateStudyItem(slPtItemID, 'NewStudy')
-            
-            # get volume and segmentation node ID's in the subject hierarchy node (shNode)
-            if oPrimaryImageNode.sClassName == 'DicomVolumeDetail':
-                # for primary image volumes that were loaded as dicoms.
-                #    access the subject hierarchy ID number using the series UID
-                slPrimaryVolumeID = shNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(),\
-                                                         oPrimaryImageNode.sSeriesInstanceUID) 
-# FOR DEBUG TO CREATE AN ERROR                    slPrimaryVolumeID = shNode.GetItemChildWithName(shNode.GetSceneItemID(), oPrimaryImageNode.sNodeName)
-            else:
-                slPrimaryVolumeID = shNode.GetItemChildWithName(shNode.GetSceneItemID(), oPrimaryImageNode.sNodeName)
+            slPrimaryVolumeID = shNode.GetItemByDataNode(oPrimaryImageNode.slNode)
+            slStudyShItem = shNode.GetItemParent(slPrimaryVolumeID)
+            slLabelMapSegNodeID = shNode.GetItemByDataNode(slLabelMapSegNode)
+            shNode.SetItemParent(slLabelMapSegNodeID, slStudyShItem)
 
-            slLabelMapSegNodeID = shNode.GetItemChildWithName(shNode.GetSceneItemID(), slLabelMapSegNode.GetName())
-            
-            if slPrimaryVolumeID > 0 and slLabelMapSegNodeID > 0:
-                # reassign the volume and segmentation nodes to the new patient study 
-                shNode.SetItemParent(slPrimaryVolumeID, slStudyItemID)
-                shNode.SetItemParent(slLabelMapSegNodeID, slStudyItemID)
-                
-                
-                # create the dicom exporter
-                import DicomRtImportExportPlugin
-                exporter = DicomRtImportExportPlugin.DicomRtImportExportPluginClass()
-                exportables = []
-                
-                # examine volumes for export and add to export list
-                volExportable = exporter.examineForExport(slPrimaryVolumeID)
-                segExportable = exporter.examineForExport(slLabelMapSegNodeID)
-                exportables.extend(volExportable)
-                exportables.extend(segExportable)
-                
-                # assign output path to each exportable
-                for exp in exportables:
-                    exp.directory = sOutputDir
-                    
-                
-                # perform export
-                exporter.export(exportables)
-                
-            else:
-                bRTStructSaved = False
-                sMsg = 'Failed to get volume or segmentation ID \n'\
-                        + 'Failed to save RTStruct\n'\
-                        + 'See administrator: ' + sys._getframe(  ).f_code.co_name
+                 
+            # create the dicom exporter
+            import DicomRtImportExportPlugin
+            exporter = DicomRtImportExportPlugin.DicomRtImportExportPluginClass()
+            exportables = []
+             
+            # examine volumes for export and add to export list
+            volExportable = exporter.examineForExport(slPrimaryVolumeID)
+            segExportable = exporter.examineForExport(slLabelMapSegNodeID)
+            exportables.extend(volExportable)
+            exportables.extend(segExportable)
+             
+            # assign output path to each exportable
+            for exp in exportables:
+                exp.directory = sOutputDir
+                 
+             
+            # perform export
+            exporter.export(exportables)
+
 
         except:
             bRTStructSaved = False
             sMsg = 'Failed to store Dicom RTStruct ' + sOutputDir \
-                   + 'See administrator: ' + sys._getframe(  ).f_code.co_name
+                   + '\n See administrator: ' + sys._getframe(  ).f_code.co_name
 
         
         return bRTStructSaved, sMsg
