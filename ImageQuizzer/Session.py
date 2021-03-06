@@ -582,7 +582,7 @@ class Session:
         self.oImageView = ImageView()
         self.oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self.oFilesIO.GetDataParentDir())
 
-        # if load label maps if a labelmap path has been stored in the xml for the images on this page
+        # load label maps if a labelmap path has been stored in the xml for the images on this page
         self.LoadSavedLabelMaps()
 
         # assign each image node and its label map (if applicable) to the viewing widget
@@ -888,31 +888,31 @@ class Session:
             and if found, saves them as a data volume  (.nrrd file) in the specified directory.
             The path to this file is then stored in the xml file within the associated image element.
             
-            Also store label maps as RTStructs if the attribute to do so was set.
+            Also store label maps as RTStructs if the attribute to do so was set in the xml root node.
             
             A warning is presented if the xml question set had the 'segmentrequired' flag set to 'y'
             but no label maps (with -bainesquizlabel suffix) were found. The user purposely may 
             not have created a label map if there were no lesions to segment. This is acceptable.
         """
             
-        # if label maps were created, save to disk
-        bLabelMapsSaved = True #initialize
+        bLabelMapsSaved = True # initialize
         sMsg = ''
         
         bLabelMapFound = False  # to detect if label map was created by user
  
+        # capture the names of the images that have had the label maps stored
+        #    the list of image nodes may repeat the same image if being viewed in 
+        #    multiple windows
+        lsLabelMapsStoredForImages = [] # initialize for each label map
+
         # get list of label maps to save
         lSlicerLabelMapNodes = slicer.util.getNodesByClass('vtkMRMLLabelMapVolumeNode')
          
         # if list length > 0, create folder to hold labels
         if len(lSlicerLabelMapNodes) > 0:
             
-            for oImageNode in self.oImageView.GetUniqueImageObjectList():
+            for oImageNode in self.oImageView.GetImageViewList():
                   
-#                 for iLabelMap in range(len(lSlicerLabelMapNodes)):
-# #                         slNodeLabelMap = lSlicerLabelMapNodes.GetItemAsObject(iLabelMap)
-#                     slNodeLabelMap = lSlicerLabelMapNodes[iLabelMap]
-
                 for slNodeLabelMap in lSlicerLabelMapNodes:
 
                     # match label map file with xml image
@@ -920,20 +920,29 @@ class Session:
                     if oImageNode.sNodeName + '-bainesquizlabel' == sLabelMapFilename:
                         
                         bLabelMapFound = True  # -bainesquizlabel suffix is associated with an image on the page
-                    
 
-                        # store the path name in the xml file and the label map in the directory
-                        sDirName = self.GetFolderNameForLabelMaps()
-                        sPageLabelMapDir = self.oFilesIO.CreatePageDir(sDirName)
 
-                        sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
+                        # only write to disk if it hasn't already been done for this image node                    
+                        if not oImageNode.sNodeName in lsLabelMapsStoredForImages:
+
+                            # store the path name in the xml file and the label map in the directory
+                            sDirName = self.GetFolderNameForLabelMaps()
+                            sPageLabelMapDir = self.oFilesIO.CreatePageDir(sDirName)
+    
+                            sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
+                             
+                            # save the label map file to the user's page directory
+                            sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
+    
+                            bDataVolumeSaved, sNRRDMsg = self.SaveLabeMapAsDataVolume(sLabelMapPath, slNodeLabelMap) 
                          
-                        # save the label map file to the user's page directory
-                        sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
-
-                        bDataVolumeSaved, sNRRDMsg = self.SaveLabeMapAsDataVolume(sLabelMapPath, slNodeLabelMap) 
-                     
-                        bRTStructSaved, sRTStructMsg = self.SaveLabelMapAsRTStruct(oImageNode, sLabelMapFilename, sPageLabelMapDir)
+                            if (self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'SaveLabelMapsAsRTStruct')) == 'Y':
+                                bRTStructSaved, sRTStructMsg = self.SaveLabelMapAsRTStruct(oImageNode, sLabelMapFilename, sPageLabelMapDir)
+                            else:
+                                bRTStructSaved = True # allow label map path to be written to xml
+                                
+                            # update list of names of images that have the label maps stored
+                            lsLabelMapsStoredForImages.append(oImageNode.sNodeName)
 
 
                         # if label maps were saved as a data volume and as an RTStruct (if applicable)

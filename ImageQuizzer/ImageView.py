@@ -42,22 +42,6 @@ class ImageView:
     def GetImageViewList(self):
         return self._loImageViews
 
-    #----------
-    def GetUniqueImageObjectList(self):
-        """ The same image may be displayed in different viewing windows.
-            Return a unique list of image objects (first occurrence)
-        """
-        
-        loUniqueImages = []
-        lsImageNodeNames = []
-        
-        for oImageView in self._loImageViews:
-            if not oImageView.sNodeName in lsImageNodeNames:
-                lsImageNodeNames.append(oImageView.sNodeName)
-                loUniqueImages.append(oImageView)
-        
-        return loUniqueImages
-
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def RunSetup(self, xPageNode, quizLayout, sParentDataDir):
