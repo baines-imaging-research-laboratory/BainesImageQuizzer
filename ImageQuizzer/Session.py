@@ -582,7 +582,7 @@ class Session:
         self.oImageView = ImageView()
         self.oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self.oFilesIO.GetDataParentDir())
 
-        # if load label maps if a labelmap path has been stored in the xml for the images on this page
+        # load label maps if a labelmap path has been stored in the xml for the images on this page
         self.LoadSavedLabelMaps()
 
         # assign each image node and its label map (if applicable) to the viewing widget
@@ -767,7 +767,7 @@ class Session:
                     oImageNode.SetImageState(dictImageState)
             
             
-
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SaveLabelMaps(self, sCaller):
 
@@ -776,97 +776,189 @@ class Session:
             or segmentation was loaded in through the xml quiz file.
             
             This function looks for label maps created by the user (-bainesquizlabel suffix) 
-            and if found, saves them as a .nrrd file in the specified directory. x
-            and if found, then stored in the xml file within the associated image element.
+            and if found, saves them as a data volume  (.nrrd file) in the specified directory.
+            The path to this file is then stored in the xml file within the associated image element.
+            
+            Also store label maps as RTStructs if the attribute to do so was set in the xml root node.
             
             A warning is presented if the xml question set had the 'segmentrequired' flag set to 'y'
             but no label maps (with -bainesquizlabel suffix) were found. The user purposely may 
             not have created a label map if there were no lesions to segment. This is acceptable.
         """
             
-        # if label maps were created, save to disk
-        bLabelMapsSaved = True #initialize
+        bLabelMapsSaved = True # initialize
         sMsg = ''
         
         bLabelMapFound = False  # to detect if label map was created by user
  
-        try:
-        
-            # get list of label maps to save
-            lLabelMaps = slicer.util.getNodesByClass('vtkMRMLLabelMapVolumeNode')
-             
-            # if list length > 0, create folder to hold labels
-            iNumLabelMaps =  len(lLabelMaps)
-            if iNumLabelMaps > 0:
-     
-                for oImageNode in self.oImageView.GetImageViewList():
-                      
-                    for iLabelMap in range(iNumLabelMaps):
-#                         slNodeLabelMap = lLabelMaps.GetItemAsObject(iLabelMap)
-                        slNodeLabelMap = lLabelMaps[iLabelMap]
+        # capture the names of the images that have had the label maps stored
+        #    the list of image nodes may repeat the same image if being viewed in 
+        #    multiple windows
+        lsLabelMapsStoredForImages = [] # initialize for each label map
 
-                        # match label map file with xml image
-                        sLabelMapFilename = slNodeLabelMap.GetName()
-                        if oImageNode.sNodeName + '-bainesquizlabel' == sLabelMapFilename:
-                            
-                            bLabelMapFound = True  # -bainesquizlabel suffix is associated with an image on the page
+        # get list of label maps to save
+        lSlicerLabelMapNodes = slicer.util.getNodesByClass('vtkMRMLLabelMapVolumeNode')
+         
+        # if list length > 0, create folder to hold labels
+        if len(lSlicerLabelMapNodes) > 0:
+            
+            for oImageNode in self.oImageView.GetImageViewList():
+                  
+                for slNodeLabelMap in lSlicerLabelMapNodes:
+
+                    # match label map file with xml image
+                    sLabelMapFilename = slNodeLabelMap.GetName()
+                    if oImageNode.sNodeName + '-bainesquizlabel' == sLabelMapFilename:
                         
+                        bLabelMapFound = True  # -bainesquizlabel suffix is associated with an image on the page
+
+
+                        # only write to disk if it hasn't already been done for this image node                    
+                        if not oImageNode.sNodeName in lsLabelMapsStoredForImages:
 
                             # store the path name in the xml file and the label map in the directory
                             sDirName = self.GetFolderNameForLabelMaps()
                             sPageLabelMapDir = self.oFilesIO.CreatePageDir(sDirName)
-
+    
                             sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
                              
                             # save the label map file to the user's page directory
                             sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
-#                             print('LabelMap Path: ', sLabelMapPath)
-
-                             
-                            slStorageNode = slNodeLabelMap.CreateDefaultStorageNode()
-                            slStorageNode.SetFileName(sLabelMapPath)
-                            slStorageNode.WriteData(slNodeLabelMap)
-                            slStorageNode.UnRegister(slicer.mrmlScene) # for memory leaks
+    
+                            bDataVolumeSaved, sNRRDMsg = self.SaveLabeMapAsDataVolume(sLabelMapPath, slNodeLabelMap) 
                          
+                            if (self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'SaveLabelMapsAsRTStruct')) == 'Y':
+                                bRTStructSaved, sRTStructMsg = self.SaveLabelMapAsRTStruct(oImageNode, sLabelMapFilename, sPageLabelMapDir)
+                            else:
+                                bRTStructSaved = True # allow label map path to be written to xml
+                                
+                            # update list of names of images that have the label maps stored
+                            lsLabelMapsStoredForImages.append(oImageNode.sNodeName)
 
+
+                        # if label maps were saved as a data volume and as an RTStruct (if applicable)
+                        #    add the label map path element to the image element in the xml
+                        
+                        if (bDataVolumeSaved * bRTStructSaved):
                             # update xml storing the path to the label map file with the image element
                             self.AddLabelMapPathElement(oImageNode.GetXmlImageElement(),\
                                                  self.oFilesIO.GetRelativeUserPath(sLabelMapPath))
-
-                            
+                        
                             bLabelMapsSaved = True  # at least one label map was saved
+                        else:
+                            bLabelMapsSaved = False
+                            sMsg = sNRRDMsg + sRTStructMsg
+                            self.oUtilsMsgs.DisplayError(sMsg)
 
-    
-            # If there were no label map volume nodes 
-            # OR if there were label map volume nodes, but there wasn't a -bainesquizlabel suffix 
-            #    to match an image on the page, ie. the labelMaps found flag was left as false
-            # Check if the segmentation was required and if enabled present the warning
-            if iNumLabelMaps == 0 or (iNumLabelMaps > 0 and bLabelMapFound == False):    
-                
-                # user doesn't get the option to cancel if the call was initiated 
-                # from the Close event filter
-                if sCaller != 'EventFilter':
-                    if self._bSegmentationModule == True:   # if there is a segmentation module
-                        if self.GetSegmentationTabEnabled() == True:    # if the tab is enabled
-                            qtAns = self.oUtilsMsgs.DisplayOkCancel(\
-                                                'No label maps were created. Do you want to continue?')
-                            if qtAns == qt.QMessageBox.Ok:
-                                # user did not create a label map but there may be no lesions to segment
-                                # continue with the save
-                                bLabelMapsSaved = True
-                            else:
-                                # user wants to resume work on this page
-                                bLabelMapsSaved = False
+
+        #####
+        # Display warning if segmentation was required but no user created label map was found.
+        #####
+        #    If there were no label map volume nodes 
+        #    OR if there were label map volume nodes, but there wasn't a -bainesquizlabel suffix 
+        #        to match an image on the page, ie. the labelMaps found flag was left as false
+        #    Check if the segmentation was required and if enabled present the warning
+        if len(lSlicerLabelMapNodes) == 0 or (len(lSlicerLabelMapNodes) > 0 and bLabelMapFound == False):    
+            
+            # user doesn't get the option to cancel if the call was initiated 
+            # from the Close event filter
+            if sCaller != 'EventFilter':
+                if self._bSegmentationModule == True:   # if there is a segmentation module
+                    if self.GetSegmentationTabEnabled() == True:    # if the tab is enabled
+                        qtAns = self.oUtilsMsgs.DisplayOkCancel(\
+                                            'No label maps were created. Do you want to continue?')
+                        if qtAns == qt.QMessageBox.Ok:
+                            # user did not create a label map but there may be no lesions to segment
+                            # continue with the save
+                            bLabelMapsSaved = True
+                        else:
+                            # user wants to resume work on this page
+                            bLabelMapsSaved = False
                 
                     
     
-        except:
-            sMsg = 'Failed to store label maps ' + sLabelMapPath
-            bLabelMapsSaved = False
-     
     
         return bLabelMapsSaved, sMsg
-   
+
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SaveLabeMapAsDataVolume(self, sLabelMapPath, slNodeLabelMap):
+        """ Use Slicer's storage node to export label map node as a data volume.
+        """
+        
+        sMsg = ''
+        bSuccess = True
+        
+        try:
+            slStorageNode = slNodeLabelMap.CreateDefaultStorageNode()
+            slStorageNode.SetFileName(sLabelMapPath)
+            slStorageNode.WriteData(slNodeLabelMap)
+            slStorageNode.UnRegister(slicer.mrmlScene) # for memory leaks
+            
+        except:
+            bSuccess = False
+            sMsg = 'Failed to store label map as data volume file: \n'\
+                    + sLabelMapPath +\
+                    'See administrator: ' + sys._getframe(  ).f_code.co_name
+    
+    
+        return bSuccess, sMsg
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SaveLabelMapAsRTStruct(self, oPrimaryImageNode, sLabelMapName, sOutputLabelDir):
+    
+        bRTStructSaved = True
+        sMsg = ''
+    
+        sSubDirForDicom = 'DICOM-' + oPrimaryImageNode.sNodeName
+        sOutputDir = os.path.join(sOutputLabelDir ,sSubDirForDicom)
+        
+        try:
+            
+            if not os.path.exists(sOutputDir):
+                os.makedirs(sOutputDir)
+                
+            # convert label map to segmentation
+            slLabelMapVolumeNode = slicer.util.getNode(sLabelMapName)
+            slLabelMapSegNode =  slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode')
+            slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(slLabelMapVolumeNode, slLabelMapSegNode)
+
+
+            # Associate segmentation node with a reference volume node
+            shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+            slPrimaryVolumeID = shNode.GetItemByDataNode(oPrimaryImageNode.slNode)
+            slStudyShItem = shNode.GetItemParent(slPrimaryVolumeID)
+            slLabelMapSegNodeID = shNode.GetItemByDataNode(slLabelMapSegNode)
+            shNode.SetItemParent(slLabelMapSegNodeID, slStudyShItem)
+
+                 
+            # create the dicom exporter
+            import DicomRtImportExportPlugin
+            exporter = DicomRtImportExportPlugin.DicomRtImportExportPluginClass()
+            exportables = []
+             
+            # examine volumes for export and add to export list
+            volExportable = exporter.examineForExport(slPrimaryVolumeID)
+            segExportable = exporter.examineForExport(slLabelMapSegNodeID)
+            exportables.extend(volExportable)
+            exportables.extend(segExportable)
+             
+            # assign output path to each exportable
+            for exp in exportables:
+                exp.directory = sOutputDir
+                 
+             
+            # perform export
+            exporter.export(exportables)
+
+
+        except:
+            bRTStructSaved = False
+            sMsg = 'Failed to store Dicom RTStruct ' + sOutputDir \
+                   + '\n See administrator: ' + sys._getframe(  ).f_code.co_name
+
+        
+        return bRTStructSaved, sMsg
+
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadSavedLabelMaps(self):

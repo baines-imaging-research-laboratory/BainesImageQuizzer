@@ -14,7 +14,7 @@ import ssl
 from DICOMLib.DICOMUtils import loadPatientByUID
 
 import pydicom
-
+import time
 
 ##########################################################################
 #
@@ -64,8 +64,7 @@ class ImageView:
 
         # display Images
         self.xImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
-        self.iNumImages = self.oIOXml.GetNumChildrenByName(xPageNode, 'Image')
-        
+#         self.iNumImages = self.oIOXml.GetNumChildrenByName(xPageNode, 'Image')
        
         self.BuildViewNodes()
         
@@ -812,14 +811,17 @@ class DicomVolumeDetail(ViewNodeBase):
     def LoadDicomVolume(self):
         self.slNode = None
         bLoadSuccess = False
+        t = time.time()
 
         # first check if patient/series was already imported into the database
         
         database = slicer.dicomDatabase
         if (database.isOpen):
+
             bSeriesFoundInDB = False   # initialize
             
             lAllSeriesUIDs = DICOMUtils.allSeriesUIDsInDatabase(database)
+            print('NumSeries in DB: ', len(lAllSeriesUIDs))
             tags = {}
             tags['patientName'] = "0010,0010"
             tags['patientID'] = "0010,0020"
@@ -842,28 +844,27 @@ class DicomVolumeDetail(ViewNodeBase):
             sSeriesNumber = database.fileValue(self.sImagePath, tags['seriesNumber'])
 
             self.sStudyInstanceUID = database.fileValue(self.sImagePath, tags['studyUID'])
-#             sExpectedSubjectHierarchyName = sPatientName + ' (' + sPatientID + ')'
-#             print(' ~~~ Subject Hierarchy expected name : %s' % sExpectedSubjectHierarchyName)
-
-#             sExpectedSeriesSubjectHierarchyName = sSeriesNumber + ': ' + sSeriesDescription
-#             print(' ~~~ Subject Hierarchy Series expected name : %s' % sExpectedSeriesSubjectHierarchyName)
-            
 
             
             # extract directory that stores the dicom series from defined image path
             sHead_Tail = os.path.split(self.sImagePath)
             sDicomSeriesDir = sHead_Tail[0]
             
+            elapsed = time.time() - t
+            print('Checking if already in db: %s' % elapsed)
+            
             # check if already loaded into the database
             for sImportedSeries in lAllSeriesUIDs:
                 if sImportedSeries == sSeriesUIDToLoad:
                     bSeriesFoundInDB = True
                     break
-                
+
             # if not already in the database, import from series directory 
             #  NOTE: if more than one series is located in this directory, 
             #        all series will be imported
             if not bSeriesFoundInDB:
+                elaspsed = time.time() - elapsed
+                print('Starting import: %s' % elapsed )                
                 DICOMUtils.importDicom(sDicomSeriesDir)
 
 
@@ -877,6 +878,9 @@ class DicomVolumeDetail(ViewNodeBase):
             if slNodeId > 0:
                 bVolumeAlreadyLoaded = True
             else:
+                elaspsed = time.time() - elapsed
+                print('Starting load: %s' % elapsed )                
+
                 DICOMUtils.loadSeriesByUID([sSeriesUIDToLoad])
                 slNodeId = slSubjectHierarchyNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(),sSeriesUIDToLoad)
                 
