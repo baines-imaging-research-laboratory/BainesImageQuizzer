@@ -7,6 +7,7 @@ import unittest
 from Utilities import *
 from Question import *
 from ImageView import *
+from UtilsIO import *
 #from ImageQuizzer import *
 
 import EditorLib
@@ -17,7 +18,6 @@ from PythonQt import QtCore, QtGui
 from slicer.util import EXIT_SUCCESS
 from datetime import datetime
 
-import shutil
 
 
 ##########################################################################
@@ -33,7 +33,6 @@ class Session:
         self.parent = parent
 #         print('Constructor for Session')
         
-        self._oMsgUtil = UtilsMsgs()
         self._sLoginTime = ''
 
         self._iCurrentCompositeIndex = 0
@@ -68,7 +67,7 @@ class Session:
     def __del__(self):
         if not self.QuizComplete():
             self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-            self._oMsgUtil.DisplayInfo(' Image Quizzer Exiting - User file is saved.')
+            self.oUtilsMsgs.DisplayInfo(' Image Quizzer Exiting - User file is saved.')
 
         # clean up of editor observers and nodes that may cause memory leaks (color table?)
         if self.GetSegmentationTabIndex() > 0:
@@ -393,7 +392,7 @@ class Session:
     
             else:
                 if sMsg != '':
-                    self._oMsgUtil.DisplayWarning( sMsg )
+                    self.oUtilsMsgs.DisplayWarning( sMsg )
                 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -429,7 +428,7 @@ class Session:
         
         else:
             if sMsg != '':
-                self._oMsgUtil.DisplayWarning( sMsg )
+                self.oUtilsMsgs.DisplayWarning( sMsg )
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onExitButtonClicked(self,sCaller):
@@ -442,14 +441,14 @@ class Session:
         if sCaller == 'ExitBtn':
             sMsg = sMsg + ' \nYour responses will be saved. Quiz may be resumed.'
 
-        qtAns = self._oMsgUtil.DisplayOkCancel(sMsg)
+        qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
         if qtAns == qt.QMessageBox.Ok:
             bSuccess, sMsg = self.PerformSave(sCaller)
             if bSuccess:
                 slicer.util.exit(status=EXIT_SUCCESS)
             else:
                 if sMsg != '':
-                    self._oMsgUtil.DisplayWarning( sMsg )
+                    self.oUtilsMsgs.DisplayWarning( sMsg )
 
         # if code reaches here, either the exit was cancelled or there was 
         # an error in the save
@@ -583,7 +582,7 @@ class Session:
         self.oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self.oFilesIO.GetDataParentDir())
 
         # load label maps if a labelmap path has been stored in the xml for the images on this page
-        self.LoadSavedLabelMaps()
+        self.oFilesIO.LoadSavedLabelMaps(self)
 
         # assign each image node and its label map (if applicable) to the viewing widget
         self.oImageView.AssignNodesToView()
@@ -657,7 +656,7 @@ class Session:
             # or 'none) for capturing all of the required pieces for the question set
             # (responses and label maps). The label maps therefore must be saved
             # prior to capturing the responses
-            bSuccess, sMsg = self.SaveLabelMaps(sCaller)
+            bSuccess, sMsg = self.oFilesIO.SaveLabelMaps(self, sCaller)
         
 
             if bSuccess:
@@ -768,290 +767,6 @@ class Session:
             
             
     
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SaveLabelMaps(self, sCaller):
-
-        """ label map volume nodes may exist in the mrmlScene if the user created a label map
-            (in which case it is named with a '-bainesquizlabel' suffix), or if a label map 
-            or segmentation was loaded in through the xml quiz file.
-            
-            This function looks for label maps created by the user (-bainesquizlabel suffix) 
-            and if found, saves them as a data volume  (.nrrd file) in the specified directory.
-            The path to this file is then stored in the xml file within the associated image element.
-            
-            Also store label maps as RTStructs if the attribute to do so was set in the xml root node.
-            
-            A warning is presented if the xml question set had the 'segmentrequired' flag set to 'y'
-            but no label maps (with -bainesquizlabel suffix) were found. The user purposely may 
-            not have created a label map if there were no lesions to segment. This is acceptable.
-        """
-            
-        bLabelMapsSaved = True # initialize
-        sMsg = ''
-        
-        bLabelMapFound = False  # to detect if label map was created by user
- 
-        # capture the names of the images that have had the label maps stored
-        #    the list of image nodes may repeat the same image if being viewed in 
-        #    multiple windows
-        lsLabelMapsStoredForImages = [] # initialize for each label map
-
-        # get list of label maps to save
-        lSlicerLabelMapNodes = slicer.util.getNodesByClass('vtkMRMLLabelMapVolumeNode')
-         
-        # if list length > 0, create folder to hold labels
-        if len(lSlicerLabelMapNodes) > 0:
-            
-            for oImageNode in self.oImageView.GetImageViewList():
-                  
-                for slNodeLabelMap in lSlicerLabelMapNodes:
-
-                    # match label map file with xml image
-                    sLabelMapFilename = slNodeLabelMap.GetName()
-                    if oImageNode.sNodeName + '-bainesquizlabel' == sLabelMapFilename:
-                        
-                        bLabelMapFound = True  # -bainesquizlabel suffix is associated with an image on the page
-
-
-                        # only write to disk if it hasn't already been done for this image node                    
-                        if not oImageNode.sNodeName in lsLabelMapsStoredForImages:
-
-                            # store the path name in the xml file and the label map in the directory
-                            sDirName = self.GetFolderNameForLabelMaps()
-                            sPageLabelMapDir = self.oFilesIO.CreatePageDir(sDirName)
-    
-                            sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
-                             
-                            # save the label map file to the user's page directory
-                            sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
-    
-                            bDataVolumeSaved, sNRRDMsg = self.SaveLabeMapAsDataVolume(sLabelMapPath, slNodeLabelMap) 
-                         
-                            if (self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'SaveLabelMapsAsRTStruct')) == 'Y':
-                                bRTStructSaved, sRTStructMsg = self.SaveLabelMapAsRTStruct(oImageNode, sLabelMapFilename, sPageLabelMapDir)
-                            else:
-                                bRTStructSaved = True # allow label map path to be written to xml
-                                
-                            # update list of names of images that have the label maps stored
-                            lsLabelMapsStoredForImages.append(oImageNode.sNodeName)
-
-
-                        # if label maps were saved as a data volume and as an RTStruct (if applicable)
-                        #    add the label map path element to the image element in the xml
-                        
-                        if (bDataVolumeSaved * bRTStructSaved):
-                            # update xml storing the path to the label map file with the image element
-                            self.AddLabelMapPathElement(oImageNode.GetXmlImageElement(),\
-                                                 self.oFilesIO.GetRelativeUserPath(sLabelMapPath))
-                        
-                            bLabelMapsSaved = True  # at least one label map was saved
-                        else:
-                            bLabelMapsSaved = False
-                            sMsg = sNRRDMsg + sRTStructMsg
-                            self.oUtilsMsgs.DisplayError(sMsg)
-
-
-        #####
-        # Display warning if segmentation was required but no user created label map was found.
-        #####
-        #    If there were no label map volume nodes 
-        #    OR if there were label map volume nodes, but there wasn't a -bainesquizlabel suffix 
-        #        to match an image on the page, ie. the labelMaps found flag was left as false
-        #    Check if the segmentation was required and if enabled present the warning
-        if len(lSlicerLabelMapNodes) == 0 or (len(lSlicerLabelMapNodes) > 0 and bLabelMapFound == False):    
-            
-            # user doesn't get the option to cancel if the call was initiated 
-            # from the Close event filter
-            if sCaller != 'EventFilter':
-                if self._bSegmentationModule == True:   # if there is a segmentation module
-                    if self.GetSegmentationTabEnabled() == True:    # if the tab is enabled
-                        qtAns = self.oUtilsMsgs.DisplayOkCancel(\
-                                            'No label maps were created. Do you want to continue?')
-                        if qtAns == qt.QMessageBox.Ok:
-                            # user did not create a label map but there may be no lesions to segment
-                            # continue with the save
-                            bLabelMapsSaved = True
-                        else:
-                            # user wants to resume work on this page
-                            bLabelMapsSaved = False
-                
-                    
-    
-    
-        return bLabelMapsSaved, sMsg
-
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SaveLabeMapAsDataVolume(self, sLabelMapPath, slNodeLabelMap):
-        """ Use Slicer's storage node to export label map node as a data volume.
-        """
-        
-        sMsg = ''
-        bSuccess = True
-        
-        try:
-            slStorageNode = slNodeLabelMap.CreateDefaultStorageNode()
-            slStorageNode.SetFileName(sLabelMapPath)
-            slStorageNode.WriteData(slNodeLabelMap)
-            slStorageNode.UnRegister(slicer.mrmlScene) # for memory leaks
-            
-        except:
-            bSuccess = False
-            sMsg = 'Failed to store label map as data volume file: \n'\
-                    + sLabelMapPath +\
-                    'See administrator: ' + sys._getframe(  ).f_code.co_name
-    
-    
-        return bSuccess, sMsg
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SaveLabelMapAsRTStruct(self, oPrimaryImageNode, sLabelMapName, sOutputLabelDir):
-    
-        bRTStructSaved = True
-        sMsg = ''
-    
-        sSubDirForDicom = 'DICOM-' + oPrimaryImageNode.sNodeName
-        sOutputDir = os.path.join(sOutputLabelDir ,sSubDirForDicom)
-        
-        try:
-            
-            if not os.path.exists(sOutputDir):
-                os.makedirs(sOutputDir)
-                
-            # convert label map to segmentation
-            slLabelMapVolumeNode = slicer.util.getNode(sLabelMapName)
-            slLabelMapSegNode =  slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode')
-            slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(slLabelMapVolumeNode, slLabelMapSegNode)
-
-
-            # Associate segmentation node with a reference volume node
-            shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-            slPrimaryVolumeID = shNode.GetItemByDataNode(oPrimaryImageNode.slNode)
-            slStudyShItem = shNode.GetItemParent(slPrimaryVolumeID)
-            slLabelMapSegNodeID = shNode.GetItemByDataNode(slLabelMapSegNode)
-            shNode.SetItemParent(slLabelMapSegNodeID, slStudyShItem)
-
-                 
-            # create the dicom exporter
-            import DicomRtImportExportPlugin
-            exporter = DicomRtImportExportPlugin.DicomRtImportExportPluginClass()
-            exportables = []
-             
-            # examine volumes for export and add to export list
-            volExportable = exporter.examineForExport(slPrimaryVolumeID)
-            segExportable = exporter.examineForExport(slLabelMapSegNodeID)
-            exportables.extend(volExportable)
-            exportables.extend(segExportable)
-             
-            # assign output path to each exportable
-            for exp in exportables:
-                exp.directory = sOutputDir
-                 
-             
-            # perform export
-            exporter.export(exportables)
-
-
-        except:
-            bRTStructSaved = False
-            sMsg = 'Failed to store Dicom RTStruct ' + sOutputDir \
-                   + '\n See administrator: ' + sys._getframe(  ).f_code.co_name
-
-        
-        return bRTStructSaved, sMsg
-
-    
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def LoadSavedLabelMaps(self):
-        # when loading label maps created in the quiz, associate it with the correct 
-        #    image node in the subject hierarchy
-        # add it to the slquizlabelmap property of the image node 
-
-
-
-        lLoadedLabelMaps = []
-
-        for oImageNode in self.oImageView.GetImageViewList():
-            
-            # for each image view, get list of labelmap files stored (may be more than one)
-            if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
-
-                # read attribute from xml file whether to use label maps previously created
-                #    by the user in the quiz for this image
-                if (self.oIOXml.GetValueOfNodeAttribute(oImageNode.GetXmlImageElement(), 'UsePreviousLabelMap') == 'Y'):
-                    bUsePreviousLabelMap = True
-                else:
-                    bUsePreviousLabelMap = False
-
-        
-                # look at latest instance of the label map elements stored in the xml
-                xLabelMapPathElement = self.oIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
-                slLabelMapNode = None # initialize
-
-                # if there were no label map paths stored with the image, and xml attribute has flag 
-                #    to use a previous label map, check previous pages for the first matching image
-                if xLabelMapPathElement == None and bUsePreviousLabelMap == True:
-                    xHistoricalLabelMapMatch = self.CheckXmlImageHistoryForMatch( oImageNode.GetXmlImageElement(), 'LabelMapPath')
-                    
-                    if xHistoricalLabelMapMatch != None:
-                        # found a label map for this image in history
-                        # copy to disk and store it in xml for the current image
-                        self.CopyAndStoreLabelMapFromHistory(xHistoricalLabelMapMatch, oImageNode)
-
-                        #    assign newly stored xml element to xLabelMapPathElement
-                        xLabelMapPathElement = self.oIOXml.GetLatestChildElement( oImageNode.GetXmlImageElement(), 'LabelMapPath')
-                    
-                
-                # load labelmap file from stored path in XML                
-                if xLabelMapPathElement != None:
-                    sStoredRelativePath = self.oIOXml.GetDataInNode(xLabelMapPathElement)
-                    
-                    # check if label map was already loaded (if between question sets, label map will persisit)
-                    sLabelMapNodeName = self.oFilesIO.GetFilenameNoExtFromPath(sStoredRelativePath)
-                    bFoundLabelMap, slLabelMapNode = self.CheckForLoadedLabelMapInScene(sLabelMapNodeName)
-
-                    # only load the label map once
-                    #    same label map may have been stored multiple times in XML for the page
-                    #    (same image but different orientations)
-                    if not sStoredRelativePath in lLoadedLabelMaps:
-                        sAbsolutePath = self.oFilesIO.GetAbsoluteUserPath(sStoredRelativePath)
-#                         dictProperties = {'LabelMap' : True, 'show': False}
-                        dictProperties = {'LabelMap' : True}
-                        
-                        try:
-
-                            if not bFoundLabelMap:
-                                if os.path.exists(sAbsolutePath):
-                                    # load label map into the scene
-                                    slLabelMapNode = slicer.util.loadLabelVolume(sAbsolutePath, dictProperties)
-                                else:
-                                    sMsg = 'Stored path to label map file does not exist. Label map will not be loaded.\n' \
-                                        + sAbsolutePath
-                                    self.oUtilsMsgs.DisplayWarning(sMsg)
-                                    break # continue in for loop for next label map path element
-                            
-                            
-                            lLoadedLabelMaps.append(sStoredRelativePath)
-    
-                            # set associated volume to connect label map to master
-                            sLabelMapNodeName = slLabelMapNode.GetName()
-#                             sAssociatedName = sLabelMapNodeName.replace('-bainesquizlabel','')
-                            sAssociatedName = oImageNode.sNodeName
-                            slAssociatedNodeCollection = slicer.mrmlScene.GetNodesByName(sAssociatedName)
-                            slAssociatedNode = slAssociatedNodeCollection.GetItemAsObject(0)
-                            slLabelMapNode.SetNodeReferenceID('AssociatedNodeID',slAssociatedNode.GetID())
-
-    
-                        except:
-                             
-                            sMsg = 'Trouble loading label map file:' + sAbsolutePath
-                            self.oUtilsMsgs.DisplayWarning(sMsg)
-                           
-
-                # add the label map node to the image property so that it gets
-                #    set when assigning nodes to the viewing widgets (red, green, yellow)
-                # the node may be None (no label map path was stored)
-                oImageNode.SetQuizLabelMapNode(slLabelMapNode)
-
 
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1106,54 +821,6 @@ class Session:
         return sCaptureSuccessLevel, lsAllResponses, sAllMsgs
        
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CopyAndStoreLabelMapFromHistory(self, xHistoricalLabelMapElement, oImageNode):
-
-        # define source for copy
-        sStoredRelativePathForSource = self.oIOXml.GetDataInNode(xHistoricalLabelMapElement)
-        sAbsolutePathForSource = self.oFilesIO.GetAbsoluteUserPath(sStoredRelativePathForSource)
-
-        # create new folder for destination based on current page information
-        sCurrentLabelMapFolderName = self.GetFolderNameForLabelMaps()
-        sLabelMapDirForDest = self.oFilesIO.CreatePageDir(sCurrentLabelMapFolderName)
-        
-        # create new file name to which the historical label map is to be copied
-        sLabelMapFilenameWithExtForDest = oImageNode.sNodeName + '-bainesquizlabel' + '.nrrd'
-        
-        # define destination path
-        sLabelMapPathForDest = os.path.join(sLabelMapDirForDest, sLabelMapFilenameWithExtForDest)
-
-        # check if exists
-        if not os.path.exists(sLabelMapPathForDest):
-        
-            # copy source to dest
-            shutil.copy(sAbsolutePathForSource, sLabelMapPathForDest)
-
-        # update xml storing the path to the label map file with the image element
-        self.AddLabelMapPathElement(oImageNode.GetXmlImageElement(), self.oFilesIO.GetRelativeUserPath(sLabelMapPathForDest))
-
-        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CheckForLoadedLabelMapInScene(self, sFilenameNoExt):
-        """ A label map is stored on disk with the same name as the node in the mrmlScene.
-            Using the filename for the label map (with no extension) check if it is already
-            loaded into the scene.
-        """
-        bFound = False
-        slNode = None
-        
-        slNodesCollection = slicer.mrmlScene.GetNodesByName(sFilenameNoExt)
-
-        if slNodesCollection.GetNumberOfItems() == 1:
-            bFound = True
-            slNode = slNodesCollection.GetItemAsObject(0)
-
-        # for memory leak
-        slNodesCollection.UnRegister(slicer.mrmlScene)
-              
-        return bFound, slNode
-    
-    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForSavedResponse(self):
 
@@ -1280,6 +947,9 @@ class Session:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetFolderNameForLabelMaps(self):
+        """ Label maps are stored in a directory where the name is derived from the 
+            current page of the Session.
+        """
         
         # get page info to create directory
         xPageNode = self.GetCurrentPageNode()
@@ -1287,7 +957,7 @@ class Session:
         sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Name')
         sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
          
-        sDirName = os.path.join(self.oFilesIO.GetUserQuizResultsDir(), sPageIndex + '_' + sPageName + '_' + sPageDescriptor)
+        sDirName = os.path.join(self.oFilesIO.GetUserQuizResultsDir(), 'Pg'+ sPageIndex + '_' + sPageName + '_' + sPageDescriptor)
 
         return sDirName
         
@@ -1614,7 +1284,7 @@ class Session:
                 if self.GetMultipleResponsesInQuiz() == True:
 
                     sMsg = 'Quiz has already been completed. \nClick Yes to begin again. Click No to exit.'
-                    qtAns = self._oMsgUtil.DisplayYesNo(sMsg)
+                    qtAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
 
                     if qtAns == qt.QMessageBox.Yes:
                         iResumeCompIndex = 0
@@ -1636,7 +1306,7 @@ class Session:
             
         # Display a message to user if resuming
         if not iResumeCompIndex == self._iCurrentCompositeIndex:
-            self._oMsgUtil.DisplayInfo('Resuming quiz from previous login session.')
+            self.oUtilsMsgs.DisplayInfo('Resuming quiz from previous login session.')
             
         self._iCurrentCompositeIndex = iResumeCompIndex
         
@@ -1692,7 +1362,7 @@ class Session:
         self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
         self.SetQuizComplete(True)
         
-        self._oMsgUtil.DisplayInfo('Quiz Complete - Exiting')
+        self.oUtilsMsgs.DisplayInfo('Quiz Complete - Exiting')
         slicer.util.exit(status=EXIT_SUCCESS)
         
     
