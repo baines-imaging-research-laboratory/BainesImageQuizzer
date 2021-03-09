@@ -213,7 +213,11 @@ class ImageView:
                 if oViewNode.slQuizLabelMapNode != None:
                     slWindowCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
                 else:
-                    slWindowCompositeNode.SetLabelVolumeID('None')
+                    # there is no quiz label map node associated with the background,
+                    #    but there may have been one in the foreground;
+                    #    if so, leave it turned on
+                    if slWindowCompositeNode.GetLabelVolumeID ()== None:
+                        slWindowCompositeNode.SetLabelVolumeID('None')
 
     
             elif oViewNode.sViewLayer == 'Foreground':
@@ -229,7 +233,11 @@ class ImageView:
                 if oViewNode.slQuizLabelMapNode != None:
                     slWindowCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
                 else:
-                    slWindowCompositeNode.SetLabelVolumeID('None')
+                    # there is no quiz label map node associated with the foreground,
+                    #    but there may have been one in the background;
+                    #    if so, leave it turned on
+                    if slWindowCompositeNode.GetLabelVolumeID ()== None:
+                        slWindowCompositeNode.SetLabelVolumeID('None')
 
     
             elif oViewNode.sViewLayer == 'Label':
