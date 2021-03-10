@@ -468,11 +468,17 @@ class UtilsIO:
                             bDataVolumeSaved, sNRRDMsg = self.SaveLabeMapAsDataVolume(sLabelMapPath, slNodeLabelMap) 
                          
                             if (oSession.oIOXml.GetValueOfNodeAttribute(oSession.oIOXml.GetRootNode(), 'SaveLabelMapsAsRTStruct')) == 'Y':
-                                bRTStructSaved, sRTStructMsg, sRTStructOutputDir = self.SaveLabelMapAsRTStruct(oImageNode, sLabelMapFilename, sPageLabelMapDir)
+                                bRTStructSaved, sRTStructMsg, sDicomExportOutputDir = self.SaveLabelMapAsRTStruct(oImageNode, sLabelMapFilename, sPageLabelMapDir)
 
                                 if (oSession.oIOXml.GetValueOfNodeAttribute(oSession.oIOXml.GetRootNode(), 'MapRTStructToVolume')) == 'Y':
-                                    # args=(original dicom series, Slicer's dicom output, SaveTo dir)
-                                    self.mapRTStructToVolume(self.GetDirFromPath(oImageNode.sImagePath), sRTStructOutputDir, sPageLabelMapDir ) 
+                                    try:
+                                        # args=(original dicom series, Slicer's dicom output, SaveTo dir)
+                                        self.mapRTStructToVolume(self.GetDirFromPath(oImageNode.sImagePath), sDicomExportOutputDir, sPageLabelMapDir )
+                                        shutil.rmtree(sDicomExportOutputDir, ignore_errors=True)
+                                    except:
+                                        sMsg = 'Failed to map exported RTStruct to original volume.'\
+                                                + '\nSee administrator: ' +  + sys._getframe(  ).f_code.co_name
+                                        oSession.oUtilsMsgs.DisplayWarning(sMsg) 
 
                             else:
                                 bRTStructSaved = True # allow label map path to be written to xml
@@ -917,7 +923,10 @@ class UtilsIO:
         # get mapping of SOPInstanceUIDs to z position
         uids_df=pd.DataFrame()
         image_files=os.listdir(directory)
-        image_files=[im_f for im_f in image_files if (".dcm" in im_f and (("rtss" not in im_f) or ("rtstruct" not in im_f)))]
+
+        # mods cj - remove restriction that extension must be .dcm
+#         image_files=[im_f for im_f in image_files if (".dcm" in im_f and (("rtss" not in im_f) or ("rtstruct" not in im_f)))]
+        image_files=[im_f for im_f in image_files if ((("rtss" not in im_f) or ("rtstruct" not in im_f)))]
     #     count=0
         for image_file in image_files:
             try:
