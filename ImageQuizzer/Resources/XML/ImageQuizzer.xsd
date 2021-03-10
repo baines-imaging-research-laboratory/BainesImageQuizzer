@@ -12,6 +12,7 @@
 		</xs:sequence>
 		<xs:attribute name="ROIColorFile" type="xs:string" />
 		<xs:attribute name="SaveLabelMapsAsRTStruct" type="yesnoType" default="N" />
+		<xs:attribute name="MapRTStructToVolume" type="yesnoType" default="N" />
 	</xs:complexType>
 </xs:element>
 
