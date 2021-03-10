@@ -144,9 +144,9 @@
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>DICOM series - no contours</Option>
 			</Question>
-			<Question Type="CheckBox" Descriptor="Patient general health">
+			<Question Type="Radio" Descriptor="Patient general health">
 				<Option>3 Good</Option>
-				<Option>2 So-So</Option>
+				<Option>2 Average</Option>
 				<Option>1 Poor</Option>
 			</Question>
 		</QuestionSet>
@@ -202,7 +202,7 @@
 				<Option>DICOM with RTStruct on Segmentation Layer</Option>
 			</Question>
 			<Question Type="Radio" Descriptor="Milestone checker">
-				<Option>Plannin CT</Option>
+				<Option>Planning CT</Option>
 				<Option>Follow-up 3 mos</Option>
 				<Option>Follow-up 6 mos</Option>
 			</Question>

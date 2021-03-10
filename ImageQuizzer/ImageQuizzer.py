@@ -6,6 +6,7 @@ from pip._vendor.distlib._backport.shutil import copyfile
 from slicer.util import findChild
 
 from Utilities import *
+from UtilsIO import *
 
 from slicer import qSlicerMainWindow #for custom eventFilter
 #

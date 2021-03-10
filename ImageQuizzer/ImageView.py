@@ -213,7 +213,11 @@ class ImageView:
                 if oViewNode.slQuizLabelMapNode != None:
                     slWindowCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
                 else:
-                    slWindowCompositeNode.SetLabelVolumeID('None')
+                    # there is no quiz label map node associated with the background,
+                    #    but there may have been one in the foreground;
+                    #    if so, leave it turned on
+                    if slWindowCompositeNode.GetLabelVolumeID ()== None:
+                        slWindowCompositeNode.SetLabelVolumeID('None')
 
     
             elif oViewNode.sViewLayer == 'Foreground':
@@ -229,7 +233,11 @@ class ImageView:
                 if oViewNode.slQuizLabelMapNode != None:
                     slWindowCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
                 else:
-                    slWindowCompositeNode.SetLabelVolumeID('None')
+                    # there is no quiz label map node associated with the foreground,
+                    #    but there may have been one in the background;
+                    #    if so, leave it turned on
+                    if slWindowCompositeNode.GetLabelVolumeID ()== None:
+                        slWindowCompositeNode.SetLabelVolumeID('None')
 
     
             elif oViewNode.sViewLayer == 'Label':
@@ -787,17 +795,27 @@ class DicomVolumeDetail(ViewNodeBase):
             that the contours are associated.
         '''
         
-        dcmDataset = pydicom.dcmread(self.sImagePath)
-        self.sSeriesInstanceUID = dcmDataset.SeriesInstanceUID
-        
-        # access the referenced volume series instance UID that the contours are associated with
-        if self.sImageType == 'RTStruct':
-            dcmReferencedFrameOfRefenceSequence = dcmDataset.ReferencedFrameOfReferenceSequence[0]
-            dcmRTReferencedStudySequence = dcmReferencedFrameOfRefenceSequence.RTReferencedStudySequence[0]
-            dcmRTReferencedSeriesSequence = dcmRTReferencedStudySequence.RTReferencedSeriesSequence[0]
-            
-            self.sVolumeReferenceSeriesUID = dcmRTReferencedSeriesSequence.SeriesInstanceUID
-            
+        if os.path.isfile(self.sImagePath):
+            try:
+                dcmDataset = pydicom.dcmread(self.sImagePath)
+                self.sSeriesInstanceUID = dcmDataset.SeriesInstanceUID
+                
+                # access the referenced volume series instance UID that the contours are associated with
+                if self.sImageType == 'RTStruct':
+                    dcmReferencedFrameOfRefenceSequence = dcmDataset.ReferencedFrameOfReferenceSequence[0]
+                    dcmRTReferencedStudySequence = dcmReferencedFrameOfRefenceSequence.RTReferencedStudySequence[0]
+                    dcmRTReferencedSeriesSequence = dcmRTReferencedStudySequence.RTReferencedSeriesSequence[0]
+                    
+                    self.sVolumeReferenceSeriesUID = dcmRTReferencedSeriesSequence.SeriesInstanceUID
+            except:
+                sMsg = 'Cannot read SeriesInstanceUID from DICOM using pydicom.' \
+                        + '\n See administrator : ' + sys._getframe(  ).f_code.co_name
+                self.oUtilsMsgs.DisplayError(sMsg)
+
+        else:
+            sMsg = 'Image file does not exist: ' + self.sImagePath \
+                    + '\n See administrator : ' + sys._getframe(  ).f_code.co_name
+            self.oUtilsMsgs.DisplayError(sMsg)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadVolume(self):
