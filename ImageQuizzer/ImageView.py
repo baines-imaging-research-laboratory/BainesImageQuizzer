@@ -839,7 +839,7 @@ class DicomVolumeDetail(ViewNodeBase):
             bSeriesFoundInDB = False   # initialize
             
             lAllSeriesUIDs = DICOMUtils.allSeriesUIDsInDatabase(database)
-            print('NumSeries in DB: ', len(lAllSeriesUIDs))
+#             print('NumSeries in DB: ', len(lAllSeriesUIDs))
             tags = {}
             tags['patientName'] = "0010,0010"
             tags['patientID'] = "0010,0020"
@@ -869,7 +869,7 @@ class DicomVolumeDetail(ViewNodeBase):
             sDicomSeriesDir = sHead_Tail[0]
             
             elapsed = time.time() - t
-            print('Checking if already in db: %s' % elapsed)
+#             print('Checking if already in db: %s' % elapsed)
             
             # check if already loaded into the database
             for sImportedSeries in lAllSeriesUIDs:
@@ -882,7 +882,7 @@ class DicomVolumeDetail(ViewNodeBase):
             #        all series will be imported
             if not bSeriesFoundInDB:
                 elaspsed = time.time() - elapsed
-                print('Starting import: %s' % elapsed )                
+#                 print('Starting import: %s' % elapsed )                
                 DICOMUtils.importDicom(sDicomSeriesDir)
 
 
@@ -897,7 +897,7 @@ class DicomVolumeDetail(ViewNodeBase):
                 bVolumeAlreadyLoaded = True
             else:
                 elaspsed = time.time() - elapsed
-                print('Starting load: %s' % elapsed )                
+#                 print('Starting load: %s' % elapsed )                
 
                 DICOMUtils.loadSeriesByUID([sSeriesUIDToLoad])
                 slNodeId = slSubjectHierarchyNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(),sSeriesUIDToLoad)

@@ -377,7 +377,7 @@ class Session:
                 # if last question set, clear list and scene
                 if self.CheckForLastQuestionSetForPage() == True:
                     self._loQuestionSets = []
-                    slicer.mrmlScene.Clear()
+# REMOVE FOR THREADING??                    slicer.mrmlScene.Clear()
                 else:
                     # clear quiz widgets only
                     for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
@@ -409,7 +409,7 @@ class Session:
             # set up for previous page
             ########################################    
 
-            slicer.mrmlScene.Clear()
+# REMOVE FOR THREADING??            slicer.mrmlScene.Clear()
 
             self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
             self.progress.setValue(self._iCurrentCompositeIndex)

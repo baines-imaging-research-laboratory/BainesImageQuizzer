@@ -25,6 +25,11 @@ try:
 except ImportError:
     print("!"*100, 'numpy not installed')
 
+
+import logging
+import threading
+import time
+
 ##########################################################################
 #
 #   class UtilsIO
@@ -468,17 +473,38 @@ class UtilsIO:
                             bDataVolumeSaved, sNRRDMsg = self.SaveLabeMapAsDataVolume(sLabelMapPath, slNodeLabelMap) 
                          
                             if (oSession.oIOXml.GetValueOfNodeAttribute(oSession.oIOXml.GetRootNode(), 'SaveLabelMapsAsRTStruct')) == 'Y':
-                                bRTStructSaved, sRTStructMsg, sDicomExportOutputDir = self.SaveLabelMapAsRTStruct(oImageNode, sLabelMapFilename, sPageLabelMapDir)
+#                                 bRTStructSaved, sRTStructMsg, sDicomExportOutputDir = self.SaveLabelMapAsRTStruct(oImageNode, sLabelMapFilename, sPageLabelMapDir)
+#  
+#                                 if (oSession.oIOXml.GetValueOfNodeAttribute(oSession.oIOXml.GetRootNode(), 'MapRTStructToVolume')) == 'Y':
+#                                     try:
+#                                         # args=(original dicom series, Slicer's dicom output, SaveTo dir)
+#                                         self.mapRTStructToVolume(self.GetDirFromPath(oImageNode.sImagePath), sDicomExportOutputDir, sPageLabelMapDir )
+#                                         shutil.rmtree(sDicomExportOutputDir, ignore_errors=True)
+#                                     except:
+#                                         sMsg = 'Failed to map exported RTStruct to original volume.'\
+#                                                 + '\nSee administrator: ' + sys._getframe(  ).f_code.co_name
+#                                         oSession.oUtilsMsgs.DisplayWarning(sMsg) 
 
-                                if (oSession.oIOXml.GetValueOfNodeAttribute(oSession.oIOXml.GetRootNode(), 'MapRTStructToVolume')) == 'Y':
-                                    try:
-                                        # args=(original dicom series, Slicer's dicom output, SaveTo dir)
-                                        self.mapRTStructToVolume(self.GetDirFromPath(oImageNode.sImagePath), sDicomExportOutputDir, sPageLabelMapDir )
-                                        shutil.rmtree(sDicomExportOutputDir, ignore_errors=True)
-                                    except:
-                                        sMsg = 'Failed to map exported RTStruct to original volume.'\
-                                                + '\nSee administrator: ' +  + sys._getframe(  ).f_code.co_name
-                                        oSession.oUtilsMsgs.DisplayWarning(sMsg) 
+                                #######################
+                                # attempt threading 
+                                # do not set up as a daemon (we want this to complete after shutdown)
+                                # 
+                                bRTStructSaved = True
+                                sRTStructMsg = ''
+                                log_format = "%(asctime)s: %(message)s"
+                                logging.basicConfig(format=log_format, level=logging.INFO,
+                                                    datefmt="%H:%M:%S")
+ 
+                                logging.info("   **: before creating thread")
+                                threadMapFn = threading.Thread(target=self.ThreadedExportRTStruct, args=(oSession, oImageNode, sLabelMapFilename, sPageLabelMapDir))
+                                 
+                                logging.info("   **: before running thread")
+                                threadMapFn.start()
+                                 
+                                logging.info("   **: wait for the thread to finish")
+                                # x.join()
+                                logging.info("   **: all done")                                    
+                                #######################
 
                             else:
                                 bRTStructSaved = True # allow label map path to be written to xml
@@ -532,6 +558,20 @@ class UtilsIO:
         return bLabelMapsSaved, sMsg
 
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ThreadedExportRTStruct(self, oSession, oImageNode, sLabelMapFilename, sPageLabelMapDir ):
+        
+        bRTStructSaved, sRTStructMsg, sDicomExportOutputDir = self.SaveLabelMapAsRTStruct(oImageNode, sLabelMapFilename, sPageLabelMapDir)
+
+        if (oSession.oIOXml.GetValueOfNodeAttribute(oSession.oIOXml.GetRootNode(), 'MapRTStructToVolume')) == 'Y':
+
+            # args=(original dicom series, Slicer's dicom output, SaveTo dir)
+            self.mapRTStructToVolume(self.GetDirFromPath(oImageNode.sImagePath), sDicomExportOutputDir, sPageLabelMapDir )
+            shutil.rmtree(sDicomExportOutputDir, ignore_errors=True)
+        
+        
+        
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SaveLabeMapAsDataVolume(self, sLabelMapPath, slNodeLabelMap):
         """ Use Slicer's storage node to export label map node as a data volume.

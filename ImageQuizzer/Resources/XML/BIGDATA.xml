@@ -1,4 +1,4 @@
-<Session ROIColorFile="PET_PSMA">
+<Session ROIColorFile="PET_PSMA" SaveLabelMapsAsRTStruct="Y" MapRTStructToVolume="Y">
 	<Page Name="BIGDATA001" Descriptor="">
 		<Image Format="DICOM" Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
