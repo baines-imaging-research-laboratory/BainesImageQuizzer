@@ -27,7 +27,7 @@ except ImportError:
 
 
 import logging
-import threading
+# import threading
 import time
 
 ##########################################################################
@@ -796,7 +796,22 @@ class UtilsIO:
               
         return bFound, slNode
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CreateShutdownBatchFile(self):
+        """ If Image Quizzer was started using the batch file, 
+            the shutdown batch file will be called on close.
+            This function sets up the shutdown batch file instructing it to
+            remove the SlicerDicomDatabase directory.
+            This speeds up the relaunch of the Image Quizzer. 
+        """
+        sShutdownDir = self.GetScriptedModulesPath()
+        sShutdownPath = os.path.join(sShutdownDir,'ImageQuizzerShutdown.bat')
 
+        sCommand = 'RMDIR /S /Q ' + '"' + self.GetDICOMDatabaseDir() +'"'
+        
+        fh = open(sShutdownPath,"w")
+        fh.write(sCommand)
+        fh.close()
 
 ##########################################################################
 #

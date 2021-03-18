@@ -446,6 +446,9 @@ class Session:
         if qtAns == qt.QMessageBox.Ok:
             bSuccess, sMsg = self.PerformSave(sCaller)
             if bSuccess:
+                # update shutdown batch file to remove SlicerDICOMDatabase
+                self.oFilesIO.CreateShutdownBatchFile()
+        
                 slicer.util.exit(status=EXIT_SUCCESS)
             else:
                 if sMsg != '':
