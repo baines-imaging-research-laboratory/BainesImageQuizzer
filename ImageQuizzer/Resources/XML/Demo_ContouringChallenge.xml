@@ -1,4 +1,4 @@
-<Session SaveLabelMapsAsRTStruct="Y">
+<Session SaveLabelMapAsRTStruct="Y">
 	<Page Name="Patient 1" Descriptor="Contouring Challenge">
 		<Image Format="NRRD" Type="Volume" ID="MR" RotateToAcquisition="Y">
 			<Destination>Red</Destination>

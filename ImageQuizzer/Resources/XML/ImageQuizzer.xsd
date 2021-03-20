@@ -11,7 +11,7 @@
 			</xs:choice>
 		</xs:sequence>
 		<xs:attribute name="ROIColorFile" type="xs:string" />
-		<xs:attribute name="SaveLabelMapsAsRTStruct" type="yesnoType" default="N" />
+		<xs:attribute name="SaveLabelMapAsRTStruct" type="yesnoType" default="N" />
 		<xs:attribute name="MapRTStructToVolume" type="yesnoType" default="N" />
 	</xs:complexType>
 </xs:element>
@@ -40,6 +40,7 @@
 			<xs:element name="Orientation" type="orientationType" minOccurs="0" maxOccurs="1" />
 			<xs:element name="Layer" type="layerType" minOccurs="0" maxOccurs="1" />
 			<xs:element ref="ROIs" minOccurs="0" maxOccurs="1" />
+			<xs:element name="PathToOriginalDICOM" minOccurs="0" maxOccurs="1" />
 		</xs:all>
 		<xs:attribute name="Type" use="required" type="imageType" />
 		<xs:attribute name="Format" use="required" type="formatType" />
