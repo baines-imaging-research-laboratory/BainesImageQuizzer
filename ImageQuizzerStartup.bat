@@ -11,4 +11,4 @@ rem %SLICER_LAUNCHER%  --no-main-window  --show-python-interactor --python-scrip
 rem OR launch Slicer with the module showing as startup
 %SLICER_LAUNCHER%   --python-code "slicer.util.selectModule('ImageQuizzer')"
 
-call ImageQuizzer\ImageQuizzerShutdown.bat
+call ImageQuizzerShutdown.bat

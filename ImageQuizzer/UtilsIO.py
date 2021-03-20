@@ -803,8 +803,12 @@ class UtilsIO:
             This function sets up the shutdown batch file instructing it to
             remove the SlicerDicomDatabase directory.
             This speeds up the relaunch of the Image Quizzer. 
+            
+            This batch file resides in the parent directory of the ImageQuizzer module .
         """
-        sShutdownDir = self.GetScriptedModulesPath()
+        
+        # get parent directory of the Image Quizzer module
+        sShutdownDir = os.path.abspath(os.path.join(self.GetScriptedModulesPath(), os.pardir))
         sShutdownPath = os.path.join(sShutdownDir,'ImageQuizzerShutdown.bat')
 
         sCommand = 'RMDIR /S /Q ' + '"' + self.GetDICOMDatabaseDir() +'"'
