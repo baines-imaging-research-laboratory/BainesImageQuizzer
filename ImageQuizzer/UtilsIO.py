@@ -477,8 +477,17 @@ class UtilsIO:
   
                                 if (oSession.oIOXml.GetValueOfNodeAttribute(oSession.oIOXml.GetRootNode(), 'MapRTStructToVolume')) == 'Y':
                                     try:
+                                        if oImageNode.sVolumeFormat == 'DICOM':
+                                            sOriginalDicomPath = oImageNode.sImagePath
+                                        else:
+                                            xImage = oImageNode.GetXmlImageElement()
+                                            xOrigDicomPathElement = oSession.oIOXml.GetNthChild(xImage, 'PathToOriginalDICOM', 0 )
+                                            sOrigDicomRelativePath = oSession.oIOXml.GetDataInNode(xOrigDicomPathElement)
+                                            sOriginalDicomPath = self.GetAbsoluteDataPath(sOrigDicomRelativePath)
+ 
                                         # args=(original dicom series, Slicer's dicom output, SaveTo dir)
-                                        self.mapRTStructToVolume(self.GetDirFromPath(oImageNode.sImagePath), sDicomExportOutputDir, sPageLabelMapDir )
+#                                         self.mapRTStructToVolume(self.GetDirFromPath(oImageNode.sImagePath), sDicomExportOutputDir, sPageLabelMapDir )
+                                        self.mapRTStructToVolume(self.GetDirFromPath(sOriginalDicomPath), sDicomExportOutputDir, sPageLabelMapDir )
                                         shutil.rmtree(sDicomExportOutputDir, ignore_errors=True)
 
                                     except:
@@ -561,16 +570,16 @@ class UtilsIO:
         return bLabelMapsSaved, sMsg
 
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ThreadedExportRTStruct(self, oSession, oImageNode, sLabelMapFilename, sPageLabelMapDir ):
-        
-        bRTStructSaved, sRTStructMsg, sDicomExportOutputDir = self.SaveLabelMapAsRTStruct(oImageNode, sLabelMapFilename, sPageLabelMapDir)
-
-        if (oSession.oIOXml.GetValueOfNodeAttribute(oSession.oIOXml.GetRootNode(), 'MapRTStructToVolume')) == 'Y':
-
-            # args=(original dicom series, Slicer's dicom output, SaveTo dir)
-            self.mapRTStructToVolume(self.GetDirFromPath(oImageNode.sImagePath), sDicomExportOutputDir, sPageLabelMapDir )
-            shutil.rmtree(sDicomExportOutputDir, ignore_errors=True)
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def ThreadedExportRTStruct(self, oSession, oImageNode, sLabelMapFilename, sPageLabelMapDir ):
+#         
+#         bRTStructSaved, sRTStructMsg, sDicomExportOutputDir = self.SaveLabelMapAsRTStruct(oImageNode, sLabelMapFilename, sPageLabelMapDir)
+# 
+#         if (oSession.oIOXml.GetValueOfNodeAttribute(oSession.oIOXml.GetRootNode(), 'MapRTStructToVolume')) == 'Y':
+# 
+#             # args=(original dicom series, Slicer's dicom output, SaveTo dir)
+#             self.mapRTStructToVolume(self.GetDirFromPath(oImageNode.sImagePath), sDicomExportOutputDir, sPageLabelMapDir )
+#             shutil.rmtree(sDicomExportOutputDir, ignore_errors=True)
         
         
         
@@ -617,9 +626,22 @@ class UtilsIO:
             slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(slLabelMapVolumeNode, slLabelMapSegNode)
 
 
-            # Associate segmentation node with a reference volume node
+            # work in subject hierarchy node (shNode)
             shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
             slPrimaryVolumeID = shNode.GetItemByDataNode(oPrimaryImageNode.slNode)
+
+            # If image was originally loaded as a data volume, move it to 
+            #    a new patient & study in the subject hierarchy
+            if ( oPrimaryImageNode.sVolumeFormat != "DICOM"):
+                slNewPatientItemID = shNode.CreateSubjectItem(shNode.GetSceneItemID(), "Patient Baines1")
+                slNewStudyItemID = shNode.CreateStudyItem(slNewPatientItemID, "Study Baines1")
+                shNode.SetItemParent(slPrimaryVolumeID, slNewStudyItemID)
+
+             
+
+            # Associate segmentation node with a reference volume node
+#             shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+#             slPrimaryVolumeID = shNode.GetItemByDataNode(oPrimaryImageNode.slNode)
             slStudyShItem = shNode.GetItemParent(slPrimaryVolumeID)
             slLabelMapSegNodeID = shNode.GetItemByDataNode(slLabelMapSegNode)
             shNode.SetItemParent(slLabelMapSegNodeID, slStudyShItem)

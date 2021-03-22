@@ -430,6 +430,7 @@ class ViewNodeBase:
         self.sImageType = ''
         self.sImagePath = ''
         self.sNodeName = ''
+        self.sFormat=''
         self._xImageElement = None
         self._sPageID = ''
         self.sColorTableName = ''
@@ -468,6 +469,8 @@ class ViewNodeBase:
 
         sImageID = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'ID')
         self.sImageType = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'Type')
+        self.sVolumeFormat = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'Format')
+
 #         self.sDestination = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'destination')
         self.sColorTableName = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'ColorTable')
 
