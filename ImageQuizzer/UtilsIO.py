@@ -479,19 +479,28 @@ class UtilsIO:
                                     try:
                                         if oImageNode.sVolumeFormat == 'DICOM':
                                             sOriginalDicomPath = oImageNode.sImagePath
+                                            sOriginalDicomDir = self.GetDirFromPath(sOriginalDicomPath)
                                         else:
                                             xImage = oImageNode.GetXmlImageElement()
-                                            xOrigDicomPathElement = oSession.oIOXml.GetNthChild(xImage, 'PathToOriginalDICOM', 0 )
-                                            sOrigDicomRelativePath = oSession.oIOXml.GetDataInNode(xOrigDicomPathElement)
-                                            sOriginalDicomPath = self.GetAbsoluteDataPath(sOrigDicomRelativePath)
- 
+                                            xOrigDicomDirElement = oSession.oIOXml.GetNthChild(xImage, 'OriginalDicomDir', 0 )
+                                            if xOrigDicomDirElement != None:
+                                                sOrigDicomRelativeDir = oSession.oIOXml.GetDataInNode(xOrigDicomDirElement)
+                                                sOriginalDicomDir = self.GetAbsoluteDataPath(sOrigDicomRelativeDir)
+                                            else:
+                                                sMsg = 'Study set up to remap exported RTStruct to original dicom volume'\
+                                                        + '\n but XML element OriginalDicomDir is missing'\
+                                                        + '\nFor page:' + str(oSession.GetCurrentPageIndex()) \
+                                                        + '\nSee administrator: ' + sys._getframe(  ).f_code.co_name
+                                                oSession.oUtilsMsgs.DisplayWarning(sMsg) 
                                         # args=(original dicom series, Slicer's dicom output, SaveTo dir)
 #                                         self.mapRTStructToVolume(self.GetDirFromPath(oImageNode.sImagePath), sDicomExportOutputDir, sPageLabelMapDir )
-                                        self.mapRTStructToVolume(self.GetDirFromPath(sOriginalDicomPath), sDicomExportOutputDir, sPageLabelMapDir )
+#                                         self.mapRTStructToVolume(self.GetDirFromPath(sOriginalDicomPath), sDicomExportOutputDir, sPageLabelMapDir )
+                                        self.mapRTStructToVolume(sOriginalDicomDir, sDicomExportOutputDir, sPageLabelMapDir )
                                         shutil.rmtree(sDicomExportOutputDir, ignore_errors=True)
 
                                     except:
                                         sMsg = 'Failed to map exported RTStruct to original volume.'\
+                                                + '\nNote: Pandas must be installed to map RTStruct to original volume UIDs'\
                                                 + '\nSee administrator: ' + sys._getframe(  ).f_code.co_name
                                         oSession.oUtilsMsgs.DisplayWarning(sMsg) 
 
