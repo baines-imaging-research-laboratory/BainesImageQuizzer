@@ -30,6 +30,10 @@ import logging
 # import threading
 import time
 
+import DicomRtImportExportPlugin
+import DICOMVolumeSequencePlugin
+
+
 ##########################################################################
 #
 #   class UtilsIO
@@ -500,8 +504,10 @@ class UtilsIO:
 
                                     except:
                                         sMsg = 'Failed to map exported RTStruct to original volume.'\
-                                                + '\nNote: Pandas must be installed to map RTStruct to original volume UIDs'\
-                                                + '\nSee administrator: ' + sys._getframe(  ).f_code.co_name
+                                                + '\nNotes: - It is possible that the original dicom had irregular geometry'\
+                                                + '\n- or that the number of slices output by Slicer does not match that of the original volume'\
+                                                + '\n- The following packages are required for mapping to the original volume UIDs: Pandas, pydicom and numpy'\
+                                                + '\n' + sys._getframe(  ).f_code.co_name
                                         oSession.oUtilsMsgs.DisplayWarning(sMsg) 
 
 #                                 #######################
@@ -649,16 +655,18 @@ class UtilsIO:
              
 
             # Associate segmentation node with a reference volume node
-#             shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-#             slPrimaryVolumeID = shNode.GetItemByDataNode(oPrimaryImageNode.slNode)
             slStudyShItem = shNode.GetItemParent(slPrimaryVolumeID)
             slLabelMapSegNodeID = shNode.GetItemByDataNode(slLabelMapSegNode)
             shNode.SetItemParent(slLabelMapSegNodeID, slStudyShItem)
 
                  
             # create the dicom exporter
-            import DicomRtImportExportPlugin
-            exporter = DicomRtImportExportPlugin.DicomRtImportExportPluginClass()
+            if oPrimaryImageNode.sImageType == 'VolumeSequence' :
+                exporter = DICOMVolumeSequencePlugin.DICOMVolumeSequencePluginClass()
+            else:
+                exporter = DicomRtImportExportPlugin.DicomRtImportExportPluginClass()
+            
+            
             exportables = []
              
             # examine volumes for export and add to export list
