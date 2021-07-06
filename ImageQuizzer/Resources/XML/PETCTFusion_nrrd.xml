@@ -1,4 +1,4 @@
-<Session ROIColorFile="PET_PSMA"  SaveLabelMapAsRTStruct="Y">
+<Session ROIColorFile="PET_PSMA">
 	<Page Name="Patient1" Descriptor="PET PSMA Study">
 		<Image Format="NRRD" Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Red</Destination>

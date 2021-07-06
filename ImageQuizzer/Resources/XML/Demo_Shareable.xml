@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Session ROIColorFile="PiRadsStudy" SaveLabelMapAsRTStruct="Y">
+<Session ROIColorFile="PiRadsStudy">
 	<Page Name="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y">
 		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
