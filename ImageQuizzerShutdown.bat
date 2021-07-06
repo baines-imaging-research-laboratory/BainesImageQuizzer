@@ -1,1 +1,1 @@
-RMDIR /S /Q "C:/Users/Carol/Documents/Carol-Work/Repos/ImageQuizzerProject/ImageQuizzer/ImageQuizzerData\SlicerDICOMDatabase"
+RMDIR /S /Q "D:/BainesWork/Slicer/ImageQuizzerProject/ImageQuizzer/ImageQuizzerData\SlicerDICOMDatabase"

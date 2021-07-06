@@ -1,53 +1,47 @@
-<Session ROIColorFile="PET_PSMA"  SaveLabelMapAsRTStruct="Y" MapRTStructToVolume="Y">
+<Session ROIColorFile="PET_PSMA"  SaveLabelMapAsRTStruct="Y">
 	<Page Name="Patient1" Descriptor="PET PSMA Study">
 		<Image Format="NRRD" Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\PETCTFusion\CT1.nrrd</Path>
-			<OriginalDicomDir>ImageVolumes\PETCTFusion\CT1</OriginalDicomDir>
+
 		</Image>
 		<Image Format="NRRD" Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\PETCTFusion\CT1.nrrd</Path>
-			<OriginalDicomDir>ImageVolumes\PETCTFusion\CT1</OriginalDicomDir>
 		</Image>
 		<Image Format="NRRD" Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\PETCTFusion\CT1.nrrd</Path>
-			<OriginalDicomDir>ImageVolumes\PETCTFusion\CT1</OriginalDicomDir>
 		</Image>
 		<Image Format="NRRD" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Red</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\PETCTFusion\PET1.nrrd</Path>
-			<OriginalDicomDir>ImageVolumes\PETCTFusion\PET1</OriginalDicomDir>
 		</Image>
 		<Image Format="NRRD" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Green</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\PETCTFusion\PET1.nrrd</Path>
-			<OriginalDicomDir>ImageVolumes\PETCTFusion\PET1</OriginalDicomDir>
 		</Image>
 		<Image Format="NRRD" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Yellow</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\PETCTFusion\PET1.nrrd</Path>
-			<OriginalDicomDir>ImageVolumes\PETCTFusion\PET1</OriginalDicomDir>
 		</Image>
 		<Image Format="NRRD" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Slice4</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\PETCTFusion\PET1.nrrd</Path>
-			<OriginalDicomDir>ImageVolumes\PETCTFusion\PET1</OriginalDicomDir>
 		</Image>
 		<QuestionSet Name="PET PSMA Study" Descriptor=""  SegmentRequired="Y">
 			<Question Type="Radio" Descriptor="PET Reading">
@@ -62,49 +56,42 @@
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\PETCTFusion\CT2.nrrd</Path>
-			<OriginalDicomDir>ImageVolumes\PETCTFusion\CT2</OriginalDicomDir>
 		</Image>
 		<Image Format="NRRD" Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\PETCTFusion\CT2.nrrd</Path>
-			<OriginalDicomDir>ImageVolumes\PETCTFusion\CT2</OriginalDicomDir>
 		</Image>
 		<Image Format="NRRD" Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\PETCTFusion\CT2.nrrd</Path>
-			<OriginalDicomDir>ImageVolumes\PETCTFusion\CT2</OriginalDicomDir>
 		</Image>
 		<Image Format="NRRD" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Red</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\PETCTFusion\PET2.nrrd</Path>
-			<OriginalDicomDir>ImageVolumes\PETCTFusion\PET2</OriginalDicomDir>
 		</Image>
 		<Image Format="NRRD" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Green</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\PETCTFusion\PET2.nrrd</Path>
-			<OriginalDicomDir>ImageVolumes\PETCTFusion\PET2</OriginalDicomDir>
 		</Image>
 		<Image Format="NRRD" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Yellow</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\PETCTFusion\PET2.nrrd</Path>
-			<OriginalDicomDir>ImageVolumes\PETCTFusion\PET2</OriginalDicomDir>
 		</Image>
 		<Image Format="NRRD" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Slice4</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\PETCTFusion\PET2.nrrd</Path>
-			<OriginalDicomDir>ImageVolumes\PETCTFusion\PET2</OriginalDicomDir>
 		</Image>
 		<QuestionSet Name="PET PSMA Study" Descriptor=""  SegmentRequired="Y">
 			<Question Type="Radio" Descriptor="PET Reading">
