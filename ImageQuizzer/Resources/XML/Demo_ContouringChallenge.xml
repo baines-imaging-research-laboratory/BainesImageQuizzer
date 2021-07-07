@@ -1,4 +1,4 @@
-<Session SaveLabelMapAsRTStruct="Y">
+<Session>
 	<Page Name="Patient 1" Descriptor="Contouring Challenge">
 		<Image Format="NRRD" Type="Volume" ID="MR" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
@@ -80,5 +80,7 @@
 				<Option>more than 5</Option>
 			</Question>
 		</QuestionSet>
+	</Page>
+</Session>nSet>
 	</Page>
 </Session>
