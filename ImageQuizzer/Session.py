@@ -377,6 +377,7 @@ class Session:
                 # if last question set, clear list and scene
                 if self.CheckForLastQuestionSetForPage() == True:
                     self._loQuestionSets = []
+# REMOVE FOR THREADING??                    slicer.mrmlScene.Clear()
                     slicer.mrmlScene.Clear()
                 else:
                     # clear quiz widgets only
@@ -409,8 +410,8 @@ class Session:
             # set up for previous page
             ########################################    
 
+# REMOVE FOR THREADING??            slicer.mrmlScene.Clear()
             slicer.mrmlScene.Clear()
-
             self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
             self.progress.setValue(self._iCurrentCompositeIndex)
     
@@ -445,6 +446,9 @@ class Session:
         if qtAns == qt.QMessageBox.Ok:
             bSuccess, sMsg = self.PerformSave(sCaller)
             if bSuccess:
+                # update shutdown batch file to remove SlicerDICOMDatabase
+                self.oFilesIO.CreateShutdownBatchFile()
+        
                 slicer.util.exit(status=EXIT_SUCCESS)
             else:
                 if sMsg != '':

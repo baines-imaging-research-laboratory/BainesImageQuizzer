@@ -41,7 +41,7 @@
 			<Question Type="InfoBox" Descriptor="Instructions">
 				<Option>This is how to run the quiz : .....</Option>
 			</Question>
-			<Question Type="IntegerValue" Descriptor="Food Order" Max="5">
+			<Question Type="IntegerValue" Descriptor="Integer input test" Max="5">
 				<Option>Integer value with maximum defined:</Option>
 			</Question>
 		</QuestionSet>
@@ -80,8 +80,8 @@
 			<Question Type="FloatValue" Descriptor="Tumour Measurment" Max="50">
 				<Option>Enter RECIST of largest tumour:</Option>
 			</Question>
-			<Question Type="Text" Descriptor="First Impressions">
-				<Option>Enter your thoughts : </Option>
+			<Question Type="Text" Descriptor="Text box test">
+				<Option>Additional comments : </Option>
 			</Question>
 		</QuestionSet>
 	</Page>
@@ -201,7 +201,7 @@
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>DICOM with RTStruct on Segmentation Layer</Option>
 			</Question>
-			<Question Type="Radio" Descriptor="Milestone checker">
+			<Question Type="Radio" Descriptor="Milestone check box test">
 				<Option>Planning CT</Option>
 				<Option>Follow-up 3 mos</Option>
 				<Option>Follow-up 6 mos</Option>

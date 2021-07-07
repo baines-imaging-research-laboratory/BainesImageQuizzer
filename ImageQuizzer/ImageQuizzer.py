@@ -8,6 +8,8 @@ from slicer.util import findChild
 from Utilities import *
 from UtilsIO import *
 
+import importlib.util
+
 from slicer import qSlicerMainWindow #for custom eventFilter
 #
 
@@ -100,6 +102,17 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         slicer.util.setModuleHelpSectionVisible(False)
         slicer.modules.welcome.widgetRepresentation().setVisible(False)
         
+
+        # confirm the Pandas package has been installed
+        #    (for mapping RTStruct dicom to original dicom volume)
+        package_name = 'pandas'
+        spec = importlib.util.find_spec(package_name)
+        
+        if spec is None:
+            sMsg = "The package 'pandas' has not been installed to Slicer"\
+                    + "\nThis package is necessary to remap RTStruct dicom files to the original series"\
+                    + "\n See administrator"
+            self.oUtilsMsgs.DisplayWarning(sMsg)
 
         self.oSession = Session()                    
         self.oCustomEventFilter = customEventFilter(self.oSession, self.oFilesIO)
