@@ -2,6 +2,7 @@ import qt, ctk, slicer
 import os, sys, argparse, logging
 import DICOMLib
 from DICOMLib import DICOMUtils
+from PythonQt import QtCore, QtGui
 from slicer.ScriptedLoadableModule import *
 from SlicerDevelopmentToolboxUtils.mixins import ModuleWidgetMixin, ModuleLogicMixin
 
@@ -84,6 +85,9 @@ class LabelledImageToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWi
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def setup(self):
         ScriptedLoadableModuleWidget.setup(self)
+        
+        # initialize
+        self.sInputImageType = 'volume'
 
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # GUI Layout
@@ -95,47 +99,63 @@ class LabelledImageToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWi
     
         parametersFormLayout = qt.QFormLayout(parametersCollapsibleButton)
     
-#         self.inputDirButton = ctk.ctkDirectoryButton()
-#         parametersFormLayout.addRow("Input directory:", self.inputDirButton)
-
         self.inputImageVolumeFileButton = qt.QPushButton('Select image volume file:')
         self.inputImageVolumeFileButton.toolTip = "Select file that holds image volume."
         self.inputImageVolumeFileButton.connect('clicked(bool)', self.onSelectImageVolumeFile)
         inputLabelForImageVolume = qt.QLabel("Input image volume file:")
         parametersFormLayout.addRow(inputLabelForImageVolume, self.inputImageVolumeFileButton)
 
-       
+        self.inputLabelMapFileButton = qt.QPushButton('Select label map file:')
+        self.inputLabelMapFileButton.toolTip = "Select file that holds the label map (contours)."
+        self.inputLabelMapFileButton.connect('clicked(bool)', self.onSelectLabelMapFile)
+        inputLabelForLabelMap = qt.QLabel("Input label map file (contours):")
+        parametersFormLayout.addRow(inputLabelForLabelMap, self.inputLabelMapFileButton)
+        
         self.qGrpBox = qt.QGroupBox()
         qGrpBoxLayout = qt.QHBoxLayout()
         self.qGrpBox.setLayout(qGrpBoxLayout)
         self.qGrpBox.setStyleSheet("QGroupBox {background-color: \
-            rgb(255, 255, 255); margin: 10px; border: 1px solid gray;\
-            border-top-style:solid; border-bottom-style:none;\
-            border-left-style:solid; border-right-style:none; }")
-        qRadioBtn1 = qt.QRadioButton("volume")
-        qRadioBtn1.setChecked(True)
-        qGrpBoxLayout.addWidget(qRadioBtn1)
-        qRadioBtn2 = qt.QRadioButton("volume sequence (time series)")
-        qGrpBoxLayout.addWidget(qRadioBtn2)
+            rgb(255, 255, 255); border: 1px solid gray;\
+            border-top-style:solid; border-bottom-style:solid;\
+            border-left-style:solid; border-right-style:solid; }")
+        self.qVolumeBtn = qt.QRadioButton("volume")
+        self.qVolumeBtn.setChecked(True)
+        self.qVolumeBtn.toggled.connect( self.onToggleImageTypeVolume)
+        qGrpBoxLayout.addWidget(self.qVolumeBtn)
+        self.qVolumeSequenceBtn = qt.QRadioButton("volume sequence (time series)")
+        self.qVolumeSequenceBtn.toggled.connect(self.onToggleImageTypeVolumeSequence)
+        qGrpBoxLayout.addWidget(self.qVolumeSequenceBtn)
         inputVolumeTypeLabel = qt.QLabel("Input image type:")
         parametersFormLayout.addRow(inputVolumeTypeLabel, self.qGrpBox)
          
-        self.inputLabelMapFileButton = qt.QPushButton('Select label map file:')
-        self.inputLabelMapFileButton.toolTip = "Select file that holds the label map (contours)."
-        self.inputLabelMapFileButton.connect('clicked(bool)', self.onSelectLabelMapFile)
-        inputLabelForLabelMap = qt.QLabel("Input label map file:")
-        parametersFormLayout.addRow(inputLabelForLabelMap, self.inputLabelMapFileButton)
-        
+        self.chkExportAllSeriesOfSequence = qt.QCheckBox()
+        self.chkExportAllSeriesOfSequence.setChecked(0)
+        self.chkExportAllSeriesOfSequence.enabled = False
+        parametersFormLayout.addRow("Export all series of volume sequence:", self.chkExportAllSeriesOfSequence)
+        self.chkExportAllSeriesOfSequence.toolTip = "If unchecked, only the primary series for the sequence will be exported"
     
+        parametersFormLayout.addRow("  ",qt.QLabel("   "))  # adds spacing
+
+
+        self.chkRemapRTStructUIDs = qt.QCheckBox()
+        self.chkRemapRTStructUIDs.setChecked(0)
+        self.chkRemapRTStructUIDs.toggled.connect(self.onToggleRemapBtn)
+        parametersFormLayout.addRow("Remap RTStuct to original volume UIDs:", self.chkRemapRTStructUIDs)
+        self.chkRemapRTStructUIDs.toolTip = "RTStruct will be remapped to match UIDs of original image volume."
+
+        self.originalImageDirButton = ctk.ctkDirectoryButton()
+        self.originalImageDirButton.enabled = False
+        parametersFormLayout.addRow("Select directory of original image volume:", self.originalImageDirButton)
+        
+        parametersFormLayout.addRow("  ",qt.QLabel("   "))  # adds spacing
+
         self.outputDirButton = ctk.ctkDirectoryButton()
         parametersFormLayout.addRow("Output directory:", self.outputDirButton)
     
-#         self.copyDICOMButton = qt.QCheckBox()
-#         self.copyDICOMButton.setChecked(0)
-#         parametersFormLayout.addRow("Organize DICOMs:", self.copyDICOMButton)
-    
-        createRTStructButton = qt.QPushButton('Create RTStruct with dicom series')
-        createRTStructButton.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
+        parametersFormLayout.addRow("  ",qt.QLabel("   "))  # adds spacing
+
+        createRTStructButton = qt.QPushButton('Create DICOM')
+        createRTStructButton.setStyleSheet("QPushButton{ background-color: rgb(0,153,76) }")
         parametersFormLayout.addRow(createRTStructButton)
     
         createRTStructButton.connect('clicked()', self.onApplyCreateDicom)
@@ -177,35 +197,58 @@ class LabelledImageToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWi
         self.sLabelMapPath = inputFilePath
         return inputFilePath
         
-        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onToggleImageTypeVolume(self, enabled):
+        if enabled:
+            self.chkExportAllSeriesOfSequence.enabled = False
+            self.chkExportAllSeriesOfSequence.setChecked(0)
+            self.sInputImageType = 'volume'
+            
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onToggleImageTypeVolumeSequence(self, enabled):
+        if enabled:
+            self.chkExportAllSeriesOfSequence.enabled = True
+            self.chkExportAllSeriesOfSequence.setChecked(1)
+            self.sInputImageType = 'volumesequence'
+            
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onToggleRemapBtn(self, enabled):
+        if enabled:
+            self.originalImageDirButton.enabled = True
+        else:
+            self.originalImageDirButton.enabled = False
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @handleErrors
     def onApplyCreateDicom(self):
+        
+        self.msgBox = qt.QMessageBox()
+        slicer.mrmlScene.Clear()
+
         logic = LabelledImageToDicomGeneratorLogic()
         self.progress = self.createProgressDialog()
         self.progress.canceled.connect(lambda: logic.cancelProcess())
-        
-        
-        # get image type selection
-        for qBtn in self.qGrpBox.findChildren(qt.QRadioButton):
-            if qBtn.isChecked():
-                if qBtn.text == "volume":
-                    self.sInputImageType = "volume"
-                else:
-                    self.sInputImageType = "volumesequence"
-                break
-        print('*** ', self.sInputImageType)
 
-        logic.LoadVolumesAndExport(self.sImageVolumePath,
+        [bLoadSuccess, sMsg] = logic.LoadVolumesAndExport(self.sImageVolumePath,
                                 self.sInputImageType,
-                                self.outputDirButton.directory,
-                                self.sLabelMapPath,
-                                progressCallback=self.updateProgressBar)
-        
+                                self.sLabelMapPath)
+
+
+        if bLoadSuccess == False:
+            self.msgBox.warning(slicer.util.mainWindow(),"LabelledImageToDicomGenerator: WARNING",sMsg)
+        else:
+            bExportSuccess = logic.ExportToDicom(self.outputDirButton.directory, self.sInputImageType, self.chkExportAllSeriesOfSequence.isChecked(), progressCallback=self.updateProgressBar)
+ 
+        if bExportSuccess:
+            print("Process complete")
+        else:
+            sMsg = 'Trouble exporting image volume and RTStruct as DICOM'
+            self.msgBox.warning(slicer.util.mainWindow(),"LabelledImageToDicomGenerator: WARNING",sMsg)
+
         self.progress.canceled.disconnect(lambda : logic.cancelProcess())
         self.progress.close()
 
+             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def updateProgressBar(self, **kwargs):
         ModuleWidgetMixin.updateProgressBar(self, progress=self.progress, **kwargs)
@@ -220,6 +263,7 @@ class LabelledImageToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogi
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def __init__(self):
         ScriptedLoadableModuleLogic.__init__(self)
+        self.shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def updateProgressBar(self, **kwargs):
@@ -233,27 +277,17 @@ class LabelledImageToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogi
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @handleErrors
-    def LoadVolumesAndExport(self, sImageVolumePath, sImageType, sOutputDir, sLabelMapPath, progressCallback=None):
+    def LoadVolumesAndExport(self, sImageVolumePath, sImageType, sLabelMapPath):
         self.canceled = False
+        sMsg = ''
+        bSuccess = True
         
-        print('Creating dicom series with RTStruct')
+        print('Loading image volume and label map files.')
         
-        
-
-        
-        self.progressCallback = progressCallback
         logging.debug('Input image volume: %s' % sImageVolumePath)
         logging.debug('Input label map: %s' % sLabelMapPath)
-        self.indexer = getattr(self, "indexer", None)
-        if not self.indexer:
-            self.indexer = ctk.ctkDICOMIndexer()
         
-        self.shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
 
-
-        # for both volume and volumesequence image types, export the rtstruct with
-        #    the primary image volume
-        
         # load image and label map volumes
         
         dictProperties = {'labelmap' : True, 'show': False}
@@ -261,84 +295,135 @@ class LabelledImageToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogi
 
         if sImageType == 'volume':
             self.slImageNode = slicer.util.loadVolume(sImageVolumePath)
-        else:
+        elif sImageType == 'volumesequence':
             # slicer loads the multi volume file as a sequence node
             # from the sequence node, slicer creates a ScalarVolumeNode in the subject hierarchy
             # access the data node through the subject hierarchy
             slSeqNode = slicer.util.loadNodeFromFile(sImageVolumePath,'SequenceFile')
     
             slSHItemID = self.shNode.GetItemChildWithName(self.shNode.GetSceneItemID(), slSeqNode.GetName())
-            self.slImageNode = self.shNode.GetItemDataNode(slSHItemID)                
+            self.slImageNode = self.shNode.GetItemDataNode(slSHItemID)
+        else:
+            bSuccess = False
+            sMsg = sMsg + '\nTrouble loading image - Invalid volume type.'
+                                      
             
-        
-        bSuccess = self.ExportToDicom(sOutputDir, sImageType)
-        
-            
-                    
-        print('Process complete')
+        return bSuccess, sMsg
 
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @handleErrors
-    def ExportToDicom(self, sOutputDir, sImageType):
+    def ExportToDicom(self, sOutputDir, sImageType, bExportAllSeries, progressCallback=None):
         
+        self.progressCallback = progressCallback
+        self.indexer = getattr(self, "indexer", None)
+        if not self.indexer:
+            self.indexer = ctk.ctkDICOMIndexer()
+
+
+        # for both volume and volumesequence image types, export the rtstruct with
+        #    the primary image volume using DicomRtImportExportPlugin
+        
+        print("Exporting RTStruct and primary image volume.")
         # work in subject hierarchy node (shNode)
 #         shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-        slPrimaryVolumeID = self.shNode.GetItemByDataNode(self.slImageNode)
-        
-        # convert label map to segmentation
-        slLabelMapSegNode =  slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode')
-        slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(self.slLabelMapNode, slLabelMapSegNode)
+        self.slPrimaryVolumeID = self.shNode.GetItemByDataNode(self.slImageNode)
         
         # create subject hierarchy - new patient and study
         slNewPatientItemID = self.shNode.CreateSubjectItem(self.shNode.GetSceneItemID(), "Patient Baines1")
         slNewStudyItemID = self.shNode.CreateStudyItem(slNewPatientItemID, "Study Baines1")
-        self.shNode.SetItemParent(slPrimaryVolumeID, slNewStudyItemID)
+        self.shNode.SetItemParent(self.slPrimaryVolumeID, slNewStudyItemID)
 
+        # convert label map to segmentation
+        slLabelMapSegNode =  slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode')
+        slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(self.slLabelMapNode, slLabelMapSegNode)
+        
         # Associate segmentation node with a reference volume node
-        slStudyShItem = self.shNode.GetItemParent(slPrimaryVolumeID)
-        slLabelMapSegNodeID = self.shNode.GetItemByDataNode(slLabelMapSegNode)
-        self.shNode.SetItemParent(slLabelMapSegNodeID, slStudyShItem)
+        slStudyShItem = self.shNode.GetItemParent(self.slPrimaryVolumeID)
+        self.slLabelMapSegNodeID = self.shNode.GetItemByDataNode(slLabelMapSegNode)
+        self.shNode.SetItemParent(self.slLabelMapSegNodeID, slStudyShItem)
         
-        # create the dicom exporter
+#         # create the dicom exporter
+# 
+#         # DicomRtImportExportPluginClass used for volume image types
+#         # if a volume sequence , use the DicomRtImportExportPluginClass to export 
+#         #    the master image series with the rtstruct
+#         exporter = DicomRtImportExportPlugin.DicomRtImportExportPluginClass()
+#         
+#         exportables = []
+#         # examine volumes for export and add to export list
+#         volExportable = exporter.examineForExport(slPrimaryVolumeID)
+#         segExportable = exporter.examineForExport(slLabelMapSegNodeID)
+#         exportables.extend(volExportable)
+#         exportables.extend(segExportable)
+#           
+#         # assign output path to each exportable
+#         for exp in exportables:
+#             exp.directory = sOutputDir
+#               
+#           
+#         # perform export for the volume sequence - all series
+#         #    using DICOMVolumeSequencePlugin
+#         exporter.export(exportables)
+#         
+#         if sImageType == 'volumesequence' and bExportAllSeries == True:
+# 
+#             print("Exporting time series for volume sequence image.")
+#             exportables = []
+#             # export the time series (rtstruct not exported here)
+#             exporter = DICOMVolumeSequencePlugin.DICOMVolumeSequencePluginClass()
+#             volExportable = exporter.examineForExport(slPrimaryVolumeID)
+#             exportables.extend(volExportable)
+#               
+#             # assign output path to each exportable
+#             for exp in exportables:
+#                 exp.directory = sOutputDir
+#             # perform export
+#             exporter.export(exportables)
 
-        # DicomRtImportExportPluginClass used for volume image types
-        # if a volume sequence , use the DicomRtImportExportPluginClass to export 
-        #    the master image series with the rtstruct
+        # for both 'volume' and 'volumesequence' image types, use 
+        #    DicomRtImportExportPlugin to export the primary image volume
+        #    and the RTStruct
         exporter = DicomRtImportExportPlugin.DicomRtImportExportPluginClass()
-        
-        exportables = []
-        # examine volumes for export and add to export list
-        volExportable = exporter.examineForExport(slPrimaryVolumeID)
-        segExportable = exporter.examineForExport(slLabelMapSegNodeID)
-        exportables.extend(volExportable)
-        exportables.extend(segExportable)
-          
-        # assign output path to each exportable
-        for exp in exportables:
-            exp.directory = sOutputDir
-              
-          
-        # perform export for the volume sequence - all series
-        exporter.export(exportables)
-            
-        if sImageType == 'volumesequence':
+        [bSuccess, sMsg] = self.PerformExport(exporter, sOutputDir)  
 
-            exportables = []
+        # if the user requested exporting all series of the volume sequence, use
+        #    DICOMVolumeSequencePlugin to export
+        if sImageType == 'volumesequence' and bExportAllSeries == True:
+ 
+            print("Exporting time series for volume sequence image.")
             # export the time series (rtstruct not exported here)
+            self.slLabelMapSegNodeID = None
             exporter = DICOMVolumeSequencePlugin.DICOMVolumeSequencePluginClass()
-            volExportable = exporter.examineForExport(slPrimaryVolumeID)
+            [bSuccess, sMsg] = self.PerformExport(exporter, sOutputDir)  
+        
+        return bSuccess, sMsg
+    
+    def PerformExport(self, exporter, sOutputDir):
+
+        bSuccess = True
+        sMsg = ''
+        try:
+            exportables = []
+            # examine volumes for export and add to export list
+            volExportable = exporter.examineForExport(self.slPrimaryVolumeID)
             exportables.extend(volExportable)
+            if self.slLabelMapSegNodeID != None:
+                segExportable = exporter.examineForExport(self.slLabelMapSegNodeID)
+                exportables.extend(segExportable)
               
             # assign output path to each exportable
             for exp in exportables:
                 exp.directory = sOutputDir
+                
             # perform export
             exporter.export(exportables)
-         
-         
-          
-        
-        return True
+                
+        except:
+            sMsg = 'Trouble exporting'
+            bSuccess = False
+            
+        return bSuccess, sMsg
+       
 
 #==================================================================================================================================
 # Run from cmd window
