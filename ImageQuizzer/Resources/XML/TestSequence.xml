@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Session ROIColorFile="PiRadsStudy">
+	<Page Name="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y">
+		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y">
+			<Destination>Red</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC1010\In-Vivo Image Volumes\Raw\DCE-Sequence\AX Dynamic Contrast - as a 7 frames MultiVolume by TriggerTime.nrrd</Path>
+		</Image>
+		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y">
+			<Destination>Green</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Coronal</Orientation>
+			<Path>ImageVolumes\IGPC1010\In-Vivo Image Volumes\Raw\DCE-Sequence\AX Dynamic Contrast - as a 7 frames MultiVolume by TriggerTime.nrrd</Path>
+		</Image>
+		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y">
+			<Destination>Yellow</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Sagittal</Orientation>
+			<Path>ImageVolumes\IGPC1010\In-Vivo Image Volumes\Raw\DCE-Sequence\AX Dynamic Contrast - as a 7 frames MultiVolume by TriggerTime.nrrd</Path>
+		</Image>
+		<QuestionSet Name="PI-RADS" Descriptor="Contouring Exercise"  SegmentRequired="Y" AllowMultipleResponse="Y">
+			<Question Type="InfoBox" Descriptor="Segmentation Instructions">
+				<Option>In Segment Editor tab, select volume to create segments.</Option>
+				<Option>     Click Edit Selected Label Map collapsible button to access the segmenting tools.</Option>
+				<Option>     Select contour color to match PI-RADS category.</Option>
+				<Option>This may be repeated if segments are to be created on different volumes.</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>
