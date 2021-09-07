@@ -101,6 +101,7 @@ class LabelledImageToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWi
         
         # initialize
         self.sInputImageType = 'volume'
+        self.sLabelMapPath = ''
 
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # GUI Layout
@@ -242,15 +243,16 @@ class LabelledImageToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWi
         self.progress = self.createProgressDialog()
         self.progress.canceled.connect(lambda: logic.cancelProcess())
 
-        [bLoadSuccess, sMsg] = logic.LoadVolumesAndExport(self.sImageVolumePath,
+        tupResultSuccess = logic.LoadVolumesAndExport(self.sImageVolumePath,
                                 self.sInputImageType,
                                 self.sLabelMapPath)
 
 
-        if bLoadSuccess == False:
-            self.msgBox.warning(slicer.util.mainWindow(),"LabelledImageToDicomGenerator: WARNING",sMsg)
+        if tupResultSuccess[0] == False:
+            self.msgBox.warning(slicer.util.mainWindow(),"LabelledImageToDicomGenerator: WARNING",tupResultSuccess[1])
         else:
-            tupSuccessResult = logic.ExportToDicom(self.outputDirButton.directory, self.sInputImageType, self.chkExportAllSeriesOfSequence.isChecked(), progressCallback=self.updateProgressBar)
+#             tupSuccessResult = logic.ExportToDicom(self.outputDirButton.directory, self.sInputImageType, self.chkExportAllSeriesOfSequence.isChecked(), progressCallback=self.updateProgressBar)
+            tupSuccessResult = logic.ExportToDicom(self.outputDirButton.directory, self.sInputImageType, self.chkExportAllSeriesOfSequence.isChecked())
  
         if tupSuccessResult[0]:
             print("Process complete")
@@ -304,7 +306,10 @@ class LabelledImageToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogi
         # load image and label map volumes
         
         dictProperties = {'labelmap' : True, 'show': False}
-        self.slLabelMapNode = slicer.util.loadLabelVolume(sLabelMapPath, dictProperties)
+        if sLabelMapPath == '':
+            self.slLabelMapNode = None
+        else:
+            self.slLabelMapNode = slicer.util.loadLabelVolume(sLabelMapPath, dictProperties)
 
         if sImageType == 'volume':
             self.slImageNode = slicer.util.loadVolume(sImageVolumePath)
@@ -346,58 +351,22 @@ class LabelledImageToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogi
         slNewStudyItemID = self.shNode.CreateStudyItem(slNewPatientItemID, "Study Baines1")
         self.shNode.SetItemParent(self.slPrimaryVolumeID, slNewStudyItemID)
 
-        # convert label map to segmentation
-        slLabelMapSegNode =  slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode')
-        slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(self.slLabelMapNode, slLabelMapSegNode)
+        if not (self.slLabelMapNode == None):
+            # convert label map to segmentation
+            slLabelMapSegNode =  slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode')
+            slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(self.slLabelMapNode, slLabelMapSegNode)
+            
+            # Associate segmentation node with a reference volume node
+            slStudyShItem = self.shNode.GetItemParent(self.slPrimaryVolumeID)
+            self.slLabelMapSegNodeID = self.shNode.GetItemByDataNode(slLabelMapSegNode)
+            self.shNode.SetItemParent(self.slLabelMapSegNodeID, slStudyShItem)
         
-        # Associate segmentation node with a reference volume node
-        slStudyShItem = self.shNode.GetItemParent(self.slPrimaryVolumeID)
-        self.slLabelMapSegNodeID = self.shNode.GetItemByDataNode(slLabelMapSegNode)
-        self.shNode.SetItemParent(self.slLabelMapSegNodeID, slStudyShItem)
-        
-#         # create the dicom exporter
-# 
-#         # DicomRtImportExportPluginClass used for volume image types
-#         # if a volume sequence , use the DicomRtImportExportPluginClass to export 
-#         #    the master image series with the rtstruct
-#         exporter = DicomRtImportExportPlugin.DicomRtImportExportPluginClass()
-#         
-#         exportables = []
-#         # examine volumes for export and add to export list
-#         volExportable = exporter.examineForExport(slPrimaryVolumeID)
-#         segExportable = exporter.examineForExport(slLabelMapSegNodeID)
-#         exportables.extend(volExportable)
-#         exportables.extend(segExportable)
-#           
-#         # assign output path to each exportable
-#         for exp in exportables:
-#             exp.directory = sOutputDir
-#               
-#           
-#         # perform export for the volume sequence - all series
-#         #    using DICOMVolumeSequencePlugin
-#         exporter.export(exportables)
-#         
-#         if sImageType == 'volumesequence' and bExportAllSeries == True:
-# 
-#             print("Exporting time series for volume sequence image.")
-#             exportables = []
-#             # export the time series (rtstruct not exported here)
-#             exporter = DICOMVolumeSequencePlugin.DICOMVolumeSequencePluginClass()
-#             volExportable = exporter.examineForExport(slPrimaryVolumeID)
-#             exportables.extend(volExportable)
-#               
-#             # assign output path to each exportable
-#             for exp in exportables:
-#                 exp.directory = sOutputDir
-#             # perform export
-#             exporter.export(exportables)
 
-        # for both 'volume' and 'volumesequence' image types, use 
-        #    DicomRtImportExportPlugin to export the primary image volume
-        #    and the RTStruct
-        exporter = DicomRtImportExportPlugin.DicomRtImportExportPluginClass()
-        tupSuccessResult = self.PerformExport(exporter, sOutputDir)  
+            # for both 'volume' and 'volumesequence' image types, use 
+            #    DicomRtImportExportPlugin to export the primary image volume
+            #    and the RTStruct
+            exporter = DicomRtImportExportPlugin.DicomRtImportExportPluginClass()
+            tupResultSuccess = self.PerformExport(exporter, sOutputDir)  
 
         # if the user requested exporting all series of the volume sequence, use
         #    DICOMVolumeSequencePlugin to export
@@ -407,10 +376,9 @@ class LabelledImageToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogi
             # export the time series (rtstruct not exported here)
             self.slLabelMapSegNodeID = None
             exporter = DICOMVolumeSequencePlugin.DICOMVolumeSequencePluginClass()
-            tupResult = self.PerformExport(exporter, sOutputDir)  
-        bSuccess = tupSuccessResult[0]
-        sMsg = tupSuccessResult[1]
-        return bSuccess, sMsg
+            tupResultSuccess = self.PerformExport(exporter, sOutputDir)  
+
+        return tupResultSuccess
     
     def PerformExport(self, exporter, sOutputDir):
 
