@@ -1,3 +1,16 @@
+'''
+####################################################
+LabelledImageToDicomGenerator
+####################################################
+Description:
+
+Created September 2021
+
+Author: Carol Johnson 
+        Baines Imaging Laboratory, 
+        London Regional Cancer Program, 
+        London, Ontarion
+'''
 import qt, ctk, slicer
 import os, sys, argparse, logging
 import DICOMLib
