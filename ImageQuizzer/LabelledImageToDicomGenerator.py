@@ -237,9 +237,9 @@ class LabelledImageToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWi
         if bLoadSuccess == False:
             self.msgBox.warning(slicer.util.mainWindow(),"LabelledImageToDicomGenerator: WARNING",sMsg)
         else:
-            bExportSuccess = logic.ExportToDicom(self.outputDirButton.directory, self.sInputImageType, self.chkExportAllSeriesOfSequence.isChecked(), progressCallback=self.updateProgressBar)
+            tupSuccessResult = logic.ExportToDicom(self.outputDirButton.directory, self.sInputImageType, self.chkExportAllSeriesOfSequence.isChecked(), progressCallback=self.updateProgressBar)
  
-        if bExportSuccess:
+        if tupSuccessResult[0]:
             print("Process complete")
         else:
             sMsg = 'Trouble exporting image volume and RTStruct as DICOM'
@@ -384,7 +384,7 @@ class LabelledImageToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogi
         #    DicomRtImportExportPlugin to export the primary image volume
         #    and the RTStruct
         exporter = DicomRtImportExportPlugin.DicomRtImportExportPluginClass()
-        [bSuccess, sMsg] = self.PerformExport(exporter, sOutputDir)  
+        tupSuccessResult = self.PerformExport(exporter, sOutputDir)  
 
         # if the user requested exporting all series of the volume sequence, use
         #    DICOMVolumeSequencePlugin to export
@@ -394,8 +394,9 @@ class LabelledImageToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogi
             # export the time series (rtstruct not exported here)
             self.slLabelMapSegNodeID = None
             exporter = DICOMVolumeSequencePlugin.DICOMVolumeSequencePluginClass()
-            [bSuccess, sMsg] = self.PerformExport(exporter, sOutputDir)  
-        
+            tupResult = self.PerformExport(exporter, sOutputDir)  
+        bSuccess = tupSuccessResult[0]
+        sMsg = tupSuccessResult[1]
         return bSuccess, sMsg
     
     def PerformExport(self, exporter, sOutputDir):
