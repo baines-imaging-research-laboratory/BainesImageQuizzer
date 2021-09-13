@@ -187,7 +187,8 @@ class LabelledImageToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWi
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onImageVolumeFileSelected(self,inputFilePath):
         head, tail = os.path.split(inputFilePath)
-        self.inputImageVolumeFileButton.setText(tail)
+#         self.inputImageVolumeFileButton.setText(tail)
+        self.inputImageVolumeFileButton.setText(inputFilePath)
         self.inputImageVolumeFileButton.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
         self.sImageVolumePath = inputFilePath
         return inputFilePath
