@@ -319,7 +319,8 @@ class LabelledImageToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogi
         if not self.indexer:
             self.indexer = ctk.ctkDICOMIndexer()
 
-
+        sMsg = ''
+        
         # for both volume and volumesequence image types, export the rtstruct with
         #    the primary image volume using DicomRtImportExportPlugin
         
@@ -342,66 +343,39 @@ class LabelledImageToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogi
         self.slLabelMapSegNodeID = self.shNode.GetItemByDataNode(slLabelMapSegNode)
         self.shNode.SetItemParent(self.slLabelMapSegNodeID, slStudyShItem)
         
-#         # create the dicom exporter
-# 
-#         # DicomRtImportExportPluginClass used for volume image types
-#         # if a volume sequence , use the DicomRtImportExportPluginClass to export 
-#         #    the master image series with the rtstruct
-#         exporter = DicomRtImportExportPlugin.DicomRtImportExportPluginClass()
-#         
-#         exportables = []
-#         # examine volumes for export and add to export list
-#         volExportable = exporter.examineForExport(slPrimaryVolumeID)
-#         segExportable = exporter.examineForExport(slLabelMapSegNodeID)
-#         exportables.extend(volExportable)
-#         exportables.extend(segExportable)
-#           
-#         # assign output path to each exportable
-#         for exp in exportables:
-#             exp.directory = sOutputDir
-#               
-#           
-#         # perform export for the volume sequence - all series
-#         #    using DICOMVolumeSequencePlugin
-#         exporter.export(exportables)
-#         
-#         if sImageType == 'volumesequence' and bExportAllSeries == True:
-# 
-#             print("Exporting time series for volume sequence image.")
-#             exportables = []
-#             # export the time series (rtstruct not exported here)
-#             exporter = DICOMVolumeSequencePlugin.DICOMVolumeSequencePluginClass()
-#             volExportable = exporter.examineForExport(slPrimaryVolumeID)
-#             exportables.extend(volExportable)
-#               
-#             # assign output path to each exportable
-#             for exp in exportables:
-#                 exp.directory = sOutputDir
-#             # perform export
-#             exporter.export(exportables)
 
         # for both 'volume' and 'volumesequence' image types, use 
         #    DicomRtImportExportPlugin to export the primary image volume
         #    and the RTStruct
         exporter = DicomRtImportExportPlugin.DicomRtImportExportPluginClass()
-        [bSuccess, sMsg] = self.PerformExport(exporter, sOutputDir)  
+        [bSuccess, sMsgRTStructExport] = self.PerformExport(exporter, sOutputDir)  
+        if sMsgRTStructExport != '':
+            sMsg = sMsg + sMsgRTStructExport + ' --- Exporting RTStruct and primary volume.'  
 
         # if the user requested exporting all series of the volume sequence, use
         #    DICOMVolumeSequencePlugin to export
-        if sImageType == 'volumesequence' and bExportAllSeries == True:
+        if bSuccess and sImageType == 'volumesequence' and bExportAllSeries:
  
             print("Exporting time series for volume sequence image.")
             # export the time series (rtstruct not exported here)
             self.slLabelMapSegNodeID = None
             exporter = DICOMVolumeSequencePlugin.DICOMVolumeSequencePluginClass()
-            [bSuccess, sMsg] = self.PerformExport(exporter, sOutputDir)  
+            [bSuccess, sMsgSeriesExport] = self.PerformExport(exporter, sOutputDir)
+            if sMsgSeriesExport != '':
+                sMsg = sMsg + sMsgSeriesExport + ' --- Exporting all series of sequence.'  
         
         return bSuccess, sMsg
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def PerformExport(self, exporter, sOutputDir):
-
+        ''' using the exporter passed in as an argument, export the DICOM
+            series to disk. 
+            If using exporter DicomRtImportExportPlugin, the RTStruct can be
+            exported with the primary volume.
+        '''
         bSuccess = True
         sMsg = ''
+
         try:
             exportables = []
             # examine volumes for export and add to export list

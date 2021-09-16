@@ -5,19 +5,19 @@
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\DCE-Sequence\dyn_VIBE DCE - as a 77 frames MultiVolume by AcquisitionTime.nrrd</Path>
+			<Path>ImageVolumes\IGPC2026\InVivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
 		</Image>
 		<Image Format="DICOM" Type="Volume" ID="ADC" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\ADC\IGPC2-026.MR.MMR_PELVIS_MMR.0016.0001.2016.06.09.10.31.44.687500.175599235.IMA</Path>
+			<Path>ImageVolumes\IGPC2026\InVivo Image Volumes\Raw\DICOM\ADC\IGPC2-026.MR.MMR_PELVIS_MMR.0016.0001.2016.06.09.10.31.44.687500.175599235.IMA</Path>
 		</Image>
 		<Image ID="In_Vivo_2D_T2" Format="DICOM" Type="Volume" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\In_Vivo_2D_T2\IGPC2-026.MR.MMR_PELVIS_MMR.0010.0001.2016.05.11.12.40.24.890625.175588063.IMA</Path>
+			<Path>ImageVolumes\IGPC2026\InVivo Image Volumes\Raw\DICOM\In_Vivo_2D_T2\IGPC2-026.MR.MMR_PELVIS_MMR.0010.0001.2016.05.11.12.40.24.890625.175588063.IMA</Path>
 		</Image>
 		<QuestionSet Name="PI-RADS" Descriptor="Contouring Exercise"  SegmentRequired="Y" AllowMultipleResponse="Y">
 			<Question Type="InfoBox" Descriptor="Segmentation Instructions">
@@ -36,25 +36,25 @@
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\DCE-Sequence\dyn_VIBE DCE - as a 77 frames MultiVolume by AcquisitionTime.nrrd</Path>
+			<Path>ImageVolumes\IGPC2026\InVivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
 		</Image>
 		<Image Format="DICOM" Type="Volume" ID="ADC" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\ADC\IGPC2-026.MR.MMR_PELVIS_MMR.0016.0001.2016.06.09.10.31.44.687500.175599235.IMA</Path>
+			<Path>ImageVolumes\IGPC2026\InVivo Image Volumes\Raw\DICOM\ADC\IGPC2-026.MR.MMR_PELVIS_MMR.0016.0001.2016.06.09.10.31.44.687500.175599235.IMA</Path>
 		</Image>
 		<Image ID="In_Vivo_2D_T2" Format="DICOM" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\In_Vivo_2D_T2\IGPC2-026.MR.MMR_PELVIS_MMR.0010.0001.2016.05.11.12.40.24.890625.175588063.IMA</Path>
+			<Path>ImageVolumes\IGPC2026\InVivo Image Volumes\Raw\DICOM\In_Vivo_2D_T2\IGPC2-026.MR.MMR_PELVIS_MMR.0010.0001.2016.05.11.12.40.24.890625.175588063.IMA</Path>
 		</Image>
 		<Image ID="PELVIS_MRAC_PET" Format="DICOM" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\PELVIS_MRAC_PET\IGPC2-026.PT.MMR_PELVIS_MMR.0014.0001.2016.05.11.12.40.24.890625.175593827.IMA</Path>
+			<Path>ImageVolumes\IGPC2026\InVivo Image Volumes\Raw\DICOM\PET\IGPC2-026.PT.MMR_PELVIS_MMR.0014.0001.2016.05.11.12.40.24.890625.175593827.IMA</Path>
 		</Image>
 		<QuestionSet Name="Segmentation" Descriptor="Self-Assessment"  SegmentRequired="Y" AllowMultipleResponse="Y">
 			<Question Type="Radio" Descriptor="How did you do?">
