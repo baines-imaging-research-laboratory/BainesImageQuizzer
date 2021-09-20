@@ -69,10 +69,12 @@ class VolumeToDicomGenerator(ScriptedLoadableModule):
         parent.dependencies = ["SlicerDevelopmentToolbox"]
         parent.contributors = ["Carol Johnson (Baines Imaging Laboratories)"]
         parent.helpText = """
-        This is a module to generate a dicom series for a specified volume (originally in .nrrd, .nii, .mhd format).
-        The user has the option to also specify a label map file (mask for contours originally in .nrrd, .nii, .mhd format).
+        This is a module to generate a dicom series for a specified volume (from format: .nrrd, .nii, or .mhd).
+        \nIf the user defines the volume to be a 4D volume sequence, you have the option to export the primary series only or
+        all time series.
+        \nThe user has the option to also specify a label map file (mask for contours from format: .nrrd, .nii, or .mhd).
         The label map will be exported as an RTStruct with the dicoms of the associated image volume.
-        There is also an option to modify the RTStruct's UID's to match the volume UID's of the original DICOM series.
+        \nThere is also an option to modify the RTStruct's UID's to match the volume UID's of the original DICOM series.
         """
         parent.acknowledgementText = """
             Baines Imaging Lab, LRCP, London Health Sciences Centre, London ON
@@ -103,6 +105,7 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
         
         # initialize
         self.sInputImageType = 'volume'
+        self.bExportAllSeries = False
         self.sLabelMapPath = ''
 
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -113,10 +116,21 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
         parametersCollapsibleButton.text = "Parameters to generate DICOM"
         self.layout.addWidget(parametersCollapsibleButton)
     
+        ######## Define Layouts
         parametersFormLayout = qt.QFormLayout(parametersCollapsibleButton)
-    
-        qInputsGroupBox = qt.QGroupBox("Image Volume Input")
+        ## image volume box
         qInputsGroupBoxLayout = qt.QVBoxLayout()
+        qInputSpecificsGrpBoxLayout = qt.QHBoxLayout()
+        qVolumeTypeGrpBoxLayout = qt.QVBoxLayout()
+        qExportSeriesGrpBoxLayout = qt.QVBoxLayout()
+        ## label map volume box
+        qLabelMapGrpBoxLayout = qt.QVBoxLayout()
+        ## output directory box
+        qOutputGrpBoxLayout = qt.QVBoxLayout()
+        
+    
+        ######## Image volume details
+        qInputsGroupBox = qt.QGroupBox("Image Volume Details")
         qInputsGroupBox.setLayout(qInputsGroupBoxLayout)
 
         self.inputImageVolumeFileButton = qt.QPushButton('Select image volume file:')
@@ -125,18 +139,14 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
 #        inputLabelForImageVolume = qt.QLabel("Input image volume file:")
 #         parametersFormLayout.addRow(inputLabelForImageVolume, self.inputImageVolumeFileButton)
         
-        qInputsGroupBoxLayout.addWidget(self.inputImageVolumeFileButton)
 #         parametersFormLayout.addWidget(qInputsGroupBox)
 
         
         qInputSpecificsGrpBox = qt.QGroupBox()
-        qInputSpecificsGrpBoxLayout = qt.QHBoxLayout()
         qInputSpecificsGrpBox.setLayout(qInputSpecificsGrpBoxLayout)
         
         
-        
         self.qVolumeTypeGrpBox = qt.QGroupBox("Image Type")
-        qVolumeTypeGrpBoxLayout = qt.QVBoxLayout()
         self.qVolumeTypeGrpBox.setLayout(qVolumeTypeGrpBoxLayout)
 #         self.qVolumeTypeGrpBox.setStyleSheet("QGroupBox {background-color: \
 #             rgb(255, 255, 255); border: 1px solid gray;\
@@ -152,60 +162,70 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
 #         inputVolumeTypeLabel = qt.QLabel("Input image type:")
 #         parametersFormLayout.addRow(inputVolumeTypeLabel, self.qGrpBox)
 
-        qInputSpecificsGrpBoxLayout.addWidget(self.qVolumeTypeGrpBox)
 
-
-        qExportSeriesGrpBox = qt.QGroupBox("Series Export")
-        qExportSeriesGrpBoxLayout = qt.QVBoxLayout()
-        qExportSeriesGrpBox.setLayout( qExportSeriesGrpBoxLayout)
-        qExportSeriesGrpBox.enabled = False
+        self.qExportSeriesGrpBox = qt.QGroupBox("Series Export")
+        self.qExportSeriesGrpBox.setLayout( qExportSeriesGrpBoxLayout)
+        self.qExportSeriesGrpBox.enabled = False
                  
-#         self.chkExportAllSeriesOfSequence = qt.QCheckBox()
-#         self.chkExportAllSeriesOfSequence.setChecked(0)
-#         self.chkExportAllSeriesOfSequence.enabled = False
-# #         parametersFormLayout.addRow("Export all series of volume sequence:", self.chkExportAllSeriesOfSequence)
-#         self.chkExportAllSeriesOfSequence.toolTip = "If unchecked, only the primary series for the sequence will be exported"
-# 
         self.qExportPrimaryBtn = qt.QRadioButton("primary series only")
         self.qExportPrimaryBtn.setChecked(True)
-#         self.qExportPrimaryBtn.toggled.connect (self.onTogglePrimarySeriesExport)
-        qExportSeriesGrpBoxLayout.addWidget(self.qExportPrimaryBtn)
-        self.qExportAllSeriesBtn = qt.QRadioButton("primary series only")
+        self.qExportPrimaryBtn.toggled.connect (self.onTogglePrimarySeriesExport)
+        self.qExportAllSeriesBtn = qt.QRadioButton("all time series")
         self.qExportAllSeriesBtn.setChecked(False)
-#         self.qExportAllSeriesBtn.toggled.connect (self.onToggleAllSeriesExport)
-        qExportSeriesGrpBoxLayout.addWidget(self.qExportAllSeriesBtn)
+        self.qExportAllSeriesBtn.toggled.connect (self.onToggleAllSeriesExport)
 
-        qInputSpecificsGrpBoxLayout.addWidget(qExportSeriesGrpBox)
         
     
+        # add image volume widgets to layouts
+        qInputsGroupBoxLayout.addWidget(self.inputImageVolumeFileButton)
+        qInputSpecificsGrpBoxLayout.addWidget(self.qVolumeTypeGrpBox)
+        qInputSpecificsGrpBoxLayout.addWidget(self.qExportSeriesGrpBox)
+        qExportSeriesGrpBoxLayout.addWidget(self.qExportPrimaryBtn)
+        qExportSeriesGrpBoxLayout.addWidget(self.qExportAllSeriesBtn)
         qInputsGroupBoxLayout.addWidget(qInputSpecificsGrpBox)
-        parametersFormLayout.addWidget(qInputsGroupBox)
-
  
+        parametersFormLayout.addWidget(qInputsGroupBox)
         parametersFormLayout.addRow("  ",qt.QLabel("   "))  # adds spacing
+
+
+        ######## Label map / RTStruct details
+        qLabelMapGroupBox = qt.QGroupBox("Label Map Details (Optional)")
+        qLabelMapGroupBox.setLayout(qLabelMapGrpBoxLayout)
 
         self.inputLabelMapFileButton = qt.QPushButton('Select label map file:')
         self.inputLabelMapFileButton.toolTip = "OPTIONAL: Select label map (contour mask) file (.nrrd, .nii, .mhd)."
         self.inputLabelMapFileButton.connect('clicked(bool)', self.onSelectLabelMapFile)
-        inputLabelForLabelMap = qt.QLabel("Input label map file:")
-        parametersFormLayout.addRow(inputLabelForLabelMap, self.inputLabelMapFileButton)
+#         inputLabelForLabelMap = qt.QLabel("Input label map file:")
+#         parametersFormLayout.addRow(inputLabelForLabelMap, self.inputLabelMapFileButton)
 
 
-        self.chkRemapRTStructUIDs = qt.QCheckBox()
+        self.chkRemapRTStructUIDs = qt.QCheckBox("Remap RTStuct to original volume UIDs")
         self.chkRemapRTStructUIDs.setChecked(0)
         self.chkRemapRTStructUIDs.toggled.connect(self.onToggleRemapBtn)
-        parametersFormLayout.addRow("Remap RTStuct to original volume UIDs:", self.chkRemapRTStructUIDs)
+#         parametersFormLayout.addRow("Remap RTStuct to original volume UIDs:", self.chkRemapRTStructUIDs)
         self.chkRemapRTStructUIDs.toolTip = "RTStruct will be remapped to match UIDs of original image volume."
+
 
         self.originalImageDirButton = ctk.ctkDirectoryButton()
         self.originalImageDirButton.enabled = False
-        parametersFormLayout.addRow("Select directory of original image volume:", self.originalImageDirButton)
-        
+#         parametersFormLayout.addRow("Select directory of original image volume:", self.originalImageDirButton)
+
+
+        qLabelMapGrpBoxLayout.addWidget(self.inputLabelMapFileButton)
+        qLabelMapGrpBoxLayout.addWidget(self.chkRemapRTStructUIDs)
+        qLabelMapGrpBoxLayout.addWidget(self.originalImageDirButton)
+
+        parametersFormLayout.addWidget(qLabelMapGroupBox)
         parametersFormLayout.addRow("  ",qt.QLabel("   "))  # adds spacing
 
+        ######## Output directory
+        qOutputDirGroupBox = qt.QGroupBox('Select output directory for DICOM series:')
+        qOutputDirGroupBox.setLayout(qOutputGrpBoxLayout)
         self.outputDirButton = ctk.ctkDirectoryButton()
-        parametersFormLayout.addRow("Output directory:", self.outputDirButton)
-    
+#         parametersFormLayout.addRow("Output directory:", self.outputDirButton)
+        qOutputGrpBoxLayout.addWidget(self.outputDirButton)
+
+        parametersFormLayout.addWidget(qOutputDirGroupBox)
         parametersFormLayout.addRow("  ",qt.QLabel("   "))  # adds spacing
 
         createRTStructButton = qt.QPushButton('Create DICOM')
@@ -226,7 +246,7 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onImageVolumeFileSelected(self,inputFilePath):
-        head, tail = os.path.split(inputFilePath)
+#         head, tail = os.path.split(inputFilePath)
 #         self.inputImageVolumeFileButton.setText(tail)
         self.inputImageVolumeFileButton.setText(inputFilePath)
         self.inputImageVolumeFileButton.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
@@ -246,8 +266,9 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onLabelMapFileSelected(self,inputFilePath):
-        head, tail = os.path.split(inputFilePath)
-        self.inputLabelMapFileButton.setText(tail)
+#         head, tail = os.path.split(inputFilePath)
+#         self.inputLabelMapFileButton.setText(tail)
+        self.inputLabelMapFileButton.setText(inputFilePath)
         self.inputLabelMapFileButton.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
         self.sLabelMapPath = inputFilePath
         return inputFilePath
@@ -255,17 +276,34 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onToggleImageTypeVolume(self, enabled):
         if enabled:
-            self.chkExportAllSeriesOfSequence.enabled = False
-            self.chkExportAllSeriesOfSequence.setChecked(0)
+#             self.chkExportAllSeriesOfSequence.enabled = False
+#             self.chkExportAllSeriesOfSequence.setChecked(0)
+
+            self.qExportSeriesGrpBox.enabled = False
             self.sInputImageType = 'volume'
+            self.qExportPrimaryBtn.setChecked(True)
+            self.bExportSeriesSequence = False
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onToggleImageTypeVolumeSequence(self, enabled):
         if enabled:
-            self.chkExportAllSeriesOfSequence.enabled = True
-            self.chkExportAllSeriesOfSequence.setChecked(1)
+#             self.chkExportAllSeriesOfSequence.enabled = True
+#             self.chkExportAllSeriesOfSequence.setChecked(1)
+
+            self.qExportSeriesGrpBox.enabled = True
             self.sInputImageType = 'volumesequence'
             
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onTogglePrimarySeriesExport(self, enabled):
+        if enabled:
+            self.bExportAllSeries = False
+            
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onToggleAllSeriesExport(self, enabled):
+        if enabled:
+            self.bExportAllSeries = True
+            
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onToggleRemapBtn(self, enabled):
         if enabled:
