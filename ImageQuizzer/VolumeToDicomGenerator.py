@@ -70,10 +70,9 @@ class VolumeToDicomGenerator(ScriptedLoadableModule):
         parent.contributors = ["Carol Johnson (Baines Imaging Laboratories)"]
         parent.helpText = """
         This is a module to generate a dicom series for a specified volume (from format: .nrrd, .nii, or .mhd).
-        \nIf the user defines the volume to be a 4D volume sequence, you have the option to export the primary series only or
-        all time series.
+        \nIf the user defines the volume to be a 4D volume sequence, there is an option to export all volumes in the time series.
         \nThe user has the option to also specify a label map file (mask for contours from format: .nrrd, .nii, or .mhd).
-        The label map will be exported as an RTStruct with the dicoms of the associated image volume.
+        The label map will be exported as an RTStruct with the dicoms of the associated primary image volume.
         \nThere is also an option to modify the RTStruct's UID's to match the volume UID's of the original DICOM series.
         """
         parent.acknowledgementText = """
@@ -118,21 +117,19 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
     
         ######## Define Layouts
         parametersFormLayout = qt.QFormLayout(parametersCollapsibleButton)
-        ## image volume box
         qInputsGroupBoxLayout = qt.QVBoxLayout()
         qVolumeTypeGrpBoxLayout = qt.QHBoxLayout()
-        qExportSeriesGrpBoxLayout = qt.QHBoxLayout()
-        ## label map volume box
         qLabelMapGrpBoxLayout = qt.QVBoxLayout()
-        ## output directory box
         qOutputGrpBoxLayout = qt.QVBoxLayout()
         
     
+        ########################################
         ######## Image volume details
         qInputsGroupBox = qt.QGroupBox("Image Volume Details")
         qInputsGroupBox.setLayout(qInputsGroupBoxLayout)
 
         self.inputImageVolumeFileButton = qt.QPushButton('Select image volume file:')
+        self.inputImageVolumeFileButton.setStyleSheet("QPushButton{ background-color: rgb(255,202,128) }")
         self.inputImageVolumeFileButton.toolTip = "Select image volume file (.nrrd, .nii, .mhd)."
         self.inputImageVolumeFileButton.connect('clicked(bool)', self.onSelectImageVolumeFile)
         
@@ -142,42 +139,33 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
         self.qVolumeBtn = qt.QRadioButton("volume")
         self.qVolumeBtn.setChecked(True)
         self.qVolumeBtn.toggled.connect( self.onToggleImageTypeVolume)
-        qVolumeTypeGrpBoxLayout.addWidget(self.qVolumeBtn)
         self.qVolumeSequenceBtn = qt.QRadioButton("volume sequence (time series)")
         self.qVolumeSequenceBtn.toggled.connect(self.onToggleImageTypeVolumeSequence)
-        qVolumeTypeGrpBoxLayout.addWidget(self.qVolumeSequenceBtn)
 
 
-        self.qExportSeriesGrpBox = qt.QGroupBox("Series Export")
-        self.qExportSeriesGrpBox.setLayout( qExportSeriesGrpBoxLayout)
-        self.qExportSeriesGrpBox.enabled = False
-                 
-        self.qExportPrimaryBtn = qt.QRadioButton("primary series only")
-        self.qExportPrimaryBtn.setChecked(True)
-        self.qExportPrimaryBtn.toggled.connect (self.onTogglePrimarySeriesExport)
-        qExportSeriesGrpBoxLayout.addWidget(self.qExportPrimaryBtn)
-        self.qExportAllSeriesBtn = qt.QRadioButton("all time series")
-        self.qExportAllSeriesBtn.setChecked(False)
-        self.qExportAllSeriesBtn.toggled.connect (self.onToggleAllSeriesExport)
-        qExportSeriesGrpBoxLayout.addWidget(self.qExportAllSeriesBtn)
+        self.chkExport4DSeries = qt.QCheckBox("Export all series of the volume sequence")
+        self.chkExport4DSeries.setChecked(0)
+        self.chkExport4DSeries.enabled = False
 
-        
-    
         # add image volume widgets to layout
         qInputsGroupBoxLayout.addWidget(self.inputImageVolumeFileButton)
         qInputsGroupBoxLayout.addWidget(self.qVolumeTypeGrpBox)
-        qInputsGroupBoxLayout.addWidget(self.qExportSeriesGrpBox)
+        qVolumeTypeGrpBoxLayout.addWidget(self.qVolumeBtn)
+        qVolumeTypeGrpBoxLayout.addWidget(self.qVolumeSequenceBtn)
+        qInputsGroupBoxLayout.addWidget(self.chkExport4DSeries)
 
  
         parametersFormLayout.addWidget(qInputsGroupBox)
         parametersFormLayout.addRow("  ",qt.QLabel("   "))  # add spacing
 
 
+        ########################################
         ######## Label map / RTStruct details
         qLabelMapGroupBox = qt.QGroupBox("Label Map Details (Optional)")
         qLabelMapGroupBox.setLayout(qLabelMapGrpBoxLayout)
 
         self.inputLabelMapFileButton = qt.QPushButton('Select label map file:')
+        self.inputLabelMapFileButton.setStyleSheet("QPushButton{ background-color: rgb(255,202,128) }")
         self.inputLabelMapFileButton.toolTip = "OPTIONAL: Select label map (contour mask) file (.nrrd, .nii, .mhd)."
         self.inputLabelMapFileButton.connect('clicked(bool)', self.onSelectLabelMapFile)
 
@@ -189,6 +177,7 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
 
 
         self.originalImageDirButton = ctk.ctkDirectoryButton()
+        self.originalImageDirButton.setStyleSheet("QPushButton{ background-color: rgb(255,202,128) }")
         self.originalImageDirButton.enabled = False
 
 
@@ -200,18 +189,24 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
         parametersFormLayout.addWidget(qLabelMapGroupBox)
         parametersFormLayout.addRow("  ",qt.QLabel("   "))  # add spacing
 
+        ########################################
         ######## Output directory
         qOutputDirGroupBox = qt.QGroupBox('Select output directory for DICOM series:')
         qOutputDirGroupBox.setLayout(qOutputGrpBoxLayout)
         self.outputDirButton = ctk.ctkDirectoryButton()
+        self.outputDirButton.setStyleSheet("QPushButton{ background-color: rgb(255,202,128) }")
         qOutputGrpBoxLayout.addWidget(self.outputDirButton)
 
         parametersFormLayout.addWidget(qOutputDirGroupBox)
         parametersFormLayout.addRow("  ",qt.QLabel("   "))  # add spacing
 
-        createRTStructButton = qt.QPushButton('Create DICOM')
-        createRTStructButton.setStyleSheet("QPushButton{ background-color: rgb(0,153,76) }")
+        ########################################
+        ######## Generate button
+        createRTStructButton = qt.QPushButton('Create DICOMs')
+#         createRTStructButton.setStyleSheet("QPushButton{ background-color: rgb(0,153,76) }")
+        createRTStructButton.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
         parametersFormLayout.addRow(createRTStructButton)
+        0,179,246
     
         createRTStructButton.connect('clicked()', self.onApplyCreateDicom)
 
@@ -230,7 +225,6 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
 #         head, tail = os.path.split(inputFilePath)
 #         self.inputImageVolumeFileButton.setText(tail)
         self.inputImageVolumeFileButton.setText(inputFilePath)
-        self.inputImageVolumeFileButton.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
         self.sImageVolumePath = inputFilePath
         return inputFilePath
         
@@ -257,29 +251,40 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onToggleImageTypeVolume(self, enabled):
         if enabled:
-            self.qExportSeriesGrpBox.enabled = False
+#             self.qExportSeriesGrpBox.enabled = False
             self.sInputImageType = 'volume'
-            self.qExportPrimaryBtn.setChecked(True)
-            self.bExport4DSeries = False
+#             self.qExportPrimaryBtn.setChecked(True)
+#             self.bExport4DSeries = False
+            self.chkExport4DSeries.enabled = False
+            self.chkExport4DSeries.setChecked(0)
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onToggleImageTypeVolumeSequence(self, enabled):
         if enabled:
-            self.qExportSeriesGrpBox.enabled = True
+#             self.qExportSeriesGrpBox.enabled = True
             self.sInputImageType = 'volumesequence'
-            self.qExportAllSeriesBtn.setChecked(True)
-            self.bExport4DSeries = True
+#             self.qExportAllSeriesBtn.setChecked(True)
+#             self.bExport4DSeries = True
+            self.chkExport4DSeries.enabled = True
+            self.chkExport4DSeries.setChecked(1)
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onTogglePrimarySeriesExport(self, enabled):
+    def onToggleSeriesExport(self, enabled):
         if enabled:
+            self.bExport4DSeries = True
+        else:
             self.bExport4DSeries = False
             
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onToggleAllSeriesExport(self, enabled):
-        if enabled:
-            self.bExport4DSeries = True
-            
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def onTogglePrimarySeriesExport(self, enabled):
+#         if enabled:
+#             self.bExport4DSeries = False
+#             
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def onToggleAllSeriesExport(self, enabled):
+#         if enabled:
+#             self.bExport4DSeries = True
+#             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onToggleRemapBtn(self, enabled):
@@ -299,7 +304,7 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
         self.progress = self.createProgressDialog()
         self.progress.canceled.connect(lambda: logic.cancelProcess())
 
-        tupResultSuccess = logic.LoadVolumesAndExport(self.sImageVolumePath,
+        tupResultSuccess = logic.LoadVolumes(self.sImageVolumePath,
                                 self.sInputImageType,
                                 self.sLabelMapPath)
 
@@ -348,7 +353,7 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogicMixin)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @handleErrors
-    def LoadVolumesAndExport(self, sImageVolumePath, sImageType, sLabelMapPath):
+    def LoadVolumes(self, sImageVolumePath, sImageType, sLabelMapPath):
         self.canceled = False
         sMsg = ''
         bSuccess = True
@@ -361,10 +366,10 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogicMixin)
 
         # load image and label map volumes
         
-        dictProperties = {'labelmap' : True, 'show': False}
         if sLabelMapPath == '':
             self.slLabelMapNode = None
         else:
+            dictProperties = {'labelmap' : True, 'show': False}
             self.slLabelMapNode = slicer.util.loadLabelVolume(sLabelMapPath, dictProperties)
 
         if sImageType == 'volume':
