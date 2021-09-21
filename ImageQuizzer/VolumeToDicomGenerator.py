@@ -177,7 +177,6 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
 
 
         self.originalImageDirButton = ctk.ctkDirectoryButton()
-        self.originalImageDirButton.setStyleSheet("QPushButton{ background-color: rgb(255,202,128) }")
         self.originalImageDirButton.enabled = False
 
 
@@ -203,10 +202,9 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
         ########################################
         ######## Generate button
         createRTStructButton = qt.QPushButton('Create DICOMs')
-#         createRTStructButton.setStyleSheet("QPushButton{ background-color: rgb(0,153,76) }")
-        createRTStructButton.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
+        createRTStructButton.setStyleSheet("QPushButton{ background-color: rgb(0,153,76) }")
+#         createRTStructButton.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
         parametersFormLayout.addRow(createRTStructButton)
-        0,179,246
     
         createRTStructButton.connect('clicked()', self.onApplyCreateDicom)
 
@@ -222,12 +220,9 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onImageVolumeFileSelected(self,inputFilePath):
-#         head, tail = os.path.split(inputFilePath)
-#         self.inputImageVolumeFileButton.setText(tail)
         self.inputImageVolumeFileButton.setText(inputFilePath)
         self.sImageVolumePath = inputFilePath
         return inputFilePath
-        
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onSelectLabelMapFile(self):
@@ -241,8 +236,6 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onLabelMapFileSelected(self,inputFilePath):
-#         head, tail = os.path.split(inputFilePath)
-#         self.inputLabelMapFileButton.setText(tail)
         self.inputLabelMapFileButton.setText(inputFilePath)
         self.inputLabelMapFileButton.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
         self.sLabelMapPath = inputFilePath
@@ -251,20 +244,14 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onToggleImageTypeVolume(self, enabled):
         if enabled:
-#             self.qExportSeriesGrpBox.enabled = False
             self.sInputImageType = 'volume'
-#             self.qExportPrimaryBtn.setChecked(True)
-#             self.bExport4DSeries = False
             self.chkExport4DSeries.enabled = False
             self.chkExport4DSeries.setChecked(0)
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onToggleImageTypeVolumeSequence(self, enabled):
         if enabled:
-#             self.qExportSeriesGrpBox.enabled = True
             self.sInputImageType = 'volumesequence'
-#             self.qExportAllSeriesBtn.setChecked(True)
-#             self.bExport4DSeries = True
             self.chkExport4DSeries.enabled = True
             self.chkExport4DSeries.setChecked(1)
             
@@ -275,23 +262,16 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
         else:
             self.bExport4DSeries = False
             
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def onTogglePrimarySeriesExport(self, enabled):
-#         if enabled:
-#             self.bExport4DSeries = False
-#             
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def onToggleAllSeriesExport(self, enabled):
-#         if enabled:
-#             self.bExport4DSeries = True
-#             
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onToggleRemapBtn(self, enabled):
         if enabled:
             self.originalImageDirButton.enabled = True
+            self.originalImageDirButton.setStyleSheet("QPushButton{ background-color: rgb(255,202,128) }")
         else:
             self.originalImageDirButton.enabled = False
+            self.originalImageDirButton.setStyleSheet('')
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @handleErrors
@@ -398,11 +378,9 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogicMixin)
         if not self.indexer:
             self.indexer = ctk.ctkDICOMIndexer()
 
-
-        # for both volume and volumesequence image types, export the rtstruct with
-        #    the primary image volume using DicomRtImportExportPlugin
         
-        print("Exporting DICOMs")
+        print("Exporting DICOMs ")
+        print("          ...........  primary volume.")
         # work in subject hierarchy node (shNode)
 #         shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
         self.slPrimaryVolumeID = self.shNode.GetItemByDataNode(self.slImageNode)
@@ -413,6 +391,7 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogicMixin)
         self.shNode.SetItemParent(self.slPrimaryVolumeID, slNewStudyItemID)
 
         if not (self.slLabelMapNode == None):
+            print("          ...........  RTStruct.")
             # convert label map to segmentation
             slLabelMapSegNode =  slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode')
             slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(self.slLabelMapNode, slLabelMapSegNode)
@@ -432,7 +411,7 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogicMixin)
         #    DICOMVolumeSequencePlugin to export
         if sImageType == 'volumesequence' and bExport4DSeries == True:
  
-            print(".......  time series for 4D volume sequence.")
+            print("          ...........  time series for 4D volume sequence.")
             # export the time series (rtstruct not exported here)
             self.slLabelMapSegNodeID = None
             exporter = DICOMVolumeSequencePlugin.DICOMVolumeSequencePluginClass()
