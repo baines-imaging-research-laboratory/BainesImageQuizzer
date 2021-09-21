@@ -17,7 +17,7 @@ import DICOMLib
 from DICOMLib import DICOMUtils
 from PythonQt import QtCore, QtGui
 from slicer.ScriptedLoadableModule import *
-from SlicerDevelopmentToolboxUtils.mixins import ModuleWidgetMixin, ModuleLogicMixin
+# from SlicerDevelopmentToolboxUtils.mixins import ModuleWidgetMixin, ModuleLogicMixin
 
 
 import DicomRtImportExportPlugin
@@ -96,7 +96,8 @@ class VolumeToDicomGenerator(ScriptedLoadableModule):
 #==================================================================================================================================
 # class VolumeToDicomGeneratorWidget
 #==================================================================================================================================
-class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMixin):
+# class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMixin):
+class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def setup(self):
@@ -104,7 +105,7 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
         
         # initialize
         self.sInputImageType = 'volume'
-        self.bExport4DSeries = False
+        self.bExportAllSeriesOfSequence = False
         self.sLabelMapPath = ''
 
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -143,16 +144,16 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
         self.qVolumeSequenceBtn.toggled.connect(self.onToggleImageTypeVolumeSequence)
 
 
-        self.chkExport4DSeries = qt.QCheckBox("Export all series of the volume sequence")
-        self.chkExport4DSeries.setChecked(0)
-        self.chkExport4DSeries.enabled = False
+        self.chkExportAllSeriesOfSequence = qt.QCheckBox("Export all series of the volume sequence")
+        self.chkExportAllSeriesOfSequence.setChecked(0)
+        self.chkExportAllSeriesOfSequence.enabled = False
 
         # add image volume widgets to layout
         qInputsGroupBoxLayout.addWidget(self.inputImageVolumeFileButton)
         qInputsGroupBoxLayout.addWidget(self.qVolumeTypeGrpBox)
         qVolumeTypeGrpBoxLayout.addWidget(self.qVolumeBtn)
         qVolumeTypeGrpBoxLayout.addWidget(self.qVolumeSequenceBtn)
-        qInputsGroupBoxLayout.addWidget(self.chkExport4DSeries)
+        qInputsGroupBoxLayout.addWidget(self.chkExportAllSeriesOfSequence)
 
  
         parametersFormLayout.addWidget(qInputsGroupBox)
@@ -175,7 +176,8 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
         self.chkRemapRTStructUIDs.toggled.connect(self.onToggleRemapBtn)
         self.chkRemapRTStructUIDs.toolTip = "RTStruct will be remapped to match UIDs of original image volume."
 
-
+        self.qOrigImageDirLabel = qt.QLabel("Select directory of original volume:")
+        self.qOrigImageDirLabel.enabled = False
         self.originalImageDirButton = ctk.ctkDirectoryButton()
         self.originalImageDirButton.enabled = False
 
@@ -183,6 +185,7 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
         # add widgets to layout
         qLabelMapGrpBoxLayout.addWidget(self.inputLabelMapFileButton)
         qLabelMapGrpBoxLayout.addWidget(self.chkRemapRTStructUIDs)
+        qLabelMapGrpBoxLayout.addWidget(self.qOrigImageDirLabel)
         qLabelMapGrpBoxLayout.addWidget(self.originalImageDirButton)
 
         parametersFormLayout.addWidget(qLabelMapGroupBox)
@@ -245,30 +248,32 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
     def onToggleImageTypeVolume(self, enabled):
         if enabled:
             self.sInputImageType = 'volume'
-            self.chkExport4DSeries.enabled = False
-            self.chkExport4DSeries.setChecked(0)
+            self.chkExportAllSeriesOfSequence.enabled = False
+            self.chkExportAllSeriesOfSequence.setChecked(0)
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onToggleImageTypeVolumeSequence(self, enabled):
         if enabled:
             self.sInputImageType = 'volumesequence'
-            self.chkExport4DSeries.enabled = True
-            self.chkExport4DSeries.setChecked(1)
+            self.chkExportAllSeriesOfSequence.enabled = True
+            self.chkExportAllSeriesOfSequence.setChecked(1)
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onToggleSeriesExport(self, enabled):
         if enabled:
-            self.bExport4DSeries = True
+            self.bExportAllSeriesOfSequence = True
         else:
-            self.bExport4DSeries = False
+            self.bExportAllSeriesOfSequence = False
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onToggleRemapBtn(self, enabled):
         if enabled:
             self.originalImageDirButton.enabled = True
+            self.qOrigImageDirLabel.enabled = True
             self.originalImageDirButton.setStyleSheet("QPushButton{ background-color: rgb(255,202,128) }")
         else:
             self.originalImageDirButton.enabled = False
+            self.qOrigImageDirLabel.enabled = False
             self.originalImageDirButton.setStyleSheet('')
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -281,8 +286,8 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
         slicer.mrmlScene.Clear()
 
         logic = VolumeToDicomGeneratorLogic()
-        self.progress = self.createProgressDialog()
-        self.progress.canceled.connect(lambda: logic.cancelProcess())
+#         self.progress = self.createProgressDialog()
+#         self.progress.canceled.connect(lambda: logic.cancelProcess())
 
         tupResultSuccess = logic.LoadVolumes(self.sImageVolumePath,
                                 self.sInputImageType,
@@ -293,7 +298,7 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
             self.msgBox.warning(slicer.util.mainWindow(),"VolumeToDicomGenerator: WARNING",tupResultSuccess[1])
         else:
 #             tupSuccessResult = logic.ExportToDicom(self.outputDirButton.directory, self.sInputImageType, self.chkExportAllSeriesOfSequence.isChecked(), progressCallback=self.updateProgressBar)
-            tupSuccessResult = logic.ExportToDicom(self.outputDirButton.directory, self.sInputImageType, self.chkExportAllSeriesOfSequence.isChecked())
+            tupSuccessResult = logic.ExportToDicom(self.outputDirButton.directory, self.sInputImageType, self.bExportAllSeriesOfSequence)
  
         if tupSuccessResult[0]:
             print("Process complete")
@@ -301,35 +306,37 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMix
             sMsg = 'Trouble exporting image volume and RTStruct as DICOM'
             self.msgBox.warning(slicer.util.mainWindow(),"VolumeToDicomGenerator: WARNING",sMsg)
 
-        self.progress.canceled.disconnect(lambda : logic.cancelProcess())
-        self.progress.close()
+#         self.progress.canceled.disconnect(lambda : logic.cancelProcess())
+#         self.progress.close()
 
              
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def updateProgressBar(self, **kwargs):
-        ModuleWidgetMixin.updateProgressBar(self, progress=self.progress, **kwargs)
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def updateProgressBar(self, **kwargs):
+#         ModuleWidgetMixin.updateProgressBar(self, progress=self.progress, **kwargs)
 
 
 
 #==================================================================================================================================
 # class VolumeToDicomGeneratorLogic
 #==================================================================================================================================
-class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogicMixin):
+# class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogicMixin):
+class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic):
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def __init__(self):
         ScriptedLoadableModuleLogic.__init__(self)
         self.shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+        self.slLabelMapSegNodeID = None   # default
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def updateProgressBar(self, **kwargs):
-        if self.progressCallback:
-            self.progressCallback(**kwargs)
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def updateProgressBar(self, **kwargs):
+#         if self.progressCallback:
+#             self.progressCallback(**kwargs)
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def cancelProcess(self):
-        self.indexer.cancel()
-        self.canceled = True
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def cancelProcess(self):
+#         self.indexer.cancel()
+#         self.canceled = True
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @handleErrors
@@ -371,12 +378,13 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogicMixin)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @handleErrors
-    def ExportToDicom(self, sOutputDir, sImageType, bExport4DSeries, progressCallback=None):
+#     def ExportToDicom(self, sOutputDir, sImageType, bExport4DSeries, progressCallback=None):
+    def ExportToDicom(self, sOutputDir, sImageType, bExportAllSeriesOfSequence):
         
-        self.progressCallback = progressCallback
-        self.indexer = getattr(self, "indexer", None)
-        if not self.indexer:
-            self.indexer = ctk.ctkDICOMIndexer()
+#         self.progressCallback = progressCallback
+#         self.indexer = getattr(self, "indexer", None)
+#         if not self.indexer:
+#             self.indexer = ctk.ctkDICOMIndexer()
 
         
         print("Exporting DICOMs ")
@@ -409,7 +417,7 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogicMixin)
 
         # if the user requested exporting all series of the volume sequence, use
         #    DICOMVolumeSequencePlugin to export
-        if sImageType == 'volumesequence' and bExport4DSeries == True:
+        if sImageType == 'volumesequence' and bExportAllSeriesOfSequence == True:
  
             print("          ...........  time series for 4D volume sequence.")
             # export the time series (rtstruct not exported here)
@@ -420,6 +428,7 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogicMixin)
         return tupResultSuccess
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    @handleErrors
     def PerformExport(self, exporter, sOutputDir):
 
         bSuccess = True
