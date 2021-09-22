@@ -22,6 +22,7 @@ from slicer.ScriptedLoadableModule import *
 
 import DicomRtImportExportPlugin
 import DICOMVolumeSequencePlugin
+import DICOMScalarVolumePlugin
  
 import pydicom
 
@@ -240,7 +241,7 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onLabelMapFileSelected(self,inputFilePath):
         self.inputLabelMapFileButton.setText(inputFilePath)
-        self.inputLabelMapFileButton.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
+#         self.inputLabelMapFileButton.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
         self.sLabelMapPath = inputFilePath
         return inputFilePath
         
@@ -257,6 +258,8 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
             self.sInputImageType = 'volumesequence'
             self.chkExportAllSeriesOfSequence.enabled = True
             self.chkExportAllSeriesOfSequence.setChecked(1)
+            self.chkExportAllSeriesOfSequence.toggle()
+#             qt.QApplication.processEvents()
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onToggleSeriesExport(self, enabled):
@@ -327,6 +330,7 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic):
         ScriptedLoadableModuleLogic.__init__(self)
         self.shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
         self.slLabelMapSegNodeID = None   # default
+        self.msgBox = qt.QMessageBox()
 
 #     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #     def updateProgressBar(self, **kwargs):
@@ -399,7 +403,6 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic):
         self.shNode.SetItemParent(self.slPrimaryVolumeID, slNewStudyItemID)
 
         if not (self.slLabelMapNode == None):
-            print("          ...........  RTStruct.")
             # convert label map to segmentation
             slLabelMapSegNode =  slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode')
             slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(self.slLabelMapNode, slLabelMapSegNode)
@@ -408,18 +411,43 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic):
             slStudyShItem = self.shNode.GetItemParent(self.slPrimaryVolumeID)
             self.slLabelMapSegNodeID = self.shNode.GetItemByDataNode(slLabelMapSegNode)
             self.shNode.SetItemParent(self.slLabelMapSegNodeID, slStudyShItem)
-        
-        # for both 'volume' and 'volumesequence' image types, use 
-        #    DicomRtImportExportPlugin to export the primary image volume
-        #    and the RTStruct (if specified)
-        exporter = DicomRtImportExportPlugin.DicomRtImportExportPluginClass()
-        tupResultSuccess = self.PerformExport(exporter, sOutputDir)  
 
-        # if the user requested exporting all series of the volume sequence, use
+        # define exporter based on the class of volume loaded        
+        exporter = None
+        if self.slImageNode.GetClassName() == 'vtkMRMLMultiVolumeNode':
+            exporter = DICOMScalarVolumePlugin.DICOMScalarVolumePluginClass()
+            sMsg = "This multi-volume image was loaded as a 'volume' instead of a 'volume sequence'."\
+                    + "\nOnly the primary volume (time series 0) will be exported."
+            if not (self.slLabelMapNode == None):
+                # a multivolume node imported as a 'volume' can only have the primary
+                # image volume (time series = 0) exported as a dicom. To have the RTStruct
+                # exported as well, you must load the multi volume image as a 'volume sequence'
+                sMsg = sMsg + "\nLabel map cannot be exported as an RTStruct unless the multi-volume image is imported as a 'volume sequence'."
+
+            self.msgBox.warning(slicer.util.mainWindow(),"VolumeToDicomGenerator: WARNING",sMsg)
+                
+        elif self.slImageNode.GetClassName() == 'vtkMRMLScalarVolumeNode':
+            # use the DicomRTImportExport plugin to export scalar volume nodes
+            # This can handle a label map volume if specified
+            exporter = DicomRtImportExportPlugin.DicomRtImportExportPluginClass()
+        else:
+            sMsg = "Unrecognized volume class: " + self.slImageNode.GetClassName() + \
+                    "Export will not be done."
+            self.msgBox.error(slicer.util.mainWindow(),"VolumeToDicomGenerator: ERROR",sMsg)
+            
+        # export primary series for both volume and volume sequence image types (class = vtkMRMLScalarVolumeNode)
+        # RTStruct is also exported here if selected by the user
+        if not exporter == None:
+            if not (self.slLabelMapNode == None):
+                print("          ...........  RTStruct.")
+            tupResultSuccess = self.PerformExport(exporter, sOutputDir)  
+        
+
+        # if the user requested exporting all series of a volume sequence, use
         #    DICOMVolumeSequencePlugin to export
         if sImageType == 'volumesequence' and bExportAllSeriesOfSequence == True:
  
-            print("          ...........  time series for 4D volume sequence.")
+            print("          ...........  all time series for 4D volume sequence.")
             # export the time series (rtstruct not exported here)
             self.slLabelMapSegNodeID = None
             exporter = DICOMVolumeSequencePlugin.DICOMVolumeSequencePluginClass()
