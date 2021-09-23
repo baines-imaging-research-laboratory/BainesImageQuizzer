@@ -108,6 +108,7 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
         self.sInputImageType = 'volume'
         self.bExportAllSeriesOfSequence = False
         self.sLabelMapPath = ''
+        self.bRemapRTStructToVolume = False
 
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # GUI Layout
@@ -148,6 +149,7 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
         self.chkExportAllSeriesOfSequence = qt.QCheckBox("Export all series of the volume sequence")
         self.chkExportAllSeriesOfSequence.setChecked(0)
         self.chkExportAllSeriesOfSequence.enabled = False
+        self.chkExportAllSeriesOfSequence.toggled.connect(self.onToggleSeriesExport)
 
         # add image volume widgets to layout
         qInputsGroupBoxLayout.addWidget(self.inputImageVolumeFileButton)
@@ -197,6 +199,7 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
         qOutputDirGroupBox = qt.QGroupBox('Select output directory for DICOM series:')
         qOutputDirGroupBox.setLayout(qOutputGrpBoxLayout)
         self.outputDirButton = ctk.ctkDirectoryButton()
+        self.outputDirButton.directory = slicer.app.temporaryPath
         self.outputDirButton.setStyleSheet("QPushButton{ background-color: rgb(255,202,128) }")
         qOutputGrpBoxLayout.addWidget(self.outputDirButton)
 
@@ -206,11 +209,38 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
         ########################################
         ######## Generate button
         createRTStructButton = qt.QPushButton('Create DICOMs')
+#         createRTStructButton.setStyleSheet("QPushButton{ background-color: rgb(202,150,202) }")
         createRTStructButton.setStyleSheet("QPushButton{ background-color: rgb(0,153,76) }")
 #         createRTStructButton.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
         parametersFormLayout.addRow(createRTStructButton)
     
         createRTStructButton.connect('clicked()', self.onApplyCreateDicom)
+
+        ########################################
+        ######## Reset button
+        resetButton = qt.QPushButton('Reset')
+        resetButton.setStyleSheet("QPushButton{ background-color: rgb(100,250,206) }")
+        resetButton.connect('clicked()', self.onApplyReset)
+        parametersFormLayout.addWidget(resetButton)
+        parametersFormLayout.addRow("  ",qt.QLabel("   "))  # add spacing
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onApplyReset(self):
+        slicer.mrmlScene.Clear()
+
+        self.sImageVolumePath = ''
+        self.inputImageVolumeFileButton.setText("Select file for image volume")
+        self.sInputImageType = 'volume'
+        self.qVolumeBtn.setChecked(True)
+        self.chkExportAllSeriesOfSequence.setChecked(0)
+        self.bExportAllSeriesOfSequence = False
+
+        self.sLabelMapPath = ''
+        self.inputLabelMapFileButton.setText("Select file for label map")
+        self.chkRemapRTStructUIDs.setChecked(0)
+        self.bRemapRTStructToVolume = False
+        
+        self.outputDirButton.directory = slicer.app.temporaryPath
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onSelectImageVolumeFile(self):
@@ -251,6 +281,7 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
             self.sInputImageType = 'volume'
             self.chkExportAllSeriesOfSequence.enabled = False
             self.chkExportAllSeriesOfSequence.setChecked(0)
+            self.bExportAllSeriesOfSequence = False
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onToggleImageTypeVolumeSequence(self, enabled):
@@ -258,9 +289,8 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
             self.sInputImageType = 'volumesequence'
             self.chkExportAllSeriesOfSequence.enabled = True
             self.chkExportAllSeriesOfSequence.setChecked(1)
-            self.chkExportAllSeriesOfSequence.toggle()
-#             qt.QApplication.processEvents()
-            
+            self.bExportAllSeriesOfSequence = True
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onToggleSeriesExport(self, enabled):
         if enabled:
@@ -301,12 +331,12 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
             self.msgBox.warning(slicer.util.mainWindow(),"VolumeToDicomGenerator: WARNING",tupResultSuccess[1])
         else:
 #             tupSuccessResult = logic.ExportToDicom(self.outputDirButton.directory, self.sInputImageType, self.chkExportAllSeriesOfSequence.isChecked(), progressCallback=self.updateProgressBar)
-            tupSuccessResult = logic.ExportToDicom(self.outputDirButton.directory, self.sInputImageType, self.bExportAllSeriesOfSequence)
+            tupResultSuccess = logic.ExportToDicom(self.outputDirButton.directory, self.sInputImageType, self.bExportAllSeriesOfSequence)
  
-        if tupSuccessResult[0]:
+        if tupResultSuccess[0]:
             print("Process complete")
         else:
-            sMsg = 'Trouble exporting image volume and RTStruct as DICOM'
+            sMsg = 'INCOMPLETE ... DICOMs not exported.'
             self.msgBox.warning(slicer.util.mainWindow(),"VolumeToDicomGenerator: WARNING",sMsg)
 
 #         self.progress.canceled.disconnect(lambda : logic.cancelProcess())
@@ -348,35 +378,40 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic):
         self.canceled = False
         sMsg = ''
         bSuccess = True
-        
-        print('Loading image volume and label map files.')
-        
-        logging.debug('Input image volume: %s' % sImageVolumePath)
-        logging.debug('Input label map: %s' % sLabelMapPath)
-        
 
-        # load image and label map volumes
+        try:
         
-        if sLabelMapPath == '':
-            self.slLabelMapNode = None
-        else:
-            dictProperties = {'labelmap' : True, 'show': False}
-            self.slLabelMapNode = slicer.util.loadLabelVolume(sLabelMapPath, dictProperties)
-
-        if sImageType == 'volume':
-            self.slImageNode = slicer.util.loadVolume(sImageVolumePath)
-        elif sImageType == 'volumesequence':
-            # load the multi volume file as a sequence node
-            # from the sequence node, slicer creates a ScalarVolumeNode in the subject hierarchy
-            # access the data node through the subject hierarchy
-            slSeqNode = slicer.util.loadNodeFromFile(sImageVolumePath,'SequenceFile')
+            print('Loading image volume and label map files.')
+            
+            logging.debug('Input image volume: %s' % sImageVolumePath)
+            logging.debug('Input label map: %s' % sLabelMapPath)
+            
     
-            slSHItemID = self.shNode.GetItemChildWithName(self.shNode.GetSceneItemID(), slSeqNode.GetName())
-            self.slImageNode = self.shNode.GetItemDataNode(slSHItemID)
-        else:
-            bSuccess = False
-            sMsg = sMsg + '\nTrouble loading image - Invalid volume type.'
+            # load image and label map volumes
+            
+            if sLabelMapPath == '':
+                self.slLabelMapNode = None
+            else:
+                dictProperties = {'labelmap' : True, 'show': False}
+                self.slLabelMapNode = slicer.util.loadLabelVolume(sLabelMapPath, dictProperties)
+    
+            if sImageType == 'volume':
+                self.slImageNode = slicer.util.loadVolume(sImageVolumePath)
+            elif sImageType == 'volumesequence':
+                # load the multi volume file as a sequence node
+                # from the sequence node, slicer creates a ScalarVolumeNode in the subject hierarchy
+                # access the data node through the subject hierarchy
+                slSeqNode = slicer.util.loadNodeFromFile(sImageVolumePath,'SequenceFile')
+        
+                slSHItemID = self.shNode.GetItemChildWithName(self.shNode.GetSceneItemID(), slSeqNode.GetName())
+                self.slImageNode = self.shNode.GetItemDataNode(slSHItemID)
+            else:
+                bSuccess = False
+                sMsg = sMsg + '\nTrouble loading image - Invalid volume type.'
                                       
+        except:
+            sMsg = 'Trouble loading volumes ... \nThe wrong image type may have been selected.'
+            bSuccess = False
             
         return bSuccess, sMsg
 
