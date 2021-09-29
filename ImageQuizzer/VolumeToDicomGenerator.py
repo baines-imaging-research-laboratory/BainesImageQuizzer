@@ -28,6 +28,8 @@ import DICOMVolumeSequencePlugin
 import DICOMScalarVolumePlugin
  
 import pydicom
+import distutils
+from distutils import util
 
 try:
     import pandas as pd
@@ -100,18 +102,13 @@ class VolumeToDicomGenerator(ScriptedLoadableModule):
 #==================================================================================================================================
 # class VolumeToDicomGeneratorWidget
 #==================================================================================================================================
-# class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget, ModuleWidgetMixin):
 class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def setup(self):
         ScriptedLoadableModuleWidget.setup(self)
         
-        # initialize
-        self.sInputImageType = 'volume'
-        self.bExportAllSeriesOfSequence = False
-        self.sLabelMapPath = ''
-        self.bRemapRTStructToVolume = False
+        self.oIOParams = IOParams()
 
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # GUI Layout
@@ -143,13 +140,6 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
         self.qVolumeTypeGrpBox = qt.QGroupBox("Image Type       (3D Volume or 4D Volume Sequence)")
         self.qVolumeTypeGrpBox.setLayout(qVolumeTypeGrpBoxLayout)
 
-#         self.qVolumeBtn = qt.QRadioButton("volume")
-#         self.qVolumeBtn.setChecked(True)
-# #         self.qVolumeBtn.toggled.connect( self.onToggleImageTypeVolume)
-#         self.qVolumeBtn.connect("clicked()", self.onToggleImageType('volume'))
-#         self.qVolumeSequenceBtn = qt.QRadioButton("volume sequence (time series)")
-# #         self.qVolumeSequenceBtn.toggled.connect(self.onToggleImageTypeVolumeSequence)
-#         self.qVolumeSequenceBtn.connect("clicked()",self.onToggleImageType('sequence'))
         self.qVolumeTypeButtons = {}
         self.lVolumeTypes = ["volume", "sequence"]
         for sVolType in self.lVolumeTypes:
@@ -221,9 +211,7 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
         ########################################
         ######## Generate button
         createRTStructButton = qt.QPushButton('Create DICOMs')
-#         createRTStructButton.setStyleSheet("QPushButton{ background-color: rgb(202,150,202) }")
         createRTStructButton.setStyleSheet("QPushButton{ background-color: rgb(0,153,76) }")
-#         createRTStructButton.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
         parametersFormLayout.addRow(createRTStructButton)
     
         createRTStructButton.connect('clicked()', self.onApplyCreateDicom)
@@ -249,7 +237,7 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onImageVolumeFileSelected(self,inputFilePath):
         self.inputImageVolumeFileButton.setText(inputFilePath)
-        self.sImageVolumePath = inputFilePath
+        self.oIOParams.sImageVolumePath = inputFilePath
         return inputFilePath
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -265,8 +253,7 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onLabelMapFileSelected(self,inputFilePath):
         self.inputLabelMapFileButton.setText(inputFilePath)
-#         self.inputLabelMapFileButton.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
-        self.sLabelMapPath = inputFilePath
+        self.oIOParams.sLabelMapPath = inputFilePath
         return inputFilePath
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -275,42 +262,25 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
         self.qVolumeTypeButtons[sValue].setChecked(True)
 
         if sValue == 'volume':
-            self.sInputImageType = 'volume'
+            self.oIOParams.sImageType = 'volume'
             self.chkExportAllSeriesOfSequence.enabled = False
             self.chkExportAllSeriesOfSequence.setChecked(0)
             self.bExportAllSeriesOfSequence = False
             
         else:
             # volume sequence
-            self.sInputImageType = 'sequence'
+            self.oIOParams.sImageType = 'sequence'
             self.chkExportAllSeriesOfSequence.enabled = True
             self.chkExportAllSeriesOfSequence.setChecked(1)
             self.bExportAllSeriesOfSequence = True
             
 
-    
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def onToggleImageTypeVolume(self, enabled):
-#         if enabled:
-#             self.sInputImageType = 'volume'
-#             self.chkExportAllSeriesOfSequence.enabled = False
-#             self.chkExportAllSeriesOfSequence.setChecked(0)
-#             self.bExportAllSeriesOfSequence = False
-#             
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def onToggleImageTypeVolumeSequence(self, enabled):
-#         if enabled:
-#             self.sInputImageType = 'volumesequence'
-#             self.chkExportAllSeriesOfSequence.enabled = True
-#             self.chkExportAllSeriesOfSequence.setChecked(1)
-#             self.bExportAllSeriesOfSequence = True
-
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onToggleSeriesExport(self, enabled):
         if enabled:
-            self.bExportAllSeriesOfSequence = True
+            self.oIOParams.bExportAllSeriesOfSequence = True
         else:
-            self.bExportAllSeriesOfSequence = False
+            self.oIOParams.bExportAllSeriesOfSequence = False
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onToggleRemapBtn(self, enabled):
@@ -327,19 +297,16 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
     def onApplyReset(self):
         slicer.mrmlScene.Clear()
 
-        self.sImageVolumePath = ''
+        self.oIOParams.Reset()
         self.inputImageVolumeFileButton.setText("Select file for image volume")
-        self.sInputImageType = 'volume'
         self.onToggleImageType(self.lVolumeTypes[0]) # set default
         self.chkExportAllSeriesOfSequence.setChecked(0)
-        self.bExportAllSeriesOfSequence = False
 
-        self.sLabelMapPath = ''
         self.inputLabelMapFileButton.setText("Select file for label map")
         self.chkRemapRTStructUIDs.setChecked(0)
-        self.bRemapRTStructToVolume = False
-        
         self.outputDirButton.directory = slicer.app.temporaryPath
+
+        print('*'*40, '   Reset Complete   ', '*'*40)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
@@ -349,94 +316,88 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
         
         self.msgBox = qt.QMessageBox()
         slicer.mrmlScene.Clear()
+        bGUIEnabled = True     # generate requested from GUI
+        
+        self.oIOParams.sOutputDir = self.outputDirButton.directory
 
-        logic = VolumeToDicomGeneratorLogic()
-#         self.progress = self.createProgressDialog()
-#         self.progress.canceled.connect(lambda: logic.cancelProcess())
+        logic = VolumeToDicomGeneratorLogic(True)
 
-        tupResultSuccess = logic.LoadVolumes(self.sImageVolumePath,
-                                self.sInputImageType,
-                                self.sLabelMapPath)
+        logic.LoadVolumesAndExport(self.oIOParams)
+
+#==================================================================================================================================
+# class VolumeToDicomGeneratorLogic
+#==================================================================================================================================
+class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic):
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def __init__(self, bGUIEnabled):
+        ScriptedLoadableModuleLogic.__init__(self)
+
+        self.shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+        self.slLabelMapSegNodeID = None   # default
+        self.msgBox = qt.QMessageBox()
+        self.iExportFilesCount = 0
+        self.bGUIEnabled = bGUIEnabled
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def LoadVolumesAndExport(self,  oIOParams):
+#         self.LoadVolumes(oIOParams)
+        
+        tupResultSuccess = self.LoadVolumes( oIOParams)
 
 
         if tupResultSuccess[0] == False:
-            self.msgBox.warning(slicer.util.mainWindow(),"VolumeToDicomGenerator: WARNING",tupResultSuccess[1])
+            if self.bGUIEnabled == True:
+                self.msgBox.warning(slicer.util.mainWindow(),"VolumeToDicomGenerator: WARNING",tupResultSuccess[1])
+            else:
+                print('VolumeToDicomGenerator: WARNING   Trouble loading input volumes')
         else:
-#             tupSuccessResult = logic.ExportToDicom(self.outputDirButton.directory, self.sInputImageType, self.chkExportAllSeriesOfSequence.isChecked(), progressCallback=self.updateProgressBar)
-            tupResultSuccess = logic.ExportToDicom(self.outputDirButton.directory, self.sInputImageType, self.bExportAllSeriesOfSequence)
+#             tupSuccessResult = logic.ExportToDicom(self.outputDirButton.directory, self.sImageType, self.chkExportAllSeriesOfSequence.isChecked(), progressCallback=self.updateProgressBar)
+            tupResultSuccess = self.ExportToDicom(oIOParams)
  
         if tupResultSuccess != None and tupResultSuccess[0]:
             print("Process complete")
         else:
             sMsg = 'INCOMPLETE ... DICOMs not exported.'
-            self.msgBox.warning(slicer.util.mainWindow(),"VolumeToDicomGenerator: WARNING",sMsg)
+            if self.bGUIEnabled:
+                self.msgBox.warning(slicer.util.mainWindow(),"VolumeToDicomGenerator: WARNING",sMsg)
+            else:
+                print(sMsg)
 
-#         self.progress.canceled.disconnect(lambda : logic.cancelProcess())
-#         self.progress.close()
-
-             
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def updateProgressBar(self, **kwargs):
-#         ModuleWidgetMixin.updateProgressBar(self, progress=self.progress, **kwargs)
-
-
-
-#==================================================================================================================================
-# class VolumeToDicomGeneratorLogic
-#==================================================================================================================================
-# class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic, ModuleLogicMixin):
-class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic):
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def __init__(self):
-        ScriptedLoadableModuleLogic.__init__(self)
-        self.shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-        self.slLabelMapSegNodeID = None   # default
-        self.msgBox = qt.QMessageBox()
-        self.iExportFilesCount = 0
-
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def updateProgressBar(self, **kwargs):
-#         if self.progressCallback:
-#             self.progressCallback(**kwargs)
-
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def cancelProcess(self):
-#         self.indexer.cancel()
-#         self.canceled = True
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @handleErrors
-    def LoadVolumes(self, sImageVolumePath, sImageType, sLabelMapPath):
+    def LoadVolumes(self, oIOParams):
         self.canceled = False
         sMsg = ''
-        bSuccess = True
+        bSuccess = True        
 
         try:
         
             print('Loading image volume and label map files.')
             
-            logging.debug('Input image volume: %s' % sImageVolumePath)
-            logging.debug('Input label map: %s' % sLabelMapPath)
+            logging.debug('Input image volume: %s' % oIOParams.sImageVolumePath)
+            logging.debug('Input label map: %s' % oIOParams.sLabelMapPath)
             
-            progressDialog = slicer.util.createProgressDialog(labelText=\
-                                    'Loading volumes ...', maximum=0)
+            if self.bGUIEnabled:
+                progressDialog = slicer.util.createProgressDialog(labelText=\
+                                        'Loading volumes ...', maximum=0)
     
             # load image and label map volumes
             
-            if sLabelMapPath == '':
+            if oIOParams.sLabelMapPath == '':
                 self.slLabelMapNode = None
             else:
                 dictProperties = {'labelmap' : True, 'show': False}
-                self.slLabelMapNode = slicer.util.loadLabelVolume(sLabelMapPath, dictProperties)
+                self.slLabelMapNode = slicer.util.loadLabelVolume(oIOParams.sLabelMapPath, dictProperties)
     
-            if sImageType == 'volume':
-                self.slImageNode = slicer.util.loadVolume(sImageVolumePath)
-            elif sImageType == 'sequence':
+            if oIOParams.sImageType == 'volume':
+                self.slImageNode = slicer.util.loadVolume(oIOParams.sImageVolumePath)
+            elif oIOParams.sImageType == 'sequence':
                 # load the multi volume file as a sequence node
                 # from the sequence node, slicer creates a ScalarVolumeNode in the subject hierarchy
                 # access the data node through the subject hierarchy
-                slSeqNode = slicer.util.loadNodeFromFile(sImageVolumePath,'SequenceFile')
+                slSeqNode = slicer.util.loadNodeFromFile(oIOParams.sImageVolumePath,'SequenceFile')
         
                 slSHItemID = self.shNode.GetItemChildWithName(self.shNode.GetSceneItemID(), slSeqNode.GetName())
                 self.slImageNode = self.shNode.GetItemDataNode(slSHItemID)
@@ -444,29 +405,27 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic):
                 bSuccess = False
                 sMsg = sMsg + '\nTrouble loading image - Invalid volume type.'
                                
-            progressDialog.close()
+            if self.bGUIEnabled:
+                progressDialog.close()
             
         except:
-            sMsg = 'Trouble loading volumes ... \nThe wrong image type may have been selected.'
+            sMsg = 'Trouble loading volumes ... '
+            + '\nCheck the input volume(s) selection (image and label map)'
+            + '\nand that the correct volume type was selected.'
             bSuccess = False
-            progressDialog.close()
+            if self.bGUIEnabled:
+                progressDialog.close()
             
         return bSuccess, sMsg
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @handleErrors
-#     def ExportToDicom(self, sOutputDir, sImageType, bExport4DSeries, progressCallback=None):
-    def ExportToDicom(self, sOutputDir, sImageType, bExportAllSeriesOfSequence):
-        
-#         self.progressCallback = progressCallback
-#         self.indexer = getattr(self, "indexer", None)
-#         if not self.indexer:
-#             self.indexer = ctk.ctkDICOMIndexer()
+    def ExportToDicom(self, oIOParams):
         
         print("Exporting DICOMs ")
         print("          ...........  primary volume.")
+
         # work in subject hierarchy node (shNode)
-#         shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
         self.slPrimaryVolumeID = self.shNode.GetItemByDataNode(self.slImageNode)
         
         # get number of files in the primary node
@@ -503,16 +462,23 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic):
                 # exported as well, you must load the multi volume image as a 'sequence'
                 sMsg = sMsg + "\nLabel map cannot be exported as an RTStruct unless the multi-volume image is imported as a 'sequence'."
 
-            self.msgBox.warning(slicer.util.mainWindow(),"VolumeToDicomGenerator: WARNING",sMsg)
+            if self.bGUIEnabled:
+                self.msgBox.warning(slicer.util.mainWindow(),"VolumeToDicomGenerator: WARNING",sMsg)
+            else:
+                print(sMsg)
+                
                 
         elif self.slImageNode.GetClassName() == 'vtkMRMLScalarVolumeNode':
             # use the DicomRTImportExport plugin to export scalar volume nodes
             # This can handle a label map volume if specified
             exporter = DicomRtImportExportPlugin.DicomRtImportExportPluginClass()
         else:
-            sMsg = "Unrecognized volume class: " + self.slImageNode.GetClassName() + \
-                    "Export will not be done."
-            self.msgBox.error(slicer.util.mainWindow(),"VolumeToDicomGenerator: ERROR",sMsg)
+            if self.bGUIEnabled:
+                sMsg = "Unrecognized volume class: " + self.slImageNode.GetClassName() + \
+                        "Export will not be done."
+                self.msgBox.error(slicer.util.mainWindow(),"VolumeToDicomGenerator: ERROR",sMsg)
+            else:
+                print(sMsg)
             
         # export primary series for both volume and sequence image types (class = vtkMRMLScalarVolumeNode)
         # RTStruct is also exported here if selected by the user
@@ -520,12 +486,12 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic):
             if (self.slLabelMapNode != None):
                 print("          ...........  RTStruct.")
                 self.iExportFilesCount = self.iExportFilesCount + 1
-            tupResultSuccess = self.PerformExport(exporter, sOutputDir)  
+            tupResultSuccess = self.PerformExport(exporter, oIOParams)  
         
 
         # if the user requested exporting all series of a sequence, use
         #    DICOMVolumeSequencePlugin to export
-        if sImageType == 'sequence' and bExportAllSeriesOfSequence == True:
+        if oIOParams.sImageType == 'sequence' and oIOParams.bExportAllSeriesOfSequence == True:
  
             print("          ...........  all time series for 4D sequence.")
             
@@ -542,13 +508,13 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic):
             # export the time series (rtstruct not exported here)
             self.slLabelMapSegNodeID = None
             exporter = DICOMVolumeSequencePlugin.DICOMVolumeSequencePluginClass()
-            tupResultSuccess = self.PerformExport(exporter, sOutputDir)  
+            tupResultSuccess = self.PerformExport(exporter, oIOParams)  
 
         return tupResultSuccess
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @handleErrors
-    def PerformExport(self, exporter, sOutputDir):
+    def PerformExport(self, exporter, oIOParams):
 
         bSuccess = True
         sMsg = ''
@@ -563,16 +529,18 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic):
               
             # assign output path to each exportable
             for exp in exportables:
-                exp.directory = sOutputDir
+                exp.directory = oIOParams.sOutputDir
                 
             # perform export
-            progressDialog = slicer.util.createProgressDialog(labelText=\
-                                    'Exporting ' + str(self.iExportFilesCount) +\
-                                     ' DICOM files. Be patient ...', maximum=0)
+            if self.bGUIEnabled:
+                progressDialog = slicer.util.createProgressDialog(labelText=\
+                                        'Exporting ' + str(self.iExportFilesCount) +\
+                                         ' DICOM files. Be patient ...', maximum=0)
 
             exporter.export(exportables)
             
-            progressDialog.close()
+            if self.bGUIEnabled:
+                progressDialog.close()
             
         except:
             sMsg = 'Trouble exporting'
@@ -582,12 +550,37 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic):
        
 
 #==================================================================================================================================
+# class IOParams
+#==================================================================================================================================
+class IOParams():
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def __init__(self):
+        
+        self.sImageVolumePath = ''
+        self.sImageType = 'volume'
+        self.bExportAllSeriesOfSequence = False
+        self.sLabelMapPath = ''
+        self.bRemapRTStructToVolume = False
+        self.sOutputDir = ''
+        
+    def Reset(self):
+        self.sImageVolumePath = ''
+        self.sImageType = 'volume'
+        self.bExportAllSeriesOfSequence = False
+        self.sLabelMapPath = ''
+        self.bRemapRTStructToVolume = False
+        self.sOutputDir = ''
+        
+        
+#==================================================================================================================================
 # Run from cmd window
 #==================================================================================================================================
 
 def main(argv):
     print('Running VolumeToDicomGenerator')
     try:
+        
         parser = argparse.ArgumentParser(description="VolumeToDicom postprocessor")
         parser.add_argument("-i", "--image-file", dest="input_image_file", metavar="PATH",
                             default="-", required=True, help="Path to file of input image volume")
@@ -596,7 +589,9 @@ def main(argv):
         parser.add_argument("-o", "--output-folder", dest="output_folder", metavar="PATH",
                             default=".", help="Folder to save DICOM series")
         parser.add_argument("-l", "--labelmap-file", dest="input_labelmap_file", metavar="PATH",
-                            default="-", required=False, help="Path to file of input label map")
+                            default="", required=False, help="Path to file of input label map")
+        parser.add_argument("-e", "--export-all-series", dest="export_all_series",
+                            default=False, required=False, help="Indicate whether all series of the sequence is to be exported.")
        
         
         args = parser.parse_args(argv)
@@ -609,13 +604,28 @@ def main(argv):
             print('Current directory is selected as output folder (default). To change it, please specify --output-folder')
         if args.input_labelmap_file == "-":
             print('Please specify input label map file!')
+
+        oIOParams = IOParams()
+        oIOParams.sImageVolumePath = args.input_image_file
+        oIOParams.sLabelMapPath = args.input_labelmap_file
+        oIOParams.sImageType = args.input_image_file_type
+        oIOParams.sOutputDir = args.output_folder
+        if oIOParams.sImageType == "volume":
+            oIOParams.bExportAllSeriesOfSequence = False
+        else:
+            oIOParams.bExportAllSeriesOfSequence = bool(distutils.util.strtobool(args.export_all_series))
         
-        logic = VolumeToDicomGeneratorLogic()
-        logic.LoadVolumesAndExport(args.input_image_file, args.output_folder, args.input_labelmap_file)
+
+        bGUIEnabled = False     # export issued from CLI
+        
+        logic = VolumeToDicomGeneratorLogic(bGUIEnabled)
+        logic.LoadVolumesAndExport(oIOParams)
+        
     except Exception as e:
         print(e)
         
-#     sys.exit()
+    # Uncomment this for bulk runs
+    # sys.exit()
 
 
 
