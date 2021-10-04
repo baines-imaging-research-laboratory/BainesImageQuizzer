@@ -559,33 +559,37 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic):
     @handleErrors
     def RemapRTSTructToOriginalVolume(self, oIOParams):
         
-        # Code adapted from 'mapRTStructToVolume' found on GitHub; authored by davisr28 on Jan 30, 2020
+        # mapToOriginalVolume takes a image volume & RTStruct output by slicer and maps that RTStruct back to 
+        #     the original volume that slicer originally read in.
+        #
+        # Input:
+        #     original_volume_loc: path to folder containing the original volume that we want the RTStruct to reference
+        #     slicer_volume_loc: path to folder containing the image volume ant RTStruct that was output by slicer
+        #     rtss_save_loc: path to folder where the RTStruct (which references the original volume) should be stored.
+        #
+        # Caveats:
+        #    1) This function throws an error when there is not a 1-to-1 mapping of z positions between the original and Slicer
+        #    output volumes. This situation (no 1-to-1 mapping) occurs when Slicer loads an irregular geometry, such as
+        #    jumps in z position.
+        #
+        #    2) In the situation where there is irregular geometry but still a 1-to-1 mapping of z positions between volumes
+        #    this code maps the volume SOPInstanceUIDs by sorting z positions of both volumes, then pairing by the sorted order.
+        #    
+        #    3) Take caution in general when changing referenced UIDs, and especially when using this function on volumes
+        #    with irregular geometries.
+    
+        #########################################
+        # The following code has been adapted from 'mapRTStructToVolume' found on GitHub; 
+        # authored by davisr28 on Jan 30, 2020
         # https://github.com/ryanmdavis/mapRTStructToVolume/blob/master/map_rtstruct_to_volume.py
         
         sRemappedRTStructOutputDir = os.path.join(oIOParams.sOutputDir, 'MappedToOriginal')
         self.mapRTStructToVolume(oIOParams.sOriginalDicomImageDir, oIOParams.sOutputDir, sRemappedRTStructOutputDir)
     
         
-
-
-    # mapToOriginalVolume takes a image volume & RTStruct output by slicer and maps that RTStruct back to 
-    #     the original volume that slicer originally read in.
-    #
-    # Input:
-    #     original_volume_loc: path to folder containing the original volume that we want the RTStruct to reference
-    #     slicer_volume_loc: path to folder containing the image volume ant RTStruct that was output by slicer
-    #     rtss_save_loc: path to folder where the RTStruct (which references the original volume) should be stored.
-    #
-    # Caveats:
-    #    1) This function throws an error when there is not a 1-to-1 mapping of z positions between the original and Slicer
-    #    output volumes. This situation (no 1-to-1 mapping) occurs when Slicer loads an irregular geometry, such as
-    #    jumps in z position.
-    #
-    #    2) In the situation where there is irregular geometry but still a 1-to-1 mapping of z positions between volumes
-    #    this code maps the volume SOPInstanceUIDs by sorting z positions of both volumes, then pairing by the sorted order.
-    #    
-    #    3) Take caution in general when changing referenced UIDs, and especially when using this function on volumes
-    #    with irregular geometries.
+    # Assumptions:
+    #    1) original_volume_loc holds only one dicom series
+    
     
     def mapRTStructToVolume(self, original_volume_loc, slicer_volume_loc, rtss_save_loc):
     
