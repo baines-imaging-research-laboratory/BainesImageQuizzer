@@ -582,6 +582,10 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic):
         # The following code has been adapted from 'mapRTStructToVolume' found on GitHub; 
         # authored by davisr28 on Jan 30, 2020
         # https://github.com/ryanmdavis/mapRTStructToVolume/blob/master/map_rtstruct_to_volume.py
+        # This includes the functions:
+        #    mapRTStructToVolume
+        #    mapBySliceSorting
+        #    getUIDAndZPos
         
         sRemappedRTStructOutputDir = os.path.join(oIOParams.sOutputDir, 'MappedToOriginal')
         self.mapRTStructToVolume(oIOParams.sOriginalDicomImageDir, oIOParams.sOutputDir, sRemappedRTStructOutputDir)
@@ -615,7 +619,7 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic):
         
         # often this happens when there is irregular slice geometry
         elif len(original_z) == len(new_z):
-            new_to_original_UID_mapping_df = mapBySliceSorting(new_uids_df,original_uids_df)
+            new_to_original_UID_mapping_df = self.mapBySliceSorting(new_uids_df,original_uids_df)
             if len(new_to_original_UID_mapping_df)==0:
                 return False
         else:
@@ -689,7 +693,7 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic):
                 
         return True
     
-    def mapBySliceSorting(new_uids_df,original_uids_df):
+    def mapBySliceSorting(self,new_uids_df,original_uids_df):
         
         # order the z position of the slices in both volumes
         slicer_vol_z_list=list(new_uids_df["ImageZPosMm"])
