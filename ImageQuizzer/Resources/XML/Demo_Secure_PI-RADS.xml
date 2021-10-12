@@ -7,17 +7,17 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="ADC" RotateToAcquisition="Y">
+		<Image Format="NIFTI" Type="Volume" ID="ADC" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\ADC.nrrd</Path>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\ADC.nii</Path>
 		</Image>
-		<Image ID="In_Vivo_2D_T2" Format="NRRD" Type="Volume" RotateToAcquisition="Y">
+		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nrrd</Path>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
 		<QuestionSet Name="PI-RADS" Descriptor="Contouring Exercise"  SegmentRequired="Y" AllowMultipleResponse="Y">
 			<Question Type="InfoBox" Descriptor="Segmentation Instructions">
@@ -38,29 +38,29 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="ADC" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+		<Image Format="NIFTI" Type="Volume" ID="ADC" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\ADC.nrrd</Path>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\ADC.nii</Path>
 		</Image>
-		<Image ID="In_Vivo_2D_T2" Format="NRRD" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nrrd</Path>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
-		<Image ID="PELVIS_MRAC_PET" Format="NRRD" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
+		<Image ID="PELVIS_MRAC_PET" Format="NIFTI" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
 			<Destination>Slice4</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\PET.nrrd</Path>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\PSMA PET.nii</Path>
 		</Image>
-		<Image ID="In_Vivo_2D_T2" Format="NRRD" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Slice4</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nrrd</Path>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
 		<QuestionSet Name="Segmentation" Descriptor="PET Overlay"  SegmentRequired="Y" AllowMultipleResponse="Y">
 			<Question Type="InfoBox" Descriptor="PET Overlay">
@@ -122,11 +122,11 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
-		<Image ID="PELVIS_MRAC_PET" Format="NRRD" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
+		<Image ID="PELVIS_MRAC_PET" Format="NIFTI" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Raw\NiFTi\PET.nrrd</Path>
+			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Raw\NiFTi\PSMA PET.nii</Path>
 		</Image>
 		<QuestionSet Name="Segmentation" Descriptor="PET Overlay"  SegmentRequired="Y" AllowMultipleResponse="Y">
 			<Question Type="InfoBox" Descriptor="PET Overlay">

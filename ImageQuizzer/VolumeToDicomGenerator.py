@@ -127,6 +127,14 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
         
     
         ########################################
+        ######## Reset button
+        resetButton = qt.QPushButton('Reset')
+        resetButton.setStyleSheet("QPushButton{ background-color: rgb(100,250,206) }")
+        resetButton.connect('clicked()', self.onApplyReset)
+        parametersFormLayout.addWidget(resetButton)
+        parametersFormLayout.addRow("  ",qt.QLabel("   "))  # add spacing
+
+        ########################################
         ######## Image volume details
         qInputsGroupBox = qt.QGroupBox("Image Volume Details")
         qInputsGroupBox.setLayout(qInputsGroupBoxLayout)
@@ -217,14 +225,6 @@ class VolumeToDicomGeneratorWidget(ScriptedLoadableModuleWidget):
     
         createRTStructButton.connect('clicked()', self.onApplyCreateDicom)
 
-        ########################################
-        ######## Reset button
-        resetButton = qt.QPushButton('Reset')
-        resetButton.setStyleSheet("QPushButton{ background-color: rgb(100,250,206) }")
-        resetButton.connect('clicked()', self.onApplyReset)
-        parametersFormLayout.addWidget(resetButton)
-        parametersFormLayout.addRow("  ",qt.QLabel("   "))  # add spacing
-        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onSelectImageVolumeFile(self):
         self.imageVolumeFileDialog = ctk.ctkFileDialog(slicer.util.mainWindow())
@@ -728,7 +728,7 @@ class VolumeToDicomGeneratorLogic(ScriptedLoadableModuleLogic):
         # get mapping of SOPInstanceUIDs to z position
         uids_df=pd.DataFrame()
         image_files=os.listdir(directory)
-        image_files=[im_f for im_f in image_files if (".dcm" in im_f and (("rtss" not in im_f) or ("rtstruct" not in im_f)))]
+        image_files=[im_f for im_f in image_files if (((".IMA" in im_f) or (".dcm" in im_f)) and (("rtss" not in im_f) or ("rtstruct" not in im_f)))]
     #     count=0
         for image_file in image_files:
             try:
