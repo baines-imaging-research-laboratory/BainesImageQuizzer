@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session ROIColorFile="PiRadsStudy">
-	<Page Name="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y">
+	<Page Name="IGPC2026" Descriptor="mpMRI - Intro" LinkViews="Y">
 		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
@@ -19,19 +19,14 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
-		<QuestionSet Name="PI-RADS" Descriptor="Contouring Exercise"  SegmentRequired="Y" AllowMultipleResponse="Y">
-			<Question Type="InfoBox" Descriptor="Segmentation Instructions">
-				<Option>In Segment Editor tab, select volume to create segments.</Option>
-				<Option>     Click Edit Selected Label Map collapsible button to access the segmenting tools.</Option>
-				<Option>     Select contour color to match PI-RADS category.</Option>
-				<Option>This may be repeated if segments are to be created on different volumes.</Option>
-			</Question>
-			<Question Type="IntegerValue" Descriptor="Overall PI-RADS" Min="1" Max="5">
-				<Option>Enter overall PI-RADS score:</Option>
+		<QuestionSet Name="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  SegmentRequired="N" AllowMultipleResponse="Y">
+			<Question Type="InfoBox" Descriptor="Features">
+				<Option>  - images linked for scrolling</Option>
+				<Option>  - DCE MRI time sequence tools</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page Name="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y">
+	<Page Name="IGPC2026" Descriptor="mpMRI - PET Overlay" LinkViews="Y">
 		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
@@ -62,17 +57,163 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
-		<QuestionSet Name="Segmentation" Descriptor="PET Overlay"  SegmentRequired="Y" AllowMultipleResponse="Y">
-			<Question Type="InfoBox" Descriptor="PET Overlay">
-				<Option>PET has been overlayed onto the 2DT2</Option>
-				<Option>Given this new information, enter your new evaluation of the overall PI-RADS score.</Option>
+		<QuestionSet Name="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  SegmentRequired="N" AllowMultipleResponse="Y">
+			<Question Type="InfoBox" Descriptor="Features:">
+				<Option> - ability to overlay images</Option>
+				<Option>      PET overlay shown with 2DT2</Option>
+				<Option> - crosshair tool displayed on all views</Option>
+				<Option>      (use with 'Shift' key)</Option>
 			</Question>
-			<Question Type="IntegerValue" Descriptor="Revised Overall PI-RADS" Min="1" Max="5">
-				<Option>Enter revised overall PI-RADS score:</Option>
+		</QuestionSet>
+		<QuestionSet Name="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  SegmentRequired="Y" AllowMultipleResponse="Y">
+			<Question Type="InfoBox" Descriptor="Segmentation Instructions">
+				<Option>In Segment Editor tab, select volume to create segments.</Option>
+				<Option>   Click Edit Selected Label Map collapsible button to access the segmenting tools.</Option>
+				<Option>   Select contour color to match PI-RADS category.</Option>
+				<Option>Repeat for each image modality.</Option>
+			</Question>
+			<Question Type="IntegerValue" Descriptor="Overall PI-RADS" Min="1" Max="5">
+				<Option>Enter overall PI-RADS score:</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page Name="IGPC2028" Descriptor="Multiparametric_MRI" LinkViews="Y">
+	<Page Name="IGPC2026" Descriptor="mpMRI - Histology" LinkViews="Y">
+		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+			<Destination>Red</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+		</Image>
+		<Image ID="Histology 3" Format="NRRD" Type="Volume"  RotateToAcquisition="Y">
+			<Destination>Yellow</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\Oblique 2D Slices\Histology\HistContoured_3.nrrd</Path>
+		</Image>
+		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" UsePreviousLabelMap='N' RotateToAcquisition="Y">
+			<Destination>Yellow</Destination>
+			<Layer>Foreground</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+		</Image>
+		<QuestionSet Name="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  SegmentRequired="N" AllowMultipleResponse="Y">
+			<Question Type="InfoBox" Descriptor="WHAT IF ....">
+				<Option>2DT2 overlay onto Histology with segmentations.</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page Name="IGPC2026" Descriptor="mpMRI - Review 2DT2" LinkViews="Y">
+		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+			<Destination>Green</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
+		</Image>
+		<Image Format="NIFTI" Type="Volume" ID="ADC" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+			<Destination>Red</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\ADC.nii</Path>
+		</Image>
+		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+			<Destination>Yellow</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+		</Image>
+		<Image ID="PELVIS_MRAC_PET" Format="NIFTI" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
+			<Destination>Slice4</Destination>
+			<Layer>Foreground</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\PSMA PET.nii</Path>
+		</Image>
+		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+			<Destination>Slice4</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+		</Image>
+		<QuestionSet Name="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  SegmentRequired="N" AllowMultipleResponse="Y">
+			<Question Type="InfoBox" Descriptor="Review">
+				<Option>PET overlay onto 2DT2 with segmentations.</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page Name="IGPC2026" Descriptor="mpMRI - Review ADC" LinkViews="Y">
+		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+			<Destination>Green</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
+		</Image>
+		<Image Format="NIFTI" Type="Volume" ID="ADC" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+			<Destination>Red</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\ADC.nii</Path>
+		</Image>
+		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+			<Destination>Yellow</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+		</Image>
+		<Image ID="PELVIS_MRAC_PET" Format="NIFTI" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
+			<Destination>Slice4</Destination>
+			<Layer>Foreground</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\PSMA PET.nii</Path>
+		</Image>
+		<Image ID="ADC" Format="NIFTI" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+			<Destination>Slice4</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\ADC.nii</Path>
+		</Image>
+		<QuestionSet Name="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  SegmentRequired="N" AllowMultipleResponse="Y">
+			<Question Type="InfoBox" Descriptor="Review">
+				<Option>PET overlay onto ADC with segmentations.</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page Name="IGPC2026" Descriptor="mpMRI - Review DCE" LinkViews="Y">
+		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+			<Destination>Green</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
+		</Image>
+		<Image Format="NIFTI" Type="Volume" ID="ADC" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+			<Destination>Red</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\ADC.nii</Path>
+		</Image>
+		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+			<Destination>Yellow</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+		</Image>
+		<Image ID="PELVIS_MRAC_PET" Format="NIFTI" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
+			<Destination>Slice4</Destination>
+			<Layer>Foreground</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\PSMA PET.nii</Path>
+		</Image>
+		<Image ID="DCE" Format="NIFTI" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+			<Destination>Slice4</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
+		</Image>
+		<QuestionSet Name="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  SegmentRequired="N" AllowMultipleResponse="Y">
+			<Question Type="InfoBox" Descriptor="Review">
+				<Option>PET overlay onto DCE with segmentations.</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page Name="IGPC2028" Descriptor="Multi-parametric MRI" LinkViews="Y">
 		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
@@ -103,7 +244,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page Name="IGPC2028" Descriptor="Multiparametric_MRI" LinkViews="Y">
+	<Page Name="IGPC2028" Descriptor="Multi-parametric MRI" LinkViews="Y">
 		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" UsePreviousLabelMap="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
