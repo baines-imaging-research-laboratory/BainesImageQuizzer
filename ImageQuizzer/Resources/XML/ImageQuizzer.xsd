@@ -26,6 +26,7 @@
 		<xs:attribute name="Name" type="xs:string" />
 		<xs:attribute name="Descriptor" type="xs:string" />
 		<xs:attribute name="LinkViews" type="yesnoType" default="N" />
+		<xs:attribute name="Layout" type="layoutType" default="FourUp" />
 	</xs:complexType>
 </xs:element>
 
@@ -168,6 +169,15 @@
     <xs:enumeration value="Select"/>
     <xs:enumeration value="None"/>
     <xs:enumeration value="Ignore"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="layoutType">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="OneUpRed"/>
+    <xs:enumeration value="FourUp"/>
+    <xs:enumeration value="TwoOverTwo"/>
+    <xs:enumeration value="RedByYellow"/>
   </xs:restriction>
 </xs:simpleType>
 

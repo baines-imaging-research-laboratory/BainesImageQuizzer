@@ -572,7 +572,7 @@ class Session:
                    
         # set the layout to default view 
 #         slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
-        slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
+#         slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
         
         # add page name/descriptor to the progress bar
         xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
@@ -580,6 +580,19 @@ class Session:
         self.sPageName = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Name')
         iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l2iPageQuestionCompositeIndices) * 100)
         self.progress.setFormat(self.sPageName + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
+
+        # set the requested layout for images
+        self.sPageLayout = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Layout')
+        if self.sPageLayout == 'TwoOverTwo' :
+            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
+        elif self.sPageLayout == 'OneUpRed' :
+            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutOneUpRedSliceView)
+        elif self.sPageLayout == 'FourUp' :
+            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
+        elif self.sPageLayout == 'RedByYellow' :
+            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutSideBySideView)
+        else:
+            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
                     
         # set up the images on the page
         self.oImageView = ImageView()

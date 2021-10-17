@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session ROIColorFile="PiRadsStudy">
-	<Page Name="IGPC2026" Descriptor="mpMRI - Intro" LinkViews="Y">
+	<Page Name="IGPC2026" Descriptor="mpMRI - Intro" LinkViews="Y" Layout="TwoOverTwo">
 		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
@@ -26,7 +26,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page Name="IGPC2026" Descriptor="mpMRI - PET Overlay" LinkViews="Y">
+	<Page Name="IGPC2026" Descriptor="mpMRI - PET Overlay" LinkViews="Y" Layout="TwoOverTwo">
 		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
@@ -77,7 +77,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page Name="IGPC2026" Descriptor="mpMRI - Histology" LinkViews="Y">
+	<Page Name="IGPC2026" Descriptor="mpMRI - Histology" LinkViews="Y" Layout="RedByYellow">
 		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -88,7 +88,7 @@
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\Oblique 2D Slices\Histology\HistContoured_3.nrrd</Path>
+			<Path>ImageVolumes\IGPC2026\Oblique 2D Slices\Histology\HistContouredExtended\HistContouredExtended_2.nrrd</Path>
 		</Image>
 		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" UsePreviousLabelMap='N' RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
@@ -102,7 +102,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page Name="IGPC2026" Descriptor="mpMRI - Review 2DT2" LinkViews="Y">
+	<Page Name="IGPC2026" Descriptor="mpMRI - Review 2DT2" LinkViews="Y" Layout="TwoOverTwo">
 		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
@@ -139,7 +139,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page Name="IGPC2026" Descriptor="mpMRI - Review ADC" LinkViews="Y">
+	<Page Name="IGPC2026" Descriptor="mpMRI - Review ADC" LinkViews="Y" Layout="TwoOverTwo">
 		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
@@ -176,7 +176,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page Name="IGPC2026" Descriptor="mpMRI - Review DCE" LinkViews="Y">
+	<Page Name="IGPC2026" Descriptor="mpMRI - Review DCE" LinkViews="Y" Layout="TwoOverTwo">
 		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
@@ -213,7 +213,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page Name="IGPC2028" Descriptor="Multi-parametric MRI" LinkViews="Y">
+	<Page Name="IGPC2028" Descriptor="Multi-parametric MRI" LinkViews="Y" Layout="TwoOverTwo">
 		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
@@ -244,7 +244,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page Name="IGPC2028" Descriptor="Multi-parametric MRI" LinkViews="Y">
+	<Page Name="IGPC2028" Descriptor="Multi-parametric MRI" LinkViews="Y" Layout="TwoOverTwo">
 		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" UsePreviousLabelMap="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
