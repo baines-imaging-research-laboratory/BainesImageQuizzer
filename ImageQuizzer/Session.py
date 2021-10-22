@@ -585,11 +585,11 @@ class Session:
         self.sPageLayout = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Layout')
         if self.sPageLayout == 'TwoOverTwo' :
             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
-        elif self.sPageLayout == 'OneUpRed' :
+        elif self.sPageLayout == 'OneUpRedSlice' :
             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutOneUpRedSliceView)
         elif self.sPageLayout == 'FourUp' :
             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
-        elif self.sPageLayout == 'RedByYellow' :
+        elif self.sPageLayout == 'SideBySideRedYellow' :
             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutSideBySideView)
         else:
             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
