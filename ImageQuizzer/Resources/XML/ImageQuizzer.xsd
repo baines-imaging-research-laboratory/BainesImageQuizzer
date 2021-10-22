@@ -174,10 +174,10 @@
 
 <xs:simpleType name="layoutType">
   <xs:restriction base="xs:string">
-    <xs:enumeration value="OneUpRed"/>
+    <xs:enumeration value="OneUpRedSlice"/>
     <xs:enumeration value="FourUp"/>
     <xs:enumeration value="TwoOverTwo"/>
-    <xs:enumeration value="RedByYellow"/>
+    <xs:enumeration value="SideBySideRedYellow"/>
   </xs:restriction>
 </xs:simpleType>
 
