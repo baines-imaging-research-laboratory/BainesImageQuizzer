@@ -18,8 +18,8 @@
 <xs:element name="Page">
 	<xs:complexType>
 		<xs:sequence>
-			<xs:choice minOccurs="0" maxOccurs="unbounded" >
-				<xs:element ref="QuestionSet" />
+			<xs:choice minOccurs="1" maxOccurs="unbounded" >
+				<xs:element ref="QuestionSet"/>
 				<xs:element ref="Image"/>
 			</xs:choice>
 		</xs:sequence>
@@ -64,7 +64,7 @@
 <xs:element name="QuestionSet">
 	<xs:complexType>
 		<xs:sequence>
-			<xs:element ref="Question" minOccurs="1" maxOccurs="unbounded" />
+			<xs:element ref="Question" minOccurs="0" maxOccurs="unbounded" />
 		</xs:sequence>
 		<xs:attribute name="Name" type="xs:string" />
 		<xs:attribute name="Descriptor" type="xs:string" />
@@ -76,7 +76,7 @@
 <xs:element name="Question">
 	<xs:complexType>
 		<xs:sequence>
-			<xs:element ref="Option" minOccurs="1" maxOccurs="unbounded"  />
+			<xs:element ref="Option" minOccurs="0" maxOccurs="unbounded"  />
 		</xs:sequence>
 		<xs:attribute name="Type" use="required" type="questionType" />
 		<xs:attribute name="Descriptor" />

@@ -503,7 +503,7 @@ class Session:
         #    The information is gathered by querying the XML quiz.
         
         # given the root of the xml document build composite list 
-        #     of indeces for each page and the question sets within
+        #     of indices for each page and the question sets within
         
         # get Page nodes
         xPages = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
@@ -514,7 +514,20 @@ class Session:
             xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
             xQuestionSets = self.oIOXml.GetChildren(xPageNode,'QuestionSet')
             
+            # if there are no question sets for the page, insert a blank shell
+            #    - this allows images to load
+            if len(xQuestionSets) == 0:
+                self.oIOXml.AddElement(xPageNode,'QuestionSet', 'Blank Quiz',{})
+                xQuestionSets = self.oIOXml.GetChildren(xPageNode, 'QuestionSet')
+            
             # append to composite indices list
+            #    - if there are 2 pages and the 1st page has 2 question sets, 2nd page has 1 question set,
+            #        the indices will look like this:
+            #        Page    QS
+            #        0        0
+            #        0        1
+            #        1        0
+            #    - there can be numerous questions in each question set
             for iQuestionSetIndex in range(len(xQuestionSets)):
                 self._l2iPageQuestionCompositeIndices.append([iPageIndex, iQuestionSetIndex])
         

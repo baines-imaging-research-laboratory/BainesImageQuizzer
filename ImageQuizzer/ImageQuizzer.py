@@ -303,18 +303,17 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         sDefaultWorkingDir = os.path.expanduser('~\Documents')
         sDataLocation = self.qDBLocationFileDialog.getExistingDirectory(None, "Select Directory", sDefaultWorkingDir, qt.QFileDialog.ShowDirsOnly )
         
-        
-        self.oFilesIO.SetupUserAndDataDirs(sDataLocation)
-        
-        self.qLblDataLocation.setText(self.oFilesIO.GetDataParentDir())
-        
-#         sUserSubfolders = [ f.name for f in os.scandir(self.oFilesIO.GetUsersParentDir()) if f.is_dir() ]
-#         for sUserName in list(sUserSubfolders):
-#             self.comboGetUserName.addItem(sUserName)
-
-#         self.qUserGrpBox.setEnabled(True)
-
-        self.qQuizSelectionGrpBox.setEnabled(True)
+        if sDataLocation != '':
+            self.oFilesIO.SetupUserAndDataDirs(sDataLocation)
+            
+            self.qLblDataLocation.setText(self.oFilesIO.GetDataParentDir())
+            self.qQuizSelectionGrpBox.setEnabled(True)
+        else:
+            sMsg = 'No location was selected for image database'
+            self.oUtilsMsgs.DisplayWarning(sMsg)
+            self.qUserLoginWidget.raise_()
+            
+                
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onApplyQuizSelection(self):

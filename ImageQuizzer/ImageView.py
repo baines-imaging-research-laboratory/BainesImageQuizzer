@@ -95,7 +95,11 @@ class ImageView:
         progressBar.setMaximum(100)
         progressBar.setValue(1) 
         slicer.app.processEvents() # force display
-        progressBar.setMaximum(len(self.xImageNodes)) # reset for this case
+        if len(self.xImageNodes) == 0:
+            progressBar.close()
+            
+        else:
+            progressBar.setMaximum(len(self.xImageNodes)) # reset for this build
         
         # for each image
         for indImage in range(len(self.xImageNodes)):
