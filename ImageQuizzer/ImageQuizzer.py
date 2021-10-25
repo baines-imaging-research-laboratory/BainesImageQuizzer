@@ -105,14 +105,15 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
         # confirm the Pandas package has been installed
         #    (for mapping RTStruct dicom to original dicom volume)
-        package_name = 'pandas'
-        spec = importlib.util.find_spec(package_name)
-        
-        if spec is None:
-            sMsg = "The package 'pandas' has not been installed to Slicer"\
-                    + "\nThis package is necessary to remap RTStruct dicom files to the original series"\
-                    + "\n See administrator"
-            self.oUtilsMsgs.DisplayWarning(sMsg)
+######### MOVED TO POST-PROCESSING SCRIPT
+#         package_name = 'pandas'
+#         spec = importlib.util.find_spec(package_name)
+#         
+#         if spec is None:
+#             sMsg = "The package 'pandas' has not been installed to Slicer"\
+#                     + "\nThis package is necessary to remap RTStruct dicom files to the original series"\
+#                     + "\n See administrator"
+#             self.oUtilsMsgs.DisplayWarning(sMsg)
 
         self.oSession = Session()                    
         self.oCustomEventFilter = customEventFilter(self.oSession, self.oFilesIO)
@@ -132,6 +133,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         qUserLoginLayout = qt.QVBoxLayout()
         self.qUserLoginWidget = qt.QWidget()
         self.qUserLoginWidget.setLayout(qUserLoginLayout)
+        self.qUserLoginWidget.setWindowModality(2)
          
 
         qTitleGroupBox = qt.QGroupBox()
@@ -377,6 +379,11 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             # copy file from Resource into user folder
             if self.oFilesIO.PopulateUserQuizFolder(): # success
 
+                # turn off login widget modality (hide first)
+                self.qUserLoginWidget.hide()
+                self.qUserLoginWidget.setWindowModality(0)
+                self.qUserLoginWidget.show()
+                
                 # start the session
                 self.oSession.RunSetup(self.oFilesIO, self.slicerMainLayout)
 
