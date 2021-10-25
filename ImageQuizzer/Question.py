@@ -276,8 +276,9 @@ class Question(ABC):
         
         sLabel = 'Warning : No options were given. Group Box is empty - Contact Administrator'
         sWarningMsg = self.sClassName + ':' + self.sFnName + ':' + 'NoOptionsAvailable - Contact Administrator'
-        qlabel = qt.QLabel(sLabel)
-        self.qGrpBoxLayout.addWidget(qlabel)
+        qLabel = qt.QLabel(sLabel)
+        qLabel.setWordWrap(True)
+        self.qGrpBoxLayout.addWidget(qLabel)
         warnings.warn( sWarningMsg )
 
     #-----------------------------------------------
@@ -567,6 +568,7 @@ class TextQuestion(Question):
             element1 = lsStoredOptions[i]
             qLineEdit = qt.QLineEdit()
             qLabel = qt.QLabel(element1)
+            qLabel.setWordWrap(True)
             newLayout.addWidget(qLabel, i, 0)
             newLayout.addWidget(qLineEdit, i, 1)
             i = i + 1
@@ -672,6 +674,7 @@ class IntegerValueQuestion(Question):
 
             
             qLabel = qt.QLabel(element1)
+            qLabel.setWordWrap(True)
             newLayout.addWidget(qLabel, i, 0)
             newLayout.addWidget(qLineEdit, i, 1)
             i = i + 1
@@ -813,6 +816,7 @@ class FloatValueQuestion(Question):
             
             
             qLabel = qt.QLabel(element1)
+            qLabel.setWordWrap(True)
             newLayout.addWidget(qLabel, i, 0)
             newLayout.addWidget(qLineEdit, i, 1)
             i = i + 1
@@ -938,6 +942,7 @@ class InfoBox(Question):
         while i < length:
             element1 = lsStoredOptions[i]
             qLabel = qt.QLabel(element1)
+            qLabel.setWordWrap(True)
             newLayout.addWidget(qLabel, i, 0)
             i = i + 1
 
