@@ -453,6 +453,8 @@ class Session:
             else:
                 if sMsg != '':
                     self.oUtilsMsgs.DisplayWarning( sMsg )
+                    # msg has been displayed - now exit
+                    slicer.util.exit(status=EXIT_SUCCESS)
 
         # if code reaches here, either the exit was cancelled or there was 
         # an error in the save
@@ -605,7 +607,7 @@ class Session:
         elif self.sPageLayout == 'SideBySideRedYellow' :
             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutSideBySideView)
         else:
-            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
+            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
                     
         # set up the images on the page
         self.oImageView = ImageView()
@@ -767,7 +769,9 @@ class Session:
     
         except:
             bSuccess = False
-            sMsg = 'Error saving the image state'
+            sMsg = 'Error saving the image state. ' \
+            + '\nCheck that the layout setting in xml quiz ' \
+            + '\nis appropriate for assigned image destinations.'
             
         return bSuccess, sMsg
     
