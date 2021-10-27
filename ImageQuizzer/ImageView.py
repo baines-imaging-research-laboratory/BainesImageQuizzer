@@ -30,7 +30,7 @@ class ImageView:
         self.sPageName = ''
         self.sPageDescriptor = ''
         
-        self.lValidVolumeFormats = ['NRRD', 'NIFTI', 'MHD', 'DICOM']
+#         self.lValidVolumeFormats = ['NRRD', 'NIFTI', 'MHD', 'DICOM']
         self.lValidSliceWidgets = ['Red', 'Green', 'Yellow', 'Slice4'] # for two over two layout
         self._loImageViews = []
         self.bLinkViews = False
@@ -107,14 +107,16 @@ class ImageView:
             
             sPageID = self.sPageName + '_' + self.sPageDescriptor
             
-            # Extract volume attribute
-            sVolumeFormat = self.oIOXml.GetValueOfNodeAttribute(self.xImageNodes[indImage], 'Format')
-            if not (sVolumeFormat in self.lValidVolumeFormats):
-                sErrorMsg = 'Invalid data format defined for patient in XML : '
-                sErrorMsg = sErrorMsg + sPageID
-                self.oUtilsMsgs.DisplayError(sErrorMsg)
+            # Extract the type of volume to be displayed 
+            #     if not a DICOM - assume it is a 'Data' volume
+            sDICOMFormat = self.oIOXml.GetValueOfNodeAttribute(self.xImageNodes[indImage], 'DicomFormat')
             
-            if (sVolumeFormat == 'DICOM'):
+#             if not (sVolumeFormat in self.lValidVolumeFormats):
+#                 sErrorMsg = 'Invalid data format defined for patient in XML : '
+#                 sErrorMsg = sErrorMsg + sPageID
+#                 self.oUtilsMsgs.DisplayError(sErrorMsg)
+            
+            if (sDICOMFormat == 'Y'):
                 oImageViewItem = DicomVolumeDetail(self.xImageNodes[indImage], sPageID, self.sParentDataDir)
             
             else:
@@ -434,7 +436,7 @@ class ViewNodeBase:
         self.sImageType = ''
         self.sImagePath = ''
         self.sNodeName = ''
-        self.sFormat=''
+#         self.sFormat=''
         self._xImageElement = None
         self._sPageID = ''
         self.sColorTableName = ''
@@ -473,9 +475,8 @@ class ViewNodeBase:
 
         sImageID = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'ID')
         self.sImageType = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'Type')
-        self.sVolumeFormat = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'Format')
+#         self.sVolumeFormat = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'Format')
 
-#         self.sDestination = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'destination')
         self.sColorTableName = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'ColorTable')
 
         sRotateToAcquisition = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'RotateToAcquisition')

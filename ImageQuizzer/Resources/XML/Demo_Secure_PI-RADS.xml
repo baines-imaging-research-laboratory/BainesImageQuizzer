@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session ROIColorFile="PiRadsStudy">
 	<Page Name="IGPC2026" Descriptor="mpMRI - Intro" LinkViews="Y" Layout="TwoOverTwo">
-		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y">
+		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
 		</Image>
-		<Image Format="NIFTI" Type="Volume" ID="ADC" RotateToAcquisition="Y">
+		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\ADC.nii</Path>
 		</Image>
-		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" RotateToAcquisition="Y">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -27,31 +27,31 @@
 		</QuestionSet>
 	</Page>
 	<Page Name="IGPC2026" Descriptor="mpMRI" LinkViews="Y" Layout="TwoOverTwo">
-		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+		<Image Type="VolumeSequence" ID="DCE" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
 		</Image>
-		<Image Format="NIFTI" Type="Volume" ID="ADC" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+		<Image Type="Volume" ID="ADC" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\ADC.nii</Path>
 		</Image>
-		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
-		<Image ID="PELVIS_MRAC_PET" Format="NIFTI" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
+		<Image ID="PELVIS_MRAC_PET" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
 			<Destination>Slice4</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\PSMA PET.nii</Path>
 		</Image>
-		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Slice4</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -78,19 +78,19 @@
 		</QuestionSet>
 	</Page>
 	<Page Name="IGPC2026" Descriptor="mpMRI" LinkViews="Y" Layout="SideBySideRedYellow">
-		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
-		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+		<Image Type="VolumeSequence" ID="DCE" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
+		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Segmentation</Layer>
 			<Orientation>Axial</Orientation>
@@ -102,86 +102,20 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page Name="IGPC2028" Descriptor="Multi-parametric MRI" LinkViews="Y" Layout="TwoOverTwo">
-		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y">
-			<Destination>Green</Destination>
-			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
-		</Image>
-		<Image Format="NIFTI" Type="Volume" ID="ADC" RotateToAcquisition="Y">
-			<Destination>Red</Destination>
-			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Raw\NiFTi\ADC.nii</Path>
-		</Image>
-		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
-			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
-		</Image>
-		<QuestionSet Name="PI-RADS" Descriptor="Contouring Exercise"  SegmentRequired="Y" AllowMultipleResponse="Y">
-			<Question Type="InfoBox" Descriptor="Segmentation Instructions">
-				<Option>In Segment Editor tab, select volume to create segments.</Option>
-				<Option>     Click Edit Selected Label map collapsible button to access the segmenting tools.</Option>
-				<Option>     Select label map color to match PI-RADS category.</Option>
-				<Option>This may be repeated if segments are to be created on different volumes.</Option>
-			</Question>
-			<Question Type="IntegerValue" Descriptor="Overall PI-RADS" Min="1" Max="5">
-				<Option>Enter overall PI-RADS score:</Option>
-			</Question>
-		</QuestionSet>
-	</Page>
-	<Page Name="IGPC2028" Descriptor="Multi-parametric MRI" LinkViews="Y" Layout="TwoOverTwo">
-		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" UsePreviousLabelMap="Y">
-			<Destination>Green</Destination>
-			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
-		</Image>
-		<Image Format="NIFTI" Type="Volume" ID="ADC" RotateToAcquisition="Y" UsePreviousLabelMap="Y">
-			<Destination>Red</Destination>
-			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Raw\NiFTi\ADC.nii</Path>
-		</Image>
-		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" RotateToAcquisition="Y" UsePreviousLabelMap="Y">
-			<Destination>Yellow</Destination>
-			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
-		</Image>
-		<Image ID="PELVIS_MRAC_PET" Format="NIFTI" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
-			<Layer>Foreground</Layer>
-			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Raw\NiFTi\PSMA PET.nii</Path>
-		</Image>
-		<QuestionSet Name="Segmentation" Descriptor="PET Overlay"  SegmentRequired="Y" AllowMultipleResponse="Y">
-			<Question Type="InfoBox" Descriptor="PET Overlay">
-				<Option>PET has been overlayed onto the 2DT2</Option>
-				<Option>Given this new information, enter your new evaluation of the overall PI-RADS score.</Option>
-			</Question>
-			<Question Type="IntegerValue" Descriptor="Overall PI-RADS" Min="1" Max="5">
-				<Option>Enter overall PI-RADS score:</Option>
-			</Question>
-		</QuestionSet>
-	</Page>
 	<Page Name="IGPC2026" Descriptor="mpMRI - Histology" LinkViews="Y" Layout="SideBySideRedYellow">
-		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
-		<Image ID="Histology" Format="NIFTI" Type="Volume" UsePreviousLabelMap='N' RotateToAcquisition="Y">
+		<Image ID="Histology" Type="Volume" UsePreviousLabelMap='N' RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\Oblique 2D Slices\Histology\HistContouredExtended\HistContouredExtended_2.nii</Path>
 		</Image>
-		<Image ID="In_Vivo_2D_T2" Format="NIFTI" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>

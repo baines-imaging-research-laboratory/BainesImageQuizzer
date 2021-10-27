@@ -41,7 +41,7 @@
 			<xs:element ref="ROIs" minOccurs="0" maxOccurs="1" />
 		</xs:all>
 		<xs:attribute name="Type" use="required" type="imageType" />
-		<xs:attribute name="Format" use="required" type="formatType" />
+		<xs:attribute name="DicomFormat" type="yesnoType" default="N"/>
 		<xs:attribute name="ID" use="required" />
 		<xs:attribute name="UsePreviousLabelMap" type="yesnoType" default="N" />
 		<xs:attribute name="RotateToAcquisition" type="yesnoType" default="N" />
