@@ -1,0 +1,47 @@
+<Session>
+	<Page Name="Patient 1" Descriptor="Histology" LinkViews="N" Layout="OneUpRedSlice">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y">
+			<Destination>Red</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+		</Image>
+		<QuestionSet Name="Contouring Challenge" SegmentRequired='Y'>
+			<Question Descriptor="Q1" Type="InfoBox">
+				<Option>Contour the tumor using the segment editor.</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page Name="Patient 1" Descriptor="Histology" LinkViews="N" Layout="SideBySideRedYellow">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+			<Destination>Red</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+		</Image>
+		<Image Type="Volume" ID="Slice" RotateToAcquisition="Y" DicomRead="N">
+			<Destination>Yellow</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\Oblique 2D Slices\Histology\HistContoured_1.dcm</Path>
+		</Image>
+		<Image ID="In_Vivo_2D_T2" Type="Volume" UsePreviousLabelMap='N' RotateToAcquisition="Y">
+			<Destination>Yellow</Destination>
+			<Layer>Foreground</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+		</Image>
+		<QuestionSet Name="Test Read Histology Slice">
+			<Question Descriptor="Q1" Type="InfoBox">
+				<Option>Loading histology single slice with LoadVolume (Data)</Option>
+				<Option>Attribute details</Option>
+				<Option>   LinkViews="N"</Option>
+				<Option>     (Histology will only appear on one view)</Option>
+				<Option>   DicomRead="N" (default)</Option>
+				<Option>     (The dicom slice is read in with Slicer's data LoadVolume; Otherwise, all histology dicom slices are imported as a dicom series.)</Option>
+				<Option>   UsePreviousLabelMap="Y" only on Yellow</Option>
+				<Option>     (If you want label not to show with histology)</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>

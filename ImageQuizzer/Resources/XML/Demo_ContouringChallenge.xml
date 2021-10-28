@@ -1,18 +1,18 @@
 <Session>
 	<Page Name="Patient 1" Descriptor="Contouring Challenge">
-		<Image Format="NRRD" Type="Volume" ID="MR" RotateToAcquisition="Y">
+		<Image Type="Volume" ID="MR" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="MR" RotateToAcquisition="Y">
+		<Image Type="Volume" ID="MR" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="MR" RotateToAcquisition="Y">
+		<Image Type="Volume" ID="MR" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
@@ -38,25 +38,25 @@
 		</QuestionSet>
 	</Page>
 	<Page Name="Patient 1" Descriptor="Contouring Challenge">
-		<Image Format="NRRD" Type="Volume" ID="MR" RotateToAcquisition="Y" UsePreviousLabelMap="Y">
+		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" UsePreviousLabelMap="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="MR" RotateToAcquisition="Y" UsePreviousLabelMap="Y">
+		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" UsePreviousLabelMap="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="MR" RotateToAcquisition="Y" UsePreviousLabelMap="Y">
+		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" UsePreviousLabelMap="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
+		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Segmentation</Layer>
 			<Orientation>Axial</Orientation>

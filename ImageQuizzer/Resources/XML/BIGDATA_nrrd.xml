@@ -1,42 +1,42 @@
 <Session ROIColorFile="PET_PSMA">
 	<Page Name="BIGDATA001" Descriptor="">
-		<Image Format="NRRD" Type="Volume" ID="CT" RotateToAcquisition="Y">
+		<Image Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON39859\CT.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="CT" RotateToAcquisition="Y">
+		<Image Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON39859\CT.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="CT" RotateToAcquisition="Y">
+		<Image Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON39859\CT.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+		<Image Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Red</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON39859\PE.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+		<Image Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Green</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON39859\PE.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+		<Image Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Yellow</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON39859\PE.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+		<Image Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Slice4</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
@@ -50,43 +50,43 @@
 		</QuestionSet>
 	</Page>
 	<Page Name="BIGDATA002" Descriptor="">
-		<Image Format="NRRD" Type="Volume" ID="CT" RotateToAcquisition="Y">
+		<Image Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON96850\CT.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="CT" RotateToAcquisition="Y">
+		<Image Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON96850\CT.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="CT" RotateToAcquisition="Y">
+		<Image Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON96850\CT.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+		<Image Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Red</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON96850\PE.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+		<Image Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Green</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON96850\PE.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+		<Image Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Yellow</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON96850\PE.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+		<Image Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Slice4</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>

@@ -77,6 +77,7 @@ class UtilsIOXml:
         self._xRootNode = None
         
         self.sTimestampFormat = "%Y%m%d_%H:%M:%S"
+        self.oUtilsMsgs = UtilsMsgs()
     
     #----------
     def GetXmlTree(self):
@@ -114,6 +115,8 @@ class UtilsIOXml:
   
                 else:
                     bSuccess = False
+                    sErrorMsg = "ERROR", "Not a valid quiz - Invalid XML root node:" + sXmlPath
+                    self.oUtilsMsgs.DisplayError(sErrorMsg)
                     raise NameError('Invalid XML root node: %s' % sXmlPath)
  
                 
@@ -122,10 +125,14 @@ class UtilsIOXml:
  
             except:
                 bSuccess = False
+                sErrorMsg = "ERROR", "Not a valid quiz - Parsing XML file error:" + sXmlPath
+                self.oUtilsMsgs.DisplayError(sErrorMsg)
                 raise Exception('Parsing XML file error: %s' % sXmlPath)
                  
         else:
             bSuccess = False
+            sErrorMsg = "ERROR", "XML file does not exist:" + sXmlPath
+            self.oUtilsMsgs.DisplayError(sErrorMsg)
             raise Exception('XML file does not exist: %s' % sXmlPath)
          
 

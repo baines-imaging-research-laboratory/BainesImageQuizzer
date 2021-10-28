@@ -98,32 +98,7 @@
 		</Image>
 		<QuestionSet Name="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  SegmentRequired="N" AllowMultipleResponse="Y">
 			<Question Type="InfoBox" Descriptor="Review">
-				<Option>PET overlay onto 2DT2 with segmentations.</Option>
-			</Question>
-		</QuestionSet>
-	</Page>
-	<Page Name="IGPC2026" Descriptor="mpMRI - Histology" LinkViews="Y" Layout="SideBySideRedYellow">
-		<Image ID="In_Vivo_2D_T2" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
-			<Destination>Red</Destination>
-			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
-		</Image>
-		<Image ID="Histology" Type="Volume" UsePreviousLabelMap='N' RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
-			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\Oblique 2D Slices\Histology\HistContouredExtended\HistContouredExtended_2.nii</Path>
-		</Image>
-		<Image ID="In_Vivo_2D_T2" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
-			<Layer>Foreground</Layer>
-			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
-		</Image>
-		<QuestionSet Name="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  SegmentRequired="N" AllowMultipleResponse="Y">
-			<Question Type="InfoBox" Descriptor="WHAT IF ....">
-				<Option>2DT2 overlay onto Histology with segmentations.</Option>
+				<Option>Compare DCE with user contour to 2DT2 gold standard.</Option>
 			</Question>
 		</QuestionSet>
 	</Page>

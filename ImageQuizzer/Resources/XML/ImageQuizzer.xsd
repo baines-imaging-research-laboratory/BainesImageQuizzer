@@ -41,7 +41,7 @@
 			<xs:element ref="ROIs" minOccurs="0" maxOccurs="1" />
 		</xs:all>
 		<xs:attribute name="Type" use="required" type="imageType" />
-		<xs:attribute name="DicomFormat" type="yesnoType" default="N"/>
+		<xs:attribute name="DicomRead" type="yesnoType" default="N"/>
 		<xs:attribute name="ID" use="required" />
 		<xs:attribute name="UsePreviousLabelMap" type="yesnoType" default="N" />
 		<xs:attribute name="RotateToAcquisition" type="yesnoType" default="N" />
@@ -118,15 +118,6 @@
     <xs:enumeration value="LabelMap"/>
     <xs:enumeration value="Segmentation"/>
     <xs:enumeration value="RTStruct"/>
-  </xs:restriction>
-</xs:simpleType>
-
-<xs:simpleType name="formatType">
-  <xs:restriction base="xs:string">
-    <xs:enumeration value="NRRD"/>
-    <xs:enumeration value="NIFTI"/>
-    <xs:enumeration value="MHD"/>
-    <xs:enumeration value="DICOM"/>
   </xs:restriction>
 </xs:simpleType>
 

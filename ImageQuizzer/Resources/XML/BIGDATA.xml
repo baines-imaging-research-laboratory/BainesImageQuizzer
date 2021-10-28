@@ -1,42 +1,42 @@
 <Session ROIColorFile="PET_PSMA">
 	<Page Name="BIGDATA001" Descriptor="">
-		<Image Format="DICOM" Type="Volume" ID="CT" RotateToAcquisition="Y">
+		<Image DicomRead="Y" Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON39859\CT.2.16.840.1.114362.1.11972228.23569092000.570231973.103.1136.dcm</Path>
 		</Image>
-		<Image Format="DICOM" Type="Volume" ID="CT" RotateToAcquisition="Y">
+		<Image DicomRead="Y" Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON39859\CT.2.16.840.1.114362.1.11972228.23569092000.570231973.103.1136.dcm</Path>
 		</Image>
-		<Image Format="DICOM" Type="Volume" ID="CT" RotateToAcquisition="Y">
+		<Image DicomRead="Y" Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON39859\CT.2.16.840.1.114362.1.11972228.23569092000.570231973.103.1136.dcm</Path>
 		</Image>
-		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+		<Image DicomRead="Y" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Red</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON39859\PE.2.16.840.1.114362.1.11972228.23569092000.570231982.822.1667.dcm</Path>
 		</Image>
-		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+		<Image DicomRead="Y" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Green</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON39859\PE.2.16.840.1.114362.1.11972228.23569092000.570231982.822.1667.dcm</Path>
 		</Image>
-		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+		<Image DicomRead="Y" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Yellow</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON39859\PE.2.16.840.1.114362.1.11972228.23569092000.570231982.822.1667.dcm</Path>
 		</Image>
-		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+		<Image DicomRead="Y" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Slice4</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
@@ -50,43 +50,43 @@
 		</QuestionSet>
 	</Page>
 	<Page Name="BIGDATA002" Descriptor="">
-		<Image Format="DICOM" Type="Volume" ID="CT" RotateToAcquisition="Y">
+		<Image DicomRead="Y" Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON96850\CT.2.16.840.1.114362.1.11972228.24271053948.570842158.949.1.dcm</Path>
 		</Image>
-		<Image Format="DICOM" Type="Volume" ID="CT" RotateToAcquisition="Y">
+		<Image DicomRead="Y" Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON96850\CT.2.16.840.1.114362.1.11972228.24271053948.570842158.949.1.dcm</Path>
 		</Image>
-		<Image Format="DICOM" Type="Volume" ID="CT" RotateToAcquisition="Y">
+		<Image DicomRead="Y" Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON96850\CT.2.16.840.1.114362.1.11972228.24271053948.570842158.949.1.dcm</Path>
 		</Image>
-		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+		<Image DicomRead="Y" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Red</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON96850\PE.2.16.840.1.114362.1.11972228.24271054222.570842169.910.557.dcm</Path>
 		</Image>
-		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+		<Image DicomRead="Y" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Green</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON96850\PE.2.16.840.1.114362.1.11972228.24271054222.570842169.910.557.dcm</Path>
 		</Image>
-		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+		<Image DicomRead="Y" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Yellow</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\BigDataStudy\ANON96850\PE.2.16.840.1.114362.1.11972228.24271054222.570842169.910.557.dcm</Path>
 		</Image>
-		<Image Format="DICOM" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+		<Image DicomRead="Y" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<Destination>Slice4</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
@@ -99,4 +99,5 @@
 			</Question>
 		</QuestionSet>
 	</Page>
+</Session>e>
 </Session>

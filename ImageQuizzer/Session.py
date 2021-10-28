@@ -244,7 +244,7 @@ class Session:
         bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizResultsPath(),'Session')
 
         if not bSuccess:
-            sErrorMsg = "ERROR", "Not a valid quiz - Root node name was not 'Session'"
+            sErrorMsg = "ERROR", "Not a valid quiz - Trouble with XML syntax."
             self.oUtilsMsgs.DisplayError(sErrorMsg)
 
         else:

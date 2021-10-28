@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session ROIColorFile="PiRadsStudy">
 	<Page Name="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y">
-		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y">
+		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\ProstateDCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="ADC" RotateToAcquisition="Y">
+		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\{286306cb-946c-441c-8ed2-630283a455d4}\Data\adc.nrrd</Path>
 		</Image>
-		<Image ID="T2-N4" Format="NRRD" Type="Volume" RotateToAcquisition="Y">
+		<Image ID="T2-N4" Type="Volume" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -28,25 +28,25 @@
 		</QuestionSet>
 	</Page>
 	<Page Name="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y">
-		<Image Format="NRRD" Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" UsePreviousLabelMap='Y'>
+		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" UsePreviousLabelMap='Y'>
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\ProstateDCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
 		</Image>
-		<Image Format="NRRD" Type="Volume" ID="ADC" RotateToAcquisition="Y" UsePreviousLabelMap='Y'>
+		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y" UsePreviousLabelMap='Y'>
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\{286306cb-946c-441c-8ed2-630283a455d4}\Data\adc.nrrd</Path>
 		</Image>
-		<Image ID="T2-N4" Format="NRRD" Type="Volume" RotateToAcquisition="Y" UsePreviousLabelMap='Y'>
+		<Image ID="T2-N4" Type="Volume" RotateToAcquisition="Y" UsePreviousLabelMap='Y'>
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\{286306cb-946c-441c-8ed2-630283a455d4}\Data\t2ax-N4.nrrd</Path>
 		</Image>
-		<Image ID="K-Trans" Format="NRRD" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
+		<Image ID="K-Trans" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>

@@ -109,14 +109,14 @@ class ImageView:
             
             # Extract the type of volume to be displayed 
             #     if not a DICOM - assume it is a 'Data' volume
-            sDICOMFormat = self.oIOXml.GetValueOfNodeAttribute(self.xImageNodes[indImage], 'DicomFormat')
+            sDICOMRead = self.oIOXml.GetValueOfNodeAttribute(self.xImageNodes[indImage], 'DicomRead')
             
 #             if not (sVolumeFormat in self.lValidVolumeFormats):
 #                 sErrorMsg = 'Invalid data format defined for patient in XML : '
 #                 sErrorMsg = sErrorMsg + sPageID
 #                 self.oUtilsMsgs.DisplayError(sErrorMsg)
             
-            if (sDICOMFormat == 'Y'):
+            if (sDICOMRead == 'Y'):
                 oImageViewItem = DicomVolumeDetail(self.xImageNodes[indImage], sPageID, self.sParentDataDir)
             
             else:
@@ -138,6 +138,9 @@ class ImageView:
                  
             progressBar.setValue(indImage + 1)
             slicer.app.processEvents()
+        
+        # all images loaded
+        progressBar.close()
 
          
     #-----------------------------------------------
