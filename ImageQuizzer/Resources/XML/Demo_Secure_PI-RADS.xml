@@ -21,8 +21,9 @@
 		</Image>
 		<QuestionSet Name="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  SegmentRequired="N" AllowMultipleResponse="Y">
 			<Question Type="InfoBox" Descriptor="Features">
-				<Option>  - images linked for scrolling</Option>
+				<Option>  - zoom, window/level</Option>
 				<Option>  - DCE MRI time sequence tools</Option>
+				<Option>  - images linked for scrolling</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
@@ -77,18 +78,12 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page Name="IGPC2026" Descriptor="mpMRI" LinkViews="Y" Layout="SideBySideRedYellow">
+	<Page Name="IGPC2026" Descriptor="mpMRI" LinkViews="Y" Layout="OneUpRedSlice">
 		<Image ID="In_Vivo_2D_T2" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
-			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
-		</Image>
-		<Image Type="VolumeSequence" ID="DCE" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
 		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
@@ -98,7 +93,7 @@
 		</Image>
 		<QuestionSet Name="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  SegmentRequired="N" AllowMultipleResponse="Y">
 			<Question Type="InfoBox" Descriptor="Review">
-				<Option>Compare DCE with user contour to 2DT2 gold standard.</Option>
+				<Option>Compare user contour with gold standard.</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
