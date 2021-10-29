@@ -453,8 +453,6 @@ class Session:
             else:
                 if sMsg != '':
                     self.oUtilsMsgs.DisplayWarning( sMsg )
-                    # msg has been displayed - now exit
-                    slicer.util.exit(status=EXIT_SUCCESS)
 
         # if code reaches here, either the exit was cancelled or there was 
         # an error in the save
@@ -772,6 +770,8 @@ class Session:
             sMsg = 'Error saving the image state. ' \
             + '\nCheck that the layout setting in xml quiz ' \
             + '\nis appropriate for assigned image destinations.'
+            # critical error - exit
+            self.oUtilsMsgs.DisplayError( sMsg )
             
         return bSuccess, sMsg
     
@@ -1135,6 +1135,8 @@ class Session:
         except:
             bSuccess = False
             sMsg = 'Error writing responses to Xml'
+            # critical error - exit
+            self.oUtilsMsgs.DisplayError( sMsg )
             
         return bSuccess, sMsg
     
