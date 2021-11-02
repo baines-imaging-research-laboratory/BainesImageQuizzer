@@ -127,6 +127,7 @@
 			<Question Type="CheckBox"  Descriptor="Try the following:">
 				<Option>Adjust window-level</Option>
 				<Option>Return to default mouse pointer</Option>
+				<Option>Crosshairs (use Shift key)</Option>
 				<Option>Slice Intersections on/off</Option>
 				<Option>Explore Data Probe</Option>
 			</Question>
