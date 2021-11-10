@@ -23,7 +23,8 @@
 				<xs:element ref="Image"/>
 			</xs:choice>
 		</xs:sequence>
-		<xs:attribute name="Name" type="xs:string" />
+		<xs:attribute name="ID" type="xs:string" use="required" />
+		<xs:attribute name="SubID" type="xs:string" />
 		<xs:attribute name="Descriptor" type="xs:string" />
 		<xs:attribute name="LinkViews" type="yesnoType" default="N" />
 		<xs:attribute name="Layout" type="layoutType" default="FourUp" />
@@ -44,6 +45,8 @@
 		<xs:attribute name="DicomRead" type="yesnoType" default="N"/>
 		<xs:attribute name="ID" use="required" />
 		<xs:attribute name="UsePreviousLabelMap" type="yesnoType" default="N" />
+		<xs:attribute name="LabelMapID" type="xs:string" />
+		<xs:attribute name="UseLabelMapID" type="xs:string" />
 		<xs:attribute name="RotateToAcquisition" type="yesnoType" default="N" />
 		<xs:attribute name="ColorTable" type="xs:string" />
 	</xs:complexType>
