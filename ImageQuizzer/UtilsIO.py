@@ -687,7 +687,7 @@ class UtilsIO:
                 # read attribute from xml file whether to use label maps previously created
                 #    by the user in the quiz for this image
                 sLabelMapIDLink = '' # initialize
-                sLabelMapIDLink = oSession.oIOXml.GetValueOfNodeAttribute(oImageNode.GetXmlImageElement(), 'UseLabelMapID')
+                sLabelMapIDLink = oSession.oIOXml.GetValueOfNodeAttribute(oImageNode.GetXmlImageElement(), 'DisplayLabelMapID')
                 if sLabelMapIDLink != '':
                     bUsePreviousLabelMap = True
                 else:

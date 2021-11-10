@@ -46,7 +46,7 @@
 		<xs:attribute name="ID" use="required" />
 		<xs:attribute name="UsePreviousLabelMap" type="yesnoType" default="N" />
 		<xs:attribute name="LabelMapID" type="xs:string" />
-		<xs:attribute name="UseLabelMapID" type="xs:string" />
+		<xs:attribute name="DisplayLabelMapID" type="xs:string" />
 		<xs:attribute name="RotateToAcquisition" type="yesnoType" default="N" />
 		<xs:attribute name="ColorTable" type="xs:string" />
 	</xs:complexType>

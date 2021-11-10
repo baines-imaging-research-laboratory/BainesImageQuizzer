@@ -79,7 +79,7 @@
 		</QuestionSet>
 	</Page>
 	<Page ID="IGPC2026" Descriptor="mpMRI" LinkViews="Y" Layout="OneUpRedSlice">
-		<Image ID="In_Vivo_2D_T2" Type="Volume" UseLabelMapID="2DT2-Contour" RotateToAcquisition="Y">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" DisplayLabelMapID="2DT2-Contour" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>

@@ -1,6 +1,6 @@
 <Session>
 	<Page Name="Patient 1" Descriptor="Histology" LinkViews="N" Layout="OneUpRedSlice">
-		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" LabelMapID="2DT2">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -13,7 +13,7 @@
 		</QuestionSet>
 	</Page>
 	<Page Name="Patient 1" Descriptor="Histology" LinkViews="N" Layout="SideBySideRedYellow">
-		<Image ID="In_Vivo_2D_T2" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y" DisplayLabelMapID="2DT2">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
