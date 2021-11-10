@@ -81,7 +81,7 @@
 				<Option>Enter RECIST of largest tumour:</Option>
 			</Question>
 			<Question Type="Text" Descriptor="Text box test">
-				<Option>Additional comments : </Option>
+				<Option>Additional comments: </Option>
 			</Question>
 		</QuestionSet>
 	</Page>

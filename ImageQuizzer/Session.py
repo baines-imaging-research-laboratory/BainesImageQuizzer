@@ -792,7 +792,7 @@ class Session:
                 if xStateElement != None:
                     dictImageState = self.oIOXml.GetAttributes(xStateElement)
                 else:
-                    xHistoricalStateElement = self.CheckXmlImageHistoryForMatch(oImageNode.GetXmlImageElement(), 'State')
+                    xHistoricalStateElement = self.GetXmlElementFromImagePathHistory(oImageNode.GetXmlImageElement(), 'State')
                     if xHistoricalStateElement != None:
                         dictImageState = self.oIOXml.GetAttributes(xHistoricalStateElement)
                     
@@ -996,10 +996,51 @@ class Session:
         return sDirName
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CheckXmlImageHistoryForMatch(self, xImageNodeToMatch, sChildTagName):  
+    def GetXmlElementFromAttributeHistory(self, sPageChildrenToSearch, sImageAttributeToMatch, sAttributeValue):
+        ''' Function will return the historical element that contains the attribute requested for the search.
+            This attribute is associated with a child of the 'Page' element.
+            The search goes through the pages in reverse. 
+                For each page, the requested children are searched (forward) for the requested attribute.
+            When found, the xml element that contains the attribute is returned.
+        '''
+        
+        
+        xHistoricalChildElement = None
+        
+        # start searching pages in reverse order - to get most recent setting
+        # first match will end the search
+        bHistoricalElementFound = False
+        for iPageIndex in range(self.GetCurrentPageIndex()-1, -1, -1):
+            xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
+        
+            if bHistoricalElementFound == False:
+                
+                #get all requested children
+                lxChildElementsToSearch = self.oIOXml.GetChildren(xPageNode, sPageChildrenToSearch)
+                if len(lxChildElementsToSearch) > 0:
+    
+                    for xImageNode in lxChildElementsToSearch:
+                        
+                        # get image attribute
+                        sPotentialAttributeValue = self.oIOXml.GetValueOfNodeAttribute(xImageNode, sImageAttributeToMatch)
+                        if sPotentialAttributeValue == sAttributeValue:
+                            xHistoricalChildElement = xImageNode
+                            bHistoricalElementFound = True
+                            break
+            else:
+                break
+        
+        return xHistoricalChildElement
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetXmlElementFromImagePathHistory(self, xImageNodeToMatch, sChildTagName):  
         """ Start searching the xml file for a matching image on a previous page
-            (based on path and series instance UID (if applicable),
-            and extract the required child.
+            This is based on the 'Path' element for the current node to match. The
+            historical element must have the same 'Path' element value.
+            If this is a Dicom series, the Path points directly to a dicom slice within
+            the Dicom series.
+            Extract the latest element of the required child 
+                (in case there is more than one element with this name).
             The most recent element will be returned.
         """
         xHistoricalChildElement = None
@@ -1007,11 +1048,11 @@ class Session:
         xPathElement = self.oIOXml.GetNthChild(xImageNodeToMatch, 'Path', 0)
         sPathToMatch = self.oIOXml.GetDataInNode(xPathElement)
         
-        # check if there is a SeriesInstanceUID element (in the case of a dicom type of image)
-        sSeriesInstanceUIDToMatch = ''
-        xSeriesInstanceUIDElement = self.oIOXml.GetNthChild(xImageNodeToMatch, 'SeriesInstanceUID', 0)
-        if xSeriesInstanceUIDElement != None:
-            sSeriesInstanceUIDToMatch = self.oIOXml.GetDataInNode(xSeriesInstanceUIDElement)
+#         # check if there is a SeriesInstanceUID element (in the case of a dicom type of image)
+#         sSeriesInstanceUIDToMatch = ''
+#         xSeriesInstanceUIDElement = self.oIOXml.GetNthChild(xImageNodeToMatch, 'SeriesInstanceUID', 0)
+#         if xSeriesInstanceUIDElement != None:
+#             sSeriesInstanceUIDToMatch = self.oIOXml.GetDataInNode(xSeriesInstanceUIDElement)
         
         
         # start searching pages in reverse order - to get most recent setting
@@ -1030,14 +1071,15 @@ class Session:
                         xPotentialPathElement = self.oIOXml.GetNthChild(xImageNode, 'Path', 0)
                         sPotentialPath = self.oIOXml.GetDataInNode(xPotentialPathElement)
                         
-                        # get series instance UID if it exists
-                        sPotentialSeriesInstanceUID = ''
-                        xPotentialSeriesInstanceUID = self.oIOXml.GetNthChild(xImageNode, 'SeriesInstanceUID', 0)
-                        if xPotentialSeriesInstanceUID != None:
-                            sPotentialSeriesInstanceUID = self.oIOXml.GetDataInNode(xPotentialSeriesInstanceUID)
+#                         # get series instance UID if it exists
+#                         sPotentialSeriesInstanceUID = ''
+#                         xPotentialSeriesInstanceUID = self.oIOXml.GetNthChild(xImageNode, 'SeriesInstanceUID', 0)
+#                         if xPotentialSeriesInstanceUID != None:
+#                             sPotentialSeriesInstanceUID = self.oIOXml.GetDataInNode(xPotentialSeriesInstanceUID)
                         
                         # test for match of both the Path and Series Instance UID
-                        if sPotentialPath == sPathToMatch and sPotentialSeriesInstanceUID == sSeriesInstanceUIDToMatch:
+#                         if sPotentialPath == sPathToMatch and sPotentialSeriesInstanceUID == sSeriesInstanceUIDToMatch:
+                        if sPotentialPath == sPathToMatch:
 #                             print('found prior image instance: ', iPageIndex, ' ', sPotentialPath)
                             
                             # capture most recent (based on response time) historical element of interest

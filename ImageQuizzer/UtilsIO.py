@@ -679,7 +679,16 @@ class UtilsIO:
 
                 # read attribute from xml file whether to use label maps previously created
                 #    by the user in the quiz for this image
-                if (oSession.oIOXml.GetValueOfNodeAttribute(oImageNode.GetXmlImageElement(), 'UsePreviousLabelMap') == 'Y'):
+#                 if (oSession.oIOXml.GetValueOfNodeAttribute(oImageNode.GetXmlImageElement(), 'UsePreviousLabelMap') == 'Y'):
+#                     bUsePreviousLabelMap = True
+#                 else:
+#                     bUsePreviousLabelMap = False
+
+                # read attribute from xml file whether to use label maps previously created
+                #    by the user in the quiz for this image
+                sLabelMapIDLink = '' # initialize
+                sLabelMapIDLink = oSession.oIOXml.GetValueOfNodeAttribute(oImageNode.GetXmlImageElement(), 'UseLabelMapID')
+                if sLabelMapIDLink != '':
                     bUsePreviousLabelMap = True
                 else:
                     bUsePreviousLabelMap = False
@@ -692,7 +701,13 @@ class UtilsIO:
                 # if there were no label map paths stored with the image, and xml attribute has flag 
                 #    to use a previous label map, check previous pages for the first matching image
                 if xLabelMapPathElement == None and bUsePreviousLabelMap == True:
-                    xHistoricalLabelMapMatch = oSession.CheckXmlImageHistoryForMatch( oImageNode.GetXmlImageElement(), 'LabelMapPath')
+#                     xHistoricalLabelMapMatch = oSession.GetXmlElementFromImagePathHistory( oImageNode.GetXmlImageElement(), 'LabelMapPath')
+
+                    # get image element from history that holds the same label map id; 
+                    xHistoricalImageElement = None  # initialize
+                    xHistoricalImageElement = oSession.GetXmlElementFromAttributeHistory('Image','LabelMapID',sLabelMapIDLink)
+                    if xHistoricalImageElement != None:
+                        xHistoricalLabelMapMatch = oSession.oIOXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')
                     
                     if xHistoricalLabelMapMatch != None:
                         # found a label map for this image in history
