@@ -1,6 +1,6 @@
 <Session>
 	<Page Name="Patient 1" Descriptor="Histology" LinkViews="N" Layout="OneUpRedSlice">
-		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" LabelMapID="2DT2">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -13,7 +13,7 @@
 		</QuestionSet>
 	</Page>
 	<Page Name="Patient 1" Descriptor="Histology" LinkViews="N" Layout="SideBySideRedYellow">
-		<Image ID="In_Vivo_2D_T2" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" UsePreviousLabelMap='Y' RotateToAcquisition="Y" DisplayLabelMapID="2DT2">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -25,11 +25,11 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\Oblique 2D Slices\Histology\HistContoured_1.dcm</Path>
 		</Image>
-		<Image ID="In_Vivo_2D_T2" Type="Volume" UsePreviousLabelMap='N' RotateToAcquisition="Y">
+		<Image ID="In_Vivo_2D_T2-transformed" Type="Volume" UsePreviousLabelMap='N' RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2DT2_transformed.nii</Path>
 		</Image>
 		<QuestionSet Name="Test Read Histology Slice">
 			<Question Descriptor="Q1" Type="InfoBox">

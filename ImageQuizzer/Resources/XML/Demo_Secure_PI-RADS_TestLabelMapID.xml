@@ -79,11 +79,49 @@
 		</QuestionSet>
 	</Page>
 	<Page ID="IGPC2026" Descriptor="mpMRI" LinkViews="Y" Layout="OneUpRedSlice">
-		<Image ID="In_Vivo_2D_T2" Type="Volume" UseLabelMapID="2DT2-Contour" RotateToAcquisition="Y">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" DisplayLabelMapID="2DT2-Contour" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+		</Image>
+		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
+			<Destination>Yellow</Destination>
+			<Layer>Segmentation</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\2DT2-GoldStandard.seg.nrrd</Path>
+		</Image>
+		<QuestionSet Name="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  SegmentRequired="N" AllowMultipleResponse="Y">
+			<Question Type="InfoBox" Descriptor="Review">
+				<Option>Compare user contour with gold standard.</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page ID="IGPC2026" Descriptor="mpMRI - ADC Contour" LinkViews="Y" Layout="OneUpRedSlice">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" DisplayLabelMapID="ADC-Contour" RotateToAcquisition="Y">
+			<Destination>Red</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\ADC.nii</Path>
+		</Image>
+		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
+			<Destination>Yellow</Destination>
+			<Layer>Segmentation</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\2DT2-GoldStandard.seg.nrrd</Path>
+		</Image>
+		<QuestionSet Name="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  SegmentRequired="N" AllowMultipleResponse="Y">
+			<Question Type="InfoBox" Descriptor="Review">
+				<Option>Compare user contour with gold standard.</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page ID="IGPC2026" Descriptor="mpMRI - DCE Contour" LinkViews="Y" Layout="OneUpRedSlice">
+		<Image ID="In_Vivo_2D_T2" Type="VolumeSequence" DisplayLabelMapID="DCE-Contour" RotateToAcquisition="Y">
+			<Destination>Red</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
 		</Image>
 		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
