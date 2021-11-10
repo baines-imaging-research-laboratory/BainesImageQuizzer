@@ -4,7 +4,7 @@
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<QuestionSet Name="Contouring Challenge" SegmentRequired='Y'>
 			<Question Descriptor="Q1" Type="InfoBox">
@@ -17,7 +17,7 @@
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<Image Type="Volume" ID="Slice" RotateToAcquisition="Y" DicomRead="N">
 			<Destination>Yellow</Destination>
@@ -29,7 +29,7 @@
 			<Destination>Yellow</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<QuestionSet Name="Test Read Histology Slice">
 			<Question Descriptor="Q1" Type="InfoBox">
