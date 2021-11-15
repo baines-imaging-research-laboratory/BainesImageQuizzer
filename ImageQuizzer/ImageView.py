@@ -27,7 +27,7 @@ class ImageView:
     def __init__(self,  parent=None):
         self.sClassName = type(self).__name__
         self.parent = parent
-        self.sPageName = ''
+        self.sPageID = ''
         self.sPageDescriptor = ''
         
 #         self.lValidVolumeFormats = ['NRRD', 'NIFTI', 'MHD', 'DICOM']
@@ -52,8 +52,8 @@ class ImageView:
         self.sParentDataDir = sParentDataDir
 
 
-        # get name and descriptor
-        self.sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Name')
+        # get ID and descriptor
+        self.sPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
         self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
         
         # assign link views
@@ -105,7 +105,7 @@ class ImageView:
         for indImage in range(len(self.xImageNodes)):
 
             
-            sPageID = self.sPageName + '_' + self.sPageDescriptor
+#             sPageID = self.sPageName + '_' + self.sPageDescriptor
             
             # Extract the type of volume to be displayed 
             #     if not a DICOM - assume it is a 'Data' volume
@@ -117,10 +117,10 @@ class ImageView:
 #                 self.oUtilsMsgs.DisplayError(sErrorMsg)
             
             if (sDICOMRead == 'Y'):
-                oImageViewItem = DicomVolumeDetail(self.xImageNodes[indImage], sPageID, self.sParentDataDir)
+                oImageViewItem = DicomVolumeDetail(self.xImageNodes[indImage], self.sPageID, self.sParentDataDir)
             
             else:
-                oImageViewItem = DataVolumeDetail(self.xImageNodes[indImage], sPageID, self.sParentDataDir)
+                oImageViewItem = DataVolumeDetail(self.xImageNodes[indImage], self.sPageID, self.sParentDataDir)
                     
                 
             bLoadSuccess = oImageViewItem.LoadVolume()
@@ -133,7 +133,7 @@ class ImageView:
                     self._loImageViews.append(oImageViewItem)
                 
             else:
-                sMsg = 'Image load Failed : ' + sPageID + ':' + oImageViewItem.sImagePath
+                sMsg = 'Image load Failed : ' + self.sPageID + ':' + oImageViewItem.sImagePath
                 self.oUtilsMsgs.DisplayWarning(sMsg)
                  
             progressBar.setValue(indImage + 1)
@@ -441,7 +441,7 @@ class ViewNodeBase:
         self.sNodeName = ''
 #         self.sFormat=''
         self._xImageElement = None
-        self._sPageID = ''
+#         self._sPageID = ''
         self.sColorTableName = ''
         self.bRotateToAcquisition = False
         
@@ -458,11 +458,11 @@ class ViewNodeBase:
     
     #----------
     def SetPageID(self, sInput):
-        self._sPageID = sInput
-        
+        self.sPageID = sInput
+         
     #----------
     def GetPageID(self):
-        return self._sPageID
+        return self.sPageID
 
     #----------
     def GetSlicerViewNode(self):

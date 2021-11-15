@@ -39,7 +39,7 @@ class Session:
         self._l2iPageQuestionCompositeIndices = []
 
         self._xPageNode = None
-        self.sPageName = ''
+        self.sPageID = ''
         self.sPageDescriptor = ''
         
         self._loQuestionSets = []
@@ -436,7 +436,7 @@ class Session:
 
         self.progress.setValue(self._iCurrentCompositeIndex + 1)
         iProgressPercent = int((self._iCurrentCompositeIndex + 1) / len(self._l2iPageQuestionCompositeIndices) * 100)
-        self.progress.setFormat(self.sPageName + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
+        self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
         
         sMsg = 'Do you wish to exit?'
         if sCaller == 'ExitBtn':
@@ -458,7 +458,7 @@ class Session:
         # an error in the save
         self.progress.setValue(self._iCurrentCompositeIndex)
         iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l2iPageQuestionCompositeIndices) * 100)
-        self.progress.setFormat(self.sPageName + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
+        self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -587,12 +587,12 @@ class Session:
 #         slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
 #         slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
         
-        # add page name/descriptor to the progress bar
+        # add page ID/descriptor to the progress bar
         xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
         self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
-        self.sPageName = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Name')
+        self.sPageID = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'ID')
         iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l2iPageQuestionCompositeIndices) * 100)
-        self.progress.setFormat(self.sPageName + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
+        self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
 
         # set the requested layout for images
         self.sPageLayout = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Layout')
@@ -988,10 +988,11 @@ class Session:
         # get page info to create directory
         xPageNode = self.GetCurrentPageNode()
         sPageIndex = str(self.GetCurrentPageIndex() + 1)
-        sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Name')
-        sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
+        sPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
+#         sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
          
-        sDirName = os.path.join(self.oFilesIO.GetUserQuizResultsDir(), 'Pg'+ sPageIndex + '_' + sPageName + '_' + sPageDescriptor)
+#         sDirName = os.path.join(self.oFilesIO.GetUserQuizResultsDir(), 'Pg'+ sPageIndex + '_' + sPageID + '_' + sPageDescriptor)
+        sDirName = os.path.join(self.oFilesIO.GetUserQuizResultsDir(), 'Pg'+ sPageIndex + '_' + sPageID )
 
         return sDirName
         

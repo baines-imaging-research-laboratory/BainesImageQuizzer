@@ -20,7 +20,7 @@ class QuestionSet():
     
     def __init__(self):
         self.sClassName = type(self).__name__
-        self.name = ''
+        self.id = ''
         self.descriptor = ''
         self._bSegmentRequired = False
         self._bAllowMultipleResponse = False
@@ -76,7 +76,7 @@ class QuestionSet():
             # for each child named 'Question' extract labels and options
             iNumQuestions = self.oIOXml.GetNumChildrenByName(xNodeQuestionSet, "Question")
             
-            self.name = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'Name')
+            self.id = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'ID')
             self.descriptor = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'Descriptor')
             self.SetSegmentRequiredTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'SegmentRequired'))
             self.SetMultipleResponseTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'AllowMultipleResponse'))
@@ -182,7 +182,7 @@ class QuestionSet():
         self.qQuizWidget = qt.QWidget()
         self.qQuizWidgetLayout = qt.QVBoxLayout()
         self.qQuizWidget.setLayout(self.qQuizWidgetLayout)
-        self.qQuizTitle = qt.QLabel(self.name + ' ' + self.descriptor)
+        self.qQuizTitle = qt.QLabel(self.id + ' ' + self.descriptor)
         self.qQuizTitle.setStyleSheet("QLabel{ font: bold}")
         self.qQuizWidgetLayout.addWidget(self.qQuizTitle)
         

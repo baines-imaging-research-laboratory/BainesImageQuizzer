@@ -705,6 +705,7 @@ class UtilsIO:
 
                     # get image element from history that holds the same label map id; 
                     xHistoricalImageElement = None  # initialize
+                    xHistoricalLabelMapMatch = None
                     xHistoricalImageElement = oSession.GetXmlElementFromAttributeHistory('Image','LabelMapID',sLabelMapIDLink)
                     if xHistoricalImageElement != None:
                         xHistoricalLabelMapMatch = oSession.oIOXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')

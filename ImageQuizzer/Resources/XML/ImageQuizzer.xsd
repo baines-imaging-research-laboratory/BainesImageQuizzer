@@ -24,7 +24,6 @@
 			</xs:choice>
 		</xs:sequence>
 		<xs:attribute name="ID" type="xs:string" use="required" />
-		<xs:attribute name="SubID" type="xs:string" />
 		<xs:attribute name="Descriptor" type="xs:string" />
 		<xs:attribute name="LinkViews" type="yesnoType" default="N" />
 		<xs:attribute name="Layout" type="layoutType" default="FourUp" />
@@ -44,7 +43,6 @@
 		<xs:attribute name="Type" use="required" type="imageType" />
 		<xs:attribute name="DicomRead" type="yesnoType" default="N"/>
 		<xs:attribute name="ID" use="required" />
-		<xs:attribute name="UsePreviousLabelMap" type="yesnoType" default="N" />
 		<xs:attribute name="LabelMapID" type="xs:string" />
 		<xs:attribute name="DisplayLabelMapID" type="xs:string" />
 		<xs:attribute name="RotateToAcquisition" type="yesnoType" default="N" />
@@ -69,7 +67,7 @@
 		<xs:sequence>
 			<xs:element ref="Question" minOccurs="0" maxOccurs="unbounded" />
 		</xs:sequence>
-		<xs:attribute name="Name" type="xs:string" />
+		<xs:attribute name="ID" type="xs:string" />
 		<xs:attribute name="Descriptor" type="xs:string" />
 		<xs:attribute name="SegmentRequired" type="yesnoType" default="N" />
 		<xs:attribute name="AllowMultipleResponse" type="yesnoType" default="Y" />
