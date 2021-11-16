@@ -702,7 +702,7 @@ class DataVolumeDetail(ViewNodeBase):
                 
                 bNodeExists = self.CheckForNodeExists('vtkMRMLScalarVolumeNode')
                 if not (bNodeExists):
-                    self.slNode = slicer.util.loadVolume(self.sImagePath, {'show': False, 'name': self.sNodeName})
+                    self.slNode = slicer.util.loadVolume(self.sImagePath, {'show': False, 'name': self.sNodeName, 'singleFile': True} )
                 else: # make sure a node exists after load
                     if bNodeExists and (self.slNode is None):
                         bLoadSuccess = False
