@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session ROIColorFile="PiRadsStudy">
-	<Page Name="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y">
-		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y">
+	<Page ID="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y">
+		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" LabelMapID="DCE-contour">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\ProstateDCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y">
+		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y" LabelMapID="ADC-contour">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\{286306cb-946c-441c-8ed2-630283a455d4}\Data\adc.nrrd</Path>
 		</Image>
-		<Image ID="T2-N4" Type="Volume" RotateToAcquisition="Y">
+		<Image ID="T2-N4" Type="Volume" RotateToAcquisition="Y" LabelMapID="T2-contour">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\{286306cb-946c-441c-8ed2-630283a455d4}\Data\t2ax-N4.nrrd</Path>
 		</Image>
-		<QuestionSet Name="PI-RADS" Descriptor="Contouring Exercise"  SegmentRequired="Y" AllowMultipleResponse="N">
+		<QuestionSet ID="PI-RADS" Descriptor="Contouring Exercise"  SegmentRequired="Y" AllowMultipleResponse="N">
 			<Question Type="InfoBox" Descriptor="TestDetails">
 				<Option>User contours on this page and is allowed to adjust on next.</Option>
 				<Option>No multiple responses=n</Option>
@@ -27,20 +27,20 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page Name="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y">
-		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" UsePreviousLabelMap='Y'>
+	<Page ID="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y">
+		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" DisplayLabelMapID='DCE-contour'>
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\ProstateDCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y" UsePreviousLabelMap='Y'>
+		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y" DisplayLabelMapID='ADC-contour'>
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\{286306cb-946c-441c-8ed2-630283a455d4}\Data\adc.nrrd</Path>
 		</Image>
-		<Image ID="T2-N4" Type="Volume" RotateToAcquisition="Y" UsePreviousLabelMap='Y'>
+		<Image ID="T2-N4" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID='T2-contour'>
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -52,12 +52,12 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\{286306cb-946c-441c-8ed2-630283a455d4}\Data\ktrans.nrrd</Path>
 		</Image>
-		<QuestionSet Name="Segmentation" Descriptor="Self-Assessment"  SegmentRequired="Y" AllowMultipleResponse="N">
+		<QuestionSet ID="Segmentation" Descriptor="Self-Assessment"  SegmentRequired="Y" AllowMultipleResponse="N">
 			<Question Type="InfoBox" Descriptor="TestDetails">
 				<Option>Contours from previous page are displayed. User can adjust.</Option>
 				<Option>No multiple responses=n</Option>
 				<Option>SegmentRequired=y</Option>
-				<Option>UsePreviousLabelMap=y</Option>
+				<Option>DisplayLabelMapID=xxx-contour</Option>
 			</Question>
 			<Question Type="Radio" Descriptor="How did you do?">
 				<Option>Great</Option>

@@ -19,7 +19,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
-		<Image Type="Volume" ID="Slice" RotateToAcquisition="Y" DicomRead="N">
+		<Image Type="Volume" ID="Slice1" RotateToAcquisition="Y" DicomRead="N">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -33,7 +33,7 @@
 		</Image>
 		<QuestionSet ID="Test Read Histology Slice">
 			<Question Descriptor="Q1" Type="InfoBox">
-				<Option>Loading histology single slice with LoadVolume (Data)</Option>
+				<Option>Loading histology single slice #1 with LoadVolume (Data)</Option>
 				<Option>Attribute details</Option>
 				<Option>   LinkViews="N"</Option>
 				<Option>     (Histology will only appear on one view)</Option>
@@ -51,7 +51,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
-		<Image Type="Volume" ID="Slice" RotateToAcquisition="Y" DicomRead="N">
+		<Image Type="Volume" ID="Slice2" RotateToAcquisition="Y" DicomRead="N">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -65,7 +65,7 @@
 		</Image>
 		<QuestionSet ID="Test Read Histology Slice">
 			<Question Descriptor="Q1" Type="InfoBox">
-				<Option>Loading histology single slice with LoadVolume (Data)</Option>
+				<Option>Loading histology single slice #2 with LoadVolume (Data)</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
@@ -76,7 +76,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
-		<Image Type="Volume" ID="Slice" RotateToAcquisition="Y" DicomRead="N">
+		<Image Type="Volume" ID="Slice3" RotateToAcquisition="Y" DicomRead="N">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -90,7 +90,7 @@
 		</Image>
 		<QuestionSet ID="Test Read Histology Slice">
 			<Question Descriptor="Q1" Type="InfoBox">
-				<Option>Loading histology single slice with LoadVolume (Data)</Option>
+				<Option>Loading histology single slice #3 with LoadVolume (Data)</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
@@ -101,7 +101,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
-		<Image Type="Volume" ID="Slice" RotateToAcquisition="Y" DicomRead="N">
+		<Image Type="Volume" ID="Slice4" RotateToAcquisition="Y" DicomRead="N">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -115,7 +115,7 @@
 		</Image>
 		<QuestionSet ID="Test Read Histology Slice">
 			<Question Descriptor="Q1" Type="InfoBox">
-				<Option>Loading histology single slice with LoadVolume (Data)</Option>
+				<Option>Loading histology single slice #4 with LoadVolume (Data)</Option>
 			</Question>
 		</QuestionSet>
 	</Page>

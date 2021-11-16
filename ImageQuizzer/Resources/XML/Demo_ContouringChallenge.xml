@@ -1,6 +1,6 @@
 <Session>
-	<Page Name="Patient 1" Descriptor="Contouring Challenge">
-		<Image Type="Volume" ID="MR" RotateToAcquisition="Y">
+	<Page ID="Patient 1" Descriptor="Contouring Challenge">
+		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" LabelMapID="MR_Contour">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -18,7 +18,7 @@
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
-		<QuestionSet Name="Contouring Challenge" Descriptor=""  SegmentRequired="Y">
+		<QuestionSet ID="Contouring Challenge" Descriptor=""  SegmentRequired="Y">
 			<Question Type="InfoBox" Descriptor="Segmentation Instructions">
 				<Option>Contour the tumor using the segment editor.</Option>
 			</Question>
@@ -37,20 +37,20 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page Name="Patient 1" Descriptor="Contouring Challenge">
-		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" UsePreviousLabelMap="Y">
+	<Page ID="Patient 1" Descriptor="Contouring Challenge">
+		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" DisplayLabelMapID="MR_Contour">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" UsePreviousLabelMap="Y">
+		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" DisplayLabelMapID="MR_Contour">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" UsePreviousLabelMap="Y">
+		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" DisplayLabelMapID="MR_Contour">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
@@ -62,9 +62,9 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1-GoldStandard.seg.nrrd</Path>
 		</Image>
-		<QuestionSet Name="Gold Standard Display" Descriptor=""  SegmentRequired="Y">
+		<QuestionSet ID="Gold Standard Display" Descriptor=""  SegmentRequired="Y">
 			<Question Type="InfoBox" Descriptor="Compare to gold standard">
-				<Option>The gold standard is presented over the user's blue contour.</Option>
+				<Option>The gold standard is presented over the user's contour.</Option>
 			</Question>
 			<Question Type="Radio" Descriptor="Observer position:">
 				<Option>Graduate student</Option>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session ROIColorFile="PiRadsStudy">
-	<Page Name="IGPCxxx" Descriptor="DCE Contouring" LinkViews="Y">
+	<Page ID="IGPCxxx" Descriptor="DCE Contouring" LinkViews="Y">
 		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -19,7 +19,7 @@
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\IGPC1010\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
 		</Image>
-		<QuestionSet Name="PI-RADS" Descriptor="Contouring Exercise"  SegmentRequired="Y" AllowMultipleResponse="Y">
+		<QuestionSet ID="PI-RADS" Descriptor="Contouring Exercise"  SegmentRequired="Y" AllowMultipleResponse="Y">
 			<Question Type="InfoBox" Descriptor="Segmentation Instructions">
 				<Option>In Segment Editor tab, select volume to create segments.</Option>
 				<Option>     Click Edit Selected Label Map collapsible button to access the segmenting tools.</Option>
