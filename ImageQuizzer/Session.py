@@ -249,39 +249,42 @@ class Session:
 
         else:
 
-#             self.AddSessionLoginTimestamp()
-
-            self.SetupWidgets(slicerMainLayout)
-            self.oQuizWidgets.qLeftWidget.activateWindow()
-
+            bValidationSuccess, sValidationMsg = self.oFilesIO.ValidateQuiz(xRootNode)
             
-            # turn on functionality if any of the question set attributes indicated they are required
-            self.SetMultipleResponsesInQuiz( \
-                self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
-                './/Page/QuestionSet', 'AllowMultipleResponse','Y'))
-            self.AddSegmentationModule( \
-                self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
-                './/Page/QuestionSet', 'SegmentRequired','Y'))
-            
-            # set up ROI colors for segmenting
-#             self.oUtilsIO.SetResourcesROIColorFilesDir()
-            sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
-            self.oFilesIO.SetupROIColorFile(sColorFileName)
-
-
-        self.BuildPageQuestionCompositeIndexList()
-        # check for partial or completed quiz
-        self.SetCompositeIndexIfResumeRequired()
+            if bValidationSuccess:
+                self.SetupWidgets(slicerMainLayout)
+                self.oQuizWidgets.qLeftWidget.activateWindow()
+    
+                
+                # turn on functionality if any of the question set attributes indicated they are required
+                self.SetMultipleResponsesInQuiz( \
+                    self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
+                    './/Page/QuestionSet', 'AllowMultipleResponse','Y'))
+                self.AddSegmentationModule( \
+                    self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
+                    './/Page/QuestionSet', 'SegmentRequired','Y'))
+                
+                # set up ROI colors for segmenting
+    #             self.oUtilsIO.SetResourcesROIColorFilesDir()
+                sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
+                self.oFilesIO.SetupROIColorFile(sColorFileName)
+    
+    
+                self.BuildPageQuestionCompositeIndexList()
+                # check for partial or completed quiz
+                self.SetCompositeIndexIfResumeRequired()
+                
+                self.progress.setMaximum(len(self._l2iPageQuestionCompositeIndices))
+                self.progress.setValue(self._iCurrentCompositeIndex)
         
-        self.progress.setMaximum(len(self._l2iPageQuestionCompositeIndices))
-        self.progress.setValue(self._iCurrentCompositeIndex)
-
-        # if quiz is not complete, finish setup
-        #    (the check for resuming the quiz may have found it was already complete)
-        if not self.QuizComplete():
-            # setup buttons and display
-            self.EnableButtons()
-            self.DisplayPage()
+                # if quiz is not complete, finish setup
+                #    (the check for resuming the quiz may have found it was already complete)
+                if not self.QuizComplete():
+                    # setup buttons and display
+                    self.EnableButtons()
+                    self.DisplayPage()
+            else:
+                self.oUtilsMsgs.DisplayError(sValidationMsg)
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
