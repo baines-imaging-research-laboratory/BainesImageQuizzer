@@ -361,10 +361,11 @@ class UtilsIO:
             
             iPageNum = 0
             for xPage in xPageElements:
+                lPathAndNodeNames= []
                 iPageNum= iPageNum + 1
+
                 sPageID = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ID')
                 
-                lPathAndNodeNames= []
                 # Image element validations
                 xImageElements = self.oIOXml.GetChildren(xPage, 'Image')
                 for xImage in xImageElements:
@@ -383,12 +384,11 @@ class UtilsIO:
                     if len(xImagePath) != 1:
                         sMsg = sMsg + '\nError for Image Path Element. See Page:' + str(iPageNum) + ': ' + sNodeNameID\
                                  + '\n   .....There is either none or more than 1 of the Path elements'
-#                         raise ElementFrequencyError
                     
     
      
+                    # For any page, test that a path always has only one node name associated with it
                     sImagePath = self.oIOXml.GetDataInNode(xImagePath[0])
-                    # test that path always has only one node name associated with it.
                      
                     # create tuple of path, sNodeName
                     tupPathAndID = (sImagePath, sNodeNameID)
@@ -423,10 +423,9 @@ class UtilsIO:
         
         except:
             self.oUtilsMsgs.DisplayWarning(sMsg)
-            # after warning, reset the message for calling function error display
+            # after warning, reset the message for calling function to display error and exit
             sMsg = 'See Administrator: ERROR in XML validation.'
             bSuccess = False
-            # calling function will display error msg
             
             
         return bSuccess, sMsg
