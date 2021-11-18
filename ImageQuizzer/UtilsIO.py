@@ -354,57 +354,80 @@ class UtilsIO:
         '''
         sMsg = ''
         bSuccess = True
-        lPathAndNodeNames= []
         
         
-        xPageElements = self.oIOXml.GetChildren(xRootNode, 'Page')
-        
-        iPageNum = 0
-        for xPage in xPageElements:
-            iPageNum= iPageNum + 1
-            sPageID = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ID')
+        try:
+            xPageElements = self.oIOXml.GetChildren(xRootNode, 'Page')
             
-            # Image element validations
-            xImageElements = self.oIOXml.GetChildren(xPage, 'Image')
-            for xImage in xImageElements:
-                sImageID = self.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
-
-                # Page ID + Image ID creates the node name for the image that is loaded.
-                # Use this to test with Path for uniqueness
-                sNodeNameID = sPageID + '_' + sImageID
-
-                # Destination element frequency and content
-                # Layout element frequency and content
-                # Orientation element frequency and content
+            iPageNum = 0
+            for xPage in xPageElements:
+                iPageNum= iPageNum + 1
+                sPageID = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ID')
                 
-                # Path element frequency
-                xImagePath = self.oIOXml.GetChildren(xImage, 'Path')
-                sImagePath = ''
-                if len(xImagePath) != 1:
-                    sMsg = sMsg + '\nEither there is no Path element or there is more than one path defined. See Page ' + str(iPageNum) + ': ' + sNodeNameID
-                    bSuccess = False
-                else:
-
+                lPathAndNodeNames= []
+                # Image element validations
+                xImageElements = self.oIOXml.GetChildren(xPage, 'Image')
+                for xImage in xImageElements:
+                    sImageID = self.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
+    
+                    # Page ID + Image ID creates the node name for the image that is loaded (in ImageView>ViewNodeBase)
+                    sNodeNameID = sPageID + '_' + sImageID
+                    
+                    # Destination element frequency and content
+                    # Layout element frequency and content
+                    # Orientation element frequency and content
+                    
+                    # Path element frequency
+                    xImagePath = self.oIOXml.GetChildren(xImage, 'Path')
+                    sImagePath = ''
+                    if len(xImagePath) != 1:
+                        sMsg = sMsg + '\nError for Image Path Element. See Page:' + str(iPageNum) + ': ' + sNodeNameID\
+                                 + '\n   .....There is either none or more than 1 of the Path elements'
+#                         raise ElementFrequencyError
+                    
+    
+     
                     sImagePath = self.oIOXml.GetDataInNode(xImagePath[0])
                     # test that path always has only one node name associated with it.
-                    
+                     
                     # create tuple of path, sNodeName
                     tupPathAndID = (sImagePath, sNodeNameID)
-                    for i in lPathAndNodeNames:
-                        if 
-                    # check if tuple-path exists in the list
-                    # if y; check that tuple-sNodeName matches - else error
-                    # if n; add to list
-                    
-#                     l=[1,2,3,4,5,2,3,4,7,9,5]
-#                     l1=[]
-#                     for i in l:
-#                         if i not in l1:
-#                             l1.append(i)
-#                         else:
-#                             print(i,end=' ')
-                    
-                    print(sNodeNameID,'...', sImagePath)
+                     
+                    # search list of path/nodeNames for existing match
+                    bFoundMatchingPath = False
+                    ind = 0
+                    for lElement in lPathAndNodeNames:
+                        ind = ind + 1
+                        msg = (str(ind) + ':' )
+                        print(lPathAndNodeNames)
+                        print (msg)
+                        if bFoundMatchingPath == False:
+                            # check if path exists in the list elements
+                            if sImagePath in lElement:
+                                bFoundMatchingPath = True
+                                print('found matching path: ',lElement)
+                                # check that sNodeName exists in that list element
+                                if sNodeNameID not in lElement:
+                                    sMsg = sMsg + "\nIn XML, the combination of 'PageID_ImageID' should always have the same associated Image Path" +\
+                                            "\n   .....Check all paths for :" + sNodeNameID
+                                 
+                    if not bFoundMatchingPath:
+                        # new path found; add to list
+                        lPathAndNodeNames.append(tupPathAndID)
+                                
+
+            # validation errors found
+            if sMsg != '':
+                raise
+        
+        
+        except:
+            self.oUtilsMsgs.DisplayWarning(sMsg)
+            # after warning, reset the message for calling function error display
+            sMsg = 'See Administrator: ERROR in XML validation.'
+            bSuccess = False
+            # calling function will display error msg
+            
             
         return bSuccess, sMsg
     
