@@ -78,6 +78,10 @@ class UtilsIOXml:
         
         self.sTimestampFormat = "%Y%m%d_%H:%M:%S"
         self.oUtilsMsgs = UtilsMsgs()
+        self.lValidSliceWidgets = ['Red', 'Green', 'Yellow', 'Slice4'] # Slice4 for two over two layout
+        self.lValidLayouts = ['TwoOverTwo', 'OneUpRedSlice', 'SideBySideRedYellow', 'FourUp']
+        self.lValidLayers = ['Foreground', 'Background', 'Segmentation', 'Label']
+        self.lValidOrientations = ['Axial', 'Sagittal', 'Coronal']
     
     #----------
     def GetXmlTree(self):

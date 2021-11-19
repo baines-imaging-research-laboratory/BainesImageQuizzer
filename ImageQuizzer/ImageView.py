@@ -31,7 +31,7 @@ class ImageView:
         self.sPageDescriptor = ''
         
 #         self.lValidVolumeFormats = ['NRRD', 'NIFTI', 'MHD', 'DICOM']
-        self.lValidSliceWidgets = ['Red', 'Green', 'Yellow', 'Slice4'] # for two over two layout
+#         self.lValidSliceWidgets = ['Red', 'Green', 'Yellow', 'Slice4'] # for two over two layout
         self._loImageViews = []
         self.bLinkViews = False
         
@@ -161,7 +161,7 @@ class ImageView:
  
         # initialize all layers to None
         # make sure the widget exists in case the default layout changes
-        for sWidgetName in self.lValidSliceWidgets:
+        for sWidgetName in self.oIOXml.lValidSliceWidgets:
             slWidget = slicer.app.layoutManager().sliceWidget(sWidgetName)
             if slWidget != None:
                 slWindowLogic = slWidget.sliceLogic()

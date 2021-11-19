@@ -373,48 +373,57 @@ class UtilsIO:
     
                     # Page ID + Image ID creates the node name for the image that is loaded (in ImageView>ViewNodeBase)
                     sNodeNameID = sPageID + '_' + sImageID
+                    sPageReference = str(iPageNum) + ' ' + sNodeNameID
+
+                    # >>>>>>>>>>>>>>>
+                    # Validate element frequency (one required element) and content
+                    sValidationMsg = self.ValidateRequiredElement(xImage, 'Layer', sPageReference, self.oIOXml.lValidLayers)
+                    sMsg = sMsg + sValidationMsg
                     
-                    # Destination element frequency and content
-                    # Layout element frequency and content
-                    # Orientation element frequency and content
+                    sValidationMsg = self.ValidateRequiredElement(xImage, 'Orientation', sPageReference, self.oIOXml.lValidOrientations)
+                    sMsg = sMsg + sValidationMsg
                     
-                    # Path element frequency
-                    xImagePath = self.oIOXml.GetChildren(xImage, 'Path')
-                    sImagePath = ''
-                    if len(xImagePath) != 1:
-                        sMsg = sMsg + '\nError for Image Path Element. See Page:' + str(iPageNum) + ': ' + sNodeNameID\
-                                 + '\n   .....There is either none or more than 1 of the Path elements'
+                    sValidationMsg = self.ValidateRequiredElement(xImage, 'Destination', sPageReference, self.oIOXml.lValidSliceWidgets)
+                    sMsg = sMsg + sValidationMsg
                     
-    
+                    sValidationMsg = self.ValidateRequiredElement(xImage, 'Path', sPageReference)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    # >>>>>>>>>>>>>>>
+                    
      
-                    # For any page, test that a path always has only one node name associated with it
-                    sImagePath = self.oIOXml.GetDataInNode(xImagePath[0])
-                     
-                    # create tuple of path, sNodeName
-                    tupPathAndID = (sImagePath, sNodeNameID)
-                     
-                    # search list of path/nodeNames for existing match
-                    bFoundMatchingPath = False
-                    ind = 0
-                    for lElement in lPathAndNodeNames:
-                        ind = ind + 1
-                        msg = (str(ind) + ':' )
-                        print(lPathAndNodeNames)
-                        print (msg)
-                        if bFoundMatchingPath == False:
-                            # check if path exists in the list elements
-                            if sImagePath in lElement:
-                                bFoundMatchingPath = True
-                                print('found matching path: ',lElement)
-                                # check that sNodeName exists in that list element
-                                if sNodeNameID not in lElement:
-                                    sMsg = sMsg + "\nIn XML, the combination of 'PageID_ImageID' should always have the same associated Image Path" +\
-                                            "\n   .....Check all paths for :" + sNodeNameID
-                                 
-                    if not bFoundMatchingPath:
-                        # new path found; add to list
-                        lPathAndNodeNames.append(tupPathAndID)
+                    # For any page, test that a path always has only one associated PageID_ImageID (or node name)
+                    #    (Otherwise, the quizzer will reload the same image with a different node name)
+                    xImagePath = self.oIOXml.GetChildren(xImage, 'Path')
+                    if len(xImagePath) == 1:
+                        sImagePath = self.oIOXml.GetDataInNode(xImagePath[0])
+                         
+                        # create tuple of path, sNodeName
+                        tupPathAndID = (sImagePath, sNodeNameID)
+                         
+                        # search list of path/nodeNames for existing match
+                        bFoundMatchingPath = False
+                        ind = 0
+                        for lElement in lPathAndNodeNames:
+                            ind = ind + 1
+                            msg = (str(ind) + ':' )
+                            print(lPathAndNodeNames)
+                            print (msg)
+                            if bFoundMatchingPath == False:
+                                # check if path exists in the list elements
+                                if sImagePath in lElement:
+                                    bFoundMatchingPath = True
+                                    print('found matching path: ',lElement)
+                                    # check that sNodeName exists in that list element
+                                    if sNodeNameID not in lElement:
+                                        sMsg = sMsg + "\nIn any Page Element, there should be a one-to-one correlation of 'PageID_ImageID' with the Image Path" +\
+                                                "\n   .....Check all paths for Page: " + str(iPageNum) + ' '+ sNodeNameID
+                                     
+                        if not bFoundMatchingPath:
+                            # new path found; add to list
+                            lPathAndNodeNames.append(tupPathAndID)
                                 
+            # >>>>>>>>>>>>>>>
 
             # validation errors found
             if sMsg != '':
@@ -430,6 +439,31 @@ class UtilsIO:
             
         return bSuccess, sMsg
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateRequiredElement(self, xParentElement, sElementName, sPageReference, lValidOptions=None):
+        '''
+            This function checks that there is exactly one child element for the input parent element.
+            If there is a valid list of options input as a parameter, the function checks that the
+            data stored in the element exists in that list.
+        '''
+        sMsg = ''
+        
+        xChildren = self.oIOXml.GetChildren(xParentElement, sElementName)
+        if len(xChildren) != 1:
+            sMsg = sMsg + '\nError for ' + sElementName + ' Element.   See Page:' + sPageReference\
+                     + '\n   .....There is either more than 1 of these elements or it is missing.'
+        else:
+            if lValidOptions != None:
+                sDataValue = self.oIOXml.GetDataInNode(xChildren[0])
+                if sDataValue not in lValidOptions:
+                    sValidOptions = ''
+                    for sWidgetName in lValidOptions:
+                        sValidOptions = sValidOptions + ', ' + sWidgetName
+                    sMsg = sMsg + '\nNot a valid ' + sElementName + ' : ' + sDataValue + '   See Page:' + sPageReference\
+                            + '\n   .....Valid destinations are:' + sValidOptions
+        
+        
+        return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def PopulateUserQuizFolder(self):
