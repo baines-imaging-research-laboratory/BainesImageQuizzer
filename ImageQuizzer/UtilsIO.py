@@ -375,24 +375,33 @@ class UtilsIO:
                     sNodeNameID = sPageID + '_' + sImageID
                     sPageReference = str(iPageNum) + ' ' + sNodeNameID
 
-                    # >>>>>>>>>>>>>>>
-                    # Validate element frequency (one required element) and content
-                    sValidationMsg = self.ValidateRequiredElement(xImage, 'Layer', sPageReference, self.oIOXml.lValidLayers)
-                    sMsg = sMsg + sValidationMsg
-                    
-                    sValidationMsg = self.ValidateRequiredElement(xImage, 'Orientation', sPageReference, self.oIOXml.lValidOrientations)
-                    sMsg = sMsg + sValidationMsg
-                    
-                    sValidationMsg = self.ValidateRequiredElement(xImage, 'Destination', sPageReference, self.oIOXml.lValidSliceWidgets)
-                    sMsg = sMsg + sValidationMsg
-                    
+                    # Validate  frequency (one required element) and content
+                    # >>>>>>>>>>>>>>> Elements
                     sValidationMsg = self.ValidateRequiredElement(xImage, 'Path', sPageReference)
                     sMsg = sMsg + sValidationMsg
                     
-                    # >>>>>>>>>>>>>>>
+                    sValidationMsg = self.ValidateElementOptions(xImage, 'Layer', sPageReference, self.oIOXml.lValidLayers)
+                    sMsg = sMsg + sValidationMsg
                     
+                    sValidationMsg = self.ValidateElementOptions(xImage, 'Destination', sPageReference, self.oIOXml.lValidSliceWidgets)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    sValidationMsg = self.ValidateElementOptions(xImage, 'Orientation', sPageReference, self.oIOXml.lValidOrientations)
+                    sMsg = sMsg + sValidationMsg
      
-                    # For any page, test that a path always has only one associated PageID_ImageID (or node name)
+                    # >>>>>>>>>>>>>>> Attributes
+                    sValidationMsg = self.ValidateRequiredAttribute(xImage, 'Type', sPageReference)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    sValidationMsg = self.ValidateAttributeOptions(xImage, 'Type', sPageReference, self.oIOXml.lValidImageTypes)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    sValidationMsg = self.ValidateAttributeOptions(xImage, 'ROIVisibilityCode', sPageReference, self.oIOXml.lValidRoiVisibilityCodes)
+                    sMsg = sMsg + sValidationMsg
+     
+                    # >>>>>>>>>>>>>>>
+
+                    # For any page, test that a path always has only one associated PageID_ImageID (aka node name)
                     #    (Otherwise, the quizzer will reload the same image with a different node name)
                     xImagePath = self.oIOXml.GetChildren(xImage, 'Path')
                     if len(xImagePath) == 1:
@@ -440,7 +449,7 @@ class UtilsIO:
         return bSuccess, sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateRequiredElement(self, xParentElement, sElementName, sPageReference, lValidOptions=None):
+    def ValidateRequiredElement(self, xParentElement, sElementName, sPageReference):
         '''
             This function checks that there is exactly one child element for the input parent element.
             If there is a valid list of options input as a parameter, the function checks that the
@@ -452,19 +461,57 @@ class UtilsIO:
         if len(xChildren) != 1:
             sMsg = sMsg + '\nError for ' + sElementName + ' Element.   See Page:' + sPageReference\
                      + '\n   .....There is either more than 1 of these elements or it is missing.'
-        else:
-            if lValidOptions != None:
-                sDataValue = self.oIOXml.GetDataInNode(xChildren[0])
-                if sDataValue not in lValidOptions:
-                    sValidOptions = ''
-                    for sWidgetName in lValidOptions:
-                        sValidOptions = sValidOptions + ', ' + sWidgetName
-                    sMsg = sMsg + '\nNot a valid ' + sElementName + ' : ' + sDataValue + '   See Page:' + sPageReference\
-                            + '\n   .....Valid destinations are:' + sValidOptions
-        
         
         return sMsg
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateElementOptions(self, xParentElement, sElementName, sPageReference, lValidOptions):
+        '''
+            This function checks that the data stored in the xml element exists in the list of valid options.
+        '''
+        sMsg = ''
+        
+        xChildren = self.oIOXml.GetChildren(xParentElement, sElementName)
+
+        for xChild in xChildren:
+            sDataValue = self.oIOXml.GetDataInNode(xChild)
+            if sDataValue not in lValidOptions:
+                sValidOptions = ''
+                for sOption in lValidOptions:
+                    sValidOptions = sValidOptions + ', ' + sOption
+                sMsg = sMsg + '\nNot a valid option for ' + sElementName + ' : ' + sDataValue + '   See Page:' + sPageReference\
+                        + '\n   .....Valid options are:' + sValidOptions
+
+        return sMsg
+                        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateRequiredAttribute(self, xParentElement, sAttributeName, sPageReference):
+        sMsg = ''
+        sDataValue = ''
+        sDataValue = self.oIOXml.GetValueOfNodeAttribute(xParentElement, sAttributeName)
+        if sDataValue == '':
+            sMsg = sMsg + '\nError for ' + sAttributeName + ' Attribute.   See Page:' + sPageReference\
+                     + '\n   .....The required attribute is missing.'
+        
+        return sMsg
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateAttributeOptions(self, xParentElement, sAttributeName, sPageReference, lValidOptions):
+        sMsg = ''
+        
+        sDataValue = self.oIOXml.GetValueOfNodeAttribute(xParentElement, sAttributeName)
+
+        # check for valid option if it exists
+        if sDataValue != '':
+            if sDataValue not in lValidOptions:
+                sValidOptions = ''
+                for sOption in lValidOptions:
+                    sValidOptions = sValidOptions + ', ' + sOption
+                sMsg = sMsg + '\nNot a valid option for ' + sAttributeName + ' : ' + sDataValue + '   See Page:' + sPageReference\
+                        + '\n   .....Valid options are:' + sValidOptions
+            
+        return sMsg
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def PopulateUserQuizFolder(self):
             

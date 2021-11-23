@@ -82,6 +82,8 @@ class UtilsIOXml:
         self.lValidLayouts = ['TwoOverTwo', 'OneUpRedSlice', 'SideBySideRedYellow', 'FourUp']
         self.lValidLayers = ['Foreground', 'Background', 'Segmentation', 'Label']
         self.lValidOrientations = ['Axial', 'Sagittal', 'Coronal']
+        self.lValidImageTypes = ['Volume', 'VolumeSequence', 'LabelMap', 'Segmentation', 'RTStruct']
+        self.lValidRoiVisibilityCodes = ['All', 'None', 'Select', 'Ignore']
     
     #----------
     def GetXmlTree(self):
