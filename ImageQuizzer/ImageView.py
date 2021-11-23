@@ -256,7 +256,7 @@ class ImageView:
     
 
             elif oViewNode.sViewLayer == 'Segmentation':
-                if not (oViewNode.sRoiVisibilityCode == 'Empty'):
+                if not (oViewNode.sRoiVisibilityCode == ''):
                     self.SetSegmentRoiVisibility(oViewNode)
 #                 print('after set Segmentation Volume ID',slWidget.sliceOrientation)
 
@@ -774,7 +774,7 @@ class DicomVolumeDetail(ViewNodeBase):
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
         
-        self.sRoiVisibilityCode = 'Empty'
+        self.sRoiVisibilityCode = ''
         self.sVolumeReferenceSeriesUID = ''
         self.sSeriesInstanceUID = ''
         self.sStudyInstanceUID = ''
@@ -971,18 +971,20 @@ class DicomVolumeDetail(ViewNodeBase):
         '''
         
         # get XML ROIs element
-        xRoisNode = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'ROIs')
+        lxRoisNode = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'ROIs')
         
         # get visibility code from the attribute
-        self.sRoiVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(xRoisNode[0], 'ROIVisibilityCode')
+        #    if the attribute doesn't exist, the code remains as it was initialized
+        if len(lxRoisNode) > 0 :
+            self.sRoiVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(lxRoisNode[0], 'ROIVisibilityCode')
 
         if (self.sRoiVisibilityCode == 'Select' or self.sRoiVisibilityCode == 'Ignore'):
             
             # get list of ROI children
-            xRoiChildren = self.oIOXml.GetChildren(xRoisNode[0], 'ROI')
+            lxRoiChildren = self.oIOXml.GetChildren(lxRoisNode[0], 'ROI')
 
-            for indRoi in range(len(xRoiChildren)):
-                sRoiName = self.oIOXml.GetDataInNode(xRoiChildren[indRoi])
+            for indRoi in range(len(lxRoiChildren)):
+                sRoiName = self.oIOXml.GetDataInNode(lxRoiChildren[indRoi])
                 self.lsRoiList.append(sRoiName)
                 
         
