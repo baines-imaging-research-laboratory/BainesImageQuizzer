@@ -180,9 +180,9 @@ class UtilsIOXml:
         
 #         xmlChildren = xParentNode.getElementsByTagName(sChildTagName)
 
-        xmlChildren = xParentNode.findall(sChildTagName)
+        lxChildren = xParentNode.findall(sChildTagName)
         
-        return xmlChildren
+        return lxChildren
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetNthChild(self, xParentNode, sChildTagName, indElem):
@@ -218,8 +218,8 @@ class UtilsIOXml:
         dtLatestTimestamp = ''    # timestamp of type 'datetime'
         xLatestChildElement = None
  
-        xAllChildren = self.GetChildren(xParentNode, sChildTagName)
-        for xChild in xAllChildren:
+        lxAllChildren = self.GetChildren(xParentNode, sChildTagName)
+        for xChild in lxAllChildren:
             sResponseTime = self.GetValueOfNodeAttribute(xChild, 'ResponseTime')
             dtResponseTimestamp = datetime.strptime(sResponseTime, self.sTimestampFormat)
 #             print('*** TIME : %s' % sResponseTime)

@@ -82,9 +82,9 @@ class QuestionSet():
             self.SetMultipleResponseTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'AllowMultipleResponse'))
             
             
-            xQuestions = self.oIOXml.GetChildren(xNodeQuestionSet, 'Question')
+            lxQuestions = self.oIOXml.GetChildren(xNodeQuestionSet, 'Question')
             
-            for xNodeQuestion in xQuestions:
+            for xNodeQuestion in lxQuestions:
 
                 dictModifiers = {}
 
@@ -138,9 +138,9 @@ class QuestionSet():
         lOptions = []
 
         # get options for each question
-        xOptions = self.oIOXml.GetChildren(xNodeQuestion, 'Option')
+        lxOptions = self.oIOXml.GetChildren(xNodeQuestion, 'Option')
 
-        for iElem in range(len(xOptions)):
+        for iElem in range(len(lxOptions)):
             
             xNodeOption = self.oIOXml.GetNthChild(xNodeQuestion, 'Option', iElem)
             sValue = self.oIOXml.GetDataInNode(xNodeOption)

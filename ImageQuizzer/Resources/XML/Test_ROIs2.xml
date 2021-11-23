@@ -1,0 +1,49 @@
+<Session>
+	<Page ID="CL PT001" Descriptor="Multiparametric_MRI">
+		<Image DicomRead="Y" Type="Volume" ID="T1W MR">
+			<Destination>Red</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\000000.dcm</Path>
+		</Image>
+		<Image DicomRead="Y" Type="Volume" ID="T2W MR">
+			<Destination>Yellow</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\000000.dcm</Path>
+		</Image>
+		<Image Type="Volume" ID="DWI">
+			<Destination>Green</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\BrainDWI\dwi.nrrd</Path>
+		</Image>
+		<Image DicomRead="Y" Type="RTStruct" ID="Seg T2W">
+			<Destination>Yellow</Destination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\RT Struct.dcm</Path>
+			<ROIs ROIVisibilityCode="All">
+				<ROI>1</ROI>
+			</ROIs>
+		</Image>
+		<Image DicomRead="Y" Type="RTStruct" ID="Seg T1W">
+			<Destination>Red</Destination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\RT Struct.dcm</Path>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>1</ROI>
+			</ROIs>
+		</Image>
+		<Image Type="LabelMap" ID="Contour1">
+			<Destination>Green</Destination>
+			<Layer>Label</Layer>
+			<Path>ImageVolumes\BrainDWI\Segment_1-label.nrrd</Path>
+		</Image>
+		<QuestionSet ID="QS-Checkup" Descriptor="Your thoughts?" AllowMultipleResponse="Y">
+			<Question Type="CheckBox" Descriptor="Test Items:">
+				<Option>Two different DICOM series with different RTStructs</Option> 
+				<Option>NRRD file on Green with mask on Label layer</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>

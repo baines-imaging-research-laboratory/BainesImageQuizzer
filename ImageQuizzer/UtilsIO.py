@@ -357,18 +357,21 @@ class UtilsIO:
         
         
         try:
-            xPageElements = self.oIOXml.GetChildren(xRootNode, 'Page')
+            lxPageElements = self.oIOXml.GetChildren(xRootNode, 'Page')
             
             iPageNum = 0
-            for xPage in xPageElements:
+            for xPage in lxPageElements:
                 lPathAndNodeNames= []
                 iPageNum= iPageNum + 1
 
+                sValidationMsg = self.ValidateRequiredAttribute(xPage, 'ID', str(iPageNum))
+                sMsg = sMsg + sValidationMsg
+                
                 sPageID = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ID')
                 
                 # Image element validations
-                xImageElements = self.oIOXml.GetChildren(xPage, 'Image')
-                for xImage in xImageElements:
+                lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
+                for xImage in lxImageElements:
                     sImageID = self.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
     
                     # Page ID + Image ID creates the node name for the image that is loaded (in ImageView>ViewNodeBase)
@@ -390,22 +393,22 @@ class UtilsIO:
                     sMsg = sMsg + sValidationMsg
      
                     # >>>>>>>>>>>>>>> Attributes
+                    sValidationMsg = self.ValidateRequiredAttribute(xImage, 'ID', sPageReference)
+                    sMsg = sMsg + sValidationMsg
+                    
                     sValidationMsg = self.ValidateRequiredAttribute(xImage, 'Type', sPageReference)
                     sMsg = sMsg + sValidationMsg
                     
                     sValidationMsg = self.ValidateAttributeOptions(xImage, 'Type', sPageReference, self.oIOXml.lValidImageTypes)
                     sMsg = sMsg + sValidationMsg
                     
-                    sValidationMsg = self.ValidateAttributeOptions(xImage, 'ROIVisibilityCode', sPageReference, self.oIOXml.lValidRoiVisibilityCodes)
-                    sMsg = sMsg + sValidationMsg
-     
                     # >>>>>>>>>>>>>>>
 
                     # For any page, test that a path always has only one associated PageID_ImageID (aka node name)
                     #    (Otherwise, the quizzer will reload the same image with a different node name)
-                    xImagePath = self.oIOXml.GetChildren(xImage, 'Path')
-                    if len(xImagePath) == 1:
-                        sImagePath = self.oIOXml.GetDataInNode(xImagePath[0])
+                    lxImagePath = self.oIOXml.GetChildren(xImage, 'Path')
+                    if len(lxImagePath) == 1:
+                        sImagePath = self.oIOXml.GetDataInNode(lxImagePath[0])
                          
                         # create tuple of path, sNodeName
                         tupPathAndID = (sImagePath, sNodeNameID)
@@ -416,13 +419,10 @@ class UtilsIO:
                         for lElement in lPathAndNodeNames:
                             ind = ind + 1
                             msg = (str(ind) + ':' )
-                            print(lPathAndNodeNames)
-                            print (msg)
                             if bFoundMatchingPath == False:
                                 # check if path exists in the list elements
                                 if sImagePath in lElement:
                                     bFoundMatchingPath = True
-                                    print('found matching path: ',lElement)
                                     # check that sNodeName exists in that list element
                                     if sNodeNameID not in lElement:
                                         sMsg = sMsg + "\nIn any Page Element, there should be a one-to-one correlation of 'PageID_ImageID' with the Image Path" +\
@@ -431,6 +431,20 @@ class UtilsIO:
                         if not bFoundMatchingPath:
                             # new path found; add to list
                             lPathAndNodeNames.append(tupPathAndID)
+                            
+                            
+                    # If the image type is an RTStruct, validate the ROIs element
+                    sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
+                    if sImageType == 'RTStruct':
+                        sValidationMsg = self.ValidateRequiredElement(xImage, 'ROIs', sPageReference)
+                        sMsg = sMsg + sValidationMsg
+                        
+                        lxROIs = self.oIOXml.GetChildren(xImage, 'ROIs')
+                        if len(lxROIs) >0:
+                            sValidationMsg = self.ValidateRequiredAttribute(lxROIs[0], 'ROIVisibilityCode', sPageReference)
+                            sMsg = sMsg + sValidationMsg
+                            sValidationMsg = self.ValidateAttributeOptions(lxROIs[0], 'ROIVisibilityCode', sPageReference, self.oIOXml.lValidRoiVisibilityCodes)
+                            sMsg = sMsg + sValidationMsg
                                 
             # >>>>>>>>>>>>>>>
 
@@ -457,8 +471,8 @@ class UtilsIO:
         '''
         sMsg = ''
         
-        xChildren = self.oIOXml.GetChildren(xParentElement, sElementName)
-        if len(xChildren) != 1:
+        lxChildren = self.oIOXml.GetChildren(xParentElement, sElementName)
+        if len(lxChildren) != 1:
             sMsg = sMsg + '\nError for ' + sElementName + ' Element.   See Page:' + sPageReference\
                      + '\n   .....There is either more than 1 of these elements or it is missing.'
         
@@ -471,9 +485,9 @@ class UtilsIO:
         '''
         sMsg = ''
         
-        xChildren = self.oIOXml.GetChildren(xParentElement, sElementName)
+        lxChildren = self.oIOXml.GetChildren(xParentElement, sElementName)
 
-        for xChild in xChildren:
+        for xChild in lxChildren:
             sDataValue = self.oIOXml.GetDataInNode(xChild)
             if sDataValue not in lValidOptions:
                 sValidOptions = ''
