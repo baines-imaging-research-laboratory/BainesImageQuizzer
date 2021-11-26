@@ -72,6 +72,8 @@ class UtilsIO:
         self._sDefaultROIColorTableName = 'GenericColors'
 
         self.oUtilsMsgs = UtilsMsgs()
+        self.oIOXml = UtilsIOXml()
+
 
 #     def setup(self):
 #         self.oUtilsMsgs = UtilsMsgs()
@@ -345,6 +347,185 @@ class UtilsIO:
             return False, sMsg
             
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateQuiz(self, xRootNode):
+        '''
+            a function to check for specific validation requirements for the quiz
+        '''
+        sMsg = ''
+        bSuccess = True
+        
+        
+        try:
+            lxPageElements = self.oIOXml.GetChildren(xRootNode, 'Page')
+            
+            iPageNum = 0
+            for xPage in lxPageElements:
+                lPathAndNodeNames= []
+                iPageNum= iPageNum + 1
+
+                sValidationMsg = self.ValidateRequiredAttribute(xPage, 'ID', str(iPageNum))
+                sMsg = sMsg + sValidationMsg
+                
+                sPageID = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ID')
+                
+                # Image element validations
+                lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
+                for xImage in lxImageElements:
+                    sImageID = self.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
+    
+                    # Page ID + Image ID creates the node name for the image that is loaded (in ImageView>ViewNodeBase)
+                    sNodeNameID = sPageID + '_' + sImageID
+                    sPageReference = str(iPageNum) + ' ' + sNodeNameID
+
+                    # Validate  frequency (one required element) and content
+                    # >>>>>>>>>>>>>>> Elements
+                    sValidationMsg = self.ValidateRequiredElement(xImage, 'Path', sPageReference)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    sValidationMsg = self.ValidateElementOptions(xImage, 'Layer', sPageReference, self.oIOXml.lValidLayers)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    sValidationMsg = self.ValidateElementOptions(xImage, 'Destination', sPageReference, self.oIOXml.lValidSliceWidgets)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    sValidationMsg = self.ValidateElementOptions(xImage, 'Orientation', sPageReference, self.oIOXml.lValidOrientations)
+                    sMsg = sMsg + sValidationMsg
+     
+                    # >>>>>>>>>>>>>>> Attributes
+                    sValidationMsg = self.ValidateRequiredAttribute(xImage, 'ID', sPageReference)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    sValidationMsg = self.ValidateRequiredAttribute(xImage, 'Type', sPageReference)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    sValidationMsg = self.ValidateAttributeOptions(xImage, 'Type', sPageReference, self.oIOXml.lValidImageTypes)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    # >>>>>>>>>>>>>>>
+
+                    # For any page, test that a path always has only one associated PageID_ImageID (aka node name)
+                    #    (Otherwise, the quizzer will reload the same image with a different node name)
+                    lxImagePath = self.oIOXml.GetChildren(xImage, 'Path')
+                    if len(lxImagePath) == 1:
+                        sImagePath = self.oIOXml.GetDataInNode(lxImagePath[0])
+                         
+                        # create tuple of path, sNodeName
+                        tupPathAndID = (sImagePath, sNodeNameID)
+                         
+                        # search list of path/nodeNames for existing match
+                        bFoundMatchingPath = False
+                        ind = 0
+                        for lElement in lPathAndNodeNames:
+                            ind = ind + 1
+                            msg = (str(ind) + ':' )
+                            if bFoundMatchingPath == False:
+                                # check if path exists in the list elements
+                                if sImagePath in lElement:
+                                    bFoundMatchingPath = True
+                                    # check that sNodeName exists in that list element
+                                    if sNodeNameID not in lElement:
+                                        sMsg = sMsg + "\nIn any Page Element, there should be a one-to-one correlation of 'PageID_ImageID' with the Image Path" +\
+                                                "\n   .....Check all paths for Page: " + str(iPageNum) + ' '+ sNodeNameID
+                                     
+                        if not bFoundMatchingPath:
+                            # new path found; add to list
+                            lPathAndNodeNames.append(tupPathAndID)
+                            
+                            
+                    # If the image type is an RTStruct, validate the ROIs element
+                    sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
+                    if sImageType == 'RTStruct':
+                        sValidationMsg = self.ValidateRequiredElement(xImage, 'ROIs', sPageReference)
+                        sMsg = sMsg + sValidationMsg
+                        
+                        lxROIs = self.oIOXml.GetChildren(xImage, 'ROIs')
+                        if len(lxROIs) >0:
+                            sValidationMsg = self.ValidateRequiredAttribute(lxROIs[0], 'ROIVisibilityCode', sPageReference)
+                            sMsg = sMsg + sValidationMsg
+                            sValidationMsg = self.ValidateAttributeOptions(lxROIs[0], 'ROIVisibilityCode', sPageReference, self.oIOXml.lValidRoiVisibilityCodes)
+                            sMsg = sMsg + sValidationMsg
+                                
+            # >>>>>>>>>>>>>>>
+
+            # validation errors found
+            if sMsg != '':
+                raise
+        
+        
+        except:
+            self.oUtilsMsgs.DisplayWarning(sMsg)
+            # after warning, reset the message for calling function to display error and exit
+            sMsg = 'See Administrator: ERROR in XML validation.'
+            bSuccess = False
+            
+            
+        return bSuccess, sMsg
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateRequiredElement(self, xParentElement, sElementName, sPageReference):
+        '''
+            This function checks that there is exactly one child element for the input parent element.
+            If there is a valid list of options input as a parameter, the function checks that the
+            data stored in the element exists in that list.
+        '''
+        sMsg = ''
+        
+        lxChildren = self.oIOXml.GetChildren(xParentElement, sElementName)
+        if len(lxChildren) != 1:
+            sMsg = sMsg + '\nError for ' + sElementName + ' Element.   See Page:' + sPageReference\
+                     + '\n   .....There is either more than 1 of these elements or it is missing.'
+        
+        return sMsg
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateElementOptions(self, xParentElement, sElementName, sPageReference, lValidOptions):
+        '''
+            This function checks that the data stored in the xml element exists in the list of valid options.
+        '''
+        sMsg = ''
+        
+        lxChildren = self.oIOXml.GetChildren(xParentElement, sElementName)
+
+        for xChild in lxChildren:
+            sDataValue = self.oIOXml.GetDataInNode(xChild)
+            if sDataValue not in lValidOptions:
+                sValidOptions = ''
+                for sOption in lValidOptions:
+                    sValidOptions = sValidOptions + ', ' + sOption
+                sMsg = sMsg + '\nNot a valid option for ' + sElementName + ' : ' + sDataValue + '   See Page:' + sPageReference\
+                        + '\n   .....Valid options are:' + sValidOptions
+
+        return sMsg
+                        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateRequiredAttribute(self, xParentElement, sAttributeName, sPageReference):
+        sMsg = ''
+        sDataValue = ''
+        sDataValue = self.oIOXml.GetValueOfNodeAttribute(xParentElement, sAttributeName)
+        if sDataValue == '':
+            sMsg = sMsg + '\nError for ' + sAttributeName + ' Attribute.   See Page:' + sPageReference\
+                     + '\n   .....The required attribute is missing.'
+        
+        return sMsg
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateAttributeOptions(self, xParentElement, sAttributeName, sPageReference, lValidOptions):
+        sMsg = ''
+        
+        sDataValue = self.oIOXml.GetValueOfNodeAttribute(xParentElement, sAttributeName)
+
+        # check for valid option if it exists
+        if sDataValue != '':
+            if sDataValue not in lValidOptions:
+                sValidOptions = ''
+                for sOption in lValidOptions:
+                    sValidOptions = sValidOptions + ', ' + sOption
+                sMsg = sMsg + '\nNot a valid option for ' + sAttributeName + ' : ' + sDataValue + '   See Page:' + sPageReference\
+                        + '\n   .....Valid options are:' + sValidOptions
+            
+        return sMsg
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def PopulateUserQuizFolder(self):
             
@@ -679,7 +860,16 @@ class UtilsIO:
 
                 # read attribute from xml file whether to use label maps previously created
                 #    by the user in the quiz for this image
-                if (oSession.oIOXml.GetValueOfNodeAttribute(oImageNode.GetXmlImageElement(), 'UsePreviousLabelMap') == 'Y'):
+#                 if (oSession.oIOXml.GetValueOfNodeAttribute(oImageNode.GetXmlImageElement(), 'UsePreviousLabelMap') == 'Y'):
+#                     bUsePreviousLabelMap = True
+#                 else:
+#                     bUsePreviousLabelMap = False
+
+                # read attribute from xml file whether to use label maps previously created
+                #    by the user in the quiz for this image
+                sLabelMapIDLink = '' # initialize
+                sLabelMapIDLink = oSession.oIOXml.GetValueOfNodeAttribute(oImageNode.GetXmlImageElement(), 'DisplayLabelMapID')
+                if sLabelMapIDLink != '':
                     bUsePreviousLabelMap = True
                 else:
                     bUsePreviousLabelMap = False
@@ -692,7 +882,14 @@ class UtilsIO:
                 # if there were no label map paths stored with the image, and xml attribute has flag 
                 #    to use a previous label map, check previous pages for the first matching image
                 if xLabelMapPathElement == None and bUsePreviousLabelMap == True:
-                    xHistoricalLabelMapMatch = oSession.CheckXmlImageHistoryForMatch( oImageNode.GetXmlImageElement(), 'LabelMapPath')
+#                     xHistoricalLabelMapMatch = oSession.GetXmlElementFromImagePathHistory( oImageNode.GetXmlImageElement(), 'LabelMapPath')
+
+                    # get image element from history that holds the same label map id; 
+                    xHistoricalImageElement = None  # initialize
+                    xHistoricalLabelMapMatch = None
+                    xHistoricalImageElement = oSession.GetXmlElementFromAttributeHistory('Image','LabelMapID',sLabelMapIDLink)
+                    if xHistoricalImageElement != None:
+                        xHistoricalLabelMapMatch = oSession.oIOXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')
                     
                     if xHistoricalLabelMapMatch != None:
                         # found a label map for this image in history

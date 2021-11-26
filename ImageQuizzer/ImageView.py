@@ -27,11 +27,11 @@ class ImageView:
     def __init__(self,  parent=None):
         self.sClassName = type(self).__name__
         self.parent = parent
-        self.sPageName = ''
+        self.sPageID = ''
         self.sPageDescriptor = ''
         
 #         self.lValidVolumeFormats = ['NRRD', 'NIFTI', 'MHD', 'DICOM']
-        self.lValidSliceWidgets = ['Red', 'Green', 'Yellow', 'Slice4'] # for two over two layout
+#         self.lValidSliceWidgets = ['Red', 'Green', 'Yellow', 'Slice4'] # for two over two layout
         self._loImageViews = []
         self.bLinkViews = False
         
@@ -52,8 +52,8 @@ class ImageView:
         self.sParentDataDir = sParentDataDir
 
 
-        # get name and descriptor
-        self.sPageName = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Name')
+        # get ID and descriptor
+        self.sPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
         self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
         
         # assign link views
@@ -63,7 +63,7 @@ class ImageView:
             self.bLinkViews = False
 
         # display Images
-        self.xImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
+        self.lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
 #         self.iNumImages = self.oIOXml.GetNumChildrenByName(xPageNode, 'Image')
        
         self.BuildViewNodes()
@@ -95,21 +95,21 @@ class ImageView:
         progressBar.setMaximum(100)
         progressBar.setValue(1) 
         slicer.app.processEvents() # force display
-        if len(self.xImageNodes) == 0:
+        if len(self.lxImageNodes) == 0:
             progressBar.close()
             
         else:
-            progressBar.setMaximum(len(self.xImageNodes)) # reset for this build
+            progressBar.setMaximum(len(self.lxImageNodes)) # reset for this build
         
         # for each image
-        for indImage in range(len(self.xImageNodes)):
+        for indImage in range(len(self.lxImageNodes)):
 
             
-            sPageID = self.sPageName + '_' + self.sPageDescriptor
+#             sPageID = self.sPageName + '_' + self.sPageDescriptor
             
             # Extract the type of volume to be displayed 
             #     if not a DICOM - assume it is a 'Data' volume
-            sDICOMRead = self.oIOXml.GetValueOfNodeAttribute(self.xImageNodes[indImage], 'DicomRead')
+            sDICOMRead = self.oIOXml.GetValueOfNodeAttribute(self.lxImageNodes[indImage], 'DicomRead')
             
 #             if not (sVolumeFormat in self.lValidVolumeFormats):
 #                 sErrorMsg = 'Invalid data format defined for patient in XML : '
@@ -117,10 +117,10 @@ class ImageView:
 #                 self.oUtilsMsgs.DisplayError(sErrorMsg)
             
             if (sDICOMRead == 'Y'):
-                oImageViewItem = DicomVolumeDetail(self.xImageNodes[indImage], sPageID, self.sParentDataDir)
+                oImageViewItem = DicomVolumeDetail(self.lxImageNodes[indImage], self.sPageID, self.sParentDataDir)
             
             else:
-                oImageViewItem = DataVolumeDetail(self.xImageNodes[indImage], sPageID, self.sParentDataDir)
+                oImageViewItem = DataVolumeDetail(self.lxImageNodes[indImage], self.sPageID, self.sParentDataDir)
                     
                 
             bLoadSuccess = oImageViewItem.LoadVolume()
@@ -133,7 +133,7 @@ class ImageView:
                     self._loImageViews.append(oImageViewItem)
                 
             else:
-                sMsg = 'Image load Failed : ' + sPageID + ':' + oImageViewItem.sImagePath
+                sMsg = 'Image load Failed : ' + self.sPageID + ':' + oImageViewItem.sImagePath
                 self.oUtilsMsgs.DisplayWarning(sMsg)
                  
             progressBar.setValue(indImage + 1)
@@ -161,7 +161,7 @@ class ImageView:
  
         # initialize all layers to None
         # make sure the widget exists in case the default layout changes
-        for sWidgetName in self.lValidSliceWidgets:
+        for sWidgetName in self.oIOXml.lValidSliceWidgets:
             slWidget = slicer.app.layoutManager().sliceWidget(sWidgetName)
             if slWidget != None:
                 slWindowLogic = slWidget.sliceLogic()
@@ -256,7 +256,7 @@ class ImageView:
     
 
             elif oViewNode.sViewLayer == 'Segmentation':
-                if not (oViewNode.sRoiVisibilityCode == 'Empty'):
+                if not (oViewNode.sRoiVisibilityCode == ''):
                     self.SetSegmentRoiVisibility(oViewNode)
 #                 print('after set Segmentation Volume ID',slWidget.sliceOrientation)
 
@@ -441,7 +441,7 @@ class ViewNodeBase:
         self.sNodeName = ''
 #         self.sFormat=''
         self._xImageElement = None
-        self._sPageID = ''
+#         self._sPageID = ''
         self.sColorTableName = ''
         self.bRotateToAcquisition = False
         
@@ -458,11 +458,11 @@ class ViewNodeBase:
     
     #----------
     def SetPageID(self, sInput):
-        self._sPageID = sInput
-        
+        self.sPageID = sInput
+         
     #----------
     def GetPageID(self):
-        return self._sPageID
+        return self.sPageID
 
     #----------
     def GetSlicerViewNode(self):
@@ -497,27 +497,27 @@ class ViewNodeBase:
         
 
         # Extract Destination (Red, Green, Yellow, Slice4)
-        xDestinationNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Destination')
-        if len(xDestinationNodes) == 0:
+        lxDestinationNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Destination')
+        if len(lxDestinationNodes) == 0:
             self.sDestination = 'Red'
-            sWarningMsg = sWarningMsg + '\n' + 'Missing XML element: Destination . The default "Red" viewing window will be used.   '
+#             sWarningMsg = sWarningMsg + '\n' + 'Missing XML element: Destination . The default "Red" viewing window will be used.   '
         else:
-            self.sDestination = self.oIOXml.GetDataInNode(xDestinationNodes[0])
+            self.sDestination = self.oIOXml.GetDataInNode(lxDestinationNodes[0])
             
-            if len(xDestinationNodes) > 1:
-                sWarningMsg = sWarningMsg + '\n' + 'There can only be one viewing destination (Red, Green, Yellow, or Slice4) per image. The first defined destination in the XML will be used.   '
+#             if len(xDestinationNodes) > 1:
+#                 sWarningMsg = sWarningMsg + '\n' + 'There can only be one viewing destination (Red, Green, Yellow, or Slice4) per image. The first defined destination in the XML will be used.   '
 
 
         # Extract viewing layer (foreground, background, label)
-        xLayerNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Layer')
-        if len(xLayerNodes) == 0: # default
+        lxLayerNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Layer')
+        if len(lxLayerNodes) == 0: # default
             self.sViewLayer = 'Background'
-            sWarningMsg = sWarningMsg + '\n' + 'Missing XML element: Layer. The default "Background" will be used.   '
+#             sWarningMsg = sWarningMsg + '\n' + 'Missing XML element: Layer. The default "Background" will be used.   '
         else:
-            self.sViewLayer = self.oIOXml.GetDataInNode(xLayerNodes[0])
+            self.sViewLayer = self.oIOXml.GetDataInNode(lxLayerNodes[0])
 
-            if len(xLayerNodes) > 1:
-                sWarningMsg = sWarningMsg + '\n' + 'There can only be one viewing layer (foreground, background or label) per image. The first defined layer in the XML will be used.   '
+#             if len(xLayerNodes) > 1:
+#                 sWarningMsg = sWarningMsg + '\n' + 'There can only be one viewing layer (foreground, background or label) per image. The first defined layer in the XML will be used.   '
     
 
         # Extract orientation (axial, sagittal, coronal)
@@ -525,31 +525,29 @@ class ViewNodeBase:
             # Only image volumes have an orientation, 
             # segmentation layer (RTStruct) follows the orientation of the display node
              
-            xOrientationNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Orientation')
-            if len(xOrientationNodes) == 0:
+            lxOrientationNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Orientation')
+            if len(lxOrientationNodes) == 0:
                 self.sOrientation = 'Axial'
-                sWarningMsg = sWarningMsg + '\n' + 'Missing XML element: Orientation . The default "Axial" will be used.   '
+#                 sWarningMsg = sWarningMsg + '\n' + 'Missing XML element: Orientation . The default "Axial" will be used.   '
                 
             else:
-                self.sOrientation = self.oIOXml.GetDataInNode(xOrientationNodes[0])
+                self.sOrientation = self.oIOXml.GetDataInNode(lxOrientationNodes[0])
 
-                if len(xOrientationNodes) > 1:
-                    sWarningMsg = sWarningMsg + '\n' + 'There can only be one orientation (axial, sagittal, coronal) per image. \nThe first defined orientation in the XML will be used.   '
+#                 if len(xOrientationNodes) > 1:
+#                     sWarningMsg = sWarningMsg + '\n' + 'There can only be one orientation (axial, sagittal, coronal) per image. \nThe first defined orientation in the XML will be used.   '
             
         # Extract path element
-        xPathNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Path')
+        lxPathNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Path')
 
-        if len(xPathNodes) == 0:
-            sWarningMsg = sWarningMsg + '\n' + 'Missing XML element: Path . No image will be displayed.'
+        if len(lxPathNodes) == 0:
+#             sWarningMsg = sWarningMsg + '\n' + 'Missing XML element: Path . No image will be displayed.'
             self.sImagePath = ''
         else:
-            self.sImagePath = os.path.join(sParentDataDir, self.oIOXml.GetDataInNode(xPathNodes[0]))
+            self.sImagePath = os.path.join(sParentDataDir, self.oIOXml.GetDataInNode(lxPathNodes[0]))
             
-            if len(xPathNodes) > 1:
-                sWarningMsg = sWarningMsg + '\n' + 'There can only be one path per image.  The first defined path will be used.   '
+#             if len(xPathNodes) > 1:
+#                 sWarningMsg = sWarningMsg + '\n' + 'There can only be one path per image.  The first defined path will be used.   '
 
-#         sFilename_w_ext = os.path.basename(self.sImagePath)
-#         sFilename, sFileExt = os.path.splitext(sFilename_w_ext)
         
 
         # display warnings
@@ -702,7 +700,7 @@ class DataVolumeDetail(ViewNodeBase):
                 
                 bNodeExists = self.CheckForNodeExists('vtkMRMLScalarVolumeNode')
                 if not (bNodeExists):
-                    self.slNode = slicer.util.loadVolume(self.sImagePath, {'show': False, 'name': self.sNodeName})
+                    self.slNode = slicer.util.loadVolume(self.sImagePath, {'show': False, 'name': self.sNodeName, 'singleFile': True} )
                 else: # make sure a node exists after load
                     if bNodeExists and (self.slNode is None):
                         bLoadSuccess = False
@@ -774,7 +772,7 @@ class DicomVolumeDetail(ViewNodeBase):
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
         
-        self.sRoiVisibilityCode = 'Empty'
+        self.sRoiVisibilityCode = ''
         self.sVolumeReferenceSeriesUID = ''
         self.sSeriesInstanceUID = ''
         self.sStudyInstanceUID = ''
@@ -971,18 +969,20 @@ class DicomVolumeDetail(ViewNodeBase):
         '''
         
         # get XML ROIs element
-        xRoisNode = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'ROIs')
+        lxRoisNode = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'ROIs')
         
         # get visibility code from the attribute
-        self.sRoiVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(xRoisNode[0], 'ROIVisibilityCode')
+        #    if the attribute doesn't exist, the code remains as it was initialized
+        if len(lxRoisNode) > 0 :
+            self.sRoiVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(lxRoisNode[0], 'ROIVisibilityCode')
 
         if (self.sRoiVisibilityCode == 'Select' or self.sRoiVisibilityCode == 'Ignore'):
             
             # get list of ROI children
-            xRoiChildren = self.oIOXml.GetChildren(xRoisNode[0], 'ROI')
+            lxRoiChildren = self.oIOXml.GetChildren(lxRoisNode[0], 'ROI')
 
-            for indRoi in range(len(xRoiChildren)):
-                sRoiName = self.oIOXml.GetDataInNode(xRoiChildren[indRoi])
+            for indRoi in range(len(lxRoiChildren)):
+                sRoiName = self.oIOXml.GetDataInNode(lxRoiChildren[indRoi])
                 self.lsRoiList.append(sRoiName)
                 
         

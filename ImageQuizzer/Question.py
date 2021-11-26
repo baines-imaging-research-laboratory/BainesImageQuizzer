@@ -20,7 +20,7 @@ class QuestionSet():
     
     def __init__(self):
         self.sClassName = type(self).__name__
-        self.name = ''
+        self.id = ''
         self.descriptor = ''
         self._bSegmentRequired = False
         self._bAllowMultipleResponse = False
@@ -76,15 +76,15 @@ class QuestionSet():
             # for each child named 'Question' extract labels and options
             iNumQuestions = self.oIOXml.GetNumChildrenByName(xNodeQuestionSet, "Question")
             
-            self.name = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'Name')
+            self.id = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'ID')
             self.descriptor = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'Descriptor')
             self.SetSegmentRequiredTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'SegmentRequired'))
             self.SetMultipleResponseTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'AllowMultipleResponse'))
             
             
-            xQuestions = self.oIOXml.GetChildren(xNodeQuestionSet, 'Question')
+            lxQuestions = self.oIOXml.GetChildren(xNodeQuestionSet, 'Question')
             
-            for xNodeQuestion in xQuestions:
+            for xNodeQuestion in lxQuestions:
 
                 dictModifiers = {}
 
@@ -138,9 +138,9 @@ class QuestionSet():
         lOptions = []
 
         # get options for each question
-        xOptions = self.oIOXml.GetChildren(xNodeQuestion, 'Option')
+        lxOptions = self.oIOXml.GetChildren(xNodeQuestion, 'Option')
 
-        for iElem in range(len(xOptions)):
+        for iElem in range(len(lxOptions)):
             
             xNodeOption = self.oIOXml.GetNthChild(xNodeQuestion, 'Option', iElem)
             sValue = self.oIOXml.GetDataInNode(xNodeOption)
@@ -182,7 +182,7 @@ class QuestionSet():
         self.qQuizWidget = qt.QWidget()
         self.qQuizWidgetLayout = qt.QVBoxLayout()
         self.qQuizWidget.setLayout(self.qQuizWidgetLayout)
-        self.qQuizTitle = qt.QLabel(self.name + ' ' + self.descriptor)
+        self.qQuizTitle = qt.QLabel(self.id + ' ' + self.descriptor)
         self.qQuizTitle.setStyleSheet("QLabel{ font: bold}")
         self.qQuizWidgetLayout.addWidget(self.qQuizTitle)
         

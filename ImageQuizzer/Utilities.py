@@ -78,6 +78,12 @@ class UtilsIOXml:
         
         self.sTimestampFormat = "%Y%m%d_%H:%M:%S"
         self.oUtilsMsgs = UtilsMsgs()
+        self.lValidSliceWidgets = ['Red', 'Green', 'Yellow', 'Slice4'] # Slice4 for two over two layout
+        self.lValidLayouts = ['TwoOverTwo', 'OneUpRedSlice', 'SideBySideRedYellow', 'FourUp']
+        self.lValidLayers = ['Foreground', 'Background', 'Segmentation', 'Label']
+        self.lValidOrientations = ['Axial', 'Sagittal', 'Coronal']
+        self.lValidImageTypes = ['Volume', 'VolumeSequence', 'LabelMap', 'Segmentation', 'RTStruct']
+        self.lValidRoiVisibilityCodes = ['All', 'None', 'Select', 'Ignore']
     
     #----------
     def GetXmlTree(self):
@@ -174,9 +180,9 @@ class UtilsIOXml:
         
 #         xmlChildren = xParentNode.getElementsByTagName(sChildTagName)
 
-        xmlChildren = xParentNode.findall(sChildTagName)
+        lxChildren = xParentNode.findall(sChildTagName)
         
-        return xmlChildren
+        return lxChildren
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetNthChild(self, xParentNode, sChildTagName, indElem):
@@ -212,8 +218,8 @@ class UtilsIOXml:
         dtLatestTimestamp = ''    # timestamp of type 'datetime'
         xLatestChildElement = None
  
-        xAllChildren = self.GetChildren(xParentNode, sChildTagName)
-        for xChild in xAllChildren:
+        lxAllChildren = self.GetChildren(xParentNode, sChildTagName)
+        for xChild in lxAllChildren:
             sResponseTime = self.GetValueOfNodeAttribute(xChild, 'ResponseTime')
             dtResponseTimestamp = datetime.strptime(sResponseTime, self.sTimestampFormat)
 #             print('*** TIME : %s' % sResponseTime)
