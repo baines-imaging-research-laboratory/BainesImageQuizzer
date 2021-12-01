@@ -232,6 +232,8 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             # see Slicer/Modules/Scripted/EditorLib/EditBox.py
             #     Slicer/Modules/Scripted/EditorLib/LabelEffect.py
             #     Slicer/Modules/Scripted/EditorLib/ChangeLabelEffect.py
+            if len(self.shortcuts) == 0:
+                self.installShortcutKeys()
             if self.helper.master != None and sCurrentTool not in ('DefaultTool', 'PaintEffect', 'EraseLabel', 'DrawEffect', 'ChangeLabelEffect'):
               self.msgBox = qt.QMessageBox()
               self.msgBox.warning(slicer.util.mainWindow(), 'Image Quizzer: Warning', 'This tool is unavailable.')
