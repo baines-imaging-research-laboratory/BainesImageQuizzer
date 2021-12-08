@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Session>
+<Session RandomizePages="Y">
 	<Page ID="Patient1" Descriptor="PlanningCT">
 		<Image Type="Volume" ID="Fixed Volume" LabelMapID="Brain-fixed-contour">
 			<Destination>Red</Destination>
@@ -205,6 +205,12 @@
 				<Option>Planning CT</Option>
 				<Option>Follow-up 3 mos</Option>
 				<Option>Follow-up 6 mos</Option>
+			</Question>
+		</QuestionSet>
+		<QuestionSet>
+			<Question Type="InfoBox" Descriptor="Another set of questions">
+				<Option>No response required.</Option>
+				<Option>Just another question set test.</Option>
 			</Question>
 		</QuestionSet>
 	</Page>

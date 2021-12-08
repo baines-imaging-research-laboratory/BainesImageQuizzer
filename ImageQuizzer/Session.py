@@ -269,8 +269,17 @@ class Session:
                 sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
                 self.oFilesIO.SetupROIColorFile(sColorFileName)
     
-    
+                # build the list of indices page/questionset as read in by the XML
                 self.BuildPageQuestionCompositeIndexList()
+                # if randomization is requested - shuffle the page/questionset list
+                sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePages')
+                if sRandomizeRequired == 'Y':
+                    # check if xnl already holds a set of randomized indices
+                    lRandIndices = self.GetRandomizedIndices()
+                    self._l2iPageQuestionCompositeIndices = self.ShufflePageQuestionCompositeIndexList(lRandIndices)
+                
+                
+                
                 # check for partial or completed quiz
                 self.SetCompositeIndexIfResumeRequired()
                 
@@ -534,6 +543,49 @@ class Session:
             for iQuestionSetIndex in range(len(xQuestionSets)):
                 self._l2iPageQuestionCompositeIndices.append([iPageIndex, iQuestionSetIndex])
         
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetRandomizedIndices(self):
+        ''' This function will check for existing element of randomized indices.
+            If no element exists, create a new list.
+        '''
+
+        xRandIndicesNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'RandomizedPageIndices', 0)
+        if xRandIndicesNode != None:
+            sStoredRandIndices = self.oIOXml.GetDataInNode(xRandIndicesNode)
+        
+        lRandIndices = [5,3,1,0,2,4]
+        
+        
+        
+        return lRandIndices
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ShufflePageQuestionCompositeIndexList(self, lRandIndices):
+        ''' This function will shuffle the original list as read in from the quiz xml,  that holds the
+            "[page number,questionset number]" according to the randomized index list input.
+            The question sets always follow with the page, they are never randomized.
+            
+            eg.     Original XML List           Randomized Page indices          Shuffled Composite List
+                       Page   QS                         Indices                      Page   QS
+                       0      0                             3                         3      0
+                       0      1                             0                         0      0
+                       1      0                             2                         0      1
+                       2      0                             4                         2      0
+                       2      1                             1                         2      1
+                       3      0                                                       4      0
+                       4      0                                                       4      1
+                       4      1                                                       1      0
+        '''
+        
+        lShuffledCompositeIndices = []
+        
+        for indRand in lRandIndices:
+            for indOrig in range(len(self._l2iPageQuestionCompositeIndices)):
+                if self._l2iPageQuestionCompositeIndices[indOrig][0] == indRand :
+                    lShuffledCompositeIndices.append(self._l2iPageQuestionCompositeIndices[indOrig])
+                    
+        return lShuffledCompositeIndices
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayPage(self):
