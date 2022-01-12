@@ -21,3 +21,4 @@ ImageQuizzer/Users/
 ImageQuizzer/ImageQuizzerData/Users/
 
 ImageQuizzer/ImageQuizzerData/SlicerDICOMDatabase/
+*.cproject
