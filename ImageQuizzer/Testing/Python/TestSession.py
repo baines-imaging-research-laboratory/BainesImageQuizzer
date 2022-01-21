@@ -26,7 +26,7 @@ class TestSession(ScriptedLoadableModule):
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
         self.parent.title = "Test Session" 
-        self.parent.categories = ["Testing.ImageQuizzer"]
+        self.parent.categories = ["Baines Custom Modules.Testing"]
         self.parent.dependencies = []
         self.parent.contributors = ["Carol Johnson (Baines Imaging Research Laboratories)"] 
         self.parent.helpText = """
@@ -94,10 +94,6 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
     def __init__(self):
         
-        self.sModuleName = 'ImageQuizzer'
-        self.sUsername = 'Tests'
-        self.sSourceDirForQuizTests = 'Testing/TestData/Test_Session'
-
         
         self._oFilesIO = None
         
@@ -110,10 +106,15 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         slicer.mrmlScene.Clear(0)
         self.sClassName = type(self).__name__
 
+        sModuleName = 'ImageQuizzer'
+
         self._oFilesIO = UtilsIO()
-        self._oFilesIO.SetModuleDirs(self.sModuleName, self.sSourceDirForQuizTests)
-        self._oFilesIO.SetQuizUsername(self.sUsername)
-        self._oFilesIO.SetUserDir()
+
+        # define path for test data
+        self._oFilesIO.SetScriptedModulesPath(sModuleName)
+        self.sBaseDirForTestData = os.path.join(self._oFilesIO.GetScriptedModulesPath(),'Testing\TestData')
+
+        self.sTestDataDir = os.path.join(self.sBaseDirForTestData, 'Test_Session')
 
         self._oIOXml = UtilsIOXml()
 
@@ -144,7 +145,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         
         # copy test file to user area
         sTestFilename = 'Test_PageQuestions_GenericPath.xml'
-        sTestPath = os.path.join(self._oFilesIO.GetXmlResourcesDir(), sTestFilename)
+        sTestPath = os.path.join(self.sTestDataDir, sTestFilename)
         
         
         [bOpenResult, self.xRootNode] = self._oIOXml.OpenXml(sTestPath, 'Session')

@@ -21,7 +21,7 @@ class TestQuestionSet(ScriptedLoadableModule):
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
         self.parent.title = "Test QuestionSet and Question classes" # TODO make this more human readable by adding spaces
-        self.parent.categories = ["Testing.ImageQuizzer"]
+        self.parent.categories = ["Baines Custom Modules.Testing"]
         self.parent.dependencies = []
         self.parent.contributors = ["Carol Johnson (Baines Imaging Research Laboratories)"] 
         self.parent.helpText = """
@@ -486,7 +486,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         lqAllBtns = qGrpBox.findChildren(qt.QRadioButton)
         lqAllBtns[1].setChecked(True)
          
-        lsExpectedResponse = ['n','y','n']
+        lsExpectedResponse = ['N','Y','N']
          
         # get actual response list
         bSuccess, lActualResponse, sMsg = oQuestion.CaptureResponse()
@@ -523,7 +523,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         lqAllBoxes[1].setChecked(True)
         lqAllBoxes[2].setChecked(True)
          
-        lsExpectedResponse = ['n','y','y']
+        lsExpectedResponse = ['N','Y','Y']
          
         # get actual response list
         bSuccess, lActualResponse, sMsg = oQuestion.CaptureResponse()
@@ -582,7 +582,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         sGroupTitle = 'Capture Response - Integer Value Spinbox'
         bTestResult = False
          
-        dictModifiers = {'min':'-10', 'max':'200'}
+        dictModifiers = {'Min':'-10', 'Max':'200'}
         oQuestion = IntegerValueQuestion()
 
         sQuestionDescriptor = sGroupTitle + ' ...Test Capture Reponse for Integer Value box'
@@ -620,7 +620,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         sGroupTitle = 'Capture Response - Float Value edit box'
         bTestResult = False
          
-        dictModifiers = {'min':'-10.5', 'max':'200.5'}
+        dictModifiers = {'Min':'-10.5', 'Max':'200.5'}
         oQuestion = FloatValueQuestion()
 
         sQuestionDescriptor = sGroupTitle + ' ...Test Capture Reponse for Float Value box'
