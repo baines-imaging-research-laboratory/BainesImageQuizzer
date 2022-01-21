@@ -103,7 +103,12 @@ class UtilsIOXml:
         """
         given a path, open the xml document
         """
-         
+        
+        # check if function is being called from unittesting
+        if "testing" in os.environ:
+            sTestMode = os.environ.get("testing")
+        else:
+            sTestMode = "0"
          
         # initialize a document node
         xNode = None
@@ -121,8 +126,9 @@ class UtilsIOXml:
   
                 else:
                     bSuccess = False
-                    sErrorMsg = "ERROR", "Not a valid quiz - Invalid XML root node:" + sXmlPath
-                    self.oUtilsMsgs.DisplayError(sErrorMsg)
+                    if sTestMode == "0":
+                        sErrorMsg = "ERROR", "Not a valid quiz - Invalid XML root node:" + sXmlPath
+                        self.oUtilsMsgs.DisplayError(sErrorMsg)
                     raise NameError('Invalid XML root node: %s' % sXmlPath)
  
                 
@@ -131,14 +137,16 @@ class UtilsIOXml:
  
             except:
                 bSuccess = False
-                sErrorMsg = "ERROR", "Not a valid quiz - Parsing XML file error:" + sXmlPath
-                self.oUtilsMsgs.DisplayError(sErrorMsg)
+                if sTestMode == "0":
+                    sErrorMsg = "ERROR", "Not a valid quiz - Parsing XML file error:" + sXmlPath
+                    self.oUtilsMsgs.DisplayError(sErrorMsg)
                 raise Exception('Parsing XML file error: %s' % sXmlPath)
                  
         else:
             bSuccess = False
-            sErrorMsg = "ERROR", "XML file does not exist:" + sXmlPath
-            self.oUtilsMsgs.DisplayError(sErrorMsg)
+            if sTestMode == "0":
+                sErrorMsg = "ERROR", "XML file does not exist:" + sXmlPath
+                self.oUtilsMsgs.DisplayError(sErrorMsg)
             raise Exception('XML file does not exist: %s' % sXmlPath)
          
 

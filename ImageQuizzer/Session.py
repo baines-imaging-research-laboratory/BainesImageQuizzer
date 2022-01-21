@@ -83,8 +83,8 @@ class Session:
         self.oFilesIO = oFilesIO
 
     #----------
-#     def SetIOXml(self, oIOXml):
-#         self.oIOXml = oIOXml
+    def SetIOXml(self, oIOXml):
+        self.oIOXml = oIOXml
 
     #----------
     def SetQuizComplete(self, bInput):

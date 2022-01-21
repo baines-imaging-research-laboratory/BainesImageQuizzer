@@ -285,10 +285,15 @@ class UtilsIO:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetModuleDirs(self, sModuleName, sSourceDirForQuiz):
-        self._sScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
-        self._sScriptedModulesPath = os.path.dirname(self._sScriptedModulesPath)
+        self.SetScriptedModulesPath(sModuleName)
         self._sXmlResourcesDir = os.path.join(self._sScriptedModulesPath, sSourceDirForQuiz)
         self.SetResourcesROIColorFilesDir()
+        
+    #----------
+    def SetScriptedModulesPath(self,sModuleName):
+        self._sScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
+        self._sScriptedModulesPath = os.path.dirname(self._sScriptedModulesPath)
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupUserAndDataDirs(self, sParentDirInput):
         
@@ -531,13 +536,17 @@ class UtilsIO:
             
         # check if quiz file already exists in the user folder - if not, copy from Resources
 
-#         # setup for new location
-#         self._sUserQuizResultsPath = os.path.join(self._sUserDir, self._sQuizFilename)
-
+        # check if there is an existing file in the results directory (partially completed quiz)
         if not os.path.isfile(self.GetUserQuizResultsPath()):
             # file not found, copy file from Resources to User folder
-            copyfile(self.GetResourcesQuizPath(), self.GetUserQuizResultsPath())
-            return True
+            #     first make sure selected quiz file exists in the source directory
+            if not os.path.isfile(self.GetResourcesQuizPath()):
+                sErrorMsg = 'Selected Quiz file does not exist'
+                self.oUtilsMsgs.DisplayWarning(sErrorMsg)
+                return False  
+            else:
+                copyfile(self.GetResourcesQuizPath(), self.GetUserQuizResultsPath())
+                return True
 
         else:
 
