@@ -196,7 +196,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
         
         btnGetDBLocation = qt.QPushButton("Define location for Image Quizzer data")
-        btnGetDBLocation.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
+        btnGetDBLocation.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
         btnGetDBLocation.setEnabled(True)
         btnGetDBLocation.toolTip = "Select folder for Image Quizzer data."
         btnGetDBLocation.connect('clicked(bool)', self.onApplyQuizzerDataLocation)
@@ -254,7 +254,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         # File Picker
         self.btnGetUserStudy = qt.QPushButton("Choose quiz to launch")
-        self.btnGetUserStudy.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
+        self.btnGetUserStudy.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
         self.btnGetUserStudy.setEnabled(True)
         self.btnGetUserStudy.toolTip = "Select Quiz xml file for launch "
         self.btnGetUserStudy.connect('clicked(bool)', self.onApplyQuizSelection)
@@ -283,7 +283,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
  
  
         self.btnLaunchStudy = qt.QPushButton("Begin")
-        self.btnLaunchStudy.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
+        self.btnLaunchStudy.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
         self.btnLaunchStudy.connect('clicked(bool)', self.onApplyLaunchQuiz)
         self.qLaunchGrpBoxLayout.addWidget(self.btnLaunchStudy)
          

@@ -107,7 +107,7 @@ class Session:
         self._l2iPageQuestionCompositeIndices = lIndices
         
     #----------
-    def CompositeIndicesList(self):
+    def GetCompositeIndicesList(self):
         return self._l2iPageQuestionCompositeIndices
 
     #----------
@@ -335,14 +335,14 @@ class Session:
         self._btnNext = qt.QPushButton("Next")
         self._btnNext.toolTip = "Save responses and display next set of questions."
         self._btnNext.enabled = True
-        self._btnNext.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
+        self._btnNext.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
         self._btnNext.connect('clicked(bool)',self.onNextButtonClicked)
         
         # Back button
         self._btnPrevious = qt.QPushButton("Previous")
         self._btnPrevious.toolTip = "Display previous set of questions."
         self._btnPrevious.enabled = True
-        self._btnPrevious.setStyleSheet("QPushButton{ background-color: rgb(255,149,0) }")
+        self._btnPrevious.setStyleSheet("QPushButton{ background-color: rgb(255,149,0); color: black }")
         self._btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
 
 
@@ -350,7 +350,7 @@ class Session:
         self._btnExit = qt.QPushButton("Exit")
         self._btnExit.toolTip = "Save quiz and exit Slicer."
         self._btnExit.enabled = True
-        self._btnExit.setStyleSheet("QPushButton{ background-color: rgb(255,0,0) }")
+        self._btnExit.setStyleSheet("QPushButton{ background-color: rgb(255,0,0); color: black }")
         # use lambda to pass argument to this PyQt slot without invoking the function on setup
         self._btnExit.connect('clicked(bool)',lambda: self.onExitButtonClicked('ExitBtn'))
 

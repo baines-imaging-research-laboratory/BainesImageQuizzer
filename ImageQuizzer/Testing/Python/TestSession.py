@@ -26,7 +26,7 @@ class TestSession(ScriptedLoadableModule):
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
         self.parent.title = "Test Session" 
-        self.parent.categories = ["Baines Custom Modules.Testing"]
+        self.parent.categories = ["Baines Custom Modules.Testing_ImageQuizzer"]
         self.parent.dependencies = []
         self.parent.contributors = ["Carol Johnson (Baines Imaging Research Laboratories)"] 
         self.parent.helpText = """
@@ -162,7 +162,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         self.oSession.SetFilesIO(self._oFilesIO)
         self.oSession.SetIOXml(self._oIOXml)
         self.oSession.BuildPageQuestionCompositeIndexList()
-        lCompositeIndicesResult = self.oSession.CompositeIndicesList()
+        lCompositeIndicesResult = self.oSession.GetCompositeIndicesList()
         
         if lCompositeIndicesResult == lExpectedCompositeIndices :
             bTestResult = True

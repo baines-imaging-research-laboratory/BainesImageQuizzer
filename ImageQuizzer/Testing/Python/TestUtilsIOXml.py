@@ -55,7 +55,7 @@ class TestUtilsIOXml(ScriptedLoadableModule):
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
         self.parent.title = "Test IO Utilities for XML handling" 
-        self.parent.categories = ["Baines Custom Modules.Testing"]
+        self.parent.categories = ["Baines Custom Modules.Testing_ImageQuizzer"]
         self.parent.dependencies = []
         self.parent.contributors = ["Carol Johnson (Baines Imaging Research Laboratories)"] 
         self.parent.helpText = """
