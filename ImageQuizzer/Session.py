@@ -272,7 +272,7 @@ class Session:
                 # build the list of indices page/questionset as read in by the XML
                 self.BuildPageQuestionCompositeIndexList()
                 # if randomization is requested - shuffle the page/questionset list
-                sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePages')
+                sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
                 if sRandomizeRequired == 'Y':
                     # check if xnl already holds a set of randomized indices
                     lRandIndices = self.GetRandomizedIndices()

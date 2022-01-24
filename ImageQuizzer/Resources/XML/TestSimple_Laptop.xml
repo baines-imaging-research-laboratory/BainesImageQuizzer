@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Session RandomizePages="Y">
+<Session RandomizePageGroups="Y">
 	<Page ID="Patient1" Descriptor="PlanningCT">
 		<Image Type="Volume" ID="Fixed Volume" LabelMapID="Brain-fixed-contour">
 			<Destination>Red</Destination>

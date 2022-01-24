@@ -11,7 +11,7 @@
 			</xs:choice>
 		</xs:sequence>
 		<xs:attribute name="ROIColorFile" type="xs:string" />
-		<xs:attribute name="RandomizePages" type="yesnoType" default="N" />
+		<xs:attribute name="RandomizePageGroups" type="yesnoType" default="N" />
 	</xs:complexType>
 </xs:element>
 
