@@ -37,6 +37,7 @@ class Session:
 
         self._iCurrentCompositeIndex = 0
         self._l2iPageQuestionCompositeIndices = []
+        self._l3iPageQuestionGroupCompositeIndices = []
 
         self._xPageNode = None
         self.sPageID = ''
@@ -109,6 +110,14 @@ class Session:
     #----------
     def GetCompositeIndicesList(self):
         return self._l2iPageQuestionCompositeIndices
+
+    #----------
+    def Set3DCompositeIndicesList(self, lIndices):
+        self._l3iPageQuestionGroupCompositeIndices = lIndices
+        
+    #----------
+    def Get3DCompositeIndicesList(self):
+        return self._l3iPageQuestionGroupCompositeIndices
 
     #----------
     def SetMultipleResponsesInQSetAllowed(self, bInput):
@@ -525,6 +534,8 @@ class Session:
             # for each page - get number of question sets
             xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
             xQuestionSets = self.oIOXml.GetChildren(xPageNode,'QuestionSet')
+            sPageGroup = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
+            iPageGroup = int(sPageGroup)
             
             # if there are no question sets for the page, insert a blank shell
             #    - this allows images to load
@@ -542,6 +553,7 @@ class Session:
             #    - there can be numerous questions in each question set
             for iQuestionSetIndex in range(len(xQuestionSets)):
                 self._l2iPageQuestionCompositeIndices.append([iPageIndex, iQuestionSetIndex])
+                self._l3iPageQuestionGroupCompositeIndices.append([iPageIndex,iQuestionSetIndex, iPageGroup])
         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -560,6 +572,21 @@ class Session:
         
         return lRandIndices
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetRandomizedPageGroupIndices(self):
+        ''' This function will check for existing element of randomized indices.
+            If no element exists, create a new list.
+        '''
+
+        xRandIndicesNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'RandomizedPageGroupIndices', 0)
+        if xRandIndicesNode != None:
+            sStoredRandIndices = self.oIOXml.GetDataInNode(xRandIndicesNode)
+        
+        lRandIndices = [2,3,1]
+        
+        
+        
+        return lRandIndices
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ShufflePageQuestionCompositeIndexList(self, lRandIndices):
         ''' This function will shuffle the original list as read in from the quiz xml,  that holds the
@@ -587,6 +614,45 @@ class Session:
                     
         return lShuffledCompositeIndices
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ShufflePageQuestionGroupCompositeIndexList(self, lRandIndices):
+        ''' This function will shuffle the original list as read in from the quiz xml,  that holds the
+            "[page number,questionset number, page group number]" according to the randomized index list input.
+            The question sets always follow with the page, they are never randomized.
+            The page groups are randomized. 
+                Any pages that have that group number will remain in the order they were read in.
+            
+            eg.     Original XML List         Randomized Page Group indices      Shuffled Composite List
+                       Page   QS  Grp                    Indices                      Page   QS    Grp
+                       0      0     1                        2                         2      0     2
+                       0      1     1                        3                         2      1     2
+                       1      0     1                        1                         3      0     2
+                       2      0     2                                                  4      0     3
+                       2      1     2                                                  4      1     3
+                       3      0     2                                                  0      0     1
+                       4      0     3                                                  0      1     1
+                       4      1     3                                                  1      0     1
+        '''
+        
+        
+        # get unique page numbers
+        lUniquePageGroups = []
+        for ind in range(len(self._l3iPageQuestionGroupCompositeIndices)):
+            iGrp = self._l3iPageQuestionGroupCompositeIndices[ind][2]
+            if iGrp not in lUniquePageGroups:
+                lUniquePageGroups.append(iGrp)
+
+    
+        lShuffledCompositeIndices = []
+        
+        for indRand in lRandIndices:
+            for indOrig in range(len(self._l3iPageQuestionGroupCompositeIndices)):
+                if self._l3iPageQuestionGroupCompositeIndices[indOrig][2] == indRand :
+                    lShuffledCompositeIndices.append(self._l3iPageQuestionGroupCompositeIndices[indOrig])
+        
+        
+        return lShuffledCompositeIndices
+   
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayPage(self):
 

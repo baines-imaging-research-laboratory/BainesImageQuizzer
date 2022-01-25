@@ -28,6 +28,7 @@
 		<xs:attribute name="Descriptor" type="xs:string" />
 		<xs:attribute name="LinkViews" type="yesnoType" default="N" />
 		<xs:attribute name="Layout" type="layoutType" default="FourUp" />
+		<xs:attribute name="PageGroup" type="xs:integer" use="required" />
 	</xs:complexType>
 </xs:element>
 

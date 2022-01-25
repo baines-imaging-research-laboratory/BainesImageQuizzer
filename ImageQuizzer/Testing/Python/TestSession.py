@@ -131,6 +131,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         tupResults = []
         tupResults.append(self.test_BuildPageQuestionCompositeIndexList())
         tupResults.append(self.test_ShufflePageQuestionCompositeIndexList())
+        tupResults.append(self.test_ShufflePageQuestionGroupCompositeIndexList())
 
 #         bTestResult = self.oSession.readPresentationInstructions()
 
@@ -204,7 +205,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         lCompositeTestIndices.append([3,0])
         lCompositeTestIndices.append([4,0])
         lCompositeTestIndices.append([4,1])
-        
+    
         self.oSession.SetCompositeIndicesList(lCompositeTestIndices)
         
         
@@ -217,7 +218,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         lExpectedShuffledOrder.append([4,0])
         lExpectedShuffledOrder.append([4,1])
         lExpectedShuffledOrder.append([1,0])
-        
+    
         lRandIndices = [3,0,2,4,1]
         
         # call function to rebuild the composite indices list
@@ -231,6 +232,64 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         
         tupResult = self.fnName, bTestResult
         return tupResult
+
+    #------------------------------------------- 
+    def test_ShufflePageQuestionGroupCompositeIndexList(self):
+        bTestResult = True
+        self.fnName = sys._getframe().f_code.co_name
+        
+        # build page/question set/page group composite indices list for testing
+        '''
+            eg.     Original XML List         Randomized Page Group indices      Shuffled Composite List
+                       Page   QS  Grp                    Indices                      Page   QS    Grp
+                       0      0     1                        2                         2      0     2
+                       0      1     1                        3                         2      1     2
+                       1      0     1                        1                         3      0     2
+                       2      0     2                                                  4      0     3
+                       2      1     2                                                  4      1     3
+                       3      0     2                                                  0      0     1
+                       4      0     3                                                  0      1     1
+                       4      1     3                                                  1      0     1
+        
+        '''
+        
+        lCompositeTestIndices = []
+        lCompositeTestIndices.append([0,0,1])
+        lCompositeTestIndices.append([0,1,1])
+        lCompositeTestIndices.append([1,0,1])
+        lCompositeTestIndices.append([2,0,2])
+        lCompositeTestIndices.append([2,1,2])
+        lCompositeTestIndices.append([3,0,2])
+        lCompositeTestIndices.append([4,0,3])
+        lCompositeTestIndices.append([4,1,3])
+        
+        self.oSession.Set3DCompositeIndicesList(lCompositeTestIndices)
+        
+        
+        lExpectedShuffledOrder = []
+        lExpectedShuffledOrder.append([2,0,2])
+        lExpectedShuffledOrder.append([2,1,2])
+        lExpectedShuffledOrder.append([3,0,2])
+        lExpectedShuffledOrder.append([4,0,3])
+        lExpectedShuffledOrder.append([4,1,3])
+        lExpectedShuffledOrder.append([0,0,1])
+        lExpectedShuffledOrder.append([0,1,1])
+        lExpectedShuffledOrder.append([1,0,1])
+        
+        lRandIndices = [2,3,1]
+        
+        # call function to rebuild the composite indices list
+        lCompositeIndicesResult = self.oSession.ShufflePageQuestionGroupCompositeIndexList(lRandIndices)
+        
+        # valid result with expected
+        if lCompositeIndicesResult == lExpectedShuffledOrder :
+            bTestResult = True
+        else:
+            bTestResult = False
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
     #------------------------------------------- 
 
 ##########################################################################################

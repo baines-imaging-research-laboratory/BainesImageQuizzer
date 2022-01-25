@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session RandomizePageGroups="Y">
-	<Page ID="Patient1" Descriptor="PlanningCT">
+	<Page ID="Patient1" Descriptor="PlanningCT" PageGroup="1">
 		<Image Type="Volume" ID="Fixed Volume" LabelMapID="Brain-fixed-contour">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -46,7 +46,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient1" Descriptor="Follow-up 1">
+	<Page ID="Patient1" Descriptor="Follow-up 1" PageGroup="1">
 		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -85,7 +85,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient2" Descriptor="Mixed Displays" LinkViews="N">
+	<Page ID="Patient2" Descriptor="Mixed Displays" LinkViews="N" PageGroup="2">
 		<Image Type="Volume"  ID="Brain CT" DisplayLabelMapID="Brain-fixed-contour" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -121,7 +121,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="TinyPatient" Descriptor="DicomSeries">
+	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="3">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -151,7 +151,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="TinyPatient" Descriptor="DicomSeries">
+	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="3">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -214,7 +214,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="CL PT001" Descriptor="Multiparametric_MRI">
+	<Page ID="CL PT001" Descriptor="Multiparametric_MRI" PageGroup="4">
 		<Image DicomRead="Y" Type="Volume" ID="T1W MR">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
