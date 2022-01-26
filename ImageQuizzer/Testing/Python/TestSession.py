@@ -117,6 +117,11 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         self.sTestDataDir = os.path.join(self.sBaseDirForTestData, 'Test_Session')
 
         self._oIOXml = UtilsIOXml()
+        
+        # create/set environment variable to be checked in UtilsIOXml class
+        #    to prevent displaying error messages during testing
+        os.environ["testing"] = "1"
+        self._oFilesIO.setupTestEnvironment()
 
     #------------------------------------------- 
 
@@ -140,6 +145,10 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
+ 
+        # reset to allow for non-testing logic
+        #    ie. display error messages when not testing
+        os.environ["testing"] = "0"
  
 
     #------------------------------------------- 

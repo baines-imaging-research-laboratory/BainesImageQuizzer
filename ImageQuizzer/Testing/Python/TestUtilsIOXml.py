@@ -130,11 +130,13 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         self.sBaseDirForTestData = os.path.join(self._oFilesIO.GetScriptedModulesPath(),'Testing\TestData')
 
         self.sTestDataDir = os.path.join(self.sBaseDirForTestData, 'Test_UtilsIOXml')
-        self.oIOXml = UtilsIOXml()
+        self._oIOXml = UtilsIOXml()
 
         # create/set environment variable to be checked in UtilsIOXml class
         #    to prevent displaying error messages during testing
         os.environ["testing"] = "1"
+        self._oFilesIO.setupTestEnvironment()
+        self._oIOXml.setupTestEnvironment()
 
 
        
@@ -182,8 +184,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
                 
         sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
           
-        [bTestResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
-        if (self.oIOXml.GetElementNodeName(xRootNode) == sRootName):
+        [bTestResult, xRootNode] = self._oIOXml.OpenXml(sXmlPath,'rootNode')
+        if (self._oIOXml.GetElementNodeName(xRootNode) == sRootName):
             bTestResult = bTestResult * True
         else:
             bTestResult = False
@@ -204,7 +206,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
             bTestResult = False
 
             with self.assertRaises(Exception) as context:
-                self.oIOXml.OpenXml(sXmlPath,'rootNode')
+                self._oIOXml.OpenXml(sXmlPath,'rootNode')
 
             sMsg = context.exception.args[0]
             if sMsg.find('XML file does not exist')>=0:
@@ -229,7 +231,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
             bTestResult = False
 
             with self.assertRaises(NameError) as context:
-                self.oIOXml.OpenXml(sXmlPath,'Session')
+                self._oIOXml.OpenXml(sXmlPath,'Session')
 
             sMsg = context.exception.args[0]
             if sMsg.find('Invalid XML root node')>=0:
@@ -257,7 +259,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
             bTestResult = False
 
             with self.assertRaises(Exception) as context:
-                self.oIOXml.OpenXml(sXmlPath,'rootNode')
+                self._oIOXml.OpenXml(sXmlPath,'rootNode')
 
             sMsg = context.exception.args[0]
             if sMsg.find('Parsing XML file error')>=0:
@@ -283,13 +285,13 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
 
         
-        bSuccess, xRootNode = self.oIOXml.OpenXml(sXmlPath,'rootNode')
+        bSuccess, xRootNode = self._oIOXml.OpenXml(sXmlPath,'rootNode')
 
         # get child of data node and check for expected tag name
-        xElementNode = self.oIOXml.GetNthChild(xRootNode,'data',0)
+        xElementNode = self._oIOXml.GetNthChild(xRootNode,'data',0)
         sExpectedTag = 'data'
         
-        sActualTag = self.oIOXml.GetElementNodeName(xElementNode)
+        sActualTag = self._oIOXml.GetElementNodeName(xElementNode)
         if (sExpectedTag == sActualTag):
             bTestResult = True
         
@@ -310,10 +312,10 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
 
         
-        bSuccess, xRootNode = self.oIOXml.OpenXml(sXmlPath,'rootNode')
+        bSuccess, xRootNode = self._oIOXml.OpenXml(sXmlPath,'rootNode')
 
         # get an attribute node to test the 'invalid element node'
-        xElementNode = self.oIOXml.GetNthChild(xRootNode,'data',0)
+        xElementNode = self._oIOXml.GetNthChild(xRootNode,'data',0)
 #         xAttributeNode = xElementNode.getAttributeNode('id')
         dictAttribs = xElementNode.attrib
         xAttributeNode = dictAttribs['id']
@@ -322,7 +324,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
             bTestResult = False
 
             with self.assertRaises(TypeError) as context:
-                self.oIOXml.GetElementNodeName(xAttributeNode)
+                self._oIOXml.GetElementNodeName(xAttributeNode)
 
             sMsg = context.exception.args[0]
             if sMsg.find('Invalid XML node type: should be Element type of node')>=0:
@@ -346,7 +348,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
 
         
-        [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
+        [bOpenResult, xRootNode] = self._oIOXml.OpenXml(sXmlPath,'rootNode')
             
         bTestResult = True
         
@@ -356,14 +358,14 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         xDataNode = lDataNodes[0]
         
         dExpectedNumChildren = 3
-        dNumChildren = self.oIOXml.GetNumChildrenByName(xDataNode,'infoGroup')
+        dNumChildren = self._oIOXml.GetNumChildrenByName(xDataNode,'infoGroup')
         if (dNumChildren == dExpectedNumChildren):
             bTestResult = bTestResult * True
         else:
             bTestResult = bTestResult * False
         
         dExpectedNumChildren = 1
-        dNumChildren = self.oIOXml.GetNumChildrenByName(xDataNode,'soloTag')
+        dNumChildren = self._oIOXml.GetNumChildrenByName(xDataNode,'soloTag')
         if (dNumChildren == dExpectedNumChildren):
             bTestResult = bTestResult * True
         else:
@@ -389,7 +391,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
 
         
-        [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
+        [bOpenResult, xRootNode] = self._oIOXml.OpenXml(sXmlPath,'rootNode')
             
         bTestResult = True
         
@@ -402,7 +404,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         sExpectedDescriptors = ['First Child Page1', 'Second Child Page1', 'Third Child Page1']
         dExpectedNumChildren = 3
         
-        dNumChildren = self.oIOXml.GetNumChildrenByName(xDataNode,'infoGroup')
+        dNumChildren = self._oIOXml.GetNumChildrenByName(xDataNode,'infoGroup')
 
         # ensure we have a node with the expected number of children
         if (dNumChildren == dExpectedNumChildren):
@@ -410,12 +412,12 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
             # Test 1: Get All children and then loop through children to see
             #    if the 2nd child has the proper descriptor
 
-            xAllInfoGroupNodes = self.oIOXml.GetChildren(xDataNode, 'infoGroup')
+            xAllInfoGroupNodes = self._oIOXml.GetChildren(xDataNode, 'infoGroup')
             for iNode in range( 0,dNumChildren-1 ):
 
 #                 xInfoGroupChildNode = xAllInfoGroupNodes.item(iNode)
                 xInfoGroupChildNode = xAllInfoGroupNodes[iNode]
-                sDescriptor = self.oIOXml.GetValueOfNodeAttribute(xInfoGroupChildNode,'descriptor')
+                sDescriptor = self._oIOXml.GetValueOfNodeAttribute(xInfoGroupChildNode,'descriptor')
 
                 if sDescriptor == sExpectedDescriptors[iNode]:
                     bTestResult = bTestResult * True
@@ -426,9 +428,9 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
             # Test 2: Access the second child directly
 
             # access the 2nd child (0 indexed) and check that it has the expected descriptor
-            xSecondChildNode = self.oIOXml.GetNthChild(xDataNode, 'infoGroup', 1)
+            xSecondChildNode = self._oIOXml.GetNthChild(xDataNode, 'infoGroup', 1)
             
-            sSecondChildDescriptor = self.oIOXml.GetValueOfNodeAttribute(xSecondChildNode,'descriptor')
+            sSecondChildDescriptor = self._oIOXml.GetValueOfNodeAttribute(xSecondChildNode,'descriptor')
             if (sSecondChildDescriptor == sExpectedDescriptors[1]) :
             
                 bTestResult = bTestResult * True
@@ -455,7 +457,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
 
         
-        [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
+        [bOpenResult, xRootNode] = self._oIOXml.OpenXml(sXmlPath,'rootNode')
             
         
         import operator
@@ -467,7 +469,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         xNode = lDataNodes[1]
 
 
-        listOfAttributes = self.oIOXml.GetListOfNodeAttributes(xNode)
+        listOfAttributes = self._oIOXml.GetListOfNodeAttributes(xNode)
         lsExpectedNames = ['id', 'descriptor']
         lsExpectedValues = ['002', 'TestData Page2' ]
 
@@ -503,7 +505,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
 
         
-        [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
+        [bOpenResult, xRootNode] = self._oIOXml.OpenXml(sXmlPath,'rootNode')
             
         bTestResult = True
 
@@ -511,7 +513,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         lDataNodes = xRootNode.findall('data')
         xNode1 = lDataNodes[1]
-        sValue = self.oIOXml.GetValueOfNodeAttribute(xNode1, 'descriptor')
+        sValue = self._oIOXml.GetValueOfNodeAttribute(xNode1, 'descriptor')
 #         print('returned sValue {x}'.format(x=sValue))
 
         if (sValue == 'TestData Page2'):
@@ -525,7 +527,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         xNode0 = lDataNodes[0]
         xSoloNode = xNode0.find('soloTag')
-        sValue = self.oIOXml.GetValueOfNodeAttribute(xSoloNode, 'path')
+        sValue = self._oIOXml.GetValueOfNodeAttribute(xSoloNode, 'path')
 #         print('returned sValue {x}'.format(x=sValue))
 
 
@@ -550,7 +552,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         sXmlPath = os.path.join(self.sTestDataDir, sXmlFile)
 
         
-        [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
+        [bOpenResult, xRootNode] = self._oIOXml.OpenXml(sXmlPath,'rootNode')
             
         bTestResult = True
 
@@ -562,11 +564,11 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         sExpectedData = 'item2uvw'
         
-        xDataNode2 = self.oIOXml.GetNthChild(xRootNode,'data', 1)
-        xInfoGroup1 = self.oIOXml.GetNthChild(xDataNode2, 'infoGroup', 0)
-        xInfoPiece2 = self.oIOXml.GetNthChild(xInfoGroup1, 'infoPiece', 1)
+        xDataNode2 = self._oIOXml.GetNthChild(xRootNode,'data', 1)
+        xInfoGroup1 = self._oIOXml.GetNthChild(xDataNode2, 'infoGroup', 0)
+        xInfoPiece2 = self._oIOXml.GetNthChild(xInfoGroup1, 'infoPiece', 1)
         
-        xStoredData = self.oIOXml.GetDataInNode(xInfoPiece2)
+        xStoredData = self._oIOXml.GetDataInNode(xInfoPiece2)
         
         if xStoredData == sExpectedData :
             bTestResult = True
@@ -594,15 +596,15 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         # sXmlPath = self._oFilesIO.GetResourcesQuizPath()
 
         
-        [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'rootNode')
+        [bOpenResult, xRootNode] = self._oIOXml.OpenXml(sXmlPath,'rootNode')
             
         bTestResult = True
 
         sExpectedData = ''
         
-        xDataNode2 = self.oIOXml.GetNthChild(xRootNode,'data', 1)
+        xDataNode2 = self._oIOXml.GetNthChild(xRootNode,'data', 1)
 
-        xStoredData = self.oIOXml.GetDataInNode(xDataNode2)
+        xStoredData = self._oIOXml.GetDataInNode(xDataNode2)
         
         if xStoredData == sExpectedData :
             bTestResult = True
@@ -637,7 +639,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         
          
-        [bOpenResult, xRootNode] = self.oIOXml.OpenXml(sXmlPath,'Session')
+        [bOpenResult, xRootNode] = self._oIOXml.OpenXml(sXmlPath,'Session')
 
         xTree = etree.parse(sXmlPath)
         xRootNode = xTree.getroot()
@@ -646,7 +648,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         print(sNodeName)
             
         try:
-            self.oIOXml.SaveXml(sXmlOutputFilePath)
+            self._oIOXml.SaveXml(sXmlOutputFilePath)
 #             with open(sXmlOutputFilePath,'w') as xml_outfile:
 #                 xTree.write(xml_outfile, encoding='unicode', xml_declaration=True)
             
@@ -714,6 +716,6 @@ if __name__ == "__main__":
 #         print('***************************')
 #         xParentNode = xRootNode.getElementsByTagName('data')[0]
 #         sChildTagName = 'soloTag'
-#         self.oIOXml.GetListOfAttributes(xParentNode, sChildTagName)
+#         self._oIOXml.GetListOfAttributes(xParentNode, sChildTagName)
 # 
 

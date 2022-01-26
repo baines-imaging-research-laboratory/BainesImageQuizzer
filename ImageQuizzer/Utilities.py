@@ -84,7 +84,17 @@ class UtilsIOXml:
         self.lValidOrientations = ['Axial', 'Sagittal', 'Coronal']
         self.lValidImageTypes = ['Volume', 'VolumeSequence', 'LabelMap', 'Segmentation', 'RTStruct']
         self.lValidRoiVisibilityCodes = ['All', 'None', 'Select', 'Ignore']
+
+        self.setupTestEnvironment()
     
+    #----------
+    def setupTestEnvironment(self):
+         # check if function is being called from unittesting
+        if "testing" in os.environ:
+            self.sTestMode = os.environ.get("testing")
+        else:
+            self.sTestMode = "0"
+
     #----------
     def GetXmlTree(self):
         return self._xTree
@@ -104,12 +114,6 @@ class UtilsIOXml:
         given a path, open the xml document
         """
         
-        # check if function is being called from unittesting
-        if "testing" in os.environ:
-            sTestMode = os.environ.get("testing")
-        else:
-            sTestMode = "0"
-         
         # initialize a document node
         xNode = None
         # test for existence
@@ -126,7 +130,7 @@ class UtilsIOXml:
   
                 else:
                     bSuccess = False
-                    if sTestMode == "0":
+                    if self.sTestMode == "0":
                         sErrorMsg = "ERROR", "Not a valid quiz - Invalid XML root node:" + sXmlPath
                         self.oUtilsMsgs.DisplayError(sErrorMsg)
                     raise NameError('Invalid XML root node: %s' % sXmlPath)
@@ -137,14 +141,14 @@ class UtilsIOXml:
  
             except:
                 bSuccess = False
-                if sTestMode == "0":
+                if self.sTestMode == "0":
                     sErrorMsg = "ERROR", "Not a valid quiz - Parsing XML file error:" + sXmlPath
                     self.oUtilsMsgs.DisplayError(sErrorMsg)
                 raise Exception('Parsing XML file error: %s' % sXmlPath)
                  
         else:
             bSuccess = False
-            if sTestMode == "0":
+            if self.sTestMode == "0":
                 sErrorMsg = "ERROR", "XML file does not exist:" + sXmlPath
                 self.oUtilsMsgs.DisplayError(sErrorMsg)
             raise Exception('XML file does not exist: %s' % sXmlPath)

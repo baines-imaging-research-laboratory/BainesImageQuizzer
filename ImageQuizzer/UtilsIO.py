@@ -74,9 +74,19 @@ class UtilsIO:
         self.oUtilsMsgs = UtilsMsgs()
         self.oIOXml = UtilsIOXml()
 
+        self.setupTestEnvironment()
 
-#     def setup(self):
-#         self.oUtilsMsgs = UtilsMsgs()
+
+        
+        
+    def setupTestEnvironment(self):
+         # check if function is being called from unittesting
+        if "testing" in os.environ:
+            self.sTestMode = os.environ.get("testing")
+        else:
+            self.sTestMode = "0"
+
+ 
         
     #-------------------------------------------
     #        Getters / Setters
@@ -572,7 +582,8 @@ class UtilsIO:
                 except ValueError:
                     sValidationMsg = 'Page Group is not an integer. See Page: ' + str(iPageNum)
                     sMsg = sMsg + sValidationMsg
-                    raise ValueError('Invalid PageGroup value: %s' % sValidationMsg)
+                    if self.sTestMode == "1":
+                        raise ValueError('Invalid PageGroup value: %s' % sValidationMsg)
                 
                 lPageGroups.append(iPageGroup)
 
@@ -580,11 +591,13 @@ class UtilsIO:
             # you can't randomize if all the pages are assigned to the same group
             for ind in lPageGroups:
                 lUniqueNumbers = self.GetUniqueNumbers(lPageGroups)
-                lUniqueNumbers.pop(0) #ignore page groups set to 0
+                if 0 in lUniqueNumbers:
+                    lUniqueNumbers.remove(0) #ignore page groups set to 0
                 if len(lUniqueNumbers) == 1:
                     sValidationMsg = 'Not enough unique PageGroups for requested randomization. \nYou must have more than one page group (other than 0)'
                     sMsg = sMsg + sValidationMsg
-                    raise Exception('Randomizing Error: %s' % sValidationMsg)
+                    if self.sTestMode == "1":
+                        raise Exception('Randomizing Error: %s' % sValidationMsg)
                     
             
         return sMsg
