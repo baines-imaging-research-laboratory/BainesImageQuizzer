@@ -529,13 +529,20 @@ class Session:
         # get Page nodes
         xPages = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
 
+        iPageNum = 0
         for iPageIndex in range(len(xPages)):
-            
+            iPageNum = iPageNum + 1
             # for each page - get number of question sets
             xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
             xQuestionSets = self.oIOXml.GetChildren(xPageNode,'QuestionSet')
+
             sPageGroup = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
-            iPageGroup = int(sPageGroup)
+            # if there is no request to randomize the page groups, there may not be a page group number
+            try:
+                iPageGroup = int(sPageGroup)
+            except:
+                # assign a unique page number if no group number exists
+                iPageGroup = iPageNum
             
             # if there are no question sets for the page, insert a blank shell
             #    - this allows images to load
@@ -637,10 +644,14 @@ class Session:
         
         # get unique page numbers
         lUniquePageGroups = []
-        for ind in range(len(self._l3iPageQuestionGroupCompositeIndices)):
-            iGrp = self._l3iPageQuestionGroupCompositeIndices[ind][2]
-            if iGrp not in lUniquePageGroups:
-                lUniquePageGroups.append(iGrp)
+        lPageGroups = [ind[2] for ind in self._l3iPageQuestionGroupCompositeIndices]
+        lUniquePageGroups = self.oFilesIO.GetUniqueNumbers(lPageGroups)
+        
+        # lUniquePageGroups = []
+        # for ind in range(len(self._l3iPageQuestionGroupCompositeIndices)):
+        #     iGrp = self._l3iPageQuestionGroupCompositeIndices[ind][2]
+        #     if iGrp not in lUniquePageGroups:
+        #         lUniquePageGroups.append(iGrp)
 
     
         lShuffledCompositeIndices = []

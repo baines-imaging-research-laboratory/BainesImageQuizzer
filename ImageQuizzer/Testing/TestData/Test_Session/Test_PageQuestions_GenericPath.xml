@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session>
-	<Page ID="Patient1" Descriptor="PlanningCT" PageGroup="1">
+	<Page ID="Patient1" Descriptor="PlanningCT">
 		<Image Type="Volume" ID="Fixed Volume">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -30,7 +30,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient1" Descriptor="Follow-up 1" PageGroup="1">
+	<Page ID="Patient1" Descriptor="Follow-up 1">
 		<Image Type="Volume" ID="Moving Volume">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -61,7 +61,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient2" Descriptor="Mixed Displays" PageGroup="2">
+	<Page ID="Patient2" Descriptor="Mixed Displays">
 		<Image Type="Volume"  ID="Brain CT">
 			<Destination>Red</Destination>
 			<Layer>Foreground</Layer>

@@ -160,6 +160,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_GetDataInNodeEmpty())
 #         
         tupResults.append(self.test_WriteXML())
+
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
 
@@ -657,6 +658,13 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         tupResult = self.fnName, bTestResult
         return tupResult
+     
+     
+
+    #-------------------------------------------
+    #-------------------------------------------
+    #-------------------------------------------
+
      
 ##########################################################################################
 #                      Launching from main (Reload and Test button)

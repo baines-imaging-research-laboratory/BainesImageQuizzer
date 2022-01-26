@@ -133,7 +133,10 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_ShufflePageQuestionCompositeIndexList())
         tupResults.append(self.test_ShufflePageQuestionGroupCompositeIndexList())
 
-#         bTestResult = self.oSession.readPresentationInstructions()
+
+        tupResults.append(self.test_ValidatePageGroupNumbers_MissingPageGroup())
+        tupResults.append(self.test_ValidatePageGroupNumbers_InvalidNumber())
+        tupResults.append(self.test_ValidatePageGroupNumbers_NotEnoughPageGroups())
 
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
@@ -290,6 +293,112 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         tupResult = self.fnName, bTestResult
         return tupResult
 
+    #-------------------------------------------
+    def test_ValidatePageGroupNumbers_MissingPageGroup(self):
+        '''Test if randomization is requested that the PageGroup attribute exists 
+            for all pages.
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        sMsg = ''
+        bTestResult = True
+
+        # build XML
+        xRoot = etree.Element("Session", RandomizePageGroups="Y")
+        etree.SubElement(xRoot,"Page", PageGroup="1")
+        etree.SubElement(xRoot,"Page")
+        etree.SubElement(xRoot,"Page", PageGroup="1")
+        
+        
+        # tree = etree.ElementTree(xRoot)
+        # sPath = "C:\\Users\\alibi\\Documents\\Work-Baines\\Projects\\ImageQuizzer\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\Test_UtilsIOXml\\filename.xml"
+        # tree.write(sPath)
+        try:
+            with self.assertRaises(Exception) as context:
+                self._oFilesIO.ValidatePageGroupNumbers(xRoot)
+                
+            sMsg = context.exception.args[0]
+            if sMsg.find('Missing PageGroup attribute')>=0:
+                bTestResult = True
+               
+        except:
+            bTestResult = False
+        
+        
+        
+
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #-------------------------------------------
+    def test_ValidatePageGroupNumbers_InvalidNumber(self):
+        
+        self.fnName = sys._getframe().f_code.co_name
+        sMsg = ''
+        bTestResult = True
+
+        # build XML
+        xRoot = etree.Element("Session", RandomizePageGroups="Y")
+        etree.SubElement(xRoot,"Page", PageGroup="1")
+        etree.SubElement(xRoot,"Page", PageGroup="a")
+        etree.SubElement(xRoot,"Page", PageGroup="1")
+            
+            
+        try:
+            with self.assertRaises(ValueError) as context:
+                self._oFilesIO.ValidatePageGroupNumbers(xRoot)
+
+            sMsg = context.exception.args[0]
+            if sMsg.find('Invalid PageGroup value')>=0:
+                bTestResult = True
+
+            
+        except:
+            bTestResult = False
+        
+        
+        
+
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+  
+    #-------------------------------------------
+    def test_ValidatePageGroupNumbers_NotEnoughPageGroups(self):
+        
+        self.fnName = sys._getframe().f_code.co_name
+        sMsg = ''
+        bTestResult = True
+
+        # build XML
+        xRoot = etree.Element("Session", RandomizePageGroups="Y")
+        etree.SubElement(xRoot,"Page", PageGroup="0")
+        etree.SubElement(xRoot,"Page", PageGroup="1")
+        etree.SubElement(xRoot,"Page", PageGroup="1")
+        etree.SubElement(xRoot,"Page", PageGroup="1")
+            
+            
+        try:
+            with self.assertRaises(Exception) as context:
+                self._oFilesIO.ValidatePageGroupNumbers(xRoot)
+
+            sMsg = context.exception.args[0]
+            if sMsg.find('Randomizing Error')>=0:
+                bTestResult = True
+
+            
+        except:
+            bTestResult = False
+        
+        
+        
+
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+  
+    
+    #-------------------------------------------
     #------------------------------------------- 
 
 ##########################################################################################

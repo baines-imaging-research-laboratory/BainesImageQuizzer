@@ -452,6 +452,12 @@ class UtilsIO:
                             sMsg = sMsg + sValidationMsg
                                 
             # >>>>>>>>>>>>>>>
+            # validate that each page has a PageGroup attribute if the session requires page group randomization
+            sValidationMsg = self.ValidatePageGroupNumbers(xRootNode)
+            sMsg = sMsg + sValidationMsg
+
+            
+            # >>>>>>>>>>>>>>>
 
             # validation errors found
             if sMsg != '':
@@ -531,6 +537,71 @@ class UtilsIO:
             
         return sMsg
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidatePageGroupNumbers(self, xRootNode):
+        ''' If the Session requires randomization of page groups, each page must have a PageGroup attribute
+            If all page group numbers are equal, no randomization will be done.
+            The page group values must be integer values.
+            PageGroup = 0 is allowed. These will always appear at the beginning of the composite list of indices
+        '''
+        sMsg = ''
+        sValidationMsg = ''
+        lPageGroups = []
+        
+        sRandomizeRequested = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
+        if sRandomizeRequested == "Y":
+            # check that each page has a page group number and that it is an integer
+            lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
+            iPageNum = 0
+            for xPage in lxPages:
+                iPageNum = iPageNum + 1
+                
+                # required attribute for randomization
+                sValidationMsg = self.ValidateRequiredAttribute(xPage, 'PageGroup', str(iPageNum))
+                if sValidationMsg != '':
+                    raise Exception('Missing PageGroup attribute: %s' %sValidationMsg)
+                    sMsg = sMsg + sValidationMsg
+                
+                try:
+                    # test that the value is an integer
+                    iPageGroup = int(self.oIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup'))
+                    # if iPageGroup == 0:
+                    #     sValidationMsg = 'Page Group must be an integer > 0. See Page: ' + str(iPageNum)
+                    #     sMsg = sMsg + sValidationMsg
+                    
+                except ValueError:
+                    sValidationMsg = 'Page Group is not an integer. See Page: ' + str(iPageNum)
+                    sMsg = sMsg + sValidationMsg
+                    raise ValueError('Invalid PageGroup value: %s' % sValidationMsg)
+                
+                lPageGroups.append(iPageGroup)
+
+            # check that number of different page group numbers (that are >0) must be >1
+            # you can't randomize if all the pages are assigned to the same group
+            for ind in lPageGroups:
+                lUniqueNumbers = self.GetUniqueNumbers(lPageGroups)
+                lUniqueNumbers.pop(0) #ignore page groups set to 0
+                if len(lUniqueNumbers) == 1:
+                    sValidationMsg = 'Not enough unique PageGroups for requested randomization. \nYou must have more than one page group (other than 0)'
+                    sMsg = sMsg + sValidationMsg
+                    raise Exception('Randomizing Error: %s' % sValidationMsg)
+                    
+            
+        return sMsg
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetUniqueNumbers(self, lNumbers):
+        ''' Utility to return the unique numbers from a given list of numbers.
+        '''
+
+        lUniqueNumbers = []
+        for ind in range(len(lNumbers)):
+            iNum = lNumbers[ind]
+            if iNum not in lUniqueNumbers:
+                lUniqueNumbers.append(iNum)
+        
+        return lUniqueNumbers
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def PopulateUserQuizFolder(self):
             
