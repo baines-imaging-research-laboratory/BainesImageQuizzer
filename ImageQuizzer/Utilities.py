@@ -221,6 +221,21 @@ class UtilsIOXml:
         return xmlChildNode
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetLastChild(self, xParentNode, sChildTagName):
+        """
+        given an xml node, return the last child node with the specified tagname
+        """
+
+        xmlChildNode = None
+        
+        for elem in xParentNode.findall(sChildTagName):
+            xmlChildNode = elem
+            # print(elem.tag, elem.attrib, elem.text)
+
+        
+        return xmlChildNode
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetLatestChildElement(self, xParentNode, sChildTagName):
         """
         retrieve the latest child with the tag name given, from 

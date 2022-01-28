@@ -1303,7 +1303,12 @@ class Session:
                     if self._bFirstResponsesRecordedInXml == False:
                         self.AddSessionLoginTimestamp()
                         self._bFirstResponsesRecordedInXml = True
+                        
                     self.AddXmlElements()
+                    
+                     # potential exit of quiz - update logout time with each write
+                    self.UpdateSessionLogoutTimestamp()
+                    
                     self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
                     
         
@@ -1389,13 +1394,15 @@ class Session:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddSessionLoginTimestamp(self):
-        
+        ''' Function to add an element holding the login time for the session.
+            Set up the logout time attribute to be updated on each write
+        '''
 
         now = datetime.now()
 
         self.SetLoginTime( now.strftime(self.oIOXml.sTimestampFormat) )
         
-        dictAttrib = {'LoginTime': self.LoginTime()}
+        dictAttrib = {'LoginTime': self.LoginTime(), 'LogoutTime': self.LoginTime()}
         
         sNullText = ''
         
@@ -1403,6 +1410,29 @@ class Session:
         
         self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
             
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def UpdateSessionLogoutTimestamp(self):
+        ''' This function will add the attribute LogoutTime to the last entry of the Login element.
+            Each time a 'Save' is done to the XML file, this Logout time will be overwritten.
+            Then when the exit finally happens, it will reflect the last time a write was performed.
+        '''
+
+        now = datetime.now()
+
+        sLogoutTime = now.strftime(self.oIOXml.sTimestampFormat)
+        
+        # get existing attributes from the Login element
+        xLoginNode = self.oIOXml.GetLastChild(self.oIOXml.GetRootNode(), "Login")
+        
+        if xLoginNode != None:
+            # update logout time if login element exists
+            dictAttrib = self.oIOXml.GetAttributes(xLoginNode)
+    
+            dictAttrib['LogoutTime'] = sLogoutTime
+                
+            # reset the Login element
+            self.oIOXml.UpdateAtributesInElement(xLoginNode, dictAttrib)
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetCompositeIndexIfResumeRequired(self):
         # Scan the user's quiz file for existing responses in case the user

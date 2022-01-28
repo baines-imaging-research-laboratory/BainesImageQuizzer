@@ -162,6 +162,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_GetDataInNodeEmpty())
 #         
         tupResults.append(self.test_WriteXML())
+        tupResults.append(self.test_GetLastChild())
+        tupResults.append(self.test_GetLastChild_DoesNotExist())
 
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
@@ -664,6 +666,46 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
      
 
     #-------------------------------------------
+    def test_GetLastChild(self):
+
+        self.fnName = sys._getframe().f_code.co_name
+        sMsg = ''
+        bTestResult = True
+
+        # build XML
+        xRoot = etree.Element("Session")
+        etree.SubElement(xRoot,"Login", LoginTime="10", LogoutTime="15")
+        etree.SubElement(xRoot,"Login", LoginTime="20", LogoutTime="25")
+        etree.SubElement(xRoot,"Login", LoginTime="30", LogoutTime="35")
+        etree.SubElement(xRoot,"Login", LoginTime="40", LogoutTime="45")
+        
+        xLastChild = self._oIOXml.GetLastChild(xRoot, 'Login')
+        
+        if self._oIOXml.GetValueOfNodeAttribute(xLastChild, 'LogoutTime') != "45":
+            bTestResult = False
+
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #-------------------------------------------
+    def test_GetLastChild_DoesNotExist(self):
+
+        self.fnName = sys._getframe().f_code.co_name
+        sMsg = ''
+        bTestResult = True
+
+        # build XML
+        xRoot = etree.Element("Session")
+        
+        xLastChild = self._oIOXml.GetLastChild(xRoot, 'Login')
+        
+        if xLastChild != None:
+            bTestResult = False
+
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    
     #-------------------------------------------
     #-------------------------------------------
 
