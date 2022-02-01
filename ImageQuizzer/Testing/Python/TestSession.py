@@ -116,7 +116,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
         self.sTestDataDir = os.path.join(self.sBaseDirForTestData, 'Test_Session')
 
-        self._oIOXml = UtilsIOXml()
+        self.oIOXml = UtilsIOXml()
         
         # create/set environment variable to be checked in UtilsIOXml class
         #    to prevent displaying error messages during testing
@@ -142,6 +142,11 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_ValidatePageGroupNumbers_MissingPageGroup())
         tupResults.append(self.test_ValidatePageGroupNumbers_InvalidNumber())
         tupResults.append(self.test_ValidatePageGroupNumbers_NotEnoughPageGroups())
+        tupResults.append(self.test_RandomizePageGroups_WithZero())
+        tupResults.append(self.test_RandomizePageGroups_WithoutZero())
+        tupResults.append(self.test_RandomizePageGroups_NoSeed())
+        tupResults.append(self.test_GetStoredRandomizedIndices())
+        tupResults.append(self.test_AddRandomizedIndicesToXML())
 
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
@@ -161,8 +166,8 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         sTestPath = os.path.join(self.sTestDataDir, sTestFilename)
         
         
-        [bOpenResult, self.xRootNode] = self._oIOXml.OpenXml(sTestPath, 'Session')
-        self._oIOXml.SetRootNode(self.xRootNode)
+        [bOpenResult, self.xRootNode] = self.oIOXml.OpenXml(sTestPath, 'Session')
+        self.oIOXml.SetRootNode(self.xRootNode)
         
         lExpectedCompositeIndices = []
         lExpectedCompositeIndices.append([0,0])
@@ -173,7 +178,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         
         self.oSession = Session()
         self.oSession.SetFilesIO(self._oFilesIO)
-        self.oSession.SetIOXml(self._oIOXml)
+        self.oSession.SetIOXml(self.oIOXml)
         self.oSession.BuildPageQuestionCompositeIndexList()
         lCompositeIndicesResult = self.oSession.GetCompositeIndicesList()
         
@@ -236,7 +241,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         # call function to rebuild the composite indices list
         lCompositeIndicesResult = self.oSession.ShufflePageQuestionCompositeIndexList(lRandIndices)
         
-        # valid result with expected
+        # validate result with expected
         if lCompositeIndicesResult == lExpectedShuffledOrder :
             bTestResult = True
         else:
@@ -256,9 +261,9 @@ class TestSessionTest(ScriptedLoadableModuleTest):
                        Page   QS  Grp                    Indices                      Page   QS    Grp
                        0      0     1                        2                         2      0     2
                        0      1     1                        3                         2      1     2
-                       1      0     1                        1                         3      0     2
-                       2      0     2                                                  4      0     3
-                       2      1     2                                                  4      1     3
+                       1      0     1                        4                         3      0     2
+                       2      0     2                        0                         4      0     3
+                       2      1     2                        1                         4      1     3
                        3      0     2                                                  0      0     1
                        4      0     3                                                  0      1     1
                        4      1     3                                                  1      0     1
@@ -293,7 +298,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         # call function to rebuild the composite indices list
         lCompositeIndicesResult = self.oSession.ShufflePageQuestionGroupCompositeIndexList(lRandIndices)
         
-        # valid result with expected
+        # validate result with expected
         if lCompositeIndicesResult == lExpectedShuffledOrder :
             bTestResult = True
         else:
@@ -374,6 +379,9 @@ class TestSessionTest(ScriptedLoadableModuleTest):
   
     #-------------------------------------------
     def test_ValidatePageGroupNumbers_NotEnoughPageGroups(self):
+        ''' Test that only one PageGroup number was assigned for entire XML.
+            Zeros are ignored because they will always appear at the beginning of a list.
+        '''
         
         self.fnName = sys._getframe().f_code.co_name
         sMsg = ''
@@ -381,7 +389,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
         # build XML
         xRoot = etree.Element("Session", RandomizePageGroups="Y")
-        etree.SubElement(xRoot,"Page", PageGroup="0")
+        etree.SubElement(xRoot,"Page", PageGroup="0")   # this will be ignored
         etree.SubElement(xRoot,"Page", PageGroup="1")
         etree.SubElement(xRoot,"Page", PageGroup="1")
         etree.SubElement(xRoot,"Page", PageGroup="1")
@@ -390,24 +398,147 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         try:
             with self.assertRaises(Exception) as context:
                 self._oFilesIO.ValidatePageGroupNumbers(xRoot)
-
+            
+            # the validation was supposed to catch an error 
+            # check that the correct error was raised
             sMsg = context.exception.args[0]
             if sMsg.find('Randomizing Error')>=0:
                 bTestResult = True
 
             
         except:
+            # validation did not catch the error
             bTestResult = False
         
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #-------------------------------------------
+    def test_RandomizePageGroups_WithZero(self):
+
         
+        self.fnName = sys._getframe().f_code.co_name
+        sMsg = ''
+        bTestResult = True
+
+        liNumbersToRandomize = [0,1,2,3,4,5,6,7,8,9]
+        iSeed = 100
+        liExpectedResult = [0,5,1,6,9,7,2,4,8,3]
         
+        liRandomizedNumbers = self.oSession.RandomizePageGroups(liNumbersToRandomize, iSeed)
+        print(liRandomizedNumbers)
+
+        # validate result with expected
+        if liRandomizedNumbers == liExpectedResult :
+            bTestResult = True
+        else:
+            bTestResult = False
 
         tupResult = self.fnName, bTestResult
         return tupResult
 
-  
-    
     #-------------------------------------------
+    def test_RandomizePageGroups_WithoutZero(self):
+
+        
+        self.fnName = sys._getframe().f_code.co_name
+        sMsg = ''
+        bTestResult = True
+
+        liNumbersToRandomize = [1,2,3,4,5,6,7,8,9]
+        iSeed = 100
+        liExpectedResult = [5,1,6,9,7,2,4,8,3]
+        
+        liRandomizedNumbers = self.oSession.RandomizePageGroups(liNumbersToRandomize, iSeed)
+
+        # validate result with expected
+        if liRandomizedNumbers == liExpectedResult :
+            bTestResult = True
+        else:
+            bTestResult = False
+
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #-------------------------------------------
+    def test_RandomizePageGroups_NoSeed(self):
+        ''' Function to make sure an empty parameter does not throw an error.
+            Because there is no seed, we cannot test for an expected result.
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        sMsg = ''
+        bTestResult = True
+
+        liNumbersToRandomize = [1,2,3,4,5,6,7,8,9]
+        try:
+            liRandomizedNumbers = self.oSession.RandomizePageGroups(liNumbersToRandomize)
+            bTestResult = True
+            
+        except:
+            bTestResult = False
+
+        tupResult = self.fnName, bTestResult
+        return tupResult
+        
+    #-------------------------------------------
+    def test_GetStoredRandomizedIndices(self):
+        ''' Test getting the randomized list of indices from an XML file
+            and converting it to a list of integers.
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        sMsg = ''
+        bTestResult = True
+        
+        xRoot = etree.Element("Session", RandomizePageGroups="Y")
+        etree.SubElement(xRoot,"Page", PageGroup="0")
+        etree.SubElement(xRoot,"Page", PageGroup="1")
+        child = etree.SubElement(xRoot,"RandomizedPageGroupIndices")
+        child.text = '0,5,3,1,4,2'
+        self.oIOXml.SetRootNode(xRoot)
+        
+        liExpectedIndices = [0,5,3,1,4,2]
+        liStoredIndices = self.oSession.GetStoredRandomizedIndices()
+        
+        
+        if liStoredIndices == liExpectedIndices:
+            bTestResult = True
+        else:
+            bTestResult = False
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+        
+    #------------------------------------------- 
+    def test_AddRandomizedIndicesToXML(self):
+        
+        self.fnName = sys._getframe().f_code.co_name
+        sMsg = ''
+        bTestResult = True
+        
+        xRoot = etree.Element("Session", RandomizePageGroups="Y")
+        etree.SubElement(xRoot,"Page", PageGroup="0")
+        self.oIOXml.SetRootNode(xRoot)
+        
+        liIndices = [0,5,3,1,4,2]
+        self.oSession.AddRandomizedIndicesToXML(liIndices)
+
+        # read the updated xml to get what was stored 
+        liStoredIndices = self.oSession.GetStoredRandomizedIndices()
+        
+        if liStoredIndices == liIndices:
+            bTestResult = True
+        else:
+            bTestResult = False
+
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+        
+    #------------------------------------------- 
+    #------------------------------------------- 
     #------------------------------------------- 
 
 ##########################################################################################

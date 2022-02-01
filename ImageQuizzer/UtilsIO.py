@@ -71,10 +71,14 @@ class UtilsIO:
         self._sQuizzerROIColorTableNameWithExt = 'QuizzerROIColorTable.txt'
         self._sDefaultROIColorTableName = 'GenericColors'
 
+        self._liPageGroups = []
+        self._liUniquePageGroups = []
+
         self.oUtilsMsgs = UtilsMsgs()
         self.oIOXml = UtilsIOXml()
 
         self.setupTestEnvironment()
+
 
 
         
@@ -123,6 +127,24 @@ class UtilsIO:
     #----------
     def GetDefaultROIColorTableName(self):
         return self._sDefaultROIColorTableName
+    
+    #----------
+    def SetListPageGroupNumbers(self, liNumbers):
+        self._liPageGroups = liNumbers
+        
+    #----------
+    def GetListPageGroupNumbers(self):
+        return self._liPageGroups
+    
+    #----------
+    def SetListUniquePageGroups(self, liNumbers):
+        self._liUniquePageGroups = liNumbers
+        
+    #----------
+    def GetListUniquePageGroups(self):
+        return self._liUniquePageGroups
+    
+    
 #     ###################
 #     #----------
 #     def SetUserQuizResultsDir(self, sFilename):
@@ -440,7 +462,8 @@ class UtilsIO:
                                     bFoundMatchingPath = True
                                     # check that sNodeName exists in that list element
                                     if sNodeNameID not in lElement:
-                                        sMsg = sMsg + "\nIn any Page Element, there should be a one-to-one correlation of 'PageID_ImageID' with the Image Path" +\
+                                        sMsg = sMsg + "\nIn any Page Element, there should be only one match of the combined 'PageID_ImageID' attributes with the Image Path" +\
+                                                "\nThere are multiple paths that have the same 'PageID_ImageID' on this Page" +\
                                                 "\n   .....Check all paths for Page: " + str(iPageNum) + ' '+ sNodeNameID
                                      
                         if not bFoundMatchingPath:
@@ -463,8 +486,10 @@ class UtilsIO:
                                 
             # >>>>>>>>>>>>>>>
             # validate that each page has a PageGroup attribute if the session requires page group randomization
-            sValidationMsg = self.ValidatePageGroupNumbers(xRootNode)
-            sMsg = sMsg + sValidationMsg
+            sRandomizeRequested = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
+            if sRandomizeRequested == "Y":
+                sValidationMsg = self.ValidatePageGroupNumbers(xRootNode)
+                sMsg = sMsg + sValidationMsg
 
             
             # >>>>>>>>>>>>>>>
@@ -556,64 +581,62 @@ class UtilsIO:
         '''
         sMsg = ''
         sValidationMsg = ''
-        lPageGroups = []
+        # liPageGroups = []
         
-        sRandomizeRequested = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
-        if sRandomizeRequested == "Y":
-            # check that each page has a page group number and that it is an integer
-            lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
-            iPageNum = 0
-            for xPage in lxPages:
-                iPageNum = iPageNum + 1
+        # check that each page has a page group number and that it is an integer
+        lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
+        iPageNum = 0
+        for xPage in lxPages:
+            iPageNum = iPageNum + 1
+            
+            # required attribute for randomization
+            sValidationMsg = self.ValidateRequiredAttribute(xPage, 'PageGroup', str(iPageNum))
+            if sValidationMsg != '':
+                raise Exception('Missing PageGroup attribute: %s' %sValidationMsg)
+                sMsg = sMsg + sValidationMsg
+            
+            try:
+                # test that the value is an integer
+                iPageGroup = int(self.oIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup'))
+                # if iPageGroup == 0:
+                #     sValidationMsg = 'Page Group must be an integer > 0. See Page: ' + str(iPageNum)
+                #     sMsg = sMsg + sValidationMsg
                 
-                # required attribute for randomization
-                sValidationMsg = self.ValidateRequiredAttribute(xPage, 'PageGroup', str(iPageNum))
-                if sValidationMsg != '':
-                    raise Exception('Missing PageGroup attribute: %s' %sValidationMsg)
-                    sMsg = sMsg + sValidationMsg
-                
-                try:
-                    # test that the value is an integer
-                    iPageGroup = int(self.oIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup'))
-                    # if iPageGroup == 0:
-                    #     sValidationMsg = 'Page Group must be an integer > 0. See Page: ' + str(iPageNum)
-                    #     sMsg = sMsg + sValidationMsg
-                    
-                except ValueError:
-                    sValidationMsg = 'Page Group is not an integer. See Page: ' + str(iPageNum)
-                    sMsg = sMsg + sValidationMsg
-                    if self.sTestMode == "1":
-                        raise ValueError('Invalid PageGroup value: %s' % sValidationMsg)
-                
-                lPageGroups.append(iPageGroup)
+            except ValueError:
+                sValidationMsg = 'Page Group is not an integer. See Page: ' + str(iPageNum)
+                sMsg = sMsg + sValidationMsg
+                if self.sTestMode == "1":
+                    raise ValueError('Invalid PageGroup value: %s' % sValidationMsg)
+            
+            self._liPageGroups.append(iPageGroup)
 
-            # check that number of different page group numbers (that are >0) must be >1
-            # you can't randomize if all the pages are assigned to the same group
-            for ind in lPageGroups:
-                lUniqueNumbers = self.GetUniqueNumbers(lPageGroups)
-                if 0 in lUniqueNumbers:
-                    lUniqueNumbers.remove(0) #ignore page groups set to 0
-                if len(lUniqueNumbers) == 1:
-                    sValidationMsg = 'Not enough unique PageGroups for requested randomization. \nYou must have more than one page group (other than 0)'
-                    sMsg = sMsg + sValidationMsg
-                    if self.sTestMode == "1":
-                        raise Exception('Randomizing Error: %s' % sValidationMsg)
-                    
+        # check that number of different page group numbers (that are >0) must be >1
+        # you can't randomize if all the pages are assigned to the same group
+        for ind in self._liPageGroups:
+            self._liUniqueNumbers = self.GetUniqueNumbers(self._liPageGroups)
+            if 0 in self._liUniqueNumbers:
+                self._liUniqueNumbers.remove(0) #ignore page groups set to 0
+            if len(self._liUniqueNumbers) == 1:
+                sValidationMsg = 'Not enough unique PageGroups for requested randomization. \nYou must have more than one page group (other than 0)'
+                sMsg = sMsg + sValidationMsg
+                if self.sTestMode == "1":
+                    raise Exception('Randomizing Error: %s' % sValidationMsg)
+                
             
         return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetUniqueNumbers(self, lNumbers):
+    def GetUniqueNumbers(self, liNumbers):
         ''' Utility to return the unique numbers from a given list of numbers.
         '''
 
-        lUniqueNumbers = []
-        for ind in range(len(lNumbers)):
-            iNum = lNumbers[ind]
-            if iNum not in lUniqueNumbers:
-                lUniqueNumbers.append(iNum)
+        liUniqueNumbers = []
+        for ind in range(len(liNumbers)):
+            iNum = liNumbers[ind]
+            if iNum not in liUniqueNumbers:
+                liUniqueNumbers.append(iNum)
         
-        return lUniqueNumbers
+        return liUniqueNumbers
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def PopulateUserQuizFolder(self):

@@ -3,6 +3,7 @@ import os
 import vtk, qt, ctk, slicer
 import sys
 import unittest
+import random
 
 from Utilities import *
 from Question import *
@@ -283,9 +284,23 @@ class Session:
                 # if randomization is requested - shuffle the page/questionset list
                 sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
                 if sRandomizeRequired == 'Y':
-                    # check if xnl already holds a set of randomized indices
-                    lRandIndices = self.GetRandomizedIndices()
-                    self._l2iPageQuestionCompositeIndices = self.ShufflePageQuestionCompositeIndexList(lRandIndices)
+                    # check if xnl already holds a set of randomized indices otherwise, call randomizing function
+                    liRandIndices = self.GetStoredRandomizedIndices()
+                    if liRandIndices == []:
+                        # get the unique list of all Page Group numbers to randomize
+                        #    this was set during xml validation during the initial read
+                        liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
+                        liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
+                        self.AddRandomizedIndicesToXML(liRandIndices)
+                     
+                    liRandIndices = [5,3,1,0,2,4]
+                    self._l2iPageQuestionCompositeIndices = self.ShufflePageQuestionCompositeIndexList(liRandIndices)
+
+#                    liRandIndices = [2,3,1]
+                    self._l3iPageQuestionCompositeIndices = self.ShufflePageQuestionGroupCompositeIndexList(liRandIndices)
+        
+        
+        
                 
                 
                 
@@ -563,37 +578,25 @@ class Session:
                 self._l3iPageQuestionGroupCompositeIndices.append([iPageIndex,iQuestionSetIndex, iPageGroup])
         
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetRandomizedIndices(self):
-        ''' This function will check for existing element of randomized indices.
-            If no element exists, create a new list.
-        '''
-
-        xRandIndicesNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'RandomizedPageIndices', 0)
-        if xRandIndicesNode != None:
-            sStoredRandIndices = self.oIOXml.GetDataInNode(xRandIndicesNode)
-        
-        lRandIndices = [5,3,1,0,2,4]
-        
-        
-        
-        return lRandIndices
-    
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetRandomizedPageGroupIndices(self):
-        ''' This function will check for existing element of randomized indices.
-            If no element exists, create a new list.
-        '''
-
-        xRandIndicesNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'RandomizedPageGroupIndices', 0)
-        if xRandIndicesNode != None:
-            sStoredRandIndices = self.oIOXml.GetDataInNode(xRandIndicesNode)
-        
-        lRandIndices = [2,3,1]
-        
-        
-        
-        return lRandIndices
+    # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # def GetStoredRandomizedPageGroupIndices(self):
+    #     ''' This function will check for existing element of randomized indices.
+    #         If no element exists, create a new list.
+    #     '''
+    #
+    #     liRandIndices = []
+    #     xRandIndicesNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'RandomizedPageGroupIndices', 0)
+    #     if xRandIndicesNode != None:
+    #         lsStoredRandIndices = self.oIOXml.GetDataInNode(xRandIndicesNode)
+    #         liRandIndices = list(map(lsStoredRandIndices))
+    #
+    #     else:
+    #         if iSeed != None:
+    #             random.seed(iSeed)
+    #         liRandIndices = random.shuffle(liIndices)
+    #
+    #
+    #     return liRandIndices
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ShufflePageQuestionCompositeIndexList(self, lRandIndices):
         ''' This function will shuffle the original list as read in from the quiz xml,  that holds the
@@ -627,15 +630,15 @@ class Session:
             "[page number,questionset number, page group number]" according to the randomized index list input.
             The question sets always follow with the page, they are never randomized.
             The page groups are randomized. 
-                Any pages that have that group number will remain in the order they were read in.
+                 If more than one page has the same group number, they will remain in the order they were read in.
             
             eg.     Original XML List         Randomized Page Group indices      Shuffled Composite List
                        Page   QS  Grp                    Indices                      Page   QS    Grp
                        0      0     1                        2                         2      0     2
                        0      1     1                        3                         2      1     2
-                       1      0     1                        1                         3      0     2
-                       2      0     2                                                  4      0     3
-                       2      1     2                                                  4      1     3
+                       1      0     1                        4                         3      0     2
+                       2      0     2                        0                         4      0     3
+                       2      1     2                        1                         4      1     3
                        3      0     2                                                  0      0     1
                        4      0     3                                                  0      1     1
                        4      1     3                                                  1      0     1
@@ -664,6 +667,67 @@ class Session:
         
         return lShuffledCompositeIndices
    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def RandomizePageGroups(self, liIndicesToRandomize, iSeed=None):
+        ''' Function to take a list of indices and randomize them.
+            If there is a '0', it is removed prior to randomizing and inserted back to the
+            beginning of the list.
+        '''
+        
+        bPageGroup0 = False
+        # remove PageGroup 0 before reandomizing since these represent pages  
+        # that will always appear at the beginning of the quiz
+        if 0 in liIndicesToRandomize:
+            liIndicesToRandomize.remove(0)
+            bPageGroup0 = True
+            
+        if iSeed != None:     # used for testing
+            random.seed(iSeed)
+            
+        random.shuffle(liIndicesToRandomize)
+        liRandIndices = liIndicesToRandomize
+
+        # reset the first PageGroup number to 0 if it was in the quiz
+        if bPageGroup0:
+            liRandIndices.insert(0,0)
+            
+        return liRandIndices
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def AddRandomizedIndicesToXML(self,liIndices):
+        ''' Function to coordinate adding the randomized indices into the user's XML.
+        '''
+        # convert indices into a string
+        sIndicesToStore = ''
+        iCounter = 0
+        for iNum in liIndices:
+            iCounter = iCounter + 1
+            sIndicesToStore = sIndicesToStore + str(iNum)
+            if iCounter < len(liIndices):
+                sIndicesToStore = sIndicesToStore + ','
+                
+        dictAttrib = {}     # no attributes for this element
+        self.oIOXml.AddElement(self.oIOXml.GetRootNode(),'RandomizedPageGroupIndices',sIndicesToStore, dictAttrib)
+        
+                
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetStoredRandomizedIndices(self):
+        ''' This function will check for existing element of randomized indices.
+            If no element exists, a new list will be created.
+        '''
+
+        liRandIndices = []
+        liStoredRandIndices = []
+        
+        xRandIndicesNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'RandomizedPageGroupIndices', 0)
+        if xRandIndicesNode != None:
+            sStoredRandIndices = self.oIOXml.GetDataInNode(xRandIndicesNode)
+            # liStoredRandIndices = list(map(int,sStoredRandIndices))
+            liStoredRandIndices = [int(s) for s in sStoredRandIndices.split(",")]
+        
+        
+        return liStoredRandIndices
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayPage(self):
 
