@@ -113,14 +113,6 @@ class Session:
         return self._l2iPageQuestionCompositeIndices
 
     #----------
-    def Set3DCompositeIndicesList(self, lIndices):
-        self._l3iPageQuestionGroupCompositeIndices = lIndices
-        
-    #----------
-    def Get3DCompositeIndicesList(self):
-        return self._l3iPageQuestionGroupCompositeIndices
-
-    #----------
     def SetMultipleResponsesInQSetAllowed(self, bInput):
         
         self._bAllowMultipleResponseInQSet = bInput
@@ -413,7 +405,6 @@ class Session:
                 # if last question set, clear list and scene
                 if self.CheckForLastQuestionSetForPage() == True:
                     self._loQuestionSets = []
-# REMOVE FOR THREADING??                    slicer.mrmlScene.Clear()
                     slicer.mrmlScene.Clear()
                 else:
                     # clear quiz widgets only
@@ -446,7 +437,6 @@ class Session:
             # set up for previous page
             ########################################    
 
-# REMOVE FOR THREADING??            slicer.mrmlScene.Clear()
             slicer.mrmlScene.Clear()
             self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
             self.progress.setValue(self._iCurrentCompositeIndex)
@@ -523,20 +513,13 @@ class Session:
         if (self._iCurrentCompositeIndex == len(self._l2iPageQuestionCompositeIndices) - 1):
             # last question of last image view
             self._btnNext.setText("Finish")
-# 
-#         else:
-#             # assume multiple questions in the question set
-#             self._btnNext.setText("Next")
-#             # if last question in the question set - save answers and continue to next
-#             if not( self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][0] == self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex + 1][0]):
-#                 self._btnNext.setText("Save and Continue")
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def BuildPageQuestionCompositeIndexList(self):
-        
-        # This function sets up the page and question set indices which
-        #    are used to coordinate the next and previous buttons.
-        #    The information is gathered by querying the XML quiz.
+        ''' This function sets up the page and question set indices which
+            are used to coordinate the next and previous buttons.
+            The information is gathered by querying the XML quiz.
+        '''
         
         # given the root of the xml document build composite list 
         #     of indices for each page and the question sets within
@@ -577,26 +560,6 @@ class Session:
                 self._l2iPageQuestionCompositeIndices.append([iPageIndex, iQuestionSetIndex])
                 self._l3iPageQuestionGroupCompositeIndices.append([iPageIndex,iQuestionSetIndex, iPageGroup])
         
-
-    # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # def GetStoredRandomizedPageGroupIndices(self):
-    #     ''' This function will check for existing element of randomized indices.
-    #         If no element exists, create a new list.
-    #     '''
-    #
-    #     liRandIndices = []
-    #     xRandIndicesNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'RandomizedPageGroupIndices', 0)
-    #     if xRandIndicesNode != None:
-    #         lsStoredRandIndices = self.oIOXml.GetDataInNode(xRandIndicesNode)
-    #         liRandIndices = list(map(lsStoredRandIndices))
-    #
-    #     else:
-    #         if iSeed != None:
-    #             random.seed(iSeed)
-    #         liRandIndices = random.shuffle(liIndices)
-    #
-    #
-    #     return liRandIndices
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ShufflePageQuestionCompositeIndexList(self, lRandIndices):
         ''' This function will shuffle the original list as read in from the quiz xml,  that holds the
@@ -643,19 +606,6 @@ class Session:
                        4      0     3                                                  0      1     1
                        4      1     3                                                  1      0     1
         '''
-        
-        
-        # get unique page numbers
-        lUniquePageGroups = []
-        lPageGroups = [ind[2] for ind in self._l3iPageQuestionGroupCompositeIndices]
-        lUniquePageGroups = self.oFilesIO.GetUniqueNumbers(lPageGroups)
-        
-        # lUniquePageGroups = []
-        # for ind in range(len(self._l3iPageQuestionGroupCompositeIndices)):
-        #     iGrp = self._l3iPageQuestionGroupCompositeIndices[ind][2]
-        #     if iGrp not in lUniquePageGroups:
-        #         lUniquePageGroups.append(iGrp)
-
     
         lShuffledCompositeIndices = []
         
@@ -683,6 +633,8 @@ class Session:
             
         if iSeed != None:     # used for testing
             random.seed(iSeed)
+        else:
+            random.seed()
             
         random.shuffle(liIndicesToRandomize)
         liRandIndices = liIndicesToRandomize
@@ -1051,60 +1003,61 @@ class Session:
         return sCaptureSuccessLevel, lsAllResponses, sAllMsgs
        
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CheckForSavedResponse(self):
+    # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # def CheckForSavedResponse(self):
+    #
+    #     """ Check through all questions for the question set looking for a response.
+    #         If the Question Set has a "SegmentRequired='Y'" attribute, 
+    #         check for a saved label map path element. 
+    #
+    #         Assume: All options have a response if the question was answered so we just query the first.
+    #     """
+    #     bLabelMapRequirementFilled = False
+    #     iNumAnsweredQuestions = 0
+    #
+    #     xNodeQuestionSet = self.GetCurrentQuestionSetNode()
+    #     xNodePage = self.GetCurrentPageNode()
+    #
+    #     sLabelMapRequired = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'SegmentRequired')
+    #
+    #     # search for labelmap path in the xml image nodes if segmentation was required
+    #     if sLabelMapRequired == 'Y':
+    #         iNumImages = self.oIOXml.GetNumChildrenByName(xNodePage, 'Image')
+    #         for indImage in range(iNumImages):
+    #             xImageNode = self.oIOXml.GetNthChild(xNodePage, 'Image', indImage)
+    #             iNumLabelMapPaths = self.oIOXml.GetNumChildrenByName(xImageNode, 'LabelMapPath')
+    #             if iNumLabelMapPaths > 0:
+    #                 bLabelMapRequirementFilled = True
+    #                 break
+    #     else:
+    #         bLabelMapRequirementFilled = True   # user not required to create label map
+    #
+    #
+    #
+    #     iNumQuestions = self.oIOXml.GetNumChildrenByName(xNodeQuestionSet, 'Question')
+    #
+    #     for indQuestion in range(iNumQuestions):
+    #
+    #         xOptionNode = self.GetNthOptionNode( indQuestion, 0)
+    #
+    #         iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode,'Response')
+    #         if iNumResponses >0:
+    #             iNumAnsweredQuestions = iNumAnsweredQuestions + 1
+    #
+    #
+    #     if iNumAnsweredQuestions == 0:
+    #         sQuestionswithResponses = 'None'
+    #     elif  iNumAnsweredQuestions < iNumQuestions:
+    #         sQuestionswithResponses = 'Partial'
+    #     elif iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == True:
+    #         sQuestionswithResponses = 'All'
+    #     else:
+    #         if iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == False:
+    #             sQuestionswithResponses = 'Partial'
+    #
+    #     return sQuestionswithResponses
+    #
 
-        """ Check through all questions for the question set looking for a response.
-            If the Question Set has a "SegmentRequired='Y'" attribute, 
-            check for a saved label map path element. 
-
-            Assume: All options have a response if the question was answered so we just query the first.
-        """
-        bLabelMapRequirementFilled = False
-        iNumAnsweredQuestions = 0
-        
-        xNodeQuestionSet = self.GetCurrentQuestionSetNode()
-        xNodePage = self.GetCurrentPageNode()
-        
-        sLabelMapRequired = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'SegmentRequired')
-
-        # search for labelmap path in the xml image nodes if segmentation was required
-        if sLabelMapRequired == 'y':
-            iNumImages = self.oIOXml.GetNumChildrenByName(xNodePage, 'Image')
-            for indImage in range(iNumImages):
-                xImageNode = self.oIOXml.GetNthChild(xNodePage, 'Image', indImage)
-                iNumLabelMapPaths = self.oIOXml.GetNumChildrenByName(xImageNode, 'LabelMapPath')
-                if iNumLabelMapPaths > 0:
-                    bLabelMapRequirementFilled = True
-                    break
-        else:
-            bLabelMapRequirementFilled = True   # user not required to create label map
-        
-
-
-        iNumQuestions = self.oIOXml.GetNumChildrenByName(xNodeQuestionSet, 'Question')
-
-        for indQuestion in range(iNumQuestions):
-             
-            xOptionNode = self.GetNthOptionNode( indQuestion, 0)
-         
-            iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode,'Response')
-            if iNumResponses >0:
-                iNumAnsweredQuestions = iNumAnsweredQuestions + 1
-                 
-                
-        if iNumAnsweredQuestions == 0:
-            sQuestionswithResponses = 'None'
-        elif  iNumAnsweredQuestions < iNumQuestions:
-            sQuestionswithResponses = 'Partial'
-        elif iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == True:
-            sQuestionswithResponses = 'All'
-        else:
-            if iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == False:
-                sQuestionswithResponses = 'Partial'
-            
-        return sQuestionswithResponses
-    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetQuestionSetResponseCompletionLevel(self, indCI=None):
         
@@ -1137,7 +1090,7 @@ class Session:
         sLabelMapRequired = self.oIOXml.GetValueOfNodeAttribute(xQuestionSetNode, 'SegmentRequired')
 
         # search for labelmap path in the xml image nodes if segmentation was required
-        if sLabelMapRequired == 'y':
+        if sLabelMapRequired == 'Y':
             iNumImages = self.oIOXml.GetNumChildrenByName(xPageNode, 'Image')
             for indImage in range(iNumImages):
                 xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', indImage)

@@ -538,7 +538,32 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         return tupResult
         
     #------------------------------------------- 
-    #------------------------------------------- 
+    def test_CreatingRandomIndices(self):
+        ''' This test is to ensure the randomizer is truly creating 
+            random lists of indices.
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        sMsg = ''
+        bTestResult = True
+        
+        liNumbersToRandomize = [1,2,3,4,5,6,7,8,9]
+        iSeed = 100
+        liExpectedResult = [5,1,6,9,7,2,4,8,3]
+        liRandomizedNumbers = self.oSession.RandomizePageGroups(liNumbersToRandomize)
+
+        # second set should be different
+        liRandomizedNumbers2 = self.oSession.RandomizePageGroups(liNumbersToRandomize)
+        
+        if liRandomizedNumbers != liRandomizedNumbers2:
+            bTestResult = True
+        else:
+            bTestResult = False
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+        
+   #------------------------------------------- 
     #------------------------------------------- 
 
 ##########################################################################################
