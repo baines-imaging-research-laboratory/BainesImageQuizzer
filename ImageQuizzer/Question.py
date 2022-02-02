@@ -182,7 +182,7 @@ class QuestionSet():
         self.qQuizWidget = qt.QWidget()
         self.qQuizWidgetLayout = qt.QVBoxLayout()
         self.qQuizWidget.setLayout(self.qQuizWidgetLayout)
-        self.qQuizTitle = qt.QLabel(self.id + ' ' + self.descriptor)
+        self.qQuizTitle = qt.QLabel(self.id + '     ' + self.descriptor)
         self.qQuizTitle.setStyleSheet("QLabel{ font: bold}")
         self.qQuizWidgetLayout.addWidget(self.qQuizTitle)
         

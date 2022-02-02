@@ -37,7 +37,7 @@ class Session:
         self._sLoginTime = ''
 
         self._iCurrentCompositeIndex = 0
-        self._l2iPageQuestionCompositeIndices = []
+        # self._l2iPageQuestionCompositeIndices = []
         self._l3iPageQuestionGroupCompositeIndices = []
 
         self._xPageNode = None
@@ -106,11 +106,11 @@ class Session:
     
     #----------
     def SetCompositeIndicesList(self, lIndices):
-        self._l2iPageQuestionCompositeIndices = lIndices
+        self._l3iPageQuestionGroupCompositeIndices = lIndices
         
     #----------
     def GetCompositeIndicesList(self):
-        return self._l2iPageQuestionCompositeIndices
+        return self._l3iPageQuestionGroupCompositeIndices
 
     #----------
     def SetMultipleResponsesInQSetAllowed(self, bInput):
@@ -182,22 +182,22 @@ class Session:
         
     #----------
     def GetCurrentPageNode(self):
-        iPageIndex = self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][0]
+        iPageIndex = self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0]
         xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
         
         return xPageNode
     
     #----------
     def GetCurrentPageIndex(self):
-        return self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][0]
+        return self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0]
     
     #----------
     def GetCurrentQuestionSetIndex(self):
-        return self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][1]
+        return self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][1]
     
     #----------
     def GetCurrentQuestionSetNode(self):
-        iQSetIndex = self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][1]
+        iQSetIndex = self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][1]
         xPageNode = self.GetCurrentPageNode()
         xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', iQSetIndex)
         
@@ -285,11 +285,11 @@ class Session:
                         liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
                         self.AddRandomizedIndicesToXML(liRandIndices)
                      
-                    liRandIndices = [5,3,1,0,2,4]
-                    self._l2iPageQuestionCompositeIndices = self.ShufflePageQuestionCompositeIndexList(liRandIndices)
+                    # liRandIndices = [5,3,1,0,2,4]
+                    # self._l2iPageQuestionCompositeIndices = self.ShufflePageQuestionCompositeIndexList(liRandIndices)
 
 #                    liRandIndices = [2,3,1]
-                    self._l3iPageQuestionCompositeIndices = self.ShufflePageQuestionGroupCompositeIndexList(liRandIndices)
+                    self._l3iPageQuestionGroupCompositeIndices = self.ShufflePageQuestionGroupCompositeIndexList(liRandIndices)
         
         
         
@@ -299,7 +299,7 @@ class Session:
                 # check for partial or completed quiz
                 self.SetCompositeIndexIfResumeRequired()
                 
-                self.progress.setMaximum(len(self._l2iPageQuestionCompositeIndices))
+                self.progress.setMaximum(len(self._l3iPageQuestionGroupCompositeIndices))
                 self.progress.setValue(self._iCurrentCompositeIndex)
         
                 # if quiz is not complete, finish setup
@@ -383,7 +383,7 @@ class Session:
         bSuccess = True
         sMsg = ''
 
-        if self._iCurrentCompositeIndex + 1 == len(self._l2iPageQuestionCompositeIndices):
+        if self._iCurrentCompositeIndex + 1 == len(self._l3iPageQuestionGroupCompositeIndices):
 
             # the last question was answered - check if user is ready to exit
             self.onExitButtonClicked('Finish') # a save is done in here
@@ -461,7 +461,7 @@ class Session:
     def onExitButtonClicked(self,sCaller):
 
         self.progress.setValue(self._iCurrentCompositeIndex + 1)
-        iProgressPercent = int((self._iCurrentCompositeIndex + 1) / len(self._l2iPageQuestionCompositeIndices) * 100)
+        iProgressPercent = int((self._iCurrentCompositeIndex + 1) / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
         self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
         
         sMsg = 'Do you wish to exit?'
@@ -483,7 +483,7 @@ class Session:
         # if code reaches here, either the exit was cancelled or there was 
         # an error in the save
         self.progress.setValue(self._iCurrentCompositeIndex)
-        iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l2iPageQuestionCompositeIndices) * 100)
+        iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
         self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
 
         
@@ -499,7 +499,7 @@ class Session:
             self._btnPrevious.enabled = False
 
         # end of quiz
-        elif (self._iCurrentCompositeIndex == len(self._l2iPageQuestionCompositeIndices) - 1):
+        elif (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
             self._btnNext.enabled = True
             self._btnPrevious.enabled = True
 
@@ -510,7 +510,7 @@ class Session:
 
 
         # assign button description           
-        if (self._iCurrentCompositeIndex == len(self._l2iPageQuestionCompositeIndices) - 1):
+        if (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
             # last question of last image view
             self._btnNext.setText("Finish")
 
@@ -557,35 +557,35 @@ class Session:
             #        1        0
             #    - there can be numerous questions in each question set
             for iQuestionSetIndex in range(len(xQuestionSets)):
-                self._l2iPageQuestionCompositeIndices.append([iPageIndex, iQuestionSetIndex])
+                # self._l2iPageQuestionCompositeIndices.append([iPageIndex, iQuestionSetIndex])
                 self._l3iPageQuestionGroupCompositeIndices.append([iPageIndex,iQuestionSetIndex, iPageGroup])
         
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ShufflePageQuestionCompositeIndexList(self, lRandIndices):
-        ''' This function will shuffle the original list as read in from the quiz xml,  that holds the
-            "[page number,questionset number]" according to the randomized index list input.
-            The question sets always follow with the page, they are never randomized.
-            
-            eg.     Original XML List           Randomized Page indices          Shuffled Composite List
-                       Page   QS                         Indices                      Page   QS
-                       0      0                             3                         3      0
-                       0      1                             0                         0      0
-                       1      0                             2                         0      1
-                       2      0                             4                         2      0
-                       2      1                             1                         2      1
-                       3      0                                                       4      0
-                       4      0                                                       4      1
-                       4      1                                                       1      0
-        '''
-        
-        lShuffledCompositeIndices = []
-        
-        for indRand in lRandIndices:
-            for indOrig in range(len(self._l2iPageQuestionCompositeIndices)):
-                if self._l2iPageQuestionCompositeIndices[indOrig][0] == indRand :
-                    lShuffledCompositeIndices.append(self._l2iPageQuestionCompositeIndices[indOrig])
-                    
-        return lShuffledCompositeIndices
+    # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # def ShufflePageQuestionCompositeIndexList(self, lRandIndices):
+    #     ''' This function will shuffle the original list as read in from the quiz xml,  that holds the
+    #         "[page number,questionset number]" according to the randomized index list input.
+    #         The question sets always follow with the page, they are never randomized.
+    #
+    #         eg.     Original XML List           Randomized Page indices          Shuffled Composite List
+    #                    Page   QS                         Indices                      Page   QS
+    #                    0      0                             3                         3      0
+    #                    0      1                             0                         0      0
+    #                    1      0                             2                         0      1
+    #                    2      0                             4                         2      0
+    #                    2      1                             1                         2      1
+    #                    3      0                                                       4      0
+    #                    4      0                                                       4      1
+    #                    4      1                                                       1      0
+    #     '''
+    #
+    #     lShuffledCompositeIndices = []
+    #
+    #     for indRand in lRandIndices:
+    #         for indOrig in range(len(self._l2iPageQuestionCompositeIndices)):
+    #             if self._l2iPageQuestionCompositeIndices[indOrig][0] == indRand :
+    #                 lShuffledCompositeIndices.append(self._l2iPageQuestionCompositeIndices[indOrig])
+    #
+    #     return lShuffledCompositeIndices
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ShufflePageQuestionGroupCompositeIndexList(self, lRandIndices):
@@ -609,9 +609,9 @@ class Session:
     
         lShuffledCompositeIndices = []
         
-        for indRand in lRandIndices:
+        for indRand in range(len(lRandIndices)):
             for indOrig in range(len(self._l3iPageQuestionGroupCompositeIndices)):
-                if self._l3iPageQuestionGroupCompositeIndices[indOrig][2] == indRand :
+                if self._l3iPageQuestionGroupCompositeIndices[indOrig][2] == lRandIndices[indRand] :
                     lShuffledCompositeIndices.append(self._l3iPageQuestionGroupCompositeIndices[indOrig])
         
         
@@ -630,7 +630,8 @@ class Session:
         if 0 in liIndicesToRandomize:
             liIndicesToRandomize.remove(0)
             bPageGroup0 = True
-            
+        
+        ###### iSeed = 100 # for debug
         if iSeed != None:     # used for testing
             random.seed(iSeed)
         else:
@@ -642,7 +643,7 @@ class Session:
         # reset the first PageGroup number to 0 if it was in the quiz
         if bPageGroup0:
             liRandIndices.insert(0,0)
-            
+        
         return liRandIndices
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -739,7 +740,7 @@ class Session:
         xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
         self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
         self.sPageID = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'ID')
-        iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l2iPageQuestionCompositeIndices) * 100)
+        iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
         self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
 
         # set the requested layout for images
@@ -777,7 +778,7 @@ class Session:
         bLastQuestionSet = False
         
         # check if at the end of the quiz
-        if (self._iCurrentCompositeIndex == len(self._l2iPageQuestionCompositeIndices) - 1):
+        if (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
             bLastQuestionSet = True
 
         else:
@@ -785,7 +786,7 @@ class Session:
             # assume multiple question sets for the page
             # check if next page in the composite index is different than the current page
             #    if yes - we have reached the last question set
-            if not( self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][0] == self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex + 1][0]):
+            if not( self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0] == self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex + 1][0]):
                 bLastQuestionSet = True            
            
             
@@ -1080,8 +1081,8 @@ class Session:
         bLabelMapRequirementFilled = False
         iNumAnsweredQuestions = 0
         
-        indPage = self._l2iPageQuestionCompositeIndices[indCI][0]
-        indQuestionSet = self._l2iPageQuestionCompositeIndices[indCI][1]
+        indPage = self._l3iPageQuestionGroupCompositeIndices[indCI][0]
+        indQuestionSet = self._l3iPageQuestionGroupCompositeIndices[indCI][1]
         
         xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', indPage)
         xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', indQuestionSet)
@@ -1480,14 +1481,14 @@ class Session:
         # loop through composite index in reverse, to search for existing responses that match
         #    last login time (prior to current login)
 
-        for indCI in reversed(range(len(self._l2iPageQuestionCompositeIndices))):
+        for indCI in reversed(range(len(self._l3iPageQuestionGroupCompositeIndices))):
 #             print(indCI)
             
             bLastLoginResponseFound = False # default
             
             # get page and question set nodes from indices
-            indPage = self._l2iPageQuestionCompositeIndices[indCI][0]
-            indQuestionSet = self._l2iPageQuestionCompositeIndices[indCI][1]
+            indPage = self._l3iPageQuestionGroupCompositeIndices[indCI][0]
+            indQuestionSet = self._l3iPageQuestionGroupCompositeIndices[indCI][1]
             xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', indPage)
             xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', indQuestionSet)
 #             print(indCI, 'Page:', indPage, 'QS:', indQuestionSet)
@@ -1535,7 +1536,7 @@ class Session:
             
             # check if the last response found was entered on the last question set. 
             #    (i.e. was the quiz completed)
-            if indCI == (len(self._l2iPageQuestionCompositeIndices) - 1) and\
+            if indCI == (len(self._l3iPageQuestionGroupCompositeIndices) - 1) and\
                 sQSetCompletionState == 'All':
                 
                 # if one question set allows a multiple response, user has option to redo response

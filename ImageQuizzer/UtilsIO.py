@@ -612,15 +612,14 @@ class UtilsIO:
 
         # check that number of different page group numbers (that are >0) must be >1
         # you can't randomize if all the pages are assigned to the same group
-        for ind in self._liPageGroups:
-            self._liUniqueNumbers = self.GetUniqueNumbers(self._liPageGroups)
-            if 0 in self._liUniqueNumbers:
-                self._liUniqueNumbers.remove(0) #ignore page groups set to 0
-            if len(self._liUniqueNumbers) == 1:
-                sValidationMsg = 'Not enough unique PageGroups for requested randomization. \nYou must have more than one page group (other than 0)'
-                sMsg = sMsg + sValidationMsg
-                if self.sTestMode == "1":
-                    raise Exception('Randomizing Error: %s' % sValidationMsg)
+        self._liUniquePageGroups = self.GetUniqueNumbers(self._liPageGroups)
+        if 0 in self._liUniquePageGroups:
+            self._liUniquePageGroups.remove(0) #ignore page groups set to 0
+        if len(self._liUniquePageGroups) == 1:
+            sValidationMsg = 'Not enough unique PageGroups for requested randomization. \nYou must have more than one page group (other than 0)'
+            sMsg = sMsg + sValidationMsg
+            if self.sTestMode == "1":
+                raise Exception('Randomizing Error: %s' % sValidationMsg)
                 
             
         return sMsg
@@ -773,45 +772,6 @@ class UtilsIO:
     
                             bDataVolumeSaved, sMsg = self.SaveLabeMapAsDataVolume(sLabelMapPath, slNodeLabelMap) 
                          
-#                             if (oSession.oIOXml.GetValueOfNodeAttribute(oSession.oIOXml.GetRootNode(), 'SaveLabelMapAsRTStruct')) == 'Y':
-#                                 bRTStructSaved, sRTStructMsg, sDicomExportOutputDir = self.SaveLabelMapAsRTStruct(oImageNode, sLabelMapFilename, sPageLabelMapDir)
-#   
-#                                 if (oSession.oIOXml.GetValueOfNodeAttribute(oSession.oIOXml.GetRootNode(), 'MapRTStructToVolume')) == 'Y':
-#                                     try:
-#                                         if oImageNode.sVolumeFormat == 'DICOM':
-#                                             sOriginalDicomPath = oImageNode.sImagePath
-#                                             sOriginalDicomDir = self.GetDirFromPath(sOriginalDicomPath)
-#                                         else:
-#                                             xImage = oImageNode.GetXmlImageElement()
-#                                             xOrigDicomDirElement = oSession.oIOXml.GetNthChild(xImage, 'OriginalDicomDir', 0 )
-#                                             if xOrigDicomDirElement != None:
-#                                                 sOrigDicomRelativeDir = oSession.oIOXml.GetDataInNode(xOrigDicomDirElement)
-#                                                 sOriginalDicomDir = self.GetAbsoluteDataPath(sOrigDicomRelativeDir)
-#                                             else:
-#                                                 sMsg = 'Study set up to remap exported RTStruct to original dicom volume'\
-#                                                         + '\n but XML element OriginalDicomDir is missing'\
-#                                                         + '\nFor page:' + str(oSession.GetCurrentPageIndex()) \
-#                                                         + '\nSee administrator: ' + sys._getframe(  ).f_code.co_name
-#                                                 oSession.oUtilsMsgs.DisplayWarning(sMsg) 
-#                                         # args=(original dicom series, Slicer's dicom output, SaveTo dir)
-# #                                         self.mapRTStructToVolume(self.GetDirFromPath(oImageNode.sImagePath), sDicomExportOutputDir, sPageLabelMapDir )
-# #                                         self.mapRTStructToVolume(self.GetDirFromPath(sOriginalDicomPath), sDicomExportOutputDir, sPageLabelMapDir )
-#                                         self.mapRTStructToVolume(sOriginalDicomDir, sDicomExportOutputDir, sPageLabelMapDir )
-#                                         shutil.rmtree(sDicomExportOutputDir, ignore_errors=True)
-# 
-#                                     except:
-#                                         sMsg = 'Failed to map exported RTStruct to original volume.'\
-#                                                 + '\nNotes: - It is possible that the original dicom had irregular geometry'\
-#                                                 + '\n- or that the number of slices output by Slicer does not match that of the original volume'\
-#                                                 + '\n- The following packages are required for mapping to the original volume UIDs: Pandas, pydicom and numpy'\
-#                                                 + '\n' + sys._getframe(  ).f_code.co_name
-#                                         oSession.oUtilsMsgs.DisplayWarning(sMsg) 
-# 
-# 
-#                             
-#                             else:
-#                                 bRTStructSaved = True # allow label map path to be written to xml
-                                 
                             # update list of names of images that have the label maps stored
                             lsLabelMapsStoredForImages.append(oImageNode.sNodeName)
 

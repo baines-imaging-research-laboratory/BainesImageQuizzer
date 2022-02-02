@@ -167,7 +167,7 @@
 			<Question Type="CheckBox"  Descriptor="Try the following:">
 				<Option>Paint tool</Option>
 				<Option>Select color</Option>
-				<Option>Change pixel size</Option>
+				<Option>Change radius size</Option>
 				<Option>Draw tool (use Apply)</Option>
 				<Option>Undo/Redo</Option>
 				<Option>Erase</Option>

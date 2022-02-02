@@ -135,7 +135,6 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
         tupResults = []
         tupResults.append(self.test_BuildPageQuestionCompositeIndexList())
-        tupResults.append(self.test_ShufflePageQuestionCompositeIndexList())
         tupResults.append(self.test_ShufflePageQuestionGroupCompositeIndexList())
 
 
@@ -170,10 +169,10 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         self.oIOXml.SetRootNode(self.xRootNode)
         
         lExpectedCompositeIndices = []
-        lExpectedCompositeIndices.append([0,0])
-        lExpectedCompositeIndices.append([0,1])
-        lExpectedCompositeIndices.append([1,0])
-        lExpectedCompositeIndices.append([2,0])
+        lExpectedCompositeIndices.append([0,0,1])
+        lExpectedCompositeIndices.append([0,1,1])
+        lExpectedCompositeIndices.append([1,0,2])
+        lExpectedCompositeIndices.append([2,0,3])
         
         
         self.oSession = Session()
@@ -190,63 +189,6 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         # set quiz as complete for test purposes - so as not to trigger error message
         self.oSession.SetQuizComplete(True)
 
-        tupResult = self.fnName, bTestResult
-        return tupResult
-
-    #------------------------------------------- 
-    def test_ShufflePageQuestionCompositeIndexList(self):
-        bTestResult = True
-        self.fnName = sys._getframe().f_code.co_name
-        
-        # build page/question set composite indices list for testing
-        '''
-            eg.     Original XML List           Randomized Page indices          Shuffled Composite List
-                       Page   QS                         Indices                      Page   QS
-                       0      0                             3                         3      0
-                       0      1                             0                         0      0
-                       1      0                             2                         0      1
-                       2      0                             4                         2      0
-                       2      1                             1                         2      1
-                       3      0                                                       4      0
-                       4      0                                                       4      1
-                       4      1                                                       1      0
-        
-        '''
-        
-        lCompositeTestIndices = []
-        lCompositeTestIndices.append([0,0])
-        lCompositeTestIndices.append([0,1])
-        lCompositeTestIndices.append([1,0])
-        lCompositeTestIndices.append([2,0])
-        lCompositeTestIndices.append([2,1])
-        lCompositeTestIndices.append([3,0])
-        lCompositeTestIndices.append([4,0])
-        lCompositeTestIndices.append([4,1])
-    
-        self.oSession.SetCompositeIndicesList(lCompositeTestIndices)
-        
-        
-        lExpectedShuffledOrder = []
-        lExpectedShuffledOrder.append([3,0])
-        lExpectedShuffledOrder.append([0,0])
-        lExpectedShuffledOrder.append([0,1])
-        lExpectedShuffledOrder.append([2,0])
-        lExpectedShuffledOrder.append([2,1])
-        lExpectedShuffledOrder.append([4,0])
-        lExpectedShuffledOrder.append([4,1])
-        lExpectedShuffledOrder.append([1,0])
-    
-        lRandIndices = [3,0,2,4,1]
-        
-        # call function to rebuild the composite indices list
-        lCompositeIndicesResult = self.oSession.ShufflePageQuestionCompositeIndexList(lRandIndices)
-        
-        # validate result with expected
-        if lCompositeIndicesResult == lExpectedShuffledOrder :
-            bTestResult = True
-        else:
-            bTestResult = False
-        
         tupResult = self.fnName, bTestResult
         return tupResult
 
@@ -280,7 +222,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         lCompositeTestIndices.append([4,0,3])
         lCompositeTestIndices.append([4,1,3])
         
-        self.oSession.Set3DCompositeIndicesList(lCompositeTestIndices)
+        self.oSession.SetCompositeIndicesList(lCompositeTestIndices)
         
         
         lExpectedShuffledOrder = []
@@ -426,7 +368,6 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         liExpectedResult = [0,5,1,6,9,7,2,4,8,3]
         
         liRandomizedNumbers = self.oSession.RandomizePageGroups(liNumbersToRandomize, iSeed)
-        print(liRandomizedNumbers)
 
         # validate result with expected
         if liRandomizedNumbers == liExpectedResult :
