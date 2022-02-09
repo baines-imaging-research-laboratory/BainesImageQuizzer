@@ -136,14 +136,16 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         tupResults = []
         tupResults.append(self.test_BuildPageQuestionCompositeIndexList())
         tupResults.append(self.test_ShufflePageQuestionGroupCompositeIndexList())
-
+        tupResults.append(self.test_ShuffleCompositeIndexList_WithZero())
 
         tupResults.append(self.test_ValidatePageGroupNumbers_MissingPageGroup())
         tupResults.append(self.test_ValidatePageGroupNumbers_InvalidNumber())
         tupResults.append(self.test_ValidatePageGroupNumbers_NotEnoughPageGroups())
+
         tupResults.append(self.test_RandomizePageGroups_WithZero())
         tupResults.append(self.test_RandomizePageGroups_WithoutZero())
         tupResults.append(self.test_RandomizePageGroups_NoSeed())
+
         tupResults.append(self.test_GetStoredRandomizedIndices())
         tupResults.append(self.test_AddRandomizedIndicesToXML())
 
@@ -235,7 +237,60 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         lExpectedShuffledOrder.append([0,1,1])
         lExpectedShuffledOrder.append([1,0,1])
         
+        # assign a set of randomized unique page groups
         lRandIndices = [2,3,1]
+        
+        # call function to rebuild the composite indices list
+        lCompositeIndicesResult = self.oSession.ShufflePageQuestionGroupCompositeIndexList(lRandIndices)
+        
+        # validate result with expected
+        if lCompositeIndicesResult == lExpectedShuffledOrder :
+            bTestResult = True
+        else:
+            bTestResult = False
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #------------------------------------------- 
+    def test_ShuffleCompositeIndexList_WithZero(self):
+        bTestResult = True
+        self.fnName = sys._getframe().f_code.co_name
+        
+        # build page/question set/page group composite indices list for testing
+        
+        lCompositeTestIndices = []
+        lCompositeTestIndices.append([0,0,1])
+        lCompositeTestIndices.append([0,1,1])
+        lCompositeTestIndices.append([1,0,0])
+        lCompositeTestIndices.append([2,0,1])
+        lCompositeTestIndices.append([3,0,2])
+        lCompositeTestIndices.append([3,1,2])
+        lCompositeTestIndices.append([4,0,0])
+        lCompositeTestIndices.append([5,0,2])
+        lCompositeTestIndices.append([6,0,3])
+        lCompositeTestIndices.append([6,1,3])
+        lCompositeTestIndices.append([7,0,0])
+      
+        self.oSession.SetCompositeIndicesList(lCompositeTestIndices)
+        
+        
+        lExpectedShuffledOrder = []
+        lExpectedShuffledOrder.append([1,0,0])
+        lExpectedShuffledOrder.append([4,0,0])
+        lExpectedShuffledOrder.append([7,0,0])
+        lExpectedShuffledOrder.append([3,0,2])
+        lExpectedShuffledOrder.append([3,1,2])
+        lExpectedShuffledOrder.append([5,0,2])
+        lExpectedShuffledOrder.append([6,0,3])
+        lExpectedShuffledOrder.append([6,1,3])
+        lExpectedShuffledOrder.append([0,0,1])
+        lExpectedShuffledOrder.append([0,1,1])
+        lExpectedShuffledOrder.append([2,0,1])
+        
+        # assign a set of randomized unique page groups
+        #    (code for creating the unique randomized numbers always puts zero first)
+        lRandIndices = [0,2,3,1]
         
         # call function to rebuild the composite indices list
         lCompositeIndicesResult = self.oSession.ShufflePageQuestionGroupCompositeIndexList(lRandIndices)
@@ -363,18 +418,40 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         sMsg = ''
         bTestResult = True
 
-        liNumbersToRandomize = [0,1,2,3,4,5,6,7,8,9]
         iSeed = 100
         liExpectedResult = [0,5,1,6,9,7,2,4,8,3]
-        
-        liRandomizedNumbers = self.oSession.RandomizePageGroups(liNumbersToRandomize, iSeed)
 
+        # supply a set of unique page group numbers to randomize
+        # test moving the position of the zero 
+        liNumbersToRandomize = [0,1,2,3,4,5,6,7,8,9]
+        liRandomizedNumbers = self.oSession.RandomizePageGroups(liNumbersToRandomize, iSeed)
         # validate result with expected
         if liRandomizedNumbers == liExpectedResult :
+            bTest1 = True
+        else:
+            bTest1 = False
+
+        liNumbersToRandomize = [1,2,3,4,5,6,7,8,9,0]
+        liRandomizedNumbers = self.oSession.RandomizePageGroups(liNumbersToRandomize, iSeed)
+        # validate result with expected
+        if liRandomizedNumbers == liExpectedResult :
+            bTest2 = True
+        else:
+            bTest2 = False
+
+        liNumbersToRandomize = [1,2,3,0,4,5,6,7,8,9]
+        liRandomizedNumbers = self.oSession.RandomizePageGroups(liNumbersToRandomize, iSeed)
+        # validate result with expected
+        if liRandomizedNumbers == liExpectedResult :
+            bTest3 = True
+        else:
+            bTest3 = False
+
+        if bTest1 & bTest2 & bTest3:
             bTestResult = True
         else:
             bTestResult = False
-
+            
         tupResult = self.fnName, bTestResult
         return tupResult
 
