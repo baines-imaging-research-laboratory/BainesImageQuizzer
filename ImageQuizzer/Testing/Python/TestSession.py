@@ -109,13 +109,6 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         sModuleName = 'ImageQuizzer'
 
         self._oFilesIO = UtilsIO()
-
-        # define path for test data
-        self._oFilesIO.SetScriptedModulesPath(sModuleName)
-        self.sBaseDirForTestData = os.path.join(self._oFilesIO.GetScriptedModulesPath(),'Testing\TestData')
-
-        self.sTestDataDir = os.path.join(self.sBaseDirForTestData, 'Test_Session')
-
         self.oIOXml = UtilsIOXml()
         
         # create/set environment variable to be checked in UtilsIOXml class
@@ -124,12 +117,9 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         self._oFilesIO.setupTestEnvironment()
 
     #------------------------------------------- 
-
     def runTest(self ):
-        """TODO: for this function to be automatically started with the 
-            'Reload and Test' button in Slicer, there cannot be an extra argument here.
-            I have the argument 'layout' to be able to display widgets as part of my testing. 
-        """
+        # Tests are initiated in Slicer by pressing the Reload and Test button
+
         self.setUp()
         logic = TestSessionLogic()
 
@@ -162,13 +152,17 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         bTestResult = True
         self.fnName = sys._getframe().f_code.co_name
         
-        # copy test file to user area
-        sTestFilename = 'Test_PageQuestions_GenericPath.xml'
-        sTestPath = os.path.join(self.sTestDataDir, sTestFilename)
+        # build XML
+        xRoot = etree.Element("Session")
+        xPage1 = etree.SubElement(xRoot,"Page")
+        xPage2 = etree.SubElement(xRoot,"Page")
+        xPage3 = etree.SubElement(xRoot,"Page")
+        xQS1 = etree.SubElement(xPage1, "QuestionSet")
+        xQS2 = etree.SubElement(xPage1, "QuestionSet")
+        xQS1 = etree.SubElement(xPage2, "QuestionSet")
+        xQS1 = etree.SubElement(xPage3, "QuestionSet")
         
-        
-        [bOpenResult, self.xRootNode] = self.oIOXml.OpenXml(sTestPath, 'Session')
-        self.oIOXml.SetRootNode(self.xRootNode)
+        self.oIOXml.SetRootNode(xRoot)
         
         lExpectedCompositeIndices = []
         lExpectedCompositeIndices.append([0,0,1])
@@ -581,7 +575,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         tupResult = self.fnName, bTestResult
         return tupResult
         
-   #------------------------------------------- 
+    #------------------------------------------- 
     #------------------------------------------- 
 
 ##########################################################################################

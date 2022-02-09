@@ -126,12 +126,6 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         self.oFilesIO = UtilsIO()
         self.oIOXml = UtilsIOXml()
         self.sTestXmlFilePath = ''
-        
-        # # define path for test data
-        # self.oFilesIO.SetScriptedModulesPath(sModuleName)
-        # self.sBaseDirForTestData = os.path.join(self.oFilesIO.GetScriptedModulesPath(),'Testing\TestData')
-        #
-        # self.sTestDataDir = os.path.join(self.sBaseDirForTestData, 'Test_UtilsIOXml')
 
         # create/set environment variable to be checked in UtilsIOXml class
         #    to prevent displaying error messages during testing
@@ -142,8 +136,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
        
     #------------------------------------------- 
-
     def runTest(self):
+        # Tests are initiated in Slicer by pressing the Reload and Test button
 
         self.setUp()
         logic = TestUtilsIOXmlLogic()
@@ -299,7 +293,6 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         return tupResult
           
     #-------------------------------------------
-    
     def test_GetElementNodeName(self):
         
         # this test sends in an 'Attribute' type of node to see if the
@@ -323,7 +316,6 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         
     #-------------------------------------------
-    
     def test_GetElementNodeNameError(self):
         
         # this test sends in an 'Attribute' type of node to see if the
@@ -357,7 +349,6 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
          
         
     #-------------------------------------------
-    
     def test_GetNumChildrenByName(self):
 
         # this test checks how many children belong to different element nodes in the test file
@@ -392,7 +383,6 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         return tupResult
 
     #-------------------------------------------
-    
     def test_AccessChildren(self):
 
         # this test accessing the children of the first 'data' node
@@ -456,7 +446,6 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         return tupResult
 
     #-------------------------------------------
-    
     def test_GetListOfNodeAttributes(self):
         
         # this test gathers the attributes of an element node to confirm 
@@ -499,7 +488,6 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         return tupResult
 
     #-------------------------------------------
-    
     def test_GetAttributes(self):
 
         # this test gathers the attributes of an element node to confirm 
@@ -537,7 +525,6 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         return tupResult
         
     #-------------------------------------------
-    
     def test_GetDataInNode(self):
 
         # this test checks the function to extract the data value from an element node
@@ -574,7 +561,6 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
 
     #-------------------------------------------
-
     def test_GetDataInNodeEmpty(self):
 
         # this test checks the function to extract the data value 
@@ -602,36 +588,6 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         tupResult = self.fnName, bTestResult
         return tupResult
 
-
-       
-    #-------------------------------------------
-    #
-    # def test_WriteXML(self):
-    #
-    #     # this test checks the function to extract the data value from an element node
-    #
-    #     self.fnName = sys._getframe().f_code.co_name
-    #
-    #     sXmlOutputFilename = 'TestOutputXML.xml'
-    #     sTempPath = os.environ['TEMP']
-    #     sTestXmlFilePath = os.path.join(sTempPath, sXmlOutputFilename)
-    #
-    #     # build test xml
-    #     xRoot = self.buildXMLfile()
-    #     self.oIOXml.SetRootNode(xRoot)
-    #
-    #     try:
-    #         self.oIOXml.SaveXml(sTestXmlFilePath)
-    #         bTestResult = True
-    #
-    #     except:
-    #         bTestResult = False
-    #
-    #
-    #     tupResult = self.fnName, bTestResult
-    #     return tupResult
-    #
-    #
 
 
     #-------------------------------------------
