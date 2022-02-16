@@ -439,6 +439,19 @@ class UtilsIO:
                     sValidationMsg = self.ValidateAttributeOptions(xImage, 'Type', sPageReference, self.oIOXml.lValidImageTypes)
                     sMsg = sMsg + sValidationMsg
                     
+                    sOpacity = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Opacity')   # not required
+                    if sOpacity != None:
+                        try:
+                            fOpacity = float(sOpacity)
+                            if fOpacity < 0 or fOpacity > 1.0:
+                                sMsg = sMsg + 'Opacity must be a number between 0.0 and 1.0' +  str(iPageNum)
+                                if self.sTestMode == "1":
+                                    raise
+                        except ValueError:
+                            sMsg = sMsg + 'Opacity must be a number between 0.0 and 1.0' +  str(iPageNum)
+                            if self.sTestMode == "1":
+                                raise ValueError('Invalid Opacity value: %s' % sMsg)
+
                     # >>>>>>>>>>>>>>>
 
                     # For any page, test that a path always has only one associated PageID_ImageID (aka node name)
@@ -498,12 +511,17 @@ class UtilsIO:
             if sMsg != '':
                 raise
         
-        
+        except ValueError:
+            if self.sTestMode == "0":
+                raise   # rethrow for live run
+            else:
+                raise ('Value Error: %s' % sMsg)
+            
         except:
+            bSuccess = False
             self.oUtilsMsgs.DisplayWarning(sMsg)
             # after warning, reset the message for calling function to display error and exit
             sMsg = 'See Administrator: ERROR in XML validation.'
-            bSuccess = False
             
             
         return bSuccess, sMsg

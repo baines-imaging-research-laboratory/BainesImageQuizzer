@@ -138,6 +138,8 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
         tupResults.append(self.test_GetStoredRandomizedIndices())
         tupResults.append(self.test_AddRandomizedIndicesToXML())
+        
+        tupResults.append(self.test_ValidateImageOpacity())
 
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
@@ -576,6 +578,80 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         return tupResult
         
     #------------------------------------------- 
+    def test_ValidateImageOpacity(self):
+        ''' test that the opacity attribute is properly validated
+            1: valid number
+            2: if value is negative
+            3: if value is > 1
+            4: if value is not a number
+            5: missing opacity attribute (allowed)
+        '''
+        self.fnName = sys._getframe().f_code.co_name
+        sMsg = ''
+        bTestResult = True
+        bCaseTestResult = True
+
+        xRoot = etree.Element("Session", RandomizePageGroups="Y")
+        xPage = etree.SubElement(xRoot,"Page", ID="Patient1", PageGroup="0")
+
+        # >>>>>>>>>>>>>>>>>>>>>>     Value is valid
+        xImage = etree.SubElement(xPage,"Image", ID="TestImage-valid", Type="Volume", Opacity="0.7")
+        xImageChild = etree.SubElement(xImage,"Path")
+        xImageChild.text = "C:\TestFolder"
+        self.oIOXml.SetRootNode(xRoot)
+            
+        try:
+            with self.assertRaises(Exception) as context:
+                self._oFilesIO.ValidateQuiz(xRoot)
+            sMsg = context.exception.args[0]
+            if sMsg.find('Value Error') < 0:
+                bCaseTestResult = True
+        except:
+            bCaseTestResult = False
+            
+        bTestResult = bTestResult * bCaseTestResult
+
+        # >>>>>>>>>>>>>>>>>>>>>>     Value is negative
+        xImage = etree.SubElement(xPage,"Image", ID="TestImage-negative", Type="Volume", Opacity="-0.9")
+        xImageChild = etree.SubElement(xImage,"Path")
+        xImageChild.text = "C:\TestFolder"
+
+        self.oIOXml.SetRootNode(xRoot)
+            
+        try:
+            with self.assertRaises(Exception) as context:
+                self._oFilesIO.ValidateQuiz(xRoot)
+            sMsg = context.exception.args[0]
+            if sMsg.find('Value Error')>=0:
+                bCaseTestResult = True
+        except:
+            # validation did not catch the error
+            bCaseTestResult = False
+
+        bTestResult = bTestResult * bCaseTestResult
+            
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+        
+        # >>>>>>>>>>>>>>>>>>>>>>     Value >1
+        xImage = etree.SubElement(xPage,"Image", ID="TestImage-valid", Type="Volume", Opacity="15")
+        xImageChild = etree.SubElement(xImage,"Path")
+        xImageChild.text = "C:\TestFolder"
+        self.oIOXml.SetRootNode(xRoot)
+            
+        try:
+            with self.assertRaises(Exception) as context:
+                self._oFilesIO.ValidateQuiz(xRoot)
+            sMsg = context.exception.args[0]
+            if sMsg.find('Value Error') < 0:
+                bCaseTestResult = True
+        except:
+            bCaseTestResult = False
+            
+        bTestResult = bTestResult * bCaseTestResult
+        
+        
     #------------------------------------------- 
 
 ##########################################################################################

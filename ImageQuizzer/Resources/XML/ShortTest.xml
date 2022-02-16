@@ -1,0 +1,48 @@
+<Session>
+	<Page ID="Patient1" Descriptor="PlanningCT" PageGroup="1">
+		<Image Type="Volume" ID="Fixed Volume" LabelMapID="Brain-fixed-contour">
+			<Destination>Red</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
+		</Image>
+		<Image ID="Unregistered" Type="Volume" Opacity="0.9">
+			<Destination>Red</Destination>
+			<Layer>Foreground</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nii</Path>
+		</Image>
+		<Image Type="Volume" ID="Fixed Volume">
+			<Destination>Yellow</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Sagittal</Orientation>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="Fixed Volume">
+			<Destination>Green</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Coronal</Orientation>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
+		</Image>
+		<QuestionSet ID="QS-Intro" Descriptor="Introduction to Quiz"  SegmentRequired="N" AllowMultipleResponse="N">
+			<Question Type="CheckBox" Descriptor="Test Items:">
+				<Option>Segment Editor off, Don't allow multiple Response</Option> 
+				<Option>NRRD and NIFTI, background and foreground on Red</Option>
+			</Question>
+			<Question Type="InfoBox" Descriptor="Introduction">
+				<Option>Lots of text describing something</Option>
+			</Question>
+		</QuestionSet>
+		<QuestionSet ID="QS-Intro #2" Descriptor="How to - Instructions"  SegmentRequired="N"  AllowMultipleResponse="N">
+			<Question Type="CheckBox" Descriptor="Test Items:">
+				<Option>Second question set</Option> 
+			</Question>
+			<Question Type="InfoBox" Descriptor="Instructions">
+				<Option>This is how to run the quiz : .....</Option>
+			</Question>
+			<Question Type="IntegerValue" Descriptor="Integer input test" Max="5">
+				<Option>Integer value with maximum defined:</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>
