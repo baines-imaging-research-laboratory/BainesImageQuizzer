@@ -24,3 +24,4 @@ ImageQuizzer/ImageQuizzerData/SlicerDICOMDatabase/
 *.cproject
 ImageQuizzer/.vs/
 ImageQuizzer/out/
+ImageQuizzer/Testing/Python/out/
