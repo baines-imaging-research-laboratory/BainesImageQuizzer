@@ -431,36 +431,3 @@ class customEventFilter(qt.QObject):
             self.oUtilsMsgs.DisplayInfo(sExitMsg)
             slicer.util.exit(status=EXIT_SUCCESS)
                     
-        button on the main window to exit the application.
-    """
-     
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def __init__(self, oSession, oFilesIO):
-        qSlicerMainWindow.__init__(self) # required for event filter
-        
-        self.oSession = oSession
-        self.oFilesIO = oFilesIO
-     
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def eventFilter(self, obj, event):
-         
-        self.oUtilsMsgs = UtilsMsgs()
-        if event.type() == qt.QEvent.Close:
-            
-            self.oUtilsMsgs.DisplayInfo('Image Quizzer Exiting \
-                    \n   Results will be saved.\
-                    \n   Restarting the quiz will resume where you left off.')
-            
-            sUserQuizResultsPath = self.oFilesIO.GetUserQuizResultsPath()
-            
-            if sUserQuizResultsPath != '':
-#                 bFromEventFilter = True
-#                 bSuccess, sMsg = self.oSession.PerformSave(bFromEventFilter)
-                sCaller = 'EventFilter'
-                bSuccess, sMsg = self.oSession.PerformSave(sCaller)
-                if bSuccess == False:
-                    if sMsg != '':
-                        self.oUtilsMsgs.DisplayWarning(sMsg)
-                    
-            slicer.util.exit(status=EXIT_SUCCESS)
-                    
