@@ -70,9 +70,13 @@ class Session:
         if not self.QuizComplete():
             # check first if there is a Quiz Results path
             #    quiz validation errors may result in user's directory not being created
-            if self.oFilesIO.GetUserQuizResultsPath() != '':
-                self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-            self.oUtilsMsgs.DisplayInfo(' Image Quizzer Exiting - User file is saved if login was successful.')
+            sMsg = 'Image Quizzer Exiting - Performing final cleanup.'
+            if self.oFilesIO != None:
+                sResultsPath = self.oFilesIO.GetUserQuizResultsPath()
+                if sResultsPath != '':
+                    sMsg = sMsg + ' - User response file is saved.'
+                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+            self.oUtilsMsgs.DisplayInfo(sMsg)
 
         # clean up of editor observers and nodes that may cause memory leaks (color table?)
         if self.GetSegmentationTabIndex() > 0:

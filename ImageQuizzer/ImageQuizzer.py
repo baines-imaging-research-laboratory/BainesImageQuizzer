@@ -210,38 +210,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         qUserLoginLayout.addSpacing(10)
         
         
-        
-#         ################################
-#         # Get/Create User folder
-#         ################################
-# 
-#         qUserLoginLayout.addSpacing(10) # Add vertical spacer
-# 
-#         self.qUserGrpBox = qt.QGroupBox()
-#         self.qUserGrpBox.setTitle('2. Enter / select user name')
-#         self.qUserGrpBoxLayout = qt.QVBoxLayout()
-#         self.qUserGrpBox.setLayout(self.qUserGrpBoxLayout)
-#         self.qUserGrpBox.setEnabled(False)
-# 
-#         qUserLoginLayout.addWidget(self.qUserGrpBox)
-# 
-#         
-#         qUserComboLabel = qt.QLabel('Use drop down. If not shown, replace ? with your name.')
-#         self.qUserGrpBoxLayout.addWidget(qUserComboLabel)
-#         
-# 
-#         self.comboGetUserName = qt.QComboBox()
-#         self.comboGetUserName.setStyleSheet("QComboBox{ background-color: rgba(0,179,246,.9) }")
-#         
-#         self.comboGetUserName.setEditable(True)
-#         self.comboGetUserName.addItem('?') # default to special character to force user entry
-#         
-#         self.comboGetUserName.currentTextChanged.connect(self.onUserNameChanged)
-#         self.qUserGrpBoxLayout.addWidget(self.comboGetUserName)
-# 
-#         # Add vertical spacer
-#         self.qUserGrpBoxLayout.addSpacing(20)
-         
         ################################
         # Get study button
         ################################
@@ -431,6 +399,38 @@ class ImageQuizzerLogic(ScriptedLoadableModuleLogic):
  
 class customEventFilter(qt.QObject):
     """ Custom event filter set up to capture when the user presses the 'X'
+        button on the main window to exit the application.
+    """
+     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def __init__(self, oSession, oFilesIO):
+        qSlicerMainWindow.__init__(self) # required for event filter
+        
+        self.oSession = oSession
+        self.oFilesIO = oFilesIO
+     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def eventFilter(self, obj, event):
+         
+        self.oUtilsMsgs = UtilsMsgs()
+        if event.type() == qt.QEvent.Close:
+            
+            sExitMsg = 'Image Quizzer Exiting'
+            sUserQuizResultsPath = self.oFilesIO.GetUserQuizResultsPath()
+            
+            if sUserQuizResultsPath != '':
+                sExitMsg = sExitMsg + '\n   Results will be saved.\
+                    \n   Restarting the quiz will resume where you left off.'
+                
+                sCaller = 'EventFilter'
+                bSuccess, sMsg = self.oSession.PerformSave(sCaller)
+                if bSuccess == False:
+                    if sMsg != '':
+                        self.oUtilsMsgs.DisplayWarning(sMsg)
+                    
+            self.oUtilsMsgs.DisplayInfo(sExitMsg)
+            slicer.util.exit(status=EXIT_SUCCESS)
+                    
         button on the main window to exit the application.
     """
      
