@@ -1,12 +1,12 @@
-<Session>
-	<Page ID="Patient1" Descriptor="PlanningCT" PageGroup="1">
+<Session RandomizePageGroups="Y">
+	<Page ID="Patient1" Descriptor="PlanningCT" PageGroup="1a">
 		<Image Type="Volume" ID="Fixed Volume" LabelMapID="Brain-fixed-contour">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<Image ID="Unregistered" Type="Volume" Opacity="0.9">
+		<Image ID="Unregistered" Type="Volume" Opacity="15">
 			<Destination>Red</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>

@@ -492,7 +492,7 @@ class ViewNodeBase:
         else:
             self.bRotateToAcquisition = False
         sOpacity = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'Opacity')
-        if sOpacity != None:
+        if sOpacity != '':
             self.fOpacity = float(sOpacity)
     
         self.sNodeName =  self.GetPageID() + '_' + sImageID

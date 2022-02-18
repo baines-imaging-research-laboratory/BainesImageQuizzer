@@ -144,7 +144,10 @@ class UtilsIO:
     def GetListUniquePageGroups(self):
         return self._liUniquePageGroups
     
-    
+    #----------
+    def ClearPageGroupLists(self):
+        self._liPageGroups = []
+        self._liUniquePageGroups = []
 #     ###################
 #     #----------
 #     def SetUserQuizResultsDir(self, sFilename):
@@ -402,7 +405,7 @@ class UtilsIO:
                 iPageNum= iPageNum + 1
 
                 sValidationMsg = self.ValidateRequiredAttribute(xPage, 'ID', str(iPageNum))
-                sMsg = sMsg + sValidationMsg
+                sMsg = sMsg + '\n' + sValidationMsg
                 
                 sPageID = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ID')
                 
@@ -418,39 +421,29 @@ class UtilsIO:
                     # Validate  frequency (one required element) and content
                     # >>>>>>>>>>>>>>> Elements
                     sValidationMsg = self.ValidateRequiredElement(xImage, 'Path', sPageReference)
-                    sMsg = sMsg + sValidationMsg
+                    sMsg = sMsg + '\n' + sValidationMsg
                     
                     sValidationMsg = self.ValidateElementOptions(xImage, 'Layer', sPageReference, self.oIOXml.lValidLayers)
-                    sMsg = sMsg + sValidationMsg
+                    sMsg = sMsg + '\n' + sValidationMsg
                     
                     sValidationMsg = self.ValidateElementOptions(xImage, 'Destination', sPageReference, self.oIOXml.lValidSliceWidgets)
-                    sMsg = sMsg + sValidationMsg
+                    sMsg = sMsg + '\n' + sValidationMsg
                     
                     sValidationMsg = self.ValidateElementOptions(xImage, 'Orientation', sPageReference, self.oIOXml.lValidOrientations)
-                    sMsg = sMsg + sValidationMsg
+                    sMsg = sMsg + '\n' + sValidationMsg
      
                     # >>>>>>>>>>>>>>> Attributes
                     sValidationMsg = self.ValidateRequiredAttribute(xImage, 'ID', sPageReference)
-                    sMsg = sMsg + sValidationMsg
+                    sMsg = sMsg + '\n' + sValidationMsg
                     
                     sValidationMsg = self.ValidateRequiredAttribute(xImage, 'Type', sPageReference)
-                    sMsg = sMsg + sValidationMsg
+                    sMsg = sMsg + '\n' + sValidationMsg
                     
                     sValidationMsg = self.ValidateAttributeOptions(xImage, 'Type', sPageReference, self.oIOXml.lValidImageTypes)
-                    sMsg = sMsg + sValidationMsg
+                    sMsg = sMsg + '\n' + sValidationMsg
                     
-                    sOpacity = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Opacity')   # not required
-                    if sOpacity != None:
-                        try:
-                            fOpacity = float(sOpacity)
-                            if fOpacity < 0 or fOpacity > 1.0:
-                                sMsg = sMsg + 'Opacity must be a number between 0.0 and 1.0' +  str(iPageNum)
-                                if self.sTestMode == "1":
-                                    raise
-                        except ValueError:
-                            sMsg = sMsg + 'Opacity must be a number between 0.0 and 1.0' +  str(iPageNum)
-                            if self.sTestMode == "1":
-                                raise ValueError('Invalid Opacity value: %s' % sMsg)
+                    sValidationMsg = self.ValidateOpacity(xImage, iPageNum)
+                    sMsg = sMsg + '\n' + sValidationMsg
 
                     # >>>>>>>>>>>>>>>
 
@@ -488,21 +481,21 @@ class UtilsIO:
                     sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
                     if sImageType == 'RTStruct':
                         sValidationMsg = self.ValidateRequiredElement(xImage, 'ROIs', sPageReference)
-                        sMsg = sMsg + sValidationMsg
+                        sMsg = sMsg + '\n' + sValidationMsg
                         
                         lxROIs = self.oIOXml.GetChildren(xImage, 'ROIs')
                         if len(lxROIs) >0:
                             sValidationMsg = self.ValidateRequiredAttribute(lxROIs[0], 'ROIVisibilityCode', sPageReference)
-                            sMsg = sMsg + sValidationMsg
+                            sMsg = sMsg + '\n' + sValidationMsg
                             sValidationMsg = self.ValidateAttributeOptions(lxROIs[0], 'ROIVisibilityCode', sPageReference, self.oIOXml.lValidRoiVisibilityCodes)
-                            sMsg = sMsg + sValidationMsg
+                            sMsg = sMsg + '\n' + sValidationMsg
                                 
             # >>>>>>>>>>>>>>>
             # validate that each page has a PageGroup attribute if the session requires page group randomization
             sRandomizeRequested = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
             if sRandomizeRequested == "Y":
                 sValidationMsg = self.ValidatePageGroupNumbers(xRootNode)
-                sMsg = sMsg + sValidationMsg
+                sMsg = sMsg + '\n' + sValidationMsg
 
             
             # >>>>>>>>>>>>>>>
@@ -599,7 +592,7 @@ class UtilsIO:
         '''
         sMsg = ''
         sValidationMsg = ''
-        # liPageGroups = []
+        self.ClearPageGroupLists()
         
         # check that each page has a page group number and that it is an integer
         lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
@@ -611,7 +604,7 @@ class UtilsIO:
             sValidationMsg = self.ValidateRequiredAttribute(xPage, 'PageGroup', str(iPageNum))
             if sValidationMsg != '':
                 raise Exception('Missing PageGroup attribute: %s' %sValidationMsg)
-                sMsg = sMsg + sValidationMsg
+                sMsg = sMsg + '\n'+ sValidationMsg
             
             try:
                 # test that the value is an integer
@@ -622,11 +615,12 @@ class UtilsIO:
                 
             except ValueError:
                 sValidationMsg = 'Page Group is not an integer. See Page: ' + str(iPageNum)
-                sMsg = sMsg + sValidationMsg
+                sMsg = sMsg + '\n'+ sValidationMsg
                 if self.sTestMode == "1":
                     raise ValueError('Invalid PageGroup value: %s' % sValidationMsg)
             
-            self._liPageGroups.append(iPageGroup)
+            if sMsg == '':
+                self._liPageGroups.append(iPageGroup)
 
         # check that number of different page group numbers (that are >0) must be >1
         # you can't randomize if all the pages are assigned to the same group
@@ -635,11 +629,35 @@ class UtilsIO:
             self._liUniquePageGroups.remove(0) #ignore page groups set to 0
         if len(self._liUniquePageGroups) == 1:
             sValidationMsg = 'Not enough unique PageGroups for requested randomization. \nYou must have more than one page group (other than 0)'
-            sMsg = sMsg + sValidationMsg
+            sMsg = sMsg + '\n'+ sValidationMsg
             if self.sTestMode == "1":
                 raise Exception('Randomizing Error: %s' % sValidationMsg)
                 
             
+        return sMsg
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateOpacity(self,xImage, iPageNum):
+        sMsg = ''
+        sErrorMsg = 'Opacity must be a number between 0.0 and 1.0.   See Page:'
+        
+        sOpacity = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Opacity')   # not required
+        if sOpacity != '':
+            try:
+                fOpacity = float(sOpacity)
+                if fOpacity < 0 or fOpacity > 1.0:
+                    sMsg = sErrorMsg + str(iPageNum)
+                    if self.sTestMode == "1":
+                        raise
+            except ValueError:  # to catch : not a number
+                sMsg = sErrorMsg + str(iPageNum)
+                if self.sTestMode == "1":
+                    raise ValueError('Invalid Opacity value: %s' % sMsg)
+            except:
+                sMsg = sErrorMsg + str(iPageNum)
+                if self.sTestMode == "1":
+                    raise Exception('Invalid Opacity value: %s' % sMsg)
+        
         return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

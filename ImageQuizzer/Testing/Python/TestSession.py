@@ -587,70 +587,104 @@ class TestSessionTest(ScriptedLoadableModuleTest):
             5: missing opacity attribute (allowed)
         '''
         self.fnName = sys._getframe().f_code.co_name
-        sMsg = ''
         bTestResult = True
         bCaseTestResult = True
+        iPageNum = 1
 
         xRoot = etree.Element("Session", RandomizePageGroups="Y")
         xPage = etree.SubElement(xRoot,"Page", ID="Patient1", PageGroup="0")
 
         # >>>>>>>>>>>>>>>>>>>>>>     Value is valid
-        xImage = etree.SubElement(xPage,"Image", ID="TestImage-valid", Type="Volume", Opacity="0.7")
+        sMsg = ''
+        xImage = etree.SubElement(xPage,"Image", ID="TestImage", Type="Volume", Opacity="0.7")
         xImageChild = etree.SubElement(xImage,"Path")
         xImageChild.text = "C:\TestFolder"
         self.oIOXml.SetRootNode(xRoot)
-            
-        try:
-            with self.assertRaises(Exception) as context:
-                self._oFilesIO.ValidateQuiz(xRoot)
-            sMsg = context.exception.args[0]
-            if sMsg.find('Value Error') < 0:
-                bCaseTestResult = True
-        except:
+
+        sMsg = self._oFilesIO.ValidateOpacity(xImage, iPageNum)
+        if sMsg == '':
+            bCaseTestResult = True
+        else:
             bCaseTestResult = False
+                                  
             
         bTestResult = bTestResult * bCaseTestResult
 
         # >>>>>>>>>>>>>>>>>>>>>>     Value is negative
-        xImage = etree.SubElement(xPage,"Image", ID="TestImage-negative", Type="Volume", Opacity="-0.9")
+        sMsg = ''
+        xImage = etree.SubElement(xPage,"Image", ID="TestImage", Type="Volume", Opacity="-0.9")
         xImageChild = etree.SubElement(xImage,"Path")
         xImageChild.text = "C:\TestFolder"
-
+        
         self.oIOXml.SetRootNode(xRoot)
-            
+        
         try:
             with self.assertRaises(Exception) as context:
-                self._oFilesIO.ValidateQuiz(xRoot)
+                self._oFilesIO.ValidateOpacity(xImage, iPageNum)
             sMsg = context.exception.args[0]
-            if sMsg.find('Value Error')>=0:
+            if sMsg.find('Invalid Opacity value') >= 0:
                 bCaseTestResult = True
         except:
             # validation did not catch the error
             bCaseTestResult = False
-
-        bTestResult = bTestResult * bCaseTestResult
-            
         
-        tupResult = self.fnName, bTestResult
-        return tupResult
+        bTestResult = bTestResult * bCaseTestResult
+        
+
+        
         
         # >>>>>>>>>>>>>>>>>>>>>>     Value >1
-        xImage = etree.SubElement(xPage,"Image", ID="TestImage-valid", Type="Volume", Opacity="15")
+        xImage = etree.SubElement(xPage,"Image", ID="TestImage", Type="Volume", Opacity="15")
         xImageChild = etree.SubElement(xImage,"Path")
         xImageChild.text = "C:\TestFolder"
         self.oIOXml.SetRootNode(xRoot)
-            
+        
         try:
             with self.assertRaises(Exception) as context:
-                self._oFilesIO.ValidateQuiz(xRoot)
+                self._oFilesIO.ValidateOpacity(xImage, iPageNum)
             sMsg = context.exception.args[0]
-            if sMsg.find('Value Error') < 0:
+            if sMsg.find('Invalid Opacity value') >= 0:
                 bCaseTestResult = True
         except:
             bCaseTestResult = False
             
         bTestResult = bTestResult * bCaseTestResult
+
+
+        # >>>>>>>>>>>>>>>>>>>>>>     Invalid Value
+        xImage = etree.SubElement(xPage,"Image", ID="TestImage", Type="Volume", Opacity="a")
+        xImageChild = etree.SubElement(xImage,"Path")
+        xImageChild.text = "C:\TestFolder"
+        self.oIOXml.SetRootNode(xRoot)
         
+        try:
+            with self.assertRaises(Exception) as context:
+                self._oFilesIO.ValidateOpacity(xImage, iPageNum)
+            sMsg = context.exception.args[0]
+            if sMsg.find('Invalid Opacity value') >= 0:
+                bCaseTestResult = True
+        except:
+            bCaseTestResult = False
+            
+        bTestResult = bTestResult * bCaseTestResult
+
+        # >>>>>>>>>>>>>>>>>>>>>>     Missing attribute
+        xImage = etree.SubElement(xPage,"Image", ID="TestImage", Type="Volume")
+        xImageChild = etree.SubElement(xImage,"Path")
+        xImageChild.text = "C:\TestFolder"
+        self.oIOXml.SetRootNode(xRoot)
+        
+        
+        sMsg = self._oFilesIO.ValidateOpacity(xImage, iPageNum)
+        if sMsg == '':
+            bCaseTestResult = True
+        else:
+            bCaseTestResult = False
+            
+        bTestResult = bTestResult * bCaseTestResult
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
         
     #------------------------------------------- 
 
