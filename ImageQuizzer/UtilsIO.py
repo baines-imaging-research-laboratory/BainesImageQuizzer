@@ -144,7 +144,10 @@ class UtilsIO:
     def GetListUniquePageGroups(self):
         return self._liUniquePageGroups
     
-    
+    #----------
+    def ClearPageGroupLists(self):
+        self._liPageGroups = []
+        self._liUniquePageGroups = []
 #     ###################
 #     #----------
 #     def SetUserQuizResultsDir(self, sFilename):
@@ -439,6 +442,9 @@ class UtilsIO:
                     sValidationMsg = self.ValidateAttributeOptions(xImage, 'Type', sPageReference, self.oIOXml.lValidImageTypes)
                     sMsg = sMsg + sValidationMsg
                     
+                    sValidationMsg = self.ValidateOpacity(xImage, iPageNum)
+                    sMsg = sMsg + sValidationMsg
+
                     # >>>>>>>>>>>>>>>
 
                     # For any page, test that a path always has only one associated PageID_ImageID (aka node name)
@@ -498,12 +504,17 @@ class UtilsIO:
             if sMsg != '':
                 raise
         
-        
+        except ValueError:
+            if self.sTestMode == "0":
+                raise   # rethrow for live run
+            else:
+                raise ('Value Error: %s' % sMsg)
+            
         except:
+            bSuccess = False
             self.oUtilsMsgs.DisplayWarning(sMsg)
             # after warning, reset the message for calling function to display error and exit
             sMsg = 'See Administrator: ERROR in XML validation.'
-            bSuccess = False
             
             
         return bSuccess, sMsg
@@ -581,7 +592,7 @@ class UtilsIO:
         '''
         sMsg = ''
         sValidationMsg = ''
-        # liPageGroups = []
+        self.ClearPageGroupLists()
         
         # check that each page has a page group number and that it is an integer
         lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
@@ -603,12 +614,13 @@ class UtilsIO:
                 #     sMsg = sMsg + sValidationMsg
                 
             except ValueError:
-                sValidationMsg = 'Page Group is not an integer. See Page: ' + str(iPageNum)
+                sValidationMsg = '\nPage Group is not an integer. See Page: ' + str(iPageNum)
                 sMsg = sMsg + sValidationMsg
                 if self.sTestMode == "1":
                     raise ValueError('Invalid PageGroup value: %s' % sValidationMsg)
             
-            self._liPageGroups.append(iPageGroup)
+            if sMsg == '':
+                self._liPageGroups.append(iPageGroup)
 
         # check that number of different page group numbers (that are >0) must be >1
         # you can't randomize if all the pages are assigned to the same group
@@ -622,6 +634,30 @@ class UtilsIO:
                 raise Exception('Randomizing Error: %s' % sValidationMsg)
                 
             
+        return sMsg
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateOpacity(self,xImage, iPageNum):
+        sMsg = ''
+        sErrorMsg = '\nOpacity must be a number between 0.0 and 1.0.   See Page:'
+        
+        sOpacity = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Opacity')   # not required
+        if sOpacity != '':
+            try:
+                fOpacity = float(sOpacity)
+                if fOpacity < 0 or fOpacity > 1.0:
+                    sMsg = sErrorMsg + str(iPageNum)
+                    if self.sTestMode == "1":
+                        raise
+            except ValueError:  # to catch : not a number
+                sMsg = sErrorMsg + str(iPageNum)
+                if self.sTestMode == "1":
+                    raise ValueError('Invalid Opacity value: %s' % sMsg)
+            except:
+                sMsg = sErrorMsg + str(iPageNum)
+                if self.sTestMode == "1":
+                    raise Exception('Invalid Opacity value: %s' % sMsg)
+        
         return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

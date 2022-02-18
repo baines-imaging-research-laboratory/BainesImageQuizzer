@@ -49,6 +49,7 @@
 		<xs:attribute name="DisplayLabelMapID" type="xs:string" />
 		<xs:attribute name="RotateToAcquisition" type="yesnoType" default="N" />
 		<xs:attribute name="ColorTable" type="xs:string" />
+		<xs:attribute name="Opacity" type="boundedFloatType" />
 	</xs:complexType>
 </xs:element>
 
@@ -172,6 +173,13 @@
     <xs:enumeration value="FourUp"/>
     <xs:enumeration value="TwoOverTwo"/>
     <xs:enumeration value="SideBySideRedYellow"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="boundedFloatType">
+  <xs:restriction base="xs:float">
+	<xs:minInclusive value="0" />
+	<xs:maxInclusive value="1" />
   </xs:restriction>
 </xs:simpleType>
 

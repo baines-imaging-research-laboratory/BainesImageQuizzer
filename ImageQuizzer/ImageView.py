@@ -232,7 +232,7 @@ class ImageView:
             elif oViewNode.sViewLayer == 'Foreground':
                 slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
                 slWidget.setSliceOrientation(oViewNode.sOrientation)
-                slWidgetController.setForegroundOpacity(0.5)
+                slWidgetController.setForegroundOpacity(oViewNode.fOpacity)
                 if oViewNode.bRotateToAcquisition == True:
                     self.RotateSliceToImage(oViewNode.sDestination)
 
@@ -444,6 +444,7 @@ class ViewNodeBase:
 #         self._sPageID = ''
         self.sColorTableName = ''
         self.bRotateToAcquisition = False
+        self.fOpacity = 0.5
         
         self.slQuizLabelMapNode = None
         
@@ -475,6 +476,9 @@ class ViewNodeBase:
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractImageAttributes(self):
+        ''' Assign image attributes to the image node properties.
+            Validation of these attributes for acceptable values was carried out when the quiz was loaded.
+        '''
 
         sImageID = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'ID')
         self.sImageType = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'Type')
@@ -487,6 +491,9 @@ class ViewNodeBase:
             self.bRotateToAcquisition = True
         else:
             self.bRotateToAcquisition = False
+        sOpacity = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'Opacity')
+        if sOpacity != '':
+            self.fOpacity = float(sOpacity)
     
         self.sNodeName =  self.GetPageID() + '_' + sImageID
 
