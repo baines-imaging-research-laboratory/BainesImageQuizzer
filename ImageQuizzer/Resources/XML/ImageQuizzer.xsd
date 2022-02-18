@@ -11,6 +11,7 @@
 			</xs:choice>
 		</xs:sequence>
 		<xs:attribute name="ROIColorFile" type="xs:string" />
+		<xs:attribute name="RandomizePageGroups" type="yesnoType" default="N" />
 	</xs:complexType>
 </xs:element>
 
@@ -27,6 +28,7 @@
 		<xs:attribute name="Descriptor" type="xs:string" />
 		<xs:attribute name="LinkViews" type="yesnoType" default="N" />
 		<xs:attribute name="Layout" type="layoutType" default="FourUp" />
+		<xs:attribute name="PageGroup" type="xs:integer" />
 	</xs:complexType>
 </xs:element>
 

@@ -3,6 +3,7 @@ import os
 import vtk, qt, ctk, slicer
 import sys
 import unittest
+import random
 
 from Utilities import *
 from Question import *
@@ -36,7 +37,8 @@ class Session:
         self._sLoginTime = ''
 
         self._iCurrentCompositeIndex = 0
-        self._l2iPageQuestionCompositeIndices = []
+        # self._l2iPageQuestionCompositeIndices = []
+        self._l3iPageQuestionGroupCompositeIndices = []
 
         self._xPageNode = None
         self.sPageID = ''
@@ -104,11 +106,11 @@ class Session:
     
     #----------
     def SetCompositeIndicesList(self, lIndices):
-        self._l2iPageQuestionCompositeIndices = lIndices
+        self._l3iPageQuestionGroupCompositeIndices = lIndices
         
     #----------
-    def CompositeIndicesList(self):
-        return self._l2iPageQuestionCompositeIndices
+    def GetCompositeIndicesList(self):
+        return self._l3iPageQuestionGroupCompositeIndices
 
     #----------
     def SetMultipleResponsesInQSetAllowed(self, bInput):
@@ -180,22 +182,22 @@ class Session:
         
     #----------
     def GetCurrentPageNode(self):
-        iPageIndex = self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][0]
+        iPageIndex = self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0]
         xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
         
         return xPageNode
     
     #----------
     def GetCurrentPageIndex(self):
-        return self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][0]
+        return self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0]
     
     #----------
     def GetCurrentQuestionSetIndex(self):
-        return self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][1]
+        return self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][1]
     
     #----------
     def GetCurrentQuestionSetNode(self):
-        iQSetIndex = self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][1]
+        iQSetIndex = self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][1]
         xPageNode = self.GetCurrentPageNode()
         xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', iQSetIndex)
         
@@ -269,12 +271,35 @@ class Session:
                 sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
                 self.oFilesIO.SetupROIColorFile(sColorFileName)
     
-    
+                # build the list of indices page/questionset as read in by the XML
                 self.BuildPageQuestionCompositeIndexList()
+                # if randomization is requested - shuffle the page/questionset list
+                sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
+                if sRandomizeRequired == 'Y':
+                    # check if xnl already holds a set of randomized indices otherwise, call randomizing function
+                    liRandIndices = self.GetStoredRandomizedIndices()
+                    if liRandIndices == []:
+                        # get the unique list of all Page Group numbers to randomize
+                        #    this was set during xml validation during the initial read
+                        liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
+                        liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
+                        self.AddRandomizedIndicesToXML(liRandIndices)
+                     
+                    # liRandIndices = [5,3,1,0,2,4]
+                    # self._l2iPageQuestionCompositeIndices = self.ShufflePageQuestionCompositeIndexList(liRandIndices)
+
+#                    liRandIndices = [2,3,1]
+                    self._l3iPageQuestionGroupCompositeIndices = self.ShufflePageQuestionGroupCompositeIndexList(liRandIndices)
+        
+        
+        
+                
+                
+                
                 # check for partial or completed quiz
                 self.SetCompositeIndexIfResumeRequired()
                 
-                self.progress.setMaximum(len(self._l2iPageQuestionCompositeIndices))
+                self.progress.setMaximum(len(self._l3iPageQuestionGroupCompositeIndices))
                 self.progress.setValue(self._iCurrentCompositeIndex)
         
                 # if quiz is not complete, finish setup
@@ -326,14 +351,14 @@ class Session:
         self._btnNext = qt.QPushButton("Next")
         self._btnNext.toolTip = "Save responses and display next set of questions."
         self._btnNext.enabled = True
-        self._btnNext.setStyleSheet("QPushButton{ background-color: rgb(0,179,246) }")
+        self._btnNext.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
         self._btnNext.connect('clicked(bool)',self.onNextButtonClicked)
         
         # Back button
         self._btnPrevious = qt.QPushButton("Previous")
         self._btnPrevious.toolTip = "Display previous set of questions."
         self._btnPrevious.enabled = True
-        self._btnPrevious.setStyleSheet("QPushButton{ background-color: rgb(255,149,0) }")
+        self._btnPrevious.setStyleSheet("QPushButton{ background-color: rgb(255,149,0); color: black }")
         self._btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
 
 
@@ -341,7 +366,7 @@ class Session:
         self._btnExit = qt.QPushButton("Exit")
         self._btnExit.toolTip = "Save quiz and exit Slicer."
         self._btnExit.enabled = True
-        self._btnExit.setStyleSheet("QPushButton{ background-color: rgb(255,0,0) }")
+        self._btnExit.setStyleSheet("QPushButton{ background-color: rgb(255,0,0); color: black }")
         # use lambda to pass argument to this PyQt slot without invoking the function on setup
         self._btnExit.connect('clicked(bool)',lambda: self.onExitButtonClicked('ExitBtn'))
 
@@ -358,7 +383,7 @@ class Session:
         bSuccess = True
         sMsg = ''
 
-        if self._iCurrentCompositeIndex + 1 == len(self._l2iPageQuestionCompositeIndices):
+        if self._iCurrentCompositeIndex + 1 == len(self._l3iPageQuestionGroupCompositeIndices):
 
             # the last question was answered - check if user is ready to exit
             self.onExitButtonClicked('Finish') # a save is done in here
@@ -380,7 +405,6 @@ class Session:
                 # if last question set, clear list and scene
                 if self.CheckForLastQuestionSetForPage() == True:
                     self._loQuestionSets = []
-# REMOVE FOR THREADING??                    slicer.mrmlScene.Clear()
                     slicer.mrmlScene.Clear()
                 else:
                     # clear quiz widgets only
@@ -413,7 +437,6 @@ class Session:
             # set up for previous page
             ########################################    
 
-# REMOVE FOR THREADING??            slicer.mrmlScene.Clear()
             slicer.mrmlScene.Clear()
             self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
             self.progress.setValue(self._iCurrentCompositeIndex)
@@ -438,7 +461,7 @@ class Session:
     def onExitButtonClicked(self,sCaller):
 
         self.progress.setValue(self._iCurrentCompositeIndex + 1)
-        iProgressPercent = int((self._iCurrentCompositeIndex + 1) / len(self._l2iPageQuestionCompositeIndices) * 100)
+        iProgressPercent = int((self._iCurrentCompositeIndex + 1) / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
         self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
         
         sMsg = 'Do you wish to exit?'
@@ -460,7 +483,7 @@ class Session:
         # if code reaches here, either the exit was cancelled or there was 
         # an error in the save
         self.progress.setValue(self._iCurrentCompositeIndex)
-        iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l2iPageQuestionCompositeIndices) * 100)
+        iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
         self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
 
         
@@ -476,7 +499,7 @@ class Session:
             self._btnPrevious.enabled = False
 
         # end of quiz
-        elif (self._iCurrentCompositeIndex == len(self._l2iPageQuestionCompositeIndices) - 1):
+        elif (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
             self._btnNext.enabled = True
             self._btnPrevious.enabled = True
 
@@ -487,23 +510,16 @@ class Session:
 
 
         # assign button description           
-        if (self._iCurrentCompositeIndex == len(self._l2iPageQuestionCompositeIndices) - 1):
+        if (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
             # last question of last image view
             self._btnNext.setText("Finish")
-# 
-#         else:
-#             # assume multiple questions in the question set
-#             self._btnNext.setText("Next")
-#             # if last question in the question set - save answers and continue to next
-#             if not( self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][0] == self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex + 1][0]):
-#                 self._btnNext.setText("Save and Continue")
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def BuildPageQuestionCompositeIndexList(self):
-        
-        # This function sets up the page and question set indices which
-        #    are used to coordinate the next and previous buttons.
-        #    The information is gathered by querying the XML quiz.
+        ''' This function sets up the page and question set indices which
+            are used to coordinate the next and previous buttons.
+            The information is gathered by querying the XML quiz.
+        '''
         
         # given the root of the xml document build composite list 
         #     of indices for each page and the question sets within
@@ -511,11 +527,20 @@ class Session:
         # get Page nodes
         xPages = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
 
+        iPageNum = 0
         for iPageIndex in range(len(xPages)):
-            
+            iPageNum = iPageNum + 1
             # for each page - get number of question sets
             xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
             xQuestionSets = self.oIOXml.GetChildren(xPageNode,'QuestionSet')
+
+            sPageGroup = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
+            # if there is no request to randomize the page groups, there may not be a page group number
+            try:
+                iPageGroup = int(sPageGroup)
+            except:
+                # assign a unique page number if no group number exists
+                iPageGroup = iPageNum
             
             # if there are no question sets for the page, insert a blank shell
             #    - this allows images to load
@@ -532,9 +557,130 @@ class Session:
             #        1        0
             #    - there can be numerous questions in each question set
             for iQuestionSetIndex in range(len(xQuestionSets)):
-                self._l2iPageQuestionCompositeIndices.append([iPageIndex, iQuestionSetIndex])
+                # self._l2iPageQuestionCompositeIndices.append([iPageIndex, iQuestionSetIndex])
+                self._l3iPageQuestionGroupCompositeIndices.append([iPageIndex,iQuestionSetIndex, iPageGroup])
         
+    # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # def ShufflePageQuestionCompositeIndexList(self, lRandIndices):
+    #     ''' This function will shuffle the original list as read in from the quiz xml,  that holds the
+    #         "[page number,questionset number]" according to the randomized index list input.
+    #         The question sets always follow with the page, they are never randomized.
+    #
+    #         eg.     Original XML List           Randomized Page indices          Shuffled Composite List
+    #                    Page   QS                         Indices                      Page   QS
+    #                    0      0                             3                         3      0
+    #                    0      1                             0                         0      0
+    #                    1      0                             2                         0      1
+    #                    2      0                             4                         2      0
+    #                    2      1                             1                         2      1
+    #                    3      0                                                       4      0
+    #                    4      0                                                       4      1
+    #                    4      1                                                       1      0
+    #     '''
+    #
+    #     lShuffledCompositeIndices = []
+    #
+    #     for indRand in lRandIndices:
+    #         for indOrig in range(len(self._l2iPageQuestionCompositeIndices)):
+    #             if self._l2iPageQuestionCompositeIndices[indOrig][0] == indRand :
+    #                 lShuffledCompositeIndices.append(self._l2iPageQuestionCompositeIndices[indOrig])
+    #
+    #     return lShuffledCompositeIndices
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ShufflePageQuestionGroupCompositeIndexList(self, lRandIndices):
+        ''' This function will shuffle the original list as read in from the quiz xml,  that holds the
+            "[page number,questionset number, page group number]" according to the randomized index list input.
+            The question sets always follow with the page, they are never randomized.
+            The page groups are randomized. 
+                 If more than one page has the same group number, they will remain in the order they were read in.
+            
+            eg.     Original XML List         Randomized Page Group indices      Shuffled Composite List
+                       Page   QS  Grp                    Indices                      Page   QS    Grp
+                       0      0     1                        2                         2      0     2
+                       0      1     1                        3                         2      1     2
+                       1      0     1                        4                         3      0     2
+                       2      0     2                        0                         4      0     3
+                       2      1     2                        1                         4      1     3
+                       3      0     2                                                  0      0     1
+                       4      0     3                                                  0      1     1
+                       4      1     3                                                  1      0     1
+        '''
+    
+        lShuffledCompositeIndices = []
+        
+        for indRand in range(len(lRandIndices)):
+            for indOrig in range(len(self._l3iPageQuestionGroupCompositeIndices)):
+                if self._l3iPageQuestionGroupCompositeIndices[indOrig][2] == lRandIndices[indRand] :
+                    lShuffledCompositeIndices.append(self._l3iPageQuestionGroupCompositeIndices[indOrig])
+        
+        
+        return lShuffledCompositeIndices
+   
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def RandomizePageGroups(self, liIndicesToRandomize, iSeed=None):
+        ''' Function to take a list of indices and randomize them.
+            If there is a '0', it is removed prior to randomizing and inserted back to the
+            beginning of the list.
+        '''
+        
+        bPageGroup0 = False
+        # remove PageGroup 0 before reandomizing since these represent pages  
+        # that will always appear at the beginning of the quiz
+        if 0 in liIndicesToRandomize:
+            liIndicesToRandomize.remove(0)
+            bPageGroup0 = True
+        
+        ###### iSeed = 100 # for debug
+        if iSeed != None:     # used for testing
+            random.seed(iSeed)
+        else:
+            random.seed()
+            
+        random.shuffle(liIndicesToRandomize)
+        liRandIndices = liIndicesToRandomize
+
+        # reset the first PageGroup number to 0 if it was in the quiz
+        if bPageGroup0:
+            liRandIndices.insert(0,0)
+        
+        return liRandIndices
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def AddRandomizedIndicesToXML(self,liIndices):
+        ''' Function to coordinate adding the randomized indices into the user's XML.
+        '''
+        # convert indices into a string
+        sIndicesToStore = ''
+        iCounter = 0
+        for iNum in liIndices:
+            iCounter = iCounter + 1
+            sIndicesToStore = sIndicesToStore + str(iNum)
+            if iCounter < len(liIndices):
+                sIndicesToStore = sIndicesToStore + ','
+                
+        dictAttrib = {}     # no attributes for this element
+        self.oIOXml.AddElement(self.oIOXml.GetRootNode(),'RandomizedPageGroupIndices',sIndicesToStore, dictAttrib)
+        
+                
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetStoredRandomizedIndices(self):
+        ''' This function will check for existing element of randomized indices.
+            If no element exists, a new list will be created.
+        '''
+
+        liRandIndices = []
+        liStoredRandIndices = []
+        
+        xRandIndicesNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'RandomizedPageGroupIndices', 0)
+        if xRandIndicesNode != None:
+            sStoredRandIndices = self.oIOXml.GetDataInNode(xRandIndicesNode)
+            # liStoredRandIndices = list(map(int,sStoredRandIndices))
+            liStoredRandIndices = [int(s) for s in sStoredRandIndices.split(",")]
+        
+        
+        return liStoredRandIndices
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayPage(self):
 
@@ -594,7 +740,7 @@ class Session:
         xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
         self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
         self.sPageID = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'ID')
-        iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l2iPageQuestionCompositeIndices) * 100)
+        iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
         self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
 
         # set the requested layout for images
@@ -632,7 +778,7 @@ class Session:
         bLastQuestionSet = False
         
         # check if at the end of the quiz
-        if (self._iCurrentCompositeIndex == len(self._l2iPageQuestionCompositeIndices) - 1):
+        if (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
             bLastQuestionSet = True
 
         else:
@@ -640,7 +786,7 @@ class Session:
             # assume multiple question sets for the page
             # check if next page in the composite index is different than the current page
             #    if yes - we have reached the last question set
-            if not( self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex][0] == self._l2iPageQuestionCompositeIndices[self._iCurrentCompositeIndex + 1][0]):
+            if not( self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0] == self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex + 1][0]):
                 bLastQuestionSet = True            
            
             
@@ -858,60 +1004,61 @@ class Session:
         return sCaptureSuccessLevel, lsAllResponses, sAllMsgs
        
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CheckForSavedResponse(self):
+    # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # def CheckForSavedResponse(self):
+    #
+    #     """ Check through all questions for the question set looking for a response.
+    #         If the Question Set has a "SegmentRequired='Y'" attribute, 
+    #         check for a saved label map path element. 
+    #
+    #         Assume: All options have a response if the question was answered so we just query the first.
+    #     """
+    #     bLabelMapRequirementFilled = False
+    #     iNumAnsweredQuestions = 0
+    #
+    #     xNodeQuestionSet = self.GetCurrentQuestionSetNode()
+    #     xNodePage = self.GetCurrentPageNode()
+    #
+    #     sLabelMapRequired = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'SegmentRequired')
+    #
+    #     # search for labelmap path in the xml image nodes if segmentation was required
+    #     if sLabelMapRequired == 'Y':
+    #         iNumImages = self.oIOXml.GetNumChildrenByName(xNodePage, 'Image')
+    #         for indImage in range(iNumImages):
+    #             xImageNode = self.oIOXml.GetNthChild(xNodePage, 'Image', indImage)
+    #             iNumLabelMapPaths = self.oIOXml.GetNumChildrenByName(xImageNode, 'LabelMapPath')
+    #             if iNumLabelMapPaths > 0:
+    #                 bLabelMapRequirementFilled = True
+    #                 break
+    #     else:
+    #         bLabelMapRequirementFilled = True   # user not required to create label map
+    #
+    #
+    #
+    #     iNumQuestions = self.oIOXml.GetNumChildrenByName(xNodeQuestionSet, 'Question')
+    #
+    #     for indQuestion in range(iNumQuestions):
+    #
+    #         xOptionNode = self.GetNthOptionNode( indQuestion, 0)
+    #
+    #         iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode,'Response')
+    #         if iNumResponses >0:
+    #             iNumAnsweredQuestions = iNumAnsweredQuestions + 1
+    #
+    #
+    #     if iNumAnsweredQuestions == 0:
+    #         sQuestionswithResponses = 'None'
+    #     elif  iNumAnsweredQuestions < iNumQuestions:
+    #         sQuestionswithResponses = 'Partial'
+    #     elif iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == True:
+    #         sQuestionswithResponses = 'All'
+    #     else:
+    #         if iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == False:
+    #             sQuestionswithResponses = 'Partial'
+    #
+    #     return sQuestionswithResponses
+    #
 
-        """ Check through all questions for the question set looking for a response.
-            If the Question Set has a "SegmentRequired='Y'" attribute, 
-            check for a saved label map path element. 
-
-            Assume: All options have a response if the question was answered so we just query the first.
-        """
-        bLabelMapRequirementFilled = False
-        iNumAnsweredQuestions = 0
-        
-        xNodeQuestionSet = self.GetCurrentQuestionSetNode()
-        xNodePage = self.GetCurrentPageNode()
-        
-        sLabelMapRequired = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'SegmentRequired')
-
-        # search for labelmap path in the xml image nodes if segmentation was required
-        if sLabelMapRequired == 'y':
-            iNumImages = self.oIOXml.GetNumChildrenByName(xNodePage, 'Image')
-            for indImage in range(iNumImages):
-                xImageNode = self.oIOXml.GetNthChild(xNodePage, 'Image', indImage)
-                iNumLabelMapPaths = self.oIOXml.GetNumChildrenByName(xImageNode, 'LabelMapPath')
-                if iNumLabelMapPaths > 0:
-                    bLabelMapRequirementFilled = True
-                    break
-        else:
-            bLabelMapRequirementFilled = True   # user not required to create label map
-        
-
-
-        iNumQuestions = self.oIOXml.GetNumChildrenByName(xNodeQuestionSet, 'Question')
-
-        for indQuestion in range(iNumQuestions):
-             
-            xOptionNode = self.GetNthOptionNode( indQuestion, 0)
-         
-            iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode,'Response')
-            if iNumResponses >0:
-                iNumAnsweredQuestions = iNumAnsweredQuestions + 1
-                 
-                
-        if iNumAnsweredQuestions == 0:
-            sQuestionswithResponses = 'None'
-        elif  iNumAnsweredQuestions < iNumQuestions:
-            sQuestionswithResponses = 'Partial'
-        elif iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == True:
-            sQuestionswithResponses = 'All'
-        else:
-            if iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == False:
-                sQuestionswithResponses = 'Partial'
-            
-        return sQuestionswithResponses
-    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetQuestionSetResponseCompletionLevel(self, indCI=None):
         
@@ -934,8 +1081,8 @@ class Session:
         bLabelMapRequirementFilled = False
         iNumAnsweredQuestions = 0
         
-        indPage = self._l2iPageQuestionCompositeIndices[indCI][0]
-        indQuestionSet = self._l2iPageQuestionCompositeIndices[indCI][1]
+        indPage = self._l3iPageQuestionGroupCompositeIndices[indCI][0]
+        indQuestionSet = self._l3iPageQuestionGroupCompositeIndices[indCI][1]
         
         xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', indPage)
         xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', indQuestionSet)
@@ -944,7 +1091,7 @@ class Session:
         sLabelMapRequired = self.oIOXml.GetValueOfNodeAttribute(xQuestionSetNode, 'SegmentRequired')
 
         # search for labelmap path in the xml image nodes if segmentation was required
-        if sLabelMapRequired == 'y':
+        if sLabelMapRequired == 'Y':
             iNumImages = self.oIOXml.GetNumChildrenByName(xPageNode, 'Image')
             for indImage in range(iNumImages):
                 xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', indImage)
@@ -1174,7 +1321,12 @@ class Session:
                     if self._bFirstResponsesRecordedInXml == False:
                         self.AddSessionLoginTimestamp()
                         self._bFirstResponsesRecordedInXml = True
+                        
                     self.AddXmlElements()
+                    
+                     # potential exit of quiz - update logout time with each write
+                    self.UpdateSessionLogoutTimestamp()
+                    
                     self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
                     
         
@@ -1260,13 +1412,15 @@ class Session:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddSessionLoginTimestamp(self):
-        
+        ''' Function to add an element holding the login time for the session.
+            Set up the logout time attribute to be updated on each write
+        '''
 
         now = datetime.now()
 
         self.SetLoginTime( now.strftime(self.oIOXml.sTimestampFormat) )
         
-        dictAttrib = {'LoginTime': self.LoginTime()}
+        dictAttrib = {'LoginTime': self.LoginTime(), 'LogoutTime': self.LoginTime()}
         
         sNullText = ''
         
@@ -1274,6 +1428,29 @@ class Session:
         
         self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
             
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def UpdateSessionLogoutTimestamp(self):
+        ''' This function will add the attribute LogoutTime to the last entry of the Login element.
+            Each time a 'Save' is done to the XML file, this Logout time will be overwritten.
+            Then when the exit finally happens, it will reflect the last time a write was performed.
+        '''
+
+        now = datetime.now()
+
+        sLogoutTime = now.strftime(self.oIOXml.sTimestampFormat)
+        
+        # get existing attributes from the Login element
+        xLoginNode = self.oIOXml.GetLastChild(self.oIOXml.GetRootNode(), "Login")
+        
+        if xLoginNode != None:
+            # update logout time if login element exists
+            dictAttrib = self.oIOXml.GetAttributes(xLoginNode)
+    
+            dictAttrib['LogoutTime'] = sLogoutTime
+                
+            # reset the Login element
+            self.oIOXml.UpdateAtributesInElement(xLoginNode, dictAttrib)
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetCompositeIndexIfResumeRequired(self):
         # Scan the user's quiz file for existing responses in case the user
@@ -1304,14 +1481,14 @@ class Session:
         # loop through composite index in reverse, to search for existing responses that match
         #    last login time (prior to current login)
 
-        for indCI in reversed(range(len(self._l2iPageQuestionCompositeIndices))):
+        for indCI in reversed(range(len(self._l3iPageQuestionGroupCompositeIndices))):
 #             print(indCI)
             
             bLastLoginResponseFound = False # default
             
             # get page and question set nodes from indices
-            indPage = self._l2iPageQuestionCompositeIndices[indCI][0]
-            indQuestionSet = self._l2iPageQuestionCompositeIndices[indCI][1]
+            indPage = self._l3iPageQuestionGroupCompositeIndices[indCI][0]
+            indQuestionSet = self._l3iPageQuestionGroupCompositeIndices[indCI][1]
             xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', indPage)
             xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', indQuestionSet)
 #             print(indCI, 'Page:', indPage, 'QS:', indQuestionSet)
@@ -1359,7 +1536,7 @@ class Session:
             
             # check if the last response found was entered on the last question set. 
             #    (i.e. was the quiz completed)
-            if indCI == (len(self._l2iPageQuestionCompositeIndices) - 1) and\
+            if indCI == (len(self._l3iPageQuestionGroupCompositeIndices) - 1) and\
                 sQSetCompletionState == 'All':
                 
                 # if one question set allows a multiple response, user has option to redo response

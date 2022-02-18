@@ -122,8 +122,8 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         (Key_Escape, self.toolsBox.defaultEffect),
         ('p', lambda : self.toolsBox.selectEffect('PaintEffect')),
         ('d', lambda : self.toolsBox.selectEffect('DrawEffect')),
-        ('w', lambda : self.toolsBox.selectEffect('WandEffect')),
-        ('r', lambda : self.toolsBox.selectEffect('RectangleEffect')),
+        # ('w', lambda : self.toolsBox.selectEffect('WandEffect')),
+        # ('r', lambda : self.toolsBox.selectEffect('RectangleEffect')),
         ('c', self.toolsColor.showColorBox),
         (Key_Space, self.toolsBox.toggleFloatingMode),
         )

@@ -11,13 +11,13 @@
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\{286306cb-946c-441c-8ed2-630283a455d4}\Data\adc.nrrd</Path>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\adc.nrrd</Path>
 		</Image>
 		<Image ID="T2-N4" Type="Volume" RotateToAcquisition="Y" LabelMapID="T2-contour">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\{286306cb-946c-441c-8ed2-630283a455d4}\Data\t2ax-N4.nrrd</Path>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\t2ax-N4.nrrd</Path>
 		</Image>
 		<QuestionSet ID="PI-RADS" Descriptor="Contouring Exercise"  SegmentRequired="Y" AllowMultipleResponse="N">
 			<Question Type="InfoBox" Descriptor="TestDetails">
@@ -38,19 +38,19 @@
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\{286306cb-946c-441c-8ed2-630283a455d4}\Data\adc.nrrd</Path>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\adc.nrrd</Path>
 		</Image>
 		<Image ID="T2-N4" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID='T2-contour'>
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\{286306cb-946c-441c-8ed2-630283a455d4}\Data\t2ax-N4.nrrd</Path>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\t2ax-N4.nrrd</Path>
 		</Image>
 		<Image ID="K-Trans" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Foreground</Layer>
 			<Orientation>Axial</Orientation>
-			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\{286306cb-946c-441c-8ed2-630283a455d4}\Data\ktrans.nrrd</Path>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\ktrans.nrrd</Path>
 		</Image>
 		<QuestionSet ID="Segmentation" Descriptor="Self-Assessment"  SegmentRequired="Y" AllowMultipleResponse="N">
 			<Question Type="InfoBox" Descriptor="TestDetails">

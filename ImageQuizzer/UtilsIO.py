@@ -71,12 +71,26 @@ class UtilsIO:
         self._sQuizzerROIColorTableNameWithExt = 'QuizzerROIColorTable.txt'
         self._sDefaultROIColorTableName = 'GenericColors'
 
+        self._liPageGroups = []
+        self._liUniquePageGroups = []
+
         self.oUtilsMsgs = UtilsMsgs()
         self.oIOXml = UtilsIOXml()
 
+        self.setupTestEnvironment()
 
-#     def setup(self):
-#         self.oUtilsMsgs = UtilsMsgs()
+
+
+        
+        
+    def setupTestEnvironment(self):
+         # check if function is being called from unittesting
+        if "testing" in os.environ:
+            self.sTestMode = os.environ.get("testing")
+        else:
+            self.sTestMode = "0"
+
+ 
         
     #-------------------------------------------
     #        Getters / Setters
@@ -113,6 +127,24 @@ class UtilsIO:
     #----------
     def GetDefaultROIColorTableName(self):
         return self._sDefaultROIColorTableName
+    
+    #----------
+    def SetListPageGroupNumbers(self, liNumbers):
+        self._liPageGroups = liNumbers
+        
+    #----------
+    def GetListPageGroupNumbers(self):
+        return self._liPageGroups
+    
+    #----------
+    def SetListUniquePageGroups(self, liNumbers):
+        self._liUniquePageGroups = liNumbers
+        
+    #----------
+    def GetListUniquePageGroups(self):
+        return self._liUniquePageGroups
+    
+    
 #     ###################
 #     #----------
 #     def SetUserQuizResultsDir(self, sFilename):
@@ -430,7 +462,8 @@ class UtilsIO:
                                     bFoundMatchingPath = True
                                     # check that sNodeName exists in that list element
                                     if sNodeNameID not in lElement:
-                                        sMsg = sMsg + "\nIn any Page Element, there should be a one-to-one correlation of 'PageID_ImageID' with the Image Path" +\
+                                        sMsg = sMsg + "\nIn any Page Element, there should be only one match of the combined 'PageID_ImageID' attributes with the Image Path" +\
+                                                "\nThere are multiple paths that have the same 'PageID_ImageID' on this Page" +\
                                                 "\n   .....Check all paths for Page: " + str(iPageNum) + ' '+ sNodeNameID
                                      
                         if not bFoundMatchingPath:
@@ -451,6 +484,14 @@ class UtilsIO:
                             sValidationMsg = self.ValidateAttributeOptions(lxROIs[0], 'ROIVisibilityCode', sPageReference, self.oIOXml.lValidRoiVisibilityCodes)
                             sMsg = sMsg + sValidationMsg
                                 
+            # >>>>>>>>>>>>>>>
+            # validate that each page has a PageGroup attribute if the session requires page group randomization
+            sRandomizeRequested = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
+            if sRandomizeRequested == "Y":
+                sValidationMsg = self.ValidatePageGroupNumbers(xRootNode)
+                sMsg = sMsg + sValidationMsg
+
+            
             # >>>>>>>>>>>>>>>
 
             # validation errors found
@@ -531,6 +572,71 @@ class UtilsIO:
             
         return sMsg
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidatePageGroupNumbers(self, xRootNode):
+        ''' If the Session requires randomization of page groups, each page must have a PageGroup attribute
+            If all page group numbers are equal, no randomization will be done.
+            The page group values must be integer values.
+            PageGroup = 0 is allowed. These will always appear at the beginning of the composite list of indices
+        '''
+        sMsg = ''
+        sValidationMsg = ''
+        # liPageGroups = []
+        
+        # check that each page has a page group number and that it is an integer
+        lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
+        iPageNum = 0
+        for xPage in lxPages:
+            iPageNum = iPageNum + 1
+            
+            # required attribute for randomization
+            sValidationMsg = self.ValidateRequiredAttribute(xPage, 'PageGroup', str(iPageNum))
+            if sValidationMsg != '':
+                raise Exception('Missing PageGroup attribute: %s' %sValidationMsg)
+                sMsg = sMsg + sValidationMsg
+            
+            try:
+                # test that the value is an integer
+                iPageGroup = int(self.oIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup'))
+                # if iPageGroup == 0:
+                #     sValidationMsg = 'Page Group must be an integer > 0. See Page: ' + str(iPageNum)
+                #     sMsg = sMsg + sValidationMsg
+                
+            except ValueError:
+                sValidationMsg = 'Page Group is not an integer. See Page: ' + str(iPageNum)
+                sMsg = sMsg + sValidationMsg
+                if self.sTestMode == "1":
+                    raise ValueError('Invalid PageGroup value: %s' % sValidationMsg)
+            
+            self._liPageGroups.append(iPageGroup)
+
+        # check that number of different page group numbers (that are >0) must be >1
+        # you can't randomize if all the pages are assigned to the same group
+        self._liUniquePageGroups = self.GetUniqueNumbers(self._liPageGroups)
+        if 0 in self._liUniquePageGroups:
+            self._liUniquePageGroups.remove(0) #ignore page groups set to 0
+        if len(self._liUniquePageGroups) == 1:
+            sValidationMsg = 'Not enough unique PageGroups for requested randomization. \nYou must have more than one page group (other than 0)'
+            sMsg = sMsg + sValidationMsg
+            if self.sTestMode == "1":
+                raise Exception('Randomizing Error: %s' % sValidationMsg)
+                
+            
+        return sMsg
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetUniqueNumbers(self, liNumbers):
+        ''' Utility to return the unique numbers from a given list of numbers.
+        '''
+
+        liUniqueNumbers = []
+        for ind in range(len(liNumbers)):
+            iNum = liNumbers[ind]
+            if iNum not in liUniqueNumbers:
+                liUniqueNumbers.append(iNum)
+        
+        return liUniqueNumbers
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def PopulateUserQuizFolder(self):
             
@@ -666,45 +772,6 @@ class UtilsIO:
     
                             bDataVolumeSaved, sMsg = self.SaveLabeMapAsDataVolume(sLabelMapPath, slNodeLabelMap) 
                          
-#                             if (oSession.oIOXml.GetValueOfNodeAttribute(oSession.oIOXml.GetRootNode(), 'SaveLabelMapAsRTStruct')) == 'Y':
-#                                 bRTStructSaved, sRTStructMsg, sDicomExportOutputDir = self.SaveLabelMapAsRTStruct(oImageNode, sLabelMapFilename, sPageLabelMapDir)
-#   
-#                                 if (oSession.oIOXml.GetValueOfNodeAttribute(oSession.oIOXml.GetRootNode(), 'MapRTStructToVolume')) == 'Y':
-#                                     try:
-#                                         if oImageNode.sVolumeFormat == 'DICOM':
-#                                             sOriginalDicomPath = oImageNode.sImagePath
-#                                             sOriginalDicomDir = self.GetDirFromPath(sOriginalDicomPath)
-#                                         else:
-#                                             xImage = oImageNode.GetXmlImageElement()
-#                                             xOrigDicomDirElement = oSession.oIOXml.GetNthChild(xImage, 'OriginalDicomDir', 0 )
-#                                             if xOrigDicomDirElement != None:
-#                                                 sOrigDicomRelativeDir = oSession.oIOXml.GetDataInNode(xOrigDicomDirElement)
-#                                                 sOriginalDicomDir = self.GetAbsoluteDataPath(sOrigDicomRelativeDir)
-#                                             else:
-#                                                 sMsg = 'Study set up to remap exported RTStruct to original dicom volume'\
-#                                                         + '\n but XML element OriginalDicomDir is missing'\
-#                                                         + '\nFor page:' + str(oSession.GetCurrentPageIndex()) \
-#                                                         + '\nSee administrator: ' + sys._getframe(  ).f_code.co_name
-#                                                 oSession.oUtilsMsgs.DisplayWarning(sMsg) 
-#                                         # args=(original dicom series, Slicer's dicom output, SaveTo dir)
-# #                                         self.mapRTStructToVolume(self.GetDirFromPath(oImageNode.sImagePath), sDicomExportOutputDir, sPageLabelMapDir )
-# #                                         self.mapRTStructToVolume(self.GetDirFromPath(sOriginalDicomPath), sDicomExportOutputDir, sPageLabelMapDir )
-#                                         self.mapRTStructToVolume(sOriginalDicomDir, sDicomExportOutputDir, sPageLabelMapDir )
-#                                         shutil.rmtree(sDicomExportOutputDir, ignore_errors=True)
-# 
-#                                     except:
-#                                         sMsg = 'Failed to map exported RTStruct to original volume.'\
-#                                                 + '\nNotes: - It is possible that the original dicom had irregular geometry'\
-#                                                 + '\n- or that the number of slices output by Slicer does not match that of the original volume'\
-#                                                 + '\n- The following packages are required for mapping to the original volume UIDs: Pandas, pydicom and numpy'\
-#                                                 + '\n' + sys._getframe(  ).f_code.co_name
-#                                         oSession.oUtilsMsgs.DisplayWarning(sMsg) 
-# 
-# 
-#                             
-#                             else:
-#                                 bRTStructSaved = True # allow label map path to be written to xml
-                                 
                             # update list of names of images that have the label maps stored
                             lsLabelMapsStoredForImages.append(oImageNode.sNodeName)
 

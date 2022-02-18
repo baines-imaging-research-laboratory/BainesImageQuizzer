@@ -182,7 +182,7 @@ class QuestionSet():
         self.qQuizWidget = qt.QWidget()
         self.qQuizWidgetLayout = qt.QVBoxLayout()
         self.qQuizWidget.setLayout(self.qQuizWidgetLayout)
-        self.qQuizTitle = qt.QLabel(self.id + ' ' + self.descriptor)
+        self.qQuizTitle = qt.QLabel(self.id + '     ' + self.descriptor)
         self.qQuizTitle.setStyleSheet("QLabel{ font: bold}")
         self.qQuizWidgetLayout.addWidget(self.qQuizTitle)
         
@@ -262,8 +262,8 @@ class Question(ABC):
         self.qGrpBox.setTitle(sTitle)
         self.qGrpBoxLayout = qt.QVBoxLayout()
         self.qGrpBox.setLayout(self.qGrpBoxLayout)
-        self.qGrpBox.setStyleSheet("QGroupBox {background-color: \
-            rgb(255, 255, 255); margin: 10px; border: 1px solid gray;\
+        self.qGrpBox.setStyleSheet("QGroupBox { \
+            margin: 10px; border: 1px solid gray;\
             border-top-style:solid; border-bottom-style:none;\
             border-left-style:solid; border-right-style:none; }")
         

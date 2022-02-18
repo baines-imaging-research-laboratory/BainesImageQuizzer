@@ -1,0 +1,15 @@
+<Session>
+	<Page ID="XXXXX" Descriptor="xx">
+		<Image Type="XXXXX" ID="XXXXX" RotateToAcquisition="xx" >
+			<Destination>xx</Destination>
+			<Layer>xx</Layer>
+			<Orientation>xx</Orientation>
+			<Path>XXXXX</Path>
+		</Image>
+		<QuestionSet ID="XXXXX" Descriptor="xx" AllowMultipleResponse="x">
+			<Question Type="XXXXX" Descriptor="xx">
+				<Option>xx</Option> 
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>
