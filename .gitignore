@@ -25,3 +25,4 @@ ImageQuizzer/ImageQuizzerData/SlicerDICOMDatabase/
 ImageQuizzer/.vs/
 ImageQuizzer/out/
 ImageQuizzer/Testing/Python/out/
+ImageQuizzerShutdown.bat

@@ -84,7 +84,7 @@ class UtilsIO:
         
         
     def setupTestEnvironment(self):
-         # check if function is being called from unittesting
+        # check if function is being called from unittesting
         if "testing" in os.environ:
             self.sTestMode = os.environ.get("testing")
         else:

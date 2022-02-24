@@ -1,1 +1,0 @@
-RMDIR /S /Q "C:/Users/alibi/Documents/Work-Baines/Projects/ImageQuizzer/ImageQuizzerProject/ImageQuizzer/ImageQuizzerData\SlicerDICOMDatabase"
