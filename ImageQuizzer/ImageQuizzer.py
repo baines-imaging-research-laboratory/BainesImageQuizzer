@@ -68,12 +68,19 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 #         self.oCustomEventFilter = customEventFilter()
 #         slicer.util.mainWindow().installEventFilter(self.oCustomEventFilter)        
          
+        self.lsModulesToToggleVisibilty = ['ModuleToolBar', 'DialogToolBar', 'CaptureToolBar', 'MainToolBar', 'ModuleSelectorToolBar']
         
         self.slicerMainLayout = self.layout
         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def __del__(self):
+        
+        # unhide Slicer's default toolbars
+        for qtToolBar in slicer.util.mainWindow().findChildren('QToolBar'):
+            if qtToolBar.name in self.lsModulesToToggleVisibilty:
+                qtToolBar.setVisible(True)
+
         slicer.util.mainWindow().removeEventFilter(self.customEventFilter)
   
 
@@ -95,25 +102,30 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         slicer.util.setMenuBarsVisible(True)
         slicer.util.setToolbarsVisible(True)
         
+###########  For Development mode    ###########    
 #         slicer.util.setPythonConsoleVisible(True)
+#         slicer.util.mainWindow().setToolbarsVisible(True)
+###########
 
-        # live runs
+
+###########  For Release mode   ###########
+        # hide toolbars to prevent users accessing modules outside of the ImageQuizzer
+        #    Equivalent to toggling through View>Toolbars
+        #    'ModuleToolBar' includes the Editor module for segmenting
+        #    'DialogToolBar' for Extensions
+        #    'MainToolBar' for loading files by Data, Dcm buttons
+        #    'ModuleSelectorToolBar' to see all the available modules
+        for qtToolBar in slicer.util.mainWindow().findChildren('QToolBar'):
+            if qtToolBar.name in self.lsModulesToToggleVisibilty:
+                qtToolBar.setVisible(False)
+
+        
         slicer.util.setPythonConsoleVisible(False)
         slicer.util.setModuleHelpSectionVisible(False)
         slicer.modules.welcome.widgetRepresentation().setVisible(False)
+###########
         
 
-        # confirm the Pandas package has been installed
-        #    (for mapping RTStruct dicom to original dicom volume)
-######### MOVED TO POST-PROCESSING SCRIPT
-#         package_name = 'pandas'
-#         spec = importlib.util.find_spec(package_name)
-#         
-#         if spec is None:
-#             sMsg = "The package 'pandas' has not been installed to Slicer"\
-#                     + "\nThis package is necessary to remap RTStruct dicom files to the original series"\
-#                     + "\n See administrator"
-#             self.oUtilsMsgs.DisplayWarning(sMsg)
 
         self.oSession = Session()                    
         self.oCustomEventFilter = customEventFilter(self.oSession, self.oFilesIO)

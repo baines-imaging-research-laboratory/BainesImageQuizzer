@@ -26,3 +26,4 @@ ImageQuizzer/.vs/
 ImageQuizzer/out/
 ImageQuizzer/Testing/Python/out/
 ImageQuizzerShutdown.bat
+ImageQuizzer/Resources/ColorFiles/QuizzerROIColorTable.txt
