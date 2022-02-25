@@ -100,30 +100,29 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         
         slicer.util.setMenuBarsVisible(True)
-        slicer.util.setToolbarsVisible(True)
         
 ###########  For Development mode    ###########    
-#         slicer.util.setPythonConsoleVisible(True)
-#         slicer.util.mainWindow().setToolbarsVisible(True)
+        slicer.util.setPythonConsoleVisible(True)
+        slicer.util.setToolbarsVisible(True)
 ###########
 
 
-###########  For Release mode   ###########
-        # hide toolbars to prevent users accessing modules outside of the ImageQuizzer
-        #    Equivalent to toggling through View>Toolbars
-        #    'ModuleToolBar' includes the Editor module for segmenting
-        #    'DialogToolBar' for Extensions
-        #    'MainToolBar' for loading files by Data, Dcm buttons
-        #    'ModuleSelectorToolBar' to see all the available modules
-        for qtToolBar in slicer.util.mainWindow().findChildren('QToolBar'):
-            if qtToolBar.name in self.lsModulesToToggleVisibilty:
-                qtToolBar.setVisible(False)
-
-        
-        slicer.util.setPythonConsoleVisible(False)
-        slicer.util.setModuleHelpSectionVisible(False)
-        slicer.modules.welcome.widgetRepresentation().setVisible(False)
-###########
+# ###########  For Release mode   ###########
+#         # hide toolbars to prevent users accessing modules outside of the ImageQuizzer
+#         #    Equivalent to toggling through View>Toolbars
+#         #    'ModuleToolBar' includes the Editor module for segmenting
+#         #    'DialogToolBar' for Extensions
+#         #    'MainToolBar' for loading files by Data, Dcm buttons
+#         #    'ModuleSelectorToolBar' to see all the available modules
+#         for qtToolBar in slicer.util.mainWindow().findChildren('QToolBar'):
+#             if qtToolBar.name in self.lsModulesToToggleVisibilty:
+#                 qtToolBar.setVisible(False)
+#
+#
+#         slicer.util.setPythonConsoleVisible(False)
+#         slicer.util.setModuleHelpSectionVisible(False)
+#         slicer.modules.welcome.widgetRepresentation().setVisible(False)
+# ###########
         
 
 
@@ -268,14 +267,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.qLaunchGrpBoxLayout.addWidget(self.btnLaunchStudy)
          
          
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def onUserNameChanged(self):
-#          
-#         # capture selected user name
-#         self.oFilesIO.SetUsernameAndDir(self.comboGetUserName.currentText)
-#         self.qQuizSelectionGrpBox.setEnabled(True)
-#         
-        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def onApplyQuizzerDataLocation(self):
@@ -301,7 +292,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
     def onApplyQuizSelection(self):
         
         # set to default
-#         self.btnLaunchStudy.setEnabled(False)
         self.qLaunchGrpBox.setEnabled(True)
         self.qLblQuizFilename.text = ""
  
@@ -318,7 +308,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         else:
             # enable the launch button
             self.qLblQuizFilename.setText(sSelectedQuizPath)
-#             self.btnLaunchStudy.setEnabled(True)
             self.qLaunchGrpBox.setEnabled(True)
             self.qUserLoginWidget.show()
             self.qUserLoginWidget.activateWindow()
@@ -329,6 +318,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onApplyLaunchQuiz(self):
         
+        sMsg = ''
+        bSuccess = True
         # open the database - if not successful, allow user to reselect
         bDBSetupSuccess, sMsg = self.oFilesIO.OpenSelectedDatabase()
 
@@ -338,44 +329,42 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
         else:
             
-            # confirm username was entered
-#             if (self.comboGetUserName.currentText == '' or self.comboGetUserName.currentText == '?' or "?" in self.comboGetUserName.currentText):
-#                 sMsg = 'No user or invalid name was entered'
-#                 self.oUtilsMsgs.DisplayWarning(sMsg)
-#                 self.qUserLoginWidget.raise_()
-#     
-#             else:
-#                 self.oFilesIO.SetUsernameAndDir(self.comboGetUserName.currentText)
             self.oFilesIO.SetUsernameAndDir(self.lineGetUserName.text)
 
-            # create user and results folders if it doesn't exist
-            self.oFilesIO.SetupForUserQuizResults()
+            # check for errors in quiz xml layout before populating the user response folder
+            bSuccess, sMsg = self.oFilesIO.ValidateQuiz()
 
-            ##### for debug... #####
-#             self.oFilesIO.PrintDirLocations()
-            ########################
+            if bSuccess:
+                # create user and results folders if it doesn't exist
+                self.oFilesIO.SetupForUserQuizResults()
+    
+                ##### for debug... #####
+    #             self.oFilesIO.PrintDirLocations()
+                ########################
+    
+    
+                # copy file from Resource into user folder
+                if self.oFilesIO.PopulateUserQuizFolder(): # success
+    
+                    # turn off login widget modality (hide first)
+                    self.qUserLoginWidget.hide()
+                    self.qUserLoginWidget.setWindowModality(0)
+                    self.qUserLoginWidget.show()
+                    
+                    # start the session
+                    self.oSession.RunSetup(self.oFilesIO, self.slicerMainLayout)
+    
+                    
+                    try:
+                        #provide as much room as possible for the quiz
+                        qDataProbeCollapsibleButton = slicer.util.mainWindow().findChild("QWidget","DataProbeCollapsibleWidget")
+                        qDataProbeCollapsibleButton.collapsed = True
+                        self.reloadCollapsibleButton.collapsed = True
+                    except:
+                        pass
 
-
-            # copy file from Resource into user folder
-            if self.oFilesIO.PopulateUserQuizFolder(): # success
-
-                # turn off login widget modality (hide first)
-                self.qUserLoginWidget.hide()
-                self.qUserLoginWidget.setWindowModality(0)
-                self.qUserLoginWidget.show()
-                
-                # start the session
-                self.oSession.RunSetup(self.oFilesIO, self.slicerMainLayout)
-
-                
-                try:
-                    #provide as much room as possible for the quiz
-                    qDataProbeCollapsibleButton = slicer.util.mainWindow().findChild("QWidget","DataProbeCollapsibleWidget")
-                    qDataProbeCollapsibleButton.collapsed = True
-                    self.reloadCollapsibleButton.collapsed = True
-                except:
-                    pass
-                
+            else:
+                self.oUtilsMsgs.DisplayError(sMsg)
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

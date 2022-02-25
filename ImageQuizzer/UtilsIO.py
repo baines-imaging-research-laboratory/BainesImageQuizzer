@@ -11,23 +11,7 @@ from datetime import datetime
 import DICOMLib
 from DICOMLib import DICOMUtils
 
-# import pydicom
-# try:
-#     import pandas as pd
-# 
-#     print("running with pandas")
-# except ImportError:
-#     print("!"*100, 'pandas not installed')
-# 
-# try:
-#     import numpy as np
-#     print("running with numpy")
-# except ImportError:
-#     print("!"*100, 'numpy not installed')
-
-
 import logging
-# import threading
 import time
 
 import DicomRtImportExportPlugin
@@ -105,6 +89,10 @@ class UtilsIO:
 
         self._sResourcesQuizPath = os.path.join(self._sXmlResourcesDir, sSelectedQuizPath)
         self._sDir, self._sQuizFilename = os.path.split(self._sResourcesQuizPath)
+        
+    #----------
+    def GetResourcesQuizPathAndFilename(self):
+        return self._sResourcesQuizPath
         
     #----------
     def SetUsernameAndDir(self, sSelectedUser):
@@ -388,7 +376,7 @@ class UtilsIO:
             
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateQuiz(self, xRootNode):
+    def ValidateQuiz(self):
         '''
             a function to check for specific validation requirements for the quiz
         '''
@@ -397,6 +385,8 @@ class UtilsIO:
         
         
         try:
+            # open requested quiz xml and check for root node
+            bSuccess, xRootNode = self.oIOXml.OpenXml(self.GetResourcesQuizPathAndFilename(),'Session')
             lxPageElements = self.oIOXml.GetChildren(xRootNode, 'Page')
             
             iPageNum = 0
@@ -512,9 +502,9 @@ class UtilsIO:
             
         except:
             bSuccess = False
-            self.oUtilsMsgs.DisplayWarning(sMsg)
+            self.oUtilsMsgs.DisplayWarning('Quiz Validation Errors \n' + sMsg)
             # after warning, reset the message for calling function to display error and exit
-            sMsg = 'See Administrator: ERROR in XML validation.'
+            sMsg = 'See Administrator: ERROR in quiz XML validation. --Exiting--'
             
             
         return bSuccess, sMsg
@@ -1025,7 +1015,6 @@ class UtilsIO:
                     #    (same image but different orientations)
                     if not sStoredRelativePath in lLoadedLabelMaps:
                         sAbsolutePath = self.GetAbsoluteUserPath(sStoredRelativePath)
-#                         dictProperties = {'LabelMap' : True, 'show': False}
                         dictProperties = {'LabelMap' : True}
                         
                         try:

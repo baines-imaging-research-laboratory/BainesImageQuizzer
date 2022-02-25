@@ -32,12 +32,10 @@ class Session:
     def __init__(self,  parent=None):
         self.sClassName = type(self).__name__
         self.parent = parent
-#         print('Constructor for Session')
         
         self._sLoginTime = ''
 
         self._iCurrentCompositeIndex = 0
-        # self._l2iPageQuestionCompositeIndices = []
         self._l3iPageQuestionGroupCompositeIndices = []
 
         self._xPageNode = None
@@ -246,7 +244,6 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def RunSetup(self, oFilesIO, slicerMainLayout):
         
-#         self.oIOXml = UtilsIOXml()
         self.SetFilesIO(oFilesIO)
 
         # open xml and check for root node
@@ -258,66 +255,55 @@ class Session:
 
         else:
 
-            bValidationSuccess, sValidationMsg = self.oFilesIO.ValidateQuiz(xRootNode)
+            self.SetupWidgets(slicerMainLayout)
+            self.oQuizWidgets.qLeftWidget.activateWindow()
+
             
-            if bValidationSuccess:
-                self.SetupWidgets(slicerMainLayout)
-                self.oQuizWidgets.qLeftWidget.activateWindow()
-    
-                
-                # turn on functionality if any of the question set attributes indicated they are required
-                self.SetMultipleResponsesInQuiz( \
-                    self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
-                    './/Page/QuestionSet', 'AllowMultipleResponse','Y'))
-                self.AddSegmentationModule( \
-                    self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
-                    './/Page/QuestionSet', 'SegmentRequired','Y'))
-                
-                # set up ROI colors for segmenting
-    #             self.oUtilsIO.SetResourcesROIColorFilesDir()
-                sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
-                self.oFilesIO.SetupROIColorFile(sColorFileName)
-    
-                # build the list of indices page/questionset as read in by the XML
-                self.BuildPageQuestionCompositeIndexList()
-                # if randomization is requested - shuffle the page/questionset list
-                sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
-                if sRandomizeRequired == 'Y':
-                    # check if xnl already holds a set of randomized indices otherwise, call randomizing function
-                    liRandIndices = self.GetStoredRandomizedIndices()
-                    if liRandIndices == []:
-                        # get the unique list of all Page Group numbers to randomize
-                        #    this was set during xml validation during the initial read
-                        liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
-                        liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
-                        self.AddRandomizedIndicesToXML(liRandIndices)
-                     
-                    # liRandIndices = [5,3,1,0,2,4]
-                    # self._l2iPageQuestionCompositeIndices = self.ShufflePageQuestionCompositeIndexList(liRandIndices)
+            # turn on functionality if any of the question set attributes indicated they are required
+            self.SetMultipleResponsesInQuiz( \
+                self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
+                './/Page/QuestionSet', 'AllowMultipleResponse','Y'))
+            self.AddSegmentationModule( \
+                self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
+                './/Page/QuestionSet', 'SegmentRequired','Y'))
+            
+            # set up ROI colors for segmenting
+#             self.oUtilsIO.SetResourcesROIColorFilesDir()
+            sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
+            self.oFilesIO.SetupROIColorFile(sColorFileName)
 
-#                    liRandIndices = [2,3,1]
-                    self._l3iPageQuestionGroupCompositeIndices = self.ShufflePageQuestionGroupCompositeIndexList(liRandIndices)
-        
-        
-        
+            # build the list of indices page/questionset as read in by the XML
+            self.BuildPageQuestionCompositeIndexList()
+            # if randomization is requested - shuffle the page/questionset list
+            sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
+            if sRandomizeRequired == 'Y':
+                # check if xnl already holds a set of randomized indices otherwise, call randomizing function
+                liRandIndices = self.GetStoredRandomizedIndices()
+                if liRandIndices == []:
+                    # get the unique list of all Page Group numbers to randomize
+                    #    this was set during xml validation during the initial read
+                    liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
+                    liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
+                    self.AddRandomizedIndicesToXML(liRandIndices)
+                 
+                self._l3iPageQuestionGroupCompositeIndices = self.ShufflePageQuestionGroupCompositeIndexList(liRandIndices)
+    
+    
+            
+            
+            # check for partial or completed quiz
+            self.SetCompositeIndexIfResumeRequired()
+            
+            self.progress.setMaximum(len(self._l3iPageQuestionGroupCompositeIndices))
+            self.progress.setValue(self._iCurrentCompositeIndex)
+    
+            # if quiz is not complete, finish setup
+            #    (the check for resuming the quiz may have found it was already complete)
+            if not self.QuizComplete():
+                # setup buttons and display
+                self.EnableButtons()
+                self.DisplayPage()
                 
-                
-                
-                # check for partial or completed quiz
-                self.SetCompositeIndexIfResumeRequired()
-                
-                self.progress.setMaximum(len(self._l3iPageQuestionGroupCompositeIndices))
-                self.progress.setValue(self._iCurrentCompositeIndex)
-        
-                # if quiz is not complete, finish setup
-                #    (the check for resuming the quiz may have found it was already complete)
-                if not self.QuizComplete():
-                    # setup buttons and display
-                    self.EnableButtons()
-                    self.DisplayPage()
-            else:
-                self.oUtilsMsgs.DisplayError(sValidationMsg)
-
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupWidgets(self, slicerMainLayout):
