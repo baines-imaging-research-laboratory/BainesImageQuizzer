@@ -35,9 +35,9 @@ class UtilsIO:
         
         self._sScriptedModulesPath = ''     # location of quizzer module project
 
-        self._sXmlResourcesDir = ''         # folder - holds XML quiz files to copy to user
-        self._sResourcesQuizPath = ''       # full path (dir/file) of quiz to copy to user
-        self._sQuizFilename = ''            # quiz filename only (no dir)
+        self._sXmlQuizDir = ''         # folder - holds XML quiz files to copy to user
+        self._sXmlQuizPath = ''       # full path (dir/file) of quiz to copy to user
+        self._sXmlQuizFilename = ''            # quiz filename only (no dir)
 
         self._sDataParentDir = ''           # parent folder to images, DICOM database and users folders
         
@@ -85,14 +85,10 @@ class UtilsIO:
         self._sDataParentDir = sDataDirInput
         
     #----------
-    def SetResourcesQuizPathAndFilename(self, sSelectedQuizPath):
+    def SetXmlQuizPathAndFilename(self, sSelectedQuizPath):
 
-        self._sResourcesQuizPath = os.path.join(self._sXmlResourcesDir, sSelectedQuizPath)
-        self._sDir, self._sQuizFilename = os.path.split(self._sResourcesQuizPath)
-        
-    #----------
-    def GetResourcesQuizPathAndFilename(self):
-        return self._sResourcesQuizPath
+        self._sXmlQuizPath = os.path.join(self._sXmlQuizDir, sSelectedQuizPath)
+        self._sXmlQuizDir, self._sXmlQuizFilename = os.path.split(self._sXmlQuizPath)
         
     #----------
     def SetUsernameAndDir(self, sSelectedUser):
@@ -116,6 +112,10 @@ class UtilsIO:
     def GetDefaultROIColorTableName(self):
         return self._sDefaultROIColorTableName
     
+    #----------
+    def GetDefaultROIColorFilePath(self):
+        return os.path.join(self.GetResourcesROIColorFilesDir(), self.GetDefaultROIColorTableName() + '.txt')
+
     #----------
     def SetListPageGroupNumbers(self, liNumbers):
         self._liPageGroups = liNumbers
@@ -200,8 +200,8 @@ class UtilsIO:
         return self._sScriptedModulesPath
     
     #----------
-    def GetResourcesQuizPath(self):
-        return self._sResourcesQuizPath
+    def GetXmlQuizPath(self):
+        return self._sXmlQuizPath
     
     #----------
     def GetUsername(self):
@@ -223,8 +223,8 @@ class UtilsIO:
         return self._sUserQuizResultsPath
     
     #----------
-    def GetXmlResourcesDir(self):
-        return self._sXmlResourcesDir
+    def GetXmlQuizDir(self):
+        return self._sXmlQuizDir
     
     #----------
     def GetRelativeUserPath(self, sInputPath):
@@ -241,7 +241,11 @@ class UtilsIO:
     
     #----------
     def GetQuizFilename(self):
-        return self._sQuizFilename
+        return self._sXmlQuizFilename
+    
+    #----------
+    def GetROIColorFilePath(self, sROIColorFile):
+        return os.path.join(self.GetXmlQuizDir(), sROIColorFile + '.txt')
 
     #----------
     def GetFilenameWithExtFromPath(self, sFilePath):
@@ -309,7 +313,7 @@ class UtilsIO:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetModuleDirs(self, sModuleName, sSourceDirForQuiz):
         self.SetScriptedModulesPath(sModuleName)
-        self._sXmlResourcesDir = os.path.join(self._sScriptedModulesPath, sSourceDirForQuiz)
+        self._sXmlQuizDir = os.path.join(self._sScriptedModulesPath, sSourceDirForQuiz)
         self.SetResourcesROIColorFilesDir()
         
     #----------
@@ -385,8 +389,9 @@ class UtilsIO:
         
         
         try:
-            # open requested quiz xml and check for root node
-            bSuccess, xRootNode = self.oIOXml.OpenXml(self.GetResourcesQuizPathAndFilename(),'Session')
+            # open requested quiz xml 
+            bSuccess, xRootNode = self.oIOXml.OpenXml(self.GetXmlQuizPath(),'Session')
+            
             lxPageElements = self.oIOXml.GetChildren(xRootNode, 'Page')
             
             iPageNum = 0
@@ -487,6 +492,18 @@ class UtilsIO:
                 sValidationMsg = self.ValidatePageGroupNumbers(xRootNode)
                 sMsg = sMsg + sValidationMsg
 
+            # check that the ROI Color file exists if requested
+            sROIColorFile = self.oIOXml.GetValueOfNodeAttribute(xRootNode,'ROIColorFile')
+            if sROIColorFile.endswith('.txt'):
+                sMsg = sMsg + '\nRemove .txt extenstion from ROIColorFile name.'
+            if sROIColorFile == '':
+                sROIColorFilePath = self.GetDefaultROIColorFilePath()
+            else:
+                sROIColorFilePath = self.GetROIColorFilePath(sROIColorFile)
+            if not os.path.isfile(sROIColorFilePath):
+                sMsg = sMsg + '\nCustom ROIColorFile does not exist in the directory with the quiz.' + sROIColorFilePath
+                
+            
             
             # >>>>>>>>>>>>>>>
 
@@ -672,12 +689,12 @@ class UtilsIO:
         if not os.path.isfile(self.GetUserQuizResultsPath()):
             # file not found, copy file from Resources to User folder
             #     first make sure selected quiz file exists in the source directory
-            if not os.path.isfile(self.GetResourcesQuizPath()):
+            if not os.path.isfile(self.GetXmlQuizPath()):
                 sErrorMsg = 'Selected Quiz file does not exist'
                 self.oUtilsMsgs.DisplayWarning(sErrorMsg)
                 return False  
             else:
-                copyfile(self.GetResourcesQuizPath(), self.GetUserQuizResultsPath())
+                copyfile(self.GetXmlQuizPath(), self.GetUserQuizResultsPath())
                 return True
 
         else:
@@ -713,28 +730,23 @@ class UtilsIO:
         copyfile(self.GetUserQuizResultsPath(), sBackupQuizResultsPath)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetupROIColorFile(self, sInputROIColorFile):
+    def SetupROIColorFile(self, sCustomInputROIColorFile):
         """ If quiz has a custom color table for segmenting ROI's, move this 
             into the color table file that is read in by the QuizzerHelperBox
         """
-        # set up for default
-        if sInputROIColorFile == '' or sInputROIColorFile == 'default':
-            sInputROIColorFile = self.GetDefaultROIColorTableName()
-        
-        sInputROIColorFileWithExt = sInputROIColorFile + '.txt'   
-        
-        # get resources dir and join to requested color file
-        sROIColorFileDir = self.GetResourcesROIColorFilesDir()
-        sROIColorFilePath = os.path.join(sROIColorFileDir, sInputROIColorFileWithExt)
-        sQuizzerROIColorTablePath = os.path.join(sROIColorFileDir, \
-                                                 self.GetQuizzerROIColorTableNameWithExt())
+        if sCustomInputROIColorFile == '':
+            sROIColorFilePath = self.GetDefaultROIColorFilePath()
+        else:
+            sROIColorFilePath = os.path.join(self.GetXmlQuizDir(), sCustomInputROIColorFile + '.txt')
         
         # check if requested table exists
         if not os.path.isfile(sROIColorFilePath):
-            sMsg = 'ROI Color file "' + sInputROIColorFileWithExt + '" does not exist in :' + sROIColorFileDir
+            sMsg = 'ROI Color file "' + sCustomInputROIColorFileWithExt + '" does not exist in :' + sROIColorFileDir
             self.oUtilsMsgs.DisplayError(sMsg)
         else:
             # if yes - overwrite QuizzerColorTable
+            sQuizzerROIColorTablePath = os.path.join(self.GetResourcesROIColorFilesDir(), \
+                                                 self.GetQuizzerROIColorTableNameWithExt())
             copyfile(sROIColorFilePath, sQuizzerROIColorTablePath)
                 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

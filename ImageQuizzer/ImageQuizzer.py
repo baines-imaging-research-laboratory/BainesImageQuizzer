@@ -297,7 +297,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
  
         # get quiz filename
         self.quizInputFileDialog = qt.QFileDialog()
-        sSelectedQuizPath = self.quizInputFileDialog.getOpenFileName(self.qUserLoginWidget, "Open File", self.oFilesIO.GetXmlResourcesDir(), "XML files (*.xml)" )
+        sSelectedQuizPath = self.quizInputFileDialog.getOpenFileName(self.qUserLoginWidget, "Open File", self.oFilesIO.GetXmlQuizDir(), "XML files (*.xml)" )
  
         # check that file was selected
         if not sSelectedQuizPath:
@@ -312,7 +312,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             self.qUserLoginWidget.show()
             self.qUserLoginWidget.activateWindow()
             
-            self.oFilesIO.SetResourcesQuizPathAndFilename(sSelectedQuizPath)
+            self.oFilesIO.SetXmlQuizPathAndFilename(sSelectedQuizPath)
          
  
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
