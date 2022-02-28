@@ -9,9 +9,10 @@ import unittest
 from Utilities import *
 
 from DICOMLib import DICOMUtils
+import QuizzerDICOMUtils
 
 import ssl
-from DICOMLib.DICOMUtils import loadPatientByUID
+# from DICOMLib.DICOMUtils import loadPatientByUID
 
 import pydicom
 import time
@@ -915,12 +916,16 @@ class DicomVolumeDetail(ViewNodeBase):
                 elaspsed = time.time() - elapsed
 #                 print('Starting load: %s' % elapsed )                
 
-                DICOMUtils.loadSeriesByUID([sSeriesUIDToLoad])
+                ####### Function override ... See notes in QuizzerDicomUitls
+                #######     DICOMUtils.loadSeriesByUID([sSeriesUIDToLoad])
+                QuizzerDICOMUtils.loadSeriesByUID([sSeriesUIDToLoad])
                 slNodeId = slSubjectHierarchyNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(),sSeriesUIDToLoad)
                 
+##### for debug on visibility
 #                 slPlugin = slicer.qSlicerSubjectHierarchyVolumesPlugin()
 #                 iOnOrOff = slPlugin.getDisplayVisibility(slNodeId)
 #                 print('SH eye: ',iOnOrOff, slNodeId)
+#####
                     
             
             if slNodeId == 0:
