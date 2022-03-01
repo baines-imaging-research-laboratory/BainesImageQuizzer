@@ -395,7 +395,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
             # the validation was supposed to catch an error 
             # check that the correct error was raised
             sMsg = context.exception.args[0]
-            if sMsg.find('Randomizing Error')>=0:
+            if sMsg.find('Validating PageGroups Error')>=0:
                 bTestResult = True
 
             

@@ -454,7 +454,11 @@ class Session:
     def onExitButtonClicked(self,sCaller):
 
         self.progress.setValue(self._iCurrentCompositeIndex + 1)
-        iProgressPercent = int((self._iCurrentCompositeIndex + 1) / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
+        if len(self._l3iPageQuestionGroupCompositeIndices) >0:
+            iProgressPercent = int((self._iCurrentCompositeIndex + 1) / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
+        else:
+            # error in creating the composite index - assign percent to 100 for exiting
+            self.oUtilsMsgs.DisplayError('ERROR creating quiz indices - Exiting')
         self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
         
         sMsg = 'Do you wish to exit?'
@@ -513,7 +517,6 @@ class Session:
             are used to coordinate the next and previous buttons.
             The information is gathered by querying the XML quiz.
         '''
-        
         # given the root of the xml document build composite list 
         #     of indices for each page and the question sets within
         
@@ -552,6 +555,7 @@ class Session:
             for iQuestionSetIndex in range(len(xQuestionSets)):
                 # self._l2iPageQuestionCompositeIndices.append([iPageIndex, iQuestionSetIndex])
                 self._l3iPageQuestionGroupCompositeIndices.append([iPageIndex,iQuestionSetIndex, iPageGroup])
+        
         
     # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # def ShufflePageQuestionCompositeIndexList(self, lRandIndices):
@@ -592,9 +596,9 @@ class Session:
                        Page   QS  Grp                    Indices                      Page   QS    Grp
                        0      0     1                        2                         2      0     2
                        0      1     1                        3                         2      1     2
-                       1      0     1                        4                         3      0     2
-                       2      0     2                        0                         4      0     3
-                       2      1     2                        1                         4      1     3
+                       1      0     1                        1                         3      0     2
+                       2      0     2                                                  4      0     3
+                       2      1     2                                                  4      1     3
                        3      0     2                                                  0      0     1
                        4      0     3                                                  0      1     1
                        4      1     3                                                  1      0     1
@@ -606,7 +610,6 @@ class Session:
             for indOrig in range(len(self._l3iPageQuestionGroupCompositeIndices)):
                 if self._l3iPageQuestionGroupCompositeIndices[indOrig][2] == lRandIndices[indRand] :
                     lShuffledCompositeIndices.append(self._l3iPageQuestionGroupCompositeIndices[indOrig])
-        
         
         return lShuffledCompositeIndices
    
@@ -1469,93 +1472,95 @@ class Session:
         # initialize
         dtLastLogin = self.GetLastLoginTimestamp() # value in datetime format
         iResumeCompIndex = 0
-        
-        
-        # loop through composite index in reverse, to search for existing responses that match
-        #    last login time (prior to current login)
+        bLastLoginResponseFound = False # default
 
-        for indCI in reversed(range(len(self._l3iPageQuestionGroupCompositeIndices))):
-#             print(indCI)
+        # if a login time has not been recorded yet, no need to search
+        if dtLastLogin != '':
             
-            bLastLoginResponseFound = False # default
-            
-            # get page and question set nodes from indices
-            indPage = self._l3iPageQuestionGroupCompositeIndices[indCI][0]
-            indQuestionSet = self._l3iPageQuestionGroupCompositeIndices[indCI][1]
-            xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', indPage)
-            xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', indQuestionSet)
-#             print(indCI, 'Page:', indPage, 'QS:', indQuestionSet)
-            
-
-
-            # get number of questions in the question set node
-            iNumQuestions = self.oIOXml.GetNumChildrenByName(xQuestionSetNode, 'Question')
-            iNumLastLoginResponses = 0
-            
-            # scan all questions
-            for indQuestion in range(iNumQuestions):
-
-                # get first Option node of each Question
-                xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
-                xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', 0)
+            # loop through composite index in reverse, to search for existing responses that match
+            #    last login time (prior to current login)
+            for indCI in reversed(range(len(self._l3iPageQuestionGroupCompositeIndices))):
+    #             print(indCI)
                 
-                # get number of Response nodes in the option
-                iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode, 'Response')
-            
+                bLastLoginResponseFound = False # default
                 
-                # check each response tag for the time
-                for indResp in range(iNumResponses):
-                    xResponseNode = self.oIOXml.GetNthChild(xOptionNode, 'Response', indResp)
-                    sTimestamp = self.oIOXml.GetValueOfNodeAttribute(xResponseNode, 'LoginTime')
+                # get page and question set nodes from indices
+                indPage = self._l3iPageQuestionGroupCompositeIndices[indCI][0]
+                indQuestionSet = self._l3iPageQuestionGroupCompositeIndices[indCI][1]
+                xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', indPage)
+                xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', indQuestionSet)
+    #             print(indCI, 'Page:', indPage, 'QS:', indQuestionSet)
+                
     
-                    dtLoginTimestamp = datetime.strptime(sTimestamp, self.oIOXml.sTimestampFormat)
-                    if dtLoginTimestamp == dtLastLogin:
-                        # found a response for last login at this composite index
-                        bLastLoginResponseFound = True
-                        iNumLastLoginResponses = iNumLastLoginResponses + 1
-                        break   # exit checking each response
+    
+                # get number of questions in the question set node
+                iNumQuestions = self.oIOXml.GetNumChildrenByName(xQuestionSetNode, 'Question')
+                iNumLastLoginResponses = 0
                 
+                # scan all questions
+                for indQuestion in range(iNumQuestions):
+    
+                    # get first Option node of each Question
+                    xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
+                    xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', 0)
+                    
+                    # get number of Response nodes in the option
+                    iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode, 'Response')
                 
+                    
+                    # check each response tag for the time
+                    for indResp in range(iNumResponses):
+                        xResponseNode = self.oIOXml.GetNthChild(xOptionNode, 'Response', indResp)
+                        sTimestamp = self.oIOXml.GetValueOfNodeAttribute(xResponseNode, 'LoginTime')
+        
+                        dtLoginTimestamp = datetime.strptime(sTimestamp, self.oIOXml.sTimestampFormat)
+                        if dtLoginTimestamp == dtLastLogin:
+                            # found a response for last login at this composite index
+                            bLastLoginResponseFound = True
+                            iNumLastLoginResponses = iNumLastLoginResponses + 1
+                            break   # exit checking each response
+                    
+                    
+                    
+                if bLastLoginResponseFound == True:
+                    break   # exit the reversed loop through the composite indices
+    
+    
+    
                 
             if bLastLoginResponseFound == True:
-                break   # exit the reversed loop through the composite indices
-
-
-
-            
-        if bLastLoginResponseFound == True:
-            
-            sQSetCompletionState = self.GetQuestionSetResponseCompletionLevel(indCI)
-            
-            # check if the last response found was entered on the last question set. 
-            #    (i.e. was the quiz completed)
-            if indCI == (len(self._l3iPageQuestionGroupCompositeIndices) - 1) and\
-                sQSetCompletionState == 'All':
                 
-                # if one question set allows a multiple response, user has option to redo response
-                if self.GetMultipleResponsesInQuiz() == True:
-
-                    sMsg = 'Quiz has already been completed. \nClick Yes to begin again. Click No to exit.'
-                    qtAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
-
-                    if qtAns == qt.QMessageBox.Yes:
-                        iResumeCompIndex = 0
-                    else:
-                        # user decided not to change responses - exit
-                        self.ExitOnQuizComplete("This quiz was already completed. Exiting")
-                        
-                else:
-                    # quiz does not allow for changing responses - exit
-                    self.ExitOnQuizComplete("This quiz was already completed. Exiting")
-            else:
-#                 if iNumLastLoginResponses == iNumQuestions:
-                if sQSetCompletionState == 'All':
-                    iResumeCompIndex = indCI + 1    # all questions were answered
-                else:
-                    iResumeCompIndex = indCI        # not all questions were answered - stay here
+                sQSetCompletionState = self.GetQuestionSetResponseCompletionLevel(indCI)
+                
+                # check if the last response found was entered on the last question set. 
+                #    (i.e. was the quiz completed)
+                if indCI == (len(self._l3iPageQuestionGroupCompositeIndices) - 1) and\
+                    sQSetCompletionState == 'All':
                     
-#                 print(iResumeCompIndex, '...', self._l2iPageQuestionCompositeIndices[iResumeCompIndex][0], '...',self._l2iPageQuestionCompositeIndices[iResumeCompIndex][1] )
-            
+                    # if one question set allows a multiple response, user has option to redo response
+                    if self.GetMultipleResponsesInQuiz() == True:
+    
+                        sMsg = 'Quiz has already been completed. \nClick Yes to begin again. Click No to exit.'
+                        qtAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
+    
+                        if qtAns == qt.QMessageBox.Yes:
+                            iResumeCompIndex = 0
+                        else:
+                            # user decided not to change responses - exit
+                            self.ExitOnQuizComplete("This quiz was already completed. Exiting")
+                            
+                    else:
+                        # quiz does not allow for changing responses - exit
+                        self.ExitOnQuizComplete("This quiz was already completed. Exiting")
+                else:
+    #                 if iNumLastLoginResponses == iNumQuestions:
+                    if sQSetCompletionState == 'All':
+                        iResumeCompIndex = indCI + 1    # all questions were answered
+                    else:
+                        iResumeCompIndex = indCI        # not all questions were answered - stay here
+                        
+    #                 print(iResumeCompIndex, '...', self._l2iPageQuestionCompositeIndices[iResumeCompIndex][0], '...',self._l2iPageQuestionCompositeIndices[iResumeCompIndex][1] )
+                
         # Display a message to user if resuming
         if not iResumeCompIndex == self._iCurrentCompositeIndex:
             self.oUtilsMsgs.DisplayInfo('Resuming quiz from previous login session.')

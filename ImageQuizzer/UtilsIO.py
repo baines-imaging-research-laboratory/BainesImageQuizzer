@@ -610,8 +610,9 @@ class UtilsIO:
             # required attribute for randomization
             sValidationMsg = self.ValidateRequiredAttribute(xPage, 'PageGroup', str(iPageNum))
             if sValidationMsg != '':
-                raise Exception('Missing PageGroup attribute: %s' %sValidationMsg)
                 sMsg = sMsg + sValidationMsg
+                if self.sTestMode == "1":
+                    raise Exception('Missing PageGroup attribute: %s' %sValidationMsg)
             
             try:
                 # test that the value is an integer
@@ -631,15 +632,17 @@ class UtilsIO:
 
         # check that number of different page group numbers (that are >0) must be >1
         # you can't randomize if all the pages are assigned to the same group
-        self._liUniquePageGroups = self.GetUniqueNumbers(self._liPageGroups)
-        if 0 in self._liUniquePageGroups:
-            self._liUniquePageGroups.remove(0) #ignore page groups set to 0
-        if len(self._liUniquePageGroups) == 1:
+        self.SetListUniquePageGroups(self.GetUniqueNumbers(self._liPageGroups))
+        
+        liValidationPageGroups=[]
+        liValidationPageGroups = self._liUniquePageGroups[:]   # use a working copy of the list of unique page groups
+        if 0 in liValidationPageGroups:
+            liValidationPageGroups.remove(0) # ignore page groups set to 0
+        if len(liValidationPageGroups) <= 1: # <= un case of an empty list
             sValidationMsg = 'Not enough unique PageGroups for requested randomization. \nYou must have more than one page group (other than 0)'
             sMsg = sMsg + sValidationMsg
             if self.sTestMode == "1":
-                raise Exception('Randomizing Error: %s' % sValidationMsg)
-                
+                raise Exception('Validating PageGroups Error: %s' % sValidationMsg)
             
         return sMsg
 
