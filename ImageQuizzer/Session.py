@@ -139,6 +139,19 @@ class Session:
             
 
     #----------
+    def AddExtraToolsTab(self):
+
+        # add extra tools tab to quiz widget
+        self.tabExtraTools = qt.QWidget()
+        self.oQuizWidgets.qTabWidget.addTab(self.tabExtraTools,"Extra Tools")
+        self._iExtraToolsTabIndex = self.oQuizWidgets.qTabWidget.count - 1
+        self.oQuizWidgets.qTabWidget.setTabEnabled(self._iExtraToolsTabIndex, True)
+        
+        widget = self.SetupExtraToolsButtons()
+        self.tabExtraTools.setLayout(widget)
+
+
+    #----------
     def AddSegmentationModule(self, bTF):
 
         if bTF == True:
@@ -257,6 +270,8 @@ class Session:
 
             self.SetupWidgets(slicerMainLayout)
             self.oQuizWidgets.qLeftWidget.activateWindow()
+            
+            self.AddExtraToolsTab()
 
             
             # turn on functionality if any of the question set attributes indicated they are required
@@ -483,6 +498,57 @@ class Session:
         iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
         self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
 
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetupExtraToolsButtons(self):
+        
+        # create buttons
+
+        self.tabExtraToolsLayout = qt.QVBoxLayout()
+
+        
+        # add horizontal layout
+        self.qLineToolsGrpBox = qt.QGroupBox()
+        self.qLineToolsGrpBox.setTitle('Line Measurement Tools')
+        self.qLineToolsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
+        self.qLineToolsGrpBoxLayout = qt.QHBoxLayout()
+        self.qLineToolsGrpBox.setLayout(self.qLineToolsGrpBoxLayout)
+
+
+        # Next button
+        self.btnCopy = qt.QPushButton("Copy length of line to clipboard")
+        self.btnCopy.toolTip = "Copy measurement of line to clipboard."
+        self.btnCopy.enabled = True
+        self.btnCopy.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+        self.btnCopy.connect('clicked(bool)',self.onCopyButtonClicked)
+
+        self.qLineToolsGrpBoxLayout.addWidget(self.btnCopy)
+        self.tabExtraToolsLayout.addWidget(self.qLineToolsGrpBox)
+
+        return self.tabExtraToolsLayout
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onCopyButtonClicked(self):
+        ''' A function to capture the length of the last markup line created.
+            This value is copied to the clipboard and can be pasted into a text box.
+        '''
+        
+        # get last line created
+        slLineNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsLineNode')
+        slLastLineNode = slLineNodes.GetItemAsObject(slLineNodes.GetNumberOfItems()-1)
+        
+        if slLastLineNode :
+            sLength = slLastLineNode.GetDescription()
+            sTrimmedLength = sLength.replace('length: ','')
+            sTrimmedLength = sTrimmedLength.replace('mm','')
+        
+            try:
+                qt.QApplication.clipboard().setText(float(sTrimmedLength))
+            except ValueError:
+                self.oUtilsMsgs.DisplayWarning('Invalid Length')
+                    
+        else:
+            self.oUtilsMsgs.DisplayWarning('No line has been created. \nCannot copy length to clipboard.')
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
