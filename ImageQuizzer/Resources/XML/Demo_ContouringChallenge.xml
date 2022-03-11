@@ -1,4 +1,4 @@
-<Session>
+<Session ROIColorFile="ROIColors_Brain">
 	<Page ID="Patient 1" Descriptor="Contouring Challenge">
 		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" LabelMapID="MR_Contour">
 			<Destination>Red</Destination>
