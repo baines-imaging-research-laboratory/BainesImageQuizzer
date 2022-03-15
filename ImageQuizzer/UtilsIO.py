@@ -52,8 +52,9 @@ class UtilsIO:
 #         self._sImageVolumeDataDir = ''
 
         self._sResourcesROIColorFilesDir = ''  # folder to the Quizzer specific roi color files
-        self._sQuizzerROIColorTableNameWithExt = 'QuizzerROIColorTable.txt'
         self._sDefaultROIColorTableName = 'GenericColors'
+        self._sQuizzerROIColorTableNameWithExt = 'QuizzerROIColorTable.txt'
+        self._sQuizzerROIColorTablePath = ''
 
         self._liPageGroups = []
         self._liUniquePageGroups = []
@@ -65,20 +66,30 @@ class UtilsIO:
 
 
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    #-------------------------------------------
+    #        Unit testing Utility
+    #-------------------------------------------
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
         
     def setupTestEnvironment(self):
-        # check if function is being called from unittesting
+        # check if function is being called from unit testing
         if "testing" in os.environ:
             self.sTestMode = os.environ.get("testing")
         else:
             self.sTestMode = "0"
 
  
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
     #-------------------------------------------
     #        Getters / Setters
     #-------------------------------------------
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
     #----------
     def SetDataParentDir(self, sDataDirInput):
@@ -95,89 +106,8 @@ class UtilsIO:
         self._sUsername = sSelectedUser
         self._sUserDir = os.path.join(self.GetUsersParentDir(), self._sUsername)
         
-    #----------
-    def SetResourcesROIColorFilesDir(self):
-        self._sResourcesROIColorFilesDir = os.path.join(self.GetScriptedModulesPath(),\
-                                                        'Resources','ColorFiles')
-        
-    #----------
-    def GetResourcesROIColorFilesDir(self):
-        return self._sResourcesROIColorFilesDir
-    
-    #----------
-    def GetQuizzerROIColorTableNameWithExt(self):
-        return self._sQuizzerROIColorTableNameWithExt
-    
-    #----------
-    def GetDefaultROIColorTableName(self):
-        return self._sDefaultROIColorTableName
-    
-    #----------
-    def GetDefaultROIColorFilePath(self):
-        return os.path.join(self.GetResourcesROIColorFilesDir(), self.GetDefaultROIColorTableName() + '.txt')
 
     #----------
-    def SetListPageGroupNumbers(self, liNumbers):
-        self._liPageGroups = liNumbers
-        
-    #----------
-    def GetListPageGroupNumbers(self):
-        return self._liPageGroups
-    
-    #----------
-    def SetListUniquePageGroups(self, liNumbers):
-        self._liUniquePageGroups = liNumbers
-        
-    #----------
-    def GetListUniquePageGroups(self):
-        return self._liUniquePageGroups
-    
-    #----------
-    def ClearPageGroupLists(self):
-        self._liPageGroups = []
-        self._liUniquePageGroups = []
-#     ###################
-#     #----------
-#     def SetUserQuizResultsDir(self, sFilename):
-#         self._sUserQuizResultsDir = os.path.join(self.GetUserDir(), sFilename)
-#         
-#     #----------
-#     def SetUserQuizResultsPath(self, sFilename):
-#         
-#         self._sUserQuizResultsPath = os.path.join(self.GetUserQuizResultsDir(), sFilename)
-#     #####################
-    
-    
-    
-    #----------
-    def SetupForUserQuizResults(self):
-        
-
-        sQuizFileRoot, sExt = os.path.splitext(self.GetQuizFilename())
-        
-        self._sUserQuizResultsDir = os.path.join(self.GetUserDir(), sQuizFileRoot)
-        self._sUserQuizResultsPath = os.path.join(self.GetUserQuizResultsDir(), self.GetQuizFilename())
-
-        # check that the user folder exists - if not, create it
-        if not os.path.exists(self._sUserQuizResultsDir):
-            os.makedirs(self._sUserQuizResultsDir)
-        
-    
-    #----------
-    def CreatePageDir(self, sPageName):
-        # page dir stores label maps for the specified page
-        # store these in the user directory
-        sPageDir = os.path.join(self.GetUserDir(), sPageName)
-        
-        # check that the Page directory exists - if not create it
-        if not os.path.exists(sPageDir):
-            os.makedirs(sPageDir)
-    
-        return sPageDir
-
-    
-    #----------
-
     #----------
     def GetDataParentDir(self):
         return self._sDataParentDir
@@ -191,10 +121,6 @@ class UtilsIO:
         head, tail = os.path.split(sFullPath)
         return head
     
-#     #----------
-#     def GetImageVolumeDataDir(self):
-#         return self._sImageVolumeDataDir
-
     #----------
     def GetScriptedModulesPath(self):
         return self._sScriptedModulesPath
@@ -244,10 +170,6 @@ class UtilsIO:
         return self._sXmlQuizFilename
     
     #----------
-    def GetROIColorFilePath(self, sROIColorFile):
-        return os.path.join(self.GetXmlQuizDir(), sROIColorFile + '.txt')
-
-    #----------
     def GetFilenameWithExtFromPath(self, sFilePath):
         sDir,sFilenameWithExt = os.path.split(sFilePath)
 
@@ -260,7 +182,70 @@ class UtilsIO:
 
         return sFilenameNoExt
     
+
+
+    #----------
+    #----------ROI Color Files
+    #----------
+    def SetResourcesROIColorFilesDir(self):
+        self._sResourcesROIColorFilesDir = os.path.join(self.GetScriptedModulesPath(),\
+                                                        'Resources','ColorFiles')
+        
+    #----------
+    def GetResourcesROIColorFilesDir(self):
+        return self._sResourcesROIColorFilesDir
     
+    #----------
+    def GetQuizzerROIColorTableNameWithExt(self):
+        return self._sQuizzerROIColorTableNameWithExt
+    
+    #----------
+    def SetQuizzerROIColorTablePath(self, sInputPath):
+        self._sQuizzerROIColorTablePath = sInputPath
+
+    #----------
+    def GetQuizzerROIColorTablePath(self):
+        return self._sQuizzerROIColorTablePath
+    
+    #----------
+    def GetCustomROIColorTablePath(self, sROIColorFile):
+        return os.path.join(self.GetXmlQuizDir(), sROIColorFile + '.txt')
+
+    #----------
+    def GetDefaultROIColorTableName(self):
+        return self._sDefaultROIColorTableName
+
+    #----------
+    def GetDefaultROIColorFilePath(self):
+        return os.path.join(self.GetResourcesROIColorFilesDir(), self.GetDefaultROIColorTableName() + '.txt')
+
+
+    #----------
+    #----------Page Groups
+    #----------
+    def SetListPageGroupNumbers(self, liNumbers):
+        self._liPageGroups = liNumbers
+        
+    #----------
+    def GetListPageGroupNumbers(self):
+        return self._liPageGroups
+    
+    #----------
+    def SetListUniquePageGroups(self, liNumbers):
+        self._liUniquePageGroups = liNumbers
+        
+    #----------
+    def GetListUniquePageGroups(self):
+        return self._liUniquePageGroups
+    
+    #----------
+    def ClearPageGroupLists(self):
+        self._liPageGroups = []
+        self._liUniquePageGroups = []
+    
+    
+    #----------
+    #----------General functions
     #----------
     def CleanFilename(self, sInputFilename):
 #         sInvalid = '<>:"/\|?* '
@@ -306,8 +291,10 @@ class UtilsIO:
         print('User Quiz Results Dir:', self.GetUserQuizResultsDir())
         print('User Quiz Reults path:', self.GetUserQuizResultsPath())
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     #-------------------------------------------
-    #        Functions
+    #        Setup Functions
     #-------------------------------------------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -316,11 +303,39 @@ class UtilsIO:
         self._sXmlQuizDir = os.path.join(self._sScriptedModulesPath, sSourceDirForQuiz)
         self.SetResourcesROIColorFilesDir()
         
-    #----------
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetScriptedModulesPath(self,sModuleName):
         self._sScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
         self._sScriptedModulesPath = os.path.dirname(self._sScriptedModulesPath)
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetupROIColorFile(self, sCustomInputROIColorFile):
+        """ If quiz has a custom color table for segmenting ROI's, move this 
+            into the color table file that is read in by the QuizzerHelperBox
+        """
+        if sCustomInputROIColorFile == '':
+            sROIColorFilePath = self.GetDefaultROIColorFilePath()
+        else:
+            sROIColorFilePath = os.path.join(self.GetXmlQuizDir(), sCustomInputROIColorFile + '.txt')
+        
+        self.SetQuizzerROIColorTablePath( os.path.join(self.GetResourcesROIColorFilesDir(), \
+                                             self.GetQuizzerROIColorTableNameWithExt()) )
+        copyfile(sROIColorFilePath, self.GetQuizzerROIColorTablePath() )
+                
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetupForUserQuizResults(self):
+        
+
+        sQuizFileRoot, sExt = os.path.splitext(self.GetQuizFilename())
+        
+        self._sUserQuizResultsDir = os.path.join(self.GetUserDir(), sQuizFileRoot)
+        self._sUserQuizResultsPath = os.path.join(self.GetUserQuizResultsDir(), self.GetQuizFilename())
+
+        # check that the user folder exists - if not, create it
+        if not os.path.exists(self._sUserQuizResultsDir):
+            os.makedirs(self._sUserQuizResultsDir)
+        
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupUserAndDataDirs(self, sParentDirInput):
         
@@ -364,8 +379,55 @@ class UtilsIO:
         if not bSuccess:
             self.oUtilsMsgs.DisplayWarning(sMsg)
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def PopulateUserQuizFolder(self):
+            
+        # check if quiz file already exists in the user folder - if not, copy from Resources
+
+        # check if there is an existing file in the results directory (partially completed quiz)
+        if not os.path.isfile(self.GetUserQuizResultsPath()):
+            # file not found, copy file from Resources to User folder
+            #     first make sure selected quiz file exists in the source directory
+            if not os.path.isfile(self.GetXmlQuizPath()):
+                sErrorMsg = 'Selected Quiz file does not exist'
+                self.oUtilsMsgs.DisplayWarning(sErrorMsg)
+                return False  
+            else:
+                copyfile(self.GetXmlQuizPath(), self.GetUserQuizResultsPath())
+                return True
+
+        else:
+
+            # create backup of existing file
+            self.BackupUserQuizResults()
+                
+            # file exists - make sure it is readable
+            if not os.access(self.GetUserQuizResultsPath(), os.R_OK):
+                # existing file is unreadable
+                sErrorMsg = 'Quiz file is not readable'
+                self.oUtilsMsgs.DisplayWarning(sErrorMsg)     
+                return False
+            else:
+                return True
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    #-------------------------------------------
+    #        Utility Functions
+    #-------------------------------------------
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CreatePageDir(self, sPageName):
+        # page dir stores label maps for the specified page
+        # store these in the user directory
+        sPageDir = os.path.join(self.GetUserDir(), sPageName)
         
+        # check that the Page directory exists - if not create it
+        if not os.path.exists(sPageDir):
+            os.makedirs(sPageDir)
     
+        return sPageDir
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def OpenSelectedDatabase(self):
         
@@ -378,7 +440,66 @@ class UtilsIO:
                  + '\n Reselect Image Quizzer data directory or contact administrator.'
             return False, sMsg
             
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetUniqueNumbers(self, liNumbers):
+        ''' Utility to return the unique numbers from a given list of numbers.
+        '''
+
+        liUniqueNumbers = []
+        for ind in range(len(liNumbers)):
+            iNum = liNumbers[ind]
+            if iNum not in liUniqueNumbers:
+                liUniqueNumbers.append(iNum)
+        
+        return liUniqueNumbers
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CreateShutdownBatchFile(self):
+        """ If Image Quizzer was started using the batch file, 
+            the shutdown batch file will be called on close.
+            This function sets up the shutdown batch file instructing it to
+            remove the SlicerDicomDatabase directory.
+            This speeds up the relaunch of the Image Quizzer. 
+            
+            This batch file resides in the parent directory of the ImageQuizzer module .
+        """
+        
+        # get parent directory of the Image Quizzer module
+        sShutdownDir = os.path.abspath(os.path.join(self.GetScriptedModulesPath(), os.pardir))
+        sShutdownPath = os.path.join(sShutdownDir,'ImageQuizzerShutdown.bat')
+
+        sCommand = 'RMDIR /S /Q ' + '"' + self.GetDICOMDatabaseDir() +'"'
+        
+        fh = open(sShutdownPath,"w")
+        fh.write(sCommand)
+        fh.close()
+
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def BackupUserQuizResults(self):
+        
+        # get current date/time
+        from datetime import datetime
+        now = datetime.now()
+        sSuffix = now.strftime("%b-%d-%Y-%H-%M-%S")
+        
+        sFileRoot, sExt = os.path.splitext(self.GetQuizFilename())
+        
+        sNewFileRoot = '_'.join([sFileRoot, sSuffix])
+        sNewFilename = ''.join([sNewFileRoot, sExt])
+        
+        sBackupQuizResultsPath = os.path.join(self.GetUserQuizResultsDir(), sNewFilename)
+        
+        # create copy with data/time stamp as suffix
+        copyfile(self.GetUserQuizResultsPath(), sBackupQuizResultsPath)
+        
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    #-------------------------------------------
+    #        Validation Functions
+    #-------------------------------------------
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ValidateQuiz(self):
         '''
@@ -499,7 +620,7 @@ class UtilsIO:
             if sROIColorFile == '':
                 sROIColorFilePath = self.GetDefaultROIColorFilePath()
             else:
-                sROIColorFilePath = self.GetROIColorFilePath(sROIColorFile)
+                sROIColorFilePath = self.GetCustomROIColorTablePath(sROIColorFile)
             if not os.path.isfile(sROIColorFilePath):
                 sMsg = sMsg + '\nCustom ROIColorFile does not exist in the directory with the quiz.' + sROIColorFilePath
                 
@@ -671,89 +792,11 @@ class UtilsIO:
         return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetUniqueNumbers(self, liNumbers):
-        ''' Utility to return the unique numbers from a given list of numbers.
-        '''
+        
+    #-------------------------------------------
+    #        LabelMap Functions
+    #-------------------------------------------
 
-        liUniqueNumbers = []
-        for ind in range(len(liNumbers)):
-            iNum = liNumbers[ind]
-            if iNum not in liUniqueNumbers:
-                liUniqueNumbers.append(iNum)
-        
-        return liUniqueNumbers
-        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def PopulateUserQuizFolder(self):
-            
-        # check if quiz file already exists in the user folder - if not, copy from Resources
-
-        # check if there is an existing file in the results directory (partially completed quiz)
-        if not os.path.isfile(self.GetUserQuizResultsPath()):
-            # file not found, copy file from Resources to User folder
-            #     first make sure selected quiz file exists in the source directory
-            if not os.path.isfile(self.GetXmlQuizPath()):
-                sErrorMsg = 'Selected Quiz file does not exist'
-                self.oUtilsMsgs.DisplayWarning(sErrorMsg)
-                return False  
-            else:
-                copyfile(self.GetXmlQuizPath(), self.GetUserQuizResultsPath())
-                return True
-
-        else:
-
-            # create backup of existing file
-            self.BackupUserQuizResults()
-                
-            # file exists - make sure it is readable
-            if not os.access(self.GetUserQuizResultsPath(), os.R_OK):
-                # existing file is unreadable
-                sErrorMsg = 'Quiz file is not readable'
-                self.oUtilsMsgs.DisplayWarning(sErrorMsg)     
-                return False
-            else:
-                return True
-        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def BackupUserQuizResults(self):
-        
-        # get current date/time
-        from datetime import datetime
-        now = datetime.now()
-        sSuffix = now.strftime("%b-%d-%Y-%H-%M-%S")
-        
-        sFileRoot, sExt = os.path.splitext(self.GetQuizFilename())
-        
-        sNewFileRoot = '_'.join([sFileRoot, sSuffix])
-        sNewFilename = ''.join([sNewFileRoot, sExt])
-        
-        sBackupQuizResultsPath = os.path.join(self.GetUserQuizResultsDir(), sNewFilename)
-        
-        # create copy with data/time stamp as suffix
-        copyfile(self.GetUserQuizResultsPath(), sBackupQuizResultsPath)
-        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetupROIColorFile(self, sCustomInputROIColorFile):
-        """ If quiz has a custom color table for segmenting ROI's, move this 
-            into the color table file that is read in by the QuizzerHelperBox
-        """
-        if sCustomInputROIColorFile == '':
-            sROIColorFilePath = self.GetDefaultROIColorFilePath()
-        else:
-            sROIColorFilePath = os.path.join(self.GetXmlQuizDir(), sCustomInputROIColorFile + '.txt')
-        
-        # check if requested table exists
-        if not os.path.isfile(sROIColorFilePath):
-            sMsg = 'ROI Color file "' + sCustomInputROIColorFileWithExt + '" does not exist in :' + sROIColorFileDir
-            self.oUtilsMsgs.DisplayError(sMsg)
-        else:
-            # if yes - overwrite QuizzerColorTable
-            sQuizzerROIColorTablePath = os.path.join(self.GetResourcesROIColorFilesDir(), \
-                                                 self.GetQuizzerROIColorTableNameWithExt())
-            copyfile(sROIColorFilePath, sQuizzerROIColorTablePath)
-                
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SaveLabelMaps(self, oSession, sCaller):
 
@@ -888,79 +931,6 @@ class UtilsIO:
         return bSuccess, sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def SaveLabelMapAsRTStruct(self, oPrimaryImageNode, sLabelMapName, sOutputLabelDir):
-#     
-#         bRTStructSaved = True
-#         sMsg = ''
-#     
-#         sSubDirForDicom = 'DICOM-' + oPrimaryImageNode.sNodeName
-#         sOutputDir = os.path.join(sOutputLabelDir ,sSubDirForDicom)
-#         
-#         try:
-#             
-#             if not os.path.exists(sOutputDir):
-#                 os.makedirs(sOutputDir)
-#                 
-#             # convert label map to segmentation
-#             slLabelMapVolumeNode = slicer.util.getNode(sLabelMapName)
-#             slLabelMapSegNode =  slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode')
-#             slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode(slLabelMapVolumeNode, slLabelMapSegNode)
-# 
-# 
-#             # work in subject hierarchy node (shNode)
-#             shNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-#             slPrimaryVolumeID = shNode.GetItemByDataNode(oPrimaryImageNode.slNode)
-# 
-#             # If image was originally loaded as a data volume, move it to 
-#             #    a new patient & study in the subject hierarchy
-#             if ( oPrimaryImageNode.sVolumeFormat != "DICOM"):
-#                 slNewPatientItemID = shNode.CreateSubjectItem(shNode.GetSceneItemID(), "Patient Baines1")
-#                 slNewStudyItemID = shNode.CreateStudyItem(slNewPatientItemID, "Study Baines1")
-#                 shNode.SetItemParent(slPrimaryVolumeID, slNewStudyItemID)
-# 
-#              
-# 
-#             # Associate segmentation node with a reference volume node
-#             slStudyShItem = shNode.GetItemParent(slPrimaryVolumeID)
-#             slLabelMapSegNodeID = shNode.GetItemByDataNode(slLabelMapSegNode)
-#             shNode.SetItemParent(slLabelMapSegNodeID, slStudyShItem)
-# 
-#                  
-#             # create the dicom exporter
-#             if oPrimaryImageNode.sImageType == 'VolumeSequence' :
-#                 exporter = DICOMVolumeSequencePlugin.DICOMVolumeSequencePluginClass()
-#             else:
-#                 exporter = DicomRtImportExportPlugin.DicomRtImportExportPluginClass()
-#             
-#             
-#             exportables = []
-#              
-#             # examine volumes for export and add to export list
-#             volExportable = exporter.examineForExport(slPrimaryVolumeID)
-#             segExportable = exporter.examineForExport(slLabelMapSegNodeID)
-#             exportables.extend(volExportable)
-#             exportables.extend(segExportable)
-#              
-#             # assign output path to each exportable
-#             for exp in exportables:
-#                 exp.directory = sOutputDir
-#                  
-#              
-#             # perform export
-#             exporter.export(exportables)
-# 
-# 
-#         except:
-#             bRTStructSaved = False
-#             sMsg = 'Failed to store Dicom RTStruct ' + sOutputDir \
-#                    + '\n See administrator: ' + sys._getframe(  ).f_code.co_name
-# 
-#         
-#         return bRTStructSaved, sMsg, sOutputDir
-
-    
-    
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadSavedLabelMaps(self, oSession):
         # when loading label maps created in the quiz, associate it with the correct 
         #    image node in the subject hierarchy
@@ -1055,6 +1025,12 @@ class UtilsIO:
                             slAssociatedNode = slAssociatedNodeCollection.GetItemAsObject(0)
                             slLabelMapNode.SetNodeReferenceID('AssociatedNodeID',slAssociatedNode.GetID())
 
+                            # apply ROIColor table to label map display node
+                            slLabelMapDisplayNode = slLabelMapNode.GetDisplayNode()
+                            slColorLogic = slicer.modules.colors.logic()
+                            slColorNode = slColorLogic.LoadColorFile(self.GetQuizzerROIColorTablePath())
+                            slLabelMapDisplayNode.SetAndObserveColorNodeID(slColorNode.GetID())
+    
     
                         except:
                              
@@ -1116,24 +1092,3 @@ class UtilsIO:
               
         return bFound, slNode
     
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CreateShutdownBatchFile(self):
-        """ If Image Quizzer was started using the batch file, 
-            the shutdown batch file will be called on close.
-            This function sets up the shutdown batch file instructing it to
-            remove the SlicerDicomDatabase directory.
-            This speeds up the relaunch of the Image Quizzer. 
-            
-            This batch file resides in the parent directory of the ImageQuizzer module .
-        """
-        
-        # get parent directory of the Image Quizzer module
-        sShutdownDir = os.path.abspath(os.path.join(self.GetScriptedModulesPath(), os.pardir))
-        sShutdownPath = os.path.join(sShutdownDir,'ImageQuizzerShutdown.bat')
-
-        sCommand = 'RMDIR /S /Q ' + '"' + self.GetDICOMDatabaseDir() +'"'
-        
-        fh = open(sShutdownPath,"w")
-        fh.write(sCommand)
-        fh.close()
-
