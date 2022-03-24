@@ -72,8 +72,8 @@
 		</xs:sequence>
 		<xs:attribute name="ID" type="xs:string" />
 		<xs:attribute name="Descriptor" type="xs:string" />
-		<xs:attribute name="SegmentRequired" type="yesnoType" default="N" />
-		<xs:attribute name="AllowMultipleResponse" type="yesnoType" default="Y" />
+		<xs:attribute name="EnableSegmentEditor" type="yesnoType" default="N" />
+		<xs:attribute name="AllowMultipleResponse" type="yesnoType" default="N" />
 	</xs:complexType>
 </xs:element>
 

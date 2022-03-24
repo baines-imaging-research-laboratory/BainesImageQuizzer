@@ -22,7 +22,7 @@ class QuestionSet():
         self.sClassName = type(self).__name__
         self.id = ''
         self.descriptor = ''
-        self._bSegmentRequired = False
+        self._bEnableSegmentEditor = False
         self._bAllowMultipleResponse = False
         
         self._loQuestions = []
@@ -39,15 +39,15 @@ class QuestionSet():
         return self._loQuestions
     
     #----------
-    def GetSegmentRequiredTF(self):
-        return self._bSegmentRequired
+    def GetEnableSegmentEditorTF(self):
+        return self._bEnableSegmentEditor
     
     #----------
-    def SetSegmentRequiredTF(self, sYN):
+    def SetEnableSegmentEditorTF(self, sYN):
         if sYN == 'y' or sYN == 'Y':
-            self._bSegmentRequired = True
+            self._bEnableSegmentEditor = True
         else:
-            self._bSegmentRequired = False
+            self._bEnableSegmentEditor = False
     
     #----------
     def GetMultipleResponseTF(self):
@@ -55,10 +55,10 @@ class QuestionSet():
     
     #----------
     def SetMultipleResponseTF(self, sYN):
-        if sYN == 'n' or sYN == 'N':
-            self._bAllowMultipleResponse = False
-        else: # default
+        if sYN == 'y' or sYN == 'Y':
             self._bAllowMultipleResponse = True
+        else: # default
+            self._bAllowMultipleResponse = False
     
     #----------
     #----------
@@ -78,7 +78,7 @@ class QuestionSet():
             
             self.id = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'ID')
             self.descriptor = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'Descriptor')
-            self.SetSegmentRequiredTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'SegmentRequired'))
+            self.SetEnableSegmentEditorTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'EnableSegmentEditor'))
             self.SetMultipleResponseTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'AllowMultipleResponse'))
             
             

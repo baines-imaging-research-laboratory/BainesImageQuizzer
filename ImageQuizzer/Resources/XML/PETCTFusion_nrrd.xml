@@ -43,7 +43,7 @@
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\PETCTFusion\PET1.nrrd</Path>
 		</Image>
-		<QuestionSet ID="PET PSMA Study" Descriptor=""  SegmentRequired="Y">
+		<QuestionSet ID="PET PSMA Study" Descriptor=""  EnableSegmentEditor="Y">
 			<Question Type="Radio" Descriptor="PET Reading">
 				<Option>Positive</Option>
 				<Option>Negative</Option>
@@ -93,7 +93,7 @@
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\PETCTFusion\PET2.nrrd</Path>
 		</Image>
-		<QuestionSet ID="PET PSMA Study" Descriptor=""  SegmentRequired="Y">
+		<QuestionSet ID="PET PSMA Study" Descriptor=""  EnableSegmentEditor="Y">
 			<Question Type="Radio" Descriptor="PET Reading">
 				<Option>Positive</Option>
 				<Option>Negative</Option>

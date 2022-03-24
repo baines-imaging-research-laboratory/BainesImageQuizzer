@@ -19,11 +19,11 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\t2ax-N4.nrrd</Path>
 		</Image>
-		<QuestionSet ID="PI-RADS" Descriptor="Contouring Exercise"  SegmentRequired="Y" AllowMultipleResponse="N">
+		<QuestionSet ID="PI-RADS" Descriptor="Contouring Exercise"  EnableSegmentEditor="Y" AllowMultipleResponse="N">
 			<Question Type="InfoBox" Descriptor="TestDetails">
 				<Option>User contours on this page and is allowed to adjust on next.</Option>
 				<Option>No multiple responses=n</Option>
-				<Option>SegmentRequired=y</Option>
+				<Option>EnableSegmentEditor=y</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
@@ -52,11 +52,11 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\ktrans.nrrd</Path>
 		</Image>
-		<QuestionSet ID="Segmentation" Descriptor="Self-Assessment"  SegmentRequired="Y" AllowMultipleResponse="N">
+		<QuestionSet ID="Segmentation" Descriptor="Self-Assessment"  EnableSegmentEditor="Y" AllowMultipleResponse="N">
 			<Question Type="InfoBox" Descriptor="TestDetails">
 				<Option>Contours from previous page are displayed. User can adjust.</Option>
 				<Option>No multiple responses=n</Option>
-				<Option>SegmentRequired=y</Option>
+				<Option>EnableSegmentEditor=y</Option>
 				<Option>DisplayLabelMapID=xxx-contour</Option>
 			</Question>
 			<Question Type="Radio" Descriptor="How did you do?">

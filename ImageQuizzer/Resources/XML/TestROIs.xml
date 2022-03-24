@@ -42,7 +42,7 @@
 				<ROI>Tumor_Contour</ROI>
 			</ROIs>
 		</Image>
-		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress"  SegmentRequired="Y"  AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress"  EnableSegmentEditor="Y"  AllowMultipleResponse="N">
 			<Question Type="CheckBox" Descriptor="Test Description">
 				<Option>Select Tumor only</Option>
 			</Question>
@@ -91,7 +91,7 @@
 				<ROI>Tumor_Contour</ROI>
 			</ROIs>
 		</Image>
-		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress"  SegmentRequired="Y"  AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress"  EnableSegmentEditor="Y"  AllowMultipleResponse="N">
 			<Question Type="CheckBox" Descriptor="Test Description">
 				<Option>Ignore Tumor - Body should show</Option>
 			</Question>
@@ -137,7 +137,7 @@
 			<ROIs ROIVisibilityCode="All">
 			</ROIs>
 		</Image>
-		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress"  SegmentRequired="Y"  AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress"  EnableSegmentEditor="Y"  AllowMultipleResponse="N">
 			<Question Type="CheckBox" Descriptor="Test Description">
 				<Option>All selected</Option>
 			</Question>
@@ -183,7 +183,7 @@
 			<ROIs ROIVisibilityCode="None">
 			</ROIs>
 		</Image>
-		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress"  SegmentRequired="Y"  AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress"  EnableSegmentEditor="Y"  AllowMultipleResponse="N">
 			<Question Type="CheckBox" Descriptor="Test Description">
 				<Option>None selected</Option>
 			</Question>

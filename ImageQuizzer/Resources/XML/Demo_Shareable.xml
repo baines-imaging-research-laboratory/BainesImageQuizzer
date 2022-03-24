@@ -19,7 +19,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\t2ax-N4.nrrd</Path>
 		</Image>
-		<QuestionSet ID="PI-RADS" Descriptor="Contouring Exercise"  SegmentRequired="Y" AllowMultipleResponse="Y">
+		<QuestionSet ID="PI-RADS" Descriptor="Contouring Exercise"  EnableSegmentEditor="Y">
 			<Question Type="InfoBox" Descriptor="Segmentation Instructions">
 				<Option>In Segment Editor tab, select volume to create segments.</Option>
 				<Option>     Click Edit Selected Label Map collapsible button to access the segmenting tools.</Option>
@@ -56,7 +56,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\ktrans.nrrd</Path>
 		</Image>
-		<QuestionSet ID="Segmentation" Descriptor="Self-Assessment"  SegmentRequired="Y" AllowMultipleResponse="Y">
+		<QuestionSet ID="Segmentation" Descriptor="Self-Assessment"  EnableSegmentEditor="Y">
 			<Question Type="Radio" Descriptor="How did you do?">
 				<Option>Great</Option>
 				<Option>Not bad</Option>

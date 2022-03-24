@@ -810,7 +810,7 @@ class UtilsIO:
             
             Also store label maps as RTStructs if the attribute to do so was set in the xml root node.
             
-            A warning is presented if the xml question set had the 'segmentrequired' flag set to 'y'
+            A warning is presented if the xml question set had the 'EnableSegmentEditor' flag set to 'y'
             but no label maps (with -bainesquizlabel suffix) were found. The user purposely may 
             not have created a label map if there were no lesions to segment. This is acceptable.
         """

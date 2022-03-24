@@ -19,7 +19,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
-		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  SegmentRequired="N" AllowMultipleResponse="Y">
+		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  EnableSegmentEditor="N" AllowMultipleResponse="Y">
 			<Question Type="InfoBox" Descriptor="Features">
 				<Option>  - zoom, window/level</Option>
 				<Option>  - DCE MRI time sequence tools</Option>
@@ -58,7 +58,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
-		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  SegmentRequired="N" AllowMultipleResponse="Y">
+		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  EnableSegmentEditor="N" AllowMultipleResponse="Y">
 			<Question Type="InfoBox" Descriptor="Features:">
 				<Option> - ability to overlay images</Option>
 				<Option>      PET overlay shown with 2DT2</Option>
@@ -66,7 +66,7 @@
 				<Option>      (use with 'Shift' key)</Option>
 			</Question>
 		</QuestionSet>
-		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  SegmentRequired="Y" AllowMultipleResponse="Y">
+		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  EnableSegmentEditor="Y" AllowMultipleResponse="Y">
 			<Question Type="InfoBox" Descriptor="Segmentation Instructions">
 				<Option>In Segment Editor tab, select volume to create segments.</Option>
 				<Option>   Click Edit Selected Label Map collapsible button to access the segmenting tools.</Option>
@@ -91,7 +91,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\2DT2-GoldStandard.seg.nrrd</Path>
 		</Image>
-		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  SegmentRequired="Y" AllowMultipleResponse="Y">
+		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  EnableSegmentEditor="Y" AllowMultipleResponse="Y">
 			<Question Type="InfoBox" Descriptor="Review">
 				<Option>Compare user contour with gold standard.</Option>
 			</Question>
@@ -114,7 +114,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\2DT2-GoldStandard.seg.nrrd</Path>
 		</Image>
-		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  SegmentRequired="N" AllowMultipleResponse="Y">
+		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  EnableSegmentEditor="N" AllowMultipleResponse="Y">
 			<Question Type="InfoBox" Descriptor="Review">
 				<Option>Compare modified user contour with gold standard.</Option>
 			</Question>

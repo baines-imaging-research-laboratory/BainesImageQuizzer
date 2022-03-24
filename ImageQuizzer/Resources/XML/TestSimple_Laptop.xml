@@ -25,7 +25,7 @@
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<QuestionSet ID="QS-Intro" Descriptor="Introduction to Quiz"  SegmentRequired="N" AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Intro" Descriptor="Introduction to Quiz"  EnableSegmentEditor="N" AllowMultipleResponse="N">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>Segment Editor off, Don't allow multiple Response</Option> 
 				<Option>NRRD and NIFTI, background and foreground on Red</Option>
@@ -34,7 +34,7 @@
 				<Option>Lots of text describing something</Option>
 			</Question>
 		</QuestionSet>
-		<QuestionSet ID="QS-Intro #2" Descriptor="How to - Instructions"  SegmentRequired="N"  AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Intro #2" Descriptor="How to - Instructions"  EnableSegmentEditor="N"  AllowMultipleResponse="N">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>Second question set</Option> 
 			</Question>
@@ -65,7 +65,7 @@
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
-		<QuestionSet ID="QS-Observation" Descriptor="What is your Assessment"  SegmentRequired="Y"  AllowMultipleResponse="Y">
+		<QuestionSet ID="QS-Observation" Descriptor="What is your Assessment"  EnableSegmentEditor="Y"  AllowMultipleResponse="Y">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>Segment Editor on, allow multiple response, rotate to acquisition</Option> 
 				<Option>Different question types</Option>
@@ -109,7 +109,7 @@
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\Prostate\Case00_segmentation.mhd</Path>
 		</Image>
-		<QuestionSet ID="QS-Demo" Descriptor="Demo buttons" SegmentRequired="Y"  AllowMultipleResponse="Y">
+		<QuestionSet ID="QS-Demo" Descriptor="Demo buttons" EnableSegmentEditor="Y"  AllowMultipleResponse="Y">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>Segment Editor on, Don't allow multiple Response, Previous label map onto Green</Option> 
 				<Option>MHD on Yellow with contour on Label layer</Option>
@@ -140,7 +140,7 @@
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
-		<QuestionSet ID="QS-Checkup" Descriptor="Tell us how you feel" SegmentRequired="N"  AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Checkup" Descriptor="Tell us how you feel" EnableSegmentEditor="N"  AllowMultipleResponse="N">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>DICOM series - no contours</Option>
 			</Question>
@@ -197,7 +197,7 @@
 				<ROI>Body_Contour</ROI>
 			</ROIs>
 		</Image>
-		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress"  SegmentRequired="Y"  AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress"  EnableSegmentEditor="Y"  AllowMultipleResponse="N">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>DICOM with RTStruct on Segmentation Layer</Option>
 			</Question>

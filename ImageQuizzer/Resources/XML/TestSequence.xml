@@ -19,7 +19,7 @@
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\IGPC1010\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
 		</Image>
-		<QuestionSet ID="PI-RADS" Descriptor="Contouring Exercise"  SegmentRequired="Y" AllowMultipleResponse="Y">
+		<QuestionSet ID="PI-RADS" Descriptor="Contouring Exercise"  EnableSegmentEditor="Y" AllowMultipleResponse="Y">
 			<Question Type="InfoBox" Descriptor="Segmentation Instructions">
 				<Option>In Segment Editor tab, select volume to create segments.</Option>
 				<Option>     Click Edit Selected Label Map collapsible button to access the segmenting tools.</Option>

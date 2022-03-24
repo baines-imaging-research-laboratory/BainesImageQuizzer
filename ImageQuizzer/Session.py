@@ -18,6 +18,7 @@ from PythonQt import QtCore, QtGui
 
 from slicer.util import EXIT_SUCCESS
 from datetime import datetime
+from _ast import Or
 
 
 
@@ -49,8 +50,8 @@ class Session:
         
         self._bFirstResponsesRecordedInXml = False
         self._bQuizComplete = False
-        self._bAllowMultipleResponseInQuiz = True
-        self._bAllowMultipleResponseInQSet = True      # for question set
+        self._bAllowMultipleResponseInQuiz = False
+        self._bAllowMultipleResponseInQSet = False      # for question set
         self._bSegmentationModule = False
         self._iSegmentationTabIndex = -1   # default
         
@@ -265,7 +266,7 @@ class Session:
                 './/Page/QuestionSet', 'AllowMultipleResponse','Y'))
             self.AddSegmentationModule( \
                 self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
-                './/Page/QuestionSet', 'SegmentRequired','Y'))
+                './/Page/QuestionSet', 'EnableSegmentEditor','Y'))
             
             # set up ROI colors for segmenting
 #             self.oUtilsIO.SetResourcesROIColorFilesDir()
@@ -692,7 +693,7 @@ class Session:
         if self.GetSegmentationTabIndex() > 0:
             
             if oQuestionSet.GetMultipleResponseTF() == True:
-                self.SegmentationTabEnabler(oQuestionSet.GetSegmentRequiredTF())
+                self.SegmentationTabEnabler(oQuestionSet.GetEnableSegmentEditorTF())
             else:
                 # When multiple responses are not allowed, 
                 #    enable the segmentation tab only if the segments are required and
@@ -701,7 +702,7 @@ class Session:
                 if (sQuestionsWithRecordedResponses == 'All'):
                     self.SegmentationTabEnabler(False)
                 else:
-                    self.SegmentationTabEnabler(oQuestionSet.GetSegmentRequiredTF())
+                    self.SegmentationTabEnabler(oQuestionSet.GetEnableSegmentEditorTF())
 
 
         # first clear any previous widgets (except push buttons)
@@ -1000,66 +1001,11 @@ class Session:
         return sCaptureSuccessLevel, lsAllResponses, sAllMsgs
        
 
-    # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # def CheckForSavedResponse(self):
-    #
-    #     """ Check through all questions for the question set looking for a response.
-    #         If the Question Set has a "SegmentRequired='Y'" attribute, 
-    #         check for a saved label map path element. 
-    #
-    #         Assume: All options have a response if the question was answered so we just query the first.
-    #     """
-    #     bLabelMapRequirementFilled = False
-    #     iNumAnsweredQuestions = 0
-    #
-    #     xNodeQuestionSet = self.GetCurrentQuestionSetNode()
-    #     xNodePage = self.GetCurrentPageNode()
-    #
-    #     sLabelMapRequired = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'SegmentRequired')
-    #
-    #     # search for labelmap path in the xml image nodes if segmentation was required
-    #     if sLabelMapRequired == 'Y':
-    #         iNumImages = self.oIOXml.GetNumChildrenByName(xNodePage, 'Image')
-    #         for indImage in range(iNumImages):
-    #             xImageNode = self.oIOXml.GetNthChild(xNodePage, 'Image', indImage)
-    #             iNumLabelMapPaths = self.oIOXml.GetNumChildrenByName(xImageNode, 'LabelMapPath')
-    #             if iNumLabelMapPaths > 0:
-    #                 bLabelMapRequirementFilled = True
-    #                 break
-    #     else:
-    #         bLabelMapRequirementFilled = True   # user not required to create label map
-    #
-    #
-    #
-    #     iNumQuestions = self.oIOXml.GetNumChildrenByName(xNodeQuestionSet, 'Question')
-    #
-    #     for indQuestion in range(iNumQuestions):
-    #
-    #         xOptionNode = self.GetNthOptionNode( indQuestion, 0)
-    #
-    #         iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode,'Response')
-    #         if iNumResponses >0:
-    #             iNumAnsweredQuestions = iNumAnsweredQuestions + 1
-    #
-    #
-    #     if iNumAnsweredQuestions == 0:
-    #         sQuestionswithResponses = 'None'
-    #     elif  iNumAnsweredQuestions < iNumQuestions:
-    #         sQuestionswithResponses = 'Partial'
-    #     elif iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == True:
-    #         sQuestionswithResponses = 'All'
-    #     else:
-    #         if iNumAnsweredQuestions == iNumQuestions and bLabelMapRequirementFilled == False:
-    #             sQuestionswithResponses = 'Partial'
-    #
-    #     return sQuestionswithResponses
-    #
-
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetQuestionSetResponseCompletionLevel(self, indCI=None):
         
         """ Check through all questions for the question set looking for a response.
-            If the Question Set has a "SegmentRequired='Y'" attribute, 
+            If the Question Set has a "EnableSegmentEditor='Y'" attribute, 
             check for a saved label map path element. 
 
             Assumption: All options have a response if the question was answered
@@ -1076,6 +1022,7 @@ class Session:
         
         bLabelMapRequirementFilled = False
         iNumAnsweredQuestions = 0
+        self._lsPreviousResponses = [] # reset for new page
         
         indPage = self._l3iPageQuestionGroupCompositeIndices[indCI][0]
         indQuestionSet = self._l3iPageQuestionGroupCompositeIndices[indCI][1]
@@ -1084,9 +1031,9 @@ class Session:
         xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', indQuestionSet)
         
         
-        sLabelMapRequired = self.oIOXml.GetValueOfNodeAttribute(xQuestionSetNode, 'SegmentRequired')
+        sLabelMapRequired = self.oIOXml.GetValueOfNodeAttribute(xQuestionSetNode, 'EnableSegmentEditor')
 
-        # search for labelmap path in the xml image nodes if segmentation was required
+        # search for labelmap path in the xml image nodes if segmentation tab was enabled
         if sLabelMapRequired == 'Y':
             iNumImages = self.oIOXml.GetNumChildrenByName(xPageNode, 'Image')
             for indImage in range(iNumImages):
@@ -1550,8 +1497,14 @@ class Session:
                             self.ExitOnQuizComplete("This quiz was already completed. Exiting")
                             
                     else:
-                        # quiz does not allow for changing responses - exit
-                        self.ExitOnQuizComplete("This quiz was already completed. Exiting")
+                        # quiz does not allow for changing responses - review is allowed
+                        sMsg = 'Quiz has already been completed and responses cannot be modified. \nWould you like to review the quiz? (Click No to exit).'
+                        qtAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
+    
+                        if qtAns == qt.QMessageBox.Yes:
+                            iResumeCompIndex = 0
+                        else:
+                            self.ExitOnQuizComplete("This quiz was already completed. Exiting")
                 else:
     #                 if iNumLastLoginResponses == iNumQuestions:
                     if sQSetCompletionState == 'All':
@@ -1561,8 +1514,10 @@ class Session:
                         
     #                 print(iResumeCompIndex, '...', self._l2iPageQuestionCompositeIndices[iResumeCompIndex][0], '...',self._l2iPageQuestionCompositeIndices[iResumeCompIndex][1] )
                 
-        # Display a message to user if resuming
-        if not iResumeCompIndex == self._iCurrentCompositeIndex:
+        # Display a message to user if resuming (special case if resuming on first page)
+        # if not iResumeCompIndex == self._iCurrentCompositeIndex:
+        if (not iResumeCompIndex == self._iCurrentCompositeIndex) or\
+            (iResumeCompIndex == self._iCurrentCompositeIndex and bLastLoginResponseFound == True):
             self.oUtilsMsgs.DisplayInfo('Resuming quiz from previous login session.')
             
         self._iCurrentCompositeIndex = iResumeCompIndex

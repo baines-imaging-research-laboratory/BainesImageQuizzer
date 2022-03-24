@@ -18,7 +18,7 @@
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
-		<QuestionSet ID="Contouring Challenge" Descriptor=""  SegmentRequired="Y">
+		<QuestionSet ID="Contouring Challenge" Descriptor=""  EnableSegmentEditor="Y">
 			<Question Type="InfoBox" Descriptor="Segmentation Instructions">
 				<Option>Contour the tumor using the segment editor.</Option>
 			</Question>
@@ -62,7 +62,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1-GoldStandard.seg.nrrd</Path>
 		</Image>
-		<QuestionSet ID="Gold Standard Display" Descriptor=""  SegmentRequired="Y">
+		<QuestionSet ID="Gold Standard Display" Descriptor=""  EnableSegmentEditor="Y">
 			<Question Type="InfoBox" Descriptor="Compare to gold standard">
 				<Option>The gold standard is presented over the user's contour.</Option>
 			</Question>
