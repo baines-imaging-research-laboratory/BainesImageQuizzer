@@ -50,11 +50,11 @@ class QuestionSet():
             self._bEnableSegmentEditor = False
     
     #----------
-    def GetMultipleResponseTF(self):
+    def GetMultipleResponseAllowedTF(self):
         return self._bAllowMultipleResponse
     
     #----------
-    def SetMultipleResponseTF(self, sYN):
+    def SetMultipleResponseAllowedTF(self, sYN):
         if sYN == 'y' or sYN == 'Y':
             self._bAllowMultipleResponse = True
         else: # default
@@ -79,7 +79,7 @@ class QuestionSet():
             self.id = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'ID')
             self.descriptor = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'Descriptor')
             self.SetEnableSegmentEditorTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'EnableSegmentEditor'))
-            self.SetMultipleResponseTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'AllowMultipleResponse'))
+            self.SetMultipleResponseAllowedTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'AllowMultipleResponse'))
             
             
             lxQuestions = self.oIOXml.GetChildren(xNodeQuestionSet, 'Question')
