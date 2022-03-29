@@ -48,6 +48,7 @@ class Session:
         
         self._bFirstResponsesRecordedInXml = False
         self._bQuizComplete = False
+        self._bQuizResuming = False
         self._bAllowMultipleResponseInQuiz = False
         self._bAllowMultipleResponseInQSet = False      # for question set
         self._bSegmentationModule = False
@@ -64,7 +65,7 @@ class Session:
 
 
     def __del__(self):
-#         if not self.QuizComplete():
+#         if not self.GetQuizComplete():
 #             # check first if there is a Quiz Results path
 #             #    quiz validation errors may result in user's directory not being created
 #             sMsg = 'Image Quizzer Exiting - Performing final cleanup.'
@@ -97,8 +98,16 @@ class Session:
         self._bQuizComplete = bInput
         
     #----------
-    def QuizComplete(self):
+    def GetQuizComplete(self):
         return self._bQuizComplete
+            
+    #----------
+    def SetQuizResuming(self, bInput):
+        self._bQuizResuming = bInput
+        
+    #----------
+    def GetQuizResuming(self):
+        return self._bQuizResuming
             
     #----------
     def SetLoginTime(self, sTime):
@@ -126,15 +135,15 @@ class Session:
         return self._bAllowMultipleResponseInQSet
             
         
-    #----------
-    def SetMultipleResponsesAllowedInQuiz(self, bTF):
-        # flag for quiz if any question sets allowed for multiple responses
-        # this is used for 'resuming' after quiz was completed     
-        self._bAllowMultipleResponseInQuiz = bTF
-            
-    #----------
-    def GetMultipleResponsesAllowedInQuiz(self):
-        return self._bAllowMultipleResponseInQuiz
+    # #----------
+    # def SetMultipleResponsesAllowedInQuiz(self, bTF):
+    #     # flag for quiz if any question sets allowed for multiple responses
+    #     # this is used for 'resuming' after quiz was completed     
+    #     self._bAllowMultipleResponseInQuiz = bTF
+    #
+    # #----------
+    # def GetMultipleResponsesAllowedInQuiz(self):
+    #     return self._bAllowMultipleResponseInQuiz
             
 
     #----------
@@ -259,9 +268,9 @@ class Session:
 
             
             # turn on functionality if any of the question set attributes indicated they are required
-            self.SetMultipleResponsesAllowedInQuiz( \
-                self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
-                './/Page/QuestionSet', 'AllowMultipleResponse','Y'))
+            # self.SetMultipleResponsesAllowedInQuiz( \
+            #     self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
+            #     './/Page/QuestionSet', 'AllowMultipleResponse','Y'))
             self.AddSegmentationModule( \
                 self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
                 './/Page/QuestionSet', 'EnableSegmentEditor','Y'))
@@ -291,14 +300,15 @@ class Session:
             
             
             # check for partial or completed quiz
-            self.SetCompositeIndexIfResumeRequired()
-            
+            bResumingTF = self.SetCompositeIndexIfResumeRequired()
+            self.SetQuizResuming(bResumingTF)
+                        
             self.progress.setMaximum(len(self._l3iPageQuestionGroupCompositeIndices))
             self.progress.setValue(self._iCurrentCompositeIndex)
     
             # # if quiz is not complete, finish setup
             # #    (the check for resuming the quiz may have found it was already complete)
-            # if not self.QuizComplete():
+            # if not self.GetQuizComplete():
             #     # setup buttons and display
             #     self.EnableButtons()
             #     self.DisplayPage()
@@ -661,14 +671,18 @@ class Session:
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
         
         sQuestionsWithRecordedResponses = self.GetQuestionSetResponseCompletionLevel()
-        if self.QuizComplete():
+        if self.GetQuizComplete():
             self.SetMultipleResponsesInQSetAllowed(False) #read only
         else:
-            self.SetMultipleResponsesInQSetAllowed(oQuestionSet.GetMultipleResponseAllowedTF())
+            if self.GetQuizResuming():
+                # open this up - user may have answered questions but not pressed Finish
+                self.SetMultipleResponsesInQSetAllowed(True)
+            else:
+                self.SetMultipleResponsesInQSetAllowed(oQuestionSet.GetMultipleResponseAllowedTF())
 
         if self.GetSegmentationTabIndex() > 0:
             
-            if self.QuizComplete():
+            if self.GetQuizComplete():
                 self.SegmentationTabEnabler(False)
             else:
                 if oQuestionSet.GetMultipleResponseAllowedTF() == True:
@@ -679,7 +693,11 @@ class Session:
                     #    the number of questions with responses is not All (ie. either None or Partial)
                     
                     if (sQuestionsWithRecordedResponses == 'All'):
-                        self.SegmentationTabEnabler(False)
+                        if self.GetQuizResuming():
+                            # open this up - user may have answered questions but not pressed Next or Finish
+                            self.SegmentationTabEnabler(True)
+                        else:
+                            self.SegmentationTabEnabler(False)
                     else:
                         self.SegmentationTabEnabler(oQuestionSet.GetEnableSegmentEditorTF())
     
@@ -696,7 +714,7 @@ class Session:
             self._loQuestionSets.append(oQuestionSet)
             qWidgetQuestionSetForm.setEnabled(True) # initialize
 
-            if self.QuizComplete():
+            if self.GetQuizComplete():
                 qWidgetQuestionSetForm.setEnabled(False)
             else:
                 # enable widget if not all questions have responses or if user is allowed to 
@@ -749,6 +767,8 @@ class Session:
             oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
             oQuizzerEditorHelperBox.setMasterVolume(None)
 
+        # page has been displayed - reset Quiz Resuming to false if applicable
+        self.SetQuizResuming(False)
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForLastQuestionSetForPage(self):
         bLastQuestionSet = False
@@ -988,13 +1008,13 @@ class Session:
             If the Question Set has a "EnableSegmentEditor='Y'" attribute, 
             check for a saved label map path element. 
 
-            Assumption: All options have a response if the question was answered
+            Assumption: All'Ooption' elements have a 'Response' element if the question was answered
             so we just query the first. 
             eg: Radio Question     Success?
                     Opt 1            yes
-                        response:       y (checked)
+                        Response:       y (checked)
                     Opt 2            no
-                        response:       n (not checked)
+                        Response:       n (not checked)
         """
         
         if indCI == None:
@@ -1401,6 +1421,7 @@ class Session:
         dtLastLogin = self.GetLastLoginTimestamp() # value in datetime format
         iResumeCompIndex = 0
         bLastLoginResponseFound = False # default
+        self.SetQuizResuming(False)
 
         # if a login time has not been recorded yet, no need to search
         if dtLastLogin != '':
@@ -1486,7 +1507,7 @@ class Session:
                 #             iResumeCompIndex = 0
                 #         else:
                 #             self.ExitOnQuizComplete("This quiz was already completed. Exiting")
-                if self.QuizComplete():
+                if self.GetQuizComplete():
                     # quiz does not allow for changing responses - review is allowed
                     sMsg = 'Quiz has already been completed and responses cannot be modified. \nWould you like to review the quiz? (Click No to exit).'
                     qtAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
@@ -1498,24 +1519,30 @@ class Session:
                     
                 else:
                     if sQSetCompletionState == 'All':
-                        iResumeCompIndex = indCI + 1    # all questions were answered
+                        if indCI == len(self._l3iPageQuestionGroupCompositeIndices) - 1:
+                            # we are at the last page; user answered all questions but did not press the 'Finish' button
+                            iResumeCompIndex = indCI
+                        else:
+                            iResumeCompIndex = indCI + 1    # all questions were answered; move to next page
                     else:
                         iResumeCompIndex = indCI        # not all questions were answered - stay here
                         
                 # for debug                print(iResumeCompIndex, '...', self._l2iPageQuestionCompositeIndices[iResumeCompIndex][0], '...',self._l2iPageQuestionCompositeIndices[iResumeCompIndex][1] )
 
-        if not self.QuizComplete():
+        if not self.GetQuizComplete():
             # Display a message to user if resuming (special case if resuming on first page)
             # if not iResumeCompIndex == self._iCurrentCompositeIndex:
             if (not iResumeCompIndex == self._iCurrentCompositeIndex) or\
-                (iResumeCompIndex == self._iCurrentCompositeIndex and bLastLoginResponseFound == True):
+                (iResumeCompIndex == 0 and bLastLoginResponseFound == True):
                 self.oUtilsMsgs.DisplayInfo('Resuming quiz from previous login session.')
+                self.SetQuizResuming(True)
             
         self._iCurrentCompositeIndex = iResumeCompIndex
         
         # adjust if the resume question set is not the first on the page
         self.AdjustForPreviousQuestionSets()
 
+        return self.GetQuizResuming()
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetLastLoginTimestamp(self):
