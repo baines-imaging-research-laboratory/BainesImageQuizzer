@@ -49,7 +49,7 @@ class Session:
         self._bFirstResponsesRecordedInXml = False
         self._bQuizComplete = False
         self._bQuizResuming = False
-        self._bAllowMultipleResponseInQSet = False      # for question set
+        self._bAllowMultipleResponse = False      # for question set
         self._bSegmentationModule = False
         self._iSegmentationTabIndex = -1   # default
         
@@ -125,13 +125,16 @@ class Session:
         return self._l3iPageQuestionGroupCompositeIndices
 
     #----------
-    def SetMultipleResponsesInQSetAllowed(self, bInput):
+    def SetMultipleResponseAllowed(self, sYN):
         
-        self._bAllowMultipleResponseInQSet = bInput
+        if sYN == 'y' or sYN == 'Y':
+            self._bAllowMultipleResponse = True
+        else: # default
+            self._bAllowMultipleResponse = False
 
     #----------
-    def GetMultipleResponsesInQsetAllowed(self):
-        return self._bAllowMultipleResponseInQSet
+    def GetMultipleResponseAllowed(self):
+        return self._bAllowMultipleResponse
             
         
     # #----------
@@ -319,15 +322,8 @@ class Session:
             self.progress.setMaximum(len(self._l3iPageQuestionGroupCompositeIndices))
             self.progress.setValue(self._iCurrentCompositeIndex)
     
-            # # if quiz is not complete, finish setup
-            # #    (the check for resuming the quiz may have found it was already complete)
-            # if not self.GetQuizComplete():
-            #     # setup buttons and display
-            #     self.EnableButtons()
-            #     self.DisplayPage()
-                
             self.EnableButtons()
-            self.DisplayPage()
+            self.DisplayImagesAndQuestions()
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupWidgets(self, slicerMainLayout):
@@ -422,7 +418,6 @@ class Session:
                 # if last question set, clear list and scene
                 if self.CheckForLastQuestionSetForPage() == True:
                     self._loQuestionSets = []
-                    self._lsPreviousResponses = []
                     slicer.mrmlScene.Clear()
                 else:
                     # clear quiz widgets only
@@ -431,10 +426,13 @@ class Session:
             
                 self._iCurrentCompositeIndex = self._iCurrentCompositeIndex + 1
                 self.progress.setValue(self._iCurrentCompositeIndex)
+                
+                xPageNode = self.GetCurrentPageNode()
+                self.SetMultipleResponseAllowed(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'AllowMultipleResponse'))
                     
                 self.EnableButtons()
        
-                self.DisplayPage()
+                self.DisplayImagesAndQuestions()
     
             else:
                 if sMsg != '':
@@ -463,12 +461,14 @@ class Session:
                 # reset to beginning
                 self._iCurrentCompositeIndex = 0
             
+            xPageNode = self.GetCurrentPageNode()
+            self.SetMultipleResponseAllowed(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'AllowMultipleResponse'))
+
             self.EnableButtons()
             
             self.AdjustForPreviousQuestionSets()
             
-            
-            self.DisplayPage()
+            self.DisplayImagesAndQuestions()
                
         
         else:
@@ -729,13 +729,13 @@ class Session:
 #
 #         sQuestionsWithRecordedResponses = self.GetQuestionSetResponseCompletionLevel()
 #         if self.GetQuizComplete():
-#             self.SetMultipleResponsesInQSetAllowed(False) #read only
+#             self.SetMultipleResponseAllowed(False) #read only
 #         else:
 #             if self.GetQuizResuming():
 #                 # open this up - user may have answered questions but not pressed Finish
-#                 self.SetMultipleResponsesInQSetAllowed(True)
+#                 self.SetMultipleResponseAllowed(True)
 #             else:
-#                 self.SetMultipleResponsesInQSetAllowed(oQuestionSet.GetMultipleResponseAllowedTF())
+#                 self.SetMultipleResponseAllowed(oQuestionSet.GetMultipleResponseAllowedTF())
 #
 #         if self.GetSegmentationTabIndex() > 0:
 #
@@ -777,7 +777,7 @@ class Session:
 #                 # enable widget if not all questions have responses or if user is allowed to 
 #                 # input multiple responses
 #                 if sQuestionsWithRecordedResponses == 'All':
-#                     qWidgetQuestionSetForm.setEnabled(self.GetMultipleResponsesInQsetAllowed())
+#                     qWidgetQuestionSetForm.setEnabled(self.GetMultipleResponseAllowed())
 #
 #             if sQuestionsWithRecordedResponses == 'All' or sQuestionsWithRecordedResponses == 'Partial':
 #                 self.DisplaySavedResponse()
@@ -827,7 +827,7 @@ class Session:
 #         # page has been displayed - reset Quiz Resuming to false if applicable
 #         self.SetQuizResuming(False)
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def DisplayPage(self):
+    def DisplayImagesAndQuestions(self):
 
         # extract page and question set indices from the current composite index
         
@@ -836,7 +836,10 @@ class Session:
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
         
         # get question set completion state 
-        sSavedResponseCompletionLevel = self.GetQuestionSetResponseCompletionState()
+        sSavedResponseCompletionLevel = self.GetSavedResponseCompletionLevel()
+
+        if self.GetQuizComplete():
+            self.SetMultipleResponseAllowed('N') #read only
 
 
         # first clear any previous widgets (except push buttons)
@@ -861,7 +864,7 @@ class Session:
                 # enable widget if not all questions have responses or if user is allowed to 
                 # input multiple responses
                 if sSavedResponseCompletionLevel == 'All':
-                    qWidgetQuestionSetForm.setEnabled(self.GetMultipleResponsesInQsetAllowed())
+                    qWidgetQuestionSetForm.setEnabled(self.GetMultipleResponseAllowed())
 
                    
         # add page ID/descriptor to the progress bar
@@ -948,8 +951,9 @@ class Session:
         self._lsPreviousResponses = lsAllResponsesForQuestion
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetQuestionSetResponseCompletionState(self):
-        """ Check through all questions for the question set looking for a response.
+    def GetSavedResponseCompletionLevel(self):
+        """ Check through all questions for the question set looking for a response. This information
+            comes from the currently saved elements in the XML.
              
             Assumption: All'Option' elements have a 'Response' element if the question was answered
             so we just query the first. 
@@ -957,11 +961,11 @@ class Session:
                     Opt 1            yes
                         Response:       y (checked)
                     Opt 2            no
-                        Response:       n (not checked)
+          GetSavedResponseCompletionLevel n (not checked)
         """
         
         iNumAnsweredQuestions = 0
-        self._lsPreviousResponses = [] # reset for new page
+        self._lsPreviousResponses = [] # reset for new Question Set
         
         xQuestionSetNode = self.GetCurrentQuestionSetNode()
         
@@ -1284,12 +1288,12 @@ class Session:
             #      recorded is 'none' or 'partial' (not 'all')
             
             # sQuestionsWithRecordedResponses = self.GetQuestionSetResponseCompletionLevel()
-            sQuestionsWithRecordedResponses = self.GetQuestionSetResponseCompletionState()
+            sQuestionsWithRecordedResponses = self.GetSavedResponseCompletionLevel()
             
             
 
-            if ( self.GetMultipleResponsesInQsetAllowed() == True)  or \
-                ((self.GetMultipleResponsesInQsetAllowed() == False) and (sQuestionsWithRecordedResponses != 'All') ):
+            if ( self.GetMultipleResponseAllowed() == True)  or \
+                ((self.GetMultipleResponseAllowed() == False) and (sQuestionsWithRecordedResponses != 'All') ):
 
                 # check to see if the responses for the question set match 
                 #    what was previously captured
@@ -1518,7 +1522,7 @@ class Session:
                 # sQSetCompletionState = self.GetQuestionSetResponseCompletionLevel(indCI)
                 #
 
-                sQuestionsWithRecordedResponses = self.GetQuestionSetResponseCompletionState()
+                sQuestionsWithRecordedResponses = self.GetSavedResponseCompletionLevel()
                 
                 if self.GetQuizComplete():
                     # quiz does not allow for changing responses - review is allowed

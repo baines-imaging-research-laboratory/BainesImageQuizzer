@@ -1,5 +1,5 @@
 <Session ROIColorFile="ROIColors_Brain">
-	<Page ID="Patient 1" Descriptor="Contouring Challenge">
+	<Page ID="Patient 1" Descriptor="Contouring Challenge" AllowMultipleResponse="Y">
 		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" LabelMapID="MR_Contour">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>

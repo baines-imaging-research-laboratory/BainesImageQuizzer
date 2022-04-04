@@ -63,7 +63,7 @@
 				<ROI>Body_Contour</ROI>
 			</ROIs>
 		</Image>
-		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress"  EnableSegmentEditor="Y"  AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress"  EnableSegmentEditor="Y">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>DICOM with RTStruct on Segmentation Layer</Option>
 			</Question>

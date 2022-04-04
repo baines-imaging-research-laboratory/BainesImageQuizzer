@@ -24,7 +24,7 @@
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<QuestionSet ID="QS-Intro" Descriptor="Introduction to Quiz"  EnableSegmentEditor="N" AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Intro" Descriptor="Introduction to Quiz"  EnableSegmentEditor="N">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>Segment Editor off, Don't allow multiple Response</Option> 
 				<Option>NRRD and NIFTI, background and foreground on Red</Option>
@@ -33,7 +33,7 @@
 				<Option>Lots of text describing something</Option>
 			</Question>
 		</QuestionSet>
-		<QuestionSet ID="QS-Intro #2" Descriptor="How to - Instructions"  EnableSegmentEditor="N"  AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Intro #2" Descriptor="How to - Instructions"  EnableSegmentEditor="N">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>Second question set</Option> 
 			</Question>

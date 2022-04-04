@@ -46,7 +46,7 @@
 				<ROI>Body_Contour</ROI>
 			</ROIs>
 		</Image>
-		<QuestionSet ID="Test Dicom With ROIs" Descriptor="Test dicom patient showing ROIs"  EnableSegmentEditor="N"  AllowMultipleResponse="N">
+		<QuestionSet ID="Test Dicom With ROIs" Descriptor="Test dicom patient showing ROIs"  EnableSegmentEditor="N">
 			<Question Type="InfoBox" Descriptor="Welcome to the Baines Image Quizzer">
 				<Option>This is a test quiz to ensure proper installation of the application.</Option>
 			</Question>
@@ -62,7 +62,7 @@
 				<Option>If this window is greyed out, you cannot change your selection.</Option>
 			</Question>
 		</QuestionSet>
-		<QuestionSet ID="Test Dicom With ROIs" Descriptor="Test dicom patient showing ROIs"  EnableSegmentEditor="N"  AllowMultipleResponse="N">
+		<QuestionSet ID="Test Dicom With ROIs" Descriptor="Test dicom patient showing ROIs"  EnableSegmentEditor="N">
 			<Question Type="InfoBox" Descriptor="Exiting the quiz:">
 				<Option>Click on the Exit button.</Option>
 				<Option>If you exit your responses will be saved.</Option>
@@ -70,7 +70,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Pt Dicom" Descriptor="DicomSeries">
+	<Page ID="Pt Dicom" Descriptor="DicomSeries"  AllowMultipleResponse="Y">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -89,7 +89,7 @@
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
-		<QuestionSet ID="Test Dicom Read" Descriptor="Try the following:" EnableSegmentEditor="N"  AllowMultipleResponse="Y">
+		<QuestionSet ID="Test Dicom Read" Descriptor="Try the following:" EnableSegmentEditor="N">
 			<Question Type="Radio" Descriptor="Zoom and Pan">
 				<Option>Yes</Option>
 				<Option>No</Option>
@@ -104,7 +104,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Pt Volume" Descriptor="PlanningCT">
+	<Page ID="Pt Volume" Descriptor="PlanningCT" AllowMultipleResponse="Y">
 		<Image Type="Volume" ID="Fixed Volume">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -123,7 +123,7 @@
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<QuestionSet ID="QS-Checkup" Descriptor="Test more 3D Slicer features" EnableSegmentEditor="N"  AllowMultipleResponse="Y">
+		<QuestionSet ID="QS-Checkup" Descriptor="Test more 3D Slicer features" EnableSegmentEditor="N">
 			<Question Type="CheckBox"  Descriptor="Try the following:">
 				<Option>Adjust window-level</Option>
 				<Option>Return to default mouse pointer</Option>
@@ -133,7 +133,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Pt Sequence" Descriptor="Time Sequence">
+	<Page ID="Pt Sequence" Descriptor="Time Sequence" AllowMultipleResponse="Y">
 		<Image Type="VolumeSequence" ID="DCE">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -152,12 +152,12 @@
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\ProstateDCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
 		</Image>
-		<QuestionSet ID="Test Volume Sequence" Descriptor="Test Sequence Volumes"  EnableSegmentEditor="N" AllowMultipleResponse="Y">
+		<QuestionSet ID="Test Volume Sequence" Descriptor="Test Sequence Volumes"  EnableSegmentEditor="N">
 			<Question Type="InfoBox" Descriptor="Dynamic Contrast Enhanced Imaging">
 				<Option>Try the controls to run the time sequence.</Option>
 			</Question>
 		</QuestionSet>
-		<QuestionSet ID="Test Volume Sequence" Descriptor="Test Sequence Volumes"  EnableSegmentEditor="Y" AllowMultipleResponse="Y">
+		<QuestionSet ID="Test Volume Sequence" Descriptor="Test Sequence Volumes"  EnableSegmentEditor="Y">
 			<Question Type="InfoBox" Descriptor="Segmenting">
 				<Option>Move to the Segment Editor tab to begin creating segments.</Option>
 				<Option>   1. Select the Master Volume to edit.</Option>
