@@ -9,6 +9,7 @@ from Utilities import *
 from Question import *
 from ImageView import *
 from UtilsIO import *
+from PageState import *
 #from ImageQuizzer import *
 
 import EditorLib
@@ -296,6 +297,7 @@ class Session:
             sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
             self.oFilesIO.SetupROIColorFile(sColorFileName)
 
+            self.BuildPageCompletionStructure()
             # build the list of indices page/questionset as read in by the XML
             self.BuildPageQuestionCompositeIndexList()
             # if randomization is requested - shuffle the page/questionset list
@@ -304,7 +306,7 @@ class Session:
                 # check if xnl already holds a set of randomized indices otherwise, call randomizing function
                 liRandIndices = self.GetStoredRandomizedIndices()
                 if liRandIndices == []:
-                    # get the unique list of all Page Group numbers to randomize
+                    # get the unique list  of all Page Group numbers to randomize
                     #    this was set during xml validation during the initial read
                     liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
                     liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
@@ -536,6 +538,25 @@ class Session:
             # last question of last image view
             self._btnNext.setText("Finish")
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def BuildPageCompletionStructure(self):
+        ''' From the xml that was read in, set up the structure that will keep track of 
+            page completion states during the quiz.
+            This will help determine whether the quiz or segmentation tabs are to be enabled
+            and where to resume the quiz if re-entering.
+        '''
+        self.loPageCompletionState = []
+        # for each page, create the lists holding the question set states and the segmentation states
+        xPages = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
+        for iPageIndex in range(len(xPages)):
+            xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
+            
+            oPgItem = PageState(self.oIOXml)
+            oPgItem.InitializeStates(xPageNode)
+            
+            self.loPageCompletionState.append(oPgItem)
+            
+        i = 1
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def BuildPageQuestionCompositeIndexList(self):
         ''' This function sets up the page and question set indices which
@@ -1040,17 +1061,18 @@ class Session:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureNewResponsesToSave(self):
+        ''' When moving to another display of Images and QuestionSet (from pressing Next or Previous)
+            the new responses that were entered must be captured ready to do the save to XML.
+            A check for any missing responses to the questions is done and passed back to the calling function.
+        '''
         
         # sMsg may be set in Question class function to capture the response
         sMsg = ''
         sAllMsgs = ''
         
         # get list of questions from current question set
-        
         indQSet = self.GetCurrentQuestionSetIndex()
- 
         oQuestionSet = self._loQuestionSets[indQSet]
-
         loQuestions = oQuestionSet.GetQuestionList()
             
         lsAllResponses = []
@@ -1080,7 +1102,6 @@ class Session:
                 
         # define success level
         sCaptureSuccessLevel = self.GetCompletionLevel(len(loQuestions), len(loQuestions)-iNumMissingResponses)
-
                 
         return sCaptureSuccessLevel, lsAllResponses, sAllMsgs
        
@@ -1110,6 +1131,9 @@ class Session:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureAndSaveImageState(self):
+        ''' Save the current image state (window/level, slice number) to the XML.
+            This state is reset if the user revisits this page.
+        '''
 
         sMsg = ''
         bSuccess = True
@@ -1706,40 +1730,4 @@ class QuizWidgets:
     
         # add to left layout
         self.qLeftLayout.addWidget(self.qTabWidget)
-
-
-##################################################
-#    DON'T WANT TO LOSE THIS SEQUENCE - may come in handy
-#     #----------
-#     def SearchForChildWidget(self, oParent, sSearchType, sSearchName):
-# 
-# 
-#         if oParent != None:
-# #             print(oParent.className(), '.....', oParent.name)
-#             
-#             iNumChildren = len(oParent.children())
-# 
-#             # drill down through children recursively until the search object has been found
-#             for idx in range(iNumChildren):
-#                 oChildren = oParent.children()
-#                 oChild = oChildren[idx]
-# #                 print ('..............', oChild.className(),'...', oChild.name)
-#                 if oChild.className() == sSearchType:
-#                     if oChild.name == sSearchName:
-#                         return True, oChild
-#                         
-#                 self.iRecursiveCounter = self.iRecursiveCounter + 1
-#                 if self.iRecursiveCounter == 100:    # safeguard in recursive procedure
-#                     return False, None
-#                     
-#                 
-#                 if len(oChild.children()) > 0:
-#                     bFound, oFoundChild = self.SearchForChildWidget(oChild, sSearchType, sSearchName)
-#                     if bFound:
-#                         return True, oFoundChild
-#             
-#         else:
-#             return False, None
-#     
-            
 
