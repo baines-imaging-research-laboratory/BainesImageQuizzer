@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session RandomizePageGroups="N">
-	<Page ID="Patient1" Descriptor="PlanningCT" PageGroup="1">
-		<Image Type="Volume" ID="Fixed Volume" LabelMapID="Brain-fixed-contour">
+	<Page ID="Patient1" Descriptor="PlanningCT" PageGroup="1" EnableSegmentEditor="Y">
+		<Image Type="Volume" ID="Fixed Volume" LabelMapID="Brain-fixed-contour" SegmentRequired="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>

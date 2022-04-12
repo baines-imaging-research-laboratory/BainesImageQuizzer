@@ -52,6 +52,7 @@
 		<xs:attribute name="RotateToAcquisition" type="yesnoType" default="N" />
 		<xs:attribute name="ColorTable" type="xs:string" />
 		<xs:attribute name="Opacity" type="boundedFloatType" />
+		<xs:attribute name="SegmentRequired" type="yesnoType" default="N"/>
 	</xs:complexType>
 </xs:element>
 

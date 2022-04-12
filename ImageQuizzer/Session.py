@@ -295,7 +295,7 @@ class Session:
             self.oQuizWidgets.qLeftWidget.activateWindow()
 
             
-            # turn on functionality if any page containes the attribute
+            # turn on functionality if any page contains the attribute
             self.AddSegmentationModule( \
                 self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
                 './/Page', 'EnableSegmentEditor','Y'))

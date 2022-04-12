@@ -605,6 +605,12 @@ class UtilsIO:
                             sMsg = sMsg + sValidationMsg
                             sValidationMsg = self.ValidateAttributeOptions(lxROIs[0], 'ROIVisibilityCode', sPageReference, self.oIOXml.lValidRoiVisibilityCodes)
                             sMsg = sMsg + sValidationMsg
+
+                # >>>>>>>>>>>>>>>
+                # if the image has a 'SegmentRequired' attribute, the page must have EnableSegmentEditor set to Y
+                sValidationMsg = self.ValidateSegmentRequiredSetting(xPage, iPageNum)
+                sMsg = sMsg + sValidationMsg
+                            
                                 
             # >>>>>>>>>>>>>>>
             # validate that each page has a PageGroup attribute if the session requires page group randomization
@@ -624,7 +630,6 @@ class UtilsIO:
             if not os.path.isfile(sROIColorFilePath):
                 sMsg = sMsg + '\nCustom ROIColorFile does not exist in the directory with the quiz.' + sROIColorFilePath
                 
-            
             
             # >>>>>>>>>>>>>>>
 
@@ -759,8 +764,8 @@ class UtilsIO:
         liValidationPageGroups = self._liUniquePageGroups[:]   # use a working copy of the list of unique page groups
         if 0 in liValidationPageGroups:
             liValidationPageGroups.remove(0) # ignore page groups set to 0
-        if len(liValidationPageGroups) <= 1: # <= un case of an empty list
-            sValidationMsg = 'Not enough unique PageGroups for requested randomization. \nYou must have more than one page group (other than 0)'
+        if len(liValidationPageGroups) <= 1: # <= in case of an empty list
+            sValidationMsg = '\nNot enough unique PageGroups for requested randomization. \nYou must have more than one page group (other than 0)'
             sMsg = sMsg + sValidationMsg
             if self.sTestMode == "1":
                 raise Exception('Validating PageGroups Error: %s' % sValidationMsg)
@@ -770,7 +775,7 @@ class UtilsIO:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ValidateOpacity(self,xImage, iPageNum):
         sMsg = ''
-        sErrorMsg = '\nOpacity must be a number between 0.0 and 1.0.   See Page:'
+        sErrorMsg = '\nOpacity must be a number between 0.0 and 1.0.   See Page: '
         
         sOpacity = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Opacity')   # not required
         if sOpacity != '':
@@ -791,6 +796,23 @@ class UtilsIO:
         
         return sMsg
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateSegmentRequiredSetting(self, xPageNode, iPageReference):
+        
+        sMsg = ''
+        sErrorMsg = '\nPage must have EnableSegmentEditor attribute set when Image has SegmentRequired attribute set. See Page: '
+        
+        sEnableSegmentEditorSetting = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor')
+        
+        lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
+        
+        for idx in range(len(lxImageNodes)):
+            xImageNode = lxImageNodes[idx]
+            sSegmentRequiredSetting = self.oIOXml.GetValueOfNodeAttribute(xImageNode, 'SegmentRequired')
+            if sSegmentRequiredSetting == 'Y' and sEnableSegmentEditorSetting != 'Y':
+                sMsg = sMsg + sErrorMsg + str(iPageReference)
+                
+        return sMsg
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
     #-------------------------------------------
