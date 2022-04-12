@@ -40,7 +40,16 @@ class PageState:
         
         self.oIOXml = oIOXml
         
+    #----------
+    def GetSegmentationsCompletedState(self):
+        return self.bSegmentationsCompleted
         
+    #----------
+    def GetQuestionSetsCompletedState(self):
+        return self.bQuestionSetsCompleted
+    
+    #----------
+    #----------
     def InitializeStates(self, xPageNode):
         ''' 
             Each question set is intialized as incomplete.
@@ -99,4 +108,41 @@ class PageState:
                 else:
                     self.l2iCompletedSegmentations.append(l2iSegmentNotRequired)
                     
+
+    #----------
+    def UpdateQuestionSetCompletionState(self, iQSetIdx, iCompletionCode):
+        ''' Function to update the completion level for a specific question set on a Page
+        '''
+        self.liCompletedQuestionSets[iQSetIdx] = iCompletionCode
+        
+    #----------
+    def CheckPageCompletionLevelForQuestionSets(self):
+        ''' Test to see if all question sets on a page have been completed.
+        '''
+        if 0 in self.liCompletedQuestionSets:
+            self.bQuestionSetsCompleted = False
+        else:
+            self.bQuestionSetsCompleted = True
+            
+        return self.bQuestionSetsCompleted
+
+    #----------
+    def CheckPageCompletionLevelForSegmentations(self):
+        ''' Test to see if all segmentations for the required images are completed.
+            List for segmentation has 2 dimensions:
+                l2iCompletedSegmentations[requirementcode][completioncode]
+        '''
+        # assume all segmentations are complete; turn off flag when incomplete is found
+        self.bSegmentationsCompleted = True
+        for idx in range(len(self.l2iCompletedSegmentations)):
+            # look at code stating whether the segment is required (1)
+            # for codes 0 and 2 completion level can be either 0 or 1
+            if self.l2iCompletedSegmentations[idx][0] == 1:
+                if self.l2iCompletedSegmentations[idx][1] == 0:
+                    self.bSegmentationsCompleted = False
+                    
+        return self.bSegmentationsCompleted
+    
+    #----------
+    
 

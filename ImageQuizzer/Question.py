@@ -22,7 +22,6 @@ class QuestionSet():
         self.sClassName = type(self).__name__
         self.id = ''
         self.descriptor = ''
-        self._bEnableSegmentEditor = False
         self._bAllowMultipleResponse = False
         
         self._loQuestions = []
@@ -37,17 +36,6 @@ class QuestionSet():
     #----------
     def GetQuestionList(self):
         return self._loQuestions
-    
-    #----------
-    def GetEnableSegmentEditorTF(self):
-        return self._bEnableSegmentEditor
-    
-    #----------
-    def SetEnableSegmentEditorTF(self, sYN):
-        if sYN == 'y' or sYN == 'Y':
-            self._bEnableSegmentEditor = True
-        else:
-            self._bEnableSegmentEditor = False
     
     #----------
     #----------
@@ -67,7 +55,6 @@ class QuestionSet():
             
             self.id = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'ID')
             self.descriptor = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'Descriptor')
-            self.SetEnableSegmentEditorTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'EnableSegmentEditor'))
             
             
             lxQuestions = self.oIOXml.GetChildren(xNodeQuestionSet, 'Question')
