@@ -862,9 +862,9 @@ class UtilsIO:
                     if oImageNode.sNodeName + '-bainesquizlabel' == sLabelMapFilename:
                         
                         bLabelMapFound = True  # -bainesquizlabel suffix is associated with an image on the page
-
-
-                        # only write to disk if it hasn't already been done for this image node                    
+                        
+                        # only write to disk if it hasn't already been done for this image node
+                        #    (it doesn't need to be written for each orientation)
                         if not oImageNode.sNodeName in lsLabelMapsStoredForImages:
 
                             # store the path name in the xml file and the label map in the directory
@@ -1113,4 +1113,4 @@ class UtilsIO:
         slNodesCollection.UnRegister(slicer.mrmlScene)
               
         return bFound, slNode
-    
+        

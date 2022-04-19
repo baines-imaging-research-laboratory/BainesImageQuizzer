@@ -435,10 +435,6 @@ class Session:
                 self._iCurrentCompositeIndex = self._iCurrentCompositeIndex + 1
                 self.progress.setValue(self._iCurrentCompositeIndex)
                 
-                xPageNode = self.GetCurrentPageNode()
-                self.SetMultipleResponseAllowed(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'AllowMultipleResponse'))
-                self.SetRequestToEnableSegmentEditorTF(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor'))
-                    
                 self.EnableButtons()
        
                 self.DisplayImagesAndQuestions()
@@ -470,10 +466,6 @@ class Session:
                 # reset to beginning
                 self._iCurrentCompositeIndex = 0
             
-            xPageNode = self.GetCurrentPageNode()
-            self.SetMultipleResponseAllowed(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'AllowMultipleResponse'))
-            self.SetRequestToEnableSegmentEditorTF(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor'))
-
             self.EnableButtons()
             
             self.AdjustForPreviousQuestionSets()
@@ -859,6 +851,10 @@ class Session:
 
         # extract page and question set indices from the current composite index
         
+        xPageNode = self.GetCurrentPageNode()
+        self.SetMultipleResponseAllowed(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'AllowMultipleResponse'))
+        self.SetRequestToEnableSegmentEditorTF(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor'))
+
         xNodeQuestionSet = self.GetCurrentQuestionSetNode()
         oQuestionSet = QuestionSet()
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
@@ -1033,6 +1029,7 @@ class Session:
         bSuccess, sMsg = self.ResetDisplay()
         idxQuestionSet = self.GetCurrentQuestionSetIndex()
         idxPage = self.GetCurrentPageIndex()
+        iNumQSets = len(self.GetAllQuestionSetNodesForCurrentPage())
         
         if bSuccess:
             
@@ -1053,6 +1050,11 @@ class Session:
                         self.loPageCompletionState[idxPage].UpdateQuestionSetCompletionState(idxQuestionSet,1)
                     else:
                         bSuccess = False
+                        
+                        
+                    # if this was the last question set, check for label maps completion
+                    if idxQuestionSet == iNumQSets - 1:
+                        bLabelMapCompletionState, sMsg = self.loPageCompletionState[idxPage].TestLabelMapsCompletionState(self.GetCurrentPageNode(), self.GetFolderNameForLabelMaps())    
                         
                 else:  
                     # Caller must have been the Previous or Exit buttons or a close was 
