@@ -607,8 +607,8 @@ class UtilsIO:
                             sMsg = sMsg + sValidationMsg
 
                 # >>>>>>>>>>>>>>>
-                # if the image has a 'SegmentRequired' attribute, the page must have EnableSegmentEditor set to Y
-                sValidationMsg = self.ValidateSegmentRequiredSetting(xPage, iPageNum)
+                # validate attributes 'SegmentRequired' and 'SegmentRequiredOnAnyImage'
+                sValidationMsg = self.ValidateSegmentRequiredSettings(xPage, iPageNum)
                 sMsg = sMsg + sValidationMsg
                             
                                 
@@ -797,22 +797,64 @@ class UtilsIO:
         return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateSegmentRequiredSetting(self, xPageNode, iPageReference):
+    def ValidateSegmentRequiredSettings(self, xPageNode, iPageReference):
         
         sMsg = ''
-        sErrorMsg = '\nPage must have EnableSegmentEditor attribute set when Image has SegmentRequired attribute set. See Page: '
+        sErrorMsgEnableEditor = "\nPage must have 'EnableSegmentEditor' attribute set to 'Y' when a segment required attribute is set. See Page: "
+        sErrorMsgSegmentOnAnyImage = "\nContradicting attributes. You cannot have both 'SegmentRequired' on an image and 'SegmentRequiredOnAnyImage' on a page. See Page: "
+        sErrorMsgMismatchSegmentRequired = "\nAll image elements with the same path (but different destinations) must have the same attribute 'SegmentRequired' setting. See Page:"
         
         sEnableSegmentEditorSetting = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor')
+        sSegmentOnAnyImageSetting = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'SegmentRequiredOnAnyImage')
         
         lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
         
+        bFoundSegmentRequiredForImage = False
+        l2tupImageSettings = []
+        
         for idx in range(len(lxImageNodes)):
             xImageNode = lxImageNodes[idx]
+
+            # collect settings for image
             sSegmentRequiredSetting = self.oIOXml.GetValueOfNodeAttribute(xImageNode, 'SegmentRequired')
-            if sSegmentRequiredSetting == 'Y' and sEnableSegmentEditorSetting != 'Y':
-                sMsg = sMsg + sErrorMsg + str(iPageReference)
+            if sSegmentRequiredSetting == '':
+                sSegmentRequiredSetting = 'N'
+            sImagePathNode = self.oIOXml.GetLastChild(xImageNode,'Path')
+            sImagePath = self.oIOXml.GetDataInNode(sImagePathNode)
+            tupImageSettings = [sImagePath, sSegmentRequiredSetting]
+            l2tupImageSettings.append(tupImageSettings)
+            
+            if sSegmentRequiredSetting == 'Y':
+                bFoundSegmentRequiredForImage = True
                 
+        if sSegmentOnAnyImageSetting == "Y" or bFoundSegmentRequiredForImage == True :
+            if sEnableSegmentEditorSetting != "Y":
+                sMsg = sMsg + sErrorMsgEnableEditor + str(iPageReference)
+                
+        if sSegmentOnAnyImageSetting == "Y" and bFoundSegmentRequiredForImage == True:
+            sMsg = sMsg + sErrorMsgSegmentOnAnyImage + str(iPageReference)
+                
+        # if a segment required attribute was found for an image, ensure
+        #    that all images with that same path have the same attribute setting
+        if bFoundSegmentRequiredForImage:
+            bMismatch = False
+            for idxOuterLoop in range(len(l2tupImageSettings)):
+                if bMismatch == True:
+                    break
+                sPathToCompare = l2tupImageSettings[idxOuterLoop][0]
+                sSettingToCompare = l2tupImageSettings[idxOuterLoop][1]
+                
+                for idxInnerLoop in range(len(l2tupImageSettings)):
+                    sPath = l2tupImageSettings[idxInnerLoop][0]
+                    sSetting = l2tupImageSettings[idxInnerLoop][1]
+                    if sPathToCompare == sPath:
+                        if sSettingToCompare != sSetting:
+                            sMsg = sMsg + sErrorMsgMismatchSegmentRequired + str(iPageReference)
+                            bMismatch = True
+                            break
+        
         return sMsg
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
     #-------------------------------------------

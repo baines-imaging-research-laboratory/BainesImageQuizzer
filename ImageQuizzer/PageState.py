@@ -5,7 +5,6 @@ import sys
 import sitkUtils
 import SimpleITK as sitk
 import filecmp
-from builtins import False
 
 
 
@@ -20,20 +19,41 @@ class PageState:
     
     def __init__(self, oIOXml):
         ''' Class to keep track of completed items that belong to a page.
-            Codes for completed states:
-                0 = incomplete
-                1 = complete
-            Code for required states:
-                0 = not required
-                1 = required
-                2 = not applicable
             Segmentation completion state is a 2d list.
                 The first element specifies whether it is required (0, 1, or 2)
                 The second element specifies whether the requirement has been completed. (0 or 1)
+
+                Codes for completed states:
+                    0 = incomplete
+                    1 = complete
+                Code for required states:
+                    0 = not required
+                    1 = required
+                    2 = not applicable
                 
             A completed page requires all questions in all question sets to be completed
             and either all or any segmentations (depending on the required segmentations attribute)
             to have been completed
+            
+            States for variable : sSegmentationRequiredState
+                None:   This variable is set to 'None' as a default. The EnableSegmentEditor page attribute was set to "Y".
+                        This remains at 'None' if the other attributes (Image attribute: 'SegmentRequired' and 
+                        Page attribute: 'SegmentRequiredOnAnyImage') are set to 'N' or are absent.
+                        This means that the user is not required to create a contour (eg. if no tumor is present)
+                        but has the ability to create one if desired.
+                        
+                Any:    This variable gets set to 'Any' if the page attribute SegmentRequiredOnAnyImage="Y" .
+                        This means that the user is required to create at least one segmentation that is not zeroes
+                        (zeros can happen if the user goes into the segment editor, selects a volume to edit but does
+                        not actually create any segments. The mask is then all zeros.)
+                        
+                Specific:   This variable gets set to 'Specific' if there are any Image elements with the
+                            'SegmentRequired' attribute set to "Y".
+                            The user must create a segmentation for that specific image. It cannot be
+                            an empty segmentation (where the mask is all zeros - see explanation in 'Any').
+                            Also, if the image has a segmentation file that was copied in and redisplayed  
+                            from a previous page (this occurs when the Image element has an attribute
+                            'DisplayLabelMapID' set), the user is required to make a change to that copied in segmentation.
         '''
         self.liCompletedQuestionSets = []
         self.l2iCompletedSegmentations = []
@@ -89,7 +109,7 @@ class PageState:
             
     
         lxQuestionSets = self.oIOXml.GetChildren(xPageNode,'QuestionSet')
-        lxImages = self.oIOXml.GetChildren(xPageNode,'Image')
+        lxImageNodes = self.oIOXml.GetChildren(xPageNode,'Image')
 
         # initialize list of question sets to incomplete
         for xQSetNode in lxQuestionSets:
@@ -107,7 +127,7 @@ class PageState:
         l2iSegmentRequired = [1,iCompletedTF]
 
             
-        for iImgIdx in range(len(lxImages)):
+        for iImgIdx in range(len(lxImageNodes)):
             xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', iImgIdx)
             xLayerNode = self.oIOXml.GetNthChild(xImageNode,'Layer',0)
             sLayer = self.oIOXml.GetDataInNode(xLayerNode)
@@ -139,33 +159,32 @@ class PageState:
             
         return self.bQuestionSetsCompleted
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CheckPageCompletionLevelForSegmentations(self):
-        ''' Test to see if all segmentations for the required images are completed.
-            List for segmentation has 2 dimensions:
-                l2iCompletedSegmentations[requirementcode][completioncode]
-        '''
-        # assume all segmentations are complete; turn off flag when incomplete is found
-        self.bSegmentationsCompleted = True
-        for idx in range(len(self.l2iCompletedSegmentations)):
-            # look at code stating whether the segment is required (1)
-            # for codes 0 and 2 completion level can be either 0 or 1
-            if self.l2iCompletedSegmentations[idx][0] == 1:
-                if self.l2iCompletedSegmentations[idx][1] == 0:
-                    self.bSegmentationsCompleted = False
-                    
-        return self.bSegmentationsCompleted
+    # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # def CheckPageCompletionLevelForSegmentations(self):
+    #     ''' Test to see if all segmentations for the required images are completed.
+    #         List for segmentation has 2 dimensions:
+    #             l2iCompletedSegmentations[requirementcode][completioncode]
+    #     '''
+    #     # assume all segmentations are complete; turn off flag when incomplete is found
+    #     self.bSegmentationsCompleted = True
+    #     for idx in range(len(self.l2iCompletedSegmentations)):
+    #         # look at code stating whether the segment is required (1)
+    #         # for codes 0 and 2 completion level can be either 0 or 1
+    #         if self.l2iCompletedSegmentations[idx][0] == 1:
+    #             if self.l2iCompletedSegmentations[idx][1] == 0:
+    #                 self.bSegmentationsCompleted = False
+    #
+    #     return self.bSegmentationsCompleted
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def TestLabelMapsCompletionState(self, xPageNode, sLabelMapRootDir):
         
-        #    - note: image may be repeated for different orientations
-        #            was 'redisplay' or seg required on all of them? ASSUME YES - VALIDATION TO BE UPDATEd
         sMsg = ''
-        lxImages = self.oIOXml.GetChildren(xPageNode,'Image')
+        
+        lxImageNodes = self.oIOXml.GetChildren(xPageNode,'Image')
         idxImage = -1
-        for xImage in lxImages:
-            # initialize flags to set
+        for xImageNode in lxImageNodes:
+            # initialize flags
             bExists = False
             bRedisplayed = False
             bNonZero = False
@@ -183,7 +202,7 @@ class PageState:
                 bNonZero = self.TestForNonZeroLabelMap(sPath)
                 
                 # if labelmap is redisplayed from previous page, check for change in segmentation
-                sLabelMapToRedisplay = self.oIOXml.GetValueOfNodeAttribute(xImage, 'DisplayLabelMapID')
+                sLabelMapToRedisplay = self.oIOXml.GetValueOfNodeAttribute(xImageNode, 'DisplayLabelMapID')
                 if sLabelMapToRedisplay != '':
                     bRedisplayed = True
                     # get image element from history that holds the same label map id; 
@@ -193,10 +212,10 @@ class PageState:
                     if xHistoricalImageElement != None:
                         xHistoricalLabelMapMatch = oSession.oIOXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')
                     
-                    if xHistoricalLabelMapMatch != None:
-                        # found a label map for this image in history
-                        sHistoricalLabelMapPath = self.oIOXml.GetDataInNode(xHistoricalLabelMapMatch)
-                        bModified = self.TestForModifiedLabelMap(sHistoricalLabelMapPath, sLabelMapPath)
+                        if xHistoricalLabelMapMatch != None:
+                            # found a label map for this image in history
+                            sHistoricalLabelMapPath = self.oIOXml.GetDataInNode(xHistoricalLabelMapMatch)
+                            bModified = self.TestForModifiedLabelMap(sHistoricalLabelMapPath, sLabelMapPath)
 
 
             # set completion state based on segmentation required level
@@ -216,7 +235,7 @@ class PageState:
                 if self.l2iCompletedSegmentations[idxImage][0] == 1:
                     if bRedisplayed:
                         if bModified and bNonZero:
-                        self.l2iCompletedSegmentations[idxImage][1] = 1
+                            self.l2iCompletedSegmentations[idxImage][1] = 1
                     else:
                         if bNonZero:
                             self.l2iCompletedSegmentations[idxImage][1] = 1
@@ -225,32 +244,32 @@ class PageState:
             
         # set the segmentations completed flag for this page if requirements are met
         
-        
         if self.sSegmentationRequiredState == 'None' or self.sSegmentationRequiredState == 'Any':
             self.bSegmentationsCompleted = False
             for idx in range(len(self.l2iCompletedSegmentations)):
                 if self.l2iCompletedSegmentations[idx][1] == 1:
                     self.bSegmentationsCompleted = True
-            #### IF NOT TRUE - Warning message
-            
+
+            # for 'Any' at least one segmentation must exist
+            # for 'None', no segmentations is acceptable
+            if not self.bSegmentationsCompleted:
+                if self.sSegmentationRequiredState == 'Any':
+                    sMsg = sMsg + '\nYou must complete one segmentation for any of the images.'
+                else:
+                    if self.sSegmentationRequiredState == 'None':
+                        self.bSegmentationsCompleted = True
+                
         else:
             if self.sSegmentationRequiredState == 'Specific':
                 self.bSegmentationsCompleted = True
                 for idx in range(len(self.l2iCompletedSegmentations)):
-                    if self.l2iCompletedSegmentations[idx][0] == 1 :
-                        if self.l2iCompletedSegmentations[idx][1] != 1:
+                    if self.l2iCompletedSegmentations[idx][0] == 1 : # required on this image
+                        if self.l2iCompletedSegmentations[idx][1] != 1: # segmentation not complete
                             self.bSegmentationsCompleted = False
-                            sMsg = sMsg +  '\nSegmentation missing for image X and page X'
-                        
-                            
-                        
-        # if None:  look for a 1 in l2i
-        # if Any: look for a 1 in l2i
-        # if Specific: look for a 1 in [1] whereever there is a 1 in [0]                 
-                            
-                    
-                        
-        return bCompletionState, sMsg
+                            sImageID = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'ID')
+                            sMsg = sMsg +  '\nSegmentation missing for image: ' + sImageID
+
+        return  self.bSegmentationsCompleted, sMsg
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def TestForNonZeroLabelMap(self, sPath):

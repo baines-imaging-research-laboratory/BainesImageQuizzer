@@ -31,6 +31,7 @@
 		<xs:attribute name="PageGroup" type="xs:integer" />
 		<xs:attribute name="AllowMultipleResponse" type="yesnoType" default="N" />
 		<xs:attribute name="EnableSegmentEditor" type="yesnoType" default="N" />
+		<xs:attribute name="SegmentRequiredOnAnyImage" type="yesnoType" default="N"/>
 	</xs:complexType>
 </xs:element>
 
