@@ -1047,6 +1047,7 @@ class Session:
                     # only write to xml if all responses were captured
                     if sCaptureSuccessLevel == 'All':
                         bSuccess, sMsg = self.WriteResponsesToXml()
+                        # update with completion code=1
                         self.loPageCompletionState[idxPage].UpdateQuestionSetCompletionState(idxQuestionSet,1)
                     else:
                         bSuccess = False
@@ -1054,7 +1055,8 @@ class Session:
                         
                     # if this was the last question set, check for label maps completion
                     if idxQuestionSet == iNumQSets - 1:
-                        bLabelMapCompletionState, sMsg = self.loPageCompletionState[idxPage].TestLabelMapsCompletionState(self.GetCurrentPageNode(), self.GetFolderNameForLabelMaps())    
+                        bLabelMapCompletionState, sLabelMapMsg = self.loPageCompletionState[idxPage].TestLabelMapsCompletionState(self.GetCurrentPageNode(), self.GetFolderNameForLabelMaps())
+                        sMsg = sMsg + sLabelMapMsg    
                         
                 else:  
                     # Caller must have been the Previous or Exit buttons or a close was 
