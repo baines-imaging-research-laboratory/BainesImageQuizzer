@@ -551,7 +551,7 @@ class Session:
         for iPageIndex in range(len(xPages)):
             xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
             
-            oPgItem = PageState(self.oIOXml)
+            oPgItem = PageState(self)
             oPgItem.InitializeStates(xPageNode)
             
             self.loPageCompletionState.append(oPgItem)
@@ -1072,13 +1072,14 @@ class Session:
                         
                 if bSuccess:
                     #after writing responses, record the image state
-                    bSuccess, sMsg = self.CaptureAndSaveImageState()
+                    if not self.GetQuizComplete():
+                        bSuccess, sMsg = self.CaptureAndSaveImageState()
                     
                     if sCaller == 'NextBtn' or sCaller == 'Finish':
                         # update if Page is complete (only for Next/Finish - not Previous)
                         if self.loPageCompletionState[idxPage].CheckPageCompletionLevelForQuestionSets():
                             #  AND   loPageState[idxPage].GetPageCompletionForSegments
-                             self.AddPageCompleteAttribute(idxPage)
+                            self.AddPageCompleteAttribute(idxPage)
                     
                     if sCaller == 'Finish':
                         self.AddQuizCompleteAttribute()

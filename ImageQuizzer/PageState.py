@@ -17,7 +17,7 @@ import filecmp
 
 class PageState:
     
-    def __init__(self, oIOXml):
+    def __init__(self, oSession):
         ''' Class to keep track of completed items that belong to a page.
             Segmentation completion state is a 2d list.
                 The first element specifies whether it is required (0, 1, or 2)
@@ -61,7 +61,9 @@ class PageState:
         self.bQuestionSetsCompleted = 'False'
         self.bSegmentationsCompleted = 'False'
         
-        self.oIOXml = oIOXml
+        self.oSession = oSession
+        self.oIOXml = self.oSession.oIOXml
+        self.oFilesIO = self.oSession.oFilesIO
         
     #----------
     def GetSegmentationsCompletedState(self):
@@ -126,20 +128,30 @@ class PageState:
         l2iSegmentNotRequired = [0,iCompletedTF]
         l2iSegmentRequired = [1,iCompletedTF]
 
+        # initialize list of lists avoiding implicit reference sharing
+        self.l2iCompletedSegmentations = [[0 for col in range(2)] for row in range(len(lxImageNodes))]
             
         for iImgIdx in range(len(lxImageNodes)):
             xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', iImgIdx)
             xLayerNode = self.oIOXml.GetNthChild(xImageNode,'Layer',0)
             sLayer = self.oIOXml.GetDataInNode(xLayerNode)
             if sLayer == 'Segmentation' or sLayer == 'Label':
-                self.l2iCompletedSegmentations.append(l2iSegmentNotApplicableLayer)
+#                 self.l2iCompletedSegmentations.append(l2iSegmentNotApplicableLayer)
+                self.l2iCompletedSegmentations[iImgIdx][0] = l2iSegmentNotApplicableLayer[0]
+                self.l2iCompletedSegmentations[iImgIdx][1] = l2iSegmentNotApplicableLayer[1]
+                
             else:
                 sSegRequired = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'SegmentRequired')
                 if sSegRequired == 'Y' or sSegRequired == 'y':
-                    self.l2iCompletedSegmentations.append(l2iSegmentRequired)
+#                     self.l2iCompletedSegmentations.append(l2iSegmentRequired)
+                    self.l2iCompletedSegmentations[iImgIdx][0] = l2iSegmentRequired[0]
+                    self.l2iCompletedSegmentations[iImgIdx][1] = l2iSegmentRequired[1]
+                    
                     self.sSegmentationRequiredState = 'Specific' # override default
                 else:
-                    self.l2iCompletedSegmentations.append(l2iSegmentNotRequired)
+#                     self.l2iCompletedSegmentations.append(l2iSegmentNotRequired)
+                    self.l2iCompletedSegmentations[iImgIdx][0] = l2iSegmentNotRequired[0]
+                    self.l2iCompletedSegmentations[iImgIdx][1] = l2iSegmentNotRequired[1]
                     
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -192,14 +204,14 @@ class PageState:
             
             idxImage = idxImage + 1
             
-            xLabelMapElement = self.oIOXml.GetLastChild(xPageNode, 'LabelMapPath')
+            xLabelMapElement = self.oIOXml.GetLastChild(xImageNode, 'LabelMapPath')
             if xLabelMapElement != None:
-                sLabelMapPath = self.oIOXml.GetDataInNode(xLabelMapElement)
+                sLabelMapRelativePath = self.oIOXml.GetDataInNode(xLabelMapElement)
                 bExists = True
                 
                 # test for non zero segmentation
-                sPath = os.path.join(sLabelMapRootDir, sLabelMapPath)
-                bNonZero = self.TestForNonZeroLabelMap(sPath)
+                sLabelMapAbsolutePath = self.oFilesIO.GetAbsoluteUserPath(sLabelMapRelativePath)
+                bNonZero = self.TestForNonZeroLabelMap(sLabelMapAbsolutePath)
                 
                 # if labelmap is redisplayed from previous page, check for change in segmentation
                 sLabelMapToRedisplay = self.oIOXml.GetValueOfNodeAttribute(xImageNode, 'DisplayLabelMapID')
@@ -208,14 +220,15 @@ class PageState:
                     # get image element from history that holds the same label map id; 
                     xHistoricalImageElement = None  # initialize
                     xHistoricalLabelMapMatch = None
-                    xHistoricalImageElement = oSession.GetXmlElementFromAttributeHistory('Image','LabelMapID',sLabelMapIDLink)
+                    xHistoricalImageElement = self.oSession.GetXmlElementFromAttributeHistory('Image','LabelMapID',sLabelMapToRedisplay)
                     if xHistoricalImageElement != None:
-                        xHistoricalLabelMapMatch = oSession.oIOXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')
+                        xHistoricalLabelMapMatch = self.oSession.oIOXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')
                     
                         if xHistoricalLabelMapMatch != None:
                             # found a label map for this image in history
-                            sHistoricalLabelMapPath = self.oIOXml.GetDataInNode(xHistoricalLabelMapMatch)
-                            bModified = self.TestForModifiedLabelMap(sHistoricalLabelMapPath, sLabelMapPath)
+                            sHistoricalLabelMapRelativePath = self.oIOXml.GetDataInNode(xHistoricalLabelMapMatch)
+                            sHistoricalLabelMapAbsolutePath = self.oFilesIO.GetAbsoluteUserPath(sHistoricalLabelMapRelativePath)
+                            bModified = self.TestForModifiedLabelMap(sHistoricalLabelMapAbsolutePath, sLabelMapAbsolutePath)
 
 
             # set completion state based on segmentation required level
@@ -295,9 +308,16 @@ class PageState:
             modified from the original.
         '''
         
-        bModified = False
+#         bModified = False
         
-        bModified = filecmp.cmp(sPathHistorical, sPathNew, shallow=False)
+#         bModified = filecmp.cmp(sPathHistorical, sPathNew, shallow=False)
+        imgHistorical = sitk.ReadImage(sPathHistorical)
+        imgNew = sitk.ReadImage(sPathNew)
+        
+        if imgHistorical == imgNew:
+            bModified = False
+        else:
+            bModified = True
         
         return bModified
         
