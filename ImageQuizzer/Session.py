@@ -738,114 +738,6 @@ class Session:
                 self._loQuestionSets.append(oQuestionSet)
 
 
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def DisplayPage(self):
-#
-#         # extract page and question set indices from the current composite index
-#
-#         xNodeQuestionSet = self.GetCurrentQuestionSetNode()
-#         oQuestionSet = QuestionSet()
-#         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
-#
-#         sQuestionsWithRecordedResponses = self.GetQuestionSetResponseCompletionLevel()
-#         if self.GetQuizComplete():
-#             self.SetMultipleResponseAllowed(False) #read only
-#         else:
-#             if self.GetQuizResuming():
-#                 # open this up - user may have answered questions but not pressed Finish
-#                 self.SetMultipleResponseAllowed(True)
-#             else:
-#                 self.SetMultipleResponseAllowed(oQuestionSet.GetMultipleResponseAllowedTF())
-#
-#         if self.GetSegmentationTabIndex() > 0:
-#
-#             if self.GetQuizComplete():
-#                 self.SegmentationTabEnabler(False)
-#             else:
-#                 if oQuestionSet.GetMultipleResponseAllowedTF() == True:
-#                     self.SegmentationTabEnabler(oQuestionSet.GetEnableSegmentEditorTF())
-#                 else:
-#                     # When multiple responses are not allowed, 
-#                     #    enable the segmentation tab only if the segments are required and
-#                     #    the number of questions with responses is not All (ie. either None or Partial)
-#
-#                     if (sQuestionsWithRecordedResponses == 'All'):
-#                         if self.GetQuizResuming():
-#                             # open this up - user may have answered questions but not pressed Next or Finish
-#                             self.SegmentationTabEnabler(True)
-#                         else:
-#                             self.SegmentationTabEnabler(False)
-#                     else:
-#                         self.SegmentationTabEnabler(oQuestionSet.GetEnableSegmentEditorTF())
-#
-#
-#         # first clear any previous widgets (except push buttons)
-#         for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
-#             self.oQuizWidgets.qQuizLayout.itemAt(i).widget().setParent(None)
-#
-#
-#         bBuildSuccess, qWidgetQuestionSetForm = oQuestionSet.BuildQuestionSetForm()
-#
-#         if bBuildSuccess:
-#             self.oQuizWidgets.qQuizLayout.addWidget(qWidgetQuestionSetForm)
-#             self._loQuestionSets.append(oQuestionSet)
-#             qWidgetQuestionSetForm.setEnabled(True) # initialize
-#
-#             if self.GetQuizComplete():
-#                 qWidgetQuestionSetForm.setEnabled(False)
-#             else:
-#                 # enable widget if not all questions have responses or if user is allowed to 
-#                 # input multiple responses
-#                 if sQuestionsWithRecordedResponses == 'All':
-#                     qWidgetQuestionSetForm.setEnabled(self.GetMultipleResponseAllowed())
-#
-#             if sQuestionsWithRecordedResponses == 'All' or sQuestionsWithRecordedResponses == 'Partial':
-#                 self.DisplaySavedResponse()
-#
-#
-#         # set the layout to default view 
-# #         slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
-# #         slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
-#
-#         # add page ID/descriptor to the progress bar
-#         xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
-#         self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
-#         self.sPageID = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'ID')
-#         iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
-#         self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
-#
-#         # set the requested layout for images
-#         self.sPageLayout = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Layout')
-#         if self.sPageLayout == 'TwoOverTwo' :
-#             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
-#         elif self.sPageLayout == 'OneUpRedSlice' :
-#             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutOneUpRedSliceView)
-#         elif self.sPageLayout == 'FourUp' :
-#             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
-#         elif self.sPageLayout == 'SideBySideRedYellow' :
-#             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutSideBySideView)
-#         else:
-#             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
-#
-#         # set up the images on the page
-#         self.oImageView = ImageView()
-#         self.oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self.oFilesIO.GetDataParentDir())
-#
-#         # load label maps if a labelmap path has been stored in the xml for the images on this page
-#         self.oFilesIO.LoadSavedLabelMaps(self)
-#
-#         # assign each image node and its label map (if applicable) to the viewing widget
-#         self.oImageView.AssignNodesToView()
-#
-#         self.SetSavedImageState() # after loading label maps and setting assigning views
-#
-#         if self.GetSegmentationTabIndex() > 0:
-#             # clear Master and Merge selector boxes
-#             oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
-#             oQuizzerEditorHelperBox.setMasterVolume(None)
-#
-#         # page has been displayed - reset Quiz Resuming to false if applicable
-#         self.SetQuizResuming(False)
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayImagesAndQuestions(self):
 
@@ -1047,16 +939,16 @@ class Session:
                     # only write to xml if all responses were captured
                     if sCaptureSuccessLevel == 'All':
                         bSuccess, sMsg = self.WriteResponsesToXml()
-                        # update with completion code=1
-                        self.loPageCompletionState[idxPage].UpdateQuestionSetCompletionState(idxQuestionSet,1)
+                        if bSuccess:
+                            # update question set with completion code=1
+                            self.loPageCompletionState[idxPage].UpdateQuestionSetCompletionState(idxQuestionSet,1)
+                            # if this was the last question set, update label maps completion
+                            if idxQuestionSet == iNumQSets - 1:
+                                self.loPageCompletionState[idxPage].UpdateSegmentationCompletionState(self.GetCurrentPageNode())
                     else:
                         bSuccess = False
                         
                         
-                    # if this was the last question set, check for label maps completion
-                    if idxQuestionSet == iNumQSets - 1:
-                        bLabelMapCompletionState, sLabelMapMsg = self.loPageCompletionState[idxPage].TestLabelMapsCompletionState(self.GetCurrentPageNode(), self.GetFolderNameForLabelMaps())
-                        sMsg = sMsg + sLabelMapMsg    
                         
                 else:  
                     # Caller must have been the Previous or Exit buttons or a close was 
@@ -1077,12 +969,19 @@ class Session:
                     
                     if sCaller == 'NextBtn' or sCaller == 'Finish':
                         # update if Page is complete (only for Next/Finish - not Previous)
-                        if self.loPageCompletionState[idxPage].CheckPageCompletionLevelForQuestionSets():
-                            #  AND   loPageState[idxPage].GetPageCompletionForSegments
+                        bQuestionSetsComplete = self.loPageCompletionState[idxPage].CheckPageCompletionLevelForQuestionSets()
+                        bSegmentationsComplete, sLabelMapMsg = self.loPageCompletionState[idxPage].CheckPageCompletionLevelForSegmentations(self.GetCurrentPageNode())
+                        sMsg = sMsg + sLabelMapMsg
+                        if bSegmentationsComplete and bQuestionSetsComplete:
+#                         if self.loPageCompletionState[idxPage].CheckPageCompletionLevelForQuestionSets():
+                            bSuccess = True
                             self.AddPageCompleteAttribute(idxPage)
+                            if sCaller == 'Finish':
+                                self.AddQuizCompleteAttribute()
+                        else:
+                            bSuccess = False
+                            
                     
-                    if sCaller == 'Finish':
-                        self.AddQuizCompleteAttribute()
 
         # let calling program handle display of message if not successful            
         return bSuccess, sMsg
@@ -1361,7 +1260,7 @@ class Session:
                         
                     self.AddXmlElements()
                     
-                     # potential exit of quiz - update logout time with each write
+                    # potential exit of quiz - update logout time with each write
                     self.UpdateSessionLogoutTimestamp()
                     
                     self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
