@@ -1,4 +1,4 @@
-		<QuestionSet ID="XXXXX" Descriptor="xx" EnableSegmentEditor="xx">
+		<QuestionSet ID="XXXXX" Descriptor="xx">
 			<Question Type="XXXXX" Descriptor="xx">
 				<Option>xx</Option> 
 			</Question>

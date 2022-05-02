@@ -1,5 +1,5 @@
 <Session ROIColorFile="ROIColors_Brain">
-	<Page ID="Patient 1" Descriptor="Contouring Challenge" AllowMultipleResponse="Y"  EnableSegmentEditor="Y">
+	<Page ID="Patient 1" Descriptor="Contouring Challenge" AllowMultipleResponse="Y"  EnableSegmentEditor="Y" SegmentRequiredOnAnyImage="Y">
 		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" LabelMapID="MR_Contour">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -37,7 +37,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient 1" Descriptor="Contouring Challenge"  EnableSegmentEditor="Y">
+	<Page ID="Patient 1" Descriptor="Contouring Challenge"  EnableSegmentEditor="Y" SegmentRequiredOnAnyImage="Y">
 		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" DisplayLabelMapID="MR_Contour">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>

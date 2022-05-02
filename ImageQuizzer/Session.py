@@ -946,6 +946,8 @@ class Session:
                             if idxQuestionSet == iNumQSets - 1:
                                 self.loPageCompletionState[idxPage].UpdateSegmentationCompletionState(self.GetCurrentPageNode())
                     else:
+                        # update question set with completion code=0
+                        self.loPageCompletionState[idxPage].UpdateQuestionSetCompletionState(idxQuestionSet,0)
                         bSuccess = False
                         
                         
@@ -969,10 +971,11 @@ class Session:
                     
                     if sCaller == 'NextBtn' or sCaller == 'Finish':
                         # update if Page is complete (only for Next/Finish - not Previous)
-                        bQuestionSetsComplete = self.loPageCompletionState[idxPage].CheckPageCompletionLevelForQuestionSets()
-                        bSegmentationsComplete, sLabelMapMsg = self.loPageCompletionState[idxPage].CheckPageCompletionLevelForSegmentations(self.GetCurrentPageNode())
+                        self.loPageCompletionState[idxPage].CheckPageCompletionLevelForQuestionSets()
+                        sLabelMapMsg = self.loPageCompletionState[idxPage].CheckPageCompletionLevelForSegmentations(self.GetCurrentPageNode())
                         sMsg = sMsg + sLabelMapMsg
-                        if bSegmentationsComplete and bQuestionSetsComplete:
+                        if self.loPageCompletionState[idxPage].GetQuestionSetsCompletedState() and \
+                            self.loPageCompletionState[idxPage].GetSegmentationsCompletedState():
 #                         if self.loPageCompletionState[idxPage].CheckPageCompletionLevelForQuestionSets():
                             bSuccess = True
                             self.AddPageCompleteAttribute(idxPage)

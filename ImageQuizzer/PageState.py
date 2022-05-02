@@ -44,7 +44,8 @@ class PageState:
                 Any:    This variable gets set to 'Any' if the page attribute SegmentRequiredOnAnyImage="Y" .
                         This means that the user is required to create at least one segmentation that is not zeroes
                         (zeros can happen if the user goes into the segment editor, selects a volume to edit but does
-                        not actually create any segments. The mask is then all zeros.)
+                        not actually create any segments. The mask is then all zeros.) The redisplayed segmentation
+                        may remain unmodified.
                         
                 Specific:   This variable gets set to 'Specific' if there are any Image elements with the
                             'SegmentRequired' attribute set to "Y".
@@ -162,7 +163,9 @@ class PageState:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckPageCompletionLevelForSegmentations(self, xPageNode):
-        
+        ''' Based on the segmentation completion level over all the images, the flag for
+            completion of segmentation at the Page level is determined. 
+        '''
         #######################################
         # Page level segmentation completion
         # set the segmentations completed flag for this page if requirements are met for all images
@@ -194,7 +197,7 @@ class PageState:
                             sImageID = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'ID')
                             sMsg = sMsg +  '\nSegmentation missing for image: ' + sImageID
         
-        return self.bSegmentationsCompleted, sMsg
+        return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateQuestionSetCompletionState(self, iQSetIdx, iCompletionCode):
@@ -204,10 +207,7 @@ class PageState:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateSegmentationCompletionState(self, xPageNode):
-        ''' Function to set the completion flags for segmentations.
-            First the function checks on whether a segmentation exists for each image.
-            Then, based on the completion level over all the images, the flag for
-            completion of segmentation at the Page level is set. 
+        ''' Function to update the completion flags for segmentations for each image.
         '''
         
         sMsg = ''
@@ -259,7 +259,8 @@ class PageState:
                 if bExists:
                     self.l2iCompletedSegmentations[idxImage][1] = 1
                     
-            #    if 'Any' - segmentation must be non-zero in order to be complete
+            #    if 'Any' - segmentation must be non-zero in order to be complete 
+            #        - it can be unmodified if it was redisplayed
             if self.sSegmentationRequiredState == 'Any':
                 if bExists and not bEmptyLabelMap :
                     self.l2iCompletedSegmentations[idxImage][1] = 1

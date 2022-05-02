@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session ROIColorFile="PiRadsStudy">
-	<Page ID="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y">
+	<Page ID="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y" EnableSegmentEditor="Y" SegmentRequiredOnAnyImage="Y">
 		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" LabelMapID="DCE-contour">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
@@ -19,7 +19,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\t2ax-N4.nrrd</Path>
 		</Image>
-		<QuestionSet ID="PI-RADS" Descriptor="Contouring Exercise"  EnableSegmentEditor="Y">
+		<QuestionSet ID="PI-RADS" Descriptor="Contouring Exercise">
 			<Question Type="InfoBox" Descriptor="Segmentation Instructions">
 				<Option>In Segment Editor tab, select volume to create segments.</Option>
 				<Option>     Click Edit Selected Label Map collapsible button to access the segmenting tools.</Option>
@@ -31,7 +31,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y">
+	<Page ID="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y" EnableSegmentEditor="Y">
 		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" DisplayLabelMapID='DCE-contour'>
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
@@ -56,7 +56,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\ktrans.nrrd</Path>
 		</Image>
-		<QuestionSet ID="Segmentation" Descriptor="Self-Assessment"  EnableSegmentEditor="Y">
+		<QuestionSet ID="Segmentation" Descriptor="Self-Assessment">
 			<Question Type="Radio" Descriptor="How did you do?">
 				<Option>Great</Option>
 				<Option>Not bad</Option>
