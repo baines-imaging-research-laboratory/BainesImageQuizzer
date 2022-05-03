@@ -54,6 +54,8 @@ class PageState:
                             Also, if the image has a segmentation file that was copied in and redisplayed  
                             from a previous page (this occurs when the Image element has an attribute
                             'DisplayLabelMapID' set), the user is required to make a change to that copied in segmentation.
+                            Images that are not set to 'SegmentRequired="Y"' are not subject to the above rules (they
+                            could be empty or unmodified).
         '''
         self.liCompletedQuestionSets = []
         self.l2iCompletedSegmentations = []
@@ -195,8 +197,8 @@ class PageState:
                             self.bSegmentationsCompleted = False
                             xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', idx)
                             sImageID = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'ID')
-                            sMsg = sMsg +  '\nSegmentation missing for image: ' + sImageID + \
-                            '\nIf image has been redisplayed, it must be modified'
+                            sMsg = sMsg +  '\nYou must complete a segmentation for this image: ' + sImageID + \
+                            '\nIf contour has been redisplayed for this image, it must be modified'
         
         return sMsg
         
@@ -316,7 +318,8 @@ class PageState:
         npArrayImgHistorical = sitk.GetArrayViewFromImage(imgHistorical)
         npArrayImgNew = sitk.GetArrayViewFromImage(imgNew)
         
-        if (npArrayImgHistorical == npArrayImgNew).all():
+#         if (npArrayImgHistorical == npArrayImgNew).all():
+        if (nparray.equal(npArrayImgHistorical, npArrayImgNew))
             bModified = False
         else:
             bModified = True
