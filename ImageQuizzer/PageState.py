@@ -319,7 +319,7 @@ class PageState:
         npArrayImgNew = sitk.GetArrayViewFromImage(imgNew)
         
 #         if (npArrayImgHistorical == npArrayImgNew).all():
-        if (nparray.equal(npArrayImgHistorical, npArrayImgNew))
+        if nparray.equal(npArrayImgHistorical, npArrayImgNew):
             bModified = False
         else:
             bModified = True
