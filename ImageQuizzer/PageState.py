@@ -195,7 +195,8 @@ class PageState:
                             self.bSegmentationsCompleted = False
                             xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', idx)
                             sImageID = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'ID')
-                            sMsg = sMsg +  '\nSegmentation missing for image: ' + sImageID
+                            sMsg = sMsg +  '\nSegmentation missing for image: ' + sImageID + \
+                            '\nIf image has been redisplayed, it must be modified'
         
         return sMsg
         
@@ -307,7 +308,15 @@ class PageState:
         imgHistorical = sitk.ReadImage(sPathHistorical)
         imgNew = sitk.ReadImage(sPathNew)
         
-        if imgHistorical == imgNew:
+        # if imgHistorical == imgNew:
+        #     bModified = False
+        # else:
+        #     bModified = True
+        
+        npArrayImgHistorical = sitk.GetArrayViewFromImage(imgHistorical)
+        npArrayImgNew = sitk.GetArrayViewFromImage(imgNew)
+        
+        if (npArrayImgHistorical == npArrayImgNew).all():
             bModified = False
         else:
             bModified = True
