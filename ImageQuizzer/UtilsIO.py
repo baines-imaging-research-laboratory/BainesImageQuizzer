@@ -799,10 +799,12 @@ class UtilsIO:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ValidateSegmentRequiredSettings(self, xPageNode, iPageReference):
         
+       
         sMsg = ''
         sErrorMsgEnableEditor = "\nPage must have 'EnableSegmentEditor' attribute set to 'Y' when a segment required attribute is set. See Page: "
         sErrorMsgSegmentOnAnyImage = "\nContradicting attributes. You cannot have both 'SegmentRequired' on an image and 'SegmentRequiredOnAnyImage' on a page. See Page: "
-        sErrorMsgMismatchSegmentRequired = "\nAll image elements with the same path (but different destinations) must have the same attribute 'SegmentRequired' setting. See Page:"
+        sErrorMsgMismatchSegmentRequired = "\nAll image elements with the same path (but different destinations) must have the same attribute 'SegmentRequired' setting. See Page: "
+        sErrorMsgSegmentRequiredOnWrongLayer = "\n'SegmentRequired' attribute cannot be on an image assigned to Layer='Segmentation' or 'Label' See Page: "
         
         sEnableSegmentEditorSetting = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor')
         sSegmentOnAnyImageSetting = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'SegmentRequiredOnAnyImage')
@@ -819,6 +821,8 @@ class UtilsIO:
             sSegmentRequiredSetting = self.oIOXml.GetValueOfNodeAttribute(xImageNode, 'SegmentRequired')
             if sSegmentRequiredSetting == '':
                 sSegmentRequiredSetting = 'N'
+            sImageLayerNode = self.oIOXml.GetLastChild(xImageNode, 'Layer')
+            sImageLayer = self.oIOXml.GetDataInNode(sImageLayerNode)
             sImagePathNode = self.oIOXml.GetLastChild(xImageNode,'Path')
             sImagePath = self.oIOXml.GetDataInNode(sImagePathNode)
             tupImageSettings = [sImagePath, sSegmentRequiredSetting]
@@ -826,6 +830,9 @@ class UtilsIO:
             
             if sSegmentRequiredSetting == 'Y':
                 bFoundSegmentRequiredForImage = True
+                if (sImageLayer=="Segmentation" or sImageLayer=="Label"):
+                    sMsg = sMsg + sErrorMsgSegmentRequiredOnWrongLayer + str(iPageReference)
+
                 
         if sSegmentOnAnyImageSetting == "Y" or bFoundSegmentRequiredForImage == True :
             if sEnableSegmentEditorSetting != "Y":
@@ -834,8 +841,11 @@ class UtilsIO:
         if sSegmentOnAnyImageSetting == "Y" and bFoundSegmentRequiredForImage == True:
             sMsg = sMsg + sErrorMsgSegmentOnAnyImage + str(iPageReference)
                 
-        # if a segment required attribute was found for an image, ensure
-        #    that all images with that same path have the same attribute setting
+
+        # if a segment required attribute was found for an image, ensure:
+        #    - that it is not on an image set to Layer="Segmentation" or "Label"
+        #    - that all images with that same path have the same attribute setting
+        
         if bFoundSegmentRequiredForImage:
             bMismatch = False
             for idxOuterLoop in range(len(l2tupImageSettings)):

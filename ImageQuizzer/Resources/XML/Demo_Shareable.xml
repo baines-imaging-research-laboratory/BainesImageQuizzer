@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session ROIColorFile="PiRadsStudy">
-	<Page ID="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y" EnableSegmentEditor="Y">
+	<Page ID="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y" EnableSegmentEditor="Y" SegmentRequiredOnAnyImage="Y">
 		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" LabelMapID="DCE-contour">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\ProstateDCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y" LabelMapID="ADC-contour" SegmentRequired="Y">
+		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y" LabelMapID="ADC-contour">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -31,14 +31,14 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y" EnableSegmentEditor="Y">
+	<Page ID="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y" EnableSegmentEditor="Y" SegmentRequiredOnAnyImage="Y">
 		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" DisplayLabelMapID='DCE-contour'>
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\ProstateDCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y" DisplayLabelMapID='ADC-contour' SegmentRequired="Y">
+		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y" DisplayLabelMapID='ADC-contour'>
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>

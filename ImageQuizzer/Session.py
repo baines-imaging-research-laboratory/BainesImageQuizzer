@@ -591,16 +591,15 @@ class Session:
             
             # append to composite indices list
             #    - if there are 2 pages and the 1st page has 2 question sets, 2nd page has 1 question set,
+            #        and each page is in a different page group
             #        the indices will look like this:
-            #        Page    QS
-            #        0        0
-            #        0        1
-            #        1        0
+            #        Page    QS    PageGroup
+            #        0        0        1
+            #        0        1        1
+            #        1        0        2
             #    - there can be numerous questions in each question set
             for iQuestionSetIndex in range(len(xQuestionSets)):
-                # self._l2iPageQuestionCompositeIndices.append([iPageIndex, iQuestionSetIndex])
                 self._l3iPageQuestionGroupCompositeIndices.append([iPageIndex,iQuestionSetIndex, iPageGroup])
-        
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ShufflePageQuestionGroupCompositeIndexList(self, lRandIndices):

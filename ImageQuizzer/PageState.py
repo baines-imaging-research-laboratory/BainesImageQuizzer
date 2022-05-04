@@ -5,6 +5,7 @@ import sys
 import sitkUtils
 import SimpleITK as sitk
 
+import numpy as np
 
 
 
@@ -22,13 +23,13 @@ class PageState:
                 The first element specifies whether it is required (0, 1, or 2)
                 The second element specifies whether the requirement has been completed. (0 or 1)
 
-                Codes for completed states:
-                    0 = incomplete
-                    1 = complete
                 Code for required states:
                     0 = not required
                     1 = required
-                    2 = not applicable
+                    2 = not applicable    (eg. image elements assigned to Layer='Segmentation' or 'Label')
+                Codes for completed states:
+                    0 = incomplete
+                    1 = complete
                 
             A completed page requires all questions in all question sets to be completed
             and either all or any segmentations (depending on the required segmentations attribute)
@@ -44,9 +45,10 @@ class PageState:
                 Any:    This variable gets set to 'Any' if the page attribute SegmentRequiredOnAnyImage="Y" .
                         This means that the user is required to create at least one segmentation that is not zeroes
                         (zeros can happen if the user goes into the segment editor, selects a volume to edit but does
-                        not actually create any segments. The mask is then all zeros.) The redisplayed segmentation
-                        may remain unmodified.
-                        
+                        not actually create any segments. The mask is then all zeros.) 
+                        Some kind of change must have been made to the segmentations - whether it is a new
+                        segmentation on an image, or an existing segmentation is modified (if the segmentation was copied in from a previous page
+                        and redisplayed)                        
                 Specific:   This variable gets set to 'Specific' if there are any Image elements with the
                             'SegmentRequired' attribute set to "Y".
                             The user must create a segmentation for that specific image. It cannot be
@@ -90,7 +92,7 @@ class PageState:
         ''' 
             Each question set is intialized as incomplete.
             Each image segmentation state is initialized as incomplete except when the image node
-            has a layer defined as 'Segmentation' or 'Layer'
+            has a layer defined as 'Segmentation' or 'Label'
             If the image has an attribute 'SegmentRequired' then there must exist a seg file specifically for that image.
             If the page has the attribute 'SegmentRequiredOnAnyImage' then there must exist a non-empty/modified labelmap file.
                 
@@ -179,16 +181,18 @@ class PageState:
                 if self.l2iCompletedSegmentations[idx][1] == 1:
                     self.bSegmentationsCompleted = True
 
-            # for 'Any' at least one segmentation must exist
+            # for 'Any' at least one completed segmentation must exist
             # for 'None', no segmentations is acceptable
             if not self.bSegmentationsCompleted:
                 if self.sSegmentationRequiredState == 'Any':
-                    sMsg = sMsg + '\nYou must complete one segmentation for any of the images.'
+                    sMsg = sMsg + '\nYou must complete one segmentation for any of the images.' + \
+                            '\nIf contour has been redisplayed for this image, it must be modified'
                 else:
                     if self.sSegmentationRequiredState == 'None':
                         self.bSegmentationsCompleted = True
                 
         else:
+            # for 'Specific' the images marked with the 'required' code must also have the 'completed' code
             if self.sSegmentationRequiredState == 'Specific':
                 self.bSegmentationsCompleted = True
                 for idx in range(len(self.l2iCompletedSegmentations)):
@@ -198,7 +202,7 @@ class PageState:
                             xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', idx)
                             sImageID = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'ID')
                             sMsg = sMsg +  '\nYou must complete a segmentation for this image: ' + sImageID + \
-                            '\nIf contour has been redisplayed for this image, it must be modified'
+                                '\nIf contour has been redisplayed for this image, it must be modified'
         
         return sMsg
         
@@ -254,21 +258,29 @@ class PageState:
                             sHistoricalLabelMapRelativePath = self.oIOXml.GetDataInNode(xHistoricalLabelMapMatch)
                             sHistoricalLabelMapAbsolutePath = self.oFilesIO.GetAbsoluteUserPath(sHistoricalLabelMapRelativePath)
                             bModified = self.TestForModifiedLabelMap(sHistoricalLabelMapAbsolutePath, sLabelMapAbsolutePath)
+                        else:
+                            # there was no labelmap in history so this must be a 'new' contour - reset flag
+                            bRedisplayed = False
 
 
             # set segmentation completion state for the image based on the image segmentation required level
-            #     if 'None' - segmentation just needs to exist; non-zero or modified is irrelevant
+            #     if state is 'None' - segmentation just needs to exist; non-zero or modified is irrelevant
             if self.sSegmentationRequiredState == 'None':
                 if bExists:
                     self.l2iCompletedSegmentations[idxImage][1] = 1
                     
-            #    if 'Any' - segmentation must be non-zero in order to be complete 
-            #        - it can be unmodified if it was redisplayed
+            #    if state is 'Any' - some kind of change must have happened to the segmentations
+            #        (either new & non-zero or redisplayed & modified)
             if self.sSegmentationRequiredState == 'Any':
-                if bExists and not bEmptyLabelMap :
-                    self.l2iCompletedSegmentations[idxImage][1] = 1
+                if bExists:
+                    if bRedisplayed:
+                        if bModified and not bEmptyLabelMap:
+                            self.l2iCompletedSegmentations[idxImage][1] = 1
+                    else:   # a new segmentation
+                        if not bEmptyLabelMap :
+                            self.l2iCompletedSegmentations[idxImage][1] = 1
                     
-            #    if 'Specific' - check whether 'SegmentRequired' was set and
+            #    if state is 'Specific' - check whether the code for segment required (first element) was set and
             #        the labelmap file must be non-zero; if redisplayed it must be modified
             if self.sSegmentationRequiredState == 'Specific':
                 if self.l2iCompletedSegmentations[idxImage][0] == 1:
@@ -319,7 +331,7 @@ class PageState:
         npArrayImgNew = sitk.GetArrayViewFromImage(imgNew)
         
 #         if (npArrayImgHistorical == npArrayImgNew).all():
-        if nparray.equal(npArrayImgHistorical, npArrayImgNew):
+        if np.array_equal(npArrayImgHistorical, npArrayImgNew):
             bModified = False
         else:
             bModified = True
