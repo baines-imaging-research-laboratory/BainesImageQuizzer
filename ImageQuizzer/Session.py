@@ -781,6 +781,8 @@ class Session:
                 # input multiple responses
                 if sSavedResponseCompletionLevel == 'All':
                     qWidgetQuestionSetForm.setEnabled(self.GetMultipleResponseAllowed())
+                    if self.GetQuizResuming():
+                        qWidgetQuestionSetForm.setEnabled(True)     # open quiz tab on a resume
                 if self.GetRequestToEnableSegmentEditorTF():
                 # if not self.loPageCompletionState[self.GetCurrentPageIndex()].GetSegmentationsCompletedState():
                     self.SegmentationTabEnabler(True)
@@ -1254,8 +1256,6 @@ class Session:
                 if not self._lsNewResponses == self._lsPreviousResponses:
                     # Responses have been captured, if it's the first set of responses
                     #    for the session, add in the login timestamp
-                    #    The timestamp is added here in case the user exited without responding to anything,
-                    #    allowing for the resume check to function properly
                     if self._bFirstResponsesRecordedInXml == False:
                         self.AddSessionLoginTimestamp()
                         self._bFirstResponsesRecordedInXml = True
@@ -1437,9 +1437,17 @@ class Session:
                 xQuestionSetNode = lxQSetNodes[indQSet]
                 if self.GetSavedResponseCompletionLevel(xQuestionSetNode) == 'All':
                     self.loPageCompletionState[iPageIndex].UpdateQuestionSetCompletionState(indQSet,1)
-                    if iResumeCompIndex < len(self._l3iPageQuestionGroupCompositeIndices) - 1: # end case: complete but user didn't press Finish
+                    
+                    # only advance if there are more question sets
+                    #    if the last question set has been reached and it is complete then 'PageComplete'
+                    #    was not set because the segmentation requirements were not met
+                    if indQSet < iNumQSets - 1:
                         iResumeCompIndex = iResumeCompIndex + 1
-            
+
+            if self.loPageCompletionState[iPageIndex].GetQuestionSetsCompletedState() and \
+                        self.loPageCompletionState[iPageIndex].GetSegmentationsCompletedState():
+                iResumeCompIndex = iResumeCompIndex + 1
+
 
             # Display a message to user if resuming (special case if resuming on first page)
             # if not iResumeCompIndex == self._iCurrentCompositeIndex:

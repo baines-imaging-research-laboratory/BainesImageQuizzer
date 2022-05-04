@@ -186,7 +186,7 @@ class PageState:
             if not self.bSegmentationsCompleted:
                 if self.sSegmentationRequiredState == 'Any':
                     sMsg = sMsg + '\nYou must complete one segmentation for any of the images.' + \
-                            '\nIf contour has been redisplayed for this image, it must be modified'
+                            '\nYou can create a new segmentation or modify a segmentation that was redisplayed.'
                 else:
                     if self.sSegmentationRequiredState == 'None':
                         self.bSegmentationsCompleted = True
@@ -202,7 +202,7 @@ class PageState:
                             xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', idx)
                             sImageID = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'ID')
                             sMsg = sMsg +  '\nYou must complete a segmentation for this image: ' + sImageID + \
-                                '\nIf contour has been redisplayed for this image, it must be modified'
+                                '\nIf a contour has been redisplayed for this image, it must be modified.'
         
         return sMsg
         
