@@ -29,12 +29,17 @@
 			<Question Type="IntegerValue" Descriptor="Overall PI-RADS" Min="1" Max="5">
 				<Option>Enter overall PI-RADS score:</Option>
 			</Question>
+			<Question Type="CheckBox" Descriptor="Testing">
+				<Option>QS1 Test 1</Option>
+				<Option>QS1 Test 2</Option>
+				<Option>QS1 Test 3</Option>
+			</Question>
 		</QuestionSet>
 		<QuestionSet ID="PI-RADS" Descriptor="Second QSet Test">
 			<Question Type="CheckBox" Descriptor="Testing">
-				<Option>Test 1</Option>
-				<Option>Test 2</Option>
-				<Option>Test 3</Option>
+				<Option>QS2 Test 1</Option>
+				<Option>QS2 Test 2</Option>
+				<Option>QS2 Test 3</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
@@ -69,6 +74,11 @@
 				<Option>Not bad</Option>
 				<Option>Could be better</Option>
 				<Option>Terrible</Option>
+			</Question>
+			<Question Type="CheckBox" Descriptor="Testing">
+				<Option>QS1 Test 1</Option>
+				<Option>QS1 Test 2</Option>
+				<Option>QS1 Test 3</Option>
 			</Question>
 		</QuestionSet>
 	</Page>

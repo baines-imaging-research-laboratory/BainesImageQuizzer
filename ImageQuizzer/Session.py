@@ -784,10 +784,10 @@ class Session:
                     if self.GetQuizResuming():
                         qWidgetQuestionSetForm.setEnabled(True)     # open quiz tab on a resume
                 if self.GetRequestToEnableSegmentEditorTF():
-                # if not self.loPageCompletionState[self.GetCurrentPageIndex()].GetSegmentationsCompletedState():
-                    self.SegmentationTabEnabler(True)
-                else:
-                    self.SegmentationTabEnabler(False)
+                    if not self.loPageCompletionState[self.GetCurrentPageIndex()].GetSegmentationsCompletedState():
+                        self.SegmentationTabEnabler(True)
+                    else:
+                        self.SegmentationTabEnabler(False)
 
                    
         # add page ID/descriptor to the progress bar
@@ -943,9 +943,10 @@ class Session:
                         if bSuccess:
                             # update question set with completion code=1
                             self.loPageCompletionState[idxPage].UpdateQuestionSetCompletionState(idxQuestionSet,1)
-                            # if this was the last question set, update label maps completion
-                            if idxQuestionSet == iNumQSets - 1:
-                                self.loPageCompletionState[idxPage].UpdateSegmentationCompletionState(self.GetCurrentPageNode())
+                            # # if this was the last question set, update label maps completion
+                            # if idxQuestionSet == iNumQSets - 1:
+                            #     self.loPageCompletionState[idxPage].UpdateSegmentationCompletionState(self.GetCurrentPageNode())
+                            self.loPageCompletionState[idxPage].UpdateSegmentationCompletionState(self.GetCurrentPageNode())
                     else:
                         # update question set with completion code=0
                         self.loPageCompletionState[idxPage].UpdateQuestionSetCompletionState(idxQuestionSet,0)
@@ -971,19 +972,20 @@ class Session:
                         bSuccess, sMsg = self.CaptureAndSaveImageState()
                     
                     if sCaller == 'NextBtn' or sCaller == 'Finish':
-                        # update if Page is complete (only for Next/Finish - not Previous)
-                        self.loPageCompletionState[idxPage].CheckPageCompletionLevelForQuestionSets()
-                        sLabelMapMsg = self.loPageCompletionState[idxPage].CheckPageCompletionLevelForSegmentations(self.GetCurrentPageNode())
-                        sMsg = sMsg + sLabelMapMsg
-                        if self.loPageCompletionState[idxPage].GetQuestionSetsCompletedState() and \
-                            self.loPageCompletionState[idxPage].GetSegmentationsCompletedState():
-#                         if self.loPageCompletionState[idxPage].CheckPageCompletionLevelForQuestionSets():
-                            bSuccess = True
-                            self.AddPageCompleteAttribute(idxPage)
-                            if sCaller == 'Finish':
-                                self.AddQuizCompleteAttribute()
-                        else:
-                            bSuccess = False
+                        # if this was the last question set for the page, check for completion
+                        if idxQuestionSet == iNumQSets - 1:
+                            # update if Page is complete (only for Next/Finish - not Previous)
+                            self.loPageCompletionState[idxPage].CheckPageCompletionLevelForQuestionSets()
+                            sLabelMapMsg = self.loPageCompletionState[idxPage].CheckPageCompletionLevelForSegmentations(self.GetCurrentPageNode())
+                            sMsg = sMsg + sLabelMapMsg
+                            if self.loPageCompletionState[idxPage].GetQuestionSetsCompletedState() and \
+                                    self.loPageCompletionState[idxPage].GetSegmentationsCompletedState():
+                                bSuccess = True
+                                self.AddPageCompleteAttribute(idxPage)
+                                if sCaller == 'Finish':
+                                    self.AddQuizCompleteAttribute()
+                            else:
+                                bSuccess = False
                             
                     
 
