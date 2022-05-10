@@ -1,18 +1,18 @@
 <Session>
-	<Page ID="Patient 1" Descriptor="Histology" LinkViews="N" Layout="OneUpRedSlice">
+	<Page ID="Patient 1" Descriptor="Histology" LinkViews="N" Layout="OneUpRedSlice" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" LabelMapID="2DT2">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
-		<QuestionSet ID="Contouring Challenge" EnableSegmentEditor='Y'>
+		<QuestionSet ID="Contouring Challenge">
 			<Question Descriptor="Q1" Type="InfoBox">
 				<Option>Contour the tumor using the segment editor.</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient 1" Descriptor="Histology 1" LinkViews="N" Layout="SideBySideRedYellow">
+	<Page ID="Patient 1" Descriptor="Histology 1" LinkViews="N" Layout="SideBySideRedYellow" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="2DT2" LabelMapID="Modified2DT2">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -31,7 +31,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
-		<QuestionSet ID="Test Read Histology Slice" EnableSegmentEditor='Y'>
+		<QuestionSet ID="Test Read Histology Slice">
 			<Question Descriptor="Q1" Type="InfoBox">
 				<Option>Loading histology single slice #1 with LoadVolume (Data)</Option>
 				<Option>Attribute details</Option>
@@ -44,7 +44,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient 1" Descriptor="Histology 2" LinkViews="N" Layout="SideBySideRedYellow">
+	<Page ID="Patient 1" Descriptor="Histology 2" LinkViews="N" Layout="SideBySideRedYellow" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="Modified2DT2">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -63,13 +63,13 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
-		<QuestionSet ID="Test Read Histology Slice" EnableSegmentEditor='Y'>
+		<QuestionSet ID="Test Read Histology Slice">
 			<Question Descriptor="Q1" Type="InfoBox">
 				<Option>Loading histology single slice #2 with LoadVolume (Data)</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient 1" Descriptor="Histology 3" LinkViews="N" Layout="SideBySideRedYellow">
+	<Page ID="Patient 1" Descriptor="Histology 3" LinkViews="N" Layout="SideBySideRedYellow" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="2DT2">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -88,13 +88,13 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
-		<QuestionSet ID="Test Read Histology Slice" EnableSegmentEditor='Y'>
+		<QuestionSet ID="Test Read Histology Slice">
 			<Question Descriptor="Q1" Type="InfoBox">
 				<Option>Loading histology single slice #3 with LoadVolume (Data)</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient 1" Descriptor="Histology 4" LinkViews="N" Layout="SideBySideRedYellow">
+	<Page ID="Patient 1" Descriptor="Histology 4" LinkViews="N" Layout="SideBySideRedYellow" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="2DT2">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -113,26 +113,26 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
-		<QuestionSet ID="Test Read Histology Slice" EnableSegmentEditor='Y'>
+		<QuestionSet ID="Test Read Histology Slice">
 			<Question Descriptor="Q1" Type="InfoBox">
 				<Option>Loading histology single slice #4 with LoadVolume (Data)</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient 2" Descriptor="Histology" LinkViews="N" Layout="OneUpRedSlice">
+	<Page ID="Patient 2" Descriptor="Histology" LinkViews="N" Layout="OneUpRedSlice" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" LabelMapID="2DT2">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
-		<QuestionSet ID="Contouring Challenge" EnableSegmentEditor='Y'>
+		<QuestionSet ID="Contouring Challenge">
 			<Question Descriptor="Q1" Type="InfoBox">
 				<Option>Contour the tumor using the segment editor.</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient 2" Descriptor="Histology 1" LinkViews="N" Layout="SideBySideRedYellow">
+	<Page ID="Patient 2" Descriptor="Histology 1" LinkViews="N" Layout="SideBySideRedYellow" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="2DT2">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -151,7 +151,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
-		<QuestionSet ID="Test Read Histology Slice" EnableSegmentEditor='Y'>
+		<QuestionSet ID="Test Read Histology Slice">
 			<Question Descriptor="Q1" Type="InfoBox">
 				<Option>Loading histology single slice #1 with LoadVolume (Data)</Option>
 				<Option>Attribute details</Option>
@@ -164,7 +164,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient 2" Descriptor="Histology 2" LinkViews="N" Layout="SideBySideRedYellow">
+	<Page ID="Patient 2" Descriptor="Histology 2" LinkViews="N" Layout="SideBySideRedYellow" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="2DT2">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -183,13 +183,13 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
-		<QuestionSet ID="Test Read Histology Slice" EnableSegmentEditor='Y'>
+		<QuestionSet ID="Test Read Histology Slice">
 			<Question Descriptor="Q1" Type="InfoBox">
 				<Option>Loading histology single slice #2 with LoadVolume (Data)</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient 2" Descriptor="Histology 3" LinkViews="N" Layout="SideBySideRedYellow">
+	<Page ID="Patient 2" Descriptor="Histology 3" LinkViews="N" Layout="SideBySideRedYellow" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="2DT2">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -208,13 +208,13 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
-		<QuestionSet ID="Test Read Histology Slice" EnableSegmentEditor='Y'>
+		<QuestionSet ID="Test Read Histology Slice">
 			<Question Descriptor="Q1" Type="InfoBox">
 				<Option>Loading histology single slice #3 with LoadVolume (Data)</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient 2" Descriptor="Histology 4" LinkViews="N" Layout="SideBySideRedYellow">
+	<Page ID="Patient 2" Descriptor="Histology 4" LinkViews="N" Layout="SideBySideRedYellow" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="2DT2">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -233,13 +233,13 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
-		<QuestionSet ID="Test Read Histology Slice" EnableSegmentEditor='Y'>
+		<QuestionSet ID="Test Read Histology Slice">
 			<Question Descriptor="Q1" Type="InfoBox">
 				<Option>Loading histology single slice #4 with LoadVolume (Data)</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient 2" Descriptor="Histology 5" LinkViews="N" Layout="SideBySideRedYellow">
+	<Page ID="Patient 2" Descriptor="Histology 5" LinkViews="N" Layout="SideBySideRedYellow" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="2DT2">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -258,7 +258,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
-		<QuestionSet ID="Test Read Histology Slice" EnableSegmentEditor='Y'>
+		<QuestionSet ID="Test Read Histology Slice">
 			<Question Descriptor="Q1" Type="InfoBox">
 				<Option>Loading histology single slice #4 with LoadVolume (Data)</Option>
 			</Question>

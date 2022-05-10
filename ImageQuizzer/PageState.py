@@ -36,32 +36,33 @@ class PageState:
             to have been completed
             
             States for variable : sSegmentationRequiredState
-                None:   This variable is set to 'None' as a default. The EnableSegmentEditor page attribute was set to "Y".
-                        This remains at 'None' if the other attributes (Image attribute: 'SegmentRequired' and 
+                NoSegReq:   This variable is set to 'NoSegReq' as a default. The EnableSegmentEditor page attribute was set to "Y".
+                        This remains at 'NoSegReq' if the other attributes (Image attribute: 'SegmentRequired' and 
                         Page attribute: 'SegmentRequiredOnAnyImage') are set to 'N' or are absent.
                         This means that the user is not required to create a contour (eg. if no tumor is present)
                         but has the ability to create one if desired.
                         
-                Any:    This variable gets set to 'Any' if the page attribute SegmentRequiredOnAnyImage="Y" .
+                AnySegReq:    This variable gets set to 'AnySegReq' if the page attribute SegmentRequiredOnAnyImage="Y" .
                         This means that the user is required to create at least one segmentation that is not zeroes
                         (zeros can happen if the user goes into the segment editor, selects a volume to edit but does
                         not actually create any segments. The mask is then all zeros.) 
                         Some kind of change must have been made to the segmentations - whether it is a new
-                        segmentation on an image, or an existing segmentation is modified (if the segmentation was copied in from a previous page
-                        and redisplayed)                        
-                Specific:   This variable gets set to 'Specific' if there are any Image elements with the
-                            'SegmentRequired' attribute set to "Y".
-                            The user must create a segmentation for that specific image. It cannot be
-                            an empty segmentation (where the mask is all zeros - see explanation in 'Any').
-                            Also, if the image has a segmentation file that was copied in and redisplayed  
-                            from a previous page (this occurs when the Image element has an attribute
-                            'DisplayLabelMapID' set), the user is required to make a change to that copied in segmentation.
-                            Images that are not set to 'SegmentRequired="Y"' are not subject to the above rules (they
-                            could be empty or unmodified).
+                        segmentation on an image, or an existing segmentation is modified (if the segmentation was copied 
+                        in from a previous page and redisplayed)           
+                                     
+                SpecificSegReq:   This variable gets set to 'SpecificSegReq' if there are any Image elements with the
+                        'SegmentRequired' attribute set to "Y".
+                        The user must create a segmentation for that specific image. It cannot be
+                        an empty segmentation (where the mask is all zeros - see explanation in 'AnySegReq').
+                        Also, if the image has a segmentation file that was copied in and redisplayed  
+                        from a previous page (this occurs when the Image element has an attribute
+                        'DisplayLabelMapID' set), the user is required to make a change to that copied in segmentation.
+                        Images that are not set to 'SegmentRequired="Y"' are not subject to the above rules (they
+                        could be empty or unmodified).
         '''
         self.liCompletedQuestionSets = []
         self.l2iCompletedSegmentations = []
-        self.sSegmentationRequiredState = 'None'
+        self.sSegmentationRequiredState = 'NoSegReq'
         self.bQuestionSetsCompleted = 'False'
         self.bSegmentationsCompleted = 'False'
         
@@ -123,10 +124,10 @@ class PageState:
 
 
         # store segmentation requirement code
-        sSegmentationRequiredState = 'None' # default
+        sSegmentationRequiredState = 'NoSegReq' # default
         sSegRequiredAnyImage = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'SegmentRequiredOnAnyImage')
         if sSegRequiredAnyImage == 'Y' or sSegRequiredAnyImage == 'y':
-            self.sSegmentationRequiredState = 'Any'
+            self.sSegmentationRequiredState = 'AnySegReq'
 
         l2iSegmentNotApplicableLayer = [2,iCompletedTF]
         l2iSegmentNotRequired = [0,iCompletedTF]
@@ -149,7 +150,7 @@ class PageState:
                     self.l2iCompletedSegmentations[iImgIdx][0] = l2iSegmentRequired[0]
                     self.l2iCompletedSegmentations[iImgIdx][1] = l2iSegmentRequired[1]
                     
-                    self.sSegmentationRequiredState = 'Specific' # override default
+                    self.sSegmentationRequiredState = 'SpecificSegReq' # override default
                 else:
                     self.l2iCompletedSegmentations[iImgIdx][0] = l2iSegmentNotRequired[0]
                     self.l2iCompletedSegmentations[iImgIdx][1] = l2iSegmentNotRequired[1]
@@ -175,34 +176,37 @@ class PageState:
         # set the segmentations completed flag for this page if requirements are met for all images
         sMsg = ''
         
-        if self.sSegmentationRequiredState == 'None' or self.sSegmentationRequiredState == 'Any':
+        if self.sSegmentationRequiredState == 'NoSegReq' or self.sSegmentationRequiredState == 'AnySegReq':
             self.bSegmentationsCompleted = False
             for idx in range(len(self.l2iCompletedSegmentations)):
                 if self.l2iCompletedSegmentations[idx][1] == 1:
                     self.bSegmentationsCompleted = True
 
-            # for 'Any' at least one completed segmentation must exist
-            # for 'None', no segmentations is acceptable
+            # for 'AnySegReq' at least one completed segmentation must exist
+            # for 'NoSegReq', no segmentations is acceptable
             if not self.bSegmentationsCompleted:
-                if self.sSegmentationRequiredState == 'Any':
+                if self.sSegmentationRequiredState == 'AnySegReq':
                     sMsg = sMsg + '\nYou must complete one segmentation for any of the images.' + \
                             '\nYou can create a new segmentation or modify a segmentation that was redisplayed.'
                 else:
-                    if self.sSegmentationRequiredState == 'None':
+                    if self.sSegmentationRequiredState == 'NoSegReq':
                         self.bSegmentationsCompleted = True
                 
         else:
-            # for 'Specific' the images marked with the 'required' code must also have the 'completed' code
-            if self.sSegmentationRequiredState == 'Specific':
+            # for 'SpecificSegReq' the images marked with the 'required' code must also have the 'completed' code
+            if self.sSegmentationRequiredState == 'SpecificSegReq':
                 self.bSegmentationsCompleted = True
                 for idx in range(len(self.l2iCompletedSegmentations)):
                     if self.l2iCompletedSegmentations[idx][0] == 1 : # required on this image
                         if self.l2iCompletedSegmentations[idx][1] != 1: # segmentation not complete
                             self.bSegmentationsCompleted = False
                             xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', idx)
+                            sPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'ID')
                             sImageID = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'ID')
-                            sMsg = sMsg +  '\nYou must complete a segmentation for this image: ' + sImageID + \
-                                '\nIf a contour has been redisplayed for this image, it must be modified.'
+                            sNodeName = sPageID + '_' + sImageID
+                            sMsg = sMsg +  '\nYou must complete a segmentation for this image: ' + sNodeName + \
+                                '\nIf a contour has been redisplayed for this image, it must be modified.' + \
+                                '\nSelect the image: "'+ sNodeName + '" as the Master Volume in the Segment Editor.'
         
         return sMsg
         
@@ -264,14 +268,14 @@ class PageState:
 
 
             # set segmentation completion state for the image based on the image segmentation required level
-            #     if state is 'None' - segmentation just needs to exist; non-zero or modified is irrelevant
-            if self.sSegmentationRequiredState == 'None':
+            #     if state is 'NoSegReq' - segmentation just needs to exist; non-zero or modified is irrelevant
+            if self.sSegmentationRequiredState == 'NoSegReq':
                 if bExists:
                     self.l2iCompletedSegmentations[idxImage][1] = 1
                     
-            #    if state is 'Any' - some kind of change must have happened to the segmentations
+            #    if state is 'AnySegReq' - some kind of change must have happened to the segmentations
             #        (either new & non-zero or redisplayed & modified)
-            if self.sSegmentationRequiredState == 'Any':
+            if self.sSegmentationRequiredState == 'AnySegReq':
                 if bExists:
                     if bRedisplayed:
                         if bModified and not bEmptyLabelMap:
@@ -280,16 +284,21 @@ class PageState:
                         if not bEmptyLabelMap :
                             self.l2iCompletedSegmentations[idxImage][1] = 1
                     
-            #    if state is 'Specific' - check whether the code for segment required (first element) was set and
+            #    if state is 'SpecificSegReq' - check whether the code for segment required (first element) was set and
             #        the labelmap file must be non-zero; if redisplayed it must be modified
-            if self.sSegmentationRequiredState == 'Specific':
-                if self.l2iCompletedSegmentations[idxImage][0] == 1:
+            if self.sSegmentationRequiredState == 'SpecificSegReq':
+                if self.l2iCompletedSegmentations[idxImage][0] == 1:    # required
                     if bRedisplayed:
                         if bModified and not bEmptyLabelMap:
                             self.l2iCompletedSegmentations[idxImage][1] = 1
                     else:
                         if not bEmptyLabelMap:
                             self.l2iCompletedSegmentations[idxImage][1] = 1
+                else:
+                    # segmentation not required 
+                    #    it is completed if it is not empty; does not require modification if redisplayed
+                    if not bEmptyLabelMap:
+                        self.l2iCompletedSegmentations[idxImage][1] = 1
             
                 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -316,21 +325,12 @@ class PageState:
             modified from the original.
         '''
         
-#         bModified = False
-#         bModified = filecmp.cmp(sPathHistorical, sPathNew, shallow=False)
-
         imgHistorical = sitk.ReadImage(sPathHistorical)
         imgNew = sitk.ReadImage(sPathNew)
-        
-        # if imgHistorical == imgNew:
-        #     bModified = False
-        # else:
-        #     bModified = True
         
         npArrayImgHistorical = sitk.GetArrayViewFromImage(imgHistorical)
         npArrayImgNew = sitk.GetArrayViewFromImage(imgNew)
         
-#         if (npArrayImgHistorical == npArrayImgNew).all():
         if np.array_equal(npArrayImgHistorical, npArrayImgNew):
             bModified = False
         else:

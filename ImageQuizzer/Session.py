@@ -149,6 +149,15 @@ class Session:
     def GetRequestToEnableSegmentEditorTF(self):
         return self._bRequestToEnableSegmentEditor
     
+    #----------
+    def GetPageCompleteAttribute(self, iCompIndex):
+        iPageIndex = self._l3iPageQuestionGroupCompositeIndices[iCompIndex][0]
+        xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
+
+        sPageComplete = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'PageComplete')
+        
+        return sPageComplete
+        
     # #----------
     # def SetMultipleResponsesAllowedInQuiz(self, bTF):
     #     # flag for quiz if any question sets allowed for multiple responses
@@ -159,18 +168,18 @@ class Session:
     # def GetMultipleResponsesAllowedInQuiz(self):
     #     return self._bAllowMultipleResponseInQuiz
     #----------
-    def GetCompletionLevel(self, iTotalItems, iCountedItems):
+    def GetResponseCompletionLevel(self, iTotalItems, iCountedItems):
         ''' This function may be used to define the number of questions that had 
             responses stored in the XML or the number of reponses the user
             made in the quiz form.
         '''
         
         if iCountedItems == iTotalItems:
-            sCompletionLevel = 'All'
+            sCompletionLevel = 'AllResponses'
         elif iCountedItems == 0:
-            sCompletionLevel = 'None'
+            sCompletionLevel = 'NoResponses'
         else:
-            sCompletionLevel = 'Partial'
+            sCompletionLevel = 'PartialResponses'
         
         return sCompletionLevel        
 
@@ -770,24 +779,46 @@ class Session:
             qWidgetQuestionSetForm.setEnabled(True) # initialize
 
 
-            if sSavedResponseCompletionLevel == 'All' or sSavedResponseCompletionLevel == 'Partial':
+            if sSavedResponseCompletionLevel == 'AllResponses' or sSavedResponseCompletionLevel == 'PartialResponses':
                 self.DisplaySavedResponse()
 
             if self.GetQuizComplete():
                 qWidgetQuestionSetForm.setEnabled(False)
                 self.SegmentationTabEnabler(False)
             else:
-                # enable widget if not all questions have responses or if user is allowed to 
-                # input multiple responses
-                if sSavedResponseCompletionLevel == 'All':
-                    qWidgetQuestionSetForm.setEnabled(self.GetMultipleResponseAllowed())
-                    if self.GetQuizResuming():
-                        qWidgetQuestionSetForm.setEnabled(True)     # open quiz tab on a resume
-                if self.GetRequestToEnableSegmentEditorTF():
-                    if not self.loPageCompletionState[self.GetCurrentPageIndex()].GetSegmentationsCompletedState():
-                        self.SegmentationTabEnabler(True)
-                    else:
+                # # enable widget if not all questions have responses or if user is allowed to 
+                # # input multiple responses
+                # if sSavedResponseCompletionLevel == 'AllResponses':
+                #     qWidgetQuestionSetForm.setEnabled(self.GetMultipleResponseAllowed())
+                #     if self.GetQuizResuming():
+                #         qWidgetQuestionSetForm.setEnabled(True)     # open quiz tab on a resume
+                # if self.GetRequestToEnableSegmentEditorTF():
+                #     if not self.loPageCompletionState[self.GetCurrentPageIndex()].GetSegmentationsCompletedState():
+                #         self.SegmentationTabEnabler(True)
+                #     else:
+                #         self.SegmentationTabEnabler(False)
+                # else:
+                #     self.SegmentationTabEnabler(False)
+                
+                #enable tabs
+                if self.GetMultipleResponseAllowed() or self.GetQuizResuming():
+                    qWidgetQuestionSetForm.setEnabled(True)
+                    self.SegmentationTabEnabler(self.GetRequestToEnableSegmentEditorTF())
+                else:
+                    sPageComplete = self.GetPageCompleteAttribute(self._iCurrentCompositeIndex)
+                    if sPageComplete == 'Y':
+                        qWidgetQuestionSetForm.setEnabled(False)
                         self.SegmentationTabEnabler(False)
+                    else:
+                        # page not complete - check for question and segmentation completion
+                        qWidgetQuestionSetForm.setEnabled(True)
+                        self.SegmentationTabEnabler(self.GetRequestToEnableSegmentEditorTF())
+
+                        if sSavedResponseCompletionLevel == 'AllResponses':
+                            qWidgetQuestionSetForm.setEnabled(False)
+                        if self.loPageCompletionState[self.GetCurrentPageIndex()].GetSegmentationsCompletedState():
+                            self.SegmentationTabEnabler(False)
+                        
 
                    
         # add page ID/descriptor to the progress bar
@@ -904,7 +935,7 @@ class Session:
                 iNumAnsweredQuestions = iNumAnsweredQuestions + 1
                  
 
-        sSavedResponseCompletionLevel = self.GetCompletionLevel(iNumQuestions, iNumAnsweredQuestions)
+        sSavedResponseCompletionLevel = self.GetResponseCompletionLevel(iNumQuestions, iNumAnsweredQuestions)
                 
         return sSavedResponseCompletionLevel
            
@@ -926,8 +957,8 @@ class Session:
         
         if bSuccess:
             
-            # Saving the label maps becomes part of the success level ('all', 'partial' 
-            # or 'none) for capturing all of the required pieces for the question set
+            # Saving the label maps becomes part of the success level ('AllResponses', 'PartialResponses' 
+            # or 'NoResponses') for capturing all of the required pieces for the question set
             # (responses and label maps). The label maps therefore must be saved
             # prior to capturing the responses
             bSuccess, sMsg = self.oFilesIO.SaveLabelMaps(self, sCaller)
@@ -938,7 +969,7 @@ class Session:
 
                 if sCaller == 'NextBtn' or sCaller == 'Finish':
                     # only write to xml if all responses were captured
-                    if sCaptureSuccessLevel == 'All':
+                    if sCaptureSuccessLevel == 'AllResponses':
                         bSuccess, sMsg = self.WriteResponsesToXml()
                         if bSuccess:
                             # update question set with completion code=1
@@ -958,11 +989,11 @@ class Session:
                     # Caller must have been the Previous or Exit buttons or a close was 
                     #     requested (which triggers the event filter)
                     # Only write if there were responses captured
-                    if sCaptureSuccessLevel == 'All' or sCaptureSuccessLevel == 'Partial':
+                    if sCaptureSuccessLevel == 'AllResponses' or sCaptureSuccessLevel == 'PartialResponses':
                         bSuccess, sMsg = self.WriteResponsesToXml()
                     else:
                         # if no responses were captured 
-                        if sCaptureSuccessLevel == 'None':
+                        if sCaptureSuccessLevel == 'NoResponses':
                             # this isn't the Next button so it is allowed
                             bSuccess = True
                         
@@ -1034,7 +1065,7 @@ class Session:
                 iNumMissingResponses = iNumMissingResponses + 1
                 
         # define success level
-        sCaptureSuccessLevel = self.GetCompletionLevel(len(loQuestions), len(loQuestions)-iNumMissingResponses)
+        sCaptureSuccessLevel = self.GetResponseCompletionLevel(len(loQuestions), len(loQuestions)-iNumMissingResponses)
                 
         return sCaptureSuccessLevel, lsAllResponses, sAllMsgs
        
@@ -1242,7 +1273,7 @@ class Session:
             # only allow for writing of responses under certain conditions
             #    - allow if the question set is marked for multiple responses allowed
             #    - OR allow if the number of questions with responses already 
-            #      recorded is 'none' or 'partial' (not 'all')
+            #      recorded is 'NoResponses' or 'PartialResponses' (not 'AllResponses')
             
             # sQuestionsWithRecordedResponses = self.GetQuestionSetResponseCompletionLevel()
             sQuestionsWithRecordedResponses = self.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
@@ -1250,7 +1281,7 @@ class Session:
             
 
             if ( self.GetMultipleResponseAllowed() == True)  or \
-                ((self.GetMultipleResponseAllowed() == False) and (sQuestionsWithRecordedResponses != 'All') ):
+                ((self.GetMultipleResponseAllowed() == False) and (sQuestionsWithRecordedResponses != 'AllResponses') ):
 
                 # check to see if the responses for the question set match 
                 #    what was previously captured
@@ -1425,7 +1456,7 @@ class Session:
                 if not self.GetQuizResuming():
                     iPageIndex = self._l3iPageQuestionGroupCompositeIndices[indCI][0]
                     xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
-            
+                    
                     sPageComplete = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'PageComplete')
                     if sPageComplete != 'Y':    # found first page that was not complete
                         iResumeCompIndex = indCI
@@ -1437,7 +1468,7 @@ class Session:
             lxQSetNodes = self.GetAllQuestionSetsForNthPage(iPageIndex)
             for indQSet in range(iNumQSets):
                 xQuestionSetNode = lxQSetNodes[indQSet]
-                if self.GetSavedResponseCompletionLevel(xQuestionSetNode) == 'All':
+                if self.GetSavedResponseCompletionLevel(xQuestionSetNode) == 'AllResponses':
                     self.loPageCompletionState[iPageIndex].UpdateQuestionSetCompletionState(indQSet,1)
                     
                     # only advance if there are more question sets

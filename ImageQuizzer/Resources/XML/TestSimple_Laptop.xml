@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Session RandomizePageGroups="N">
+<Session RandomizePageGroups="Y">
 	<Page ID="Patient1" Descriptor="PlanningCT" PageGroup="1" EnableSegmentEditor="Y">
 		<Image Type="Volume" ID="Fixed Volume" LabelMapID="Brain-fixed-contour" SegmentRequired="Y">
 			<Destination>Red</Destination>
@@ -13,13 +13,13 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\BrainCT_moving.nii</Path>
 		</Image>
-		<Image Type="Volume" ID="Fixed Volume">
+		<Image Type="Volume" ID="Fixed Volume" SegmentRequired="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="Fixed Volume">
+		<Image Type="Volume" ID="Fixed Volume" SegmentRequired="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
@@ -46,20 +46,20 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient1" Descriptor="Follow-up 1" PageGroup="1" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
-		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour">
+	<Page ID="Patient1" Descriptor="Follow-up 1" PageGroup="2" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
+		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour" SegmentRequired="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour">
+		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour" SegmentRequired="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour">
+		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour" SegmentRequired="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
@@ -92,7 +92,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="Unregistered" DisplayLabelMapID="Brain-moving-contour" RotateToAcquisition="Y">
+		<Image Type="Volume" ID="Unregistered" DisplayLabelMapID="Brain-moving-contour" RotateToAcquisition="Y" SegmentRequired="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>

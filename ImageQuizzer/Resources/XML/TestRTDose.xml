@@ -1,5 +1,5 @@
 <Session RandomizePageGroups="N">
-	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="3">
+	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="3" EnableSegmentEditor="Y">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -63,7 +63,7 @@
 				<ROI>Body_Contour</ROI>
 			</ROIs>
 		</Image>
-		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress"  EnableSegmentEditor="Y">
+		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>DICOM with RTStruct on Segmentation Layer</Option>
 			</Question>

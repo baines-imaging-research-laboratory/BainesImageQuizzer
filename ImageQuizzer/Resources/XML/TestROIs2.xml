@@ -1,5 +1,5 @@
 <Session>
-	<Page ID="CL PT001" Descriptor="Multiparametric_MRI" AllowMultipleResponse="Y">
+	<Page ID="CL PT001" Descriptor="Multiparametric_MRI" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
 		<Image DicomRead="Y" Type="Volume" ID="T1W MR">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -45,7 +45,7 @@
 				<Option>NRRD file on Green with mask on Label layer</Option>
 			</Question>
 		</QuestionSet>
-		<QuestionSet ID="QS-Checkup" Descriptor="Second Question Set" EnableSegmentEditor="Y">
+		<QuestionSet ID="QS-Checkup" Descriptor="Second Question Set">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>Two different DICOM series with different RTStructs</Option> 
 				<Option>NRRD file on Green with mask on Label layer</Option>
