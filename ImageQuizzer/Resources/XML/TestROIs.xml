@@ -1,5 +1,5 @@
 <Session>
-	<Page ID="TinyPatient" Descriptor="DicomSeries">
+	<Page ID="TinyPatient" Descriptor="DicomSeries" EnableSegmentEditor="Y">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -42,13 +42,13 @@
 				<ROI>Tumor_Contour</ROI>
 			</ROIs>
 		</Image>
-		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress"  SegmentRequired="Y"  AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress">
 			<Question Type="CheckBox" Descriptor="Test Description">
 				<Option>Select Tumor only</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="TinyPatient" Descriptor="DicomSeries">
+	<Page ID="TinyPatient" Descriptor="DicomSeries" EnableSegmentEditor="Y">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -91,13 +91,13 @@
 				<ROI>Tumor_Contour</ROI>
 			</ROIs>
 		</Image>
-		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress"  SegmentRequired="Y"  AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress">
 			<Question Type="CheckBox" Descriptor="Test Description">
 				<Option>Ignore Tumor - Body should show</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="TinyPatient" Descriptor="DicomSeries">
+	<Page ID="TinyPatient" Descriptor="DicomSeries" EnableSegmentEditor="Y">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -137,13 +137,13 @@
 			<ROIs ROIVisibilityCode="All">
 			</ROIs>
 		</Image>
-		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress"  SegmentRequired="Y"  AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress">
 			<Question Type="CheckBox" Descriptor="Test Description">
 				<Option>All selected</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="TinyPatient" Descriptor="DicomSeries">
+	<Page ID="TinyPatient" Descriptor="DicomSeries" EnableSegmentEditor="Y">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -183,7 +183,7 @@
 			<ROIs ROIVisibilityCode="None">
 			</ROIs>
 		</Image>
-		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress"  SegmentRequired="Y"  AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress">
 			<Question Type="CheckBox" Descriptor="Test Description">
 				<Option>None selected</Option>
 			</Question>

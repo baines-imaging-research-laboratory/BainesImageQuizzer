@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session RandomizePageGroups="Y">
-	<Page ID="Patient1" Descriptor="PlanningCT" PageGroup="1">
-		<Image Type="Volume" ID="Fixed Volume" LabelMapID="Brain-fixed-contour">
+	<Page ID="Patient1" Descriptor="PlanningCT" PageGroup="1" EnableSegmentEditor="Y">
+		<Image Type="Volume" ID="Fixed Volume" LabelMapID="Brain-fixed-contour" SegmentRequired="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -13,19 +13,19 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\BrainCT_moving.nii</Path>
 		</Image>
-		<Image Type="Volume" ID="Fixed Volume">
+		<Image Type="Volume" ID="Fixed Volume" SegmentRequired="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="Fixed Volume">
+		<Image Type="Volume" ID="Fixed Volume" SegmentRequired="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<QuestionSet ID="QS-Intro" Descriptor="Introduction to Quiz"  SegmentRequired="N" AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Intro" Descriptor="Introduction to Quiz">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>Segment Editor off, Don't allow multiple Response</Option> 
 				<Option>NRRD and NIFTI, background and foreground on Red</Option>
@@ -34,7 +34,7 @@
 				<Option>Lots of text describing something</Option>
 			</Question>
 		</QuestionSet>
-		<QuestionSet ID="QS-Intro #2" Descriptor="How to - Instructions"  SegmentRequired="N"  AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Intro #2" Descriptor="How to - Instructions">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>Second question set</Option> 
 			</Question>
@@ -46,26 +46,26 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient1" Descriptor="Follow-up 1" PageGroup="1">
-		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour">
+	<Page ID="Patient1" Descriptor="Follow-up 1" PageGroup="2" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
+		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour" SegmentRequired="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour">
+		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour" SegmentRequired="Y">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour">
+		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour" SegmentRequired="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
-		<QuestionSet ID="QS-Observation" Descriptor="What is your Assessment"  SegmentRequired="Y"  AllowMultipleResponse="Y">
+		<QuestionSet ID="QS-Observation" Descriptor="What is your Assessment">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>Segment Editor on, allow multiple response, rotate to acquisition</Option> 
 				<Option>Different question types</Option>
@@ -85,14 +85,14 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient2" Descriptor="Mixed Displays" LinkViews="N" PageGroup="2">
+	<Page ID="Patient2" Descriptor="Mixed Displays" LinkViews="N" PageGroup="2" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
 		<Image Type="Volume"  ID="Brain CT" DisplayLabelMapID="Brain-fixed-contour" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="Unregistered" DisplayLabelMapID="Brain-moving-contour" RotateToAcquisition="Y">
+		<Image Type="Volume" ID="Unregistered" DisplayLabelMapID="Brain-moving-contour" RotateToAcquisition="Y" SegmentRequired="Y">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -109,7 +109,7 @@
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\Prostate\Case00_segmentation.mhd</Path>
 		</Image>
-		<QuestionSet ID="QS-Demo" Descriptor="Demo buttons" SegmentRequired="Y"  AllowMultipleResponse="Y">
+		<QuestionSet ID="QS-Demo" Descriptor="Demo buttons">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>Segment Editor on, Don't allow multiple Response, Previous label map onto Green</Option> 
 				<Option>MHD on Yellow with contour on Label layer</Option>
@@ -121,7 +121,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="3">
+	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="3" EnableSegmentEditor="N">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -140,7 +140,7 @@
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
-		<QuestionSet ID="QS-Checkup" Descriptor="Tell us how you feel" SegmentRequired="N"  AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Checkup" Descriptor="Tell us how you feel">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>DICOM series - no contours</Option>
 			</Question>
@@ -151,7 +151,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="3">
+	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="3" EnableSegmentEditor="Y">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -197,7 +197,7 @@
 				<ROI>Body_Contour</ROI>
 			</ROIs>
 		</Image>
-		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress"  SegmentRequired="Y"  AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>DICOM with RTStruct on Segmentation Layer</Option>
 			</Question>
@@ -214,7 +214,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="CL PT001" Descriptor="Multiparametric_MRI" PageGroup="4">
+	<Page ID="CL PT001" Descriptor="Multiparametric_MRI" PageGroup="4" AllowMultipleResponse="Y">
 		<Image DicomRead="Y" Type="Volume" ID="T1W MR">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -254,7 +254,7 @@
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\BrainDWI\Segment_1-label.nrrd</Path>
 		</Image>
-		<QuestionSet ID="QS-Checkup" Descriptor="Your thoughts?" AllowMultipleResponse="Y">
+		<QuestionSet ID="QS-Checkup" Descriptor="Your thoughts?">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>Two different DICOM series with different RTStructs</Option> 
 				<Option>NRRD file on Green with mask on Label layer</Option>

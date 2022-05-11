@@ -412,6 +412,9 @@ class customEventFilter(qt.QObject):
      
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def eventFilter(self, obj, event):
+        ''' Function to save current data if the user presses Slicer's 'X' 
+            to exit the quiz.
+        '''
          
         self.oUtilsMsgs = UtilsMsgs()
         if event.type() == qt.QEvent.Close:

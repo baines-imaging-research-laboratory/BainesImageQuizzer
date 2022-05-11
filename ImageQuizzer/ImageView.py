@@ -129,9 +129,14 @@ class ImageView:
                 
             if bLoadSuccess and (oImageViewItem.slNode is not None):
                 
-                if oImageViewItem.sImageType != 'Segmentation': 
-                    oImageViewItem.slNode.SetName(oImageViewItem.sNodeName)
-                    self._loImageViews.append(oImageViewItem)
+#                 if oImageViewItem.sImageType != 'Segmentation': 
+#                     oImageViewItem.slNode.SetName(oImageViewItem.sNodeName)
+#                     self._loImageViews.append(oImageViewItem)
+
+                # customize node name to prevent illegal characters on defaults
+                oImageViewItem.slNode.SetName(oImageViewItem.sNodeName)
+                self._loImageViews.append(oImageViewItem)
+
                 
             else:
                 sMsg = 'Image load Failed : ' + self.sPageID + ':' + oImageViewItem.sImagePath
@@ -257,9 +262,14 @@ class ImageView:
     
 
             elif oViewNode.sViewLayer == 'Segmentation':
-                if not (oViewNode.sRoiVisibilityCode == ''):
-                    self.SetSegmentRoiVisibility(oViewNode)
-#                 print('after set Segmentation Volume ID',slWidget.sliceOrientation)
+                # Segmentation nodes are handled differently if they are loaded from Data or Dicom
+                if oViewNode.GetNodeSource() == 'Dicom':
+                    if not (oViewNode.sRoiVisibilityCode == ''):
+                        self.SetSegmentRoiVisibility(oViewNode)
+                else:   # source = 'Data'
+                    self.SetSegmentRoiVisibilityFromData(1)
+
+
 
             # after all images and their label maps have been assigned, adjust the link control
             if self.bLinkViews == True:
@@ -393,6 +403,42 @@ class ImageView:
         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetSegmentRoiVisibilityFromData(self, iOnOff):
+        # Set visibility of Segments loaded as 'Data' image node (on = 1; off = 0)
+        #
+        # get list of all segmentation nodes
+        
+        slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+
+        lSegNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSegmentationNode')
+        
+        for indParentSegNode in range(lSegNodes.GetNumberOfItems()):
+            
+            slParentSegNode = lSegNodes.GetItemAsObject(indParentSegNode)
+            sParentSegNodeName = slParentSegNode.GetName()
+            slSceneItemID = slSHNode.GetSceneItemID()
+            iParentSegNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sParentSegNodeName)
+            
+            # for each Segmentation node, get all segmentations
+            lSegmentations = slParentSegNode.GetSegmentation()
+            
+            for indSegment in range(lSegmentations.GetNumberOfSegments()):
+                
+                slSegNode = lSegmentations.GetNthSegment(indSegment)
+                sSegNodeName = slSegNode.GetName()
+                
+                iSegmentSubjectHierarchyId = slSHNode.GetItemChildWithName(iParentSegNodeID, sSegNodeName)
+                
+                # using the slicer plugin, set the visibility
+                slPlugin = slicer.qSlicerSubjectHierarchySegmentsPlugin()
+                slPlugin.setDisplayVisibility(iSegmentSubjectHierarchyId, iOnOff)
+
+        # clean up memory leaks
+        #    getting a node by ID (slSegDisplayNode) doesn't seem to cause a memory leak
+        #    getting nodes by class does create a memory leak so you have to unregister it!
+        lSegNodes.UnRegister(slicer.mrmlScene)
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetLabelMapVisibility(self, iOnOff):
         
         # Set the label map volume visibility: on = 1; off = 0
@@ -432,6 +478,7 @@ class ViewNodeBase:
         self.sClassName = type(self).__name__
         self.parent = parent
     
+        self.sNodeSource = ''
         self.sPageID = ''
         self.slNode = None
         self.sDestination = ''
@@ -450,6 +497,14 @@ class ViewNodeBase:
         self.slQuizLabelMapNode = None
         
 
+    #----------
+    def SetNodeSource(self, sInput):
+        self._sNodeSource = sInput
+        
+    #----------
+    def GetNodeSource(self):
+        return self._sNodeSource
+    
     #----------
     def SetXmlImageElement(self, xInput):
         self._xImageElement = xInput
@@ -680,6 +735,7 @@ class DataVolumeDetail(ViewNodeBase):
         #--------------------
         
         # functions from base class
+        self.SetNodeSource('Data')
         self.SetXmlImageElement(xImage)
         self.SetPageID(sPageID)
         self.ExtractImageAttributes()
@@ -720,7 +776,7 @@ class DataVolumeDetail(ViewNodeBase):
                 
                 bNodeExists = self.CheckForNodeExists('vtkMRMLSegmentationNode')
                 if not (bNodeExists):
-                    self.slNode = slicer.util.loadSegmentation(self.sImagePath, {'show': False, 'name': self.sNodeName})
+                    self.slNode = slicer.util.loadSegmentation(self.sImagePath)
                 else: # make sure a node exists after load
                     if bNodeExists and (self.slNode is None):
                         bLoadSuccess = False
@@ -793,6 +849,7 @@ class DicomVolumeDetail(ViewNodeBase):
         #--------------------
         
         # functions from base class
+        self.SetNodeSource('Dicom')
         self.SetXmlImageElement(xImage)
         self.SetPageID(sPageID)
         self.ExtractImageAttributes()

@@ -1,5 +1,5 @@
 <Session RandomizePageGroups="Y">
-	<Page ID="Patient1" Descriptor="PlanningCT" PageGroup="1a">
+	<Page ID="Patient1" Descriptor="PlanningCT" PageGroup="1a" EnableSegmentEditor="N">
 		<Image Type="Volume" ID="Fixed Volume" LabelMapID="Brain-fixed-contour">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -24,7 +24,7 @@
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<QuestionSet ID="QS-Intro" Descriptor="Introduction to Quiz"  SegmentRequired="N" AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Intro" Descriptor="Introduction to Quiz">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>Segment Editor off, Don't allow multiple Response</Option> 
 				<Option>NRRD and NIFTI, background and foreground on Red</Option>
@@ -33,7 +33,7 @@
 				<Option>Lots of text describing something</Option>
 			</Question>
 		</QuestionSet>
-		<QuestionSet ID="QS-Intro #2" Descriptor="How to - Instructions"  SegmentRequired="N"  AllowMultipleResponse="N">
+		<QuestionSet ID="QS-Intro #2" Descriptor="How to - Instructions">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>Second question set</Option> 
 			</Question>

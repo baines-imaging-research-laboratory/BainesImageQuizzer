@@ -22,7 +22,6 @@ class QuestionSet():
         self.sClassName = type(self).__name__
         self.id = ''
         self.descriptor = ''
-        self._bSegmentRequired = False
         self._bAllowMultipleResponse = False
         
         self._loQuestions = []
@@ -37,28 +36,6 @@ class QuestionSet():
     #----------
     def GetQuestionList(self):
         return self._loQuestions
-    
-    #----------
-    def GetSegmentRequiredTF(self):
-        return self._bSegmentRequired
-    
-    #----------
-    def SetSegmentRequiredTF(self, sYN):
-        if sYN == 'y' or sYN == 'Y':
-            self._bSegmentRequired = True
-        else:
-            self._bSegmentRequired = False
-    
-    #----------
-    def GetMultipleResponseTF(self):
-        return self._bAllowMultipleResponse
-    
-    #----------
-    def SetMultipleResponseTF(self, sYN):
-        if sYN == 'n' or sYN == 'N':
-            self._bAllowMultipleResponse = False
-        else: # default
-            self._bAllowMultipleResponse = True
     
     #----------
     #----------
@@ -78,8 +55,6 @@ class QuestionSet():
             
             self.id = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'ID')
             self.descriptor = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'Descriptor')
-            self.SetSegmentRequiredTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'SegmentRequired'))
-            self.SetMultipleResponseTF(self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'AllowMultipleResponse'))
             
             
             lxQuestions = self.oIOXml.GetChildren(xNodeQuestionSet, 'Question')

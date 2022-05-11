@@ -1,5 +1,5 @@
 <Session>
-	<Page ID="CL PT001" Descriptor="Multiparametric_MRI">
+	<Page ID="CL PT001" Descriptor="Multiparametric_MRI" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
 		<Image DicomRead="Y" Type="Volume" ID="T1W MR">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -39,7 +39,13 @@
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\BrainDWI\Segment_1-label.nrrd</Path>
 		</Image>
-		<QuestionSet ID="QS-Checkup" Descriptor="Your thoughts?" AllowMultipleResponse="Y">
+		<QuestionSet ID="QS-Checkup" Descriptor="First Question Set">
+			<Question Type="CheckBox" Descriptor="Test Items:">
+				<Option>Two different DICOM series with different RTStructs</Option> 
+				<Option>NRRD file on Green with mask on Label layer</Option>
+			</Question>
+		</QuestionSet>
+		<QuestionSet ID="QS-Checkup" Descriptor="Second Question Set">
 			<Question Type="CheckBox" Descriptor="Test Items:">
 				<Option>Two different DICOM series with different RTStructs</Option> 
 				<Option>NRRD file on Green with mask on Label layer</Option>

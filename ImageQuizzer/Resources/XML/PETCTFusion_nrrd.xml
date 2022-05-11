@@ -1,5 +1,5 @@
 <Session ROIColorFile="PET_PSMA">
-	<Page ID="Patient1" Descriptor="PET PSMA Study">
+	<Page ID="Patient1" Descriptor="PET PSMA Study" EnableSegmentEditor="Y">
 		<Image Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -43,14 +43,14 @@
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\PETCTFusion\PET1.nrrd</Path>
 		</Image>
-		<QuestionSet ID="PET PSMA Study" Descriptor=""  SegmentRequired="Y">
+		<QuestionSet ID="PET PSMA Study" Descriptor="">
 			<Question Type="Radio" Descriptor="PET Reading">
 				<Option>Positive</Option>
 				<Option>Negative</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient2" Descriptor="PET PSMA Study">
+	<Page ID="Patient2" Descriptor="PET PSMA Study" EnableSegmentEditor="Y">
 		<Image Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -93,7 +93,7 @@
 			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\PETCTFusion\PET2.nrrd</Path>
 		</Image>
-		<QuestionSet ID="PET PSMA Study" Descriptor=""  SegmentRequired="Y">
+		<QuestionSet ID="PET PSMA Study" Descriptor="">
 			<Question Type="Radio" Descriptor="PET Reading">
 				<Option>Positive</Option>
 				<Option>Negative</Option>

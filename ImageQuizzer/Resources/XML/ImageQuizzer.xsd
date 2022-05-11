@@ -29,6 +29,9 @@
 		<xs:attribute name="LinkViews" type="yesnoType" default="N" />
 		<xs:attribute name="Layout" type="layoutType" default="FourUp" />
 		<xs:attribute name="PageGroup" type="xs:integer" />
+		<xs:attribute name="AllowMultipleResponse" type="yesnoType" default="N" />
+		<xs:attribute name="EnableSegmentEditor" type="yesnoType" default="N" />
+		<xs:attribute name="SegmentRequiredOnAnyImage" type="yesnoType" default="N"/>
 	</xs:complexType>
 </xs:element>
 
@@ -50,6 +53,7 @@
 		<xs:attribute name="RotateToAcquisition" type="yesnoType" default="N" />
 		<xs:attribute name="ColorTable" type="xs:string" />
 		<xs:attribute name="Opacity" type="boundedFloatType" />
+		<xs:attribute name="SegmentRequired" type="yesnoType" default="N"/>
 	</xs:complexType>
 </xs:element>
 
@@ -72,8 +76,6 @@
 		</xs:sequence>
 		<xs:attribute name="ID" type="xs:string" />
 		<xs:attribute name="Descriptor" type="xs:string" />
-		<xs:attribute name="SegmentRequired" type="yesnoType" default="N" />
-		<xs:attribute name="AllowMultipleResponse" type="yesnoType" default="Y" />
 	</xs:complexType>
 </xs:element>
 
