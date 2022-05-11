@@ -936,14 +936,16 @@ class UtilsIO:
 
                         # if label maps were saved as a data volume
                         #    add the label map path element to the image element in the xml
-                        
-#                         if (bDataVolumeSaved * bRTStructSaved):
+                        #    only one label map path element is to be recorded
                         if bDataVolumeSaved:
-                            # update xml storing the path to the label map file with the image element
-                            oSession.AddLabelMapPathElement(oImageNode.GetXmlImageElement(),\
-                                                 self.GetRelativeUserPath(sLabelMapPath))
-                        
-                            bLabelMapsSaved = True  # at least one label map was saved
+                            xLabelMapPathElement = self.oIOXml.GetLastChild(oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                            
+                            if xLabelMapPathElement == None:
+                                # update xml storing the path to the label map file with the image element
+                                oSession.AddLabelMapPathElement(oImageNode.GetXmlImageElement(),\
+                                                     self.GetRelativeUserPath(sLabelMapPath))
+                            
+                                bLabelMapsSaved = True  # at least one label map was saved
                         else:
                             bLabelMapsSaved = False
 #                             sMsg = sNRRDMsg + sRTStructMsg
