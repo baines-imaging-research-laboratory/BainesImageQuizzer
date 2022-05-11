@@ -950,74 +950,75 @@ class Session:
         sMsg = ''
         bSuccess = True
         
-        bSuccess, sMsg = self.ResetDisplay()
-        idxQuestionSet = self.GetCurrentQuestionSetIndex()
-        idxPage = self.GetCurrentPageIndex()
-        iNumQSets = len(self.GetAllQuestionSetNodesForCurrentPage())
+        if not self.GetQuizComplete():
         
-        if bSuccess:
+            bSuccess, sMsg = self.ResetDisplay()
+            idxQuestionSet = self.GetCurrentQuestionSetIndex()
+            idxPage = self.GetCurrentPageIndex()
+            iNumQSets = len(self.GetAllQuestionSetNodesForCurrentPage())
             
-            # Saving the label maps becomes part of the success level ('AllResponses', 'PartialResponses' 
-            # or 'NoResponses') for capturing all of the required pieces for the question set
-            # (responses and label maps). The label maps therefore must be saved
-            # prior to capturing the responses
-            bSuccess, sMsg = self.oFilesIO.SaveLabelMaps(self, sCaller)
-        
-
             if bSuccess:
-                sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponsesToSave()
-
-                if sCaller == 'NextBtn' or sCaller == 'Finish':
-                    # only write to xml if all responses were captured
-                    if sCaptureSuccessLevel == 'AllResponses':
-                        bSuccess, sMsg = self.WriteResponsesToXml()
-                        if bSuccess:
-                            # update question set with completion code=1
-                            self.loPageCompletionState[idxPage].UpdateQuestionSetCompletionState(idxQuestionSet,1)
-                            # # if this was the last question set, update label maps completion
-                            # if idxQuestionSet == iNumQSets - 1:
-                            #     self.loPageCompletionState[idxPage].UpdateSegmentationCompletionState(self.GetCurrentPageNode())
-                            self.loPageCompletionState[idxPage].UpdateSegmentationCompletionState(self.GetCurrentPageNode())
-                    else:
-                        # update question set with completion code=0
-                        self.loPageCompletionState[idxPage].UpdateQuestionSetCompletionState(idxQuestionSet,0)
-                        bSuccess = False
-                        
-                        
-                        
-                else:  
-                    # Caller must have been the Previous or Exit buttons or a close was 
-                    #     requested (which triggers the event filter)
-                    # Only write if there were responses captured
-                    if sCaptureSuccessLevel == 'AllResponses' or sCaptureSuccessLevel == 'PartialResponses':
-                        bSuccess, sMsg = self.WriteResponsesToXml()
-                    else:
-                        # if no responses were captured 
-                        if sCaptureSuccessLevel == 'NoResponses':
-                            # this isn't the Next button so it is allowed
-                            bSuccess = True
-                        
+                
+                # Saving the label maps becomes part of the success level ('AllResponses', 'PartialResponses' 
+                # or 'NoResponses') for capturing all of the required pieces for the question set
+                # (responses and label maps). The label maps therefore must be saved
+                # prior to capturing the responses
+                bSuccess, sMsg = self.oFilesIO.SaveLabelMaps(self, sCaller)
+            
+    
                 if bSuccess:
-                    #after writing responses, record the image state
-                    if not self.GetQuizComplete():
-                        bSuccess, sMsg = self.CaptureAndSaveImageState()
-                    
+                    sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponsesToSave()
+    
                     if sCaller == 'NextBtn' or sCaller == 'Finish':
-                        # if this was the last question set for the page, check for completion
-                        if idxQuestionSet == iNumQSets - 1:
-                            # update if Page is complete (only for Next/Finish - not Previous)
-                            self.loPageCompletionState[idxPage].CheckPageCompletionLevelForQuestionSets()
-                            sLabelMapMsg = self.loPageCompletionState[idxPage].CheckPageCompletionLevelForSegmentations(self.GetCurrentPageNode())
-                            sMsg = sMsg + sLabelMapMsg
-                            if self.loPageCompletionState[idxPage].GetQuestionSetsCompletedState() and \
-                                    self.loPageCompletionState[idxPage].GetSegmentationsCompletedState():
-                                bSuccess = True
-                                self.AddPageCompleteAttribute(idxPage)
-                                if sCaller == 'Finish':
-                                    self.AddQuizCompleteAttribute()
-                            else:
-                                bSuccess = False
+                        # only write to xml if all responses were captured
+                        if sCaptureSuccessLevel == 'AllResponses':
+                            bSuccess, sMsg = self.WriteResponsesToXml()
+                            if bSuccess:
+                                # update question set with completion code=1
+                                self.loPageCompletionState[idxPage].UpdateQuestionSetCompletionState(idxQuestionSet,1)
+                                # # if this was the last question set, update label maps completion
+                                # if idxQuestionSet == iNumQSets - 1:
+                                #     self.loPageCompletionState[idxPage].UpdateSegmentationCompletionState(self.GetCurrentPageNode())
+                                self.loPageCompletionState[idxPage].UpdateSegmentationCompletionState(self.GetCurrentPageNode())
+                        else:
+                            # update question set with completion code=0
+                            self.loPageCompletionState[idxPage].UpdateQuestionSetCompletionState(idxQuestionSet,0)
+                            bSuccess = False
                             
+                            
+                            
+                    else:  
+                        # Caller must have been the Previous or Exit buttons or a close was 
+                        #     requested (which triggers the event filter)
+                        # Only write if there were responses captured
+                        if sCaptureSuccessLevel == 'AllResponses' or sCaptureSuccessLevel == 'PartialResponses':
+                            bSuccess, sMsg = self.WriteResponsesToXml()
+                        else:
+                            # if no responses were captured 
+                            if sCaptureSuccessLevel == 'NoResponses':
+                                # this isn't the Next button so it is allowed
+                                bSuccess = True
+                            
+                    if bSuccess:
+                        #after writing responses, record the image state
+                        bSuccess, sMsg = self.CaptureAndSaveImageState()
+                        
+                        if sCaller == 'NextBtn' or sCaller == 'Finish':
+                            # if this was the last question set for the page, check for completion
+                            if idxQuestionSet == iNumQSets - 1:
+                                # update if Page is complete (only for Next/Finish - not Previous)
+                                self.loPageCompletionState[idxPage].CheckPageCompletionLevelForQuestionSets()
+                                sLabelMapMsg = self.loPageCompletionState[idxPage].CheckPageCompletionLevelForSegmentations(self.GetCurrentPageNode())
+                                sMsg = sMsg + sLabelMapMsg
+                                if self.loPageCompletionState[idxPage].GetQuestionSetsCompletedState() and \
+                                        self.loPageCompletionState[idxPage].GetSegmentationsCompletedState():
+                                    bSuccess = True
+                                    self.AddPageCompleteAttribute(idxPage)
+                                    if sCaller == 'Finish':
+                                        self.AddQuizCompleteAttribute()
+                                else:
+                                    bSuccess = False
+                                
                     
 
         # let calling program handle display of message if not successful            
@@ -1288,9 +1289,10 @@ class Session:
                 #    -only write responses if they have changed
                 if not self._lsNewResponses == self._lsPreviousResponses:
                     # Responses have been captured, if it's the first set of responses
-                    #    for the session, add in the login timestamp
+                    #    for the session, add in the login timestamp and record the username
                     if self._bFirstResponsesRecordedInXml == False:
                         self.AddSessionLoginTimestamp()
+                        self.AddUserNameAttribute()
                         self._bFirstResponsesRecordedInXml = True
                         
                     self.AddXmlElements()
@@ -1384,7 +1386,8 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddSessionLoginTimestamp(self):
         ''' Function to add an element holding the login time for the session.
-            Set up the logout time attribute to be updated on each write
+            Set up the logout time attribute to be updated on each write.
+            Also - record the user's name
         '''
 
         now = datetime.now()
@@ -1565,6 +1568,20 @@ class Session:
         '''
         xmlCurrentPageElement = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(),'Page', idxPage)
         xmlCurrentPageElement.set('PageComplete','Y')
+        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def AddUserNameAttribute(self):
+        ''' add attribute to Session to record the user's name
+        '''
+        xRootNode = self.oIOXml.GetRootNode()
+        dictAttrib = self.oIOXml.GetAttributes(xRootNode)
+
+        dictAttrib['UserName'] = self.oFilesIO.GetUsername()
+            
+        # reset the Login element
+        self.oIOXml.UpdateAtributesInElement(xRootNode, dictAttrib)
+
         self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
         
 ##########################################################################
