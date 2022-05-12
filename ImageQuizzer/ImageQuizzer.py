@@ -177,18 +177,18 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         # Add vertical spacer
         qUserLoginLayout.addSpacing(10)
         
-        self.qUserGrpBox = qt.QGroupBox()
-        self.qUserGrpBox.setTitle('User name')
-        self.qUserGrpBoxLayout = qt.QVBoxLayout()
-        self.qUserGrpBox.setLayout(self.qUserGrpBoxLayout)
-
-        self.lineGetUserName = qt.QLineEdit()
-        self.lineGetUserName.setText(os.getlogin())
-        self.lineGetUserName.setReadOnly(True)
-        self.qUserGrpBoxLayout.addWidget(self.lineGetUserName)
-        self.qUserGrpBox.setEnabled(True)
-        
-        qUserLoginLayout.addWidget(self.qUserGrpBox)
+#         self.qUserGrpBox = qt.QGroupBox()
+#         self.qUserGrpBox.setTitle('User name')
+#         self.qUserGrpBoxLayout = qt.QVBoxLayout()
+#         self.qUserGrpBox.setLayout(self.qUserGrpBoxLayout)
+# 
+#         self.comboGetUserName = qt.QComboBox()
+#         self.comboGetUserName.addItem(os.getlogin())
+#         self.qUserGrpBoxLayout.addWidget(self.comboGetUserName)
+#         self.qUserGrpBox.setEnabled(True)
+#         
+#         
+#         qUserLoginLayout.addWidget(self.qUserGrpBox)
 
         
         ################################
@@ -215,6 +215,21 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
  
         self.qLblDataLocation = qt.QLabel('Selected data location:')
         qDBGrpBoxLayout.addWidget(self.qLblDataLocation)
+
+
+        qUserLoginLayout.addSpacing(5)
+        self.qUserGrpBox = qt.QGroupBox()
+        self.qUserGrpBox.setTitle('User name')
+        self.qUserGrpBoxLayout = qt.QVBoxLayout()
+        self.qUserGrpBox.setLayout(self.qUserGrpBoxLayout)
+
+        self.comboGetUserName = qt.QComboBox()
+        self.comboGetUserName.addItem(os.getlogin())
+        self.qUserGrpBoxLayout.addWidget(self.comboGetUserName)
+        self.qUserGrpBox.setEnabled(True)
+        
+        
+        qDBGrpBoxLayout.addWidget(self.qUserGrpBox)
 
         
         # Add vertical spacer
@@ -281,6 +296,14 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             
             self.qLblDataLocation.setText(self.oFilesIO.GetDataParentDir())
             self.qQuizSelectionGrpBox.setEnabled(True)
+            
+            # populate user name list in combo box
+            sUsersParentDir = self.oFilesIO.GetUsersParentDir()
+            lSubFolders = [f.name for f in os.scandir(sUsersParentDir) if f.is_dir()]
+            if os.getlogin() in lSubFolders:
+                lSubFolders.remove(os.getlogin())
+            self.comboGetUserName.addItems(lSubFolders)
+            
         else:
             sMsg = 'No location was selected for image database'
             self.oUtilsMsgs.DisplayWarning(sMsg)
@@ -329,7 +352,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
         else:
             
-            self.oFilesIO.SetUsernameAndDir(self.lineGetUserName.text)
+            self.oFilesIO.SetUsernameAndDir(self.comboGetUserName.currentText)
 
             # check for errors in quiz xml layout before populating the user response folder
             bSuccess, sMsg = self.oFilesIO.ValidateQuiz()
