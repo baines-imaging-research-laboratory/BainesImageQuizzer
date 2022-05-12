@@ -550,15 +550,26 @@ class Session:
         self.qLineToolsGrpBoxLayout = qt.QHBoxLayout()
         self.qLineToolsGrpBox.setLayout(self.qLineToolsGrpBoxLayout)
 
-
-        # Next button
-        self.btnCopy = qt.QPushButton("Copy length of line to clipboard")
-        self.btnCopy.toolTip = "Copy measurement of line to clipboard."
+        qLineToolLabel = qt.QLabel('Ruler:')
+        self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabel)
+        
+        self.slMarkupsLineWidget = slicer.qSlicerMarkupsPlaceWidget()
+        self.slMarkupsLineWidget.setMRMLScene(slicer.mrmlScene)
+        markupsNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsLineNode")
+        self.slMarkupsLineWidget.setCurrentNode(slicer.mrmlScene.GetNodeByID(markupsNode.GetID()))
+        # Hide all buttons and only show place button
+        self.slMarkupsLineWidget.buttonsVisible=False
+        self.slMarkupsLineWidget.placeButton().show()
+        self.qLineToolsGrpBoxLayout.addWidget(self.slMarkupsLineWidget)
+        
+        # Copy measurement button
+        self.btnCopy = qt.QPushButton("Copy measurement to clipboard")
+        self.btnCopy.toolTip = "Copy measurement to clipboard."
         self.btnCopy.enabled = True
         self.btnCopy.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
         self.btnCopy.connect('clicked(bool)',self.onCopyButtonClicked)
-
         self.qLineToolsGrpBoxLayout.addWidget(self.btnCopy)
+
         self.tabExtraToolsLayout.addWidget(self.qLineToolsGrpBox)
 
         return self.tabExtraToolsLayout
@@ -568,6 +579,7 @@ class Session:
         ''' A function to capture the length of the last markup line created.
             This value is copied to the clipboard and can be pasted into a text box.
         '''
+        
         
         # get last line created
         slLineNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsLineNode')
@@ -584,7 +596,7 @@ class Session:
                 self.oUtilsMsgs.DisplayWarning('Invalid Length')
                     
         else:
-            self.oUtilsMsgs.DisplayWarning('No line has been created. \nCannot copy length to clipboard.')
+            self.oUtilsMsgs.DisplayWarning('No (markups) line has been created. \nCannot copy length to clipboard.')
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
