@@ -217,7 +217,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         qDBGrpBoxLayout.addWidget(self.qLblDataLocation)
 
 
-        qUserLoginLayout.addSpacing(5)
+        qDBGrpBoxLayout.addSpacing(10)
         self.qUserGrpBox = qt.QGroupBox()
         self.qUserGrpBox.setTitle('User name')
         self.qUserGrpBoxLayout = qt.QVBoxLayout()
