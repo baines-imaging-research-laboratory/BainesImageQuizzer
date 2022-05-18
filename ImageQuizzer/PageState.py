@@ -178,9 +178,12 @@ class PageState:
         
         if self.sSegmentationRequiredState == 'NoSegReq' or self.sSegmentationRequiredState == 'AnySegReq':
             self.bSegmentationsCompleted = False
-            for idx in range(len(self.l2iCompletedSegmentations)):
-                if self.l2iCompletedSegmentations[idx][1] == 1:
-                    self.bSegmentationsCompleted = True
+            if len(self.l2iCompletedSegmentations) == 0:    # case for no images on page
+                self.bSegmentationsCompleted = True
+            else:
+                for idx in range(len(self.l2iCompletedSegmentations)):
+                    if self.l2iCompletedSegmentations[idx][1] == 1:
+                        self.bSegmentationsCompleted = True
 
             # for 'AnySegReq' at least one completed segmentation must exist
             # for 'NoSegReq', no segmentations is acceptable
@@ -214,7 +217,8 @@ class PageState:
     def UpdateQuestionSetCompletionState(self, iQSetIdx, iCompletionCode):
         ''' Function to update the completion level for a specific question set on a Page
         '''
-        self.liCompletedQuestionSets[iQSetIdx] = iCompletionCode
+        if len(self.liCompletedQuestionSets) != 0:  # case = 0 if no question sets
+            self.liCompletedQuestionSets[iQSetIdx] = iCompletionCode
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateSegmentationCompletionState(self, xPageNode):
