@@ -560,44 +560,29 @@ class Session:
         # Hide all buttons and only show place button
         self.slMarkupsLineWidget.buttonsVisible=False
         self.slMarkupsLineWidget.placeButton().show()
+        self.slMarkupsLineWidget.deleteButton().show()
         self.qLineToolsGrpBoxLayout.addWidget(self.slMarkupsLineWidget)
         
         # Copy measurement button
-        self.btnCopy = qt.QPushButton("Copy measurement to clipboard")
-        self.btnCopy.toolTip = "Copy measurement to clipboard."
-        self.btnCopy.enabled = True
-        self.btnCopy.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
-        self.btnCopy.connect('clicked(bool)',self.onCopyButtonClicked)
-        self.qLineToolsGrpBoxLayout.addWidget(self.btnCopy)
+        self.btnClearLines = qt.QPushButton("Clear all")
+        self.btnClearLines.toolTip = "Remove all markup lines."
+        self.btnClearLines.enabled = True
+        self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+        self.btnClearLines.connect('clicked(bool)',self.onClearLinesButtonClicked)
+        self.qLineToolsGrpBoxLayout.addWidget(self.btnClearLines)
 
         self.tabExtraToolsLayout.addWidget(self.qLineToolsGrpBox)
 
         return self.tabExtraToolsLayout
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onCopyButtonClicked(self):
-        ''' A function to capture the length of the last markup line created.
-            This value is copied to the clipboard and can be pasted into a text box.
+    def onClearLinesButtonClicked(self):
+        ''' A function to clear all markup line nodes from the scene.
         '''
-        
-        
-        # get last line created
         slLineNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsLineNode')
-        slLastLineNode = slLineNodes.GetItemAsObject(slLineNodes.GetNumberOfItems()-1)
-        
-        if slLastLineNode :
-            sLength = slLastLineNode.GetDescription()
-            sTrimmedLength = sLength.replace('length: ','')
-            sTrimmedLength = sTrimmedLength.replace('mm','')
-        
-            try:
-                qt.QApplication.clipboard().setText(float(sTrimmedLength))
-            except ValueError:
-                self.oUtilsMsgs.DisplayWarning('Invalid Length')
-                    
-        else:
-            self.oUtilsMsgs.DisplayWarning('No (markups) line has been created. \nCannot copy length to clipboard.')
-        
+        for node in slLineNodes:
+            slicer.mrmlScene.RemoveNode(node)
+            
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
         
@@ -1037,12 +1022,8 @@ class Session:
             
             if bSuccess:
                 
-                # Saving the label maps becomes part of the success level ('AllResponses', 'PartialResponses' 
-                # or 'NoResponses') for capturing all of the required pieces for the question set
-                # (responses and label maps). The label maps therefore must be saved
-                # prior to capturing the responses
                 bSuccess, sMsg = self.oFilesIO.SaveLabelMaps(self, sCaller)
-            
+                bSuccess, sMsg = self.oFilesIO.SaveMarkupsLines(self, sCaller)
     
                 if bSuccess:
                     sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponsesToSave()
@@ -1231,25 +1212,6 @@ class Session:
                 if len(dictImageState) > 0:
                     oImageNode.SetImageState(dictImageState)
             
-
-    
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetFolderNameForLabelMaps(self):
-        """ Label maps are stored in a directory where the name is derived from the 
-            current page of the Session.
-        """
-        
-        # get page info to create directory
-        xPageNode = self.GetCurrentPageNode()
-        sPageIndex = str(self.GetCurrentPageIndex() + 1)
-        sPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
-#         sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
-         
-#         sDirName = os.path.join(self.oFilesIO.GetUserQuizResultsDir(), 'Pg'+ sPageIndex + '_' + sPageID + '_' + sPageDescriptor)
-        sDirName = os.path.join(self.oFilesIO.GetUserQuizResultsDir(), 'Pg'+ sPageIndex + '_' + sPageID )
-
-        return sDirName
-        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetXmlElementFromAttributeHistory(self, sPageChildrenToSearch, sImageAttributeToMatch, sAttributeValue):
         ''' Function will return the historical element that contains the attribute requested for the search.

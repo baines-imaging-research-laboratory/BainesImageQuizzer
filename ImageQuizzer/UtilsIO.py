@@ -182,6 +182,20 @@ class UtilsIO:
 
         return sFilenameNoExt
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetFolderNameForPageResults(self, oSession):
+        """ Quiz results (eg. LabelMaps, MarkupLines) are stored in a directory where the name is derived from the 
+            current page of the Session.
+        """
+        
+        # get page info from the session's current page to create directory
+        xPageNode = oSession.GetCurrentPageNode()
+        sPageIndex = str(oSession.GetCurrentPageIndex() + 1)
+        sPageID = oSession.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
+        sDirName = os.path.join(self.GetUserQuizResultsDir(), 'Pg'+ sPageIndex + '_' + sPageID )
+
+        return sDirName
+        
 
 
     #----------
@@ -866,6 +880,26 @@ class UtilsIO:
         return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ExportResultsItemToFile(self, sItemName, sPath, slNode):
+        """ Use Slicer's storage node to export node to a file
+        """
+        
+        sMsg = ''
+        bSuccess = True
+        
+        try:
+            slStorageNode = slNode.CreateDefaultStorageNode()
+            slStorageNode.SetFileName(sPath)
+            slStorageNode.WriteData(slNode)
+            slStorageNode.UnRegister(slicer.mrmlScene) # for memory leaks
+            
+        except:
+            bSuccess = False
+            sMsg = 'Failed to store ' + sItemName + ' as file: \n' + sPath
+    
+        return bSuccess, sMsg
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
     #-------------------------------------------
     #        LabelMap Functions
@@ -920,7 +954,7 @@ class UtilsIO:
                         if not oImageNode.sNodeName in lsLabelMapsStoredForImages:
 
                             # store the path name in the xml file and the label map in the directory
-                            sDirName = oSession.GetFolderNameForLabelMaps()
+                            sDirName = self.GetFolderNameForPageResults(oSession)
                             sPageLabelMapDir = self.CreatePageDir(sDirName)
     
                             sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
@@ -928,7 +962,7 @@ class UtilsIO:
                             # save the label map file to the user's page directory
                             sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
     
-                            bDataVolumeSaved, sMsg = self.SaveLabeMapAsDataVolume(sLabelMapPath, slNodeLabelMap) 
+                            bDataVolumeSaved, sMsg = self.ExportResultsItemToFile('LabelMap', sLabelMapPath, slNodeLabelMap) 
                          
                             # update list of names of images that have the label maps stored
                             lsLabelMapsStoredForImages.append(oImageNode.sNodeName)
@@ -983,28 +1017,28 @@ class UtilsIO:
 
 
         
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SaveLabeMapAsDataVolume(self, sLabelMapPath, slNodeLabelMap):
-        """ Use Slicer's storage node to export label map node as a data volume.
-        """
-        
-        sMsg = ''
-        bSuccess = True
-        
-        try:
-            slStorageNode = slNodeLabelMap.CreateDefaultStorageNode()
-            slStorageNode.SetFileName(sLabelMapPath)
-            slStorageNode.WriteData(slNodeLabelMap)
-            slStorageNode.UnRegister(slicer.mrmlScene) # for memory leaks
-            
-        except:
-            bSuccess = False
-            sMsg = 'Failed to store label map as data volume file: \n'\
-                    + sLabelMapPath +\
-                    'See administrator: ' + sys._getframe(  ).f_code.co_name
-    
-    
-        return bSuccess, sMsg
+    # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # def SaveLabeMapAsDataVolume(self, sLabelMapPath, slNodeLabelMap):
+    #     """ Use Slicer's storage node to export label map node as a data volume.
+    #     """
+    #
+    #     sMsg = ''
+    #     bSuccess = True
+    #
+    #     try:
+    #         slStorageNode = slNodeLabelMap.CreateDefaultStorageNode()
+    #         slStorageNode.SetFileName(sLabelMapPath)
+    #         slStorageNode.WriteData(slNodeLabelMap)
+    #         slStorageNode.UnRegister(slicer.mrmlScene) # for memory leaks
+    #
+    #     except:
+    #         bSuccess = False
+    #         sMsg = 'Failed to store label map as data volume file: \n'\
+    #                 + sLabelMapPath +\
+    #                 'See administrator: ' + sys._getframe(  ).f_code.co_name
+    #
+    #
+    #     return bSuccess, sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadSavedLabelMaps(self, oSession):
@@ -1128,7 +1162,7 @@ class UtilsIO:
         sAbsolutePathForSource = oSession.oFilesIO.GetAbsoluteUserPath(sStoredRelativePathForSource)
 
         # create new folder for destination based on current page information
-        sCurrentLabelMapFolderName = oSession.GetFolderNameForLabelMaps()
+        sCurrentLabelMapFolderName = self.GetFolderNameForPageResults(oSession)
         sLabelMapDirForDest = self.CreatePageDir(sCurrentLabelMapFolderName)
         
         # create new file name to which the historical label map is to be copied
@@ -1167,4 +1201,49 @@ class UtilsIO:
         slNodesCollection.UnRegister(slicer.mrmlScene)
               
         return bFound, slNode
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
+    #-------------------------------------------
+    #        MarkupsLine Functions
+    #-------------------------------------------
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SaveMarkupsLines(self, oSession, sCaller):
+        ''' This function will capture all markup lines, rename them to reflect the associated 
+            reference node and save them in the json format.
+        '''
+        
+        sMsg = ''
+        bMarkupsLinesSaved = True
+        
+        lsMarkupsLineNodes = []
+        lsMarkupsLineNodes = slicer.util.getNodesByClass('vtkMRMLMarkupsLineNode')
+        
+        if len(lsMarkupsLineNodes) > 0:
+            for slMarkupsLine in lsMarkupsLineNodes:
+                sAssociatedReferenceNodeID = slMarkupsLine.GetNthControlPointAssociatedNodeID()
+                # update name of node only if not already done
+                if slMarkupsLine.GetName().find(sAssociatedReferenceNodeID) == -1:
+                    sLineName = slMarkupsLine.GetName() + '_' + slicer.util.getNode(sAssociatedReferenceNodeID).GetName()
+                    slMarkupsLine.SetName(sLineName)
+            
+                # save the markups line in the directory
+                sDirName = self.GetFolderNameForPageResults(oSession)
+                sPageMarkupsLineDir = self.CreatePageDir(sDirName)
+    
+                sMarkupsLineFilenameWithExt = slMarkupsLine.GetName() + '.mrk.json'
+                             
+                # save the label map file to the user's page directory
+                sMarkupsLinePath = os.path.join(sPageMarkupsLineDir, sMarkupsLineFilenameWithExt)
+    
+                bLineSaved, sMsg = self.ExportResultsItemToFile('MarkupsLine', sMarkupsLinePath, slMarkupsLine) 
+        
+                # store the path name in the xml file
+                if bLineSaved:
+                    pass
+                    # save to XML
+                
+        
+        return bMarkupsLinesSaved, sMsg
+    
