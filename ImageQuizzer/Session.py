@@ -561,6 +561,7 @@ class Session:
         self.slMarkupsLineWidget.buttonsVisible=False
         self.slMarkupsLineWidget.placeButton().show()
         self.slMarkupsLineWidget.deleteButton().show()
+        self.slMarkupsLineWidget.setPlaceModeEnabled(True)
         self.qLineToolsGrpBoxLayout.addWidget(self.slMarkupsLineWidget)
         
         # Copy measurement button
@@ -572,6 +573,38 @@ class Session:
         self.qLineToolsGrpBoxLayout.addWidget(self.btnClearLines)
 
         self.tabExtraToolsLayout.addWidget(self.qLineToolsGrpBox)
+        
+        self.qOtherToolsGrpBox = qt.QGroupBox()
+        self.qOtherToolsGrpBox.setTitle('Other Tools')
+        self.qOtherToolsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
+        self.qOtherToolsGrpBoxLayout = qt.QGridLayout()
+        self.qOtherToolsGrpBox.setLayout(self.qOtherToolsGrpBoxLayout)
+        
+        
+        self.btnCrosshairsOn = qt.QPushButton('Crosshairs On:')
+        self.btnCrosshairsOn.enabled = True
+        self.btnCrosshairsOn.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+        self.btnCrosshairsOn.connect('clicked(bool)',self.onCrosshairsOnClicked)
+        self.qOtherToolsGrpBoxLayout.addWidget(self.btnCrosshairsOn,0,0)
+
+        self.btnCrosshairsOff = qt.QPushButton('Crosshairs Off:')
+        self.btnCrosshairsOff.enabled = True
+        self.btnCrosshairsOff.setStyleSheet("QPushButton{ background-color: rgb(255,149,0); color: black }")
+        self.btnCrosshairsOff.connect('clicked(bool)',self.onCrosshairsOffClicked)
+        self.qOtherToolsGrpBoxLayout.addWidget(self.btnCrosshairsOff,0,1)
+        
+        qSeparatorLabel = qt.QLabel("|")
+        self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,0,2)
+        qEmptyTextLabel = qt.QLabel("     ")
+        self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,0,3)
+        self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,0,4)
+        self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,0,5)
+        
+        
+        self.tabExtraToolsLayout.addWidget(self.qOtherToolsGrpBox)
+        
+        
+        
 
         return self.tabExtraToolsLayout
         
@@ -583,6 +616,22 @@ class Session:
         for node in slLineNodes:
             slicer.mrmlScene.RemoveNode(node)
             
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onCrosshairsOnClicked(self):
+        ''' activate the crosshairs tool
+        '''
+        slCrosshairNode = slicer.util.getNode('vtkMRMLCrosshairNodedefault')
+        slCrosshairNode.SetCrosshairBehavior(1) # offset jump slice
+        slCrosshairNode.SetCrosshairMode(2)     # basic intersection
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onCrosshairsOffClicked(self):
+        ''' activate the crosshairs tool
+        '''
+        slCrosshairNode = slicer.util.getNode('vtkMRMLCrosshairNodedefault')
+        slCrosshairNode.SetCrosshairBehavior(1) # offset jump slice
+        slCrosshairNode.SetCrosshairMode(0)     # basic intersection
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
         
@@ -837,6 +886,7 @@ class Session:
         bBuildSuccess, qWidgetQuestionSetForm = oQuestionSet.BuildQuestionSetForm()
         
         if bBuildSuccess:
+            self.slMarkupsLineWidget.setPlaceModeEnabled(True)
             self.oQuizWidgets.qQuizLayout.addWidget(qWidgetQuestionSetForm)
             self._loQuestionSets.append(oQuestionSet)
             qWidgetQuestionSetForm.setEnabled(True) # initialize
