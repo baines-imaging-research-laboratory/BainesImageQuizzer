@@ -37,7 +37,6 @@ class Session:
 
         self._iCurrentCompositeIndex = 0
         self._l3iPageQuestionGroupCompositeIndices = []
-        self._oPageState = None
 
         self._xPageNode = None
         self.sPageID = ''
@@ -59,6 +58,7 @@ class Session:
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
+        self.oPageState = None
 
         self.oImageView = None
         
@@ -167,16 +167,16 @@ class Session:
         xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPgIndex)
         oPgItem = PageState(self)
         oPgItem.InitializeStates(xPageNode)
-        self._oPageState = oPgItem
+        self.oPageState = oPgItem
     
     #----------
     def GetPageState(self):
-        return self._oPageState
+        return self.oPageState
     
     #----------
-    def GetResponseCompletionLevel(self, iTotalItems, iCountedItems):
+    def CategorizeResponseCompletionLevel(self, iTotalItems, iCountedItems):
         ''' This function may be used to define the number of questions that had 
-            responses stored in the XML or the number of reponses the user
+            responses stored in the XML or the number of responses the user
             made in the quiz form.
         '''
         
@@ -789,6 +789,7 @@ class Session:
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
         
         # get question set completion state 
+        self._lsPreviousResponses = [] # reset for new Question Set
         sSavedResponseCompletionLevel = self.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
 
         if self.GetQuizComplete():
@@ -912,6 +913,11 @@ class Session:
                 
             oQuestion.PopulateQuestionWithResponses(lsResponseValues)
 
+            # only InfoBox type of question can have all responses equal to null string
+            if self.oIOXml.GetValueOfNodeAttribute(xQuestionNode, 'Type') != "InfoBox" \
+                    and (all(elem == '' for elem in lsResponseValues)):
+                lsResponseValues = []   # reset if all are empty
+
             lsAllResponsesForQuestion.append(lsResponseValues)
             
     
@@ -925,16 +931,17 @@ class Session:
             comes from the currently saved elements in the XML.
              
             Assumption: All'Option' elements have a 'Response' element if the question was answered
-            so we just query the first. 
+            so we just query the first Response 
+            
             eg: Radio Question     Success?
                     Opt 1            yes
                         Response:       y (checked)
                     Opt 2            no
-          GetSavedResponseCompletionLevel n (not checked)
+                        Response:       n (not checked) 
+            
         """
         
         iNumAnsweredQuestions = 0
-        self._lsPreviousResponses = [] # reset for new Question Set
         
         # xQuestionSetNode = self.GetCurrentQuestionSetNode()
         
@@ -950,7 +957,7 @@ class Session:
                 iNumAnsweredQuestions = iNumAnsweredQuestions + 1
                  
 
-        sSavedResponseCompletionLevel = self.GetResponseCompletionLevel(iNumQuestions, iNumAnsweredQuestions)
+        sSavedResponseCompletionLevel = self.CategorizeResponseCompletionLevel(iNumQuestions, iNumAnsweredQuestions)
                 
         return sSavedResponseCompletionLevel
            
@@ -1093,7 +1100,7 @@ class Session:
                 iNumMissingResponses = iNumMissingResponses + 1
                 
         # define success level
-        sCaptureSuccessLevel = self.GetResponseCompletionLevel(len(loQuestions), len(loQuestions)-iNumMissingResponses)
+        sCaptureSuccessLevel = self.CategorizeResponseCompletionLevel(len(loQuestions), len(loQuestions)-iNumMissingResponses)
                 
         return sCaptureSuccessLevel, lsAllResponses, sAllMsgs
        
