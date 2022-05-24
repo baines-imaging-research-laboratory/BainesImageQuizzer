@@ -170,10 +170,6 @@ class Session:
         self.oPageState = oPgItem
     
     #----------
-    def GetPageState(self):
-        return self.oPageState
-    
-    #----------
     def CategorizeResponseCompletionLevel(self, iTotalItems, iCountedItems):
         ''' This function may be used to define the number of questions that had 
             responses stored in the XML or the number of responses the user
@@ -834,7 +830,7 @@ class Session:
                         if sSavedResponseCompletionLevel == 'AllResponses':
                             qWidgetQuestionSetForm.setEnabled(False)
 #                         if self.loPageCompletionState[self.GetCurrentPageIndex()].GetSegmentationsCompletedState():
-                        if self.GetPageState().GetSegmentationsCompletedState():
+                        if self.oPageState.GetSegmentationsCompletedState():
                             self.SegmentationTabEnabler(False)
                         
 
@@ -997,15 +993,15 @@ class Session:
                             bSuccess, sMsg = self.WriteResponsesToXml()
                             if bSuccess:
                                 # update question set with completion code=1
-                                self.GetPageState().UpdateQuestionSetCompletionState(idxQuestionSet,1)
+                                self.oPageState.UpdateQuestionSetCompletionState(idxQuestionSet,1)
                                 # # if this was the last question set, update label maps completion
                                 # if idxQuestionSet == iNumQSets - 1:
                                 #     self.loPageCompletionState[idxPage].UpdateSegmentationCompletionState(self.GetCurrentPageNode())
-                                self.GetPageState().UpdateSegmentationCompletionState(self.GetCurrentPageNode())
+                                self.oPageState.UpdateSegmentationCompletionState(self.GetCurrentPageNode())
                         else:
                             # update question set with completion code=0
 #                             self.loPageCompletionState[idxPage].UpdateQuestionSetCompletionState(idxQuestionSet,0)
-                            self.GetPageState().UpdateQuestionSetCompletionState(idxQuestionSet,0)
+                            self.oPageState.UpdateQuestionSetCompletionState(idxQuestionSet,0)
                             bSuccess = False
                             
                             
@@ -1041,11 +1037,12 @@ class Session:
 #                                         self.AddQuizCompleteAttribute()
 #                                 else:
 #                                     bSuccess = False
-                                self.GetPageState().CheckPageCompletionLevelForQuestionSets()
-                                sLabelMapMsg = self.GetPageState().CheckPageCompletionLevelForSegmentations(self.GetCurrentPageNode())
+                                self.oPageState.CheckPageCompletionLevelForQuestionSets()
+                                sLabelMapMsg = self.oPageState.CheckPageCompletionLevelForSegmentations(self.GetCurrentPageNode())
                                 sMsg = sMsg + sLabelMapMsg
-                                if self.GetPageState().GetQuestionSetsCompletedState() and \
-                                        self.GetPageState().GetSegmentationsCompletedState():
+#                                 if self.oPageState.GetQuestionSetsCompletedState() and \
+#                                         self.oPageState.GetSegmentationsCompletedState():
+                                if self.oPageState.GetPageCompletedTF():
                                     bSuccess = True
                                     self.AddPageCompleteAttribute(self.GetCurrentPageIndex())
                                     if sCaller == 'Finish':
@@ -1500,7 +1497,7 @@ class Session:
                         iResumeCompIndex = indCI
                         self.SetQuizResuming(True)
             
-            self.GetPageState().UpdateSegmentationCompletionState(xPageNode)
+            self.oPageState.UpdateSegmentationCompletionState(xPageNode)
             # adjust resuming index based on completion state of the first incomplete page
             #    (some question sets, if more than one exists, may have been completed)
             iNumQSets = self.oIOXml.GetNumChildrenByName(xPageNode, 'QuestionSet')
@@ -1509,7 +1506,7 @@ class Session:
                 xQuestionSetNode = lxQSetNodes[indQSet]
                 if self.GetSavedResponseCompletionLevel(xQuestionSetNode) == 'AllResponses':
 #                     self.loPageCompletionState[iPageIndex].UpdateQuestionSetCompletionState(indQSet,1)
-                    self.GetPageState().UpdateQuestionSetCompletionState(indQSet,1)
+                    self.oPageState.UpdateQuestionSetCompletionState(indQSet,1)
                     
                     # only advance if there are more question sets
                     #    if the last question set has been reached and it is complete then 'PageComplete'
@@ -1519,8 +1516,9 @@ class Session:
 
 #             if self.loPageCompletionState[iPageIndex].GetQuestionSetsCompletedState() and \
 #                         self.loPageCompletionState[iPageIndex].GetSegmentationsCompletedState():
-            if self.GetPageState().GetQuestionSetsCompletedState() and \
-                        self.GetPageState().GetSegmentationsCompletedState():
+#             if self.oPageState.GetQuestionSetsCompletedState() and \
+#                         self.oPageState.GetSegmentationsCompletedState():
+            if self.oPageState.GetPageCompletedTF():
                 iResumeCompIndex = iResumeCompIndex + 1
 
 
