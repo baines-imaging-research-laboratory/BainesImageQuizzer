@@ -71,6 +71,10 @@ class PageState:
         self.oFilesIO = self.oSession.oFilesIO
         
     #----------
+    def GetCompletedQuestionSetsList(self):
+        return self.liCompletedQuestionSets
+    
+    #----------
     def GetSegmentationsCompletedState(self):
         return self.bSegmentationsCompleted
         
@@ -99,6 +103,43 @@ class PageState:
             
         return bCompleted
     
+    #----------
+    def CategorizeResponseCompletionLevel(self, iTotalItems, iCountedItems):
+        ''' This function may be used to define the number of questions that had 
+            responses stored in the XML or the number of responses the user
+            made in the quiz form.
+        '''
+        
+        if iCountedItems == iTotalItems:
+            sCompletionLevel = 'AllResponses'
+        elif iCountedItems == 0:
+            sCompletionLevel = 'NoResponses'
+        else:
+            sCompletionLevel = 'PartialResponses'
+        
+        return sCompletionLevel        
+
+    #----------
+    def UpdateCompletionLists(self, xPageNode):
+        ''' For the given indices, update the completion states in the lists
+        '''
+        
+        self.UpdateQuestionSetCompletionList(xPageNode)
+        self.UpdateSegmentationCompletionList(xPageNode)
+        
+    #----------
+    def UpdateCompletedFlags(self, xPageNode):
+        ''' Update completed flags for page elements
+        '''
+        sMsg = ''
+        sQSetMsg = self.UpdatePageCompletionLevelForQuestionSets()
+        sLabelMapMsg = self.UpdatePageCompletionLevelForSegmentations(xPageNode)
+        sMsg = sQSetMsg + '\n' + sLabelMapMsg
+        
+        return sMsg
+    
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def InitializeStates(self, xPageNode):
         ''' 
@@ -134,7 +175,7 @@ class PageState:
             self.liCompletedQuestionSets.append(iCompletedTF)
 
 
-        # store segmentation requirement code
+        # store segmentation requirement code (SpecificSegReq state introduced when looping through images)
         sSegmentationRequiredState = 'NoSegReq' # default
         sSegRequiredAnyImage = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'SegmentRequiredOnAnyImage')
         if sSegRequiredAnyImage == 'Y' or sSegRequiredAnyImage == 'y':
@@ -167,18 +208,28 @@ class PageState:
                     self.l2iCompletedSegmentations[iImgIdx][1] = l2iSegmentNotRequired[1]
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def UpdateQuestionSetCompletionState(self, iQSetIdx, iCompletionCode):
-        ''' Function to update the completion level for a specific question set on a Page
+    def UpdateQuestionSetCompletionList(self, xPageNode):
+        ''' For the given page node, update the completion state level
+            for each question set.
         '''
-        if len(self.liCompletedQuestionSets) != 0:  # case = 0 if no question sets
-            self.liCompletedQuestionSets[iQSetIdx] = iCompletionCode
         
+        lxQSetNodes = self.oIOXml.GetChildren(xPageNode, 'QuestionSet')
+        iQSetIdx = -1
+        for xQSetNode in lxQSetNodes:
+            
+            iQSetIdx = iQSetIdx + 1
+            sSavedResponseCompletionLevel = self.GetSavedResponseCompletionLevel(xQSetNode)
+        
+            if sSavedResponseCompletionLevel == 'AllResponses':
+                self.liCompletedQuestionSets[iQSetIdx] = 1
+            else:
+                self.liCompletedQuestionSets[iQSetIdx] = 0
+                
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def UpdateSegmentationCompletionState(self, xPageNode):
-        ''' Function to update the completion flags for segmentations for each image.
+    def UpdateSegmentationCompletionList(self, xPageNode):
+        ''' Function to update the completion flags for segmentations for 
+            each image stored in the list
         '''
-        
-        sMsg = ''
         
         lxImageNodes = self.oIOXml.GetChildren(xPageNode,'Image')
         idxImage = -1
@@ -258,19 +309,22 @@ class PageState:
                         self.l2iCompletedSegmentations[idxImage][1] = 1
             
                 
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CheckPageCompletionLevelForQuestionSets(self):
+    def UpdatePageCompletionLevelForQuestionSets(self):
         ''' Test to see if all question sets on a page have been completed.
         '''
+        sMsg = ''
         if 0 in self.liCompletedQuestionSets:
             self.bQuestionSetsCompleted = False
+            sMsg = 'Not all question sets were completed'
         else:
             self.bQuestionSetsCompleted = True
             
-        return self.bQuestionSetsCompleted
+        return sMsg
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CheckPageCompletionLevelForSegmentations(self, xPageNode):
+    def UpdatePageCompletionLevelForSegmentations(self, xPageNode):
         ''' Based on the segmentation completion level over all the images, the flag for
             completion of segmentation at the Page level is determined. 
         '''
@@ -311,7 +365,7 @@ class PageState:
                             sImageID = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'ID')
                             sNodeName = sPageID + '_' + sImageID
                             sMsg = sMsg +  '\nYou must complete a segmentation for this image: ' + sNodeName + \
-                                '\nIf a contour has been redisplayed for this image, it must be modified.' + \
+                                '\nIf a contour has been redisplayed for this image, it must be modified. It cannot be empty.' + \
                                 '\nSelect the image: "'+ sNodeName + '" as the Master Volume in the Segment Editor.'
         
         return sMsg
@@ -355,4 +409,39 @@ class PageState:
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetSavedResponseCompletionLevel(self, xQuestionSetNode):
+        """ Check through all questions for the question set looking for a response. This information
+            comes from the currently saved elements in the XML.
+             
+            Assumption: All'Option' elements have a 'Response' element if the question was answered
+            so we just query the first Response 
+            
+            eg: Radio Question     Success?
+                    Opt 1            yes
+                        Response:       y (checked)
+                    Opt 2            no
+                        Response:       n (not checked) 
+            
+        """
+        
+        iNumAnsweredQuestions = 0
+        
+        # xQuestionSetNode = self.GetCurrentQuestionSetNode()
+        
+        iNumQuestions = self.oIOXml.GetNumChildrenByName(xQuestionSetNode, 'Question')
+
+        for indQuestion in range(iNumQuestions):
+            # get first option for the question (all (or none) options have a response so just check the first)
+            xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
+            xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', 0)
+         
+            iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode,'Response')
+            if iNumResponses >0:
+                iNumAnsweredQuestions = iNumAnsweredQuestions + 1
+                 
+        sSavedResponseCompletionLevel = self.CategorizeResponseCompletionLevel(iNumQuestions, iNumAnsweredQuestions)
+
+        return sSavedResponseCompletionLevel
+           
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
