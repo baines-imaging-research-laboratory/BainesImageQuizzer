@@ -65,6 +65,7 @@ class QuestionSet():
 
                 sQuestionType = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Type')
                 sQuestionDescriptor = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Descriptor')
+                sGroupBoxLayout = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'GroupLayout')
 
 
                 bQuestionTypeGood = True
@@ -100,6 +101,7 @@ class QuestionSet():
 
                 if bQuestionTypeGood == True:
                     oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
+                    oQuestion._sGrpBoxLayout_setter(sGroupBoxLayout)
                     
                     lOptions = self.GetOptionsFromXML(xNodeQuestion)
                     oQuestion._lsOptions_setter(lOptions)
@@ -175,6 +177,7 @@ class Question(ABC):
 
         self._lsOptions = []
         self._sGrpBoxTitle = ''
+        self._sGrpBoxLayout = ''
 
     
     # abstract properties require level of indirection
@@ -220,6 +223,27 @@ class Question(ABC):
     
     
     #----------
+    # _sGrpBoxLayout
+    #----------
+    @property
+    def sGrpBoxLayout(self):
+        return self._sGrpBoxLayout
+    
+    @sGrpBoxLayout.setter
+    def sGrpBoxLayout(self, x):
+        self._sGrpBoxLayout_setter(x)
+        
+    @abstractmethod
+    def _sGrpBoxLayout_getter(self,x):
+        pass
+    
+    @abstractmethod
+    def _sGrpBoxTitle_getter(self):
+        return self._sGrpBoxTitle
+    #----------
+    
+    
+    #----------
     @abstractmethod        
     def BuildQuestion(self): pass
     
@@ -231,11 +255,14 @@ class Question(ABC):
 
     #-----------------------------------------------
     
-    def CreateGroupBox(self, sTitle):
+    def CreateGroupBox(self, sTitle, sGrpBoxLayout='Vertical'):
         # create group box widget to which each subclass can add elements
         self.qGrpBox = qt.QGroupBox()
         self.qGrpBox.setTitle(sTitle)
-        self.qGrpBoxLayout = qt.QVBoxLayout()
+        if sGrpBoxLayout == 'Horizontal':
+            self.qGrpBoxLayout = qt.QHBoxLayout()
+        else:
+            self.qGrpBoxLayout = qt.QVBoxLayout()
         self.qGrpBox.setLayout(self.qGrpBoxLayout)
         self.qGrpBox.setStyleSheet("QGroupBox { \
             margin: 10px; border: 1px solid gray;\
@@ -337,12 +364,18 @@ class RadioQuestion(Question):
     def _sGrpBoxTitle_getter(self):
         return self._sGrpBoxTitle
 
+    def _sGrpBoxLayout_setter(self, sInput):
+        self._sGrpBoxLayout = sInput
+        
+    def _sGrpBoxLayout_getter(self):
+        return self._sGrpBoxLayout
+
     #-----------------------------------------------
     
     def BuildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
 
-        self.CreateGroupBox(self._sGrpBoxTitle_getter())
+        self.CreateGroupBox(self._sGrpBoxTitle_getter(), self._sGrpBoxLayout_getter())
         
         lsStoredOptions = self._lsOptions_getter()
         length = len(lsStoredOptions)
@@ -430,12 +463,18 @@ class CheckBoxQuestion(Question):
     def _sGrpBoxTitle_getter(self):
         return self._sGrpBoxTitle
 
+    def _sGrpBoxLayout_setter(self, sInput):
+        self._sGrpBoxLayout = sInput
+        
+    def _sGrpBoxLayout_getter(self):
+        return self._sGrpBoxLayout
+
     #-----------------------------------------------
        
     def BuildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
 
-        self.CreateGroupBox(self._sGrpBoxTitle_getter())
+        self.CreateGroupBox(self._sGrpBoxTitle_getter(), self._sGrpBoxLayout_getter())
         
         lsStoredOptions = self._lsOptions_getter()
         length = len(lsStoredOptions)
@@ -521,6 +560,12 @@ class TextQuestion(Question):
         
     def _sGrpBoxTitle_getter(self):
         return self._sGrpBoxTitle
+
+    def _sGrpBoxLayout_setter(self, sInput):
+        self._sGrpBoxLayout = sInput
+        
+    def _sGrpBoxLayout_getter(self):
+        return self._sGrpBoxLayout
 
     #-----------------------------------------------
     
@@ -615,6 +660,12 @@ class IntegerValueQuestion(Question):
         
     def _sGrpBoxTitle_getter(self):
         return self._sGrpBoxTitle
+
+    def _sGrpBoxLayout_setter(self, sInput):
+        self._sGrpBoxLayout = sInput
+        
+    def _sGrpBoxLayout_getter(self):
+        return self._sGrpBoxLayout
 
     def UpdateDictionaryModifiers(self, dictionaryInput):
         self.dictModifiers = dictionaryInput
@@ -756,6 +807,12 @@ class FloatValueQuestion(Question):
     def _sGrpBoxTitle_getter(self):
         return self._sGrpBoxTitle
 
+    def _sGrpBoxLayout_setter(self, sInput):
+        self._sGrpBoxLayout = sInput
+        
+    def _sGrpBoxLayout_getter(self):
+        return self._sGrpBoxLayout
+
     def UpdateDictionaryModifiers(self, dictionaryInput):
         self.dictModifiers = dictionaryInput
         
@@ -896,6 +953,12 @@ class InfoBox(Question):
         
     def _sGrpBoxTitle_getter(self):
         return self._sGrpBoxTitle
+
+    def _sGrpBoxLayout_setter(self, sInput):
+        self._sGrpBoxLayout = sInput
+        
+    def _sGrpBoxLayout_getter(self):
+        return self._sGrpBoxLayout
 
     #-----------------------------------------------
 
