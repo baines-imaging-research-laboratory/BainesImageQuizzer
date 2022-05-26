@@ -26,7 +26,7 @@ class PageState:
                 Code for required states:
                     0 = not required
                     1 = required
-                    2 = not applicable    (eg. image elements assigned to Layer='Segmentation' or 'Label')
+                    -1 = not applicable    (eg. image elements assigned to Layer='Segmentation' or 'Label')
                 Codes for completed states:
                     0 = incomplete
                     1 = complete
@@ -71,6 +71,10 @@ class PageState:
         self.oFilesIO = self.oSession.oFilesIO
         
     #----------
+    def GetCompletedQuestionSetsList(self):
+        return self.liCompletedQuestionSets
+    
+    #----------
     def GetSegmentationsCompletedState(self):
         return self.bSegmentationsCompleted
         
@@ -87,7 +91,55 @@ class PageState:
             return True
         else:
             return False
+        
+    #----------
+    def GetPageCompletedTF(self):
+        ''' return T/F if all elements are completed
+        '''        
+        if self.bQuestionSetsCompleted and self.bSegmentationsCompleted:
+            bCompleted = True
+        else:
+            bCompleted = False
+            
+        return bCompleted
     
+    #----------
+    def CategorizeResponseCompletionLevel(self, iTotalItems, iCountedItems):
+        ''' This function may be used to define the number of questions that had 
+            responses stored in the XML or the number of responses the user
+            made in the quiz form.
+        '''
+        
+        if iCountedItems == iTotalItems:
+            sCompletionLevel = 'AllResponses'
+        elif iCountedItems == 0:
+            sCompletionLevel = 'NoResponses'
+        else:
+            sCompletionLevel = 'PartialResponses'
+        
+        return sCompletionLevel        
+
+    #----------
+    def UpdateCompletionLists(self, xPageNode):
+        ''' For the given indices, update the completion states in the lists
+        '''
+        
+        self.UpdateQuestionSetCompletionList(xPageNode)
+        self.UpdateSegmentationCompletionList(xPageNode)
+        
+    #----------
+    def UpdateCompletedFlags(self, xPageNode):
+        ''' Update completed flags for page elements
+        '''
+        sMsg = ''
+        sQSetMsg = self.UpdatePageCompletionLevelForQuestionSets()
+        sLabelMapMsg = self.UpdatePageCompletionLevelForSegmentations(xPageNode)
+        sMsg = sQSetMsg + '\n' + sLabelMapMsg
+        
+        return sMsg
+    
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def InitializeStates(self, xPageNode):
         ''' 
@@ -100,7 +152,7 @@ class PageState:
             The segmentation requirement attribute is captured at the Page element level.
             Each image that has a layer defined as 'Foreground' or 'Background'
             will have an entry initialized to 0. Other image layers (LabelMap or Segmentation)
-            are set to a 2 (not applicable - segment only on fg/bg layers) 
+            are set to a -1 (not applicable - segment only on fg/bg layers) 
         '''
         
         sPageComplete = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'PageComplete')
@@ -123,13 +175,13 @@ class PageState:
             self.liCompletedQuestionSets.append(iCompletedTF)
 
 
-        # store segmentation requirement code
+        # store segmentation requirement code (SpecificSegReq state introduced when looping through images)
         sSegmentationRequiredState = 'NoSegReq' # default
         sSegRequiredAnyImage = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'SegmentRequiredOnAnyImage')
         if sSegRequiredAnyImage == 'Y' or sSegRequiredAnyImage == 'y':
             self.sSegmentationRequiredState = 'AnySegReq'
 
-        l2iSegmentNotApplicableLayer = [2,iCompletedTF]
+        l2iSegmentNotApplicableLayer = [-1,iCompletedTF]
         l2iSegmentNotRequired = [0,iCompletedTF]
         l2iSegmentRequired = [1,iCompletedTF]
 
@@ -156,76 +208,28 @@ class PageState:
                     self.l2iCompletedSegmentations[iImgIdx][1] = l2iSegmentNotRequired[1]
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CheckPageCompletionLevelForQuestionSets(self):
-        ''' Test to see if all question sets on a page have been completed.
+    def UpdateQuestionSetCompletionList(self, xPageNode):
+        ''' For the given page node, update the completion state level
+            for each question set.
         '''
-        if 0 in self.liCompletedQuestionSets:
-            self.bQuestionSetsCompleted = False
-        else:
-            self.bQuestionSetsCompleted = True
+        
+        lxQSetNodes = self.oIOXml.GetChildren(xPageNode, 'QuestionSet')
+        iQSetIdx = -1
+        for xQSetNode in lxQSetNodes:
             
-        return self.bQuestionSetsCompleted
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CheckPageCompletionLevelForSegmentations(self, xPageNode):
-        ''' Based on the segmentation completion level over all the images, the flag for
-            completion of segmentation at the Page level is determined. 
-        '''
-        #######################################
-        # Page level segmentation completion
-        # set the segmentations completed flag for this page if requirements are met for all images
-        sMsg = ''
+            iQSetIdx = iQSetIdx + 1
+            sSavedResponseCompletionLevel = self.GetSavedResponseCompletionLevel(xQSetNode)
         
-        if self.sSegmentationRequiredState == 'NoSegReq' or self.sSegmentationRequiredState == 'AnySegReq':
-            self.bSegmentationsCompleted = False
-            if len(self.l2iCompletedSegmentations) == 0:    # case for no images on page
-                self.bSegmentationsCompleted = True
+            if sSavedResponseCompletionLevel == 'AllResponses':
+                self.liCompletedQuestionSets[iQSetIdx] = 1
             else:
-                for idx in range(len(self.l2iCompletedSegmentations)):
-                    if self.l2iCompletedSegmentations[idx][1] == 1:
-                        self.bSegmentationsCompleted = True
-
-            # for 'AnySegReq' at least one completed segmentation must exist
-            # for 'NoSegReq', no segmentations is acceptable
-            if not self.bSegmentationsCompleted:
-                if self.sSegmentationRequiredState == 'AnySegReq':
-                    sMsg = sMsg + '\nYou must complete one segmentation for any of the images.' + \
-                            '\nYou can create a new segmentation or modify a segmentation that was redisplayed.'
-                else:
-                    if self.sSegmentationRequiredState == 'NoSegReq':
-                        self.bSegmentationsCompleted = True
+                self.liCompletedQuestionSets[iQSetIdx] = 0
                 
-        else:
-            # for 'SpecificSegReq' the images marked with the 'required' code must also have the 'completed' code
-            if self.sSegmentationRequiredState == 'SpecificSegReq':
-                self.bSegmentationsCompleted = True
-                for idx in range(len(self.l2iCompletedSegmentations)):
-                    if self.l2iCompletedSegmentations[idx][0] == 1 : # required on this image
-                        if self.l2iCompletedSegmentations[idx][1] != 1: # segmentation not complete
-                            self.bSegmentationsCompleted = False
-                            xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', idx)
-                            sPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'ID')
-                            sImageID = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'ID')
-                            sNodeName = sPageID + '_' + sImageID
-                            sMsg = sMsg +  '\nYou must complete a segmentation for this image: ' + sNodeName + \
-                                '\nIf a contour has been redisplayed for this image, it must be modified.' + \
-                                '\nSelect the image: "'+ sNodeName + '" as the Master Volume in the Segment Editor.'
-        
-        return sMsg
-        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def UpdateQuestionSetCompletionState(self, iQSetIdx, iCompletionCode):
-        ''' Function to update the completion level for a specific question set on a Page
+    def UpdateSegmentationCompletionList(self, xPageNode):
+        ''' Function to update the completion flags for segmentations for 
+            each image stored in the list
         '''
-        if len(self.liCompletedQuestionSets) != 0:  # case = 0 if no question sets
-            self.liCompletedQuestionSets[iQSetIdx] = iCompletionCode
-        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def UpdateSegmentationCompletionState(self, xPageNode):
-        ''' Function to update the completion flags for segmentations for each image.
-        '''
-        
-        sMsg = ''
         
         lxImageNodes = self.oIOXml.GetChildren(xPageNode,'Image')
         idxImage = -1
@@ -305,6 +309,67 @@ class PageState:
                         self.l2iCompletedSegmentations[idxImage][1] = 1
             
                 
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def UpdatePageCompletionLevelForQuestionSets(self):
+        ''' Test to see if all question sets on a page have been completed.
+        '''
+        sMsg = ''
+        if 0 in self.liCompletedQuestionSets:
+            self.bQuestionSetsCompleted = False
+            sMsg = 'Not all question sets were completed'
+        else:
+            self.bQuestionSetsCompleted = True
+            
+        return sMsg
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def UpdatePageCompletionLevelForSegmentations(self, xPageNode):
+        ''' Based on the segmentation completion level over all the images, the flag for
+            completion of segmentation at the Page level is determined. 
+        '''
+        #######################################
+        # Page level segmentation completion
+        # set the segmentations completed flag for this page if requirements are met for all images
+        sMsg = ''
+        
+        if self.sSegmentationRequiredState == 'NoSegReq' or self.sSegmentationRequiredState == 'AnySegReq':
+            self.bSegmentationsCompleted = False
+            if len(self.l2iCompletedSegmentations) == 0:    # case for no images on page
+                self.bSegmentationsCompleted = True
+            else:
+                for idx in range(len(self.l2iCompletedSegmentations)):
+                    if self.l2iCompletedSegmentations[idx][1] == 1:
+                        self.bSegmentationsCompleted = True
+
+            # for 'AnySegReq' at least one completed segmentation must exist
+            # for 'NoSegReq', no segmentations is acceptable
+            if not self.bSegmentationsCompleted:
+                if self.sSegmentationRequiredState == 'AnySegReq':
+                    sMsg = sMsg + '\nYou must complete one segmentation for any of the images.' + \
+                            '\nYou can create a new segmentation or modify a segmentation that was redisplayed.'
+                else:
+                    if self.sSegmentationRequiredState == 'NoSegReq':
+                        self.bSegmentationsCompleted = True
+                
+        else:
+            # for 'SpecificSegReq' the images marked with the 'required' code must also have the 'completed' code
+            if self.sSegmentationRequiredState == 'SpecificSegReq':
+                self.bSegmentationsCompleted = True
+                for idx in range(len(self.l2iCompletedSegmentations)):
+                    if self.l2iCompletedSegmentations[idx][0] == 1 : # required on this image
+                        if self.l2iCompletedSegmentations[idx][1] != 1: # segmentation not complete
+                            self.bSegmentationsCompleted = False
+                            xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', idx)
+                            sPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'ID')
+                            sImageID = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'ID')
+                            sNodeName = sPageID + '_' + sImageID
+                            sMsg = sMsg +  '\nYou must complete a segmentation for this image: ' + sNodeName + \
+                                '\nIf a contour has been redisplayed for this image, it must be modified. It cannot be empty.' + \
+                                '\nSelect the image: "'+ sNodeName + '" as the Master Volume in the Segment Editor.'
+        
+        return sMsg
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def TestForEmptyLabelMap(self, sPath):
         ''' A function to look at pixels of label map node to determine if a segment exists
@@ -344,4 +409,39 @@ class PageState:
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetSavedResponseCompletionLevel(self, xQuestionSetNode):
+        """ Check through all questions for the question set looking for a response. This information
+            comes from the currently saved elements in the XML.
+             
+            Assumption: All'Option' elements have a 'Response' element if the question was answered
+            so we just query the first Response 
+            
+            eg: Radio Question     Success?
+                    Opt 1            yes
+                        Response:       y (checked)
+                    Opt 2            no
+                        Response:       n (not checked) 
+            
+        """
+        
+        iNumAnsweredQuestions = 0
+        
+        # xQuestionSetNode = self.GetCurrentQuestionSetNode()
+        
+        iNumQuestions = self.oIOXml.GetNumChildrenByName(xQuestionSetNode, 'Question')
+
+        for indQuestion in range(iNumQuestions):
+            # get first option for the question (all (or none) options have a response so just check the first)
+            xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
+            xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', 0)
+         
+            iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode,'Response')
+            if iNumResponses >0:
+                iNumAnsweredQuestions = iNumAnsweredQuestions + 1
+                 
+        sSavedResponseCompletionLevel = self.CategorizeResponseCompletionLevel(iNumQuestions, iNumAnsweredQuestions)
+
+        return sSavedResponseCompletionLevel
+           
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

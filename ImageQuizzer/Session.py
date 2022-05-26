@@ -58,6 +58,7 @@ class Session:
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
+        self.oPageState = None
 
         self.oImageView = None
         
@@ -158,31 +159,16 @@ class Session:
         
         return sPageComplete
         
-    # #----------
-    # def SetMultipleResponsesAllowedInQuiz(self, bTF):
-    #     # flag for quiz if any question sets allowed for multiple responses
-    #     # this is used for 'resuming' after quiz was completed     
-    #     self._bAllowMultipleResponseInQuiz = bTF
-    #
-    # #----------
-    # def GetMultipleResponsesAllowedInQuiz(self):
-    #     return self._bAllowMultipleResponseInQuiz
     #----------
-    def GetResponseCompletionLevel(self, iTotalItems, iCountedItems):
-        ''' This function may be used to define the number of questions that had 
-            responses stored in the XML or the number of reponses the user
-            made in the quiz form.
+    def SetupPageState(self, iPgIndex):
+        ''' Initialize a new page state object for the page.
+            XML specifics for the input page index are used for initializing.
         '''
-        
-        if iCountedItems == iTotalItems:
-            sCompletionLevel = 'AllResponses'
-        elif iCountedItems == 0:
-            sCompletionLevel = 'NoResponses'
-        else:
-            sCompletionLevel = 'PartialResponses'
-        
-        return sCompletionLevel        
-
+        xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPgIndex)
+        oPgItem = PageState(self)
+        oPgItem.InitializeStates(xPageNode)
+        self.oPageState = oPgItem
+    
     #----------
     def AddExtraToolsTab(self):
 
@@ -328,7 +314,11 @@ class Session:
             sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
             self.oFilesIO.SetupROIColorFile(sColorFileName)
 
-            self.BuildPageStateCompletionStructure()
+
+
+#             self.BuildPageStateCompletionStructure()
+
+
             # build the list of indices page/questionset as read in by the XML
             self.BuildPageQuestionCompositeIndexList()
             # if randomization is requested - shuffle the page/questionset list
@@ -356,6 +346,13 @@ class Session:
     
             self.EnableButtons()
             self.DisplayImagesAndQuestions()
+            
+            if self.GetQuizResuming():
+                # page has been displayed - reset Quiz Resuming to false
+                self.SetQuizResuming(False)
+            else:
+                self.SetupPageState(self.GetCurrentPageIndex())     # create new state object
+                
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupWidgets(self, slicerMainLayout):
@@ -438,6 +435,9 @@ class Session:
 
         else:
             # this is not the last question set, do a save and display the next page
+            bNewPage = True
+            if self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0] == self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex + 1][0]:
+                bNewPage = False
             bSuccess, sMsg = self.PerformSave('NextBtn')
             
             if bSuccess:
@@ -461,8 +461,10 @@ class Session:
                 
                 self.EnableButtons()
        
+                if bNewPage:
+                    self.SetupPageState(self.GetCurrentPageIndex())
                 self.DisplayImagesAndQuestions()
-    
+                        
             else:
                 if sMsg != '':
                     self.oUtilsMsgs.DisplayWarning( sMsg )
@@ -473,6 +475,11 @@ class Session:
         
         bSuccess = True
         sMsg = ''
+
+        bNewPage = True
+        if self._iCurrentCompositeIndex > 0:
+            if self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0] == self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex - 1][0]:
+                bNewPage = False
 
         bSuccess, sMsg = self.PerformSave('PreviousBtn')
         
@@ -494,6 +501,8 @@ class Session:
             
             self.AdjustForPreviousQuestionSets()
             
+            if bNewPage:
+                self.SetupPageState(self.GetCurrentPageIndex())
             self.DisplayImagesAndQuestions()
                
         
@@ -659,24 +668,6 @@ class Session:
             # last question of last image view
             self._btnNext.setText("Finish")
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def BuildPageStateCompletionStructure(self):
-        ''' From the xml that was read in, set up the structure that will keep track of 
-            page completion states during the quiz.
-            This will help determine whether the quiz or segmentation tabs are to be enabled
-            and where to resume the quiz if re-entering.
-        '''
-        self.loPageCompletionState = []
-        # for each page, create the lists holding the question set states and the segmentation states
-        xPages = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
-        for iPageIndex in range(len(xPages)):
-            xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
-            
-            oPgItem = PageState(self)
-            oPgItem.InitializeStates(xPageNode)
-            
-            self.loPageCompletionState.append(oPgItem)
-            
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def BuildPageQuestionCompositeIndexList(self):
         ''' This function sets up the page and question set indices which
@@ -872,7 +863,8 @@ class Session:
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
         
         # get question set completion state 
-        sSavedResponseCompletionLevel = self.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
+        self._lsPreviousResponses = [] # reset for new Question Set
+        sSavedResponseCompletionLevel = self.oPageState.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
 
         if self.GetQuizComplete():
             self.SetMultipleResponseAllowed('N') #read only
@@ -899,19 +891,6 @@ class Session:
                 qWidgetQuestionSetForm.setEnabled(False)
                 self.SegmentationTabEnabler(False)
             else:
-                # # enable widget if not all questions have responses or if user is allowed to 
-                # # input multiple responses
-                # if sSavedResponseCompletionLevel == 'AllResponses':
-                #     qWidgetQuestionSetForm.setEnabled(self.GetMultipleResponseAllowed())
-                #     if self.GetQuizResuming():
-                #         qWidgetQuestionSetForm.setEnabled(True)     # open quiz tab on a resume
-                # if self.GetRequestToEnableSegmentEditorTF():
-                #     if not self.loPageCompletionState[self.GetCurrentPageIndex()].GetSegmentationsCompletedState():
-                #         self.SegmentationTabEnabler(True)
-                #     else:
-                #         self.SegmentationTabEnabler(False)
-                # else:
-                #     self.SegmentationTabEnabler(False)
                 
                 #enable tabs
                 if self.GetMultipleResponseAllowed() or self.GetQuizResuming():
@@ -929,7 +908,8 @@ class Session:
 
                         if sSavedResponseCompletionLevel == 'AllResponses':
                             qWidgetQuestionSetForm.setEnabled(False)
-                        if self.loPageCompletionState[self.GetCurrentPageIndex()].GetSegmentationsCompletedState():
+#                         if self.loPageCompletionState[self.GetCurrentPageIndex()].GetSegmentationsCompletedState():
+                        if self.oPageState.GetSegmentationsCompletedState():
                             self.SegmentationTabEnabler(False)
                         
 
@@ -971,8 +951,6 @@ class Session:
             oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
             oQuizzerEditorHelperBox.setMasterVolume(None)
 
-        # page has been displayed - reset Quiz Resuming to false if applicable
-        self.SetQuizResuming(False)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplaySavedResponse(self):
@@ -1010,6 +988,11 @@ class Session:
                 
             oQuestion.PopulateQuestionWithResponses(lsResponseValues)
 
+            # only InfoBox type of question can have all responses equal to null string
+            if self.oIOXml.GetValueOfNodeAttribute(xQuestionNode, 'Type') != "InfoBox" \
+                    and (all(elem == '' for elem in lsResponseValues)):
+                lsResponseValues = []   # reset if all are empty
+
             lsAllResponsesForQuestion.append(lsResponseValues)
             
     
@@ -1017,41 +1000,6 @@ class Session:
 
         self._lsPreviousResponses = lsAllResponsesForQuestion
     
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetSavedResponseCompletionLevel(self, xQuestionSetNode):
-        """ Check through all questions for the question set looking for a response. This information
-            comes from the currently saved elements in the XML.
-             
-            Assumption: All'Option' elements have a 'Response' element if the question was answered
-            so we just query the first. 
-            eg: Radio Question     Success?
-                    Opt 1            yes
-                        Response:       y (checked)
-                    Opt 2            no
-          GetSavedResponseCompletionLevel n (not checked)
-        """
-        
-        iNumAnsweredQuestions = 0
-        self._lsPreviousResponses = [] # reset for new Question Set
-        
-        # xQuestionSetNode = self.GetCurrentQuestionSetNode()
-        
-        iNumQuestions = self.oIOXml.GetNumChildrenByName(xQuestionSetNode, 'Question')
-
-        for indQuestion in range(iNumQuestions):
-            # get first option for the question (all (or none) options have a response so just check the first)
-            xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
-            xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', 0)
-         
-            iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode,'Response')
-            if iNumResponses >0:
-                iNumAnsweredQuestions = iNumAnsweredQuestions + 1
-                 
-
-        sSavedResponseCompletionLevel = self.GetResponseCompletionLevel(iNumQuestions, iNumAnsweredQuestions)
-                
-        return sSavedResponseCompletionLevel
-           
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def PerformSave(self, sCaller):
         """ Actions performed here include:
@@ -1067,7 +1015,7 @@ class Session:
         
             bSuccess, sMsg = self.ResetDisplay()
             idxQuestionSet = self.GetCurrentQuestionSetIndex()
-            idxPage = self.GetCurrentPageIndex()
+#             idxPage = self.GetCurrentPageIndex()
             iNumQSets = len(self.GetAllQuestionSetNodesForCurrentPage())
             
             if bSuccess:
@@ -1077,24 +1025,14 @@ class Session:
     
                 if bSuccess:
                     sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponsesToSave()
-    
+                    
                     if sCaller == 'NextBtn' or sCaller == 'Finish':
                         # only write to xml if all responses were captured
                         if sCaptureSuccessLevel == 'AllResponses':
                             bSuccess, sMsg = self.WriteResponsesToXml()
-                            if bSuccess:
-                                # update question set with completion code=1
-                                self.loPageCompletionState[idxPage].UpdateQuestionSetCompletionState(idxQuestionSet,1)
-                                # # if this was the last question set, update label maps completion
-                                # if idxQuestionSet == iNumQSets - 1:
-                                #     self.loPageCompletionState[idxPage].UpdateSegmentationCompletionState(self.GetCurrentPageNode())
-                                self.loPageCompletionState[idxPage].UpdateSegmentationCompletionState(self.GetCurrentPageNode())
                         else:
-                            # update question set with completion code=0
-                            self.loPageCompletionState[idxPage].UpdateQuestionSetCompletionState(idxQuestionSet,0)
+                            sMsg = sMsg + '\n All questions must be answered to proceed'
                             bSuccess = False
-                            
-                            
                             
                     else:  
                         # Caller must have been the Previous or Exit buttons or a close was 
@@ -1109,20 +1047,26 @@ class Session:
                                 bSuccess = True
                             
                     if bSuccess:
-                        #after writing responses, record the image state
+                        #after writing responses, update page states and record the image state
+                        self.oPageState.UpdateCompletionLists(self.GetCurrentPageNode())
                         bSuccess, sMsg = self.CaptureAndSaveImageState()
                         
                         if sCaller == 'NextBtn' or sCaller == 'Finish':
                             # if this was the last question set for the page, check for completion
                             if idxQuestionSet == iNumQSets - 1:
                                 # update if Page is complete (only for Next/Finish - not Previous)
-                                self.loPageCompletionState[idxPage].CheckPageCompletionLevelForQuestionSets()
-                                sLabelMapMsg = self.loPageCompletionState[idxPage].CheckPageCompletionLevelForSegmentations(self.GetCurrentPageNode())
-                                sMsg = sMsg + sLabelMapMsg
-                                if self.loPageCompletionState[idxPage].GetQuestionSetsCompletedState() and \
-                                        self.loPageCompletionState[idxPage].GetSegmentationsCompletedState():
+#                                 self.oPageState.CheckPageCompletionLevelForQuestionSets()
+#                                 sLabelMapMsg = self.oPageState.CheckPageCompletionLevelForSegmentations(self.GetCurrentPageNode())
+#                                 sMsg = sMsg + sLabelMapMsg
+                                
+                                sCompletionFlagMsg = self.oPageState.UpdateCompletedFlags(self.GetCurrentPageNode())
+                                sMsg = sMsg + sCompletionFlagMsg
+                                
+#                                 if self.oPageState.GetQuestionSetsCompletedState() and \
+#                                         self.oPageState.GetSegmentationsCompletedState():
+                                if self.oPageState.GetPageCompletedTF():
                                     bSuccess = True
-                                    self.AddPageCompleteAttribute(idxPage)
+                                    self.AddPageCompleteAttribute(self.GetCurrentPageIndex())
                                     if sCaller == 'Finish':
                                         self.AddQuizCompleteAttribute()
                                 else:
@@ -1175,7 +1119,7 @@ class Session:
                 iNumMissingResponses = iNumMissingResponses + 1
                 
         # define success level
-        sCaptureSuccessLevel = self.GetResponseCompletionLevel(len(loQuestions), len(loQuestions)-iNumMissingResponses)
+        sCaptureSuccessLevel = self.oPageState.CategorizeResponseCompletionLevel(len(loQuestions), len(loQuestions)-iNumMissingResponses)
                 
         return sCaptureSuccessLevel, lsAllResponses, sAllMsgs
        
@@ -1330,12 +1274,6 @@ class Session:
                         xPotentialPathElement = self.oIOXml.GetNthChild(xImageNode, 'Path', 0)
                         sPotentialPath = self.oIOXml.GetDataInNode(xPotentialPathElement)
                         
-#                         # get series instance UID if it exists
-#                         sPotentialSeriesInstanceUID = ''
-#                         xPotentialSeriesInstanceUID = self.oIOXml.GetNthChild(xImageNode, 'SeriesInstanceUID', 0)
-#                         if xPotentialSeriesInstanceUID != None:
-#                             sPotentialSeriesInstanceUID = self.oIOXml.GetDataInNode(xPotentialSeriesInstanceUID)
-                        
                         # test for match of both the Path and Series Instance UID
 #                         if sPotentialPath == sPathToMatch and sPotentialSeriesInstanceUID == sSeriesInstanceUIDToMatch:
                         if sPotentialPath == sPathToMatch:
@@ -1366,9 +1304,9 @@ class Session:
             #    - OR allow if the number of questions with responses already 
             #      recorded is 'NoResponses' or 'PartialResponses' (not 'AllResponses')
             
-            # sQuestionsWithRecordedResponses = self.GetQuestionSetResponseCompletionLevel()
-            sQuestionsWithRecordedResponses = self.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
-            
+            # get from xml, the category of saved recorded responses to 
+            #    determine whether the newly captured responses are to be written
+            sQuestionsWithRecordedResponses = self.oPageState.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
             
 
             if ( self.GetMultipleResponseAllowed() == True)  or \
@@ -1444,10 +1382,6 @@ class Session:
         """ Add the image state element to the xml file including window/level
             and slice offset. 
         """
-#             Only add if user has already made a change to the quiz responses. 
-#             (ie. ignore if user briefly opens quiz and closes it again)
-#         """
-#         if self._bFirstChangeRecordedInXml:
 
         sNullData = ''
 
@@ -1540,6 +1474,9 @@ class Session:
 
             if qtAns == qt.QMessageBox.Yes:
                 iResumeCompIndex = 0
+                iPageIndex = self._l3iPageQuestionGroupCompositeIndices[iResumeCompIndex][0]
+                self.SetupPageState(iPageIndex)
+                
             else:
                 self.ExitOnQuizComplete("This quiz was completed. Exiting")
         else:        
@@ -1549,32 +1486,26 @@ class Session:
                 if not self.GetQuizResuming():
                     iPageIndex = self._l3iPageQuestionGroupCompositeIndices[indCI][0]
                     xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
+                    self.SetupPageState(iPageIndex)
                     
                     sPageComplete = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'PageComplete')
                     if sPageComplete != 'Y':    # found first page that was not complete
                         iResumeCompIndex = indCI
                         self.SetQuizResuming(True)
             
+            self.oPageState.UpdateCompletionLists(xPageNode)
             # adjust resuming index based on completion state of the first incomplete page
             #    (some question sets, if more than one exists, may have been completed)
-            iNumQSets = self.oIOXml.GetNumChildrenByName(xPageNode, 'QuestionSet')
-            lxQSetNodes = self.GetAllQuestionSetsForNthPage(iPageIndex)
-            for indQSet in range(iNumQSets):
-                xQuestionSetNode = lxQSetNodes[indQSet]
-                if self.GetSavedResponseCompletionLevel(xQuestionSetNode) == 'AllResponses':
-                    self.loPageCompletionState[iPageIndex].UpdateQuestionSetCompletionState(indQSet,1)
-                    
-                    # only advance if there are more question sets
-                    #    if the last question set has been reached and it is complete then 'PageComplete'
-                    #    was not set because the segmentation requirements were not met
-                    if indQSet < iNumQSets - 1:
+            liCompletedQuestionSets = self.oPageState.GetCompletedQuestionSetsList()
+            
+            for indQSet in range(len(liCompletedQuestionSets)):
+                # only advance if there are more question sets
+                #    if the last question set has been reached and it is complete then 'PageComplete'
+                #    was not set because the segmentation requirements were not met
+                if indQSet < len(liCompletedQuestionSets) -1:
+                    if liCompletedQuestionSets[indQSet] == 1:
                         iResumeCompIndex = iResumeCompIndex + 1
-
-            if self.loPageCompletionState[iPageIndex].GetQuestionSetsCompletedState() and \
-                        self.loPageCompletionState[iPageIndex].GetSegmentationsCompletedState():
-                iResumeCompIndex = iResumeCompIndex + 1
-
-
+                
             # Display a message to user if resuming (special case if resuming on first page)
             # if not iResumeCompIndex == self._iCurrentCompositeIndex:
             if (not iResumeCompIndex == self._iCurrentCompositeIndex) or\
