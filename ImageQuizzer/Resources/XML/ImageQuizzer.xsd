@@ -88,6 +88,7 @@
 		<xs:attribute name="Descriptor" />
 		<xs:attribute name="Min" />
 		<xs:attribute name="Max" />
+		<xs:attribute name="GroupLayout" type="groupLayoutType" />
 	</xs:complexType>
 </xs:element>
 
@@ -113,6 +114,13 @@
     <xs:enumeration value="Text"/>
     <xs:enumeration value="IntegerValue"/>
     <xs:enumeration value="FloatValue"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="groupLayoutType">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="Vertical"/>
+    <xs:enumeration value="Horizontal"/>
   </xs:restriction>
 </xs:simpleType>
 

@@ -20,7 +20,7 @@ class PageState:
     def __init__(self, oSession):
         ''' Class to keep track of completed items that belong to a page.
             Segmentation completion state is a 2d list.
-                The first element specifies whether it is required (0, 1, or 2)
+                The first element specifies whether it is required (0, 1, or -1)
                 The second element specifies whether the requirement has been completed. (0 or 1)
 
                 Code for required states:
