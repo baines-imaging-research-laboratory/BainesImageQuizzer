@@ -446,9 +446,9 @@ class Session:
                 
                 self.EnableButtons()
        
-                self.DisplayImagesAndQuestions()
                 if bNewPage:
                     self.SetupPageState(self.GetCurrentPageIndex())
+                self.DisplayImagesAndQuestions()
                         
             else:
                 if sMsg != '':
@@ -486,9 +486,9 @@ class Session:
             
             self.AdjustForPreviousQuestionSets()
             
-            self.DisplayImagesAndQuestions()
             if bNewPage:
                 self.SetupPageState(self.GetCurrentPageIndex())
+            self.DisplayImagesAndQuestions()
                
         
         else:
@@ -1416,11 +1416,6 @@ class Session:
                     if liCompletedQuestionSets[indQSet] == 1:
                         iResumeCompIndex = iResumeCompIndex + 1
                 
-
-            if self.oPageState.GetPageCompletedTF():
-                iResumeCompIndex = iResumeCompIndex + 1
-
-
             # Display a message to user if resuming (special case if resuming on first page)
             # if not iResumeCompIndex == self._iCurrentCompositeIndex:
             if (not iResumeCompIndex == self._iCurrentCompositeIndex) or\
