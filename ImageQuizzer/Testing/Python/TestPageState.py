@@ -144,10 +144,12 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         logic = TestPageStateLogic()
 
         tupResults = []
-        tupResults.append(self.prepForTests())
+        # tupResults.append(self.prepForTests())
         tupResults.append(self.test_InitializeStates_NoMarkupLinesRequired())
         tupResults.append(self.test_InitializeStates_MarkupLinesRequiredOnAnyImage_Y())
         tupResults.append(self.test_InitializeStates_MarkupLinesRequiredOnAnyImage_3())
+        tupResults.append(self.test_InitializeStates_MarkupLinesRequired_Y())
+        tupResults.append(self.test_InitializeStates_MarkupLinesRequired_n())
 
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
@@ -157,34 +159,35 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         os.environ["testing"] = "0"
  
 
-    #-------------------------------------------
-    def prepForTests(self):
-        # create an xml file for testing
-        # store in TEMP directory
-        # run this as the first test
-        #    - if this fails, all subsequent tests dependant on the test file will fail
-        
-        self.fnName = sys._getframe().f_code.co_name
-        sMsg = ''
-        bTestResult = True
+    # #-------------------------------------------
+    # def prepForTests(self):
+    #     # create an xml file for testing
+    #     # store in TEMP directory
+    #     # run this as the first test
+    #     #    - if this fails, all subsequent tests dependant on the test file will fail
+    #
+    #     self.fnName = sys._getframe().f_code.co_name
+    #     sMsg = ''
+    #     bTestResult = True
+    #
+    #     try:
+    #         sXmlOutputFilename = 'ImageQuizzerTestXML.xml'
+    #         sTempPath = os.environ['TEMP']
+    #         self.sTestXmlFilePath = os.path.join(sTempPath, sXmlOutputFilename)
+    #
+    #         # build test xml
+    #         xRoot = self.buildXML_MarkupLinesfile1()
+    #         self.oIOXml.SetRootNode(xRoot)
+    #
+    #         self.oIOXml.SaveXml(self.sTestXmlFilePath)
+    #
+    #     except:
+    #         bTestResult = False
+    #
+    #     tupResult = self.fnName, bTestResult
+    #     return tupResult
+    #
 
-        try:
-            sXmlOutputFilename = 'ImageQuizzerTestXML.xml'
-            sTempPath = os.environ['TEMP']
-            self.sTestXmlFilePath = os.path.join(sTempPath, sXmlOutputFilename)
-            
-            # build test xml
-            xRoot = self.buildXML_MarkupLinesfile1()
-            self.oIOXml.SetRootNode(xRoot)
-    
-            self.oIOXml.SaveXml(self.sTestXmlFilePath)
-            
-        except:
-            bTestResult = False
-
-        tupResult = self.fnName, bTestResult
-        return tupResult
-        
 
     #------------------------------------------- 
     def test_InitializeStates_NoMarkupLinesRequired(self):
@@ -300,6 +303,84 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         return tupResult
         
     #------------------------------------------- 
+    def test_InitializeStates_MarkupLinesRequired_Y(self):
+        ''' No attributes for markup lines exist in the page node
+        '''
+        self.fnName = sys._getframe().f_code.co_name
+
+        xRoot = etree.Element("Session")
+        xPage = etree.SubElement(xRoot,"Page", ID="001", Descriptor="TestData Page1")
+        xImage = etree.SubElement(xPage, "Image", Descriptor="Image1_Axial", MarkupLinesRequired="Y")
+        xLayer = etree.SubElement(xImage, "Layer")
+        xLayer.text = "Background"
+        xImage = etree.SubElement(xPage, "Image", Descriptor="Image2_Axial")
+        xLayer = etree.SubElement(xImage, "Layer")
+        xLayer.text = "Background"
+        xImage = etree.SubElement(xPage, "Image", Descriptor="Image3_Axial", MarkupLinesRequired="Y")
+        xLayer = etree.SubElement(xImage, "Layer")
+        xLayer.text = "Background"
+        xImage = etree.SubElement(xPage, "Image", Descriptor="Segmentation overlay")
+        xLayer = etree.SubElement(xImage, "Layer")
+        xLayer.text = "Segmentation"
+        
+        self.oSession = Session()
+        self.oPageState = PageState(self.oSession)
+        self.oPageState.InitializeStates(xPage)
+        
+        
+        iExpectedMinimumNumberOfLines = 0
+        sExpectedMarkupLinesRequiredState = 'SpecificLinesReq'
+        lExpectedl2iCompletedMarkupLines = [[1,0],[0,0],[1,0],[-1,0]]
+        if self.oPageState.l2iCompletedMarkupLines == lExpectedl2iCompletedMarkupLines \
+                and self.oPageState.sMarkupLinesRequiredState == sExpectedMarkupLinesRequiredState \
+                and self.oPageState.iMarkupLinesOnAnyImageMinimum == iExpectedMinimumNumberOfLines:
+            bTestResult = True
+        else:
+            bTestResult = False
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+        
+    #------------------------------------------- 
+    def test_InitializeStates_MarkupLinesRequired_n(self):
+        ''' No attributes for markup lines exist in the page node
+        '''
+        self.fnName = sys._getframe().f_code.co_name
+
+        xRoot = etree.Element("Session")
+        xPage = etree.SubElement(xRoot,"Page", ID="001", Descriptor="TestData Page1")
+        xImage = etree.SubElement(xPage, "Image", Descriptor="Image1_Axial", MarkupLinesRequired="2")
+        xLayer = etree.SubElement(xImage, "Layer")
+        xLayer.text = "Background"
+        xImage = etree.SubElement(xPage, "Image", Descriptor="Image2_Axial", MarkupLinesRequired="5")
+        xLayer = etree.SubElement(xImage, "Layer")
+        xLayer.text = "Background"
+        xImage = etree.SubElement(xPage, "Image", Descriptor="Image3_Axial")
+        xLayer = etree.SubElement(xImage, "Layer")
+        xLayer.text = "Background"
+        xImage = etree.SubElement(xPage, "Image", Descriptor="Segmentation overlay", MarkupLinesRequired="5")
+        xLayer = etree.SubElement(xImage, "Layer")
+        xLayer.text = "Segmentation"
+        
+        self.oSession = Session()
+        self.oPageState = PageState(self.oSession)
+        self.oPageState.InitializeStates(xPage)
+        
+        
+        iExpectedMinimumNumberOfLines = 0
+        sExpectedMarkupLinesRequiredState = 'SpecificLinesReq'
+        lExpectedl2iCompletedMarkupLines = [[2,0],[5,0],[0,0],[-1,0]]
+        if self.oPageState.l2iCompletedMarkupLines == lExpectedl2iCompletedMarkupLines \
+                and self.oPageState.sMarkupLinesRequiredState == sExpectedMarkupLinesRequiredState \
+                and self.oPageState.iMarkupLinesOnAnyImageMinimum == iExpectedMinimumNumberOfLines:
+            bTestResult = True
+        else:
+            bTestResult = False
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+        
+    #------------------------------------------- 
     #------------------------------------------- 
     #------------------------------------------- 
     #------------------------------------------- 
@@ -310,18 +391,18 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
     # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     # Helper functions
     # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    def buildXML_MarkupLinesfile1(self):
-        # create an xml file for testing
-        xRoot = etree.Element("Session")
-        xPage = etree.SubElement(xRoot,"Page", ID="001", Descriptor="TestData Page1")
-
-        xImage = etree.SubElement(xPage, "Image", Descriptor="Image1_Axial")
-
-        xImage = etree.SubElement(xPage, "Image", Descriptor="Image1_Sagittal")
-
-        xImage = etree.SubElement(xPage, "Image", Descriptor="Image1_Coronal")
-
-        return xRoot
+    # def buildXML_MarkupLinesfile1(self):
+    #     # create an xml file for testing
+    #     xRoot = etree.Element("Session")
+    #     xPage = etree.SubElement(xRoot,"Page", ID="001", Descriptor="TestData Page1")
+    #
+    #     xImage = etree.SubElement(xPage, "Image", Descriptor="Image1_Axial")
+    #
+    #     xImage = etree.SubElement(xPage, "Image", Descriptor="Image1_Sagittal")
+    #
+    #     xImage = etree.SubElement(xPage, "Image", Descriptor="Image1_Coronal")
+    #
+    #     return xRoot
     #-------------------------------------------
     #-------------------------------------------
      
@@ -342,37 +423,3 @@ def main(self):
 if __name__ == "__main__":
     main()
     
-
-
-#######################################################
-#                TESTING
-#######################################################
-    
-        # See Parsing with minidom Mouse vs Python
-        # http://www.blog.pythonlibrary.org/2010/11/12/python-parsing-xml-with-minidom/
-        
-#         listChildren = []
-#         dataChildren = xRootNode.getElementsByTagName('data')
-#         numObjs = dataChildren.length
-#         numAttributes = xRootNode.getElementsByTagName('data')[0].attributes.length
-#         print('Num of children %d' % numObjs)
-#         for i in range(0,numAttributes):
-#             (name, value) = xRootNode.getElementsByTagName('data')[0].attributes.items()[i]
-#             print('name: %s ..... value: %s' % (name, value))
-# 
-#         for index in range(0,numObjs):
-#             dataNode = xRootNode.getElementsByTagName('data')[index]
-#             infoObj = dataNode.getElementsByTagName("soloTag")
-#             print(infoObj.length)
-#             for childIndex in range(0, infoObj.length):
-#                 (name, value) = dataNode.getElementsByTagName("infoGroup")[childIndex].attributes.items()[0]
-#                 print('name: %s ..... value: %s' % (name, value))
-#          
-# 
-# 
-#         print('***************************')
-#         xParentNode = xRootNode.getElementsByTagName('data')[0]
-#         sChildTagName = 'soloTag'
-#         self.oIOXml.GetListOfAttributes(xParentNode, sChildTagName)
-# 
-
