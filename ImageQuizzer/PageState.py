@@ -88,6 +88,7 @@ class PageState:
         self.bQuestionSetsCompleted = 'False'
         self.bSegmentationsCompleted = 'False'
         self.bMarkupLinesCompleted = 'False'
+        self.iMarkupLinesOnAnyImageMinimum = 0
         
         self.oSession = oSession
         self.oIOXml = self.oSession.oIOXml
@@ -194,11 +195,11 @@ class PageState:
 
             Each image markup lines state is initialized as incomplete except when the image node
                 has a layer defined as 'Segmentation' or 'Label'
-            If the xml Image element has an attribute 'MarkupLineRequired' then there must exist
+            If the xml Image element has an attribute 'MarkupLinesRequired' then there must exist
                 a markup line(s) specifically for that image.
                 If the attribute is set to 'Y', any number of lines can be created (minimum 1).
                 If the attribute has a value assigned (n), a minimum of n lines must be created.
-            If the xml Page element has the attribute 'MarkupLineRequiredOnAnyImage', then
+            If the xml Page element has the attribute 'MarkupLinesRequiredOnAnyImage', then
                 there must exist a markup line - associated with any displayed image.
              
             For both segmentations and markup lines, each image that has a layer defined 
@@ -239,19 +240,15 @@ class PageState:
         sSegRequiredAnyImage = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'SegmentRequiredOnAnyImage')
         if sSegRequiredAnyImage == 'Y' or sSegRequiredAnyImage == 'y':
             self.sSegmentationRequiredState = 'AnySegReq'
-        else:
-            self.sSegmentationRequiredState = 'NoSegReq'
 
-        sLinesRequiredAnyImage = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'MarkupLineRequiredOnAnyImage')
+        sLinesRequiredAnyImage = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'MarkupLinesRequiredOnAnyImage')
         if sLinesRequiredAnyImage == 'Y' or sLinesRequiredAnyImage == 'y':
             self.sMarkupLinesRequiredState = 'AnyLinesReq'
             self.iMarkupLinesOnAnyImageMinimum = 1
-        elif sLinesRequiredAnyImage.isdigit():
-            self.sMarkupLinesRequiredState = 'AnyLinesReq'
-            self.iMarkupLinesOnAnyImageMinimum = int(sLinesRequiredAnyImage)
         else:
-            self.sMarkupLinesRequiredState = 'NoLinesReq'
-            self.iMarkupLinesOnAnyImageMinimum = 0
+            if sLinesRequiredAnyImage.isdigit():
+                self.sMarkupLinesRequiredState = 'AnyLinesReq'
+                self.iMarkupLinesOnAnyImageMinimum = int(sLinesRequiredAnyImage)
 
 
         ##########################
@@ -279,13 +276,13 @@ class PageState:
                 else:
                     self.l2iCompletedSegmentations[iImgIdx] = l2iNotRequired
                 # markup lines
-                sLineRequired = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'MarkupLineRequired')
-                if sLineRequired == 'Y' or sLineRequired == 'y':
+                sLinesRequired = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'MarkupLinesRequired')
+                if sLinesRequired == 'Y' or sLinesRequired == 'y':
                     self.l2iCompletedMarkupLines[iImgIdx] = l2iRequired
-                    self.sMarkupLinesRequiredState = 'SpecificLineReq' # override default
-                elif sLineRequired.isdigit():
-                        self.sMarkupLinesRequiredState = 'SpecificLineReq' # override default
-                        self.l2iCompletedMarkupLines[iImgIdx][0] = int(sLineRequired)
+                    self.sMarkupLinesRequiredState = 'SpecificLinesReq' # override default
+                elif sLinesRequired.isdigit():
+                        self.sMarkupLinesRequiredState = 'SpecificLinesReq' # override default
+                        self.l2iCompletedMarkupLines[iImgIdx][0] = int(sLinesRequired)
                         self.l2iCompletedMarkupLines[iImgIdx][1] = l2iRequired[1]
                 else:
                         self.l2iCompletedSegmentations[iImgIdx] = l2iNotRequired

@@ -305,30 +305,24 @@ class UtilsIOXml:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetDataInNode(self, xNode):
         # given a node get the value
-        
-#         xData = 'Empty'
-#         nodes = xNode.childNodes
-#         for node in nodes:
-#             if node.nodeType == node.TEXT_NODE:
-#                 xData =node.data
-# #                 print(xData)
-#             else:
-#                 print('invalid data node  check xml schema' )
-        
-        sData = xNode.text
-        
-        if sData is None:        
+        #   if the node did not exist, return null string
+
+        try:
+            sData = xNode.text
+            
+            if sData is None:        
+                sData = ''
+            else:
+                if '\n' or '\t' in sData: 
+                    # clean up any tabs or line feeds in the data string; replace with null
+                    #    Element tree stores '\n\t\t'  when the text property is empty for an element 
+                    sTab = '\t'
+                    sNull = ''
+                    sLineFeed = '\n'
+                    sData = sData.replace(sTab, sNull)
+                    sData = sData.replace(sLineFeed, sNull)
+        except:
             sData = ''
-        else:
-            if '\n' or '\t' in sData: 
-                # clean up any tabs or line feeds in the data string; replace with null
-                #    Element tree stores '\n\t\t'  when the text property is empty for an element 
-                sTab = '\t'
-                sNull = ''
-                sLineFeed = '\n'
-                sData = sData.replace(sTab, sNull)
-                sData = sData.replace(sLineFeed, sNull)
-                
         return sData
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
