@@ -58,7 +58,7 @@ class Session:
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
-        self.oPageState = None
+        self.oPageState = PageState(self)
 
         self.oImageView = None
         
@@ -165,9 +165,7 @@ class Session:
             XML specifics for the input page index are used for initializing.
         '''
         xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPgIndex)
-        oPgItem = PageState(self)
-        oPgItem.InitializeStates(xPageNode)
-        self.oPageState = oPgItem
+        self.oPageState.InitializeStates(xPageNode)
     
     #----------
     def AddExtraToolsTab(self):

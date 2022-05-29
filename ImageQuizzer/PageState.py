@@ -241,6 +241,7 @@ class PageState:
         if sSegRequiredAnyImage == 'Y' or sSegRequiredAnyImage == 'y':
             self.sSegmentationRequiredState = 'AnySegReq'
 
+        self.iMarkupLinesOnAnyImageMinimum = 0
         sLinesRequiredAnyImage = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'MarkupLinesRequiredOnAnyImage')
         if sLinesRequiredAnyImage == 'Y' or sLinesRequiredAnyImage == 'y':
             self.sMarkupLinesRequiredState = 'AnyLinesReq'
@@ -308,7 +309,8 @@ class PageState:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateSegmentationCompletionList(self, xPageNode):
         ''' Function to update the completion flags for segmentations for 
-            each image stored in the list
+            each image stored in the list.
+            This is based on the LabelMapPath element stored in the Image element.
         '''
         
         lxImageNodes = self.oIOXml.GetChildren(xPageNode,'Image')
@@ -388,7 +390,20 @@ class PageState:
                     if not bEmptyLabelMap:
                         self.l2iCompletedSegmentations[idxImage][1] = 1
             
-                
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def UpdateMarkupLinesCompletionLists(self, xPageNode):
+        ''' Function to update the completion flags for markup lines for 
+            each image stored in the list.
+            This is based on the MarkupLinePath element stored in the Image element.
+        '''
+        
+        lxImageNodes = self.oIOXml.GetChildren(xPageNode,'Image')
+        idxImage = -1
+
+        for xImageNode in lxImageNodes:
+            idxImage = idxImage + 1
+            lxMarkupLinePathElement = self.oIOXml.GetChildren(xImageNode, 'MarkupLinePath')
+            self.l2iCompletedMarkupLines[idxImage][1] = len(lxMarkupLinePathElement)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdatePageCompletionLevelForQuestionSets(self):
@@ -450,6 +465,43 @@ class PageState:
         
         return sMsg
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def UpdatePageCompletionLevelForMarkupLines(self, xPageNode):
+        ''' Test to see if all markup lines on a page have been completed.
+        '''
+        sMsg = ''
+
+        self.bMarkupLinesCompleted = False
+        
+        if self.sMarkupLinesRequiredState == 'NoLinesReq':
+            self.bMarkupLinesCompleted = True
+        elif self.sMarkupLinesRequiredState == 'AnyLinesReq':
+            # count number of lines created (regardless of associated image)
+            iNumLines = 0
+            for idx in range(len(self.l2iCompletedMarkupLines)):
+                iNumLines = iNumLines + self.l2iCompletedMarkupLines[idx][1]
+            # total number must be >= to the stored requirement
+            if iNumLines >= self.iMarkupLinesOnAnyImageMinimum:
+                self.bMarkupLinesCompleted = True
+            else:
+                self.bMarkupLinesCompleted = False
+                sMsg = sMsg + '\nYou must complete ' + str(self.l2iCompletedMarkupLines[idx][0]) + ' markup lines.' + \
+                            '\nUse the markup tool to draw the lines on on any of the displayed imagese.'                       
+        else:
+            if self.sMarkupLinesRequiredState == 'SpecificLinesReq':
+                self.bMarkupLinesCompleted = True
+                for idx in range(len(self.l2iCompletedMarkupLines)):
+                    if self.l2iCompletedMarkupLines[idx][1] < self.l2iCompletedMarkupLines[idx][0]:
+                        self.bMarkupLinesCompleted = False
+                        xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', idx)
+                        sPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'ID')
+                        sImageID = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'ID')
+                        sNodeName = sPageID + '_' + sImageID
+                        sMsg = sMsg +  '\nYou must complete ' + str(self.l2iCompletedMarkupLines[idx][0]) + \
+                                    ' markup lines for this image: ' + sNodeName + \
+                                    '\nUse the markup tool to draw the lines on this image.'                       
+        
+        return sMsg
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def TestForEmptyLabelMap(self, sPath):
         ''' A function to look at pixels of label map node to determine if a segment exists
