@@ -5,8 +5,8 @@ from Session import *
 from pip._vendor.distlib._backport.shutil import copyfile
 from slicer.util import findChild
 
-from Utilities import *
-from UtilsIO import *
+from Utilities.UtilsMsgs import *
+from Utilities.UtilsFilesIO import *
 
 import importlib.util
 
@@ -58,7 +58,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         sSourceDirForQuiz = 'Resources/XML'
 
         self.oUtilsMsgs = UtilsMsgs()
-        self.oFilesIO = UtilsIO()
+        self.oFilesIO = UtilsFilesIO()
         self.oFilesIO.SetModuleDirs(sModuleName, sSourceDirForQuiz)
         
 #         # capture Slicer's default database location

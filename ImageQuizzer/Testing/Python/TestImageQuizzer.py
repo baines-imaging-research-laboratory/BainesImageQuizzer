@@ -2,7 +2,7 @@ import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 from ImageQuizzer import *
 from TestingStatus import *
-from Utilities import *
+from Utilities.UtilsMsgs import *
 
 import os
 import sys

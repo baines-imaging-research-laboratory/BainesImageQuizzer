@@ -6,7 +6,8 @@ import vtk, qt, ctk, slicer
 import sys
 import unittest
 
-from Utilities import *
+from Utilities.UtilsMsgs import *
+from Utilities.UtilsIOXml import *
 
 from DICOMLib import DICOMUtils
 import QuizzerDICOMUtils

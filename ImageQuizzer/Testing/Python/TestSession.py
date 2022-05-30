@@ -2,7 +2,7 @@ import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 from Session import *
 from TestingStatus import *
-from Utilities import *
+from Utilities.UtilsIOXml import *
 
 import xml.dom.minidom
 
@@ -108,7 +108,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
         sModuleName = 'ImageQuizzer'
 
-        self._oFilesIO = UtilsIO()
+        self._oFilesIO = UtilsFilesIO()
         self.oIOXml = UtilsIOXml()
         
         # create/set environment variable to be checked in UtilsIOXml class

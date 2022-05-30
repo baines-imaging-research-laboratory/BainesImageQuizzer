@@ -17,7 +17,7 @@ import numpy as np
 
 class PageState:
     
-    def __init__(self, oSession):
+    def __init__(self):
         ''' Class to keep track of completed items that belong to a page.
             Segmentation completion state is a 2d list.
                 The first element specifies whether it is required (0, 1, or -1)
@@ -80,6 +80,11 @@ class PageState:
                         If the attribute is set to a number (n), then a minimum of n lines must be created for this image.
                     
         '''
+        self.ClearPageStateVariables()
+        
+    #----------
+    def ClearPageStateVariables(self):
+        
         self.liCompletedQuestionSets = []
         self.l2iCompletedSegmentations = []
         self.l2iCompletedMarkupLines = []
@@ -90,9 +95,6 @@ class PageState:
         self.bMarkupLinesCompleted = 'False'
         self.iMarkupLinesOnAnyImageMinimum = 0
         
-        self.oSession = oSession
-        self.oIOXml = self.oSession.oIOXml
-        self.oFilesIO = self.oSession.oFilesIO
         
     #----------
     def GetCompletedQuestionSetsList(self):
@@ -182,7 +184,7 @@ class PageState:
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def InitializeStates(self, xPageNode):
+    def InitializeStates(self, oSession, xPageNode):
         ''' 
             Each question set is intialized as incomplete.
 
@@ -207,6 +209,11 @@ class PageState:
                 Other image layers (LabelMap or Segmentation) are set to a -1 (not applicable) 
 
         '''
+        self.oSession = oSession
+        self.oIOXml = self.oSession.oIOXml
+        self.oFilesIO = self.oSession.oFilesIO
+
+        self.ClearPageStateVariables()
         
         sPageComplete = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'PageComplete')
         if sPageComplete == 'Y':
@@ -220,8 +227,6 @@ class PageState:
             self.bMarkupLinesCompleted = False
             iCompletedTF = 0
             
-            
-    
         lxQuestionSets = self.oIOXml.GetChildren(xPageNode,'QuestionSet')
         lxImageNodes = self.oIOXml.GetChildren(xPageNode,'Image')
 
@@ -286,7 +291,7 @@ class PageState:
                         self.l2iCompletedMarkupLines[iImgIdx][0] = int(sLinesRequired)
                         self.l2iCompletedMarkupLines[iImgIdx][1] = l2iRequired[1]
                 else:
-                        self.l2iCompletedSegmentations[iImgIdx] = l2iNotRequired
+                        self.l2iCompletedMarkupLines[iImgIdx] = l2iNotRequired
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateQuestionSetCompletionList(self, xPageNode):
@@ -391,7 +396,7 @@ class PageState:
                         self.l2iCompletedSegmentations[idxImage][1] = 1
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def UpdateMarkupLinesCompletionLists(self, xPageNode):
+    def UpdateMarkupLinesCompletionList(self, xPageNode):
         ''' Function to update the completion flags for markup lines for 
             each image stored in the list.
             This is based on the MarkupLinePath element stored in the Image element.

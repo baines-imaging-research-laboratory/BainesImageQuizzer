@@ -1,8 +1,9 @@
 import os, sys
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
-from UtilsIO import *
-from Utilities import *
+from Utilities.UtilsFilesIO import *
+from Utilities.UtilsIOXml import *
+from Utilities.UtilsMsgs import *
 from Session import *
 from TestingStatus import *
 
@@ -42,7 +43,7 @@ except ImportError:
 
 ##########################################################################
 #
-# TestUtilsIOXml
+# TestPageState
 #
 ##########################################################################
 
@@ -103,7 +104,7 @@ class TestPageStateLogic(ScriptedLoadableModuleLogic):
 
 ##########################################################################
 #
-# TestUtilsIOXml_ModuleTest
+# TestUtilsPageState_ModuleTest
 #
 ##########################################################################
 
@@ -127,7 +128,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         self.sTestXmlFilePath = ''
         self.oSession = Session()
         self.oIOXml = self.oSession.oIOXml
-        self.oPageState = PageState(self.oSession)
+        self.oPageState = PageState()
 
     #------------------------------------------- 
     def runTest(self):
@@ -143,7 +144,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_InitializeStates_MarkupLinesRequiredOnAnyImage_3())
         tupResults.append(self.test_InitializeStates_MarkupLinesRequired_Y())
         tupResults.append(self.test_InitializeStates_MarkupLinesRequired_num())
-        tupResults.append(self.test_UpdateMarkupLinesCompletionLists_SpecificLinesReq_num())
+        tupResults.append(self.test_UpdateMarkupLinesCompletionList_SpecificLinesReq_num())
         tupResults.append(self.test_UpdatePageCompletionLevelForMarkupLines_NoLinesReq())
         tupResults.append(self.test_UpdatePageCompletionLevelForMarkupLines_AnyLinesReq())
         tupResults.append(self.test_UpdatePageCompletionLevelForMarkupLines_SpecificLinesReq())
@@ -174,7 +175,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         
         # self.oSession = Session()
         # self.oPageState = PageState(self.oSession)
-        self.oPageState.InitializeStates(xPage)
+        self.oPageState.InitializeStates(self.oSession, xPage)
         
         lExpectedl2iCompletedMarkupLines = [[0,0],[0,0],[0,0],[-1,0]]
         if self.oPageState.l2iCompletedMarkupLines == lExpectedl2iCompletedMarkupLines:
@@ -210,7 +211,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         
         # self.oSession = Session()
         # self.oPageState = PageState(self.oSession)
-        self.oPageState.InitializeStates(xPage)
+        self.oPageState.InitializeStates(self.oSession, xPage)
         
         
         iExpectedMinimumNumberOfLines = 1
@@ -250,7 +251,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         
         # self.oSession = Session()
         # self.oPageState = PageState(self.oSession)
-        self.oPageState.InitializeStates(xPage)
+        self.oPageState.InitializeStates(self.oSession, xPage)
         
         
         iExpectedMinimumNumberOfLines = 3
@@ -290,7 +291,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         
         # self.oSession = Session()
         # self.oPageState = PageState(self.oSession)
-        self.oPageState.InitializeStates(xPage)
+        self.oPageState.InitializeStates(self.oSession, xPage)
         
         
         iExpectedMinimumNumberOfLines = 0
@@ -330,7 +331,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         
         # self.oSession = Session()
         # self.oPageState = PageState(self.oSession)
-        self.oPageState.InitializeStates(xPage)
+        self.oPageState.InitializeStates(self.oSession, xPage)
         
         
         iExpectedMinimumNumberOfLines = 0
@@ -347,7 +348,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         return tupResult
         
     #------------------------------------------- 
-    def test_UpdateMarkupLinesCompletionLists_SpecificLinesReq_num(self):
+    def test_UpdateMarkupLinesCompletionList_SpecificLinesReq_num(self):
         ''' Test that the completion list is updated as expected when the
             path element is found.
             Case : MarkupLinesRequired on specific image with a number
@@ -382,9 +383,9 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         
         # self.oSession = Session()
         # self.oPageState = PageState(self.oSession)
-        self.oPageState.InitializeStates(xPage)
+        self.oPageState.InitializeStates(self.oSession, xPage)
         
-        self.oPageState.UpdateMarkupLinesCompletionLists(xPage)
+        self.oPageState.UpdateMarkupLinesCompletionList(xPage)
         l2iExpectedList = [[2,2],[5,1],[0,1],[-1,0]]
         
         if self.oPageState.l2iCompletedMarkupLines == l2iExpectedList:
@@ -411,7 +412,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         xRoot = self.buildXML_TestFile_Generic()
         xPage = self.oIOXml.GetNthChild(xRoot, 'Page', 0)
         
-        self.oPageState.InitializeStates(xPage)
+        self.oPageState.InitializeStates(self.oSession, xPage)
 
         
         # test no markup lines required
@@ -446,7 +447,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         xRoot = self.buildXML_TestFile_Generic()
         xPage = self.oIOXml.GetNthChild(xRoot, 'Page', 0)
         
-        self.oPageState.InitializeStates(xPage)
+        self.oPageState.InitializeStates(self.oSession, xPage)
         self.oPageState.sMarkupLinesRequiredState = 'AnyLinesReq'
         self.oPageState.iMarkupLinesOnAnyImageMinimum = 2
         self.oPageState.l2iCompletedMarkupLines = [[0,2],[0,1],[0,1],[-1,0]]
@@ -456,7 +457,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         if bExpectedCompleted == self.oPageState.bMarkupLinesCompleted:
             bTestResult1 = True
 
-        self.oPageState.InitializeStates(xPage)
+        self.oPageState.InitializeStates(self.oSession, xPage)
         self.oPageState.sMarkupLinesRequiredState = 'AnyLinesReq'
         self.oPageState.iMarkupLinesOnAnyImageMinimum = 5
         self.oPageState.l2iCompletedMarkupLines = [[0,2],[0,1],[0,1],[-1,0]]
@@ -466,7 +467,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         if bExpectedCompleted == self.oPageState.bMarkupLinesCompleted:
             bTestResult2 = True
 
-        self.oPageState.InitializeStates(xPage)
+        self.oPageState.InitializeStates(self.oSession, xPage)
         self.oPageState.sMarkupLinesRequiredState = 'AnyLinesReq'
         self.oPageState.iMarkupLinesOnAnyImageMinimum = 1 # when MarkupLinesRequiredOnAnyImage="Y"
         self.oPageState.l2iCompletedMarkupLines = [[0,2],[0,1],[0,1],[-1,0]]
@@ -500,7 +501,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         xRoot = self.buildXML_TestFile_Generic()
         xPage = self.oIOXml.GetNthChild(xRoot, 'Page', 0)
         
-        self.oPageState.InitializeStates(xPage)
+        self.oPageState.InitializeStates(self.oSession, xPage)
         self.oPageState.sMarkupLinesRequiredState = 'SpecificLinesReq'
         self.oPageState.l2iCompletedMarkupLines = [[2,2],[0,1],[0,1],[-1,0]]
         self.oPageState.UpdatePageCompletionLevelForMarkupLines(xPage)
@@ -509,7 +510,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         if bExpectedCompleted == self.oPageState.bMarkupLinesCompleted:
             bTestResult1 = True
 
-        self.oPageState.InitializeStates(xPage)
+        self.oPageState.InitializeStates(self.oSession, xPage)
         self.oPageState.sMarkupLinesRequiredState = 'SpecificLinesReq'
         self.oPageState.l2iCompletedMarkupLines = [[2,2],[0,1],[3,1],[-1,0]]
         self.oPageState.UpdatePageCompletionLevelForMarkupLines(xPage)

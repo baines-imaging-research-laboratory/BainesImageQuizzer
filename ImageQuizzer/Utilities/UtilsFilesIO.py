@@ -2,7 +2,8 @@ import os, sys
 import warnings
 import vtk, qt, ctk, slicer
 
-from Utilities import *
+from Utilities.UtilsIOXml import *
+from Utilities.UtilsMsgs import *
 
 from shutil import copyfile
 import shutil
@@ -20,12 +21,12 @@ import DICOMVolumeSequencePlugin
 
 ##########################################################################
 #
-#   class UtilsIO
+#   class UtilsFilesIO
 #
 ##########################################################################
 
-class UtilsIO:
-    """ Class UtilsIO
+class UtilsFilesIO:
+    """ Class UtilsFilesIO
         - to set up path and filenames for the Image Quizzer module
         - to handle disk input/output
     """

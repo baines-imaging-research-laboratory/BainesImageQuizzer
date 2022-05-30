@@ -3,6 +3,20 @@ import vtk, qt, ctk, slicer
 import sys
 from DICOMLib.DICOMUtils import *
 
+##########################################################################
+# Class QuizzerDICOMUtils
+##########################################################################
+class QuizzerDICOMUtils:
+    ''' class QuizzerDICOMUtils
+        stub set up to remove error message when loading scripted modules during Slicer startup
+    '''
+    
+    def __init__(self, parent=None):
+        self.parent = parent
+
+##########################################################################
+# Slicer override of the DicomUtils>loadSeriesByUID function
+##########################################################################
 
 
 ''' These functions were taken from the DicomLib.DicomUtils.py in the nightly 

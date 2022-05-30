@@ -5,10 +5,12 @@ import sys
 import unittest
 import random
 
-from Utilities import *
+from Utilities.UtilsIOXml import *
+from Utilities.UtilsMsgs import *
+from Utilities.UtilsFilesIO import *
+
 from Question import *
 from ImageView import *
-from UtilsIO import *
 from PageState import *
 #from ImageQuizzer import *
 
@@ -58,7 +60,7 @@ class Session:
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
-        self.oPageState = PageState(self)
+        self.oPageState = PageState()
 
         self.oImageView = None
         
@@ -165,7 +167,7 @@ class Session:
             XML specifics for the input page index are used for initializing.
         '''
         xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPgIndex)
-        self.oPageState.InitializeStates(xPageNode)
+        self.oPageState.InitializeStates(self, xPageNode)
     
     #----------
     def AddExtraToolsTab(self):

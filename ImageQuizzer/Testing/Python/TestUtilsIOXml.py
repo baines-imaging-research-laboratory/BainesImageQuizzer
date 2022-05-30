@@ -1,8 +1,8 @@
 import os, sys
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
-from UtilsIO import *
-from Utilities import *
+from Utilities.UtilsFilesIO import *
+from Utilities.UtilsIOXml import *
 from TestingStatus import *
 
 import xml
@@ -69,7 +69,7 @@ class TestUtilsIOXml(ScriptedLoadableModule):
 
 ##########################################################################
 #
-# TestQuestionSet_ModuleWidget
+# TestUtilsIOXml_ModuleWidget
 #
 ##########################################################################
 
@@ -123,7 +123,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         sModuleName = 'ImageQuizzer'
         self.sUsername = 'Tests'
-        self.oFilesIO = UtilsIO()
+        self.oFilesIO = UtilsFilesIO()
         self.oIOXml = UtilsIOXml()
         self.sTestXmlFilePath = ''
 

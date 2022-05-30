@@ -6,7 +6,8 @@ import vtk, qt, ctk, slicer
 import sys
 import warnings
 
-from Utilities import *
+from Utilities.UtilsMsgs import *
+from Utilities.UtilsIOXml import *
 
 
 
