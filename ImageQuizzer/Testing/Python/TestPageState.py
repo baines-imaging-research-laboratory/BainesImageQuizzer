@@ -139,11 +139,11 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
 
         tupResults = []
         # tupResults.append(self.prepForTests())
-        tupResults.append(self.test_InitializeStates_NoMarkupLinesRequired())
-        tupResults.append(self.test_InitializeStates_MarkupLinesRequiredOnAnyImage_Y())
-        tupResults.append(self.test_InitializeStates_MarkupLinesRequiredOnAnyImage_3())
-        tupResults.append(self.test_InitializeStates_MarkupLinesRequired_Y())
-        tupResults.append(self.test_InitializeStates_MarkupLinesRequired_num())
+        tupResults.append(self.test_InitializeStates_NoMarkupLineRequired())
+        tupResults.append(self.test_InitializeStates_MarkupLineRequiredOnAnyImage_Y())
+        tupResults.append(self.test_InitializeStates_MarkupLineRequiredOnAnyImage_3())
+        tupResults.append(self.test_InitializeStates_MarkupLineRequired_Y())
+        tupResults.append(self.test_InitializeStates_MarkupLineRequired_num())
         tupResults.append(self.test_UpdateMarkupLinesCompletionList_SpecificLinesReq_num())
         tupResults.append(self.test_UpdatePageCompletionLevelForMarkupLines_NoLinesReq())
         tupResults.append(self.test_UpdatePageCompletionLevelForMarkupLines_AnyLinesReq())
@@ -153,7 +153,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         logic.sessionTestStatus.DisplayTestResults(tupResults)
 
     #------------------------------------------- 
-    def test_InitializeStates_NoMarkupLinesRequired(self):
+    def test_InitializeStates_NoMarkupLineRequired(self):
         ''' No attributes for markup lines exist in the page node
         '''
         self.fnName = sys._getframe().f_code.co_name
@@ -188,14 +188,14 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         
     #------------------------------------------- 
     #------------------------------------------- 
-    def test_InitializeStates_MarkupLinesRequiredOnAnyImage_Y(self):
+    def test_InitializeStates_MarkupLineRequiredOnAnyImage_Y(self):
         ''' Test that page initialization is updated as expected.
-            Case : MarkupLinesRequiredOnAnyImage on specific image with 'Y'.
+            Case : MarkupLineRequiredOnAnyImage on specific image with 'Y'.
         '''
         self.fnName = sys._getframe().f_code.co_name
 
         xRoot = etree.Element("Session")
-        xPage = etree.SubElement(xRoot,"Page", ID="001", Descriptor="TestData Page1", MarkupLinesRequiredOnAnyImage="Y")
+        xPage = etree.SubElement(xRoot,"Page", ID="001", Descriptor="TestData Page1", MarkupLineRequiredOnAnyImage="Y")
         xImage = etree.SubElement(xPage, "Image", Descriptor="Image1_Axial")
         xLayer = etree.SubElement(xImage, "Layer")
         xLayer.text = "Background"
@@ -215,10 +215,10 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         
         
         iExpectedMinimumNumberOfLines = 1
-        sExpectedMarkupLinesRequiredState = 'AnyLinesReq'
+        sExpectedMarkupLineRequiredState = 'AnyLinesReq'
         lExpectedl2iCompletedMarkupLines = [[0,0],[0,0],[0,0],[-1,0]]
         if self.oPageState.l2iCompletedMarkupLines == lExpectedl2iCompletedMarkupLines \
-                and self.oPageState.sMarkupLinesRequiredState == sExpectedMarkupLinesRequiredState \
+                and self.oPageState.sMarkupLineRequiredState == sExpectedMarkupLineRequiredState \
                 and self.oPageState.iMarkupLinesOnAnyImageMinimum == iExpectedMinimumNumberOfLines:
             bTestResult = True
         else:
@@ -228,14 +228,14 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         return tupResult
         
     #------------------------------------------- 
-    def test_InitializeStates_MarkupLinesRequiredOnAnyImage_3(self):
+    def test_InitializeStates_MarkupLineRequiredOnAnyImage_3(self):
         ''' Test that page initialization is updated as expected.
-            Case : MarkupLinesRequiredOnAnyImage on specific image with a number.
+            Case : MarkupLineRequiredOnAnyImage on specific image with a number.
         '''
         self.fnName = sys._getframe().f_code.co_name
 
         xRoot = etree.Element("Session")
-        xPage = etree.SubElement(xRoot,"Page", ID="001", Descriptor="TestData Page1", MarkupLinesRequiredOnAnyImage="3")
+        xPage = etree.SubElement(xRoot,"Page", ID="001", Descriptor="TestData Page1", MarkupLineRequiredOnAnyImage="3")
         xImage = etree.SubElement(xPage, "Image", Descriptor="Image1_Axial")
         xLayer = etree.SubElement(xImage, "Layer")
         xLayer.text = "Background"
@@ -255,10 +255,10 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         
         
         iExpectedMinimumNumberOfLines = 3
-        sExpectedMarkupLinesRequiredState = 'AnyLinesReq'
+        sExpectedMarkupLineRequiredState = 'AnyLinesReq'
         lExpectedl2iCompletedMarkupLines = [[0,0],[0,0],[0,0],[-1,0]]
         if self.oPageState.l2iCompletedMarkupLines == lExpectedl2iCompletedMarkupLines \
-                and self.oPageState.sMarkupLinesRequiredState == sExpectedMarkupLinesRequiredState \
+                and self.oPageState.sMarkupLineRequiredState == sExpectedMarkupLineRequiredState \
                 and self.oPageState.iMarkupLinesOnAnyImageMinimum == iExpectedMinimumNumberOfLines:
             bTestResult = True
         else:
@@ -268,21 +268,21 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         return tupResult
         
     #------------------------------------------- 
-    def test_InitializeStates_MarkupLinesRequired_Y(self):
+    def test_InitializeStates_MarkupLineRequired_Y(self):
         ''' Test that page initialization is updated as expected.
-            Case : MarkupLinesRequired on specific image with 'Y'
+            Case : MarkupLineRequired on specific image with 'Y'
         '''
         self.fnName = sys._getframe().f_code.co_name
 
         xRoot = etree.Element("Session")
         xPage = etree.SubElement(xRoot,"Page", ID="001", Descriptor="TestData Page1")
-        xImage = etree.SubElement(xPage, "Image", Descriptor="Image1_Axial", MarkupLinesRequired="Y")
+        xImage = etree.SubElement(xPage, "Image", Descriptor="Image1_Axial", MarkupLineRequired="Y")
         xLayer = etree.SubElement(xImage, "Layer")
         xLayer.text = "Background"
         xImage = etree.SubElement(xPage, "Image", Descriptor="Image2_Axial")
         xLayer = etree.SubElement(xImage, "Layer")
         xLayer.text = "Background"
-        xImage = etree.SubElement(xPage, "Image", Descriptor="Image3_Axial", MarkupLinesRequired="Y")
+        xImage = etree.SubElement(xPage, "Image", Descriptor="Image3_Axial", MarkupLineRequired="Y")
         xLayer = etree.SubElement(xImage, "Layer")
         xLayer.text = "Background"
         xImage = etree.SubElement(xPage, "Image", Descriptor="Segmentation overlay")
@@ -295,10 +295,10 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         
         
         iExpectedMinimumNumberOfLines = 0
-        sExpectedMarkupLinesRequiredState = 'SpecificLinesReq'
+        sExpectedMarkupLineRequiredState = 'SpecificLinesReq'
         lExpectedl2iCompletedMarkupLines = [[1,0],[0,0],[1,0],[-1,0]]
         if self.oPageState.l2iCompletedMarkupLines == lExpectedl2iCompletedMarkupLines \
-                and self.oPageState.sMarkupLinesRequiredState == sExpectedMarkupLinesRequiredState \
+                and self.oPageState.sMarkupLineRequiredState == sExpectedMarkupLineRequiredState \
                 and self.oPageState.iMarkupLinesOnAnyImageMinimum == iExpectedMinimumNumberOfLines:
             bTestResult = True
         else:
@@ -308,24 +308,24 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         return tupResult
         
     #------------------------------------------- 
-    def test_InitializeStates_MarkupLinesRequired_num(self):
+    def test_InitializeStates_MarkupLineRequired_num(self):
         ''' Test that page initialization is updated as expected.
-            Case : MarkupLinesRequired on specific image with a number
+            Case : MarkupLineRequired on specific image with a number
         '''
         self.fnName = sys._getframe().f_code.co_name
 
         xRoot = etree.Element("Session")
         xPage = etree.SubElement(xRoot,"Page", ID="001", Descriptor="TestData Page1")
-        xImage = etree.SubElement(xPage, "Image", Descriptor="Image1_Axial", MarkupLinesRequired="2")
+        xImage = etree.SubElement(xPage, "Image", Descriptor="Image1_Axial", MarkupLineRequired="2")
         xLayer = etree.SubElement(xImage, "Layer")
         xLayer.text = "Background"
-        xImage = etree.SubElement(xPage, "Image", Descriptor="Image2_Axial", MarkupLinesRequired="5")
+        xImage = etree.SubElement(xPage, "Image", Descriptor="Image2_Axial", MarkupLineRequired="5")
         xLayer = etree.SubElement(xImage, "Layer")
         xLayer.text = "Background"
         xImage = etree.SubElement(xPage, "Image", Descriptor="Image3_Axial")
         xLayer = etree.SubElement(xImage, "Layer")
         xLayer.text = "Background"
-        xImage = etree.SubElement(xPage, "Image", Descriptor="Segmentation overlay", MarkupLinesRequired="5")
+        xImage = etree.SubElement(xPage, "Image", Descriptor="Segmentation overlay", MarkupLineRequired="5")
         xLayer = etree.SubElement(xImage, "Layer")
         xLayer.text = "Segmentation"
         
@@ -335,10 +335,10 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         
         
         iExpectedMinimumNumberOfLines = 0
-        sExpectedMarkupLinesRequiredState = 'SpecificLinesReq'
+        sExpectedMarkupLineRequiredState = 'SpecificLinesReq'
         lExpectedl2iCompletedMarkupLines = [[2,0],[5,0],[0,0],[-1,0]]
         if self.oPageState.l2iCompletedMarkupLines == lExpectedl2iCompletedMarkupLines \
-                and self.oPageState.sMarkupLinesRequiredState == sExpectedMarkupLinesRequiredState \
+                and self.oPageState.sMarkupLineRequiredState == sExpectedMarkupLineRequiredState \
                 and self.oPageState.iMarkupLinesOnAnyImageMinimum == iExpectedMinimumNumberOfLines:
             bTestResult = True
         else:
@@ -351,13 +351,13 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
     def test_UpdateMarkupLinesCompletionList_SpecificLinesReq_num(self):
         ''' Test that the completion list is updated as expected when the
             path element is found.
-            Case : MarkupLinesRequired on specific image with a number
+            Case : MarkupLineRequired on specific image with a number
         '''
         self.fnName = sys._getframe().f_code.co_name
 
         xRoot = etree.Element("Session")
         xPage = etree.SubElement(xRoot,"Page", ID="001", Descriptor="TestData Page1")
-        xImage = etree.SubElement(xPage, "Image", Descriptor="Image1_Axial", ID="Im1", MarkupLinesRequired="2")
+        xImage = etree.SubElement(xPage, "Image", Descriptor="Image1_Axial", ID="Im1", MarkupLineRequired="2")
         xLayer = etree.SubElement(xImage, "Layer")
         xLayer.text = "Background"
         xPath = etree.SubElement(xImage, "MarkupLinePath")
@@ -365,7 +365,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         xPath = etree.SubElement(xImage, "MarkupLinePath")
         xPath.text = "C:/Documents/Line1-2"
         
-        xImage = etree.SubElement(xPage, "Image", Descriptor="Image2_Axial", ID="Im2", MarkupLinesRequired="5")
+        xImage = etree.SubElement(xPage, "Image", Descriptor="Image2_Axial", ID="Im2", MarkupLineRequired="5")
         xLayer = etree.SubElement(xImage, "Layer")
         xLayer.text = "Background"
         xPath = etree.SubElement(xImage, "MarkupLinePath")
@@ -377,7 +377,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         xPath = etree.SubElement(xImage, "MarkupLinePath")
         xPath.text = "C:/Documents/Line3-1"
 
-        xImage = etree.SubElement(xPage, "Image", Descriptor="Segmentation overlay", ID="Im3", MarkupLinesRequired="5")
+        xImage = etree.SubElement(xPage, "Image", Descriptor="Segmentation overlay", ID="Im3", MarkupLineRequired="5")
         xLayer = etree.SubElement(xImage, "Layer")
         xLayer.text = "Segmentation"
         
@@ -416,7 +416,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
 
         
         # test no markup lines required
-        self.oPageState.sMarkupLinesRequiredState = 'NoLinesReq'
+        self.oPageState.sMarkupLineRequiredState = 'NoLinesReq'
         self.oPageState.l2iCompletedMarkupLines = [[2,2],[5,1],[0,1],[-1,0]]
         self.oPageState.UpdatePageCompletionLevelForMarkupLines(xPage)
         
@@ -432,7 +432,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
     def test_UpdatePageCompletionLevelForMarkupLines_AnyLinesReq(self):
         ''' Test resulting page completion state for case when markup lines
             are set as required on any image.
-            Cases: MarkupLinesRequiredOnAnyImage set to 'Y' or a number
+            Cases: MarkupLineRequiredOnAnyImage set to 'Y' or a number
         '''
         
         self.fnName = sys._getframe().f_code.co_name
@@ -448,7 +448,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         xPage = self.oIOXml.GetNthChild(xRoot, 'Page', 0)
         
         self.oPageState.InitializeStates(self.oSession, xPage)
-        self.oPageState.sMarkupLinesRequiredState = 'AnyLinesReq'
+        self.oPageState.sMarkupLineRequiredState = 'AnyLinesReq'
         self.oPageState.iMarkupLinesOnAnyImageMinimum = 2
         self.oPageState.l2iCompletedMarkupLines = [[0,2],[0,1],[0,1],[-1,0]]
         self.oPageState.UpdatePageCompletionLevelForMarkupLines(xPage)
@@ -458,7 +458,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
             bTestResult1 = True
 
         self.oPageState.InitializeStates(self.oSession, xPage)
-        self.oPageState.sMarkupLinesRequiredState = 'AnyLinesReq'
+        self.oPageState.sMarkupLineRequiredState = 'AnyLinesReq'
         self.oPageState.iMarkupLinesOnAnyImageMinimum = 5
         self.oPageState.l2iCompletedMarkupLines = [[0,2],[0,1],[0,1],[-1,0]]
         self.oPageState.UpdatePageCompletionLevelForMarkupLines(xPage)
@@ -468,8 +468,8 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
             bTestResult2 = True
 
         self.oPageState.InitializeStates(self.oSession, xPage)
-        self.oPageState.sMarkupLinesRequiredState = 'AnyLinesReq'
-        self.oPageState.iMarkupLinesOnAnyImageMinimum = 1 # when MarkupLinesRequiredOnAnyImage="Y"
+        self.oPageState.sMarkupLineRequiredState = 'AnyLinesReq'
+        self.oPageState.iMarkupLinesOnAnyImageMinimum = 1 # when MarkupLineRequiredOnAnyImage="Y"
         self.oPageState.l2iCompletedMarkupLines = [[0,2],[0,1],[0,1],[-1,0]]
         self.oPageState.UpdatePageCompletionLevelForMarkupLines(xPage)
         
@@ -502,7 +502,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         xPage = self.oIOXml.GetNthChild(xRoot, 'Page', 0)
         
         self.oPageState.InitializeStates(self.oSession, xPage)
-        self.oPageState.sMarkupLinesRequiredState = 'SpecificLinesReq'
+        self.oPageState.sMarkupLineRequiredState = 'SpecificLinesReq'
         self.oPageState.l2iCompletedMarkupLines = [[2,2],[0,1],[0,1],[-1,0]]
         self.oPageState.UpdatePageCompletionLevelForMarkupLines(xPage)
         
@@ -511,7 +511,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
             bTestResult1 = True
 
         self.oPageState.InitializeStates(self.oSession, xPage)
-        self.oPageState.sMarkupLinesRequiredState = 'SpecificLinesReq'
+        self.oPageState.sMarkupLineRequiredState = 'SpecificLinesReq'
         self.oPageState.l2iCompletedMarkupLines = [[2,2],[0,1],[3,1],[-1,0]]
         self.oPageState.UpdatePageCompletionLevelForMarkupLines(xPage)
         

@@ -977,7 +977,7 @@ class UtilsFilesIO:
                             
                             if xLabelMapPathElement == None:
                                 # update xml storing the path to the label map file with the image element
-                                oSession.AddLabelMapPathElement(oImageNode.GetXmlImageElement(),\
+                                oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(),\
                                                      self.GetRelativeUserPath(sLabelMapPath))
                             
                                 bLabelMapsSaved = True  # at least one label map was saved
@@ -1180,7 +1180,7 @@ class UtilsFilesIO:
 
         # update xml storing the path to the label map file with the image element
         #    for display on the next page
-        oSession.AddLabelMapPathElement(oImageNode.GetXmlImageElement(), self.GetRelativeUserPath(sLabelMapPathForDest))
+        oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(), self.GetRelativeUserPath(sLabelMapPathForDest))
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1210,41 +1210,70 @@ class UtilsFilesIO:
     #-------------------------------------------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SaveMarkupsLines(self, oSession, sCaller):
+    def SaveMarkupLines(self, oSession, sCaller):
         ''' This function will capture all markup lines, rename them to reflect the associated 
             reference node and save them in the json format.
         '''
         
         sMsg = ''
-        bMarkupsLinesSaved = True
+        bMarkupLinesSaved = True
         
-        lsMarkupsLineNodes = []
-        lsMarkupsLineNodes = slicer.util.getNodesByClass('vtkMRMLMarkupsLineNode')
-        
-        if len(lsMarkupsLineNodes) > 0:
-            for slMarkupsLine in lsMarkupsLineNodes:
-                sAssociatedReferenceNodeID = slMarkupsLine.GetNthControlPointAssociatedNodeID()
-                # update name of node only if not already done
-                if slMarkupsLine.GetName().find(sAssociatedReferenceNodeID) == -1:
-                    sLineName = slMarkupsLine.GetName() + '_' + slicer.util.getNode(sAssociatedReferenceNodeID).GetName()
-                    slMarkupsLine.SetName(sLineName)
+        lsMarkupLineNodes = []
+        lsMarkupLineNodes = slicer.util.getNodesByClass('vtkMRMLMarkupsLineNode')
+
+    
+        for slMarkupLine in lsMarkupLineNodes:
+            iNumPoints = slMarkupLine.GetNumberOfControlPoints()
             
-                # save the markups line in the directory
+            # only work with nodes that have 2 points
+            #    -    just adding the line tool creates a null markup line node (0 control points)
+            #    -    bMarkupLinesSaved flag is still true if no valid lines are available to save
+            if iNumPoints == 2:
+                sAssociatedReferenceNodeID = slMarkupLine.GetNthControlPointAssociatedNodeID(0)
+                sAssociatedReferenceNodeName = slicer.util.getNode(sAssociatedReferenceNodeID).GetName()
+                # update markup line name with associated node only if not already done
+                if slMarkupLine.GetName().find(sAssociatedReferenceNodeName) == -1: 
+                    sLineName = sAssociatedReferenceNodeName  + '_' + slMarkupLine.GetName()
+                    slMarkupLine.SetName(sLineName)
+            
+                # save the markup line in the directory
                 sDirName = self.GetFolderNameForPageResults(oSession)
                 sPageMarkupsLineDir = self.CreatePageDir(sDirName)
     
-                sMarkupsLineFilenameWithExt = slMarkupsLine.GetName() + '.mrk.json'
+                sMarkupsLineFilenameWithExt = slMarkupLine.GetName() + '.mrk.json'
                              
-                # save the label map file to the user's page directory
+                # save the markup line file to the user's page directory
                 sMarkupsLinePath = os.path.join(sPageMarkupsLineDir, sMarkupsLineFilenameWithExt)
     
-                bLineSaved, sMsg = self.ExportResultsItemToFile('MarkupsLine', sMarkupsLinePath, slMarkupsLine) 
+                 
+            
+                for oImageNode in oSession.oImageView.GetImageViewList():
+                    
+                    # match the markup line to the image to save the path to the correct xml Image node
+                    if slicer.util.getNode(sAssociatedReferenceNodeID).GetName() == oImageNode.sNodeName:
+                        bLineSaved, sMsg = self.ExportResultsItemToFile('MarkupsLine', sMarkupsLinePath, slMarkupLine)
+                        # store the path name in the xml file
+                        if bLineSaved:
+                            
+                            sRelativePathToStoreInXml = self.GetRelativeUserPath(sMarkupsLinePath)
+                            lxLinePathElements = self.oIOXml.GetChildren(oImageNode.GetXmlImageElement(), 'MarkupLinePath')
+                            bPathAlreadyInXml = False
+                            for xPathElement in lxLinePathElements:
+                                sStoredRelativePath = self.oIOXml.GetDataInNode(xPathElement)
+                                if sStoredRelativePath == sRelativePathToStoreInXml:
+                                    bPathAlreadyInXml = True
+                                    bMarkupLinesSaved = True
+                                    break
+                                
+                            if bPathAlreadyInXml == False:   
+                                xMarkupLInePathElement = self.oIOXml.GetLastChild(oImageNode.GetXmlImageElement(), 'MarkupLinePath')
+                                # update xml storing the path to the markup line file with the image element
+                                oSession.AddPathElement('MarkupLinePath', oImageNode.GetXmlImageElement(),
+                                                        sRelativePathToStoreInXml)
+                                bMarkupLinesSaved = True    # at least one markup line was saved
+                        else:
+                            bMarkupLinesSaved = False
+                            oSession.oUtilsMsgs.DisplayError(sMsg)
         
-                # store the path name in the xml file
-                if bLineSaved:
-                    pass
-                    # save to XML
-                
-        
-        return bMarkupsLinesSaved, sMsg
+        return bMarkupLinesSaved, sMsg
     

@@ -1021,7 +1021,7 @@ class Session:
             if bSuccess:
                 
                 bSuccess, sMsg = self.oFilesIO.SaveLabelMaps(self, sCaller)
-                bSuccess, sMsg = self.oFilesIO.SaveMarkupsLines(self, sCaller)
+                bSuccess, sMsg = self.oFilesIO.SaveMarkupLines(self, sCaller)
     
                 if bSuccess:
                     sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponsesToSave()
@@ -1054,16 +1054,10 @@ class Session:
                         if sCaller == 'NextBtn' or sCaller == 'Finish':
                             # if this was the last question set for the page, check for completion
                             if idxQuestionSet == iNumQSets - 1:
-                                # update if Page is complete (only for Next/Finish - not Previous)
-#                                 self.oPageState.CheckPageCompletionLevelForQuestionSets()
-#                                 sLabelMapMsg = self.oPageState.CheckPageCompletionLevelForSegmentations(self.GetCurrentPageNode())
-#                                 sMsg = sMsg + sLabelMapMsg
                                 
                                 sCompletionFlagMsg = self.oPageState.UpdateCompletedFlags(self.GetCurrentPageNode())
                                 sMsg = sMsg + sCompletionFlagMsg
                                 
-#                                 if self.oPageState.GetQuestionSetsCompletedState() and \
-#                                         self.oPageState.GetSegmentationsCompletedState():
                                 if self.oPageState.GetPageCompletedTF():
                                     bSuccess = True
                                     self.AddPageCompleteAttribute(self.GetCurrentPageIndex())
@@ -1396,7 +1390,7 @@ class Session:
         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def AddLabelMapPathElement(self, xImageNode, sInputPath):
+    def AddPathElement(self, sElementName, xImageNode, sInputPath):
         
         # add login and response times to the label map path element
         now = datetime.now()
@@ -1404,7 +1398,7 @@ class Session:
         
         dictAttrib = { 'LoginTime': self.LoginTime(), 'ResponseTime': sResponseTime} 
         
-        self.oIOXml.AddElement(xImageNode,'LabelMapPath',sInputPath, dictAttrib)
+        self.oIOXml.AddElement(xImageNode, sElementName, sInputPath, dictAttrib)
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
