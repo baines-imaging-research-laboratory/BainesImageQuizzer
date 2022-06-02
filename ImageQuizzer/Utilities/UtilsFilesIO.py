@@ -1318,7 +1318,7 @@ class UtilsFilesIO:
                 # extract existing numeric suffix if there is one
                 iSubstringStart = sName.find(sSubstringToSearch)
                 if iSubstringStart >= 0:
-                    iSuffixStart = iSubstringStart + len(sSubstringToSearch) + 1
+                    iSuffixStart = iSubstringStart + len(sSubstringToSearch)
                     sSuffix = sName[iSuffixStart :]
                     if sSuffix.isdigit():
                         lExistingSuffixes.append(int(sSuffix))

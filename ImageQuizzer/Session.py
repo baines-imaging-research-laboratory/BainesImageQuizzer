@@ -560,26 +560,30 @@ class Session:
         self.qLineToolsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
         self.qLineToolsGrpBoxLayout = qt.QHBoxLayout()
         self.qLineToolsGrpBox.setLayout(self.qLineToolsGrpBoxLayout)
+        self.qLineToolsGrpBoxLayout.addStretch()
 
         qLineToolLabel = qt.QLabel('Ruler:')
         self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabel)
         
+        self.btnAddMarkupsLine = qt.QPushButton("Add new line")
+        self.btnAddMarkupsLine.enabled = True
+        self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+        self.btnAddMarkupsLine.connect('clicked(bool)', self.onAddLinesButtonClicked)
+        self.qLineToolsGrpBoxLayout.addWidget(self.btnAddMarkupsLine)
+
+
+
         self.slMarkupsLineWidget = slicer.qSlicerMarkupsPlaceWidget()
-        self.slMarkupsLineWidget.setMRMLScene(slicer.mrmlScene)
-        markupsNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsLineNode")
-        self.slMarkupsLineWidget.setCurrentNode(slicer.mrmlScene.GetNodeByID(markupsNode.GetID()))
-        # Hide all buttons and only show place button
+        # Hide all buttons and only show delete button
         self.slMarkupsLineWidget.buttonsVisible=False
-        self.slMarkupsLineWidget.placeButton().show()
         self.slMarkupsLineWidget.deleteButton().show()
-        self.slMarkupsLineWidget.setPlaceModeEnabled(True)
         self.qLineToolsGrpBoxLayout.addWidget(self.slMarkupsLineWidget)
         
         # Copy measurement button
         self.btnClearLines = qt.QPushButton("Clear all")
         self.btnClearLines.toolTip = "Remove all markup lines."
         self.btnClearLines.enabled = True
-        self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+        self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(255,149,0); color: black }")
         self.btnClearLines.connect('clicked(bool)',self.onClearLinesButtonClicked)
         self.qLineToolsGrpBoxLayout.addWidget(self.btnClearLines)
 
@@ -618,6 +622,17 @@ class Session:
         
 
         return self.tabExtraToolsLayout
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onAddLinesButtonClicked(self):
+        ''' Add a new markup line - using the PlaceMode functionality
+        '''
+        
+        self.slMarkupsLineWidget.setMRMLScene(slicer.mrmlScene)
+        markupsNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsLineNode")
+        self.slMarkupsLineWidget.setCurrentNode(slicer.mrmlScene.GetNodeByID(markupsNode.GetID()))
+        self.slMarkupsLineWidget.setPlaceModeEnabled(True)
+        
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onClearLinesButtonClicked(self):
