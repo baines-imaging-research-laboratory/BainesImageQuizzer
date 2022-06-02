@@ -353,6 +353,8 @@ class Session:
             else:
                 self.SetupPageState(self.GetCurrentPageIndex())     # create new state object
                 
+            self.AddSessionLoginTimestamp()
+            self.AddUserNameAttribute()
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupWidgets(self, slicerMainLayout):
@@ -938,8 +940,9 @@ class Session:
         self.oImageView = ImageView()
         self.oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self.oFilesIO.GetDataParentDir())
 
-        # load label maps if a labelmap path has been stored in the xml for the images on this page
+        # load label maps and markup lines if a path has been stored in the xml for the images on this page
         self.oFilesIO.LoadSavedLabelMaps(self)
+        self.oFilesIO.LoadSavedMarkupLines(self)
 
         # assign each image node and its label map (if applicable) to the viewing widget
         self.oImageView.AssignNodesToView()
@@ -1021,7 +1024,7 @@ class Session:
             if bSuccess:
                 
                 bSuccess, sMsg = self.oFilesIO.SaveLabelMaps(self, sCaller)
-                bSuccess, sMsg = self.oFilesIO.SaveMarkupLines(self, sCaller)
+                bSuccess, sMsg = self.oFilesIO.SaveMarkupLines(self)
     
                 if bSuccess:
                     sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponsesToSave()
@@ -1310,12 +1313,6 @@ class Session:
                 #    what was previously captured
                 #    -only write responses if they have changed
                 if not self._lsNewResponses == self._lsPreviousResponses:
-                    # Responses have been captured, if it's the first set of responses
-                    #    for the session, add in the login timestamp and record the username
-                    if self._bFirstResponsesRecordedInXml == False:
-                        self.AddSessionLoginTimestamp()
-                        self.AddUserNameAttribute()
-                        self._bFirstResponsesRecordedInXml = True
                         
                     self.AddXmlElements()
                     

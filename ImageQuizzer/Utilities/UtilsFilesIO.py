@@ -901,6 +901,26 @@ class UtilsFilesIO:
         return bSuccess, sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CheckForLoadedNodeInScene(self, sFilenameNoExt):
+        """ A label map or markup line is stored on disk with the same name as the node in the mrmlScene.
+            Using the filename for the entity (with no extension) check if it is already
+            loaded into the scene.
+        """
+        bFound = False
+        slNode = None
+        
+        slNodesCollection = slicer.mrmlScene.GetNodesByName(sFilenameNoExt)
+
+        if slNodesCollection.GetNumberOfItems() == 1:
+            bFound = True
+            slNode = slNodesCollection.GetItemAsObject(0)
+
+        # for memory leak
+        slNodesCollection.UnRegister(slicer.mrmlScene)
+              
+        return bFound, slNode
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
     #-------------------------------------------
     #        LabelMap Functions
@@ -1104,7 +1124,7 @@ class UtilsFilesIO:
                     
                     # check if label map was already loaded (if between question sets, label map will persisit)
                     sLabelMapNodeName = self.GetFilenameNoExtFromPath(sStoredRelativePath)
-                    bFoundLabelMap, slLabelMapNode = self.CheckForLoadedLabelMapInScene(sLabelMapNodeName)
+                    bFoundLabelMap, slLabelMapNode = self.CheckForLoadedNodeInScene(sLabelMapNodeName)
 
                     # only load the label map once
                     #    same label map may have been stored multiple times in XML for the page
@@ -1184,33 +1204,13 @@ class UtilsFilesIO:
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CheckForLoadedLabelMapInScene(self, sFilenameNoExt):
-        """ A label map is stored on disk with the same name as the node in the mrmlScene.
-            Using the filename for the label map (with no extension) check if it is already
-            loaded into the scene.
-        """
-        bFound = False
-        slNode = None
-        
-        slNodesCollection = slicer.mrmlScene.GetNodesByName(sFilenameNoExt)
-
-        if slNodesCollection.GetNumberOfItems() == 1:
-            bFound = True
-            slNode = slNodesCollection.GetItemAsObject(0)
-
-        # for memory leak
-        slNodesCollection.UnRegister(slicer.mrmlScene)
-              
-        return bFound, slNode
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
     #-------------------------------------------
     #        MarkupsLine Functions
     #-------------------------------------------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SaveMarkupLines(self, oSession, sCaller):
+    def SaveMarkupLines(self, oSession):
         ''' This function will capture all markup lines, rename them to reflect the associated 
             reference node and save them in the json format.
         '''
@@ -1226,14 +1226,19 @@ class UtilsFilesIO:
             iNumPoints = slMarkupLine.GetNumberOfControlPoints()
             
             # only work with nodes that have 2 points
-            #    -    just adding the line tool creates a null markup line node (0 control points)
+            #    -    just adding the line tool can create a null markup line node (0 control points)
             #    -    bMarkupLinesSaved flag is still true if no valid lines are available to save
             if iNumPoints == 2:
                 sAssociatedReferenceNodeID = slMarkupLine.GetNthControlPointAssociatedNodeID(0)
                 sAssociatedReferenceNodeName = slicer.util.getNode(sAssociatedReferenceNodeID).GetName()
                 # update markup line name with associated node only if not already done
                 if slMarkupLine.GetName().find(sAssociatedReferenceNodeName) == -1: 
-                    sLineName = sAssociatedReferenceNodeName  + '_' + slMarkupLine.GetName()
+                    
+                    # check the scene if the name already exists
+                    #    - if not all lines are created yet and user moves between Next and Previous, a 
+                    #    newly created markup line node may be created with the same base name ('MarkupsLine'),
+                    #    so a suffix needs to be added to the new line name
+                    sLineName = self.CreateUniqueLineName(lsMarkupLineNodes, slMarkupLine.GetName(), sAssociatedReferenceNodeName)
                     slMarkupLine.SetName(sLineName)
             
                 # save the markup line in the directory
@@ -1276,4 +1281,90 @@ class UtilsFilesIO:
                             oSession.oUtilsMsgs.DisplayError(sMsg)
         
         return bMarkupLinesSaved, sMsg
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CreateUniqueLineName(self, lAllNodeNamesInScene, sSystemGeneratedName, sAssociatedReferenceNodeName):
+        ''' Input parameters:
+                - list of all nodes in the scene
+                - the system generated node name to be changed
+                - name of the associated image node
+            If there is already a node that has the proposed name, we need to add the 'next' integer suffix
+        '''
+
+        sProposedName =  sAssociatedReferenceNodeName  + '_' + sSystemGeneratedName + '_bainesquizline'
+        sUniqueName = sProposedName # default
+         
+        lExistingNamesWithProposedName = []
+        for slNode in lAllNodeNamesInScene:
+            if slNode.GetName().find(sProposedName) >= 0:
+                lExistingNamesWithProposedName.append(slNode.GetName())
+                
+        if len(lExistingNamesWithProposedName) > 0:
+            sSubstringToSearch = 'bainesquizline_'
+            iNewSuffix = self.GetSuffix(lExistingNamesWithProposedName, sSubstringToSearch)
+            if iNewSuffix > 0:
+                sUniqueName = sProposedName + '_' + str(iNewSuffix)
+
+        return sUniqueName
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetSuffix(self, lExistingNamesWithProposedName, sSubstringToSearch ):
+    
+        iNextInteger = 0
+        
+        if len(lExistingNamesWithProposedName) > 0:
+            lExistingSuffixes = []
+            for sName in lExistingNamesWithProposedName:
+                # extract existing numeric suffix if there is one
+                iSubstringStart = sName.find(sSubstringToSearch)
+                if iSubstringStart >= 0:
+                    iSuffixStart = iSubstringStart + len(sSubstringToSearch) + 1
+                    sSuffix = sName[iSuffixStart :]
+                    if sSuffix.isdigit():
+                        lExistingSuffixes.append(int(sSuffix))
+                
+            if len(lExistingSuffixes) > 0:
+                iNextInteger = max(lExistingSuffixes) + 1
+            else:
+                iNextInteger = 1
+    
+        return iNextInteger
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def LoadSavedMarkupLines(self, oSession):
+        ''' Scan the xml for markup line path elements and load the saved file.
+        '''
+        lxImageElements = []
+        lxMarkupLinePaths = []
+        
+        lxImageElements = self.oIOXml.GetChildren( oSession.GetCurrentPageNode(), 'Image')
+        
+        for  xImageNode in lxImageElements:
+            
+            lxMarkupLinePaths = self.oIOXml.GetChildren( xImageNode, 'MarkupLinePath')
+            
+            for xLinePathNode in lxMarkupLinePaths:
+                
+                sStoredRelativePath = self.oIOXml.GetDataInNode( xLinePathNode )
+                if sStoredRelativePath != '':
+                    sAbsolutePath = self.GetAbsoluteUserPath(sStoredRelativePath)
+                    
+                    # check that the markup line does not already exist in the scene 
+                    #    (if relative path has double extension .mrk.json - additional remove .mrk)
+                    sMarkupLineNodeName = self.GetFilenameNoExtFromPath(sStoredRelativePath)
+                    if sMarkupLineNodeName.endswith('.mrk') and sMarkupLineNodeName != '.mrk':
+                        sMarkupLineNodeName = sMarkupLineNodeName[:-len('.mrk')]
+                    bFoundMarkupLine, slMarkupLineNode = self.CheckForLoadedNodeInScene(sMarkupLineNodeName)
+                    
+                    if not bFoundMarkupLine:
+                        if os.path.exists(sAbsolutePath):
+                            # load label map into the scene
+                            slMarkupLineNode = slicer.util.loadMarkups(sAbsolutePath)
+                        else:
+                            sMsg = 'Stored path to markup line file does not exist. Markup line will not be loaded.\n' \
+                                + sAbsolutePath
+                            oSession.oUtilsMsgs.DisplayWarning(sMsg)
+                            break # continue in for loop for next label map path element
+                
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
