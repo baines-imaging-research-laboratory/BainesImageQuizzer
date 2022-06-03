@@ -626,6 +626,11 @@ class UtilsFilesIO:
                 sValidationMsg = self.ValidateSegmentRequiredSettings(xPage, iPageNum)
                 sMsg = sMsg + sValidationMsg
                             
+                # >>>>>>>>>>>>>>>
+                # validate attributes 'SegmentRequired' and 'MinMarkupLinesRequiredOnAnyImage'
+                sValidationMsg = self.ValidateMarkupLinesRequiredSettings(xPage, iPageNum)
+                sMsg = sMsg + sValidationMsg
+                            
                                 
             # >>>>>>>>>>>>>>>
             # validate that each page has a PageGroup attribute if the session requires page group randomization
@@ -853,14 +858,14 @@ class UtilsFilesIO:
             if sEnableSegmentEditorSetting != "Y":
                 sMsg = sMsg + sErrorMsgEnableEditor + str(iPageReference)
                 
-        if sSegmentOnAnyImageSetting == "Y" and bFoundSegmentRequiredForImage == True:
-            sMsg = sMsg + sErrorMsgSegmentOnAnyImage + str(iPageReference)
-                
-
         # if a segment required attribute was found for an image, ensure:
         #    - that it is not on an image set to Layer="Segmentation" or "Label"
         #    - that all images with that same path have the same attribute setting
         
+        if sSegmentOnAnyImageSetting == "Y" and bFoundSegmentRequiredForImage == True:
+            sMsg = sMsg + sErrorMsgSegmentOnAnyImage + str(iPageReference)
+                
+
         if bFoundSegmentRequiredForImage:
             bMismatch = False
             for idxOuterLoop in range(len(l2tupImageSettings)):
@@ -880,6 +885,71 @@ class UtilsFilesIO:
         
         return sMsg
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateMarkupLinesRequiredSettings(self, xPageNode, iPageReference):
+        
+        sMsg = ''
+        sErrorMsgMarkupLinesOnAnyImage = "\nContradicting attributes. You cannot have both 'MinMarkupLinesRequired' on an image and 'MinMarkupLinesRequiredOnAnyImage' on a page. See Page: "
+        sErrorMsgMismatchMarkupLinesRequired = "\nAll image elements with the same path (but different destinations) must have the same attribute 'MinMarkupLinesRequired' setting. See Page: "
+        sErrorMsgMarkupLinesRequiredOnWrongLayer = "\n'MinMarkupLinesRequired' attribute cannot be on an image assigned to Layer='Segmentation' or 'Label' See Page: "
+        
+        bFoundMarkupLinesRequiredForImage = False
+        l2tupImageSettings = []
+
+        sMarkupLinesOnAnyImageSetting = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'MinMarkupLinesRequiredOnAnyImage')
+        lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
+        
+
+        for idx in range(len(lxImageNodes)):
+            xImageNode = lxImageNodes[idx]
+
+            # collect settings for image
+            sMarkupLinesRequiredSetting = self.oIOXml.GetValueOfNodeAttribute(xImageNode, 'MinMarkupLinesRequired')
+            if sMarkupLinesRequiredSetting == '':
+                iNumRequiredLines = 0
+            else:
+                iNumRequiredLines = int(sMarkupLinesRequiredSetting)
+                
+                
+            sImageLayerNode = self.oIOXml.GetLastChild(xImageNode, 'Layer')
+            sImageLayer = self.oIOXml.GetDataInNode(sImageLayerNode)
+            sImagePathNode = self.oIOXml.GetLastChild(xImageNode,'Path')
+            sImagePath = self.oIOXml.GetDataInNode(sImagePathNode)
+            tupImageSettings = [sImagePath, sMarkupLinesRequiredSetting]
+            l2tupImageSettings.append(tupImageSettings)
+
+
+            if iNumRequiredLines > 0:
+                bFoundMarkupLinesRequiredForImage = True
+                if (sImageLayer=="Segmentation" or sImageLayer=="Label"):
+                    sMsg = sMsg + sErrorMsgMarkupLinesRequiredOnWrongLayer + str(iPageReference)
+
+        # if a markup line required attribute was found for an image, ensure:
+        #    - that it is not on an image set to Layer="Segmentation" or "Label"
+        #    - that all images with that same path have the same attribute setting
+        
+        if sMarkupLinesOnAnyImageSetting != '' and bFoundMarkupLinesRequiredForImage:
+                sMsg = sMsg + sErrorMsgMarkupLinesOnAnyImage + str(iPageReference)
+            
+        if bFoundMarkupLinesRequiredForImage:
+            bMismatch = False
+            for idxOuterLoop in range(len(l2tupImageSettings)):
+                if bMismatch == True:
+                    break
+                sPathToCompare = l2tupImageSettings[idxOuterLoop][0]
+                sSettingToCompare = l2tupImageSettings[idxOuterLoop][1]
+                
+                for idxInnerLoop in range(len(l2tupImageSettings)):
+                    sPath = l2tupImageSettings[idxInnerLoop][0]
+                    sSetting = l2tupImageSettings[idxInnerLoop][1]
+                    if sPathToCompare == sPath:
+                        if sSettingToCompare != sSetting:
+                            sMsg = sMsg + sErrorMsgMismatchMarkupLinesRequired + str(iPageReference)
+                            bMismatch = True
+                            break
+        
+        return sMsg
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExportResultsItemToFile(self, sItemName, sPath, slNode):
         """ Use Slicer's storage node to export node to a file

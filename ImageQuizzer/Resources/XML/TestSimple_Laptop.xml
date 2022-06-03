@@ -98,7 +98,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="Case00Prostate" DisplayLabelMapID="Prostate-contour" RotateToAcquisition="Y">
+		<Image Type="Volume" ID="Case00Prostate" DisplayLabelMapID="Prostate-contour" RotateToAcquisition="Y" MinMarkupLinesRequired="2">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
@@ -151,7 +151,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="3" EnableSegmentEditor="Y">
+	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="3" EnableSegmentEditor="Y" MinMarkupLinesRequiredOnAnyImage="1">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>

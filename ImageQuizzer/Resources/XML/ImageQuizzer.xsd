@@ -32,7 +32,7 @@
 		<xs:attribute name="AllowMultipleResponse" type="yesnoType" default="N" />
 		<xs:attribute name="EnableSegmentEditor" type="yesnoType" default="N" />
 		<xs:attribute name="SegmentRequiredOnAnyImage" type="yesnoType" default="N"/>
-		<xs:attribute name="MarkupLineRequiredOnAnyImage" type="integerOrYesNo" default="N"/>
+		<xs:attribute name="MinMarkupLinesRequiredOnAnyImage" type="xs:positiveInteger"/>
 	</xs:complexType>
 </xs:element>
 
@@ -55,7 +55,7 @@
 		<xs:attribute name="ColorTable" type="xs:string" />
 		<xs:attribute name="Opacity" type="boundedFloatType" />
 		<xs:attribute name="SegmentRequired" type="yesnoType" default="N"/>
-		<xs:attribute name="MarkupLineRequired" type="integerOrYesNo" default="N"/>
+		<xs:attribute name="MinMarkupLinesRequired" type="xs:positiveInteger"/>
 	</xs:complexType>
 </xs:element>
 
@@ -193,20 +193,6 @@
 	<xs:minInclusive value="0" />
 	<xs:maxInclusive value="1" />
   </xs:restriction>
-</xs:simpleType>
-
-<xs:simpleType name="integerOrYesNo">
-  <xs:union>
-	<xs:simpleType>
-		<xs:restriction base="xs:string">
-			<xs:enumeration value="Y"/>
-			<xs:enumeration value="N"/>
-		</xs:restriction>
-	</xs:simpleType>
-	<xs:simpleType>
-		<xs:restriction base="xs:integer"/>
-	</xs:simpleType>
-  </xs:union>
 </xs:simpleType>
 
 </xs:schema>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <Session ROIColorFile="PiRadsStudy">
-	<Page ID="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y" EnableSegmentEditor="Y" MarkupLineRequiredOnAnyImage = "2">
+	<Page ID="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y" EnableSegmentEditor="Y" MinMarkupLinesRequiredOnAnyImage = "2">
 		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" LabelMapID="DCE-contour">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
@@ -51,7 +51,7 @@
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\ProstateDCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y" DisplayLabelMapID='ADC-contour' MarkupLineRequired = "3">
+		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y" DisplayLabelMapID='ADC-contour' MinMarkupLinesRequired = "3">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
