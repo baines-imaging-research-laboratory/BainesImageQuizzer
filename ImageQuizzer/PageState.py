@@ -240,8 +240,9 @@ class PageState:
 
         self.iMarkupLinesOnAnyImageMinimum = 0
         sLinesRequiredAnyImage = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'MinMarkupLinesRequiredOnAnyImage')
-        self.sMarkupLineRequiredState = 'AnyLinesReq'
-        self.iMarkupLinesOnAnyImageMinimum = int(sLinesRequiredAnyImage)
+        if sLinesRequiredAnyImage != '':
+            self.sMarkupLineRequiredState = 'AnyLinesReq'
+            self.iMarkupLinesOnAnyImageMinimum = int(sLinesRequiredAnyImage)
 
 
         ##########################
@@ -271,19 +272,17 @@ class PageState:
                 else:
                     # self.l2iCompletedSegmentations[iImgIdx] = l2iNotRequired
                     self.l2iCompletedSegmentations[iImgIdx] = [0, iCompletedTF]
+                    
                 # markup lines
                 sLinesRequired = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'MinMarkupLinesRequired')
-                if sLinesRequired == 'Y' or sLinesRequired == 'y':
-                    self.l2iCompletedMarkupLines[iImgIdx] = [1, iCompletedTF]
+                if sLinesRequired != '':
+                    # use code = 1 for required  
                     self.sMarkupLineRequiredState = 'SpecificLinesReq' # override default
-                elif sLinesRequired.isdigit():
-                        self.sMarkupLineRequiredState = 'SpecificLinesReq' # override default
-                        # use code = num for required number of lines 
-                        self.l2iCompletedMarkupLines[iImgIdx][0] = int(sLinesRequired)
-                        self.l2iCompletedMarkupLines[iImgIdx][1] = iCompletedTF
+                    self.l2iCompletedMarkupLines[iImgIdx][0] = int(sLinesRequired)
+                    self.l2iCompletedMarkupLines[iImgIdx][1] = iCompletedTF
                 else:
-                        # use code = 0 for not required 
-                        self.l2iCompletedMarkupLines[iImgIdx] = [0, iCompletedTF]
+                    # use code = 0 for not required 
+                    self.l2iCompletedMarkupLines[iImgIdx] = [0, iCompletedTF]
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateQuestionSetCompletionList(self, xPageNode):

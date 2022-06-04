@@ -147,7 +147,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_UpdatePageCompletionLevelForMarkupLines_AnyLinesReq())
         tupResults.append(self.test_UpdatePageCompletionLevelForMarkupLines_SpecificLinesReq())
         
-        tupResults.append(self.test_UpdateSegmentationCompletionList_NoSegReq())
+        tupResults.append(self.test_UpdateSegmentation())
 
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
