@@ -46,7 +46,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient1" Descriptor="Follow-up 1" PageGroup="2" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
+	<Page ID="Patient1" Descriptor="Follow-up 1" PageGroup="1" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
 		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour" SegmentRequired="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
@@ -151,20 +151,20 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="3" EnableSegmentEditor="Y" MinMarkupLinesRequiredOnAnyImage="1">
-		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
+	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="3" EnableSegmentEditor="Y" MinMarkupLinesRequiredOnAnyImage="3">
+		<Image DicomRead="Y" Type="Volume" ID="CTSeries" MinMarkupLinesRequired="2">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
-		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
+		<Image DicomRead="Y" Type="Volume" ID="CTSeries" MinMarkupLinesRequired="2">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
-		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
+		<Image DicomRead="Y" Type="Volume" ID="CTSeries" MinMarkupLinesRequired="2">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>
