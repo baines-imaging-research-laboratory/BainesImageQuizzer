@@ -324,6 +324,13 @@ class UtilsIOXml:
 #         xParentNode.insert(1, elem)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def RemoveAllElements(self, xParentNode, sTagName):
+        ''' from the parent node, remove all children with the input tag name
+        '''
+        for xElem in xParentNode.findall(sTagName):
+            xParentNode.remove(xElem)
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateAtributesInElement(self, xElement, dictAttrib):
         
         # for each key, value in the dictionary, update the element attributes

@@ -152,19 +152,19 @@
 		</QuestionSet>
 	</Page>
 	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="3" EnableSegmentEditor="Y" MinMarkupLinesRequiredOnAnyImage="3">
-		<Image DicomRead="Y" Type="Volume" ID="CTSeries" MinMarkupLinesRequired="2">
+		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
-		<Image DicomRead="Y" Type="Volume" ID="CTSeries" MinMarkupLinesRequired="2">
+		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Sagittal</Orientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
-		<Image DicomRead="Y" Type="Volume" ID="CTSeries" MinMarkupLinesRequired="2">
+		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<Destination>Green</Destination>
 			<Layer>Background</Layer>
 			<Orientation>Coronal</Orientation>

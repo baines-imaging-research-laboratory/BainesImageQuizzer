@@ -560,26 +560,31 @@ class Session:
         self.qLineToolsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
         self.qLineToolsGrpBoxLayout = qt.QHBoxLayout()
         self.qLineToolsGrpBox.setLayout(self.qLineToolsGrpBoxLayout)
-        self.qLineToolsGrpBoxLayout.addStretch()
 
+        # Ruler tools
         qLineToolLabel = qt.QLabel('Ruler:')
         self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabel)
+        self.qLineToolsGrpBoxLayout.addSpacing(10)
         
         self.btnAddMarkupsLine = qt.QPushButton("Add new line")
         self.btnAddMarkupsLine.enabled = True
         self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
         self.btnAddMarkupsLine.connect('clicked(bool)', self.onAddLinesButtonClicked)
         self.qLineToolsGrpBoxLayout.addWidget(self.btnAddMarkupsLine)
-
-
-
+        self.qLineToolsGrpBoxLayout.addSpacing(10)
+        
+        # remove the last point of markup line created
+        qLineToolLabelTrashPt = qt.QLabel('Remove last point:')
+        self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabelTrashPt)
+ 
         self.slMarkupsLineWidget = slicer.qSlicerMarkupsPlaceWidget()
         # Hide all buttons and only show delete button
         self.slMarkupsLineWidget.buttonsVisible=False
         self.slMarkupsLineWidget.deleteButton().show()
         self.qLineToolsGrpBoxLayout.addWidget(self.slMarkupsLineWidget)
+        self.qLineToolsGrpBoxLayout.addSpacing(10)
         
-        # Copy measurement button
+        # Clear all markup lines
         self.btnClearLines = qt.QPushButton("Clear all")
         self.btnClearLines.toolTip = "Remove all markup lines."
         self.btnClearLines.enabled = True
@@ -588,6 +593,7 @@ class Session:
         self.qLineToolsGrpBoxLayout.addWidget(self.btnClearLines)
 
         self.tabExtraToolsLayout.addWidget(self.qLineToolsGrpBox)
+        self.qLineToolsGrpBoxLayout.addStretch()
         
         self.qOtherToolsGrpBox = qt.QGroupBox()
         self.qOtherToolsGrpBox.setTitle('Other Tools')
@@ -617,8 +623,7 @@ class Session:
         
         
         self.tabExtraToolsLayout.addWidget(self.qOtherToolsGrpBox)
-        
-        
+        self.tabExtraToolsLayout.addStretch()
         
 
         return self.tabExtraToolsLayout
@@ -627,21 +632,39 @@ class Session:
     def onAddLinesButtonClicked(self):
         ''' Add a new markup line - using the PlaceMode functionality
         '''
-        
         self.slMarkupsLineWidget.setMRMLScene(slicer.mrmlScene)
         markupsNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsLineNode")
         self.slMarkupsLineWidget.setCurrentNode(slicer.mrmlScene.GetNodeByID(markupsNode.GetID()))
         self.slMarkupsLineWidget.setPlaceModeEnabled(True)
         
-        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onClearLinesButtonClicked(self):
         ''' A function to clear all markup line nodes from the scene.
         '''
-        slLineNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsLineNode')
-        for node in slLineNodes:
-            slicer.mrmlScene.RemoveNode(node)
+        sMsg = ''
+        xPageNode = self.GetCurrentPageNode()
+        sPageComplete = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageComplete')
+        if sPageComplete == "Y":
+            sMsg = '\nThis page has already been completed. You cannot remove the markup lines.'
+            self.oUtilsMsgs.DisplayWarning(sMsg)
+        else:            
+            slLineNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsLineNode')
+            for node in slLineNodes:
+                slicer.mrmlScene.RemoveNode(node)
+                
+            # remove all markup line elements stored in xml for this page node
+            # and delete the markup line file stored in folder
+            lxImages = self.oIOXml.GetChildren(xPageNode, 'Image')
+            for xImage in lxImages:
+                lxMarkupLines = self.oIOXml.GetChildren(xImage, 'MarkupLinePath')
+                for xMarkupLine in lxMarkupLines:
+                    sPath = self.oIOXml.GetDataInNode(xMarkupLine)
+                    sAbsolutePath = self.oFilesIO.GetAbsoluteUserPath(sPath)
+                    os.remove(sAbsolutePath)
             
+                self.oIOXml.RemoveAllElements(xImage, 'MarkupLinePath')
+            self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onCrosshairsOnClicked(self):
         ''' activate the crosshairs tool

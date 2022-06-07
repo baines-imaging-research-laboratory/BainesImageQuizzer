@@ -22,8 +22,8 @@ class PageState:
 
             A completed page requires:
                 - all questions in all question sets to be completed
-                - either all or any segmentations (depending on the required segmentations attribute)
-                    to have been completed
+                - either all or any segmentations to have been completed
+                  (depending on the required segmentations attribute)
                 - if a number of markup lines was specified as required, at least that number must exist
             
 
@@ -36,8 +36,7 @@ class PageState:
                     1 = complete
                 Code for required states:
                     0 = not required
-                    1 = required ( 1 for segmentation requirement or minimum 1 item for markup lines)
-                    n = required (minimum n items for markup lines)
+                    1 = required 
                 
             States for variable : sSegmentationRequiredState
                 NoSegReq:   This variable is set to 'NoSegReq' as a default. The EnableSegmentEditor page attribute was set to "Y".
@@ -66,8 +65,8 @@ class PageState:
                         
             Markup Lines completion state is a list of lists. Each image (one row) has a list of 3 elements.
                 The first element specifies whether the requirement has been completed. (0 or 1)
-                The second element specifies whether the minimum number of lines required for that image
-                The third element holds the number of saved markup lines for that image
+                The second element specifies the minimum number of lines required for that image
+                The third element holds the number of markup lines currently saved in the xml for that image
                                
                 Codes for completed states (first element):
                     0 = incomplete
@@ -75,9 +74,11 @@ class PageState:
                 Code for required states (second element):
                     0 = not required
                     n = minimum n number of items required for markup lines on a specified image
+                Code for current markup lines (third element):
+                    n = number of markup lines currently saved in the xml
                     
                
-            States for variable: sMarkupLineRequiredState
+            States for variable: sMarkupLineRequiredState and iMarkupLinesOnAnyImageMinimum
                 NoLinesReq:    This variable is set to 'NoLinesReq' as a default. If there are no markup lines attributes
                         ('MinMarkupLinesRequiredOnAnyImage' at the Page level or 'MinMarkupLinesRequired'at the image level)
                         then this variable remains at NoLinesReq
@@ -116,15 +117,6 @@ class PageState:
     def GetSegmentationsCompletedState(self):
         return self.bSegmentationsCompleted
     
-    # #----------
-    # def GetMarkupLinesCompletedState(self):
-    #     return self.bMarkupLinesCompleted
-    #
-    # #----------
-    # def GetQuestionSetsCompletedState(self):
-    #     return self.bQuestionSetsCompleted
-    #
-
     #----------
     def GetPageCompletedTF(self):
         ''' return T/F if all elements are completed
@@ -140,42 +132,7 @@ class PageState:
         return bCompleted
     
     #----------
-    def CategorizeResponseCompletionLevel(self, iTotalItems, iCountedItems):
-        ''' This function may be used to define the number of questions that had 
-            responses stored in the XML or the number of responses the user
-            made in the quiz form.
-        '''
-        
-        if iCountedItems == iTotalItems:
-            sCompletionLevel = 'AllResponses'
-        elif iCountedItems == 0:
-            sCompletionLevel = 'NoResponses'
-        else:
-            sCompletionLevel = 'PartialResponses'
-        
-        return sCompletionLevel        
-
     #----------
-    def UpdateCompletionLists(self, xPageNode):
-        ''' For the given indices, update the completion states in the lists
-        '''
-        
-        self.UpdateQuestionSetCompletionList(xPageNode)
-        self.UpdateSegmentationCompletionList(xPageNode)
-        self.UpdateMarkupLinesCompletionList(xPageNode)
-        
-    #----------
-    def UpdateCompletedFlags(self, xPageNode):
-        ''' Update completed flags for page elements
-        '''
-        sMsg = ''
-        sQSetMsg = self.UpdatePageCompletionLevelForQuestionSets()
-        sLabelMapMsg = self.UpdatePageCompletionLevelForSegmentations(xPageNode)
-        sMarkupLineMsg = self.UpdatePageCompletionLevelForMarkupLines(xPageNode)
-        sMsg = sQSetMsg + '\n' + sLabelMapMsg + '\n' + sMarkupLineMsg
-        
-        return sMsg
-    
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -183,15 +140,13 @@ class PageState:
         ''' 
             Each question set is intialized as incomplete.
 
-            Each image segmentation state is initialized as incomplete except when the image node
-                has a layer defined as 'Segmentation' or 'Label'
+            Each image segmentation state is initialized as incomplete.
             If the xml Image element has an attribute 'SegmentRequired' then 
                 there must exist a seg file specifically for that image.
             If the xml Page element has the attribute 'SegmentRequiredOnAnyImage' then 
                 there must exist a non-empty/modified labelmap file.
 
-            Each image markup lines state is initialized as incomplete except when the image node
-                has a layer defined as 'Segmentation' or 'Label'
+            Each image markup lines state is initialized as incomplete
             If the xml Image element has an attribute 'MinMarkupLinesRequired' then there must exist
                 a markup line(s) specifically for that image.
                 The value of the attribute is the minimum number of lines that must be created.
@@ -199,10 +154,6 @@ class PageState:
                 the value of the attribute represents the minimum number of lines that must be
                 created. These can be associated with any displayed image.
              
-            For both segmentations and markup lines, each image that has a layer defined 
-                as 'Foreground' or 'Background' will have an entry initialized to 0.
-                Other image layers (LabelMap or Segmentation) are set to a -1 (not applicable) 
-
         '''
         self.oSession = oSession
         self.oIOXml = self.oSession.oIOXml
@@ -254,16 +205,18 @@ class PageState:
             
         for iImgIdx in range(len(lxImageNodes)):
             xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', iImgIdx)
-            xLayerNode = self.oIOXml.GetNthChild(xImageNode,'Layer',0)
-            sLayer = self.oIOXml.GetDataInNode(xLayerNode)
             lxMarkupLinePathNodes = self.oIOXml.GetChildren(xImageNode, 'MarkupLinePath')
-            # if sLayer == 'Segmentation' or sLayer == 'Label':
-            #     # use code = -1 for not applicable 
-            #     self.l2iCompletedSegmentations[iImgIdx] = [-1, iCompletedTF]
-            #     self.l3iCompletedMarkupLines[iImgIdx] = [-1, iCompletedTF, 0]
-            #
-            # else:
+#             xLayerNode = self.oIOXml.GetNthChild(xImageNode,'Layer',0)
+#             sLayer = self.oIOXml.GetDataInNode(xLayerNode)
+#             if sLayer == 'Segmentation' or sLayer == 'Label':
+#                 # use code = -1 for not applicable 
+#                 self.l2iCompletedSegmentations[iImgIdx] = [-1, iCompletedTF]
+#                 self.l3iCompletedMarkupLines[iImgIdx] = [-1, iCompletedTF, 0]
+#             
+#             else:
+
             
+            ##########################
             # segments
             sSegRequired = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'SegmentRequired')
             if sSegRequired == 'Y' or sSegRequired == 'y':
@@ -274,6 +227,8 @@ class PageState:
                 # self.l2iCompletedSegmentations[iImgIdx] = l2iNotRequired
                 self.l2iCompletedSegmentations[iImgIdx] = [iCompletedTF, 0]
                 
+
+            ##########################
             # markup lines
             sLinesRequired = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'MinMarkupLinesRequired')
             if sLinesRequired != '':
@@ -287,8 +242,33 @@ class PageState:
                 self.l3iCompletedMarkupLines[iImgIdx] = [iCompletedTF, 0, len(lxMarkupLinePathNodes)]
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def UpdateCompletionLists(self, xPageNode):
+        ''' For the given xml page element, update the completion states in the lists
+        '''
+        
+        self.UpdateQuestionSetCompletionList(xPageNode)
+        self.UpdateSegmentationCompletionList(xPageNode)
+        self.UpdateMarkupLinesCompletionList(xPageNode)
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def UpdateCompletedFlags(self, xPageNode):
+        ''' Update completed flags for the give xml page element
+        '''
+        sMsg = ''
+        sQSetMsg = self.UpdatePageCompletionLevelForQuestionSets()
+        sLabelMapMsg = self.UpdatePageCompletionLevelForSegmentations(xPageNode)
+        sMarkupLineMsg = self.UpdatePageCompletionLevelForMarkupLines(xPageNode)
+        sMsg = sQSetMsg + '\n' + sLabelMapMsg + '\n' + sMarkupLineMsg
+        
+        return sMsg
+    
+    #-------------------------------------------
+    #        Question Set Functions
+    #-------------------------------------------
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateQuestionSetCompletionList(self, xPageNode):
-        ''' For the given page node, update the completion state level
+        ''' For the given xml page node, update the completion state level
             for each question set.
         '''
         
@@ -305,10 +285,76 @@ class PageState:
                 self.liCompletedQuestionSets[iQSetIdx] = 0
                 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def UpdatePageCompletionLevelForQuestionSets(self):
+        ''' Test to see if all question sets on a page have been completed.
+        '''
+        sMsg = ''
+        if 0 in self.liCompletedQuestionSets:
+            self.bQuestionSetsCompleted = False
+            sMsg = 'Not all question sets were completed'
+        else:
+            self.bQuestionSetsCompleted = True
+            
+        return sMsg
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CategorizeResponseCompletionLevel(self, iTotalItems, iCountedItems):
+        ''' This function may be used to define the number of questions that had 
+            responses stored in the XML or the number of responses the user
+            made in the quiz form.
+        '''
+        
+        if iCountedItems == iTotalItems:
+            sCompletionLevel = 'AllResponses'
+        elif iCountedItems == 0:
+            sCompletionLevel = 'NoResponses'
+        else:
+            sCompletionLevel = 'PartialResponses'
+        
+        return sCompletionLevel        
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetSavedResponseCompletionLevel(self, xQuestionSetNode):
+        """ Check through all questions for the question set looking for a response. This information
+            comes from the currently saved elements in the XML.
+             
+            Assumption: All'Option' elements have a 'Response' element if the question was answered
+            so we just query the first Response 
+            
+            eg: Radio Question     Success?
+                    Opt 1            yes
+                        Response:       y (checked)
+                    Opt 2            no
+                        Response:       n (not checked) 
+            
+        """
+        
+        iNumAnsweredQuestions = 0
+        
+        iNumQuestions = self.oIOXml.GetNumChildrenByName(xQuestionSetNode, 'Question')
+
+        for indQuestion in range(iNumQuestions):
+            # get first option for the question (all (or none) options have a response so just check the first)
+            xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
+            xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', 0)
+         
+            iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode,'Response')
+            if iNumResponses >0:
+                iNumAnsweredQuestions = iNumAnsweredQuestions + 1
+                 
+        sSavedResponseCompletionLevel = self.CategorizeResponseCompletionLevel(iNumQuestions, iNumAnsweredQuestions)
+
+        return sSavedResponseCompletionLevel
+           
+
+    #-------------------------------------------
+    #        Segmentation Functions
+    #-------------------------------------------
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateSegmentationCompletionList(self, xPageNode):
-        ''' Function to update the completion flags for segmentations for 
-            each image stored in the list.
-            This is based on the LabelMapPath element stored in the Image element.
+        ''' For the given xml page node, this function will update the completion flags 
+            for segmentations for each image stored in the list.
+            This is based on the LabelMapPath element stored in the xml Image element.
         '''
         
         lxImageNodes = self.oIOXml.GetChildren(xPageNode,'Image')
@@ -389,40 +435,10 @@ class PageState:
                         self.l2iCompletedSegmentations[idxImage][0] = 1
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def UpdateMarkupLinesCompletionList(self, xPageNode):
-        ''' Function to update the completion flags for markup lines for 
-            each image stored in the list.
-            This is based on the MarkupLinePath element stored in the Image element.
-        '''
-        lsRecordedLinePaths = []
-        lxImageNodes = self.oIOXml.GetChildren(xPageNode,'Image')
-        idxImage = -1
-
-        for xImageNode in lxImageNodes:
-            idxImage = idxImage + 1
-            lxMarkupLinePathElement = self.oIOXml.GetChildren(xImageNode, 'MarkupLinePath')
-            self.l3iCompletedMarkupLines[idxImage][2] = len(lxMarkupLinePathElement)
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def UpdatePageCompletionLevelForQuestionSets(self):
-        ''' Test to see if all question sets on a page have been completed.
-        '''
-        sMsg = ''
-        if 0 in self.liCompletedQuestionSets:
-            self.bQuestionSetsCompleted = False
-            sMsg = 'Not all question sets were completed'
-        else:
-            self.bQuestionSetsCompleted = True
-            
-        return sMsg
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdatePageCompletionLevelForSegmentations(self, xPageNode):
         ''' Based on the segmentation completion level over all the images, the flag for
             completion of segmentation at the Page level is determined. 
         '''
-        #######################################
-        # Page level segmentation completion
         # set the segmentations completed flag for this page if requirements are met for all images
         sMsg = ''
         
@@ -457,71 +473,14 @@ class PageState:
                             sPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'ID')
                             sImageID = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'ID')
                             sNodeName = sPageID + '_' + sImageID
-                            sMsg = sMsg +  '\nYou must complete a segmentation for this image: ' + sNodeName + \
+                            sSegReqMsg = '\nYou must complete a segmentation for this image: ' + sNodeName + \
                                 '\nIf a contour has been redisplayed for this image, it must be modified. It cannot be empty.' + \
                                 '\nSelect the image: "'+ sNodeName + '" as the Master Volume in the Segment Editor.'
+                            if sSegReqMsg != sMsg:
+                                sMsg = sMsg + sSegReqMsg 
         
         return sMsg
         
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def UpdatePageCompletionLevelForMarkupLines(self, xPageNode):
-        ''' Test to see if all markup lines on a page have been completed.
-        '''
-        sMsg = ''
-
-        self.bMarkupLinesCompleted = False
-        
-        if self.sMarkupLineRequiredState == 'NoLinesReq':
-            self.bMarkupLinesCompleted = True
-        elif self.sMarkupLineRequiredState == 'AnyLinesReq':
-            lsUniqueImagePaths = []
-            iNumLines = 0
-            # count number of lines created - lines can be on any image
-            #    - some images are repeated in different views so we want to
-            #    only add to the total if it's a different image
-            for iImageIdx in range(len(self.l3iCompletedMarkupLines)):
-                xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', iImageIdx)
-                xImagePathNode = self.oIOXml.GetNthChild(xImageNode,'Path', 0)
-                sImagePath = self.oIOXml.GetDataInNode(xImagePathNode)
-                if iImageIdx == 0:
-                    iNumLines = iNumLines + self.l3iCompletedMarkupLines[iImageIdx][2]
-                    lsUniqueImagePaths.append(sImagePath)
-                    
-                bPathAlreadyRecorded = False
-                for sUniquePath in lsUniqueImagePaths:
-                    if sUniquePath == sImagePath:
-                        bPathAlreadyRecorded = True
-                        
-                if bPathAlreadyRecorded == False:
-                    iNumLines = iNumLines + self.l3iCompletedMarkupLines[iImageIdx][2]
-                    lsUniqueImagePaths.append(sImagePath)
-                    
-                    
-            # total number must be >= to the stored requirement
-            if iNumLines >= self.iMarkupLinesOnAnyImageMinimum:
-                self.bMarkupLinesCompleted = True
-            else:
-                self.bMarkupLinesCompleted = False
-                sMsg = sMsg + '\nYou must complete at least ' + str(self.iMarkupLinesOnAnyImageMinimum) + ' markup lines.' + \
-                            '\nCurrently you have ' + str(iNumLines) + ' lines created.' + \
-                            '\nUse the markup tool to draw the lines on on any of the displayed images.'                       
-        else:
-            if self.sMarkupLineRequiredState == 'SpecificLinesReq':
-                self.bMarkupLinesCompleted = True
-                for idx in range(len(self.l3iCompletedMarkupLines)):
-                    if self.l3iCompletedMarkupLines[idx][2] < self.l3iCompletedMarkupLines[idx][1]:
-                        self.bMarkupLinesCompleted = False
-                        xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', idx)
-                        sPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'ID')
-                        sImageID = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'ID')
-                        sNodeName = sPageID + '_' + sImageID
-                        sMsg = sMsg +  '\nYou must complete at least ' + str(self.l3iCompletedMarkupLines[idx][1]) + \
-                                    ' markup lines for this image: ' + sNodeName + \
-                                    '\nCurrently you have ' + str(self.l3iCompletedMarkupLines[idx][2]) + ' lines created.' + \
-                                    '\nUse the markup tool to draw the lines on this image.'                       
-        
-
-        return sMsg
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def TestForEmptyLabelMap(self, sPath):
         ''' A function to look at pixels of label map node to determine if a segment exists
@@ -559,41 +518,89 @@ class PageState:
         
         return bModified
         
+
+    #-------------------------------------------
+    #        Markup Line Functions
+    #-------------------------------------------
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def UpdateMarkupLinesCompletionList(self, xPageNode):
+        ''' For the given xml page node, this function will update the completion flags 
+            for markup lines for each image stored in the list.
+            This is based on the MarkupLinePath element stored in the Image element.
+        '''
+        lsRecordedLinePaths = []
+        lxImageNodes = self.oIOXml.GetChildren(xPageNode,'Image')
+        idxImage = -1
+
+        for xImageNode in lxImageNodes:
+            idxImage = idxImage + 1
+            lxMarkupLinePathElement = self.oIOXml.GetChildren(xImageNode, 'MarkupLinePath')
+            self.l3iCompletedMarkupLines[idxImage][2] = len(lxMarkupLinePathElement)
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def UpdatePageCompletionLevelForMarkupLines(self, xPageNode):
+        ''' Test to see if all markup lines on a page have been completed.
+        '''
+        sMsg = ''
+
+        self.bMarkupLinesCompleted = False
+        
+        if self.sMarkupLineRequiredState == 'NoLinesReq':
+            self.bMarkupLinesCompleted = True
+
+        
+        elif self.sMarkupLineRequiredState == 'AnyLinesReq':
+            lsUniqueImagePaths = []
+            iNumLines = 0
+            # count number of lines created - lines can be on any image
+            #    - some images are repeated in different views so we want to
+            #    only add to the total if it's a different image
+            for iImageIdx in range(len(self.l3iCompletedMarkupLines)):
+                xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', iImageIdx)
+                xImagePathNode = self.oIOXml.GetNthChild(xImageNode,'Path', 0)
+                sImagePath = self.oIOXml.GetDataInNode(xImagePathNode)
+                if iImageIdx == 0:
+                    iNumLines = iNumLines + self.l3iCompletedMarkupLines[iImageIdx][2]
+                    lsUniqueImagePaths.append(sImagePath)
+                    
+                bPathAlreadyRecorded = False
+                for sUniquePath in lsUniqueImagePaths:
+                    if sUniquePath == sImagePath:
+                        bPathAlreadyRecorded = True
+                        
+                if bPathAlreadyRecorded == False:
+                    iNumLines = iNumLines + self.l3iCompletedMarkupLines[iImageIdx][2]
+                    lsUniqueImagePaths.append(sImagePath)
+                    
+                    
+            # total number must be >= to the stored requirement
+            if iNumLines >= self.iMarkupLinesOnAnyImageMinimum:
+                self.bMarkupLinesCompleted = True
+            else:
+                self.bMarkupLinesCompleted = False
+                sMsg = sMsg + '\nYou must complete at least ' + str(self.iMarkupLinesOnAnyImageMinimum) + ' markup lines on any image.' + \
+                            '\nCurrently you have ' + str(iNumLines) + ' lines created.' + \
+                            '\nUse the markup tool to draw the lines on on any of the displayed images.'                       
+
+        
+        else:
+            if self.sMarkupLineRequiredState == 'SpecificLinesReq':
+                self.bMarkupLinesCompleted = True
+                for idx in range(len(self.l3iCompletedMarkupLines)):
+                    if self.l3iCompletedMarkupLines[idx][2] < self.l3iCompletedMarkupLines[idx][1]:
+                        self.bMarkupLinesCompleted = False
+                        xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', idx)
+                        sPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'ID')
+                        sImageID = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'ID')
+                        sNodeName = sPageID + '_' + sImageID
+                        sMsg = sMsg +  '\nYou must complete at least ' + str(self.l3iCompletedMarkupLines[idx][1]) + \
+                                    ' markup lines for this image: ' + sNodeName + \
+                                    '\nCurrently you have ' + str(self.l3iCompletedMarkupLines[idx][2]) + ' lines created.' + \
+                                    '\nUse the markup tool to draw the lines on this image.'                       
+        
+
+        return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetSavedResponseCompletionLevel(self, xQuestionSetNode):
-        """ Check through all questions for the question set looking for a response. This information
-            comes from the currently saved elements in the XML.
-             
-            Assumption: All'Option' elements have a 'Response' element if the question was answered
-            so we just query the first Response 
-            
-            eg: Radio Question     Success?
-                    Opt 1            yes
-                        Response:       y (checked)
-                    Opt 2            no
-                        Response:       n (not checked) 
-            
-        """
-        
-        iNumAnsweredQuestions = 0
-        
-        # xQuestionSetNode = self.GetCurrentQuestionSetNode()
-        
-        iNumQuestions = self.oIOXml.GetNumChildrenByName(xQuestionSetNode, 'Question')
-
-        for indQuestion in range(iNumQuestions):
-            # get first option for the question (all (or none) options have a response so just check the first)
-            xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
-            xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', 0)
-         
-            iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode,'Response')
-            if iNumResponses >0:
-                iNumAnsweredQuestions = iNumAnsweredQuestions + 1
-                 
-        sSavedResponseCompletionLevel = self.CategorizeResponseCompletionLevel(iNumQuestions, iNumAnsweredQuestions)
-
-        return sSavedResponseCompletionLevel
-           
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
