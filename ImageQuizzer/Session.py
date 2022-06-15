@@ -616,11 +616,45 @@ class Session:
         
         qSeparatorLabel = qt.QLabel("|")
         self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,0,2)
-        qEmptyTextLabel = qt.QLabel("     ")
         self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,0,3)
         self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,0,4)
         self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,0,5)
         
+        qViewTitleLabel = qt.QLabel("Viewing Options")
+        self.qOtherToolsGrpBoxLayout.addWidget(qViewTitleLabel,1,0)
+        self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,1,1)
+        self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,1,2)
+        self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,1,3)
+        self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,1,4)
+        self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,1,5)
+        
+        
+        self.btnResetView = qt.QPushButton('Reset to default')
+        self.btnResetView.enabled = True
+        self.btnResetView.setStyleSheet("QPushButton{ background-color: rgb(0,0,255); color: black }")
+        self.btnResetView.connect('clicked(bool)', self.onResetViewClicked)
+        self.qOtherToolsGrpBoxLayout.addWidget(self.btnResetView,2,0)
+
+        qView3PlanesLabel = qt.QLabel("View 3 planes:")
+        self.qOtherToolsGrpBoxLayout.addWidget(qView3PlanesLabel,2,1)
+
+        self.btnRed3Planes = qt.QPushButton('Red image')
+        self.btnRed3Planes.enabled = True
+        self.btnRed3Planes.setStyleSheet("QPushButton{ background-color: rgb(255,0,0); color: black }")
+        self.btnRed3Planes.connect('clicked(bool)', lambda: self.on3PlanesClicked('Red'))
+        self.qOtherToolsGrpBoxLayout.addWidget(self.btnRed3Planes,2,2)
+        
+        self.btnGreen3Planes = qt.QPushButton('Green image')
+        self.btnGreen3Planes.enabled = True
+        self.btnGreen3Planes.setStyleSheet("QPushButton{ background-color: rgb(0,255,0); color: black }")
+        self.btnGreen3Planes.connect('clicked(bool)', lambda: self.on3PlanesClicked('Green'))
+        self.qOtherToolsGrpBoxLayout.addWidget(self.btnGreen3Planes,2,3)
+        
+        self.btnYellow3Planes = qt.QPushButton('Yellow image')
+        self.btnYellow3Planes.enabled = True
+        self.btnYellow3Planes.setStyleSheet("QPushButton{ background-color: rgb(255,255,0); color: black }")
+        self.btnYellow3Planes.connect('clicked(bool)', lambda: self.on3PlanesClicked('Yellow'))
+        self.qOtherToolsGrpBoxLayout.addWidget(self.btnYellow3Planes,2,4)
         
         self.tabExtraToolsLayout.addWidget(self.qOtherToolsGrpBox)
         self.tabExtraToolsLayout.addStretch()
@@ -681,6 +715,26 @@ class Session:
         slCrosshairNode.SetCrosshairBehavior(1) # offset jump slice
         slCrosshairNode.SetCrosshairMode(0)     # basic intersection
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onResetViewClicked(self):
+        ''' return viewing nodes to original layout for this page in the xml
+        '''
+
+        self.oImageView.AssignNodesToView()
+        self.SetSavedImageState() # after loading label maps and setting assigning views
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def on3PlanesClicked(self, sRequestedImageDestination):
+        ''' display the requested image in the 3 planes
+        '''
+        # determine which image is to be displayed in 3 planes
+        loImageViewNodes = self.oImageView.GetImageViewList()
+        for oImageViewNode in loImageViewNodes:
+            if oImageViewNode.sDestination == sRequestedImageDestination:
+                self.oImageView.Assign3Planes(oImageViewNode)
+
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
         

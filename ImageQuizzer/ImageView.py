@@ -167,16 +167,7 @@ class ImageView:
         '''
  
         # initialize all layers to None
-        # make sure the widget exists in case the default layout changes
-        for sWidgetName in self.oIOXml.lValidSliceWidgets:
-            slWidget = slicer.app.layoutManager().sliceWidget(sWidgetName)
-            if slWidget != None:
-                slWindowLogic = slWidget.sliceLogic()
-                slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
-                slWindowCompositeNode.SetBackgroundVolumeID('None')
-                slWindowCompositeNode.SetForegroundVolumeID('None')
-                slWindowCompositeNode.SetLabelVolumeID('None')
-
+        self.ClearWidgets()
 
         for oViewNode in self._loImageViews:
 
@@ -280,6 +271,18 @@ class ImageView:
 
           
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ClearWidgets(self):
+        # make sure the widget exists in case the default layout changes
+        for sWidgetName in self.oIOXml.lValidSliceWidgets:
+            slWidget = slicer.app.layoutManager().sliceWidget(sWidgetName)
+            if slWidget != None:
+                slWindowLogic = slWidget.sliceLogic()
+                slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
+                slWindowCompositeNode.SetBackgroundVolumeID('None')
+                slWindowCompositeNode.SetForegroundVolumeID('None')
+                slWindowCompositeNode.SetLabelVolumeID('None')
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def RotateSliceToImage(self, sViewDestination):
         # for each viewing window,        
         #    adjust slice node to align with the native space of the image data
@@ -296,6 +299,37 @@ class ImageView:
         slWindowLogic.SnapSliceOffsetToIJK()
         slSliceNode.UpdateMatrices()
 
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def Assign3Planes(self, oImageViewNode):
+        ''' Display the selected image node in the three planes : axial, coronal and sagittal
+        '''
+        self.ClearWidgets()
+        
+        ltupDestOrient = [['Red','Axial'], ['Green','Coronal'], ['Yellow','Sagittal']]
+        
+        for idx in range(len(ltupDestOrient)):
+            slWidget = slicer.app.layoutManager().sliceWidget(ltupDestOrient[idx][0])
+            slWindowLogic = slWidget.sliceLogic()
+            slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
+            slWidgetController = slWidget.sliceController()
+            
+            # turn off link control 
+            slWindowCompositeNode.LinkedControlOff()
+            slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(oImageViewNode.sNodeName).GetID())
+    
+            # after defining the inital desired orientation, 
+            #    if the rotatetoacquisition attribute was set,
+            #    rotate the image to the volume plane
+            slWidget.setSliceOrientation(ltupDestOrient[idx][1])
+            if oImageViewNode.bRotateToAcquisition == True:
+                slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
+                slWidget.mrmlSliceNode().RotateToVolumePlane(slVolumeNode)
+                self.RotateSliceToImage(ltupDestOrient[idx][0])
+    
+            slWidget.fitSliceToBackground()
+            oImageViewNode.AssignColorTable()
+    
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSegmentRoiVisibility(self,oViewNode):
