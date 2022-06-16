@@ -637,6 +637,8 @@ class Session:
 
         qView3PlanesLabel = qt.QLabel("View 3 planes:")
         self.qOtherToolsGrpBoxLayout.addWidget(qView3PlanesLabel,2,1)
+        qView3PlanesLabel.setStyleSheet("qproperty-alignment: AlignRight;")
+
 
         self.btnRed3Planes = qt.QPushButton('Red image')
         self.btnRed3Planes.enabled = True
@@ -735,6 +737,18 @@ class Session:
 
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def Update3PlanesButtonNames(self):
+        ''' set the text on the view in 3 planes buttons to reflect the names of the images
+        '''
+        loImageViewNodes = self.oImageView.GetImageViewList()
+        for oImageViewNode in loImageViewNodes:
+            if oImageViewNode.sDestination == 'Red':
+                self.btnRed3Planes.setText(oImageViewNode.sNodeName)
+            if oImageViewNode.sDestination == 'Green':
+                self.btnGreen3Planes.setText(oImageViewNode.sNodeName)
+            if oImageViewNode.sDestination == 'Yellow':
+                self.btnYellow3Planes.setText(oImageViewNode.sNodeName)
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
         
@@ -1045,6 +1059,8 @@ class Session:
             # clear Master and Merge selector boxes
             oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
             oQuizzerEditorHelperBox.setMasterVolume(None)
+            
+        self.Update3PlanesButtonNames()
 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
