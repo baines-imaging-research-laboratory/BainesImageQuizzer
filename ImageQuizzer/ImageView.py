@@ -329,7 +329,16 @@ class ImageView:
     
             slWidget.fitSliceToBackground()
             oImageViewNode.AssignColorTable()
-    
+            
+            # display any associated label maps
+            slWindowCompositeNode.LinkedControlOff()
+            lLabelMapNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLLabelMapVolumeNode')
+            for slLabelMapNode in lLabelMapNodes:
+                if oImageViewNode.sNodeName in slLabelMapNode.GetName():
+                    slWindowCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
+                    
+        # clean up memory leaks
+        lLabelMapNodes.UnRegister(slicer.mrmlScene)    
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSegmentRoiVisibility(self,oViewNode):
@@ -495,11 +504,39 @@ class ImageView:
             # using the slicer plugin, set the visibility
             slLabelMapPlugin = slicer.qSlicerSubjectHierarchyLabelMapsPlugin()
             slLabelMapPlugin.setDisplayVisibility(iLabelMapSubjectHierarchyId, iOnOff)
-
+            
+            
         # clean up memory leaks
         #    getting a node by ID (slSegDisplayNode) doesn't seem to cause a memory leak
         #    getting nodes by class does create a memory leak so you have to unregister it!
         lLabelMapNodes.UnRegister(slicer.mrmlScene)
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def AssignLabelMapVisibilityAllNodes(self):
+        
+        lLabelMapNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLLabelMapVolumeNode')
+
+        for sWidgetName in self.oIOXml.lValidSliceWidgets:
+            slWidget = slicer.app.layoutManager().sliceWidget(sWidgetName)
+            if slWidget != None:
+                slWindowLogic = slWidget.sliceLogic()
+                slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
+                slWindowCompositeNode.LinkedControlOff()
+                
+                slImageID = slWindowCompositeNode.GetBackgroundVolumeID()
+                if slImageID != 'None':
+                    slImageNode = slicer.mrmlScene.GetNodeByID(slImageID)
+                    sImageName = slImageNode.GetName()
+                    
+                    for slLabelMapNode in lLabelMapNodes:
+                        if sImageName in slLabelMapNode.GetName():
+                            slWindowCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
+    
+            if self.bLinkViews == True:
+                slWindowCompositeNode.LinkedControlOn()
+            else:
+                slWindowCompositeNode.LinkedControlOff()
+                    
     
 ##########################################################################
 #

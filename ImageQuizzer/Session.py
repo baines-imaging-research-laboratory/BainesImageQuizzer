@@ -721,9 +721,20 @@ class Session:
     def onResetViewClicked(self):
         ''' return viewing nodes to original layout for this page in the xml
         '''
+        bSuccessLabelMaps, sMsgLabelMaps = self.oFilesIO.SaveLabelMaps(self, 'ResetBtn')
+        bSuccessMarkupLines, sMsgMarkupLines = self.oFilesIO.SaveMarkupLines(self)
+        sMsg = sMsg + sMsgLabelMaps + sMsgMarkupLines
+        bSuccess = bSuccessLabelMaps * bSuccessMarkupLines
 
-        self.oImageView.AssignNodesToView()
-        self.SetSavedImageState() # after loading label maps and setting assigning views
+        if bSuccess:
+            self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+    
+            self.oImageView.AssignNodesToView()
+            self.SetSavedImageState() # after loading label maps and setting assigning views
+            self.oImageView.AssignLabelMapVisibilityAllNodes()
+        else:
+            if sMsg != '':
+                self.oUtilsMsgs.DisplayError(sMsg)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def on3PlanesClicked(self, sRequestedImageDestination):
@@ -1131,8 +1142,10 @@ class Session:
             
             if bSuccess:
                 
-                bSuccess, sMsg = self.oFilesIO.SaveLabelMaps(self, sCaller)
-                bSuccess, sMsg = self.oFilesIO.SaveMarkupLines(self)
+                bSuccessLabelMaps, sMsgLabelMaps = self.oFilesIO.SaveLabelMaps(self, sCaller)
+                bSuccessMarkupLines, sMsgMarkupLines = self.oFilesIO.SaveMarkupLines(self)
+                sMsg = sMsg + sMsgLabelMaps + sMsgMarkupLines
+                bSuccess = bSuccessLabelMaps * bSuccessMarkupLines
     
                 if bSuccess:
                     sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponsesToSave()

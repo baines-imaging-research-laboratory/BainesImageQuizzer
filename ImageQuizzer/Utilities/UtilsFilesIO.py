@@ -1076,31 +1076,32 @@ class UtilsFilesIO:
 #                             sMsg = sNRRDMsg + sRTStructMsg
                             oSession.oUtilsMsgs.DisplayError(sMsg)
 
-
-        #####
-        # Display warning if segmentation was required but no user created label map was found.
-        #####
-        #    If there were no label map volume nodes 
-        #    OR if there were label map volume nodes, but there wasn't a -bainesquizlabel suffix 
-        #        to match an image on the page, ie. the labelMaps found flag was left as false
-        #    Check if the segmentation was required and if enabled present the warning
-        if len(lSlicerLabelMapNodes) == 0 or (len(lSlicerLabelMapNodes) > 0 and bLabelMapFound == False):    
-            
-            # user doesn't get the option to cancel if the call was initiated 
-            # from the Close event filter
-            if sCaller != 'EventFilter':
-                if oSession._bSegmentationModule == True:   # if there is a segmentation module
-                    if oSession.GetSegmentationTabEnabled() == True:    # if the tab is enabled
-                        qtAns = oSession.oUtilsMsgs.DisplayOkCancel(\
-                                            'No label maps were created. Do you want to continue?')
-                        if qtAns == qt.QMessageBox.Ok:
-                            # user did not create a label map but there may be no lesions to segment
-                            # continue with the save
-                            bLabelMapsSaved = True
-                        else:
-                            # user wants to resume work on this page
-                            bLabelMapsSaved = False
+        if sCaller != 'ResetBtn':   # warning not required on a reset
+    
+            #####
+            # Display warning if segmentation was required but no user created label map was found.
+            #####
+            #    If there were no label map volume nodes 
+            #    OR if there were label map volume nodes, but there wasn't a -bainesquizlabel suffix 
+            #        to match an image on the page, ie. the labelMaps found flag was left as false
+            #    Check if the segmentation was required and if enabled present the warning
+            if len(lSlicerLabelMapNodes) == 0 or (len(lSlicerLabelMapNodes) > 0 and bLabelMapFound == False):    
                 
+                # user doesn't get the option to cancel if the call was initiated 
+                # from the Close event filter
+                if sCaller != 'EventFilter':
+                    if oSession._bSegmentationModule == True:   # if there is a segmentation module
+                        if oSession.GetSegmentationTabEnabled() == True:    # if the tab is enabled
+                            qtAns = oSession.oUtilsMsgs.DisplayOkCancel(\
+                                                'No label maps were created. Do you want to continue?')
+                            if qtAns == qt.QMessageBox.Ok:
+                                # user did not create a label map but there may be no lesions to segment
+                                # continue with the save
+                                bLabelMapsSaved = True
+                            else:
+                                # user wants to resume work on this page
+                                bLabelMapsSaved = False
+                    
                     
     
     
@@ -1291,7 +1292,6 @@ class UtilsFilesIO:
         lsMarkupLineNodes = []
         lsMarkupLineNodes = slicer.util.getNodesByClass('vtkMRMLMarkupsLineNode')
 
-    
         for slMarkupLine in lsMarkupLineNodes:
             iNumPoints = slMarkupLine.GetNumberOfControlPoints()
             
@@ -1341,7 +1341,6 @@ class UtilsFilesIO:
                                     break
                                 
                             if bPathAlreadyInXml == False:   
-                                xMarkupLInePathElement = self.oIOXml.GetLastChild(oImageNode.GetXmlImageElement(), 'MarkupLinePath')
                                 # update xml storing the path to the markup line file with the image element
                                 oSession.AddPathElement('MarkupLinePath', oImageNode.GetXmlImageElement(),
                                                         sRelativePathToStoreInXml)
@@ -1349,7 +1348,7 @@ class UtilsFilesIO:
                         else:
                             bMarkupLinesSaved = False
                             oSession.oUtilsMsgs.DisplayError(sMsg)
-        
+                            
         return bMarkupLinesSaved, sMsg
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
