@@ -581,7 +581,7 @@ class PageState:
                 self.bMarkupLinesCompleted = False
                 sMsg = sMsg + '\nYou must complete at least ' + str(self.iMarkupLinesOnAnyImageMinimum) + ' markup lines on any image.' + \
                             '\nCurrently you have ' + str(iNumLines) + ' lines created.' + \
-                            '\nUse the markup tool to draw the lines on on any of the displayed images.'                       
+                            '\nUse the ruler markup tool to draw the lines on on any of the displayed images.'                       
 
         
         else:

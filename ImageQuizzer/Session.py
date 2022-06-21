@@ -556,7 +556,7 @@ class Session:
         
         # add horizontal layout
         self.qLineToolsGrpBox = qt.QGroupBox()
-        self.qLineToolsGrpBox.setTitle('Line Measurement Tools')
+        self.qLineToolsGrpBox.setTitle('Line Measurement Markup Tool')
         self.qLineToolsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
         self.qLineToolsGrpBoxLayout = qt.QHBoxLayout()
         self.qLineToolsGrpBox.setLayout(self.qLineToolsGrpBoxLayout)
@@ -596,31 +596,32 @@ class Session:
         self.qLineToolsGrpBoxLayout.addStretch()
         
         self.qOtherToolsGrpBox = qt.QGroupBox()
-        self.qOtherToolsGrpBox.setTitle('Other Tools')
+        self.qOtherToolsGrpBox.setTitle('Viewing Tools')
         self.qOtherToolsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
         self.qOtherToolsGrpBoxLayout = qt.QGridLayout()
         self.qOtherToolsGrpBox.setLayout(self.qOtherToolsGrpBoxLayout)
         
+        qCrosshairsLabel = qt.QLabel('Crosshairs:')
+        self.qOtherToolsGrpBoxLayout.addWidget(qCrosshairsLabel,0,0)
         
-        self.btnCrosshairsOn = qt.QPushButton('Crosshairs On:')
+        self.btnCrosshairsOn = qt.QPushButton('On')
         self.btnCrosshairsOn.enabled = True
         self.btnCrosshairsOn.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
         self.btnCrosshairsOn.connect('clicked(bool)',self.onCrosshairsOnClicked)
-        self.qOtherToolsGrpBoxLayout.addWidget(self.btnCrosshairsOn,0,0)
+        self.qOtherToolsGrpBoxLayout.addWidget(self.btnCrosshairsOn,0,1)
 
-        self.btnCrosshairsOff = qt.QPushButton('Crosshairs Off:')
+        self.btnCrosshairsOff = qt.QPushButton('Off')
         self.btnCrosshairsOff.enabled = True
         self.btnCrosshairsOff.setStyleSheet("QPushButton{ background-color: rgb(255,149,0); color: black }")
         self.btnCrosshairsOff.connect('clicked(bool)',self.onCrosshairsOffClicked)
-        self.qOtherToolsGrpBoxLayout.addWidget(self.btnCrosshairsOff,0,1)
+        self.qOtherToolsGrpBoxLayout.addWidget(self.btnCrosshairsOff,0,2)
         
-        qSeparatorLabel = qt.QLabel("|")
-        self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,0,2)
+        qSeparatorLabel = qt.QLabel(" ")
         self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,0,3)
         self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,0,4)
         self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,0,5)
         
-        qViewTitleLabel = qt.QLabel("Viewing Options")
+        qViewTitleLabel = qt.QLabel("Display Options")
         self.qOtherToolsGrpBoxLayout.addWidget(qViewTitleLabel,1,0)
         self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,1,1)
         self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,1,2)
@@ -668,6 +669,11 @@ class Session:
     def onAddLinesButtonClicked(self):
         ''' Add a new markup line - using the PlaceMode functionality
         '''
+        #collapse label editor to encourage selection of master volume
+        slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
+        slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
+        # slicer.modules.quizzereditor.widgetRepresentation().self().setMasterNode('None')
+
         self.slMarkupsLineWidget.setMRMLScene(slicer.mrmlScene)
         markupsNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsLineNode")
         self.slMarkupsLineWidget.setCurrentNode(slicer.mrmlScene.GetNodeByID(markupsNode.GetID()))
@@ -721,6 +727,7 @@ class Session:
     def onResetViewClicked(self):
         ''' return viewing nodes to original layout for this page in the xml
         '''
+        sMsg = ''
         bSuccessLabelMaps, sMsgLabelMaps = self.oFilesIO.SaveLabelMaps(self, 'ResetBtn')
         bSuccessMarkupLines, sMsgMarkupLines = self.oFilesIO.SaveMarkupLines(self)
         sMsg = sMsg + sMsgLabelMaps + sMsgMarkupLines
@@ -754,11 +761,14 @@ class Session:
         loImageViewNodes = self.oImageView.GetImageViewList()
         for oImageViewNode in loImageViewNodes:
             if oImageViewNode.sDestination == 'Red':
-                self.btnRed3Planes.setText(oImageViewNode.sNodeName)
+                if oImageViewNode.sViewLayer == 'Background':
+                    self.btnRed3Planes.setText(oImageViewNode.sNodeName)
             if oImageViewNode.sDestination == 'Green':
-                self.btnGreen3Planes.setText(oImageViewNode.sNodeName)
+                if oImageViewNode.sViewLayer == 'Background':
+                    self.btnGreen3Planes.setText(oImageViewNode.sNodeName)
             if oImageViewNode.sDestination == 'Yellow':
-                self.btnYellow3Planes.setText(oImageViewNode.sNodeName)
+                if oImageViewNode.sViewLayer == 'Background':
+                    self.btnYellow3Planes.setText(oImageViewNode.sNodeName)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
