@@ -315,10 +315,6 @@ class Session:
             self.oFilesIO.SetupROIColorFile(sColorFileName)
 
 
-
-#             self.BuildPageStateCompletionStructure()
-
-
             # build the list of indices page/questionset as read in by the XML
             self.BuildPageQuestionCompositeIndexList()
             # if randomization is requested - shuffle the page/questionset list
@@ -359,19 +355,27 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupWidgets(self, slicerMainLayout):
 
-
         self.oQuizWidgets = QuizWidgets(self.oFilesIO)
         self.oQuizWidgets.CreateLeftLayoutAndWidget()
 
-        
         self.SetupButtons()
         self.oQuizWidgets.qLeftLayout.addWidget(self.qButtonGrpBox)
 
         self.oQuizWidgets.AddQuizLayoutWithTabs()
-        
+        self.oQuizWidgets.qTabWidget.currentChanged.connect(self.onTabChanged)
+       
         slicerMainLayout.addWidget(self.oQuizWidgets.qLeftWidget)  
 
-        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onTabChanged(self):
+        ''' When changing tabs reset segment editor interface
+            to force user to reset the volume to be contoured.
+        '''
+        if self.GetSegmentationTabIndex() > 0:
+            slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
+            slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
+            slicer.modules.quizzereditor.widgetRepresentation().self().helper.setMasterVolume(None)
+
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupButtons(self):
@@ -669,11 +673,6 @@ class Session:
     def onAddLinesButtonClicked(self):
         ''' Add a new markup line - using the PlaceMode functionality
         '''
-        #collapse label editor to encourage selection of master volume
-        slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
-        slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
-        # slicer.modules.quizzereditor.widgetRepresentation().self().setMasterNode('None')
-
         self.slMarkupsLineWidget.setMRMLScene(slicer.mrmlScene)
         markupsNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsLineNode")
         self.slMarkupsLineWidget.setCurrentNode(slicer.mrmlScene.GetNodeByID(markupsNode.GetID()))
@@ -711,7 +710,7 @@ class Session:
     def onCrosshairsOnClicked(self):
         ''' activate the crosshairs tool
         '''
-        slCrosshairNode = slicer.util.getNode('vtkMRMLCrosshairNodedefault')
+        slCrosshairNode = slicer.mrmlScene.GetNodeByID('vtkMRMLCrosshairNodedefault')
         slCrosshairNode.SetCrosshairBehavior(1) # offset jump slice
         slCrosshairNode.SetCrosshairMode(2)     # basic intersection
     
@@ -719,7 +718,7 @@ class Session:
     def onCrosshairsOffClicked(self):
         ''' activate the crosshairs tool
         '''
-        slCrosshairNode = slicer.util.getNode('vtkMRMLCrosshairNodedefault')
+        slCrosshairNode = slicer.mrmlScene.GetNodeByID('vtkMRMLCrosshairNodedefault')
         slCrosshairNode.SetCrosshairBehavior(1) # offset jump slice
         slCrosshairNode.SetCrosshairMode(0)     # basic intersection
     

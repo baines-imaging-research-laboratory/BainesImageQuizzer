@@ -202,7 +202,7 @@ class ImageView:
             
             
             if oViewNode.sViewLayer == 'Background':
-                slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
+                slWindowCompositeNode.SetBackgroundVolumeID(slicer.mrmlScene.GetFirstNodeByName(oViewNode.sNodeName).GetID())
 
                 # after defining the inital desired orientation, 
                 #    if the rotatetoacquisition attribute was set,
@@ -228,7 +228,7 @@ class ImageView:
 
     
             elif oViewNode.sViewLayer == 'Foreground':
-                slWindowCompositeNode.SetForegroundVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
+                slWindowCompositeNode.SetForegroundVolumeID(slicer.mrmlScene.GetFirstNodeByName(oViewNode.sNodeName).GetID())
                 slWidget.setSliceOrientation(oViewNode.sOrientation)
                 slWidgetController.setForegroundOpacity(oViewNode.fOpacity)
                 if oViewNode.bRotateToAcquisition == True:
@@ -249,7 +249,7 @@ class ImageView:
     
             elif oViewNode.sViewLayer == 'Label':
                 if slWindowCompositeNode.GetLabelVolumeID() == 'None':
-                    slWindowCompositeNode.SetLabelVolumeID(slicer.util.getNode(oViewNode.sNodeName).GetID())
+                    slWindowCompositeNode.SetLabelVolumeID(slicer.mrmlScene.GetFirstNodeByName(oViewNode.sNodeName).GetID())
 #                 print('after set Label Volume ID',slWidget.sliceOrientation)
     
 
@@ -316,7 +316,7 @@ class ImageView:
             
             # turn off link control 
             slWindowCompositeNode.LinkedControlOff()
-            slWindowCompositeNode.SetBackgroundVolumeID(slicer.util.getNode(oImageViewNode.sNodeName).GetID())
+            slWindowCompositeNode.SetBackgroundVolumeID(slicer.mrmlScene.GetFirstNodeByName(oImageViewNode.sNodeName).GetID())
     
             # after defining the inital desired orientation, 
             #    if the rotatetoacquisition attribute was set,

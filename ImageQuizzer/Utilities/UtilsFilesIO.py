@@ -1300,7 +1300,7 @@ class UtilsFilesIO:
             #    -    bMarkupLinesSaved flag is still true if no valid lines are available to save
             if iNumPoints == 2:
                 sAssociatedReferenceNodeID = slMarkupLine.GetNthControlPointAssociatedNodeID(0)
-                sAssociatedReferenceNodeName = slicer.util.getNode(sAssociatedReferenceNodeID).GetName()
+                sAssociatedReferenceNodeName = slicer.mrmlScene.GetNodeByID(sAssociatedReferenceNodeID).GetName()
                 # update markup line name with associated node only if not already done
                 if slMarkupLine.GetName().find(sAssociatedReferenceNodeName) == -1: 
                     
@@ -1325,7 +1325,7 @@ class UtilsFilesIO:
                 for oImageNode in oSession.oImageView.GetImageViewList():
                     
                     # match the markup line to the image to save the path to the correct xml Image node
-                    if slicer.util.getNode(sAssociatedReferenceNodeID).GetName() == oImageNode.sNodeName:
+                    if slicer.mrmlScene.GetNodeByID(sAssociatedReferenceNodeID).GetName() == oImageNode.sNodeName:
                         bLineSaved, sMsg = self.ExportResultsItemToFile('MarkupsLine', sMarkupsLinePath, slMarkupLine)
                         # store the path name in the xml file
                         if bLineSaved:
