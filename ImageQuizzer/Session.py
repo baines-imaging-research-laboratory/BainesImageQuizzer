@@ -414,7 +414,7 @@ class Session:
         self._btnExit = qt.QPushButton("Exit")
         self._btnExit.toolTip = "Save quiz and exit Slicer."
         self._btnExit.enabled = True
-        self._btnExit.setStyleSheet("QPushButton{ background-color: rgb(255,0,0); color: black }")
+        self._btnExit.setStyleSheet("QPushButton{ background-color: rgb(255,0,0); color: black; font-weight: bold }")
         # use lambda to pass argument to this PyQt slot without invoking the function on setup
         self._btnExit.connect('clicked(bool)',lambda: self.onExitButtonClicked('ExitBtn'))
 
@@ -560,7 +560,7 @@ class Session:
         
         # add horizontal layout
         self.qLineToolsGrpBox = qt.QGroupBox()
-        self.qLineToolsGrpBox.setTitle('Line Measurement Markup Tool')
+        self.qLineToolsGrpBox.setTitle('Line Measurement')
         self.qLineToolsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
         self.qLineToolsGrpBoxLayout = qt.QHBoxLayout()
         self.qLineToolsGrpBox.setLayout(self.qLineToolsGrpBoxLayout)
@@ -592,78 +592,76 @@ class Session:
         self.btnClearLines = qt.QPushButton("Clear all")
         self.btnClearLines.toolTip = "Remove all markup lines."
         self.btnClearLines.enabled = True
-        self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(255,149,0); color: black }")
+        self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
         self.btnClearLines.connect('clicked(bool)',self.onClearLinesButtonClicked)
         self.qLineToolsGrpBoxLayout.addWidget(self.btnClearLines)
 
         self.tabExtraToolsLayout.addWidget(self.qLineToolsGrpBox)
         self.qLineToolsGrpBoxLayout.addStretch()
+
+
         
-        self.qOtherToolsGrpBox = qt.QGroupBox()
-        self.qOtherToolsGrpBox.setTitle('Viewing Tools')
-        self.qOtherToolsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
-        self.qOtherToolsGrpBoxLayout = qt.QGridLayout()
-        self.qOtherToolsGrpBox.setLayout(self.qOtherToolsGrpBoxLayout)
-        
-        qCrosshairsLabel = qt.QLabel('Crosshairs:')
-        self.qOtherToolsGrpBoxLayout.addWidget(qCrosshairsLabel,0,0)
+        self.qCrossHairsGrpBox = qt.QGroupBox()
+        self.qCrossHairsGrpBox.setTitle('Crosshairs')
+        self.qCrossHairsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
+        self.qCrossHairsGrpBoxLayout = qt.QGridLayout()
+        self.qCrossHairsGrpBox.setLayout(self.qCrossHairsGrpBoxLayout)
         
         self.btnCrosshairsOn = qt.QPushButton('On')
         self.btnCrosshairsOn.enabled = True
         self.btnCrosshairsOn.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
         self.btnCrosshairsOn.connect('clicked(bool)',self.onCrosshairsOnClicked)
-        self.qOtherToolsGrpBoxLayout.addWidget(self.btnCrosshairsOn,0,1)
+        self.qCrossHairsGrpBoxLayout.addWidget(self.btnCrosshairsOn,0,0)
+
 
         self.btnCrosshairsOff = qt.QPushButton('Off')
         self.btnCrosshairsOff.enabled = True
-        self.btnCrosshairsOff.setStyleSheet("QPushButton{ background-color: rgb(255,149,0); color: black }")
+        self.btnCrosshairsOff.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
         self.btnCrosshairsOff.connect('clicked(bool)',self.onCrosshairsOffClicked)
-        self.qOtherToolsGrpBoxLayout.addWidget(self.btnCrosshairsOff,0,2)
+        self.qCrossHairsGrpBoxLayout.addWidget(self.btnCrosshairsOff,0,2)
+
+        # attempting to shrink the size of the buttons - there must be a better way??
+        qSpacerLabel1 = qt.QLabel(" ")
+        qSpacerLabel2 = qt.QLabel(".")
+        qSpacerLabel2.setStyleSheet("qproperty-alignment: AlignRight;")
+        self.qCrossHairsGrpBoxLayout.addWidget(qSpacerLabel1,0,1)
+        self.qCrossHairsGrpBoxLayout.addWidget(qSpacerLabel1,0,3)
+        self.qCrossHairsGrpBoxLayout.addWidget(qSpacerLabel1,0,4)
+        self.qCrossHairsGrpBoxLayout.addWidget(qSpacerLabel2,0,5)
+
+        self.tabExtraToolsLayout.addWidget(self.qCrossHairsGrpBox)
+
+
         
+        self.qDisplayOptionsGrpBox = qt.QGroupBox()
+        self.qDisplayOptionsGrpBox.setTitle('Display options')
+        self.qDisplayOptionsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
+        self.qDisplayOptionsGrpBoxLayout = qt.QGridLayout()
+        self.qDisplayOptionsGrpBox.setLayout(self.qDisplayOptionsGrpBoxLayout)
+        
+        qView3PlanesLabel = qt.QLabel("Select image:")
+        self.qDisplayOptionsGrpBoxLayout.addWidget(qView3PlanesLabel,0,0)
+#         qView3PlanesLabel.setStyleSheet("qproperty-alignment: AlignRight;")
+        
+        self.qComboImageList = qt.QComboBox()
+        self.qDisplayOptionsGrpBoxLayout.addWidget(self.qComboImageList,0,1)
+
+        self.btn3Planes = qt.QPushButton('Display in 3 planes')
+        self.btn3Planes.enabled = True
+        self.btn3Planes.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+        self.btn3Planes.connect('clicked(bool)', self.on3PlanesClicked)
+        self.qDisplayOptionsGrpBoxLayout.addWidget(self.btn3Planes,0,2)
+
         qSeparatorLabel = qt.QLabel(" ")
-        self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,0,3)
-        self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,0,4)
-        self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,0,5)
-        
-        qViewTitleLabel = qt.QLabel("Display Options")
-        self.qOtherToolsGrpBoxLayout.addWidget(qViewTitleLabel,1,0)
-        self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,1,1)
-        self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,1,2)
-        self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,1,3)
-        self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,1,4)
-        self.qOtherToolsGrpBoxLayout.addWidget(qSeparatorLabel,1,5)
-        
+        self.qDisplayOptionsGrpBoxLayout.addWidget(qSeparatorLabel,0,3)
         
         self.btnResetView = qt.QPushButton('Reset to default')
         self.btnResetView.enabled = True
-        self.btnResetView.setStyleSheet("QPushButton{ background-color: rgb(0,0,255); color: black }")
+        self.btnResetView.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
         self.btnResetView.connect('clicked(bool)', self.onResetViewClicked)
-        self.qOtherToolsGrpBoxLayout.addWidget(self.btnResetView,2,0)
+        self.qDisplayOptionsGrpBoxLayout.addWidget(self.btnResetView,0,4)
 
-        qView3PlanesLabel = qt.QLabel("View 3 planes:")
-        self.qOtherToolsGrpBoxLayout.addWidget(qView3PlanesLabel,2,1)
-        qView3PlanesLabel.setStyleSheet("qproperty-alignment: AlignRight;")
-
-
-        self.btnRed3Planes = qt.QPushButton('Red image')
-        self.btnRed3Planes.enabled = True
-        self.btnRed3Planes.setStyleSheet("QPushButton{ background-color: rgb(255,0,0); color: black }")
-        self.btnRed3Planes.connect('clicked(bool)', lambda: self.on3PlanesClicked('Red'))
-        self.qOtherToolsGrpBoxLayout.addWidget(self.btnRed3Planes,2,2)
-        
-        self.btnGreen3Planes = qt.QPushButton('Green image')
-        self.btnGreen3Planes.enabled = True
-        self.btnGreen3Planes.setStyleSheet("QPushButton{ background-color: rgb(0,255,0); color: black }")
-        self.btnGreen3Planes.connect('clicked(bool)', lambda: self.on3PlanesClicked('Green'))
-        self.qOtherToolsGrpBoxLayout.addWidget(self.btnGreen3Planes,2,3)
-        
-        self.btnYellow3Planes = qt.QPushButton('Yellow image')
-        self.btnYellow3Planes.enabled = True
-        self.btnYellow3Planes.setStyleSheet("QPushButton{ background-color: rgb(255,255,0); color: black }")
-        self.btnYellow3Planes.connect('clicked(bool)', lambda: self.on3PlanesClicked('Yellow'))
-        self.qOtherToolsGrpBoxLayout.addWidget(self.btnYellow3Planes,2,4)
-        
-        self.tabExtraToolsLayout.addWidget(self.qOtherToolsGrpBox)
+        self.tabExtraToolsLayout.addWidget(self.qDisplayOptionsGrpBox)
         self.tabExtraToolsLayout.addStretch()
         
 
@@ -729,6 +727,7 @@ class Session:
         sMsg = ''
         bSuccessLabelMaps, sMsgLabelMaps = self.oFilesIO.SaveLabelMaps(self, 'ResetBtn')
         bSuccessMarkupLines, sMsgMarkupLines = self.oFilesIO.SaveMarkupLines(self)
+        self.CaptureAndSaveImageState()
         sMsg = sMsg + sMsgLabelMaps + sMsgMarkupLines
         bSuccess = bSuccessLabelMaps * bSuccessMarkupLines
 
@@ -743,31 +742,34 @@ class Session:
                 self.oUtilsMsgs.DisplayError(sMsg)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def on3PlanesClicked(self, sRequestedImageDestination):
+    def on3PlanesClicked(self):
         ''' display the requested image in the 3 planes
         '''
+        # get selected image name from combo box
+        sImageName = self.qComboImageList.currentText
+        
         # determine which image is to be displayed in 3 planes
         loImageViewNodes = self.oImageView.GetImageViewList()
         for oImageViewNode in loImageViewNodes:
-            if oImageViewNode.sDestination == sRequestedImageDestination:
+            if oImageViewNode.sNodeName == sImageName:
                 self.oImageView.Assign3Planes(oImageViewNode)
+                break
 
-    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def Update3PlanesButtonNames(self):
-        ''' set the text on the view in 3 planes buttons to reflect the names of the images
-        '''
+    def AddImageNamesTo3PlanesComboBox(self):
+        
+        self.qComboImageList.clear()
+        
+        lNamesAdded = []
         loImageViewNodes = self.oImageView.GetImageViewList()
         for oImageViewNode in loImageViewNodes:
-            if oImageViewNode.sDestination == 'Red':
-                if oImageViewNode.sViewLayer == 'Background':
-                    self.btnRed3Planes.setText(oImageViewNode.sNodeName)
-            if oImageViewNode.sDestination == 'Green':
-                if oImageViewNode.sViewLayer == 'Background':
-                    self.btnGreen3Planes.setText(oImageViewNode.sNodeName)
-            if oImageViewNode.sDestination == 'Yellow':
-                if oImageViewNode.sViewLayer == 'Background':
-                    self.btnYellow3Planes.setText(oImageViewNode.sNodeName)
+            if oImageViewNode.sViewLayer == 'Background':
+                if oImageViewNode.sNodeName in lNamesAdded:
+                    pass
+                else:
+                    lNamesAdded.append(oImageViewNode.sNodeName)
+                    self.qComboImageList.addItem(oImageViewNode.sNodeName)
+                    
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
@@ -1080,7 +1082,7 @@ class Session:
             oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
             oQuizzerEditorHelperBox.setMasterVolume(None)
             
-        self.Update3PlanesButtonNames()
+        self.AddImageNamesTo3PlanesComboBox()
 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
