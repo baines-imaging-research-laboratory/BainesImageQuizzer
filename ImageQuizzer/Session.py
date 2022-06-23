@@ -727,7 +727,21 @@ class Session:
         sMsg = ''
         bSuccessLabelMaps, sMsgLabelMaps = self.oFilesIO.SaveLabelMaps(self, 'ResetBtn')
         bSuccessMarkupLines, sMsgMarkupLines = self.oFilesIO.SaveMarkupLines(self)
-        bSuccessImageState, sMsgImageState = self.CaptureAndSaveImageState()
+        
+        # get current image node being displayed
+        sImageName = self.qComboImageList.currentText
+        
+        # determine which image is to be displayed in 3 planes
+        loImageViewNodes = self.oImageView.GetImageViewList()
+        for oImageViewNode in loImageViewNodes:
+            if oImageViewNode.sNodeName == sImageName:
+                oImageNodeOverride = oImageViewNode
+                break
+
+        
+        
+        
+        bSuccessImageState, sMsgImageState = self.CaptureAndSaveImageState(oImageNodeOverride)
         sMsg = sMsg + sMsgLabelMaps + sMsgMarkupLines + sMsgImageState
         bSuccess = bSuccessLabelMaps * bSuccessMarkupLines * bSuccessImageState
         
@@ -1284,25 +1298,83 @@ class Session:
             
         return bSuccess, sMsg
         
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def CaptureAndSaveImageState(self):
+#         ''' Save the current image state (window/level, slice number) to the XML.
+#             This state is reset if the user revisits this page.
+#         '''
+# 
+#         sMsg = ''
+#         bSuccess = True
+#         
+#         try:
+#             # for each image, capture the slice, window and level settings
+#             for oImageNode in self.oImageView.GetImageViewList():
+#                 if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
+#     
+#                     dictAttribState = oImageNode.GetViewState()
+#     
+#                     # check if xml State element exists
+#                     xImage = oImageNode.GetXmlImageElement()
+# 
+#                     # add image state element (tagged with response time)
+#                     self.AddImageStateElement(xImage, dictAttribState)
+#                         
+#             self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+#     
+#         except:
+#             bSuccess = False
+#             sMsg = 'Error saving the image state. ' \
+#             + '\nCheck that the layout setting in xml quiz ' \
+#             + '\nis appropriate for assigned image destinations.'
+#             # critical error - exit
+#             self.oUtilsMsgs.DisplayError( sMsg )
+#             
+#         return bSuccess, sMsg
+#     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CaptureAndSaveImageState(self):
+    def CaptureAndSaveImageState(self, sl3PlanesImageNode = None):
         ''' Save the current image state (window/level, slice number) to the XML.
             This state is reset if the user revisits this page.
+            Special case: User has entered the 3Planes viewing mode. The widgets no
+            longer hold the default list of images and orientations.
         '''
 
         sMsg = ''
         bSuccess = True
         
         try:
+            lslNodes = []
+            lsWidgetNames = []
+            if sl3PlanesImageNode == None:
+                # quizzer is in the default view mode - get state from assigned widgets
+                for oImageNode in self.oImageView.GetImageViewList():
+                    lslNodes.append(oImageNode.slNode)
+                    lsWidgetNames.append(oImageNode.sDestination)
+            else:
+                # quizzer was in 3 Planes mode - Red, Green and Yellow have fixed orientations
+                # get the orientation as defined in the xml for that node
+                if sl3PlanesImageNode.sOrientation == 'Axial':
+                    sWidgetName = 'Red'
+                elif sl3PlanesImageNode.sOrientation == 'Coronal':
+                    sWidgetName = 'Green'
+                elif sl3PlanesImageNode.sOrientation == 'Sagittal':
+                    sWidgetName = 'Yellow'
+                lslNodes.append(sl3PlanesImageNode)
+                lsWidgetNames.append(sWidgetName)
+            
+            
             # for each image, capture the slice, window and level settings
-            for oImageNode in self.oImageView.GetImageViewList():
+            for idx in range(len(lslNodes)):
+                oImageNode = lslNodes[idx]
+                sWidgetName = lsWidgetNames[idx]
+
                 if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
     
-                    dictAttribState = oImageNode.GetViewState()
+                    dictAttribState = self.oImageView.GetViewState(oImageNode.slNode, sWidgetName)
     
                     # check if xml State element exists
                     xImage = oImageNode.GetXmlImageElement()
-                    iNumStateElements = self.oIOXml.GetNumChildrenByName(xImage, 'State')
 
                     # add image state element (tagged with response time)
                     self.AddImageStateElement(xImage, dictAttribState)

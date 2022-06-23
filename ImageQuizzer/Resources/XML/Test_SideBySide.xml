@@ -5,13 +5,13 @@
 		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y" LabelMapID="ADC-contour" SegmentRequired="Y">
 			<Destination>Red</Destination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\adc.nrrd</Path>
 		</Image>
 		<Image ID="T2-N4" Type="Volume" RotateToAcquisition="Y" LabelMapID="T2-contour">
 			<Destination>Yellow</Destination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<Orientation>Coronal</Orientation>
 			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\t2ax-N4.nrrd</Path>
 		</Image>
 		<QuestionSet ID="PI-RADS" Descriptor="Contouring Exercise">

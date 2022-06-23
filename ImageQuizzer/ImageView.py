@@ -512,6 +512,31 @@ class ImageView:
         #    getting nodes by class does create a memory leak so you have to unregister it!
         lLabelMapNodes.UnRegister(slicer.mrmlScene)
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetViewState(self, slNode, sWidgetName):
+        
+        # given the view node, window and level
+        
+        # access the display node
+        slDisplayNode = slNode.GetDisplayNode()
+                
+        dictAttrib = {}
+        
+        if not slDisplayNode == None:
+            fLevel = slDisplayNode.GetLevel()
+            fWindow = slDisplayNode.GetWindow()
+    
+            # get the slice offset position for the current widget in the layout manager
+            slWidget = slicer.app.layoutManager().sliceWidget(sWidgetName)
+            slWindowLogic = slWidget.sliceLogic()
+            
+            fSliceOffset = slWindowLogic.GetSliceOffset()
+            
+            dictAttrib = { 'Window': str(fWindow), 'Level':  str(fLevel),\
+                          'SliceOffset': str(fSliceOffset)}
+        
+        return dictAttrib
+
     # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # def AssignLabelMapVisibilityAllNodes(self):
     #
@@ -715,30 +740,30 @@ class ViewNodeBase:
         return bNodeExists
 
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetViewState(self):
-        
-        # given the view node, window and level
-        
-        # access the display node
-        slDisplayNode = self.slNode.GetDisplayNode()
-                
-        dictAttrib = {}
-        
-        if not slDisplayNode == None:
-            fLevel = slDisplayNode.GetLevel()
-            fWindow = slDisplayNode.GetWindow()
-    
-            # get the slice offset position for the current widget in the layout manager
-            slWidget = slicer.app.layoutManager().sliceWidget(self.sDestination)
-            slWindowLogic = slWidget.sliceLogic()
-            
-            fSliceOffset = slWindowLogic.GetSliceOffset()
-            
-            dictAttrib = { 'Window': str(fWindow), 'Level':  str(fLevel),\
-                          'SliceOffset': str(fSliceOffset)}
-        
-        return dictAttrib
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def GetViewState(self):
+#         
+#         # given the view node, window and level
+#         
+#         # access the display node
+#         slDisplayNode = self.slNode.GetDisplayNode()
+#                 
+#         dictAttrib = {}
+#         
+#         if not slDisplayNode == None:
+#             fLevel = slDisplayNode.GetLevel()
+#             fWindow = slDisplayNode.GetWindow()
+#     
+#             # get the slice offset position for the current widget in the layout manager
+#             slWidget = slicer.app.layoutManager().sliceWidget(self.sDestination)
+#             slWindowLogic = slWidget.sliceLogic()
+#             
+#             fSliceOffset = slWindowLogic.GetSliceOffset()
+#             
+#             dictAttrib = { 'Window': str(fWindow), 'Level':  str(fLevel),\
+#                           'SliceOffset': str(fSliceOffset)}
+#         
+#         return dictAttrib
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AssignColorTable(self):
