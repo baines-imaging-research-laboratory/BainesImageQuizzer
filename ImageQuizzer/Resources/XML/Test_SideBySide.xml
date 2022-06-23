@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Session ROIColorFile="PiRadsStudy">
+	<Page ID="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y" EnableSegmentEditor="Y" MinMarkupLinesRequiredOnAnyImage = "2" Layout="SideBySideRedYellow">
+		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y" LabelMapID="ADC-contour" SegmentRequired="Y">
+			<Destination>Red</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\adc.nrrd</Path>
+		</Image>
+		<Image ID="T2-N4" Type="Volume" RotateToAcquisition="Y" LabelMapID="T2-contour">
+			<Destination>Yellow</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\t2ax-N4.nrrd</Path>
+		</Image>
+		<QuestionSet ID="PI-RADS" Descriptor="Contouring Exercise">
+			<Question Type="InfoBox" Descriptor="Segmentation Instructions">
+				<Option>In Segment Editor tab, select volume to create segments.</Option>
+				<Option>     Click Edit Selected Label Map collapsible button to access the segmenting tools.</Option>
+				<Option>     Select contour color to match PI-RADS category.</Option>
+				<Option>This may be repeated if segments are to be created on different volumes.</Option>
+			</Question>
+			<Question Type="IntegerValue" Descriptor="Overall PI-RADS" Min="1" Max="5">
+				<Option>Enter overall PI-RADS score:</Option>
+			</Question>
+			<Question Type="CheckBox" Descriptor="Testing">
+				<Option>QS1 Test 1</Option>
+				<Option>QS1 Test 2</Option>
+				<Option>QS1 Test 3</Option>
+			</Question>
+		</QuestionSet>
+		<QuestionSet ID="PI-RADS" Descriptor="Second QSet Test">
+			<Question Type="CheckBox" Descriptor="Testing">
+				<Option>QS2 Test 1</Option>
+				<Option>QS2 Test 2</Option>
+				<Option>QS2 Test 3</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>

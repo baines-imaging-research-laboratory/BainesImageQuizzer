@@ -727,16 +727,17 @@ class Session:
         sMsg = ''
         bSuccessLabelMaps, sMsgLabelMaps = self.oFilesIO.SaveLabelMaps(self, 'ResetBtn')
         bSuccessMarkupLines, sMsgMarkupLines = self.oFilesIO.SaveMarkupLines(self)
-        self.CaptureAndSaveImageState()
-        sMsg = sMsg + sMsgLabelMaps + sMsgMarkupLines
-        bSuccess = bSuccessLabelMaps * bSuccessMarkupLines
-
+        bSuccessImageState, sMsgImageState = self.CaptureAndSaveImageState()
+        sMsg = sMsg + sMsgLabelMaps + sMsgMarkupLines + sMsgImageState
+        bSuccess = bSuccessLabelMaps * bSuccessMarkupLines * bSuccessImageState
+        
         if bSuccess:
-            self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-    
-            self.oImageView.AssignNodesToView()
-            self.SetSavedImageState() # after loading label maps and setting assigning views
-            self.oImageView.AssignLabelMapVisibilityAllNodes()
+            self.DisplayImagesAndQuestions()
+            # self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+            # self.SetViewingLayout(self.GetCurrentPageNode())
+            # self.oImageView.AssignNodesToView()
+            # self.SetSavedImageState() # after loading label maps and setting assigning views
+            # self.oImageView.AssignLabelMapVisibilityAllNodes()
         else:
             if sMsg != '':
                 self.oUtilsMsgs.DisplayError(sMsg)
@@ -1051,19 +1052,8 @@ class Session:
         iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
         self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
 
-        # set the requested layout for images
-        self.sPageLayout = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Layout')
-        if self.sPageLayout == 'TwoOverTwo' :
-            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
-        elif self.sPageLayout == 'OneUpRedSlice' :
-            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutOneUpRedSliceView)
-        elif self.sPageLayout == 'FourUp' :
-            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
-        elif self.sPageLayout == 'SideBySideRedYellow' :
-            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutSideBySideView)
-        else:
-            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
-                    
+        self.SetViewingLayout(xmlPageNode)
+
         # set up the images on the page
         self.oImageView = ImageView()
         self.oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self.oFilesIO.GetDataParentDir())
@@ -1085,6 +1075,24 @@ class Session:
         self.AddImageNamesTo3PlanesComboBox()
 
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetViewingLayout(self, xmlPageNode):
+        
+        # set the requested layout for images
+        self.sPageLayout = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Layout')
+        if self.sPageLayout == 'TwoOverTwo' :
+            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
+        elif self.sPageLayout == 'OneUpRedSlice' :
+            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutOneUpRedSliceView)
+        elif self.sPageLayout == 'FourUp' :
+            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
+        elif self.sPageLayout == 'SideBySideRedYellow' :
+            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutSideBySideView)
+        else:
+            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
+                    
+    
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplaySavedResponse(self):
 

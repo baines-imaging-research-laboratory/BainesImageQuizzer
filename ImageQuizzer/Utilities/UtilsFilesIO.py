@@ -1073,8 +1073,8 @@ class UtilsFilesIO:
                                 bLabelMapsSaved = True  # at least one label map was saved
                         else:
                             bLabelMapsSaved = False
-#                             sMsg = sNRRDMsg + sRTStructMsg
                             oSession.oUtilsMsgs.DisplayError(sMsg)
+                            
 
         if sCaller != 'ResetBtn':   # warning not required on a reset
     
@@ -1103,11 +1103,10 @@ class UtilsFilesIO:
                                 bLabelMapsSaved = False
                     
                     
-    
-    
+        if bLabelMapsSaved == True:
+            oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
+
         return bLabelMapsSaved, sMsg
-
-
         
     # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # def SaveLabeMapAsDataVolume(self, sLabelMapPath, slNodeLabelMap):
@@ -1348,7 +1347,10 @@ class UtilsFilesIO:
                         else:
                             bMarkupLinesSaved = False
                             oSession.oUtilsMsgs.DisplayError(sMsg)
-                            
+        
+        if bMarkupLinesSaved == True:  
+            oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
+            
         return bMarkupLinesSaved, sMsg
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
