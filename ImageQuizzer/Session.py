@@ -279,7 +279,34 @@ class Session:
         return xAllOptionNodes
         
     #----------
+    def Get3PlanesComboBoxSelection(self):
+        # get selected image name from combo box
+        sImageName = self.qComboImageList.currentText
+        
+        # determine which image is to be displayed in 3 planes
+        loImageViewNodes = self.oImageView.GetImageViewList()
+        for oImageViewNode in loImageViewNodes:
+            if oImageViewNode.sNodeName == sImageName:
+                break
+            
+        return oImageViewNode
+        
     #----------
+    def Set3PlanesComboBoxImageNames(self):
+        
+        self.qComboImageList.clear()
+        
+        lNamesAdded = []
+        loImageViewNodes = self.oImageView.GetImageViewList()
+        for oImageViewNode in loImageViewNodes:
+            if oImageViewNode.sViewLayer == 'Background':
+                if oImageViewNode.sNodeName in lNamesAdded:
+                    pass
+                else:
+                    lNamesAdded.append(oImageViewNode.sNodeName)
+                    self.qComboImageList.addItem(oImageViewNode.sNodeName)
+                    
+
 
     #-------------------------------------------
     #        Functions
@@ -725,21 +752,21 @@ class Session:
         ''' return viewing nodes to original layout for this page in the xml
         '''
         sMsg = ''
+        oImageNodeOverride = self.Get3PlanesComboBoxSelection()
+        
         bSuccessLabelMaps, sMsgLabelMaps = self.oFilesIO.SaveLabelMaps(self, 'ResetBtn')
         bSuccessMarkupLines, sMsgMarkupLines = self.oFilesIO.SaveMarkupLines(self)
         
-        # get current image node being displayed
-        sImageName = self.qComboImageList.currentText
-        
-        # determine which image is to be displayed in 3 planes
-        loImageViewNodes = self.oImageView.GetImageViewList()
-        for oImageViewNode in loImageViewNodes:
-            if oImageViewNode.sNodeName == sImageName:
-                oImageNodeOverride = oImageViewNode
-                break
+        # # get current image node being displayed
+        # sImageName = self.qComboImageList.currentText
+        #
+        # # determine which image is to be displayed in 3 planes
+        # loImageViewNodes = self.oImageView.GetImageViewList()
+        # for oImageViewNode in loImageViewNodes:
+        #     if oImageViewNode.sNodeName == sImageName:
+        #         oImageNodeOverride = oImageViewNode
+        #         break
 
-        
-        
         
         bSuccessImageState, sMsgImageState = self.CaptureAndSaveImageState(oImageNodeOverride)
         sMsg = sMsg + sMsgLabelMaps + sMsgMarkupLines + sMsgImageState
@@ -760,32 +787,14 @@ class Session:
     def on3PlanesClicked(self):
         ''' display the requested image in the 3 planes
         '''
-        # get selected image name from combo box
-        sImageName = self.qComboImageList.currentText
-        
-        # determine which image is to be displayed in 3 planes
-        loImageViewNodes = self.oImageView.GetImageViewList()
-        for oImageViewNode in loImageViewNodes:
-            if oImageViewNode.sNodeName == sImageName:
-                self.oImageView.Assign3Planes(oImageViewNode)
-                break
+        # capture current state of default view
+        bSuccessImageState, sMsgImageState = self.CaptureAndSaveImageState()
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def AddImageNamesTo3PlanesComboBox(self):
+        oImageNodeOverride = self.Get3PlanesComboBoxSelection()
+        self.oImageView.Assign3Planes(oImageNodeOverride)
+        self.SetSavedImageState()
         
-        self.qComboImageList.clear()
         
-        lNamesAdded = []
-        loImageViewNodes = self.oImageView.GetImageViewList()
-        for oImageViewNode in loImageViewNodes:
-            if oImageViewNode.sViewLayer == 'Background':
-                if oImageViewNode.sNodeName in lNamesAdded:
-                    pass
-                else:
-                    lNamesAdded.append(oImageViewNode.sNodeName)
-                    self.qComboImageList.addItem(oImageViewNode.sNodeName)
-                    
-
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
         
@@ -1086,7 +1095,7 @@ class Session:
             oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
             oQuizzerEditorHelperBox.setMasterVolume(None)
             
-        self.AddImageNamesTo3PlanesComboBox()
+        self.Set3PlanesComboBoxImageNames()
 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1349,7 +1358,7 @@ class Session:
             if sl3PlanesImageNode == None:
                 # quizzer is in the default view mode - get state from assigned widgets
                 for oImageNode in self.oImageView.GetImageViewList():
-                    lslNodes.append(oImageNode.slNode)
+                    lslNodes.append(oImageNode)
                     lsWidgetNames.append(oImageNode.sDestination)
             else:
                 # quizzer was in 3 Planes mode - Red, Green and Yellow have fixed orientations
