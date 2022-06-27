@@ -474,7 +474,7 @@ class PageState:
                             sImageID = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'ID')
                             sNodeName = sPageID + '_' + sImageID
                             sSegReqMsg = '\nYou must complete a segmentation for this image: ' + sNodeName + \
-                                '\nIf a contour has been redisplayed for this image, it must be modified. It cannot be empty.' + \
+                                '\nIt cannot be empty. If a contour has been redisplayed for this image, it must be modified.' + \
                                 '\nSelect the image: "'+ sNodeName + '" as the Master Volume in the Segment Editor.'
                             if sSegReqMsg != sMsg:
                                 sMsg = sMsg + sSegReqMsg 

@@ -307,10 +307,10 @@ class ImageView:
         self.ClearWidgets()
         slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
 
-        ltupDestOrient = [['Red','Axial'], ['Green','Coronal'], ['Yellow','Sagittal']]
+        llsDestOrient = [['Red','Axial'], ['Green','Coronal'], ['Yellow','Sagittal']]
         
-        for idx in range(len(ltupDestOrient)):
-            slWidget = slicer.app.layoutManager().sliceWidget(ltupDestOrient[idx][0])
+        for idx in range(len(llsDestOrient)):
+            slWidget = slicer.app.layoutManager().sliceWidget(llsDestOrient[idx][0])
             slWindowLogic = slWidget.sliceLogic()
             slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
             slWidgetController = slWidget.sliceController()
@@ -322,11 +322,11 @@ class ImageView:
             # after defining the inital desired orientation, 
             #    if the rotatetoacquisition attribute was set,
             #    rotate the image to the volume plane
-            slWidget.setSliceOrientation(ltupDestOrient[idx][1])
+            slWidget.setSliceOrientation(llsDestOrient[idx][1])
             if oImageViewNode.bRotateToAcquisition == True:
                 slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
                 slWidget.mrmlSliceNode().RotateToVolumePlane(slVolumeNode)
-                self.RotateSliceToImage(ltupDestOrient[idx][0])
+                self.RotateSliceToImage(llsDestOrient[idx][0])
     
             slWidget.fitSliceToBackground()
             oImageViewNode.AssignColorTable()
@@ -786,7 +786,7 @@ class ViewNodeBase:
         slColorTableNodeList.UnRegister(slicer.mrmlScene)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetImageState(self, dictImageState):
+    def SetImageState(self, dictImageState, sDestinationOverride = None):
         
         
         slViewNode = self.GetSlicerViewNode()
@@ -806,7 +806,12 @@ class ViewNodeBase:
 
             if 'SliceOffset' in dictImageState.keys():
                 # set the slice offset position for the current widget
-                slWidget = slicer.app.layoutManager().sliceWidget(self.sDestination)
+                # a destination override exists when user moves into 3 Planes viewing mode
+                if sDestinationOverride != None:
+                    sWidgetName = sDestinationOverride
+                else:
+                    sWidgetName = self.sDestination
+                slWidget = slicer.app.layoutManager().sliceWidget(sWidgetName)
                 slWindowLogic = slWidget.sliceLogic()
                 
                 fSliceOffset = float(dictImageState['SliceOffset'])

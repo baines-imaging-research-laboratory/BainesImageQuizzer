@@ -66,6 +66,9 @@ class Session:
         
         self._btnNext = None
         self._btnPrevious = None
+        
+        self.b3PlanesViewingMode = False
+
 
 
     def __del__(self):
@@ -634,11 +637,14 @@ class Session:
         self.qCrossHairsGrpBoxLayout = qt.QGridLayout()
         self.qCrossHairsGrpBox.setLayout(self.qCrossHairsGrpBoxLayout)
         
+        qCrosshairsLabel = qt.QLabel("Use Shift key to display: ")
+        self.qCrossHairsGrpBoxLayout.addWidget(qCrosshairsLabel,0,0)
+        
         self.btnCrosshairsOn = qt.QPushButton('On')
         self.btnCrosshairsOn.enabled = True
         self.btnCrosshairsOn.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
         self.btnCrosshairsOn.connect('clicked(bool)',self.onCrosshairsOnClicked)
-        self.qCrossHairsGrpBoxLayout.addWidget(self.btnCrosshairsOn,0,0)
+        self.qCrossHairsGrpBoxLayout.addWidget(self.btnCrosshairsOn,0,1)
 
 
         self.btnCrosshairsOff = qt.QPushButton('Off')
@@ -756,29 +762,13 @@ class Session:
         
         bSuccessLabelMaps, sMsgLabelMaps = self.oFilesIO.SaveLabelMaps(self, 'ResetBtn')
         bSuccessMarkupLines, sMsgMarkupLines = self.oFilesIO.SaveMarkupLines(self)
-        
-        # # get current image node being displayed
-        # sImageName = self.qComboImageList.currentText
-        #
-        # # determine which image is to be displayed in 3 planes
-        # loImageViewNodes = self.oImageView.GetImageViewList()
-        # for oImageViewNode in loImageViewNodes:
-        #     if oImageViewNode.sNodeName == sImageName:
-        #         oImageNodeOverride = oImageViewNode
-        #         break
-
-        
         bSuccessImageState, sMsgImageState = self.CaptureAndSaveImageState(oImageNodeOverride)
         sMsg = sMsg + sMsgLabelMaps + sMsgMarkupLines + sMsgImageState
         bSuccess = bSuccessLabelMaps * bSuccessMarkupLines * bSuccessImageState
-        
+
         if bSuccess:
+            self.b3PlanesViewingMode = False
             self.DisplayImagesAndQuestions()
-            # self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-            # self.SetViewingLayout(self.GetCurrentPageNode())
-            # self.oImageView.AssignNodesToView()
-            # self.SetSavedImageState() # after loading label maps and setting assigning views
-            # self.oImageView.AssignLabelMapVisibilityAllNodes()
         else:
             if sMsg != '':
                 self.oUtilsMsgs.DisplayError(sMsg)
@@ -787,13 +777,19 @@ class Session:
     def on3PlanesClicked(self):
         ''' display the requested image in the 3 planes
         '''
-        # capture current state of default view
-        bSuccessImageState, sMsgImageState = self.CaptureAndSaveImageState()
-
-        oImageNodeOverride = self.Get3PlanesComboBoxSelection()
-        self.oImageView.Assign3Planes(oImageNodeOverride)
-        self.SetSavedImageState()
         
+        oImageNodeOverride = self.Get3PlanesComboBoxSelection()
+        
+        if self.b3PlanesViewingMode:
+            # user alread in 3 Planes mode
+            bSuccessImageState, sMsgImageState = self.CaptureAndSaveImageState(oImageNodeOverride)
+        else:
+            # capture current state of default view
+            bSuccessImageState, sMsgImageState = self.CaptureAndSaveImageState()
+            
+        self.oImageView.Assign3Planes(oImageNodeOverride)
+        self.b3PlanesViewingMode = True
+        self.SetSavedImageState(oImageNodeOverride)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
@@ -1307,40 +1303,6 @@ class Session:
             
         return bSuccess, sMsg
         
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def CaptureAndSaveImageState(self):
-#         ''' Save the current image state (window/level, slice number) to the XML.
-#             This state is reset if the user revisits this page.
-#         '''
-# 
-#         sMsg = ''
-#         bSuccess = True
-#         
-#         try:
-#             # for each image, capture the slice, window and level settings
-#             for oImageNode in self.oImageView.GetImageViewList():
-#                 if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
-#     
-#                     dictAttribState = oImageNode.GetViewState()
-#     
-#                     # check if xml State element exists
-#                     xImage = oImageNode.GetXmlImageElement()
-# 
-#                     # add image state element (tagged with response time)
-#                     self.AddImageStateElement(xImage, dictAttribState)
-#                         
-#             self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-#     
-#         except:
-#             bSuccess = False
-#             sMsg = 'Error saving the image state. ' \
-#             + '\nCheck that the layout setting in xml quiz ' \
-#             + '\nis appropriate for assigned image destinations.'
-#             # critical error - exit
-#             self.oUtilsMsgs.DisplayError( sMsg )
-#             
-#         return bSuccess, sMsg
-#     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureAndSaveImageState(self, sl3PlanesImageNode = None):
         ''' Save the current image state (window/level, slice number) to the XML.
@@ -1353,30 +1315,32 @@ class Session:
         bSuccess = True
         
         try:
-            lslNodes = []
-            lsWidgetNames = []
-            if sl3PlanesImageNode == None:
+            lsDestOrientNode = []
+            llsNodeProperties = []
+            
+            if not self.b3PlanesViewingMode:
                 # quizzer is in the default view mode - get state from assigned widgets
                 for oImageNode in self.oImageView.GetImageViewList():
-                    lslNodes.append(oImageNode)
-                    lsWidgetNames.append(oImageNode.sDestination)
+                    lsDestOrientNode = [oImageNode.sDestination, oImageNode.sOrientation, oImageNode]
+                    llsNodeProperties.append(lsDestOrientNode)
             else:
                 # quizzer was in 3 Planes mode - Red, Green and Yellow have fixed orientations
                 # get the orientation as defined in the xml for that node
-                if sl3PlanesImageNode.sOrientation == 'Axial':
-                    sWidgetName = 'Red'
-                elif sl3PlanesImageNode.sOrientation == 'Coronal':
-                    sWidgetName = 'Green'
-                elif sl3PlanesImageNode.sOrientation == 'Sagittal':
-                    sWidgetName = 'Yellow'
-                lslNodes.append(sl3PlanesImageNode)
-                lsWidgetNames.append(sWidgetName)
+                if sl3PlanesImageNode != None:
+                    if sl3PlanesImageNode.sOrientation == 'Axial':
+                        lsDestOrientNode = ["Red", "Axial", sl3PlanesImageNode]
+                    elif sl3PlanesImageNode.sOrientation == 'Coronal':
+                        lsDestOrientNode = ["Green", "Coronal", sl3PlanesImageNode]
+                    elif sl3PlanesImageNode.sOrientation == 'Sagittal':
+                        lsDestOrientNode = ["Yellow", "Sagittal", sl3PlanesImageNode]
+                    llsNodeProperties.append(lsDestOrientNode)
             
             
             # for each image, capture the slice, window and level settings
-            for idx in range(len(lslNodes)):
-                oImageNode = lslNodes[idx]
-                sWidgetName = lsWidgetNames[idx]
+            for idx in range(len(llsNodeProperties)):
+                sWidgetName = llsNodeProperties[idx][0]
+                sOrientation = llsNodeProperties[idx][1]
+                oImageNode = llsNodeProperties[idx][2]
 
                 if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
     
@@ -1384,9 +1348,12 @@ class Session:
     
                     # check if xml State element exists
                     xImage = oImageNode.GetXmlImageElement()
-
-                    # add image state element (tagged with response time)
-                    self.AddImageStateElement(xImage, dictAttribState)
+                    # match the image orientation with the captured image state
+                    xOrientation = self.oIOXml.GetLastChild(xImage, 'Orientation')
+                    sStoredXmlOrientation = self.oIOXml.GetDataInNode(xOrientation)
+                    if sStoredXmlOrientation == sOrientation:
+                        # add image state element (tagged with response time)
+                        self.AddImageStateElement(xImage, dictAttribState)
                         
             self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
     
@@ -1401,14 +1368,24 @@ class Session:
         return bSuccess, sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetSavedImageState(self):
+    def SetSavedImageState(self,  sl3PlanesImageNode = None):
         """ From the xml file, get the image state element. If there was no state element, 
             check the xml for a previously stored state for this image. (eg. if clinician
             set the window/level for an image on one page, and that same image is loaded on a subsequent page,
             the same window/level should be applied. 
+            Special case: when user has requested seeing an image in the 3 Planes viewing mode.
+                        The destination for the image defined in the xml may not be the
+                        new destination widget when in 3 Planes mode. The correct image state (offset)
+                        must be assigned to the correct orientation.
         """
-        
-        for oImageNode in self.oImageView.GetImageViewList():
+        dict3PlanesOrientDest = {"Axial":"Red", "Coronal":"Green", "Sagittal":"Yellow"}
+        loImageNodes = []
+        if not self.b3PlanesViewingMode:
+            loImageNodes = self.oImageView.GetImageViewList()
+        else:
+            loImageNodes.append(sl3PlanesImageNode)
+            
+        for oImageNode in loImageNodes:
             dictImageState = {}
             if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
         
@@ -1422,8 +1399,15 @@ class Session:
                         dictImageState = self.oIOXml.GetAttributes(xHistoricalStateElement)
                     
                 if len(dictImageState) > 0:
-                    oImageNode.SetImageState(dictImageState)
-            
+                    if not self.b3PlanesViewingMode:
+                        oImageNode.SetImageState(dictImageState)
+                    else:
+                        xImage = oImageNode.GetXmlImageElement()
+                        xOrientation = self.oIOXml.GetLastChild(xImage, 'Orientation')
+                        sOrientation = self.oIOXml.GetDataInNode(xOrientation)
+                        sDestinationOverride = dict3PlanesOrientDest[sOrientation]
+                        oImageNode.SetImageState(dictImageState, sDestinationOverride)
+                            
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetXmlElementFromAttributeHistory(self, sPageChildrenToSearch, sImageAttributeToMatch, sAttributeValue):
         ''' Function will return the historical element that contains the attribute requested for the search.
