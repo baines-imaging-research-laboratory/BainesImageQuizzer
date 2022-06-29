@@ -535,7 +535,7 @@ class Session:
             
             self.EnableButtons()
             
-            self.AdjustForPreviousQuestionSets()
+            self.AdjustToCurrentQuestionSet()
             
             if bNewPage:
                 self.SetupPageState(self.GetCurrentPageIndex())
@@ -760,13 +760,16 @@ class Session:
         sMsg = ''
         oImageNodeOverride = self.Get3PlanesComboBoxSelection()
         
-        bSuccessLabelMaps, sMsgLabelMaps = self.oFilesIO.SaveLabelMaps(self, 'ResetBtn')
-        bSuccessMarkupLines, sMsgMarkupLines = self.oFilesIO.SaveMarkupLines(self)
-        bSuccessImageState, sMsgImageState = self.CaptureAndSaveImageState(oImageNodeOverride)
-        sMsg = sMsg + sMsgLabelMaps + sMsgMarkupLines + sMsgImageState
-        bSuccess = bSuccessLabelMaps * bSuccessMarkupLines * bSuccessImageState
+        # bSuccessLabelMaps, sMsgLabelMaps = self.oFilesIO.SaveLabelMaps(self, 'ResetBtn')
+        # bSuccessMarkupLines, sMsgMarkupLines = self.oFilesIO.SaveMarkupLines(self)
+        # bSuccessImageState, sMsgImageState = self.CaptureAndSaveImageState(oImageNodeOverride)
+        # sMsg = sMsg + sMsgLabelMaps + sMsgMarkupLines + sMsgImageState
+        # bSuccess = bSuccessLabelMaps * bSuccessMarkupLines * bSuccessImageState
+
+        bSuccess, sMsg  = self.PerformSave('ResetView')
 
         if bSuccess:
+            self.AdjustToCurrentQuestionSet()
             self.b3PlanesViewingMode = False
             self.DisplayImagesAndQuestions()
         else:
@@ -789,7 +792,7 @@ class Session:
             
         self.oImageView.Assign3Planes(oImageNodeOverride)
         self.b3PlanesViewingMode = True
-        self.SetSavedImageState(oImageNodeOverride)
+        self.ApplySavedImageState(oImageNodeOverride)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
@@ -976,16 +979,18 @@ class Session:
         return bLastQuestionSet
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def AdjustForPreviousQuestionSets(self):
+    def AdjustToCurrentQuestionSet(self):
         
         # if there are multiple question sets for a page, the list of question sets must
         #    include all previous question sets - up to the one being displayed
         #    (eg. if a page has 4 Qsets, and we are going back to Qset 3,
         #    we need to collect question set indices 0, and 1 first,
-        #    then continue processing for index 2 which will be appended in Display Page)
+        #    then continue processing for index 2 which will be appended in DisplayQuestionSet function)
         
-        # This function is called when the previous button is pressed or if a
-        # resume is required into a question set that is not the first for the page.
+        # This function is called 
+        #    - when the previous button is pressed or
+        #    - if a resume is required into a question set that is not the first for the page
+        #    - if the ResetView button in Extra Tools is pressed  
         
         self._loQuestionSets = [] # initialize
         indQSet = self.GetCurrentQuestionSetIndex()
@@ -1034,8 +1039,9 @@ class Session:
             qWidgetQuestionSetForm.setEnabled(True) # initialize
 
 
-            if sSavedResponseCompletionLevel == 'AllResponses' or sSavedResponseCompletionLevel == 'PartialResponses':
-                self.DisplaySavedResponse()
+            # if sSavedResponseCompletionLevel == 'AllResponses' or sSavedResponseCompletionLevel == 'PartialResponses':
+            #     self.DisplaySavedResponse()
+            self.DisplaySavedResponse()
 
             if self.GetQuizComplete():
                 qWidgetQuestionSetForm.setEnabled(False)
@@ -1084,7 +1090,7 @@ class Session:
         # assign each image node and its label map (if applicable) to the viewing widget
         self.oImageView.AssignNodesToView()
         
-        self.SetSavedImageState() # after loading label maps and setting assigning views
+        self.ApplySavedImageState() # after loading label maps and setting assigning views
         
         if self.GetSegmentationTabIndex() > 0:
             # clear Master and Merge selector boxes
@@ -1123,7 +1129,7 @@ class Session:
          
         # for each question and each option, extract any existing responses from the XML
          
-        lsAllResponsesForQuestion = []
+        lsAllResponsesForQuestions = []
         for indQuestion in range(len(loQuestions)):
             oQuestion = loQuestions[indQuestion]
             xQuestionNode = self.oIOXml.GetNthChild(xNodeQuestionSet, 'Question', indQuestion)
@@ -1153,12 +1159,12 @@ class Session:
                     and (all(elem == '' for elem in lsResponseValues)):
                 lsResponseValues = []   # reset if all are empty
 
-            lsAllResponsesForQuestion.append(lsResponseValues)
+            lsAllResponsesForQuestions.append(lsResponseValues)
             
     
             lsResponseValues = []  # clear for next set of options 
 
-        self._lsPreviousResponses = lsAllResponsesForQuestion
+        self._lsPreviousResponses = lsAllResponsesForQuestions
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def PerformSave(self, sCaller):
@@ -1173,7 +1179,10 @@ class Session:
         
         if not self.GetQuizComplete():
         
-            bSuccess, sMsg = self.ResetDisplay()
+            if sCaller != 'ResetView':
+                self.oQuizWidgets.qTabWidget.setCurrentIndex(0)
+                
+            # bSuccess, sMsg = self.ResetDisplay()
             idxQuestionSet = self.GetCurrentQuestionSetIndex()
 #             idxPage = self.GetCurrentPageIndex()
             iNumQSets = len(self.GetAllQuestionSetNodesForCurrentPage())
@@ -1279,29 +1288,29 @@ class Session:
                 
         return sCaptureSuccessLevel, lsAllResponses, sAllMsgs
        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ResetDisplay(self):
-        
-        bSuccess = True
-        sMsg = ''
-
-        try:
-            # before leaving the page, if the segmentation is enabled, restore mouse to default cursor
-            if self.GetSegmentationTabIndex() > 0:
-                # if Segmentation editor tab exists
-                
-                #collapse label editor to encourage selection of master volume
-                slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
-                
-                # reset display to quiz tab
-                self.oQuizWidgets.qTabWidget.setCurrentIndex(0)
-                slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
-            
-        except:
-            bSuccess = False
-            sMsg = 'Reset segmentation state error'
-            
-        return bSuccess, sMsg
+    # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # def ResetDisplay(self):
+    #
+    #     bSuccess = True
+    #     sMsg = ''
+    #
+    #     try:
+    #         # before leaving the page, if the segmentation is enabled, restore mouse to default cursor
+    #         if self.GetSegmentationTabIndex() > 0:
+    #             # if Segmentation editor tab exists
+    #
+    #             #collapse label editor to encourage selection of master volume
+    #             slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
+    #
+    #             # reset display to quiz tab
+    #             self.oQuizWidgets.qTabWidget.setCurrentIndex(0)
+    #             slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
+    #
+    #     except:
+    #         bSuccess = False
+    #         sMsg = 'Reset segmentation state error'
+    #
+    #     return bSuccess, sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureAndSaveImageState(self, sl3PlanesImageNode = None):
@@ -1368,7 +1377,7 @@ class Session:
         return bSuccess, sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetSavedImageState(self,  sl3PlanesImageNode = None):
+    def ApplySavedImageState(self,  sl3PlanesImageNode = None):
         """ From the xml file, get the image state element. If there was no state element, 
             check the xml for a previously stored state for this image. (eg. if clinician
             set the window/level for an image on one page, and that same image is loaded on a subsequent page,
@@ -1711,7 +1720,7 @@ class Session:
     
         self._iCurrentCompositeIndex = iResumeCompIndex
         # adjust if the resume question set is not the first on the page
-        self.AdjustForPreviousQuestionSets()
+        self.AdjustToCurrentQuestionSet()
     
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
