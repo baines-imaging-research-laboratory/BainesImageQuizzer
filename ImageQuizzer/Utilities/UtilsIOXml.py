@@ -62,7 +62,7 @@ class UtilsIOXml:
         self._xTree = None
         self._xRootNode = None
         
-        self.sTimestampFormat = "%Y%m%d_%H:%M:%S"
+        self.sTimestampFormat = "%Y%m%d_%H:%M:%S.%f"
         self.oUtilsMsgs = UtilsMsgs()
         self.lValidSliceWidgets = ['Red', 'Green', 'Yellow', 'Slice4'] # Slice4 for two over two layout
         self.lValidLayouts = ['TwoOverTwo', 'OneUpRedSlice', 'SideBySideRedYellow', 'FourUp']

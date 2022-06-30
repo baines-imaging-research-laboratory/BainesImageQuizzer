@@ -125,6 +125,14 @@ class Session:
         return self._sLoginTime
     
     #----------
+    def SetPreviousResponses(self, lInputResponses):
+        self._lsPreviousResponses = lInputResponses
+        
+    #----------
+    def GetPreviousResponses(self):
+        return self._lsPreviousResponses
+    
+    #----------
     def SetCompositeIndicesList(self, lIndices):
         self._l3iPageQuestionGroupCompositeIndices = lIndices
         
@@ -1009,21 +1017,11 @@ class Session:
 
         # extract page and question set indices from the current composite index
         
-        xPageNode = self.GetCurrentPageNode()
-        self.SetMultipleResponseAllowed(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'AllowMultipleResponse'))
-        self.SetRequestToEnableSegmentEditorTF(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor'))
 
         xNodeQuestionSet = self.GetCurrentQuestionSetNode()
         oQuestionSet = QuestionSet()
         oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
         
-        # get question set completion state 
-        self._lsPreviousResponses = [] # reset for new Question Set
-        sSavedResponseCompletionLevel = self.oPageState.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
-
-        if self.GetQuizComplete():
-            self.SetMultipleResponseAllowed('N') #read only
-
 
         # first clear any previous widgets (except push buttons)
         for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
@@ -1042,6 +1040,21 @@ class Session:
             # if sSavedResponseCompletionLevel == 'AllResponses' or sSavedResponseCompletionLevel == 'PartialResponses':
             #     self.DisplaySavedResponse()
             self.DisplaySavedResponse()
+            self.SetPreviousResponses([]) # reset for new Question Set
+            
+            
+            
+
+            xPageNode = self.GetCurrentPageNode()
+            self.SetMultipleResponseAllowed(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'AllowMultipleResponse'))
+            self.SetRequestToEnableSegmentEditorTF(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor'))
+    
+            if self.GetQuizComplete():
+                self.SetMultipleResponseAllowed('N') #read only
+    
+            # get question set completion state 
+            # self._lsPreviousResponses = [] # reset for new Question Set
+            # sSavedResponseCompletionLevel = self.oPageState.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
 
             if self.GetQuizComplete():
                 qWidgetQuestionSetForm.setEnabled(False)
@@ -1053,6 +1066,7 @@ class Session:
                     qWidgetQuestionSetForm.setEnabled(True)
                     self.SegmentationTabEnabler(self.GetRequestToEnableSegmentEditorTF())
                 else:
+                    sSavedResponseCompletionLevel = self.oPageState.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
                     sPageComplete = self.GetPageCompleteAttribute(self._iCurrentCompositeIndex)
                     if sPageComplete == 'Y':
                         qWidgetQuestionSetForm.setEnabled(False)
@@ -1068,15 +1082,13 @@ class Session:
                         if self.oPageState.GetSegmentationsCompletedState():
                             self.SegmentationTabEnabler(False)
                         
+                if self.GetSegmentationTabIndex() > 0:
+                    # clear Master and Merge selector boxes
+                    oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
+                    oQuizzerEditorHelperBox.setMasterVolume(None)
 
                    
-        # add page ID/descriptor to the progress bar
         xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
-        self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
-        self.sPageID = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'ID')
-        iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
-        self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
-
         self.SetViewingLayout(xmlPageNode)
 
         # set up the images on the page
@@ -1092,12 +1104,14 @@ class Session:
         
         self.ApplySavedImageState() # after loading label maps and setting assigning views
         
-        if self.GetSegmentationTabIndex() > 0:
-            # clear Master and Merge selector boxes
-            oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
-            oQuizzerEditorHelperBox.setMasterVolume(None)
             
         self.Set3PlanesComboBoxImageNames()
+
+        # add page ID/descriptor to the progress bar
+        self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
+        self.sPageID = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'ID')
+        iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
+        self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1164,7 +1178,7 @@ class Session:
     
             lsResponseValues = []  # clear for next set of options 
 
-        self._lsPreviousResponses = lsAllResponsesForQuestions
+        self.SetPreviousResponses(lsAllResponsesForQuestions)
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def PerformSave(self, sCaller):
@@ -1526,7 +1540,7 @@ class Session:
                 # check to see if the responses for the question set match 
                 #    what was previously captured
                 #    -only write responses if they have changed
-                if not self._lsNewResponses == self._lsPreviousResponses:
+                if not self._lsNewResponses == self.GetPreviousResponses():
                         
                     self.AddXmlElements()
                     
