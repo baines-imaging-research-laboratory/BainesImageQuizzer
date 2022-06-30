@@ -379,7 +379,10 @@ class Session:
             self.progress.setValue(self._iCurrentCompositeIndex)
     
             self.EnableButtons()
-            self.DisplayImagesAndQuestions()
+            # self.DisplayImagesAndQuestions()
+            self.DisplayQuizLayout()
+            self.DisplayImageLayout()
+
             
             if self.GetQuizResuming():
                 # page has been displayed - reset Quiz Resuming to false
@@ -409,11 +412,7 @@ class Session:
         ''' When changing tabs reset segment editor interface
             to force user to reset the volume to be contoured.
         '''
-        if self.GetSegmentationTabIndex() > 0:
-            slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
-            slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
-            slicer.modules.quizzereditor.widgetRepresentation().self().helper.setMasterVolume(None)
-
+        self.SetSegmentationTabDefaults()
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupButtons(self):
@@ -507,7 +506,9 @@ class Session:
        
                 if bNewPage:
                     self.SetupPageState(self.GetCurrentPageIndex())
-                self.DisplayImagesAndQuestions()
+                # self.DisplayImagesAndQuestions()
+                self.DisplayQuizLayout()
+                self.DisplayImageLayout()
                         
             else:
                 if sMsg != '':
@@ -547,7 +548,9 @@ class Session:
             
             if bNewPage:
                 self.SetupPageState(self.GetCurrentPageIndex())
-            self.DisplayImagesAndQuestions()
+            # self.DisplayImagesAndQuestions()
+            self.DisplayQuizLayout()
+            self.DisplayImageLayout()
                
         
         else:
@@ -779,7 +782,10 @@ class Session:
         if bSuccess:
             self.AdjustToCurrentQuestionSet()
             self.b3PlanesViewingMode = False
-            self.DisplayImagesAndQuestions()
+            # self.DisplayImagesAndQuestions()
+            self.DisplayQuizLayout()
+            self.DisplayImageLayout()
+
         else:
             if sMsg != '':
                 self.oUtilsMsgs.DisplayError(sMsg)
@@ -790,17 +796,17 @@ class Session:
         '''
         
         oImageNodeOverride = self.Get3PlanesComboBoxSelection()
-        
-        if self.b3PlanesViewingMode:
-            # user alread in 3 Planes mode
-            bSuccessImageState, sMsgImageState = self.CaptureAndSaveImageState(oImageNodeOverride)
-        else:
-            # capture current state of default view
-            bSuccessImageState, sMsgImageState = self.CaptureAndSaveImageState()
-            
+        #
+        # if self.b3PlanesViewingMode:
+        #     # user already in 3 Planes mode
+        #     bSuccessImageState, sMsgImageState = self.CaptureAndSaveImageState(oImageNodeOverride)
+        # else:
+        #     # capture current state of default view
+        #     bSuccessImageState, sMsgImageState = self.CaptureAndSaveImageState()
+        self.CaptureAndSaveImageState()
         self.oImageView.Assign3Planes(oImageNodeOverride)
         self.b3PlanesViewingMode = True
-        self.ApplySavedImageState(oImageNodeOverride)
+        self.ApplySavedImageState()
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
@@ -1011,10 +1017,9 @@ class Session:
                 oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
                 self._loQuestionSets.append(oQuestionSet)
 
-
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def DisplayImagesAndQuestions(self):
-
+    def DisplayQuizLayout(self):
+        
         # extract page and question set indices from the current composite index
         
 
@@ -1042,50 +1047,70 @@ class Session:
             self.DisplaySavedResponse()
             self.SetPreviousResponses([]) # reset for new Question Set
             
+        ################################################
+        ''' Enable tabs and update the progress bar.
+            This is done after displaying questions and prior to loading images to provide a smooth transition
+            when widgets need to be disabled.
+        '''
             
+        xPageNode = self.GetCurrentPageNode()
+        self.SetMultipleResponseAllowed(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'AllowMultipleResponse'))
+        self.SetRequestToEnableSegmentEditorTF(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor'))
+
             
+        # get question set completion state 
+        # self._lsPreviousResponses = [] # reset for new Question Set
+        # sSavedResponseCompletionLevel = self.oPageState.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
 
-            xPageNode = self.GetCurrentPageNode()
-            self.SetMultipleResponseAllowed(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'AllowMultipleResponse'))
-            self.SetRequestToEnableSegmentEditorTF(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor'))
-    
-            if self.GetQuizComplete():
-                self.SetMultipleResponseAllowed('N') #read only
-    
-            # get question set completion state 
-            # self._lsPreviousResponses = [] # reset for new Question Set
-            # sSavedResponseCompletionLevel = self.oPageState.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
-
-            if self.GetQuizComplete():
-                qWidgetQuestionSetForm.setEnabled(False)
-                self.SegmentationTabEnabler(False)
+        if self.GetQuizComplete():
+            self.SetMultipleResponseAllowed('N') #read only
+            qWidgetQuestionSetForm.setEnabled(False)
+            self.SegmentationTabEnabler(False)
+        else:
+            
+            #enable tabs
+            if self.GetMultipleResponseAllowed() or self.GetQuizResuming():
+                qWidgetQuestionSetForm.setEnabled(True)
+                self.SegmentationTabEnabler(self.GetRequestToEnableSegmentEditorTF())
             else:
-                
-                #enable tabs
-                if self.GetMultipleResponseAllowed() or self.GetQuizResuming():
+                sSavedResponseCompletionLevel = self.oPageState.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
+                sPageComplete = self.GetPageCompleteAttribute(self._iCurrentCompositeIndex)
+                if sPageComplete == 'Y':
+                    qWidgetQuestionSetForm.setEnabled(False)
+                    self.SegmentationTabEnabler(False)
+                else:
+                    # page not complete - check for question and segmentation completion
                     qWidgetQuestionSetForm.setEnabled(True)
                     self.SegmentationTabEnabler(self.GetRequestToEnableSegmentEditorTF())
-                else:
-                    sSavedResponseCompletionLevel = self.oPageState.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
-                    sPageComplete = self.GetPageCompleteAttribute(self._iCurrentCompositeIndex)
-                    if sPageComplete == 'Y':
-                        qWidgetQuestionSetForm.setEnabled(False)
-                        self.SegmentationTabEnabler(False)
-                    else:
-                        # page not complete - check for question and segmentation completion
-                        qWidgetQuestionSetForm.setEnabled(True)
-                        self.SegmentationTabEnabler(self.GetRequestToEnableSegmentEditorTF())
 
-                        if sSavedResponseCompletionLevel == 'AllResponses':
-                            qWidgetQuestionSetForm.setEnabled(False)
+                    if sSavedResponseCompletionLevel == 'AllResponses':
+                        qWidgetQuestionSetForm.setEnabled(False)
 #                         if self.loPageCompletionState[self.GetCurrentPageIndex()].GetSegmentationsCompletedState():
-                        if self.oPageState.GetSegmentationsCompletedState():
-                            self.SegmentationTabEnabler(False)
-                        
-                if self.GetSegmentationTabIndex() > 0:
-                    # clear Master and Merge selector boxes
-                    oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
-                    oQuizzerEditorHelperBox.setMasterVolume(None)
+                    if self.oPageState.GetSegmentationsCompletedState():
+                        self.SegmentationTabEnabler(False)
+                    
+            if self.GetSegmentationTabIndex() > 0:
+                # clear Master and Merge selector boxes
+                oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
+                oQuizzerEditorHelperBox.setMasterVolume(None)
+
+
+        ################################################
+            
+        # add page ID/descriptor to the progress bar
+        xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
+        self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
+        self.sPageID = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'ID')
+        iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
+        self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
+        ################################################
+            
+        
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def DisplayImageLayout(self):
+
+            
 
                    
         xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
@@ -1093,7 +1118,7 @@ class Session:
 
         # set up the images on the page
         self.oImageView = ImageView()
-        self.oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self.oFilesIO.GetDataParentDir())
+        self.oImageView.RunSetup(self.GetCurrentPageNode(), self.oFilesIO.GetDataParentDir())
 
         # load label maps and markup lines if a path has been stored in the xml for the images on this page
         self.oFilesIO.LoadSavedLabelMaps(self)
@@ -1102,18 +1127,15 @@ class Session:
         # assign each image node and its label map (if applicable) to the viewing widget
         self.oImageView.AssignNodesToView()
         
-        self.ApplySavedImageState() # after loading label maps and setting assigning views
-        
-            
         self.Set3PlanesComboBoxImageNames()
 
-        # add page ID/descriptor to the progress bar
-        self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
-        self.sPageID = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'ID')
-        iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
-        self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
 
+        ################################################
+
+        self.ApplySavedImageState() 
         
+    
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetViewingLayout(self, xmlPageNode):
         
@@ -1195,6 +1217,7 @@ class Session:
         
             if sCaller != 'ResetView':
                 self.oQuizWidgets.qTabWidget.setCurrentIndex(0)
+            self.SetSegmentationTabDefaults()
                 
             # bSuccess, sMsg = self.ResetDisplay()
             idxQuestionSet = self.GetCurrentQuestionSetIndex()
@@ -1257,6 +1280,16 @@ class Session:
         return bSuccess, sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetSegmentationTabDefaults(self):
+        
+        if self.GetSegmentationTabIndex() > 0:
+            slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
+            slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
+            slicer.modules.quizzereditor.widgetRepresentation().self().helper.setMasterVolume(None)
+
+        
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureNewResponsesToSave(self):
         ''' When moving to another display of Images and QuestionSet (from pressing Next or Previous)
             the new responses that were entered must be captured ready to do the save to XML.
@@ -1302,32 +1335,8 @@ class Session:
                 
         return sCaptureSuccessLevel, lsAllResponses, sAllMsgs
        
-    # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # def ResetDisplay(self):
-    #
-    #     bSuccess = True
-    #     sMsg = ''
-    #
-    #     try:
-    #         # before leaving the page, if the segmentation is enabled, restore mouse to default cursor
-    #         if self.GetSegmentationTabIndex() > 0:
-    #             # if Segmentation editor tab exists
-    #
-    #             #collapse label editor to encourage selection of master volume
-    #             slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
-    #
-    #             # reset display to quiz tab
-    #             self.oQuizWidgets.qTabWidget.setCurrentIndex(0)
-    #             slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
-    #
-    #     except:
-    #         bSuccess = False
-    #         sMsg = 'Reset segmentation state error'
-    #
-    #     return bSuccess, sMsg
-        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CaptureAndSaveImageState(self, sl3PlanesImageNode = None):
+    def CaptureAndSaveImageState(self):
         ''' Save the current image state (window/level, slice number) to the XML.
             This state is reset if the user revisits this page.
             Special case: User has entered the 3Planes viewing mode. The widgets no
@@ -1344,11 +1353,13 @@ class Session:
             if not self.b3PlanesViewingMode:
                 # quizzer is in the default view mode - get state from assigned widgets
                 for oImageNode in self.oImageView.GetImageViewList():
-                    lsDestOrientNode = [oImageNode.sDestination, oImageNode.sOrientation, oImageNode]
-                    llsNodeProperties.append(lsDestOrientNode)
+                    if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
+                        lsDestOrientNode = [oImageNode.sDestination, oImageNode.sOrientation, oImageNode]
+                        llsNodeProperties.append(lsDestOrientNode)
             else:
                 # quizzer was in 3 Planes mode - Red, Green and Yellow have fixed orientations
                 # get the orientation as defined in the xml for that node
+                sl3PlanesImageNode = self.Get3PlanesComboBoxSelection()
                 if sl3PlanesImageNode != None:
                     if sl3PlanesImageNode.sOrientation == 'Axial':
                         lsDestOrientNode = ["Red", "Axial", sl3PlanesImageNode]
@@ -1391,7 +1402,7 @@ class Session:
         return bSuccess, sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ApplySavedImageState(self,  sl3PlanesImageNode = None):
+    def ApplySavedImageState(self):
         """ From the xml file, get the image state element. If there was no state element, 
             check the xml for a previously stored state for this image. (eg. if clinician
             set the window/level for an image on one page, and that same image is loaded on a subsequent page,
@@ -1401,12 +1412,13 @@ class Session:
                         new destination widget when in 3 Planes mode. The correct image state (offset)
                         must be assigned to the correct orientation.
         """
+        
         dict3PlanesOrientDest = {"Axial":"Red", "Coronal":"Green", "Sagittal":"Yellow"}
         loImageNodes = []
         if not self.b3PlanesViewingMode:
             loImageNodes = self.oImageView.GetImageViewList()
         else:
-            loImageNodes.append(sl3PlanesImageNode)
+            loImageNodes.append(self.Get3PlanesComboBoxSelection())
             
         for oImageNode in loImageNodes:
             dictImageState = {}

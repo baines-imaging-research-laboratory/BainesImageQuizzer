@@ -46,9 +46,12 @@ class ImageView:
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def RunSetup(self, xPageNode, quizLayout, sParentDataDir):
+    # def RunSetup(self, xPageNode, quizLayout, sParentDataDir):
+    #
+    #     self.quizLayout = quizLayout
+    def RunSetup(self, xPageNode, sParentDataDir):
 
-        self.quizLayout = quizLayout
+        # self.quizLayout = quizLayout
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
         self.sParentDataDir = sParentDataDir
