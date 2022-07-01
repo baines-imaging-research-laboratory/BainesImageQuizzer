@@ -1039,24 +1039,21 @@ class UtilsFilesIO:
                     if oImageNode.sNodeName + '-bainesquizlabel' == sLabelMapFilename:
                         
                         bLabelMapFound = True  # -bainesquizlabel suffix is associated with an image on the page
+                        bDataVolumeSaved = False
                         
-                        # only write to disk if it hasn't already been done for this image node
-                        #    (it doesn't need to be written for each orientation)
+                        sDirName = self.GetFolderNameForPageResults(oSession)
+                        sPageLabelMapDir = self.CreatePageDir(sDirName)
+                        sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
+                        sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
+                        
                         if not oImageNode.sNodeName in lsLabelMapsStoredForImages:
-
-                            # store the path name in the xml file and the label map in the directory
-                            sDirName = self.GetFolderNameForPageResults(oSession)
-                            sPageLabelMapDir = self.CreatePageDir(sDirName)
-    
-                            sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
-                             
                             # save the label map file to the user's page directory
-                            sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
-    
                             bDataVolumeSaved, sMsg = self.ExportResultsItemToFile('LabelMap', sLabelMapPath, slNodeLabelMap) 
                          
                             # update list of names of images that have the label maps stored
                             lsLabelMapsStoredForImages.append(oImageNode.sNodeName)
+                        else:
+                            bDataVolumeSaved = True # already saved
 
 
                         # if label maps were saved as a data volume
@@ -1108,29 +1105,6 @@ class UtilsFilesIO:
 
         return bLabelMapsSaved, sMsg
         
-    # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # def SaveLabeMapAsDataVolume(self, sLabelMapPath, slNodeLabelMap):
-    #     """ Use Slicer's storage node to export label map node as a data volume.
-    #     """
-    #
-    #     sMsg = ''
-    #     bSuccess = True
-    #
-    #     try:
-    #         slStorageNode = slNodeLabelMap.CreateDefaultStorageNode()
-    #         slStorageNode.SetFileName(sLabelMapPath)
-    #         slStorageNode.WriteData(slNodeLabelMap)
-    #         slStorageNode.UnRegister(slicer.mrmlScene) # for memory leaks
-    #
-    #     except:
-    #         bSuccess = False
-    #         sMsg = 'Failed to store label map as data volume file: \n'\
-    #                 + sLabelMapPath +\
-    #                 'See administrator: ' + sys._getframe(  ).f_code.co_name
-    #
-    #
-    #     return bSuccess, sMsg
-    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadSavedLabelMaps(self, oSession):
         # when loading label maps created in the quiz, associate it with the correct 

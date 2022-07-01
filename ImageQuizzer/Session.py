@@ -379,7 +379,6 @@ class Session:
             self.progress.setValue(self._iCurrentCompositeIndex)
     
             self.EnableButtons()
-            # self.DisplayImagesAndQuestions()
             self.DisplayQuizLayout()
             self.DisplayImageLayout()
 
@@ -506,7 +505,6 @@ class Session:
        
                 if bNewPage:
                     self.SetupPageState(self.GetCurrentPageIndex())
-                # self.DisplayImagesAndQuestions()
                 self.DisplayQuizLayout()
                 self.DisplayImageLayout()
                         
@@ -548,7 +546,6 @@ class Session:
             
             if bNewPage:
                 self.SetupPageState(self.GetCurrentPageIndex())
-            # self.DisplayImagesAndQuestions()
             self.DisplayQuizLayout()
             self.DisplayImageLayout()
                
@@ -771,18 +768,11 @@ class Session:
         sMsg = ''
         oImageNodeOverride = self.Get3PlanesComboBoxSelection()
         
-        # bSuccessLabelMaps, sMsgLabelMaps = self.oFilesIO.SaveLabelMaps(self, 'ResetBtn')
-        # bSuccessMarkupLines, sMsgMarkupLines = self.oFilesIO.SaveMarkupLines(self)
-        # bSuccessImageState, sMsgImageState = self.CaptureAndSaveImageState(oImageNodeOverride)
-        # sMsg = sMsg + sMsgLabelMaps + sMsgMarkupLines + sMsgImageState
-        # bSuccess = bSuccessLabelMaps * bSuccessMarkupLines * bSuccessImageState
-
         bSuccess, sMsg  = self.PerformSave('ResetView')
 
         if bSuccess:
             self.AdjustToCurrentQuestionSet()
             self.b3PlanesViewingMode = False
-            # self.DisplayImagesAndQuestions()
             self.DisplayQuizLayout()
             self.DisplayImageLayout()
 
@@ -796,13 +786,7 @@ class Session:
         '''
         
         oImageNodeOverride = self.Get3PlanesComboBoxSelection()
-        #
-        # if self.b3PlanesViewingMode:
-        #     # user already in 3 Planes mode
-        #     bSuccessImageState, sMsgImageState = self.CaptureAndSaveImageState(oImageNodeOverride)
-        # else:
-        #     # capture current state of default view
-        #     bSuccessImageState, sMsgImageState = self.CaptureAndSaveImageState()
+
         self.CaptureAndSaveImageState()
         self.oImageView.Assign3Planes(oImageNodeOverride)
         self.b3PlanesViewingMode = True
@@ -1057,10 +1041,6 @@ class Session:
         self.SetMultipleResponseAllowed(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'AllowMultipleResponse'))
         self.SetRequestToEnableSegmentEditorTF(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor'))
 
-            
-        # get question set completion state 
-        # self._lsPreviousResponses = [] # reset for new Question Set
-        # sSavedResponseCompletionLevel = self.oPageState.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
 
         if self.GetQuizComplete():
             self.SetMultipleResponseAllowed('N') #read only
@@ -1128,9 +1108,6 @@ class Session:
         self.oImageView.AssignNodesToView()
         
         self.Set3PlanesComboBoxImageNames()
-
-
-        ################################################
 
         self.ApplySavedImageState() 
         
