@@ -68,6 +68,7 @@ class Session:
         self._btnPrevious = None
         
         self.b3PlanesViewingMode = False
+        self.sViewingMode = "Default"
 
 
 
@@ -773,6 +774,7 @@ class Session:
         if bSuccess:
             self.AdjustToCurrentQuestionSet()
             self.b3PlanesViewingMode = False
+            self.sViewingMode = "Default"
             self.DisplayQuizLayout()
             self.DisplayImageLayout()
 
@@ -790,6 +792,7 @@ class Session:
         self.CaptureAndSaveImageState()
         self.oImageView.Assign3Planes(oImageNodeOverride)
         self.b3PlanesViewingMode = True
+        self.sViewingMode = "3Plane"
         self.ApplySavedImageState()
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1316,7 +1319,7 @@ class Session:
     def CaptureAndSaveImageState(self):
         ''' Save the current image state (window/level, slice number) to the XML.
             This state is reset if the user revisits this page.
-            Special case: User has entered the 3Planes viewing mode. The widgets no
+            Special case: User has entered a viewing mode. The widgets no
             longer hold the default list of images and orientations.
         '''
 
@@ -1338,13 +1341,17 @@ class Session:
                 # get the orientation as defined in the xml for that node
                 sl3PlanesImageNode = self.Get3PlanesComboBoxSelection()
                 if sl3PlanesImageNode != None:
-                    if sl3PlanesImageNode.sOrientation == 'Axial':
-                        lsDestOrientNode = ["Red", "Axial", sl3PlanesImageNode]
-                    elif sl3PlanesImageNode.sOrientation == 'Coronal':
-                        lsDestOrientNode = ["Green", "Coronal", sl3PlanesImageNode]
-                    elif sl3PlanesImageNode.sOrientation == 'Sagittal':
-                        lsDestOrientNode = ["Yellow", "Sagittal", sl3PlanesImageNode]
-                    llsNodeProperties.append(lsDestOrientNode)
+#                     if sl3PlanesImageNode.sOrientation == 'Axial':
+#                         lsDestOrientNode = ["Red", "Axial", sl3PlanesImageNode]
+#                     elif sl3PlanesImageNode.sOrientation == 'Coronal':
+#                         lsDestOrientNode = ["Green", "Coronal", sl3PlanesImageNode]
+#                     elif sl3PlanesImageNode.sOrientation == 'Sagittal':
+#                         lsDestOrientNode = ["Yellow", "Sagittal", sl3PlanesImageNode]
+#                     llsNodeProperties.append(lsDestOrientNode)
+
+                    llsNodeProperties.append(["Red", "Axial", sl3PlanesImageNode])
+                    llsNodeProperties.append(["Green", "Coronal", sl3PlanesImageNode])
+                    llsNodeProperties.append(["Yellow", "Sagittal", sl3PlanesImageNode])
             
             
             # for each image, capture the slice, window and level settings
@@ -1356,15 +1363,19 @@ class Session:
                 if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
     
                     dictAttribState = self.oImageView.GetViewState(oImageNode.slNode, sWidgetName)
+                    dictViewModeAttributes = {"Orientation": sOrientation, "Destination": sWidgetName, "ViewingMode": self.sViewingMode}
+                    dictAttribState.update(dictViewModeAttributes)
     
                     # check if xml State element exists
                     xImage = oImageNode.GetXmlImageElement()
-                    # match the image orientation with the captured image state
-                    xOrientation = self.oIOXml.GetLastChild(xImage, 'Orientation')
-                    sStoredXmlOrientation = self.oIOXml.GetDataInNode(xOrientation)
-                    if sStoredXmlOrientation == sOrientation:
-                        # add image state element (tagged with response time)
-                        self.AddImageStateElement(xImage, dictAttribState)
+#                     # match the image orientation with the captured image state
+#                     xOrientation = self.oIOXml.GetLastChild(xImage, 'Orientation')
+#                     sStoredXmlOrientation = self.oIOXml.GetDataInNode(xOrientation)
+#                     if sStoredXmlOrientation == sOrientation:
+#                         # add image state element (tagged with response time)
+#                         self.AddImageStateElement(xImage, dictAttribState)
+                    # add image state element (tagged with response time)
+                    self.AddImageStateElement(xImage, dictAttribState)
                         
             self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
     
@@ -1378,16 +1389,57 @@ class Session:
             
         return bSuccess, sMsg
     
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def ApplySavedImageState(self):
+#         """ From the xml file, get the image state element. If there was no state element, 
+#             check the xml for a previously stored state for this image. (eg. if clinician
+#             set the window/level for an image on one page, and that same image is loaded on a subsequent page,
+#             the same window/level should be applied.)
+#             Special case: when user has requested seeing an image in the 3 Planes viewing mode.
+#                         The destination for the image defined in the xml may not be the
+#                         new destination widget when in 3 Planes mode. The correct image state (offset)
+#                         must be assigned to the correct orientation.
+#         """
+#         
+#         dict3PlanesOrientDest = {"Axial":"Red", "Coronal":"Green", "Sagittal":"Yellow"}
+#         loImageNodes = []
+#         if not self.b3PlanesViewingMode:
+#             loImageNodes = self.oImageView.GetImageViewList()
+#         else:
+#             loImageNodes.append(self.Get3PlanesComboBoxSelection())
+#             
+#         for oImageNode in loImageNodes:
+#             dictImageState = {}
+#             if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
+#         
+#                 xStateElement = self.oIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'State')
+#                 
+#                 if xStateElement != None:
+#                     dictImageState = self.oIOXml.GetAttributes(xStateElement)
+#                 else:
+#                     xHistoricalStateElement = self.GetXmlElementFromImagePathHistory(oImageNode.GetXmlImageElement(), 'State')
+#                     if xHistoricalStateElement != None:
+#                         dictImageState = self.oIOXml.GetAttributes(xHistoricalStateElement)
+#                     
+#                 if len(dictImageState) > 0:
+#                     if not self.b3PlanesViewingMode:
+#                         oImageNode.SetImageState(dictImageState)
+#                     else:
+#                         xImage = oImageNode.GetXmlImageElement()
+#                         xOrientation = self.oIOXml.GetLastChild(xImage, 'Orientation')
+#                         sOrientation = self.oIOXml.GetDataInNode(xOrientation)
+#                         sDestinationOverride = dict3PlanesOrientDest[sOrientation]
+#                         oImageNode.SetImageState(dictImageState, sDestinationOverride)
+#                             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ApplySavedImageState(self):
-        """ From the xml file, get the image state element. If there was no state element, 
-            check the xml for a previously stored state for this image. (eg. if clinician
-            set the window/level for an image on one page, and that same image is loaded on a subsequent page,
-            the same window/level should be applied. 
-            Special case: when user has requested seeing an image in the 3 Planes viewing mode.
-                        The destination for the image defined in the xml may not be the
-                        new destination widget when in 3 Planes mode. The correct image state (offset)
-                        must be assigned to the correct orientation.
+        """ From the xml file, get the image state elements. 
+            Based on the viewing mode, define the state orientations that need to be searched for and set.
+            Check the xml for the current page for state elements. If the required orientations are
+            not found, search for a previously stored state for this image in the required orientation.
+            (eg. if clinician set the window/level for an image on one page, and that same image is 
+            loaded on a subsequent page, the same window/level should be applied.)
+            
         """
         
         dict3PlanesOrientDest = {"Axial":"Red", "Coronal":"Green", "Sagittal":"Yellow"}
@@ -1399,27 +1451,85 @@ class Session:
             
         for oImageNode in loImageNodes:
             dictImageState = {}
-            if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
-        
-                xStateElement = self.oIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'State')
+            if self.sViewingMode == "3Planes":
+                lsRequiredOrientations = ["Axial", "Coronal", "Sagittal"]
+            else:
+                # Default or 1 Plane -> just one orientation to search for
+                lsRequiredOrientations = [oImageNode.sOrientation]
                 
-                if xStateElement != None:
-                    dictImageState = self.oIOXml.GetAttributes(xStateElement)
-                else:
-                    xHistoricalStateElement = self.GetXmlElementFromImagePathHistory(oImageNode.GetXmlImageElement(), 'State')
-                    if xHistoricalStateElement != None:
-                        dictImageState = self.oIOXml.GetAttributes(xHistoricalStateElement)
-                    
-                if len(dictImageState) > 0:
-                    if not self.b3PlanesViewingMode:
-                        oImageNode.SetImageState(dictImageState)
-                    else:
-                        xImage = oImageNode.GetXmlImageElement()
-                        xOrientation = self.oIOXml.GetLastChild(xImage, 'Orientation')
-                        sOrientation = self.oIOXml.GetDataInNode(xOrientation)
-                        sDestinationOverride = dict3PlanesOrientDest[sOrientation]
-                        oImageNode.SetImageState(dictImageState, sDestinationOverride)
+            lxAllStateElements = self.GetAllStateElementsForMatchingImagePath(oImageNode.sPath)
+
+
+            for sRequiredOrientation in lsRequiredOrientations:
+                bFound = False
+                
+                if not bFound:
+
+                    for xState in reversed(lxAllStateElements):
+                        
+                        dictImageState = self.oIOXml.GetAttributes(xState)
+                        if dictImageState["Orientation"] == sRequiredOrientation:
+                            bFound = True
+                            oImageNode.SetImageState(dictImageState)
+                            break
                             
+                            
+                            
+                            else:
+                                xImage = oImageNode.GetXmlImageElement()
+                                xOrientation = self.oIOXml.GetLastChild(xImage, 'Orientation')
+                                sOrientation = self.oIOXml.GetDataInNode(xOrientation)
+                                sDestinationOverride = dict3PlanesOrientDest[sOrientation]
+                                oImageNode.SetImageState(dictImageState, sDestinationOverride)
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetAllStateElementsForMatchingImagePath(self, sCurrentImagePath):
+        
+        lxAllStateElements = []
+        
+        lxPages = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
+        
+        # for each page in the xml (up to and including  the current page) get all image elements
+        for iPageIdx in range(len(lxPages)):
+            if iPageIdx <= self.GetCurrentPageIndex():
+                xPage = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIdx)
+                lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
+                
+                # for all images on the page, if a volume type image, collect the State elements
+                for xImage in lxImageElements:
+                    sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
+                    if sImageType == 'Volume' or sImageType == 'VolumeSequence':
+                        
+                        xPath = self.oIOXml.GetLastChild(xImage, 'Path')
+                        if xPath != None:
+                            sPath = self.oIOXml.GetDataInNode(xPath)
+                        if sPath == sCurrentImagePath:
+                            lxAllStateElements.append(self.oIOXml.GetChildren(xImage, 'State'))
+                        
+        return lxAllStateElements
+                
+        
+        
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SearchListForRequiredOrientationInState(self, lxStateElements, sRequiredOrientation, oImageNode):
+        
+        xStateElement = []
+        
+        # search in reverse until required orientation has been found
+        for idx in reversed(len(lxStateElements)):
+        
+            xStateElement = self.oIOXml.GetNthChildElement(oImageNode.GetXmlImageElement(), 'State', idx)
+        
+            if xStateElement != None:
+                dictImageState = self.oIOXml.GetAttributes(xStateElement)
+                if dictImageState["Orientation"] == sRequiredOrientation:
+                    bFound = True
+                    break
+
+        
+        return xStateElement
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetXmlElementFromAttributeHistory(self, sPageChildrenToSearch, sImageAttributeToMatch, sAttributeValue):
         ''' Function will return the historical element that contains the attribute requested for the search.

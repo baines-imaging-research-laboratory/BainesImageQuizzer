@@ -1122,13 +1122,6 @@ class UtilsFilesIO:
 
                 # read attribute from xml file whether to use label maps previously created
                 #    by the user in the quiz for this image
-#                 if (oSession.oIOXml.GetValueOfNodeAttribute(oImageNode.GetXmlImageElement(), 'UsePreviousLabelMap') == 'Y'):
-#                     bUsePreviousLabelMap = True
-#                 else:
-#                     bUsePreviousLabelMap = False
-
-                # read attribute from xml file whether to use label maps previously created
-                #    by the user in the quiz for this image
                 sLabelMapIDLink = '' # initialize
                 sLabelMapIDLink = oSession.oIOXml.GetValueOfNodeAttribute(oImageNode.GetXmlImageElement(), 'DisplayLabelMapID')
                 if sLabelMapIDLink != '':
@@ -1171,8 +1164,6 @@ class UtilsFilesIO:
                     bFoundLabelMap, slLabelMapNode = self.CheckForLoadedNodeInScene(sLabelMapNodeName)
 
                     # only load the label map once
-                    #    same label map may have been stored multiple times in XML for the page
-                    #    (same image but different orientations)
                     if not sStoredRelativePath in lLoadedLabelMaps:
                         sAbsolutePath = self.GetAbsoluteUserPath(sStoredRelativePath)
                         dictProperties = {'LabelMap' : True}
