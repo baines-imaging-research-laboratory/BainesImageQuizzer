@@ -69,7 +69,7 @@ class Session:
         
         self.b3PlanesViewingMode = False
         self.sViewingMode = "Default"
-        self.slCurrentNPlanesImageNode = None
+        self.loCurrentImageViewNodes = []
 
 
 
@@ -776,7 +776,7 @@ class Session:
             self.AdjustToCurrentQuestionSet()
             self.b3PlanesViewingMode = False
             self.sViewingMode = "Default"
-            self.slCurrentNPlanesImageNode = None
+            self.loCurrentImageViewNodes = []
             self.DisplayQuizLayout()
             self.DisplayImageLayout()
 
@@ -795,7 +795,9 @@ class Session:
         self.oImageView.Assign3Planes(oImageNodeOverride)
         self.b3PlanesViewingMode = True
         self.sViewingMode = "3Planes"
-        self.slCurrentNPlanesImageNode = self.Get3PlanesComboBoxSelection()
+        #    the current node being displayed in an alternate view may have been 
+        #    repeated in different orientations in the xml
+        self.loCurrentImageViewNodes = self.GetMatchingImageNodes(oImageNodeOverride.sImagePath)
         self.ApplySavedImageState()
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1317,6 +1319,20 @@ class Session:
         return sCaptureSuccessLevel, lsAllResponses, sAllMsgs
        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetMatchingImageNodes(self, sImagePathToSearch):
+        ''' Search the xml image nodes for the current page that have the same
+            path as the image node input to this function
+        '''
+        loMatchingImageNodes = []
+        
+        loImageViewNodes = self.oImageView.GetImageViewList()
+        for oImageViewNode in loImageViewNodes:
+            if oImageViewNode.sImagePath == sImagePathToSearch:
+                loMatchingImageNodes.append(oImageViewNode)
+                
+        return loMatchingImageNodes    
+                
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureAndSaveImageState(self):
         ''' Save the current image state (window/level, slice number) to the XML.
             This state is reset if the user revisits this page.
@@ -1341,12 +1357,12 @@ class Session:
             else:
                 # quizzer was in 3 Planes mode - Red, Green and Yellow have fixed orientations
                 # capture the state of the current node being displayed 
-                #        - before changing the selection or resetting to default
-                if self.slCurrentNPlanesImageNode != None:
+                #        before changing the selection or resetting to default
+                for oImageNode in self.loCurrentImageViewNodes:
 
-                    llsNodeProperties.append(["Red", "Axial", self.slCurrentNPlanesImageNode])
-                    llsNodeProperties.append(["Green", "Coronal", self.slCurrentNPlanesImageNode])
-                    llsNodeProperties.append(["Yellow", "Sagittal", self.slCurrentNPlanesImageNode])
+                    llsNodeProperties.append(["Red", "Axial", oImageNode])
+                    llsNodeProperties.append(["Green", "Coronal", oImageNode])
+                    llsNodeProperties.append(["Yellow", "Sagittal", oImageNode])
             
             
             # for each image, capture the slice, window and level settings
