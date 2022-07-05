@@ -159,6 +159,11 @@ class UtilsFilesIO:
         return sInputPath.replace(self.GetUserDir()+'\\','')
 
     #----------
+    def GetRelativeDataPath(self, sInputPath):
+        # remove absolute path to user folders
+        return sInputPath.replace(self.GetDataParentDir()+'\\','')
+
+    #----------
     def GetAbsoluteDataPath(self, sInputPath):
         return os.path.join(self._sDataParentDir, sInputPath)
     
@@ -1073,7 +1078,7 @@ class UtilsFilesIO:
                             oSession.oUtilsMsgs.DisplayError(sMsg)
                             
 
-        if sCaller != 'ResetBtn':   # warning not required on a reset
+        if sCaller != 'ResetView':   # warning not required on a reset
     
             #####
             # Display warning if segmentation was required but no user created label map was found.

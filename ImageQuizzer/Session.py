@@ -69,6 +69,7 @@ class Session:
         
         self.b3PlanesViewingMode = False
         self.sViewingMode = "Default"
+        self.slCurrentNPlanesImageNode = None
 
 
 
@@ -775,6 +776,7 @@ class Session:
             self.AdjustToCurrentQuestionSet()
             self.b3PlanesViewingMode = False
             self.sViewingMode = "Default"
+            self.slCurrentNPlanesImageNode = None
             self.DisplayQuizLayout()
             self.DisplayImageLayout()
 
@@ -792,7 +794,8 @@ class Session:
         self.CaptureAndSaveImageState()
         self.oImageView.Assign3Planes(oImageNodeOverride)
         self.b3PlanesViewingMode = True
-        self.sViewingMode = "3Plane"
+        self.sViewingMode = "3Planes"
+        self.slCurrentNPlanesImageNode = self.Get3PlanesComboBoxSelection()
         self.ApplySavedImageState()
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1267,8 +1270,6 @@ class Session:
             slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
             slicer.modules.quizzereditor.widgetRepresentation().self().helper.setMasterVolume(None)
 
-        
-    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureNewResponsesToSave(self):
         ''' When moving to another display of Images and QuestionSet (from pressing Next or Previous)
@@ -1325,6 +1326,7 @@ class Session:
 
         sMsg = ''
         bSuccess = True
+        bAddedNewElement = False
         
         try:
             lsDestOrientNode = []
@@ -1338,20 +1340,13 @@ class Session:
                         llsNodeProperties.append(lsDestOrientNode)
             else:
                 # quizzer was in 3 Planes mode - Red, Green and Yellow have fixed orientations
-                # get the orientation as defined in the xml for that node
-                sl3PlanesImageNode = self.Get3PlanesComboBoxSelection()
-                if sl3PlanesImageNode != None:
-#                     if sl3PlanesImageNode.sOrientation == 'Axial':
-#                         lsDestOrientNode = ["Red", "Axial", sl3PlanesImageNode]
-#                     elif sl3PlanesImageNode.sOrientation == 'Coronal':
-#                         lsDestOrientNode = ["Green", "Coronal", sl3PlanesImageNode]
-#                     elif sl3PlanesImageNode.sOrientation == 'Sagittal':
-#                         lsDestOrientNode = ["Yellow", "Sagittal", sl3PlanesImageNode]
-#                     llsNodeProperties.append(lsDestOrientNode)
+                # capture the state of the current node being displayed 
+                #        - before changing the selection or resetting to default
+                if self.slCurrentNPlanesImageNode != None:
 
-                    llsNodeProperties.append(["Red", "Axial", sl3PlanesImageNode])
-                    llsNodeProperties.append(["Green", "Coronal", sl3PlanesImageNode])
-                    llsNodeProperties.append(["Yellow", "Sagittal", sl3PlanesImageNode])
+                    llsNodeProperties.append(["Red", "Axial", self.slCurrentNPlanesImageNode])
+                    llsNodeProperties.append(["Green", "Coronal", self.slCurrentNPlanesImageNode])
+                    llsNodeProperties.append(["Yellow", "Sagittal", self.slCurrentNPlanesImageNode])
             
             
             # for each image, capture the slice, window and level settings
@@ -1368,16 +1363,12 @@ class Session:
     
                     # check if xml State element exists
                     xImage = oImageNode.GetXmlImageElement()
-#                     # match the image orientation with the captured image state
-#                     xOrientation = self.oIOXml.GetLastChild(xImage, 'Orientation')
-#                     sStoredXmlOrientation = self.oIOXml.GetDataInNode(xOrientation)
-#                     if sStoredXmlOrientation == sOrientation:
-#                         # add image state element (tagged with response time)
-#                         self.AddImageStateElement(xImage, dictAttribState)
                     # add image state element (tagged with response time)
                     self.AddImageStateElement(xImage, dictAttribState)
+                    bAddedNewElement = True     # at least one element added
                         
-            self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+            if bAddedNewElement:
+                self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
     
         except:
             bSuccess = False
@@ -1389,48 +1380,6 @@ class Session:
             
         return bSuccess, sMsg
     
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def ApplySavedImageState(self):
-#         """ From the xml file, get the image state element. If there was no state element, 
-#             check the xml for a previously stored state for this image. (eg. if clinician
-#             set the window/level for an image on one page, and that same image is loaded on a subsequent page,
-#             the same window/level should be applied.)
-#             Special case: when user has requested seeing an image in the 3 Planes viewing mode.
-#                         The destination for the image defined in the xml may not be the
-#                         new destination widget when in 3 Planes mode. The correct image state (offset)
-#                         must be assigned to the correct orientation.
-#         """
-#         
-#         dict3PlanesOrientDest = {"Axial":"Red", "Coronal":"Green", "Sagittal":"Yellow"}
-#         loImageNodes = []
-#         if not self.b3PlanesViewingMode:
-#             loImageNodes = self.oImageView.GetImageViewList()
-#         else:
-#             loImageNodes.append(self.Get3PlanesComboBoxSelection())
-#             
-#         for oImageNode in loImageNodes:
-#             dictImageState = {}
-#             if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
-#         
-#                 xStateElement = self.oIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'State')
-#                 
-#                 if xStateElement != None:
-#                     dictImageState = self.oIOXml.GetAttributes(xStateElement)
-#                 else:
-#                     xHistoricalStateElement = self.GetXmlElementFromImagePathHistory(oImageNode.GetXmlImageElement(), 'State')
-#                     if xHistoricalStateElement != None:
-#                         dictImageState = self.oIOXml.GetAttributes(xHistoricalStateElement)
-#                     
-#                 if len(dictImageState) > 0:
-#                     if not self.b3PlanesViewingMode:
-#                         oImageNode.SetImageState(dictImageState)
-#                     else:
-#                         xImage = oImageNode.GetXmlImageElement()
-#                         xOrientation = self.oIOXml.GetLastChild(xImage, 'Orientation')
-#                         sOrientation = self.oIOXml.GetDataInNode(xOrientation)
-#                         sDestinationOverride = dict3PlanesOrientDest[sOrientation]
-#                         oImageNode.SetImageState(dictImageState, sDestinationOverride)
-#                             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ApplySavedImageState(self):
         """ From the xml file, get the image state elements. 
@@ -1456,34 +1405,35 @@ class Session:
             else:
                 # Default or 1 Plane -> just one orientation to search for
                 lsRequiredOrientations = [oImageNode.sOrientation]
+            # else:
+            #     for 1 Plane mode -> get the user requested orientation
+            #     lsRequiredOrientations = [self.GetOrientationComboBoxSelection())
                 
-            lxAllStateElements = self.GetAllStateElementsForMatchingImagePath(oImageNode.sPath)
-
+            lxAllStateElements = self.GetStateElementsForMatchingImagePath(self.oFilesIO.GetRelativeDataPath(oImageNode.sImagePath))
 
             for sRequiredOrientation in lsRequiredOrientations:
                 bFound = False
                 
                 if not bFound:
 
-                    for xState in reversed(lxAllStateElements):
-                        
+                    for idx in reversed(range(len(lxAllStateElements))):
+                        xState = lxAllStateElements[idx]
                         dictImageState = self.oIOXml.GetAttributes(xState)
+# for debug                        print('Required:', sRequiredOrientation, ',    ',dictImageState["ResponseTime"], ',  ',dictImageState["ViewingMode"], ',  ',dictImageState["Orientation"], ',  ',dictImageState["SliceOffset"])
                         if dictImageState["Orientation"] == sRequiredOrientation:
                             bFound = True
-                            oImageNode.SetImageState(dictImageState)
                             break
                             
-                            
-                            
-                            else:
-                                xImage = oImageNode.GetXmlImageElement()
-                                xOrientation = self.oIOXml.GetLastChild(xImage, 'Orientation')
-                                sOrientation = self.oIOXml.GetDataInNode(xOrientation)
-                                sDestinationOverride = dict3PlanesOrientDest[sOrientation]
-                                oImageNode.SetImageState(dictImageState, sDestinationOverride)
+                if bFound:
+                    if not self.b3PlanesViewingMode:
+                        oImageNode.SetImageState(dictImageState)
+                    else:
+                        xImage = oImageNode.GetXmlImageElement()
+                        sDestinationOverride = dict3PlanesOrientDest[sRequiredOrientation]
+                        oImageNode.SetImageState(dictImageState, sDestinationOverride)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetAllStateElementsForMatchingImagePath(self, sCurrentImagePath):
+    def GetStateElementsForMatchingImagePath(self, sCurrentImagePath):
         
         lxAllStateElements = []
         
@@ -1504,32 +1454,16 @@ class Session:
                         if xPath != None:
                             sPath = self.oIOXml.GetDataInNode(xPath)
                         if sPath == sCurrentImagePath:
-                            lxAllStateElements.append(self.oIOXml.GetChildren(xImage, 'State'))
+                            if self.oIOXml.GetNumChildrenByName(xImage, 'State') > 0:
+                                lStateElements = self.oIOXml.GetChildren(xImage, 'State')
+                                for xState in lStateElements:
+                                    lxAllStateElements.append(xState)
                         
         return lxAllStateElements
                 
         
         
         
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SearchListForRequiredOrientationInState(self, lxStateElements, sRequiredOrientation, oImageNode):
-        
-        xStateElement = []
-        
-        # search in reverse until required orientation has been found
-        for idx in reversed(len(lxStateElements)):
-        
-            xStateElement = self.oIOXml.GetNthChildElement(oImageNode.GetXmlImageElement(), 'State', idx)
-        
-            if xStateElement != None:
-                dictImageState = self.oIOXml.GetAttributes(xStateElement)
-                if dictImageState["Orientation"] == sRequiredOrientation:
-                    bFound = True
-                    break
-
-        
-        return xStateElement
-    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetXmlElementFromAttributeHistory(self, sPageChildrenToSearch, sImageAttributeToMatch, sAttributeValue):
         ''' Function will return the historical element that contains the attribute requested for the search.
@@ -1566,51 +1500,52 @@ class Session:
         
         return xHistoricalChildElement
     
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetXmlElementFromImagePathHistory(self, xImageNodeToMatch, sChildTagName):  
-        """ Start searching the xml file for a matching image on a previous page
-            This is based on the 'Path' element for the current node to match. The
-            historical element must have the same 'Path' element value.
-            If this is a Dicom series, the Path points directly to a dicom slice within
-            the Dicom series.
-            Extract the latest element of the required child 
-                (in case there is more than one element with this name).
-            The most recent element will be returned.
-        """
-        xHistoricalChildElement = None
-        
-        xPathElement = self.oIOXml.GetNthChild(xImageNodeToMatch, 'Path', 0)
-        sPathToMatch = self.oIOXml.GetDataInNode(xPathElement)
-        
-        # start searching pages in reverse order - to get most recent setting
-        # first match will end the search
-        bHistoricalElementFound = False
-        for iPageIndex in range(self.GetCurrentPageIndex()-1, -1, -1):
-            xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
-            
-            if bHistoricalElementFound == False:
-                #get all Image children
-                lxImageElementsToSearch = self.oIOXml.GetChildren(xPageNode, 'Image')
-                if len(lxImageElementsToSearch) > 0:
-    
-                    for xImageNode in lxImageElementsToSearch:
-    
-                        xPotentialPathElement = self.oIOXml.GetNthChild(xImageNode, 'Path', 0)
-                        sPotentialPath = self.oIOXml.GetDataInNode(xPotentialPathElement)
-                        
-                        # test for match of both the Path and Series Instance UID
-#                         if sPotentialPath == sPathToMatch and sPotentialSeriesInstanceUID == sSeriesInstanceUIDToMatch:
-                        if sPotentialPath == sPathToMatch:
-#                             print('found prior image instance: ', iPageIndex, ' ', sPotentialPath)
-                            
-                            # capture most recent (based on response time) historical element of interest
-                            xHistoricalChildElement = self.oIOXml.GetLatestChildElement(xImageNode, sChildTagName)
-                            bHistoricalElementFound = True
-                        
-        
-        return xHistoricalChildElement
+#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#     def GetXmlElementFromImagePathHistory(self, xImageNodeToMatch, sChildTagName):  
+#         """ Start searching the xml file for a matching image on a previous page
+#             This is based on the 'Path' element for the current node to match. The
+#             historical element must have the same 'Path' element value.
+#             If this is a Dicom series, the Path points directly to a dicom slice within
+#             the Dicom series.
+#             Extract the latest element of the required child 
+#                 (in case there is more than one element with this name).
+#             The most recent element will be returned.
+#         """
+#         xHistoricalChildElement = None
+#
+#         xPathElement = self.oIOXml.GetNthChild(xImageNodeToMatch, 'Path', 0)
+#         sPathToMatch = self.oIOXml.GetDataInNode(xPathElement)
+#
+#         # start searching pages in reverse order - to get most recent setting
+#         # first match will end the search
+#         bHistoricalElementFound = False
+#         for iPageIndex in range(self.GetCurrentPageIndex()-1, -1, -1):
+#             xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
+#
+#             if bHistoricalElementFound == False:
+#                 #get all Image children
+#                 lxImageElementsToSearch = self.oIOXml.GetChildren(xPageNode, 'Image')
+#                 if len(lxImageElementsToSearch) > 0:
+#
+#                     for xImageNode in lxImageElementsToSearch:
+#
+#                         xPotentialPathElement = self.oIOXml.GetNthChild(xImageNode, 'Path', 0)
+#                         sPotentialPath = self.oIOXml.GetDataInNode(xPotentialPathElement)
+#
+#                         # test for match of both the Path and Series Instance UID
+# #                         if sPotentialPath == sPathToMatch and sPotentialSeriesInstanceUID == sSeriesInstanceUIDToMatch:
+#                         if sPotentialPath == sPathToMatch:
+# #                             print('found prior image instance: ', iPageIndex, ' ', sPotentialPath)
+#
+#                             # capture most recent (based on response time) historical element of interest
+#                             xHistoricalChildElement = self.oIOXml.GetLatestChildElement(xImageNode, sChildTagName)
+#                             bHistoricalElementFound = True
+#
+#
+#         return xHistoricalChildElement
+#
+#
 
-        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def WriteResponsesToXml(self):
         """ Write captured responses to xml. If this is the first write to the xml
