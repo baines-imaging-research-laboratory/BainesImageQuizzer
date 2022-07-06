@@ -304,16 +304,19 @@ class ImageView:
 
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def Assign3Planes(self, oImageViewNode):
+    def AssignNPlanes(self, oImageViewNode, llsDestOrient):
         ''' Display the selected image node in the three planes : axial, coronal and sagittal
         '''
         self.ClearWidgets()
-        slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
+        if len(llsDestOrient) == 1:
+            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutOneUpRedSliceView)
+        else:
+            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
 
-        llsDestOrient = [['Red','Axial'], ['Green','Coronal'], ['Yellow','Sagittal']]
+        # llsDestOrient = [['Red','Axial'], ['Green','Coronal'], ['Yellow','Sagittal']]
         
         for idx in range(len(llsDestOrient)):
-            slWidget = slicer.app.layoutManager().sliceWidget(llsDestOrient[idx][0])
+            slWidget = slicer.app.layoutManager().sliceWidget(llsDestOrient[idx][1])
             slWindowLogic = slWidget.sliceLogic()
             slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
             slWidgetController = slWidget.sliceController()
@@ -325,11 +328,11 @@ class ImageView:
             # after defining the inital desired orientation, 
             #    if the rotatetoacquisition attribute was set,
             #    rotate the image to the volume plane
-            slWidget.setSliceOrientation(llsDestOrient[idx][1])
+            slWidget.setSliceOrientation(llsDestOrient[idx][0])
             if oImageViewNode.bRotateToAcquisition == True:
                 slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
                 slWidget.mrmlSliceNode().RotateToVolumePlane(slVolumeNode)
-                self.RotateSliceToImage(llsDestOrient[idx][0])
+                self.RotateSliceToImage(llsDestOrient[idx][1])
     
             slWidget.fitSliceToBackground()
             oImageViewNode.AssignColorTable()

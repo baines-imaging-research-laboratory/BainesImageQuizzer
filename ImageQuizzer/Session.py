@@ -67,7 +67,7 @@ class Session:
         self._btnNext = None
         self._btnPrevious = None
         
-        self.b3PlanesViewingMode = False
+        self.bNPlanesViewingMode = False
         self.sViewingMode = "Default"
         self.loCurrentImageViewNodes = []
 
@@ -292,11 +292,11 @@ class Session:
         return xAllOptionNodes
         
     #----------
-    def Get3PlanesComboBoxSelection(self):
+    def GetNPlanesImageComboBoxSelection(self):
         # get selected image name from combo box
         sImageName = self.qComboImageList.currentText
         
-        # determine which image is to be displayed in 3 planes
+        # determine which image is to be displayed in an alternate viewing mode (3 Planes or 1 Plane)
         loImageViewNodes = self.oImageView.GetImageViewList()
         for oImageViewNode in loImageViewNodes:
             if oImageViewNode.sNodeName == sImageName:
@@ -305,7 +305,26 @@ class Session:
         return oImageViewNode
         
     #----------
-    def Set3PlanesComboBoxImageNames(self):
+    def SetNPlanesView(self):
+        
+        self.sViewingMode = self.qComboNPlanesList.currentText
+        
+        if self.sViewingMode == "3 Planes":
+            # self.dictNPlanesOrientDest = {"Axial":"Red", "Coronal":"Green", "Sagittal":"Yellow"}
+            self.llsNPlanesOrientDest = [["Axial","Red"],["Coronal","Green"],["Sagittal","Yellow"]]
+        elif self.sViewingMode == "1 Plane Axial":
+            # self.dictNPlanesOrientDest = {"Axial":"Red"}
+            self.llsNPlanesOrientDest = [["Axial","Red"]]
+        elif self.sViewingMode == "1 Plane Sagittal":
+            # self.dictNPlanesOrientDest = {"Sagittal":"Red"}
+            self.llsNPlanesOrientDest = [["Sagittal","Red"]]
+        elif self.sViewingMode == "1 Plane Coronal":
+            # self.dictNPlanesOrientDest = {"Coronal":"Red"}
+            self.llsNPlanesOrientDest = [["Coronal","Red"]]
+            
+            
+    #----------
+    def SetNPlanesComboBoxImageNames(self):
         
         self.qComboImageList.clear()
         
@@ -682,27 +701,39 @@ class Session:
         self.qDisplayOptionsGrpBoxLayout = qt.QGridLayout()
         self.qDisplayOptionsGrpBox.setLayout(self.qDisplayOptionsGrpBoxLayout)
         
-        qView3PlanesLabel = qt.QLabel("Select image:")
-        self.qDisplayOptionsGrpBoxLayout.addWidget(qView3PlanesLabel,0,0)
-#         qView3PlanesLabel.setStyleSheet("qproperty-alignment: AlignRight;")
+        qViewImageLabel = qt.QLabel("Select image:")
+        self.qDisplayOptionsGrpBoxLayout.addWidget(qViewImageLabel,0,0)
+#         qViewNPlanesLabel.setStyleSheet("qproperty-alignment: AlignRight;")
         
         self.qComboImageList = qt.QComboBox()
         self.qDisplayOptionsGrpBoxLayout.addWidget(self.qComboImageList,0,1)
 
-        self.btn3Planes = qt.QPushButton('Display in 3 planes')
-        self.btn3Planes.enabled = True
-        self.btn3Planes.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
-        self.btn3Planes.connect('clicked(bool)', self.on3PlanesClicked)
-        self.qDisplayOptionsGrpBoxLayout.addWidget(self.btn3Planes,0,2)
+        qViewNPlanesLabel = qt.QLabel("Select view mode:")
+        self.qDisplayOptionsGrpBoxLayout.addWidget(qViewNPlanesLabel,0,2)
+#         qViewNPlanesLabel.setStyleSheet("qproperty-alignment: AlignRight;")
+        
+        self.qComboNPlanesList = qt.QComboBox()
+        self.qDisplayOptionsGrpBoxLayout.addWidget(self.qComboNPlanesList,0,3)
+        self.qComboNPlanesList.addItem("3 Planes")
+        self.qComboNPlanesList.addItem("1 Plane Axial")
+        self.qComboNPlanesList.addItem("1 Plane Sagittal")
+        self.qComboNPlanesList.addItem("1 Plane Coronal")
 
-        qSeparatorLabel = qt.QLabel(" ")
-        self.qDisplayOptionsGrpBoxLayout.addWidget(qSeparatorLabel,0,3)
+        
+        self.btnNPlanesView = qt.QPushButton('Display view')
+        self.btnNPlanesView.enabled = True
+        self.btnNPlanesView.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+        self.btnNPlanesView.connect('clicked(bool)', self.onNPlanesViewClicked)
+        self.qDisplayOptionsGrpBoxLayout.addWidget(self.btnNPlanesView,0,4)
+
+        # qSeparatorLabel = qt.QLabel(" ")
+        # self.qDisplayOptionsGrpBoxLayout.addWidget(qSeparatorLabel,0,3)
         
         self.btnResetView = qt.QPushButton('Reset to default')
         self.btnResetView.enabled = True
         self.btnResetView.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
         self.btnResetView.connect('clicked(bool)', self.onResetViewClicked)
-        self.qDisplayOptionsGrpBoxLayout.addWidget(self.btnResetView,0,4)
+        self.qDisplayOptionsGrpBoxLayout.addWidget(self.btnResetView,0,5)
 
         self.tabExtraToolsLayout.addWidget(self.qDisplayOptionsGrpBox)
         self.tabExtraToolsLayout.addStretch()
@@ -768,13 +799,13 @@ class Session:
         ''' return viewing nodes to original layout for this page in the xml
         '''
         sMsg = ''
-        oImageNodeOverride = self.Get3PlanesComboBoxSelection()
+        # oImageNodeOverride = self.GetNPlanesImageComboBoxSelection()
         
         bSuccess, sMsg  = self.PerformSave('ResetView')
 
         if bSuccess:
             self.AdjustToCurrentQuestionSet()
-            self.b3PlanesViewingMode = False
+            self.bNPlanesViewingMode = False
             self.sViewingMode = "Default"
             self.loCurrentImageViewNodes = []
             self.DisplayQuizLayout()
@@ -785,17 +816,18 @@ class Session:
                 self.oUtilsMsgs.DisplayError(sMsg)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def on3PlanesClicked(self):
-        ''' display the requested image in the 3 planes
+    def onNPlanesViewClicked(self):
+        ''' display the requested image in the requested viewing mode
         '''
-        
-        oImageNodeOverride = self.Get3PlanesComboBoxSelection()
 
         self.CaptureAndSaveImageState()
-        self.oImageView.Assign3Planes(oImageNodeOverride)
-        self.b3PlanesViewingMode = True
-        self.sViewingMode = "3Planes"
-        #    the current node being displayed in an alternate view may have been 
+        
+        oImageNodeOverride = self.GetNPlanesImageComboBoxSelection()
+        self.SetNPlanesView()
+        self.oImageView.AssignNPlanes(oImageNodeOverride, self.llsNPlanesOrientDest)
+        self.bNPlanesViewingMode = True
+
+        #    the current image node being displayed in an alternate view may have been 
         #    repeated in different orientations in the xml
         self.loCurrentImageViewNodes = self.GetMatchingImageNodes(oImageNodeOverride.sImagePath)
         self.ApplySavedImageState()
@@ -1115,7 +1147,7 @@ class Session:
         # assign each image node and its label map (if applicable) to the viewing widget
         self.oImageView.AssignNodesToView()
         
-        self.Set3PlanesComboBoxImageNames()
+        self.SetNPlanesComboBoxImageNames()
 
         self.ApplySavedImageState() 
         
@@ -1348,21 +1380,20 @@ class Session:
             lsDestOrientNode = []
             llsNodeProperties = []
             
-            if not self.b3PlanesViewingMode:
+            if not self.bNPlanesViewingMode:
                 # quizzer is in the default view mode - get state from assigned widgets
                 for oImageNode in self.oImageView.GetImageViewList():
                     if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
                         lsDestOrientNode = [oImageNode.sDestination, oImageNode.sOrientation, oImageNode]
                         llsNodeProperties.append(lsDestOrientNode)
             else:
-                # quizzer was in 3 Planes mode - Red, Green and Yellow have fixed orientations
+                # quizzer was in alternate viewing mode - Red, Green and Yellow have fixed orientations
                 # capture the state of the current node being displayed 
                 #        before changing the selection or resetting to default
                 for oImageNode in self.loCurrentImageViewNodes:
-
-                    llsNodeProperties.append(["Red", "Axial", oImageNode])
-                    llsNodeProperties.append(["Green", "Coronal", oImageNode])
-                    llsNodeProperties.append(["Yellow", "Sagittal", oImageNode])
+                    
+                    for i in range(len(self.llsNPlanesOrientDest)):
+                        llsNodeProperties.append([self.llsNPlanesOrientDest[i][1], self.llsNPlanesOrientDest[i][0], oImageNode])
             
             
             # for each image, capture the slice, window and level settings
@@ -1407,46 +1438,61 @@ class Session:
             
         """
         
-        dict3PlanesOrientDest = {"Axial":"Red", "Coronal":"Green", "Sagittal":"Yellow"}
+        # self.dictNPlanesOrientDest = {"Axial":"Red", "Coronal":"Green", "Sagittal":"Yellow"}
         loImageNodes = []
-        if not self.b3PlanesViewingMode:
+        lsRequiredOrientations = []
+        dictNPlanesOrientDest = {}
+        bLatestWindowLevelFound = False
+        
+        if not self.bNPlanesViewingMode:
             loImageNodes = self.oImageView.GetImageViewList()
         else:
-            loImageNodes.append(self.Get3PlanesComboBoxSelection())
+            loImageNodes.append(self.GetNPlanesImageComboBoxSelection())
+            for i in range(len(self.llsNPlanesOrientDest)):
+                lsRequiredOrientations.append(self.llsNPlanesOrientDest[i][0])
+                dictNPlanesOrientDest.update({self.llsNPlanesOrientDest[i][0] : self.llsNPlanesOrientDest[i][1]})
             
         for oImageNode in loImageNodes:
             dictImageState = {}
-            if self.sViewingMode == "3Planes":
-                lsRequiredOrientations = ["Axial", "Coronal", "Sagittal"]
-            else:
-                # Default or 1 Plane -> just one orientation to search for
-                lsRequiredOrientations = [oImageNode.sOrientation]
-            # else:
-            #     for 1 Plane mode -> get the user requested orientation
-            #     lsRequiredOrientations = [self.GetOrientationComboBoxSelection())
-                
-            lxAllStateElements = self.GetStateElementsForMatchingImagePath(self.oFilesIO.GetRelativeDataPath(oImageNode.sImagePath))
-
-            for sRequiredOrientation in lsRequiredOrientations:
-                bFound = False
-                
-                if not bFound:
-
-                    for idx in reversed(range(len(lxAllStateElements))):
-                        xState = lxAllStateElements[idx]
-                        dictImageState = self.oIOXml.GetAttributes(xState)
-# for debug                        print('Required:', sRequiredOrientation, ',    ',dictImageState["ResponseTime"], ',  ',dictImageState["ViewingMode"], ',  ',dictImageState["Orientation"], ',  ',dictImageState["SliceOffset"])
-                        if dictImageState["Orientation"] == sRequiredOrientation:
-                            bFound = True
-                            break
+            
+            if (oImageNode.sImageType == "Volume" or oImageNode.sImageType == "VolumeSequence"):
+                if self.sViewingMode == "Default":
+                    lsRequiredOrientations = [oImageNode.sOrientation]
+                    
+                    
+                lxAllStateElements = self.GetStateElementsForMatchingImagePath(self.oFilesIO.GetRelativeDataPath(oImageNode.sImagePath))
+    
+                for sRequiredOrientation in lsRequiredOrientations:
+                    bFound = False
+                    
+                    if not bFound:
+    
+                        for idx in reversed(range(len(lxAllStateElements))):
+                            xState = lxAllStateElements[idx]
+                            dictImageState = self.oIOXml.GetAttributes(xState)
+                            # get first instance in the reversed search for the window/level
+                            if not bLatestWindowLevelFound:
+                                sLevel = dictImageState['Level']
+                                sWindow = dictImageState['Window']
+                                bLatestWindowLevelFound = True
+    
+            # for debug                print('Required:', sRequiredOrientation, ',    ',dictImageState["ResponseTime"], ',  ',dictImageState["ViewingMode"], ',  ',dictImageState["Orientation"], ',  ',dictImageState["SliceOffset"])
+                            if dictImageState["Orientation"] == sRequiredOrientation:
+                                bFound = True
+                                break
+                                
+                    if bFound:
+                        # update with latest window/level
+                        if bLatestWindowLevelFound:
+                            dictImageState["Window"] = sWindow
+                            dictImageState["Level"] = sLevel
                             
-                if bFound:
-                    if not self.b3PlanesViewingMode:
-                        oImageNode.SetImageState(dictImageState)
-                    else:
-                        xImage = oImageNode.GetXmlImageElement()
-                        sDestinationOverride = dict3PlanesOrientDest[sRequiredOrientation]
-                        oImageNode.SetImageState(dictImageState, sDestinationOverride)
+                        if not self.bNPlanesViewingMode:
+                            oImageNode.SetImageState(dictImageState)
+                        else:
+                            xImage = oImageNode.GetXmlImageElement()
+                            sDestinationOverride = dictNPlanesOrientDest[sRequiredOrientation]
+                            oImageNode.SetImageState(dictImageState, sDestinationOverride)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetStateElementsForMatchingImagePath(self, sCurrentImagePath):
