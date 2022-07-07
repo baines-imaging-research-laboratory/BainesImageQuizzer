@@ -41,8 +41,8 @@
 	<xs:complexType>
 		<xs:all>
 			<xs:element name="Path" minOccurs="1" maxOccurs="1" />
-			<xs:element name="Destination" type="destinationType" minOccurs="0" maxOccurs="1" />
-			<xs:element name="Orientation" type="orientationType" minOccurs="0" maxOccurs="1" />
+			<xs:element name="DefaultDestination" type="destinationType" minOccurs="0" maxOccurs="1" />
+			<xs:element name="DefaultOrientation" type="orientationType" minOccurs="0" maxOccurs="1" />
 			<xs:element name="Layer" type="layerType" minOccurs="0" maxOccurs="1" />
 			<xs:element ref="ROIs" minOccurs="0" maxOccurs="1" />
 		</xs:all>

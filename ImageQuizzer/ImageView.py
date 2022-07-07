@@ -305,7 +305,7 @@ class ImageView:
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AssignNPlanes(self, oImageViewNode, llsDestOrient):
-        ''' Display the selected image node in the three planes : axial, coronal and sagittal
+        ''' Display the selected image node in the viewing mode selected by the user : 3 Planes or 1 Plane axial/coronal/sagittal
         '''
         self.ClearWidgets()
         if len(llsDestOrient) == 1:
@@ -667,7 +667,7 @@ class ViewNodeBase:
         
 
         # Extract Destination (Red, Green, Yellow, Slice4)
-        lxDestinationNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Destination')
+        lxDestinationNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'DefaultDestination')
         if len(lxDestinationNodes) == 0:
             self.sDestination = 'Red'
 #             sWarningMsg = sWarningMsg + '\n' + 'Missing XML element: Destination . The default "Red" viewing window will be used.   '
@@ -695,7 +695,7 @@ class ViewNodeBase:
             # Only image volumes have an orientation, 
             # segmentation layer (RTStruct) follows the orientation of the display node
              
-            lxOrientationNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Orientation')
+            lxOrientationNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'DefaultOrientation')
             if len(lxOrientationNodes) == 0:
                 self.sOrientation = 'Axial'
 #                 sWarningMsg = sWarningMsg + '\n' + 'Missing XML element: Orientation . The default "Axial" will be used.   '

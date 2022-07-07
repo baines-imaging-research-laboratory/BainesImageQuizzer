@@ -562,10 +562,10 @@ class UtilsFilesIO:
                     sValidationMsg = self.ValidateElementOptions(xImage, 'Layer', sPageReference, self.oIOXml.lValidLayers)
                     sMsg = sMsg + sValidationMsg
                     
-                    sValidationMsg = self.ValidateElementOptions(xImage, 'Destination', sPageReference, self.oIOXml.lValidSliceWidgets)
+                    sValidationMsg = self.ValidateElementOptions(xImage, 'DefaultDestination', sPageReference, self.oIOXml.lValidSliceWidgets)
                     sMsg = sMsg + sValidationMsg
                     
-                    sValidationMsg = self.ValidateElementOptions(xImage, 'Orientation', sPageReference, self.oIOXml.lValidOrientations)
+                    sValidationMsg = self.ValidateElementOptions(xImage, 'DefaultOrientation', sPageReference, self.oIOXml.lValidOrientations)
                     sMsg = sMsg + sValidationMsg
      
                     # >>>>>>>>>>>>>>> Attributes
