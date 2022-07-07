@@ -337,7 +337,7 @@ class Session:
         lNamesAdded = []
         loImageViewNodes = self.oImageView.GetImageViewList()
         for oImageViewNode in loImageViewNodes:
-            if oImageViewNode.sViewLayer == 'Background':
+            if oImageViewNode.sViewLayer == 'Background' or oImageViewNode.sViewLayer == 'Foreground':
                 if oImageViewNode.sNodeName in lNamesAdded:
                     pass
                 else:
@@ -722,7 +722,7 @@ class Session:
         self.qDisplayMgrGrpBoxLayout.addWidget(self.btnWindowLevelOn)
 
 
-        self.btnWindowLevelOff = qt.QPushButton('Off')
+        self.btnWindowLevelOff = qt.QPushButton('Default Cursor')
         self.btnWindowLevelOff.enabled = True
         self.btnWindowLevelOff.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
         self.btnWindowLevelOff.connect('clicked(bool)',self.onWindowLevelOffClicked)
