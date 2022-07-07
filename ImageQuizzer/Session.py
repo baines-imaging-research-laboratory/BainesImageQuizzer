@@ -624,6 +624,7 @@ class Session:
         self.qLineToolsGrpBoxLayout = qt.QHBoxLayout()
         self.qLineToolsGrpBox.setLayout(self.qLineToolsGrpBoxLayout)
 
+        # >>>>>>>>>>>>>>>>>>>>
         # Ruler tools
         qLineToolLabel = qt.QLabel('Ruler:')
         self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabel)
@@ -656,64 +657,55 @@ class Session:
         self.qLineToolsGrpBoxLayout.addWidget(self.btnClearLines)
 
         self.tabExtraToolsLayout.addWidget(self.qLineToolsGrpBox)
-        self.qLineToolsGrpBoxLayout.addStretch()
-
 
         
+        # >>>>>>>>>>>>>>>>>>>>
+        # Crosshairs
         self.qCrossHairsGrpBox = qt.QGroupBox()
         self.qCrossHairsGrpBox.setTitle('Crosshairs')
         self.qCrossHairsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
-        self.qCrossHairsGrpBoxLayout = qt.QGridLayout()
+        self.qCrossHairsGrpBoxLayout = qt.QHBoxLayout()
         self.qCrossHairsGrpBox.setLayout(self.qCrossHairsGrpBoxLayout)
         
         qCrosshairsLabel = qt.QLabel("Use Shift key to display: ")
-        self.qCrossHairsGrpBoxLayout.addWidget(qCrosshairsLabel,0,0)
+        self.qCrossHairsGrpBoxLayout.addWidget(qCrosshairsLabel)
         
         self.btnCrosshairsOn = qt.QPushButton('On')
         self.btnCrosshairsOn.enabled = True
         self.btnCrosshairsOn.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
         self.btnCrosshairsOn.connect('clicked(bool)',self.onCrosshairsOnClicked)
-        self.qCrossHairsGrpBoxLayout.addWidget(self.btnCrosshairsOn,0,1)
+        self.qCrossHairsGrpBoxLayout.addWidget(self.btnCrosshairsOn)
 
 
         self.btnCrosshairsOff = qt.QPushButton('Off')
         self.btnCrosshairsOff.enabled = True
         self.btnCrosshairsOff.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
         self.btnCrosshairsOff.connect('clicked(bool)',self.onCrosshairsOffClicked)
-        self.qCrossHairsGrpBoxLayout.addWidget(self.btnCrosshairsOff,0,2)
+        self.qCrossHairsGrpBoxLayout.addWidget(self.btnCrosshairsOff)
 
-        # attempting to shrink the size of the buttons - there must be a better way??
-        qSpacerLabel1 = qt.QLabel(" ")
-        qSpacerLabel2 = qt.QLabel(".")
-        qSpacerLabel2.setStyleSheet("qproperty-alignment: AlignRight;")
-        self.qCrossHairsGrpBoxLayout.addWidget(qSpacerLabel1,0,1)
-        self.qCrossHairsGrpBoxLayout.addWidget(qSpacerLabel1,0,3)
-        self.qCrossHairsGrpBoxLayout.addWidget(qSpacerLabel1,0,4)
-        self.qCrossHairsGrpBoxLayout.addWidget(qSpacerLabel2,0,5)
 
         self.tabExtraToolsLayout.addWidget(self.qCrossHairsGrpBox)
 
-
         
+        # >>>>>>>>>>>>>>>>>>>>
+        # Viewing modes
         self.qDisplayOptionsGrpBox = qt.QGroupBox()
-        self.qDisplayOptionsGrpBox.setTitle('Display options')
+        self.qDisplayOptionsGrpBox.setTitle('Viewing Display Options')
         self.qDisplayOptionsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
         self.qDisplayOptionsGrpBoxLayout = qt.QGridLayout()
         self.qDisplayOptionsGrpBox.setLayout(self.qDisplayOptionsGrpBoxLayout)
         
         qViewImageLabel = qt.QLabel("Select image:")
         self.qDisplayOptionsGrpBoxLayout.addWidget(qViewImageLabel,0,0)
-#         qViewNPlanesLabel.setStyleSheet("qproperty-alignment: AlignRight;")
         
         self.qComboImageList = qt.QComboBox()
         self.qDisplayOptionsGrpBoxLayout.addWidget(self.qComboImageList,0,1)
 
         qViewNPlanesLabel = qt.QLabel("Select view mode:")
-        self.qDisplayOptionsGrpBoxLayout.addWidget(qViewNPlanesLabel,0,2)
-#         qViewNPlanesLabel.setStyleSheet("qproperty-alignment: AlignRight;")
+        self.qDisplayOptionsGrpBoxLayout.addWidget(qViewNPlanesLabel,1,0)
         
         self.qComboNPlanesList = qt.QComboBox()
-        self.qDisplayOptionsGrpBoxLayout.addWidget(self.qComboNPlanesList,0,3)
+        self.qDisplayOptionsGrpBoxLayout.addWidget(self.qComboNPlanesList,1,1)
         self.qComboNPlanesList.addItem("3 Planes")
         self.qComboNPlanesList.addItem("1 Plane Axial")
         self.qComboNPlanesList.addItem("1 Plane Sagittal")
@@ -724,18 +716,42 @@ class Session:
         self.btnNPlanesView.enabled = True
         self.btnNPlanesView.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
         self.btnNPlanesView.connect('clicked(bool)', self.onNPlanesViewClicked)
-        self.qDisplayOptionsGrpBoxLayout.addWidget(self.btnNPlanesView,0,4)
+        self.qDisplayOptionsGrpBoxLayout.addWidget(self.btnNPlanesView,0,2)
 
-        # qSeparatorLabel = qt.QLabel(" ")
-        # self.qDisplayOptionsGrpBoxLayout.addWidget(qSeparatorLabel,0,3)
         
         self.btnResetView = qt.QPushButton('Reset to default')
         self.btnResetView.enabled = True
         self.btnResetView.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
         self.btnResetView.connect('clicked(bool)', self.onResetViewClicked)
-        self.qDisplayOptionsGrpBoxLayout.addWidget(self.btnResetView,0,5)
+        self.qDisplayOptionsGrpBoxLayout.addWidget(self.btnResetView,1,2)
 
         self.tabExtraToolsLayout.addWidget(self.qDisplayOptionsGrpBox)
+        
+        # >>>>>>>>>>>>>>>>>>>>
+        # Window/Level interactive mode
+        self.qDisplayMgrGrpBox = qt.QGroupBox()
+        self.qDisplayMgrGrpBox.setTitle("Interactive Mode")
+        self.qDisplayMgrGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
+        self.qDisplayMgrGrpBoxLayout = qt.QHBoxLayout()
+        self.qDisplayMgrGrpBox.setLayout(self.qDisplayMgrGrpBoxLayout)
+        
+        qWindowLevelLabel = qt.QLabel("Window/Level: ")
+        self.qDisplayMgrGrpBoxLayout.addWidget(qWindowLevelLabel)
+        
+        self.btnWindowLevelOn = qt.QPushButton('On')
+        self.btnWindowLevelOn.enabled = True
+        self.btnWindowLevelOn.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+        self.btnWindowLevelOn.connect('clicked(bool)',self.onWindowLevelOnClicked)
+        self.qDisplayMgrGrpBoxLayout.addWidget(self.btnWindowLevelOn)
+
+
+        self.btnWindowLevelOff = qt.QPushButton('Off')
+        self.btnWindowLevelOff.enabled = True
+        self.btnWindowLevelOff.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
+        self.btnWindowLevelOff.connect('clicked(bool)',self.onWindowLevelOffClicked)
+        self.qDisplayMgrGrpBoxLayout.addWidget(self.btnWindowLevelOff)
+        
+        self.tabExtraToolsLayout.addWidget(self.qDisplayMgrGrpBox)
         self.tabExtraToolsLayout.addStretch()
         
 
@@ -832,6 +848,15 @@ class Session:
         self.loCurrentImageViewNodes = self.GetMatchingImageNodes(oImageNodeOverride.sImagePath)
         self.ApplySavedImageState()
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onWindowLevelOnClicked(self):
+        slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.AdjustWindowLevel)
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onWindowLevelOffClicked(self):
+        slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.ViewTransform)
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
         
