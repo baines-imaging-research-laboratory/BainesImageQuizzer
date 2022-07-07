@@ -456,6 +456,9 @@ class Session:
         
         bSuccess = True
         sMsg = ''
+        
+        if self.sViewingMode != 'Default':
+            self.onResetViewClicked()
 
         if self._iCurrentCompositeIndex + 1 == len(self._l3iPageQuestionGroupCompositeIndices):
 
@@ -509,6 +512,9 @@ class Session:
         bSuccess = True
         sMsg = ''
 
+        if self.sViewingMode != 'Default':
+            self.onResetViewClicked()
+            
         bNewPage = True
         if self._iCurrentCompositeIndex > 0:
             if self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0] == self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex - 1][0]:
