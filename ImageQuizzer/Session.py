@@ -69,7 +69,7 @@ class Session:
         
         self.bNPlanesViewingMode = False
         self.sViewingMode = "Default"
-        self.loCurrentImageViewNodes = []
+        self.loCurrentXMLImageViewNodes = []
 
 
 
@@ -90,9 +90,15 @@ class Session:
             slicer.modules.quizzereditor.widgetRepresentation().self().exit()
 
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #-------------------------------------------
     #        Getters / Setters
     #-------------------------------------------
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     #----------
     def SetFilesIO(self, oFilesIO):
@@ -340,79 +346,15 @@ class Session:
                     
 
 
-    #-------------------------------------------
-    #        Functions
-    #-------------------------------------------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def RunSetup(self, oFilesIO, slicerMainLayout):
-        
-        self.SetFilesIO(oFilesIO)
-
-        # open xml and check for root node
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizResultsPath(),'Session')
-
-        if not bSuccess:
-            sErrorMsg = "ERROR", "Not a valid quiz - Trouble with XML syntax."
-            self.oUtilsMsgs.DisplayError(sErrorMsg)
-
-        else:
-
-            self.SetupWidgets(slicerMainLayout)
-            self.oQuizWidgets.qLeftWidget.activateWindow()
-            
-            self.AddExtraToolsTab()
-
-            
-            # turn on functionality if any page contains the attribute
-            self.AddSegmentationModule( \
-                self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
-                './/Page', 'EnableSegmentEditor','Y'))
-            
-            # set up ROI colors for segmenting
-            sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
-            self.oFilesIO.SetupROIColorFile(sColorFileName)
-
-
-            # build the list of indices page/questionset as read in by the XML
-            self.BuildPageQuestionCompositeIndexList()
-            # if randomization is requested - shuffle the page/questionset list
-            sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
-            if sRandomizeRequired == 'Y':
-                # check if xnl already holds a set of randomized indices otherwise, call randomizing function
-                liRandIndices = self.GetStoredRandomizedIndices()
-                if liRandIndices == []:
-                    # get the unique list  of all Page Group numbers to randomize
-                    #    this was set during xml validation during the initial read
-                    liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
-                    liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
-                    self.AddRandomizedIndicesToXML(liRandIndices)
-                 
-                self._l3iPageQuestionGroupCompositeIndices = self.ShufflePageQuestionGroupCompositeIndexList(liRandIndices)
-    
-    
-            
-            
-            # check for partial or completed quiz
-            self.SetCompositeIndexIfResumeRequired()
-                        
-            self.progress.setMaximum(len(self._l3iPageQuestionGroupCompositeIndices))
-            self.progress.setValue(self._iCurrentCompositeIndex)
-    
-            self.EnableButtons()
-            self.DisplayQuizLayout()
-            self.DisplayImageLayout()
-
-            
-            if self.GetQuizResuming():
-                # page has been displayed - reset Quiz Resuming to false
-                self.SetQuizResuming(False)
-            else:
-                self.SetupPageState(self.GetCurrentPageIndex())     # create new state object
-                
-            self.AddSessionLoginTimestamp()
-            self.AddUserNameAttribute()
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #-------------------------------------------
+    #        GUI Setup
+    #-------------------------------------------
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupWidgets(self, slicerMainLayout):
 
@@ -481,6 +423,33 @@ class Session:
         self.qButtonGrpBoxLayout.addWidget(self.progress)
         self.qButtonGrpBoxLayout.addWidget(self._btnPrevious)
         self.qButtonGrpBoxLayout.addWidget(self._btnNext)
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def EnableButtons(self):
+        
+        # assume not at the end of the quiz
+        self._btnNext.setText("Next")
+        
+        # beginning of quiz
+        if (self._iCurrentCompositeIndex == 0):
+            self._btnNext.enabled = True
+            self._btnPrevious.enabled = False
+
+        # end of quiz
+        elif (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
+            self._btnNext.enabled = True
+            self._btnPrevious.enabled = True
+
+        # somewhere in middle
+        else:
+            self._btnNext.enabled = True
+            self._btnPrevious.enabled = True
+
+
+        # assign button description           
+        if (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
+            # last question of last image view
+            self._btnNext.setText("Finish")
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onNextButtonClicked(self):
@@ -624,6 +593,7 @@ class Session:
         self.qLineToolsGrpBoxLayout = qt.QHBoxLayout()
         self.qLineToolsGrpBox.setLayout(self.qLineToolsGrpBoxLayout)
 
+
         # >>>>>>>>>>>>>>>>>>>>
         # Ruler tools
         qLineToolLabel = qt.QLabel('Ruler:')
@@ -727,6 +697,7 @@ class Session:
 
         self.tabExtraToolsLayout.addWidget(self.qDisplayOptionsGrpBox)
         
+
         # >>>>>>>>>>>>>>>>>>>>
         # Window/Level interactive mode
         self.qDisplayMgrGrpBox = qt.QGroupBox()
@@ -823,7 +794,7 @@ class Session:
             self.AdjustToCurrentQuestionSet()
             self.bNPlanesViewingMode = False
             self.sViewingMode = "Default"
-            self.loCurrentImageViewNodes = []
+            self.loCurrentXMLImageViewNodes = []
             self.DisplayQuizLayout()
             self.DisplayImageLayout()
 
@@ -845,7 +816,7 @@ class Session:
 
         #    the current image node being displayed in an alternate view may have been 
         #    repeated in different orientations in the xml
-        self.loCurrentImageViewNodes = self.GetMatchingImageNodes(oImageNodeOverride.sImagePath)
+        self.loCurrentXMLImageViewNodes = self.GetMatchingXMLImageNodes(oImageNodeOverride.sImagePath)
         self.ApplySavedImageState()
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -856,34 +827,96 @@ class Session:
     def onWindowLevelOffClicked(self):
         slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.ViewTransform)
 
+
+    
+    
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def EnableButtons(self):
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #-------------------------------------------
+    #        Session Setup
+    #-------------------------------------------
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def RunSetup(self, oFilesIO, slicerMainLayout):
         
-        # assume not at the end of the quiz
-        self._btnNext.setText("Next")
-        
-        # beginning of quiz
-        if (self._iCurrentCompositeIndex == 0):
-            self._btnNext.enabled = True
-            self._btnPrevious.enabled = False
+        self.SetFilesIO(oFilesIO)
 
-        # end of quiz
-        elif (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
-            self._btnNext.enabled = True
-            self._btnPrevious.enabled = True
+        # open xml and check for root node
+        bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizResultsPath(),'Session')
 
-        # somewhere in middle
+        if not bSuccess:
+            sErrorMsg = "ERROR", "Not a valid quiz - Trouble with XML syntax."
+            self.oUtilsMsgs.DisplayError(sErrorMsg)
+
         else:
-            self._btnNext.enabled = True
-            self._btnPrevious.enabled = True
+
+            self.SetupWidgets(slicerMainLayout)
+            self.oQuizWidgets.qLeftWidget.activateWindow()
+            
+            self.AddExtraToolsTab()
+
+            
+            # turn on functionality if any page contains the attribute
+            self.AddSegmentationModule( \
+                self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
+                './/Page', 'EnableSegmentEditor','Y'))
+            
+            # set up ROI colors for segmenting
+            sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
+            self.oFilesIO.SetupROIColorFile(sColorFileName)
 
 
-        # assign button description           
-        if (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
-            # last question of last image view
-            self._btnNext.setText("Finish")
+            # build the list of indices page/questionset as read in by the XML
+            self.BuildPageQuestionCompositeIndexList()
+            # if randomization is requested - shuffle the page/questionset list
+            sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
+            if sRandomizeRequired == 'Y':
+                # check if xnl already holds a set of randomized indices otherwise, call randomizing function
+                liRandIndices = self.GetStoredRandomizedIndices()
+                if liRandIndices == []:
+                    # get the unique list  of all Page Group numbers to randomize
+                    #    this was set during xml validation during the initial read
+                    liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
+                    liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
+                    self.AddRandomizedIndicesToXML(liRandIndices)
+                 
+                self._l3iPageQuestionGroupCompositeIndices = self.ShufflePageQuestionGroupCompositeIndexList(liRandIndices)
+    
+    
+            
+            
+            # check for partial or completed quiz
+            self.SetCompositeIndexIfResumeRequired()
+                        
+            self.progress.setMaximum(len(self._l3iPageQuestionGroupCompositeIndices))
+            self.progress.setValue(self._iCurrentCompositeIndex)
+    
+            self.EnableButtons()
+            self.DisplayQuizLayout()
+            self.DisplayImageLayout()
 
+            
+            if self.GetQuizResuming():
+                # page has been displayed - reset Quiz Resuming to false
+                self.SetQuizResuming(False)
+            else:
+                self.SetupPageState(self.GetCurrentPageIndex())     # create new state object
+                
+            self.AddSessionLoginTimestamp()
+            self.AddUserNameAttribute()
+
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #-------------------------------------------
+    #        Functions
+    #-------------------------------------------
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def BuildPageQuestionCompositeIndexList(self):
         ''' This function sets up the page and question set indices which
@@ -1148,14 +1181,11 @@ class Session:
         self.sPageID = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'ID')
         iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
         self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
-        ################################################
             
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayImageLayout(self):
-
-            
 
                    
         xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
@@ -1376,7 +1406,7 @@ class Session:
         return sCaptureSuccessLevel, lsAllResponses, sAllMsgs
        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetMatchingImageNodes(self, sImagePathToSearch):
+    def GetMatchingXMLImageNodes(self, sImagePathToSearch):
         ''' Search the xml image nodes for the current page that have the same
             path as the image node input to this function
         '''
@@ -1412,16 +1442,16 @@ class Session:
                         lsDestOrientNode = [oImageNode.sDestination, oImageNode.sOrientation, oImageNode]
                         llsNodeProperties.append(lsDestOrientNode)
             else:
-                # quizzer was in alternate viewing mode - Red, Green and Yellow have fixed orientations
-                # capture the state of the current node being displayed 
-                #        before changing the selection or resetting to default
-                for oImageNode in self.loCurrentImageViewNodes:
+                # quizzer was in alternate viewing mode - set up the list to hold current view's orientation, destination and image node
+                for oImageNode in self.loCurrentXMLImageViewNodes:
                     
                     for i in range(len(self.llsNPlanesOrientDest)):
                         llsNodeProperties.append([self.llsNPlanesOrientDest[i][1], self.llsNPlanesOrientDest[i][0], oImageNode])
             
             
-            # for each image, capture the slice, window and level settings
+            # for each image, capture the slice, window and level settings of the current mode being displayed 
+            #        before changing the selection or resetting to default
+            #        (eg. what was the state for the images in 1-Plane Axial view before changing to default view)
             for idx in range(len(llsNodeProperties)):
                 sWidgetName = llsNodeProperties[idx][0]
                 sOrientation = llsNodeProperties[idx][1]
@@ -1463,11 +1493,9 @@ class Session:
             
         """
         
-        # self.dictNPlanesOrientDest = {"Axial":"Red", "Coronal":"Green", "Sagittal":"Yellow"}
         loImageNodes = []
         lsRequiredOrientations = []
         dictNPlanesOrientDest = {}
-        bLatestWindowLevelFound = False
         
         if not self.bNPlanesViewingMode:
             loImageNodes = self.oImageView.GetImageViewList()
@@ -1481,10 +1509,11 @@ class Session:
             dictImageState = {}
             
             if (oImageNode.sImageType == "Volume" or oImageNode.sImageType == "VolumeSequence"):
+
                 if self.sViewingMode == "Default":
                     lsRequiredOrientations = [oImageNode.sOrientation]
                     
-                    
+                bLatestWindowLevelFound = False
                 lxAllStateElements = self.GetStateElementsForMatchingImagePath(self.oFilesIO.GetRelativeDataPath(oImageNode.sImagePath))
     
                 for sRequiredOrientation in lsRequiredOrientations:
@@ -1495,7 +1524,9 @@ class Session:
                         for idx in reversed(range(len(lxAllStateElements))):
                             xState = lxAllStateElements[idx]
                             dictImageState = self.oIOXml.GetAttributes(xState)
+
                             # get first instance in the reversed search for the window/level
+                            # then continue search for matching orientation to get the slice offset
                             if not bLatestWindowLevelFound:
                                 sLevel = dictImageState['Level']
                                 sWindow = dictImageState['Window']
@@ -1682,7 +1713,7 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddXmlElements(self):
         
-        # using the list of question set responses, isolate respones for each question
+        # using the list of question set responses, isolate responses for each question
         iNumQuestions = len(self._lsNewResponses)
 
         # for each question in the question set responses        
