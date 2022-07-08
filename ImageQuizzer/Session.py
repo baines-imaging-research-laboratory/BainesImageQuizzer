@@ -4,6 +4,7 @@ import vtk, qt, ctk, slicer
 import sys
 import unittest
 import random
+import traceback
 
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
@@ -370,13 +371,6 @@ class Session:
         slicerMainLayout.addWidget(self.oQuizWidgets.qLeftWidget)  
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onTabChanged(self):
-        ''' When changing tabs reset segment editor interface
-            to force user to reset the volume to be contoured.
-        '''
-        self.SetSegmentationTabDefaults()
-    
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupButtons(self):
         
         qProgressLabel = qt.QLabel('Progress ')
@@ -425,166 +419,6 @@ class Session:
         self.qButtonGrpBoxLayout.addWidget(self._btnNext)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def EnableButtons(self):
-        
-        # assume not at the end of the quiz
-        self._btnNext.setText("Next")
-        
-        # beginning of quiz
-        if (self._iCurrentCompositeIndex == 0):
-            self._btnNext.enabled = True
-            self._btnPrevious.enabled = False
-
-        # end of quiz
-        elif (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
-            self._btnNext.enabled = True
-            self._btnPrevious.enabled = True
-
-        # somewhere in middle
-        else:
-            self._btnNext.enabled = True
-            self._btnPrevious.enabled = True
-
-
-        # assign button description           
-        if (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
-            # last question of last image view
-            self._btnNext.setText("Finish")
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onNextButtonClicked(self):
-        
-        bSuccess = True
-        sMsg = ''
-        
-        if self.sViewingMode != 'Default':
-            self.onResetViewClicked()
-
-        if self._iCurrentCompositeIndex + 1 == len(self._l3iPageQuestionGroupCompositeIndices):
-
-            # the last question was answered - check if user is ready to exit
-            self.onExitButtonClicked('Finish') # a save is done in here
-            
-            # the user may have cancelled the 'finish'
-            # bypass remainder of the 'next' button code
-
-        else:
-            # this is not the last question set, do a save and display the next page
-            bNewPage = True
-            if self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0] == self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex + 1][0]:
-                bNewPage = False
-            bSuccess, sMsg = self.PerformSave('NextBtn')
-            
-            if bSuccess:
-    
-    
-                ########################################    
-                # set up for next page
-                ########################################    
-                
-                # if last question set, clear list and scene
-                if self.CheckForLastQuestionSetForPage() == True:
-                    self._loQuestionSets = []
-                    slicer.mrmlScene.Clear()
-                else:
-                    # clear quiz widgets only
-                    for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
-                        self.oQuizWidgets.qQuizLayout.itemAt(i).widget().setParent(None)
-            
-                self._iCurrentCompositeIndex = self._iCurrentCompositeIndex + 1
-                self.progress.setValue(self._iCurrentCompositeIndex)
-                
-                self.EnableButtons()
-       
-                if bNewPage:
-                    self.SetupPageState(self.GetCurrentPageIndex())
-                self.DisplayQuizLayout()
-                self.DisplayImageLayout()
-                        
-            else:
-                if sMsg != '':
-                    self.oUtilsMsgs.DisplayWarning( sMsg )
-                
-        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onPreviousButtonClicked(self):
-        
-        bSuccess = True
-        sMsg = ''
-
-        if self.sViewingMode != 'Default':
-            self.onResetViewClicked()
-            
-        bNewPage = True
-        if self._iCurrentCompositeIndex > 0:
-            if self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0] == self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex - 1][0]:
-                bNewPage = False
-
-        bSuccess, sMsg = self.PerformSave('PreviousBtn')
-        
-        if bSuccess:
-
-            ########################################    
-            # set up for previous page
-            ########################################    
-
-            slicer.mrmlScene.Clear()
-            self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
-            self.progress.setValue(self._iCurrentCompositeIndex)
-    
-            if self._iCurrentCompositeIndex < 0:
-                # reset to beginning
-                self._iCurrentCompositeIndex = 0
-            
-            self.EnableButtons()
-            
-            self.AdjustToCurrentQuestionSet()
-            
-            if bNewPage:
-                self.SetupPageState(self.GetCurrentPageIndex())
-            self.DisplayQuizLayout()
-            self.DisplayImageLayout()
-               
-        
-        else:
-            if sMsg != '':
-                self.oUtilsMsgs.DisplayWarning( sMsg )
-            
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onExitButtonClicked(self,sCaller):
-
-        self.progress.setValue(self._iCurrentCompositeIndex + 1)
-        if len(self._l3iPageQuestionGroupCompositeIndices) >0:
-            iProgressPercent = int((self._iCurrentCompositeIndex + 1) / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
-        else:
-            # error in creating the composite index - assign percent to 100 for exiting
-            self.oUtilsMsgs.DisplayError('ERROR creating quiz indices - Exiting')
-        self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
-        
-        sMsg = 'Do you wish to exit?'
-        if sCaller == 'ExitBtn':
-            sMsg = sMsg + ' \nYour responses will be saved. Quiz may be resumed.'
-
-        qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
-        if qtAns == qt.QMessageBox.Ok:
-            bSuccess, sMsg = self.PerformSave(sCaller)
-            if bSuccess:
-                # update shutdown batch file to remove SlicerDICOMDatabase
-                self.oFilesIO.CreateShutdownBatchFile()
-        
-                slicer.util.exit(status=EXIT_SUCCESS)
-            else:
-                if sMsg != '':
-                    self.oUtilsMsgs.DisplayWarning( sMsg )
-
-        # if code reaches here, either the exit was cancelled or there was 
-        # an error in the save
-        self.progress.setValue(self._iCurrentCompositeIndex)
-        iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
-        self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
-
-        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupExtraToolsButtons(self):
         
         # create buttons
@@ -601,39 +435,30 @@ class Session:
 
 
         # >>>>>>>>>>>>>>>>>>>>
-        # Ruler tools
-        qLineToolLabel = qt.QLabel('Ruler:')
-        self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabel)
-        self.qLineToolsGrpBoxLayout.addSpacing(10)
+        # Window/Level interactive mode
+        self.qDisplayMgrGrpBox = qt.QGroupBox()
+        self.qDisplayMgrGrpBox.setTitle("Interactive Mode")
+        self.qDisplayMgrGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
+        self.qDisplayMgrGrpBoxLayout = qt.QHBoxLayout()
+        self.qDisplayMgrGrpBox.setLayout(self.qDisplayMgrGrpBoxLayout)
         
-        self.btnAddMarkupsLine = qt.QPushButton("Add new line")
-        self.btnAddMarkupsLine.enabled = True
-        self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
-        self.btnAddMarkupsLine.connect('clicked(bool)', self.onAddLinesButtonClicked)
-        self.qLineToolsGrpBoxLayout.addWidget(self.btnAddMarkupsLine)
-        self.qLineToolsGrpBoxLayout.addSpacing(10)
+        qWindowLevelLabel = qt.QLabel("Window/Level: ")
+        self.qDisplayMgrGrpBoxLayout.addWidget(qWindowLevelLabel)
         
-        # remove the last point of markup line created
-        qLineToolLabelTrashPt = qt.QLabel('Remove last point:')
-        self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabelTrashPt)
- 
-        self.slMarkupsLineWidget = slicer.qSlicerMarkupsPlaceWidget()
-        # Hide all buttons and only show delete button
-        self.slMarkupsLineWidget.buttonsVisible=False
-        self.slMarkupsLineWidget.deleteButton().show()
-        self.qLineToolsGrpBoxLayout.addWidget(self.slMarkupsLineWidget)
-        self.qLineToolsGrpBoxLayout.addSpacing(10)
-        
-        # Clear all markup lines
-        self.btnClearLines = qt.QPushButton("Clear all")
-        self.btnClearLines.toolTip = "Remove all markup lines."
-        self.btnClearLines.enabled = True
-        self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
-        self.btnClearLines.connect('clicked(bool)',self.onClearLinesButtonClicked)
-        self.qLineToolsGrpBoxLayout.addWidget(self.btnClearLines)
+        self.btnWindowLevelOn = qt.QPushButton('On')
+        self.btnWindowLevelOn.enabled = True
+        self.btnWindowLevelOn.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+        self.btnWindowLevelOn.connect('clicked(bool)',self.onWindowLevelOnClicked)
+        self.qDisplayMgrGrpBoxLayout.addWidget(self.btnWindowLevelOn)
 
-        self.tabExtraToolsLayout.addWidget(self.qLineToolsGrpBox)
 
+        self.btnWindowLevelOff = qt.QPushButton('Default Cursor')
+        self.btnWindowLevelOff.enabled = True
+        self.btnWindowLevelOff.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
+        self.btnWindowLevelOff.connect('clicked(bool)',self.onWindowLevelOffClicked)
+        self.qDisplayMgrGrpBoxLayout.addWidget(self.btnWindowLevelOff)
+        
+        self.tabExtraToolsLayout.addWidget(self.qDisplayMgrGrpBox)
         
         # >>>>>>>>>>>>>>>>>>>>
         # Crosshairs
@@ -705,35 +530,248 @@ class Session:
         
 
         # >>>>>>>>>>>>>>>>>>>>
-        # Window/Level interactive mode
-        self.qDisplayMgrGrpBox = qt.QGroupBox()
-        self.qDisplayMgrGrpBox.setTitle("Interactive Mode")
-        self.qDisplayMgrGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
-        self.qDisplayMgrGrpBoxLayout = qt.QHBoxLayout()
-        self.qDisplayMgrGrpBox.setLayout(self.qDisplayMgrGrpBoxLayout)
+        # Ruler tools
+        qLineToolLabel = qt.QLabel('Ruler:')
+        self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabel)
+        self.qLineToolsGrpBoxLayout.addSpacing(10)
         
-        qWindowLevelLabel = qt.QLabel("Window/Level: ")
-        self.qDisplayMgrGrpBoxLayout.addWidget(qWindowLevelLabel)
+        self.btnAddMarkupsLine = qt.QPushButton("Add new line")
+        self.btnAddMarkupsLine.enabled = True
+        self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+        self.btnAddMarkupsLine.connect('clicked(bool)', self.onAddLinesButtonClicked)
+        self.qLineToolsGrpBoxLayout.addWidget(self.btnAddMarkupsLine)
+        self.qLineToolsGrpBoxLayout.addSpacing(10)
         
-        self.btnWindowLevelOn = qt.QPushButton('On')
-        self.btnWindowLevelOn.enabled = True
-        self.btnWindowLevelOn.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
-        self.btnWindowLevelOn.connect('clicked(bool)',self.onWindowLevelOnClicked)
-        self.qDisplayMgrGrpBoxLayout.addWidget(self.btnWindowLevelOn)
+        # remove the last point of markup line created
+        qLineToolLabelTrashPt = qt.QLabel('Remove last point:')
+        self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabelTrashPt)
+ 
+        self.slMarkupsLineWidget = slicer.qSlicerMarkupsPlaceWidget()
+        # Hide all buttons and only show delete button
+        self.slMarkupsLineWidget.buttonsVisible=False
+        self.slMarkupsLineWidget.deleteButton().show()
+        self.qLineToolsGrpBoxLayout.addWidget(self.slMarkupsLineWidget)
+        self.qLineToolsGrpBoxLayout.addSpacing(10)
+        
+        # Clear all markup lines
+        self.btnClearLines = qt.QPushButton("Clear all")
+        self.btnClearLines.toolTip = "Remove all markup lines."
+        self.btnClearLines.enabled = True
+        self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
+        self.btnClearLines.connect('clicked(bool)',self.onClearLinesButtonClicked)
+        self.qLineToolsGrpBoxLayout.addWidget(self.btnClearLines)
+
+        self.tabExtraToolsLayout.addWidget(self.qLineToolsGrpBox)
 
 
-        self.btnWindowLevelOff = qt.QPushButton('Default Cursor')
-        self.btnWindowLevelOff.enabled = True
-        self.btnWindowLevelOff.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
-        self.btnWindowLevelOff.connect('clicked(bool)',self.onWindowLevelOffClicked)
-        self.qDisplayMgrGrpBoxLayout.addWidget(self.btnWindowLevelOff)
         
-        self.tabExtraToolsLayout.addWidget(self.qDisplayMgrGrpBox)
+        # >>>>>>>>>>>>>>>>>>>>
         self.tabExtraToolsLayout.addStretch()
         
 
         return self.tabExtraToolsLayout
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def EnableButtons(self):
+        
+        # assume not at the end of the quiz
+        self._btnNext.setText("Next")
+        
+        # beginning of quiz
+        if (self._iCurrentCompositeIndex == 0):
+            self._btnNext.enabled = True
+            self._btnPrevious.enabled = False
+
+        # end of quiz
+        elif (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
+            self._btnNext.enabled = True
+            self._btnPrevious.enabled = True
+
+        # somewhere in middle
+        else:
+            self._btnNext.enabled = True
+            self._btnPrevious.enabled = True
+
+
+        # assign button description           
+        if (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
+            # last question of last image view
+            self._btnNext.setText("Finish")
+            
+            
+
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #-------------------------------------------
+    #        GUI Events
+    #-------------------------------------------
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onTabChanged(self):
+        ''' When changing tabs reset segment editor interface
+            to force user to reset the volume to be contoured.
+        '''
+        self.SetSegmentationTabDefaults()
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onNextButtonClicked(self):
+
+        try:        
+            bSuccess = True
+            sMsg = ''
+            
+            if self.sViewingMode != 'Default':
+                self.onResetViewClicked()
+    
+            if self._iCurrentCompositeIndex + 1 == len(self._l3iPageQuestionGroupCompositeIndices):
+    
+                # the last question was answered - check if user is ready to exit
+                self.onExitButtonClicked('Finish') # a save is done in here
+                
+                # the user may have cancelled the 'finish'
+                # bypass remainder of the 'next' button code
+    
+            else:
+                # this is not the last question set, do a save and display the next page
+                bNewPage = True
+                if self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0] == self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex + 1][0]:
+                    bNewPage = False
+                bSuccess, sMsg = self.PerformSave('NextBtn')
+                
+                if bSuccess:
+        
+        
+                    ########################################    
+                    # set up for next page
+                    ########################################    
+                    
+                    # if last question set, clear list and scene
+                    if self.CheckForLastQuestionSetForPage() == True:
+                        self._loQuestionSets = []
+                        slicer.mrmlScene.Clear()
+                    else:
+                        # clear quiz widgets only
+                        for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
+                            self.oQuizWidgets.qQuizLayout.itemAt(i).widget().setParent(None)
+                
+                    self._iCurrentCompositeIndex = self._iCurrentCompositeIndex + 1
+                    self.progress.setValue(self._iCurrentCompositeIndex)
+                    
+                    self.EnableButtons()
+           
+                    if bNewPage:
+                        self.SetupPageState(self.GetCurrentPageIndex())
+                    self.DisplayQuizLayout()
+                    self.DisplayImageLayout()
+                            
+                else:
+                    if sMsg != '':
+                        self.oUtilsMsgs.DisplayWarning( sMsg )
+
+        except:
+            iPage = self.GetCurrentPageIndex() + 1
+            tb = traceback.format_exc()
+            sMsg = "onNextButtonClicked: Error moving to next page. Current page: " + str(iPage) \
+                   + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
+                
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onPreviousButtonClicked(self):
+        
+        try:
+            bSuccess = True
+            sMsg = ''
+    
+            if self.sViewingMode != 'Default':
+                self.onResetViewClicked()
+                
+            bNewPage = True
+            if self._iCurrentCompositeIndex > 0:
+                if self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0] == self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex - 1][0]:
+                    bNewPage = False
+    
+            bSuccess, sMsg = self.PerformSave('PreviousBtn')
+            
+            if bSuccess:
+    
+                ########################################    
+                # set up for previous page
+                ########################################    
+    
+                slicer.mrmlScene.Clear()
+                self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
+                self.progress.setValue(self._iCurrentCompositeIndex)
+        
+                if self._iCurrentCompositeIndex < 0:
+                    # reset to beginning
+                    self._iCurrentCompositeIndex = 0
+                
+                self.EnableButtons()
+                
+                self.AdjustToCurrentQuestionSet()
+                
+                if bNewPage:
+                    self.SetupPageState(self.GetCurrentPageIndex())
+                self.DisplayQuizLayout()
+                self.DisplayImageLayout()
+                   
+            
+            else:
+                if sMsg != '':
+                    self.oUtilsMsgs.DisplayWarning( sMsg )
+
+        except:
+            iPage = self.GetCurrentPageIndex() + 1
+            tb = traceback.format_exc()
+            sMsg = "onPreviousButtonClicked: Error moving to previous page. Current page: " + str(iPage) \
+                   + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
+            
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onExitButtonClicked(self,sCaller):
+
+        try:
+            self.progress.setValue(self._iCurrentCompositeIndex + 1)
+            if len(self._l3iPageQuestionGroupCompositeIndices) >0:
+                iProgressPercent = int((self._iCurrentCompositeIndex + 1) / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
+            else:
+                # error in creating the composite index - assign percent to 100 for exiting
+                self.oUtilsMsgs.DisplayError('ERROR creating quiz indices - Exiting')
+            self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
+            
+            sMsg = 'Do you wish to exit?'
+            if sCaller == 'ExitBtn':
+                sMsg = sMsg + ' \nYour responses will be saved. Quiz may be resumed.'
+    
+            qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
+            if qtAns == qt.QMessageBox.Ok:
+                bSuccess, sMsg = self.PerformSave(sCaller)
+                if bSuccess:
+                    # update shutdown batch file to remove SlicerDICOMDatabase
+                    self.oFilesIO.CreateShutdownBatchFile()
+            
+                    slicer.util.exit(status=EXIT_SUCCESS)
+                else:
+                    if sMsg != '':
+                        self.oUtilsMsgs.DisplayWarning( sMsg )
+    
+            # if code reaches here, either the exit was cancelled or there was 
+            # an error in the save
+            self.progress.setValue(self._iCurrentCompositeIndex)
+            iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
+            self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
+    
+        except:
+            iPage = self.GetCurrentPageIndex() + 1
+            tb = traceback.format_exc()
+            sMsg = "onExitButtonClicked: Error exiting quiz. Current page: " + str(iPage) \
+                   + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
+            
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onAddLinesButtonClicked(self):
         ''' Add a new markup line - using the PlaceMode functionality
@@ -848,72 +886,80 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def RunSetup(self, oFilesIO, slicerMainLayout):
         
-        self.SetFilesIO(oFilesIO)
-
-        # open xml and check for root node
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizResultsPath(),'Session')
-
-        if not bSuccess:
-            sErrorMsg = "ERROR", "Not a valid quiz - Trouble with XML syntax."
-            self.oUtilsMsgs.DisplayError(sErrorMsg)
-
-        else:
-
-            self.SetupWidgets(slicerMainLayout)
-            self.oQuizWidgets.qLeftWidget.activateWindow()
-            
-            self.AddExtraToolsTab()
-
-            
-            # turn on functionality if any page contains the attribute
-            self.AddSegmentationModule( \
-                self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
-                './/Page', 'EnableSegmentEditor','Y'))
-            
-            # set up ROI colors for segmenting
-            sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
-            self.oFilesIO.SetupROIColorFile(sColorFileName)
-
-
-            # build the list of indices page/questionset as read in by the XML
-            self.BuildPageQuestionCompositeIndexList()
-            # if randomization is requested - shuffle the page/questionset list
-            sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
-            if sRandomizeRequired == 'Y':
-                # check if xnl already holds a set of randomized indices otherwise, call randomizing function
-                liRandIndices = self.GetStoredRandomizedIndices()
-                if liRandIndices == []:
-                    # get the unique list  of all Page Group numbers to randomize
-                    #    this was set during xml validation during the initial read
-                    liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
-                    liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
-                    self.AddRandomizedIndicesToXML(liRandIndices)
-                 
-                self._l3iPageQuestionGroupCompositeIndices = self.ShufflePageQuestionGroupCompositeIndexList(liRandIndices)
+        try:
+            self.SetFilesIO(oFilesIO)
     
+            # open xml and check for root node
+            bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizResultsPath(),'Session')
     
-            
-            
-            # check for partial or completed quiz
-            self.SetCompositeIndexIfResumeRequired()
-                        
-            self.progress.setMaximum(len(self._l3iPageQuestionGroupCompositeIndices))
-            self.progress.setValue(self._iCurrentCompositeIndex)
+            if not bSuccess:
+                sErrorMsg = "ERROR", "Not a valid quiz - Trouble with XML syntax."
+                self.oUtilsMsgs.DisplayError(sErrorMsg)
     
-            self.EnableButtons()
-            self.DisplayQuizLayout()
-            self.DisplayImageLayout()
-
-            
-            if self.GetQuizResuming():
-                # page has been displayed - reset Quiz Resuming to false
-                self.SetQuizResuming(False)
             else:
-                self.SetupPageState(self.GetCurrentPageIndex())     # create new state object
+    
+                self.SetupWidgets(slicerMainLayout)
+                self.oQuizWidgets.qLeftWidget.activateWindow()
                 
-            self.AddSessionLoginTimestamp()
-            self.AddUserNameAttribute()
+                self.AddExtraToolsTab()
+    
+                
+                # turn on functionality if any page contains the attribute
+                self.AddSegmentationModule( \
+                    self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
+                    './/Page', 'EnableSegmentEditor','Y'))
+                
+                # set up ROI colors for segmenting
+                sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
+                self.oFilesIO.SetupROIColorFile(sColorFileName)
+    
+    
+                # build the list of indices page/questionset as read in by the XML
+                self.BuildPageQuestionCompositeIndexList()
+                # if randomization is requested - shuffle the page/questionset list
+                sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
+                if sRandomizeRequired == 'Y':
+                    # check if xnl already holds a set of randomized indices otherwise, call randomizing function
+                    liRandIndices = self.GetStoredRandomizedIndices()
+                    if liRandIndices == []:
+                        # get the unique list  of all Page Group numbers to randomize
+                        #    this was set during xml validation during the initial read
+                        liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
+                        liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
+                        self.AddRandomizedIndicesToXML(liRandIndices)
+                     
+                    self._l3iPageQuestionGroupCompositeIndices = self.ShufflePageQuestionGroupCompositeIndexList(liRandIndices)
+        
+        
+                
+                
+                # check for partial or completed quiz
+                self.SetCompositeIndexIfResumeRequired()
+                            
+                self.progress.setMaximum(len(self._l3iPageQuestionGroupCompositeIndices))
+                self.progress.setValue(self._iCurrentCompositeIndex)
+        
+                self.EnableButtons()
+                self.DisplayQuizLayout()
+                self.DisplayImageLayout()
+    
+                
+                if self.GetQuizResuming():
+                    # page has been displayed - reset Quiz Resuming to false
+                    self.SetQuizResuming(False)
+                else:
+                    self.SetupPageState(self.GetCurrentPageIndex())     # create new state object
+                    
+                self.AddSessionLoginTimestamp()
+                self.AddUserNameAttribute()
 
+        except:
+            iPage = self.GetCurrentPageIndex() + 1
+            tb = traceback.format_exc()
+            sMsg = "RunSetup: Error trying to set up the quiz. Page: " + str(iPage) \
+                   + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
+            
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1108,111 +1154,121 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayQuizLayout(self):
         
-        # extract page and question set indices from the current composite index
-        
-
-        xNodeQuestionSet = self.GetCurrentQuestionSetNode()
-        oQuestionSet = QuestionSet()
-        oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
-        
-
-        # first clear any previous widgets (except push buttons)
-        for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
-            self.oQuizWidgets.qQuizLayout.itemAt(i).widget().setParent(None)
-
-        
-        bBuildSuccess, qWidgetQuestionSetForm = oQuestionSet.BuildQuestionSetForm()
-        
-        if bBuildSuccess:
-            self.slMarkupsLineWidget.setPlaceModeEnabled(True)
-            self.oQuizWidgets.qQuizLayout.addWidget(qWidgetQuestionSetForm)
-            self._loQuestionSets.append(oQuestionSet)
-            qWidgetQuestionSetForm.setEnabled(True) # initialize
-
-
-            # if sSavedResponseCompletionLevel == 'AllResponses' or sSavedResponseCompletionLevel == 'PartialResponses':
-            #     self.DisplaySavedResponse()
-            self.DisplaySavedResponse()
-            self.SetPreviousResponses([]) # reset for new Question Set
+        try:
+            # extract page and question set indices from the current composite index
+            xNodeQuestionSet = self.GetCurrentQuestionSetNode()
+            oQuestionSet = QuestionSet()
+            oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
             
-        ################################################
-        ''' Enable tabs and update the progress bar.
-            This is done after displaying questions and prior to loading images to provide a smooth transition
-            when widgets need to be disabled.
-        '''
+    
+            # first clear any previous widgets (except push buttons)
+            for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
+                self.oQuizWidgets.qQuizLayout.itemAt(i).widget().setParent(None)
+    
             
-        xPageNode = self.GetCurrentPageNode()
-        self.SetMultipleResponseAllowed(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'AllowMultipleResponse'))
-        self.SetRequestToEnableSegmentEditorTF(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor'))
-
-
-        if self.GetQuizComplete():
-            self.SetMultipleResponseAllowed('N') #read only
-            qWidgetQuestionSetForm.setEnabled(False)
-            self.SegmentationTabEnabler(False)
-        else:
+            bBuildSuccess, qWidgetQuestionSetForm = oQuestionSet.BuildQuestionSetForm()
             
-            #enable tabs
-            if self.GetMultipleResponseAllowed() or self.GetQuizResuming():
-                qWidgetQuestionSetForm.setEnabled(True)
-                self.SegmentationTabEnabler(self.GetRequestToEnableSegmentEditorTF())
+            if bBuildSuccess:
+                self.slMarkupsLineWidget.setPlaceModeEnabled(True)
+                self.oQuizWidgets.qQuizLayout.addWidget(qWidgetQuestionSetForm)
+                self._loQuestionSets.append(oQuestionSet)
+                qWidgetQuestionSetForm.setEnabled(True) # initialize
+    
+    
+                # if sSavedResponseCompletionLevel == 'AllResponses' or sSavedResponseCompletionLevel == 'PartialResponses':
+                #     self.DisplaySavedResponse()
+                self.DisplaySavedResponse()
+                self.SetPreviousResponses([]) # reset for new Question Set
+                
+            ################################################
+            ''' Enable tabs and update the progress bar.
+                This is done after displaying questions and prior to loading images to provide a smooth transition
+                when widgets need to be disabled.
+            '''
+                
+            xPageNode = self.GetCurrentPageNode()
+            self.SetMultipleResponseAllowed(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'AllowMultipleResponse'))
+            self.SetRequestToEnableSegmentEditorTF(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor'))
+    
+    
+            if self.GetQuizComplete():
+                self.SetMultipleResponseAllowed('N') #read only
+                qWidgetQuestionSetForm.setEnabled(False)
+                self.SegmentationTabEnabler(False)
             else:
-                sSavedResponseCompletionLevel = self.oPageState.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
-                sPageComplete = self.GetPageCompleteAttribute(self._iCurrentCompositeIndex)
-                if sPageComplete == 'Y':
-                    qWidgetQuestionSetForm.setEnabled(False)
-                    self.SegmentationTabEnabler(False)
-                else:
-                    # page not complete - check for question and segmentation completion
+                
+                #enable tabs
+                if self.GetMultipleResponseAllowed() or self.GetQuizResuming():
                     qWidgetQuestionSetForm.setEnabled(True)
                     self.SegmentationTabEnabler(self.GetRequestToEnableSegmentEditorTF())
-
-                    if sSavedResponseCompletionLevel == 'AllResponses':
+                else:
+                    sSavedResponseCompletionLevel = self.oPageState.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
+                    sPageComplete = self.GetPageCompleteAttribute(self._iCurrentCompositeIndex)
+                    if sPageComplete == 'Y':
                         qWidgetQuestionSetForm.setEnabled(False)
-#                         if self.loPageCompletionState[self.GetCurrentPageIndex()].GetSegmentationsCompletedState():
-                    if self.oPageState.GetSegmentationsCompletedState():
                         self.SegmentationTabEnabler(False)
-                    
-            if self.GetSegmentationTabIndex() > 0:
-                # clear Master and Merge selector boxes
-                oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
-                oQuizzerEditorHelperBox.setMasterVolume(None)
+                    else:
+                        # page not complete - check for question and segmentation completion
+                        qWidgetQuestionSetForm.setEnabled(True)
+                        self.SegmentationTabEnabler(self.GetRequestToEnableSegmentEditorTF())
+    
+                        if sSavedResponseCompletionLevel == 'AllResponses':
+                            qWidgetQuestionSetForm.setEnabled(False)
+    #                         if self.loPageCompletionState[self.GetCurrentPageIndex()].GetSegmentationsCompletedState():
+                        if self.oPageState.GetSegmentationsCompletedState():
+                            self.SegmentationTabEnabler(False)
+                        
+                if self.GetSegmentationTabIndex() > 0:
+                    # clear Master and Merge selector boxes
+                    oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
+                    oQuizzerEditorHelperBox.setMasterVolume(None)
 
-
-        ################################################
-            
-        # add page ID/descriptor to the progress bar
-        xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
-        self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
-        self.sPageID = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'ID')
-        iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
-        self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
+            ################################################
+                
+            # add page ID/descriptor to the progress bar
+            xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
+            self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
+            self.sPageID = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'ID')
+            iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
+            self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
+                
+        except:
+            iPage = self.GetCurrentPageIndex() + 1
+            tb = traceback.format_exc()
+            sMsg = "DisplayQuizLayout: Error trying to display questions. Page: " + str(iPage) \
+                   + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
             
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayImageLayout(self):
 
-                   
-        xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
-        self.SetViewingLayout(xmlPageNode)
-
-        # set up the images on the page
-        self.oImageView = ImageView()
-        self.oImageView.RunSetup(self.GetCurrentPageNode(), self.oFilesIO.GetDataParentDir())
-
-        # load label maps and markup lines if a path has been stored in the xml for the images on this page
-        self.oFilesIO.LoadSavedLabelMaps(self)
-        self.oFilesIO.LoadSavedMarkupLines(self)
-
-        # assign each image node and its label map (if applicable) to the viewing widget
-        self.oImageView.AssignNodesToView()
-        
-        self.SetNPlanesComboBoxImageNames()
-
-        self.ApplySavedImageState() 
-        
+        try:
+            xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
+            self.SetViewingLayout(xmlPageNode)
     
+            # set up the images on the page
+            self.oImageView = ImageView()
+            self.oImageView.RunSetup(self.GetCurrentPageNode(), self.oFilesIO.GetDataParentDir())
+    
+            # load label maps and markup lines if a path has been stored in the xml for the images on this page
+            self.oFilesIO.LoadSavedLabelMaps(self)
+            self.oFilesIO.LoadSavedMarkupLines(self)
+    
+            # assign each image node and its label map (if applicable) to the viewing widget
+            self.oImageView.AssignNodesToView()
+            
+            self.SetNPlanesComboBoxImageNames()
+    
+            self.ApplySavedImageState() 
+        
+        except:
+            iPage = self.GetCurrentPageIndex() + 1
+            tb = traceback.format_exc()
+            sMsg = "DisplayImageLayout: Error trying to display images. Page: " + str(iPage) \
+                   + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetViewingLayout(self, xmlPageNode):

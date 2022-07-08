@@ -27,7 +27,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="IGPC2026" Descriptor="Segment Required" LinkViews="Y" Layout="TwoOverTwo" AllowMultipleResponse="Y" EnableSegmentEditor="N">
+	<Page ID="IGPC2026" Descriptor="Segment Required" LinkViews="Y" Layout="TwoOverTwo" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
 		<Image Type="VolumeSequence" ID="DCE" LabelMapID="DCE-Contour" RotateToAcquisition="Y">
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>

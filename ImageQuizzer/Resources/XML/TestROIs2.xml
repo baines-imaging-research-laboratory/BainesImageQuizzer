@@ -1,25 +1,25 @@
 <Session>
 	<Page ID="CL PT001" Descriptor="Multiparametric_MRI" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
 		<Image DicomRead="Y" Type="Volume" ID="T1W MR">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\000000.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="T2W MR">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\000000.dcm</Path>
 		</Image>
 		<Image Type="Volume" ID="DWI">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\BrainDWI\dwi.nrrd</Path>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Seg T2W">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\RT Struct.dcm</Path>
 			<ROIs ROIVisibilityCode="All">
@@ -27,7 +27,7 @@
 			</ROIs>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Seg T1W">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\RT Struct.dcm</Path>
 			<ROIs ROIVisibilityCode="Select">
@@ -35,7 +35,7 @@
 			</ROIs>
 		</Image>
 		<Image Type="LabelMap" ID="Contour1">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\BrainDWI\Segment_1-label.nrrd</Path>
 		</Image>

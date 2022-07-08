@@ -633,10 +633,13 @@ class UtilsFilesIO:
                             
                 # >>>>>>>>>>>>>>>
                 # validate attributes 'SegmentRequired' and 'MinMarkupLinesRequiredOnAnyImage'
-                sValidationMsg = self.ValidateMarkupLinesRequiredSettings(xPage, iPageNum)
+                sValidationMsg = self.ValidateMarkupLinesRequiredSettings(xPage, sPageReference)
                 sMsg = sMsg + sValidationMsg
                             
-                                
+                # Slice4 assignments and TwoOverTwo layout
+                sValidationMsg = self.ValidateSlice4Layout(xPage, sPageReference)
+                sMsg = sMsg + sValidationMsg
+                  
             # >>>>>>>>>>>>>>>
             # validate that each page has a PageGroup attribute if the session requires page group randomization
             sRandomizeRequested = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
@@ -955,6 +958,28 @@ class UtilsFilesIO:
         
         return sMsg
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateSlice4Layout(self, xPageNode, iPageReference):
+        ''' For all image elements, check if it is assigned to Slice4, 
+            that the Page has the attribute 'Layout="TwoOverTwo" '
+        '''
+        sMsg = ''
+        sLayoutSetting = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Layout')
+        
+        lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
+
+        for idx in range(len(lxImageNodes)):
+            xImageNode = lxImageNodes[idx]
+            xDestination = self.oIOXml.GetNthChild(xImageNode, 'DefaultDestination',0)
+            sDestination = self.oIOXml.GetDataInNode(xDestination)
+            
+            if sDestination == 'Slice4' and sLayoutSetting != 'TwoOverTwo':
+                sMsg = sMsg + "\nAssigning an image to Slice4 requires the Page Layout attribute to be set to 'TwoOverTwo'."\
+                        + "\nSee Page:" + str(iPageReference)
+        
+        return sMsg
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExportResultsItemToFile(self, sItemName, sPath, slNode):
         """ Use Slicer's storage node to export node to a file

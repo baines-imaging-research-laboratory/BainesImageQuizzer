@@ -143,7 +143,9 @@ class ImageView:
 
                 
             else:
-                sMsg = 'Image load Failed : ' + self.sPageID + ':' + oImageViewItem.sImagePath
+                sMsg = 'Image load Failed : ' + self.sPageID + ':' + oImageViewItem.sImagePath\
+                        + "\n\nYou may have selected the wrong folder for the image data."\
+                        + "\nExit 3D Slicer and restart the Image Quizzer with the correct directory."
                 self.oUtilsMsgs.DisplayWarning(sMsg)
                  
             progressBar.setValue(indImage + 1)

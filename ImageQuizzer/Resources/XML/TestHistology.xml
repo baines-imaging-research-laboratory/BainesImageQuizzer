@@ -1,9 +1,9 @@
 <Session>
 	<Page ID="Patient 1" Descriptor="Histology" LinkViews="N" Layout="OneUpRedSlice" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" LabelMapID="2DT2">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<QuestionSet ID="Contouring Challenge">
@@ -14,21 +14,21 @@
 	</Page>
 	<Page ID="Patient 1" Descriptor="Histology 1" LinkViews="N" Layout="SideBySideRedYellow" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="2DT2" LabelMapID="Modified2DT2">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<Image Type="Volume" ID="Slice1" RotateToAcquisition="Y" DicomRead="N">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\Oblique 2D Slices\Histology\Histology and Contours\HistContoured_1.dcm</Path>
 		</Image>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="2DT2">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Foreground</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<QuestionSet ID="Test Read Histology Slice">
@@ -46,21 +46,21 @@
 	</Page>
 	<Page ID="Patient 1" Descriptor="Histology 2" LinkViews="N" Layout="SideBySideRedYellow" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="Modified2DT2">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<Image Type="Volume" ID="Slice2" RotateToAcquisition="Y" DicomRead="N">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\Oblique 2D Slices\Histology\Histology and Contours\HistContoured_2.dcm</Path>
 		</Image>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="Modified2DT2">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Foreground</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<QuestionSet ID="Test Read Histology Slice">
@@ -71,21 +71,21 @@
 	</Page>
 	<Page ID="Patient 1" Descriptor="Histology 3" LinkViews="N" Layout="SideBySideRedYellow" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="2DT2">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<Image Type="Volume" ID="Slice3" RotateToAcquisition="Y" DicomRead="N">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\Oblique 2D Slices\Histology\Histology and Contours\HistContoured_3.dcm</Path>
 		</Image>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Foreground</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<QuestionSet ID="Test Read Histology Slice">
@@ -96,21 +96,21 @@
 	</Page>
 	<Page ID="Patient 1" Descriptor="Histology 4" LinkViews="N" Layout="SideBySideRedYellow" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="2DT2">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<Image Type="Volume" ID="Slice4" RotateToAcquisition="Y" DicomRead="N">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\Oblique 2D Slices\Histology\Histology and Contours\HistContoured_4.dcm</Path>
 		</Image>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Foreground</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<QuestionSet ID="Test Read Histology Slice">
@@ -121,9 +121,9 @@
 	</Page>
 	<Page ID="Patient 2" Descriptor="Histology" LinkViews="N" Layout="OneUpRedSlice" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" LabelMapID="2DT2">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<QuestionSet ID="Contouring Challenge">
@@ -134,21 +134,21 @@
 	</Page>
 	<Page ID="Patient 2" Descriptor="Histology 1" LinkViews="N" Layout="SideBySideRedYellow" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="2DT2">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<Image Type="Volume" ID="Slice1" RotateToAcquisition="Y" DicomRead="N">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2028\Oblique 2D Slices\Histology\Histology and Contours\HistContoured_1.dcm</Path>
 		</Image>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Foreground</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<QuestionSet ID="Test Read Histology Slice">
@@ -166,21 +166,21 @@
 	</Page>
 	<Page ID="Patient 2" Descriptor="Histology 2" LinkViews="N" Layout="SideBySideRedYellow" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="2DT2">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<Image Type="Volume" ID="Slice2" RotateToAcquisition="Y" DicomRead="N">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2028\Oblique 2D Slices\Histology\Histology and Contours\HistContoured_2.dcm</Path>
 		</Image>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Foreground</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<QuestionSet ID="Test Read Histology Slice">
@@ -191,21 +191,21 @@
 	</Page>
 	<Page ID="Patient 2" Descriptor="Histology 3" LinkViews="N" Layout="SideBySideRedYellow" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="2DT2">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<Image Type="Volume" ID="Slice3" RotateToAcquisition="Y" DicomRead="N">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2028\Oblique 2D Slices\Histology\Histology and Contours\HistContoured_3.dcm</Path>
 		</Image>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Foreground</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<QuestionSet ID="Test Read Histology Slice">
@@ -216,21 +216,21 @@
 	</Page>
 	<Page ID="Patient 2" Descriptor="Histology 4" LinkViews="N" Layout="SideBySideRedYellow" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="2DT2">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<Image Type="Volume" ID="Slice4" RotateToAcquisition="Y" DicomRead="N">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2028\Oblique 2D Slices\Histology\Histology and Contours\HistContoured_4.dcm</Path>
 		</Image>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Foreground</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<QuestionSet ID="Test Read Histology Slice">
@@ -241,21 +241,21 @@
 	</Page>
 	<Page ID="Patient 2" Descriptor="Histology 5" LinkViews="N" Layout="SideBySideRedYellow" EnableSegmentEditor='Y'>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID="2DT2">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<Image Type="Volume" ID="Slice4" RotateToAcquisition="Y" DicomRead="N">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2028\Oblique 2D Slices\Histology\Histology and Contours\HistContoured_5.dcm</Path>
 		</Image>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Foreground</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2028\In-Vivo Image Volumes\Transformed\NiFTi\In_Vivo_2D_T2_transformed.nii</Path>
 		</Image>
 		<QuestionSet ID="Test Read Histology Slice">

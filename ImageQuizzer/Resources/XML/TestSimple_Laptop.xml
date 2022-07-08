@@ -2,27 +2,27 @@
 <Session RandomizePageGroups="Y">
 	<Page ID="Patient1" Descriptor="PlanningCT" PageGroup="1" EnableSegmentEditor="Y">
 		<Image Type="Volume" ID="Fixed Volume" LabelMapID="Brain-fixed-contour" SegmentRequired="Y">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
 		<Image ID="Unregistered" Type="Volume">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Foreground</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_moving.nii</Path>
 		</Image>
 		<Image Type="Volume" ID="Fixed Volume" SegmentRequired="Y">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Sagittal</Orientation>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="Fixed Volume" SegmentRequired="Y">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
 		<QuestionSet ID="QS-Intro" Descriptor="Introduction to Quiz">
@@ -48,21 +48,21 @@
 	</Page>
 	<Page ID="Patient1" Descriptor="Follow-up 1" PageGroup="1" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
 		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour" SegmentRequired="Y">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour" SegmentRequired="Y">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Sagittal</Orientation>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour" SegmentRequired="Y">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
 		<QuestionSet ID="QS-Observation" Descriptor="What is your Assessment">
@@ -87,25 +87,25 @@
 	</Page>
 	<Page ID="Patient2" Descriptor="Mixed Displays" LinkViews="N" PageGroup="2" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
 		<Image Type="Volume"  ID="Brain CT" DisplayLabelMapID="Brain-fixed-contour" RotateToAcquisition="Y">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="Unregistered" DisplayLabelMapID="Brain-moving-contour" RotateToAcquisition="Y" SegmentRequired="Y">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="Case00Prostate" DisplayLabelMapID="Prostate-contour" RotateToAcquisition="Y" MinMarkupLinesRequired="2">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\Prostate\Case00.mhd</Path>
 		</Image>
 		<Image Type="LabelMap" ID="Case00Prostate Segmentation">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\Prostate\Case00_segmentation.mhd</Path>
 		</Image>
@@ -123,21 +123,21 @@
 	</Page>
 	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="3" EnableSegmentEditor="N">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Sagittal</Orientation>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<QuestionSet ID="QS-Checkup" Descriptor="Tell us how you feel">
@@ -153,25 +153,25 @@
 	</Page>
 	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="3" EnableSegmentEditor="Y" MinMarkupLinesRequiredOnAnyImage="3">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Sagittal</Orientation>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="Select">
@@ -180,7 +180,7 @@
 			</ROIs>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="Select">
@@ -189,7 +189,7 @@
 			</ROIs>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="Select">
@@ -216,25 +216,25 @@
 	</Page>
 	<Page ID="CL PT001" Descriptor="Multiparametric_MRI" PageGroup="4" AllowMultipleResponse="Y">
 		<Image DicomRead="Y" Type="Volume" ID="T1W MR">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\000000.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="T2W MR">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\000000.dcm</Path>
 		</Image>
 		<Image Type="Volume" ID="DWI">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\BrainDWI\dwi.nrrd</Path>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Seg T2W">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\RT Struct.dcm</Path>
 			<ROIs ROIVisibilityCode="Select">
@@ -242,7 +242,7 @@
 			</ROIs>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Seg T1W">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\RT Struct.dcm</Path>
 			<ROIs ROIVisibilityCode="Select">
@@ -250,7 +250,7 @@
 			</ROIs>
 		</Image>
 		<Image Type="LabelMap" ID="Contour1">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\BrainDWI\Segment_1-label.nrrd</Path>
 		</Image>

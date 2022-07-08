@@ -2,25 +2,25 @@
 <Session>
 	<Page ID="Pt Dicom With ROIs" Descriptor="DicomSeries">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Sagittal</Orientation>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="Select">
@@ -29,7 +29,7 @@
 			</ROIs>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="Select">
@@ -38,7 +38,7 @@
 			</ROIs>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="Select">
@@ -72,21 +72,21 @@
 	</Page>
 	<Page ID="Pt Dicom" Descriptor="DicomSeries"  AllowMultipleResponse="Y">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Sagittal</Orientation>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<QuestionSet ID="Test Dicom Read" Descriptor="Try the following:">
@@ -106,21 +106,21 @@
 	</Page>
 	<Page ID="Pt Volume" Descriptor="PlanningCT" AllowMultipleResponse="Y">
 		<Image Type="Volume" ID="Fixed Volume">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="Fixed Volume">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Sagittal</Orientation>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="Fixed Volume">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
 		<QuestionSet ID="QS-Checkup" Descriptor="Test more 3D Slicer features">
@@ -135,21 +135,21 @@
 	</Page>
 	<Page ID="Pt Sequence" Descriptor="Time Sequence" AllowMultipleResponse="Y"  EnableSegmentEditor="Y">
 		<Image Type="VolumeSequence" ID="DCE">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\ProstateDCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
 		</Image>
 		<Image Type="VolumeSequence" ID="DCE">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Sagittal</Orientation>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\ProstateDCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
 		</Image>
 		<Image Type="VolumeSequence" ID="DCE">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\ProstateDCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
 		</Image>
 		<QuestionSet ID="Test Volume Sequence" Descriptor="Test Sequence Volumes">
