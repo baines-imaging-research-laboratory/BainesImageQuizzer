@@ -315,7 +315,6 @@ class ImageView:
         else:
             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
 
-        # llsDestOrient = [['Red','Axial'], ['Green','Coronal'], ['Yellow','Sagittal']]
         
         for idx in range(len(llsDestOrient)):
             slWidget = slicer.app.layoutManager().sliceWidget(llsDestOrient[idx][1])

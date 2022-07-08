@@ -252,7 +252,7 @@ class PageState:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateCompletedFlags(self, xPageNode):
-        ''' Update completed flags for the give xml page element
+        ''' Update completed flags for the given xml page element
         '''
         sMsg = ''
         sQSetMsg = self.UpdatePageCompletionLevelForQuestionSets()
