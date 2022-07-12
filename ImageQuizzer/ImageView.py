@@ -828,16 +828,17 @@ class ViewNodeBase:
             if 'Frame' in dictImageState.keys():
                 # get the sequence browser node for this volume sequence image
                 slAssociatedSequenceBrowserNode = self.GetAssociatedSequenceBrowserNode()
-                slAssociatedSequenceBrowserNode.SetSelectedItemNumber(int(dictImageState['Frame']))
+                if slAssociatedSequenceBrowserNode != None:
+                    slAssociatedSequenceBrowserNode.SetSelectedItemNumber(int(dictImageState['Frame']))
                 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetAssociatedSequenceBrowserNode(self):
-        ''' Get the current frame number of the volume sequence image.
-            The sequence information for the volume sequence node is held in an associated
-            vtkMRMLSequenceBrowserNode. 
+        ''' An image that is of type VolumeSequence is loaded as a vtkMRMLScalarVolumeNode.
+            The sequence information for this node is held in an associated vtkMRMLSequenceBrowserNode. 
         '''
-        sImageIDtoCompare = self.slNode.GetID()
+        slSeqBrowserNode = None
+        ImageIDtoCompare = self.slNode.GetID()
         
         slSequenceBrowserNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSequenceBrowserNode')
         for slSeqBrowserNode in slSequenceBrowserNodes:
