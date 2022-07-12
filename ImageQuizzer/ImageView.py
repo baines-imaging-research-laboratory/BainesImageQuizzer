@@ -824,6 +824,30 @@ class ViewNodeBase:
                 fSliceOffset = float(dictImageState['SliceOffset'])
                 
                 slWindowLogic.SetSliceOffset(fSliceOffset)
+                
+            if 'Frame' in dictImageState.keys():
+                # get the sequence browser node for this volume sequence image
+                slAssociatedSequenceBrowserNode = self.GetAssociatedSequenceBrowserNode()
+                slAssociatedSequenceBrowserNode.SetSelectedItemNumber(int(dictImageState['Frame']))
+                
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetAssociatedSequenceBrowserNode(self):
+        ''' Get the current frame number of the volume sequence image.
+            The sequence information for the volume sequence node is held in an associated
+            vtkMRMLSequenceBrowserNode. 
+        '''
+        sImageIDtoCompare = self.slNode.GetID()
+        
+        slSequenceBrowserNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSequenceBrowserNode')
+        for slSeqBrowserNode in slSequenceBrowserNodes:
+            slAssociatedScalarNodeID = slSeqBrowserNode.GetNodeReference('dataNodeRef0').GetID()
+            
+            if slAssociatedScalarNodeID == sImageIDtoCompare:
+                break
+        
+        slSequenceBrowserNodes.UnRegister(slicer.mrmlScene)
+        return slSeqBrowserNode
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     

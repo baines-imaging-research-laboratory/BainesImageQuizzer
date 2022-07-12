@@ -1391,7 +1391,7 @@ class Session:
                     if bSuccess:
                         #after writing responses, update page states and record the image state
                         self.oPageState.UpdateCompletionLists(self.GetCurrentPageNode())
-                        bSuccess, sMsg = self.CaptureAndSaveImageState()
+                        self.CaptureAndSaveImageState()
                         
                         if sCaller == 'NextBtn' or sCaller == 'Finish':
                             # if this was the last question set for the page, check for completion
@@ -1524,6 +1524,13 @@ class Session:
                     dictAttribState = self.oImageView.GetViewState(oImageNode.slNode, sWidgetName)
                     dictViewModeAttributes = {"Orientation": sOrientation, "Destination": sWidgetName, "ViewingMode": self.sViewingMode}
                     dictAttribState.update(dictViewModeAttributes)
+                    
+                    if oImageNode.sImageType == 'VolumeSequence':
+                        slAssociatedSequenceBrowserNode = oImageNode.GetAssociatedSequenceBrowserNode()
+                        if slAssociatedSequenceBrowserNode != None:
+                            sFrameNumber = str(slAssociatedSequenceBrowserNode.GetSelectedItemNumber())
+                            dictFrameAttribute = {'Frame':sFrameNumber}
+                            dictAttribState.update(dictFrameAttribute)
     
                     # check if xml State element exists
                     xImage = oImageNode.GetXmlImageElement()
@@ -1536,14 +1543,12 @@ class Session:
     
         except:
             bSuccess = False
-            sMsg = 'Error saving the image state. ' \
-            + '\nCheck that the layout setting in xml quiz ' \
-            + '\nis appropriate for assigned image destinations.'
-            # critical error - exit
-            self.oUtilsMsgs.DisplayError( sMsg )
+            iPage = self.GetCurrentPageIndex() + 1
+            tb = traceback.format_exc()
+            sMsg = "CaptureAndSaveImageState: Error saving the image state. Current page: " + str(iPage) \
+                   + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
             
-        return bSuccess, sMsg
-    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ApplySavedImageState(self):
         """ From the xml file, get the image state elements. 
