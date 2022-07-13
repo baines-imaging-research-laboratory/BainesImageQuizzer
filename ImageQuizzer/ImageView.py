@@ -268,11 +268,11 @@ class ImageView:
 
 
 
-            # after all images and their label maps have been assigned, adjust the link control
-            if self.bLinkViews == True:
-                slWindowCompositeNode.LinkedControlOn()
-            else:
-                slWindowCompositeNode.LinkedControlOff()
+        # after all images and their label maps have been assigned, adjust the link control
+        if self.bLinkViews == True:
+            slWindowCompositeNode.LinkedControlOn()
+        else:
+            slWindowCompositeNode.LinkedControlOff()
 
           
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -344,6 +344,19 @@ class ImageView:
             for slLabelMapNode in lLabelMapNodes:
                 if oImageViewNode.sNodeName in slLabelMapNode.GetName():
                     slWindowCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
+                    
+        # display only associated segmentations
+        lSegmentationNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSegmentationNode')
+        for idx in range(lSegmentationNodes.GetNumberOfItems()):
+            slSegNode = lSegmentationNodes.GetItemAsObject(idx)
+            slSegDisplayNode = slSegNode.GetDisplayNode()
+            slSegDisplayNode.SetVisibility(False)
+            if oImageViewNode.slNode.GetID() == slSegNode.GetNodeReference('referenceImageGeometryRef').GetID():
+                slSegDisplayNode.SetVisibility(True)
+                slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeRed')
+                slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeGreen')
+                slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeYellow')
+                
                     
         # clean up memory leaks
         lLabelMapNodes.UnRegister(slicer.mrmlScene)    
@@ -838,7 +851,7 @@ class ViewNodeBase:
             The sequence information for this node is held in an associated vtkMRMLSequenceBrowserNode. 
         '''
         slSeqBrowserNode = None
-        ImageIDtoCompare = self.slNode.GetID()
+        sImageIDtoCompare = self.slNode.GetID()
         
         slSequenceBrowserNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSequenceBrowserNode')
         for slSeqBrowserNode in slSequenceBrowserNodes:
