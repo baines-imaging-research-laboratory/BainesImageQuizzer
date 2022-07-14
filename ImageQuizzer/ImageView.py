@@ -314,6 +314,7 @@ class ImageView:
         else:
             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
 
+
         
         for idx in range(len(llsDestOrient)):
             slWidget = slicer.app.layoutManager().sliceWidget(llsDestOrient[idx][1])
@@ -340,28 +341,67 @@ class ImageView:
             # display any associated label maps
             slWindowCompositeNode.LinkedControlOff()
             lLabelMapNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLLabelMapVolumeNode')
+            bLabelMapMatchFound = False
             for slLabelMapNode in lLabelMapNodes:
-                # search the list of image objects for this page for an object 
-                #    of type 'LabelMap' with a node name match to the Slicer node
-                for oImage in self._loImageViews:
-                    if oImage.sImageType == 'LabelMap' and oImage.sNodeName == slLabelMapNode.GetName():
-                        # compare the destination of this matching label map with
-                        #    that of the image input as a parameter to this function
-                        if oImage.sDestination == oImageViewNode.sDestination:
-                            # assign this labelmap to the alternate viewing window(s)
-                            slWindowCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
-                    
-        # display only associated segmentations
+                #    label maps may be loaded directly from xml or
+                #        the label map may have been created by the user (name + '-bainesquizlabel')
+                #     prioritize : User defined label maps will be assigned here overwriting
+                #         any labelmaps loaded through xml file
+                if slLabelMapNode.GetName() == oImageViewNode.sNodeName + '-bainesquizlabel':
+                    bLabelMapMatchFound = True
+                else:
+                    # search the page xml list of image objects for an object 
+                    #    of type 'LabelMap' with a node name match to the Slicer node
+                    for oImage in self._loImageViews:
+                        if oImage.sImageType == 'LabelMap':
+                            # compare the destination of this matching label map with
+                            #    that of the image input as a parameter to this function
+                            if oImage.sDestination == oImageViewNode.sDestination:
+                                bLabelMapMatchFound = True
+                                
+                if bLabelMapMatchFound:
+                    # assign labelmap to the alternate viewing window(s)
+                    slWindowCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
+
+
+        #turn off all segmentation display nodes
         lSegmentationNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSegmentationNode')
         for idx in range(lSegmentationNodes.GetNumberOfItems()):
             slSegNode = lSegmentationNodes.GetItemAsObject(idx)
             slSegDisplayNode = slSegNode.GetDisplayNode()
             slSegDisplayNode.SetVisibility(False)
-            if oImageViewNode.slNode.GetID() == slSegNode.GetNodeReference('referenceImageGeometryRef').GetID():
-                slSegDisplayNode.SetVisibility(True)
-                slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeRed')
-                slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeGreen')
-                slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeYellow')
+        
+        bSegmentationMatchFound = False
+        # display only associated segmentations
+        for idx in range(lSegmentationNodes.GetNumberOfItems()):
+            slSegNode = lSegmentationNodes.GetItemAsObject(idx)
+            slSegDisplayNode = slSegNode.GetDisplayNode()
+            
+            # Segmentation may be loaded as a DICOM or as a DATA Volume
+            # Search until a match is found
+            sNodeReference = slSegNode.GetNodeReference('referenceImageGeometryRef')
+            if sNodeReference != None:
+                # loaded as a DICOM
+                if oImageViewNode.slNode.GetID() == sNodeReference.GetID():
+                    bSegmentationMatchFound = True
+                    break
+            else:
+                # search the page list of xml image objects for an object 
+                #    of type 'Segmentation' with a node name match to the Slicer node
+                for oImage in self._loImageViews:
+                    if oImage.sImageType == 'Segmentation' and oImage.sNodeName == slSegNode.GetName():
+                        # compare the destination of this matching label map with
+                        #    that of the image input as a parameter to this function
+                        if oImage.sDestination == oImageViewNode.sDestination:
+                            # assign this segmentation to the alternate viewing window(s)
+                            bSegmentationMatchFound = True
+                            break
+                            
+        if bSegmentationMatchFound:
+            slSegDisplayNode.SetVisibility(True)
+            slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeRed')
+            slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeGreen')
+            slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeYellow')
                 
                     
         # clean up memory leaks
