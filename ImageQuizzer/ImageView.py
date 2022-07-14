@@ -5,6 +5,7 @@ import os
 import vtk, qt, ctk, slicer
 import sys
 import unittest
+import traceback
 
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsIOXml import *
@@ -46,9 +47,6 @@ class ImageView:
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # def RunSetup(self, xPageNode, quizLayout, sParentDataDir):
-    #
-    #     self.quizLayout = quizLayout
     def RunSetup(self, xPageNode, sParentDataDir):
 
         # self.quizLayout = quizLayout
@@ -69,7 +67,6 @@ class ImageView:
 
         # display Images
         self.lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
-#         self.iNumImages = self.oIOXml.GetNumChildrenByName(xPageNode, 'Image')
        
         self.BuildViewNodes()
         
@@ -110,16 +107,9 @@ class ImageView:
         for indImage in range(len(self.lxImageNodes)):
 
             
-#             sPageID = self.sPageName + '_' + self.sPageDescriptor
-            
             # Extract the type of volume to be displayed 
             #     if not a DICOM - assume it is a 'Data' volume
             sDICOMRead = self.oIOXml.GetValueOfNodeAttribute(self.lxImageNodes[indImage], 'DicomRead')
-            
-#             if not (sVolumeFormat in self.lValidVolumeFormats):
-#                 sErrorMsg = 'Invalid data format defined for patient in XML : '
-#                 sErrorMsg = sErrorMsg + sPageID
-#                 self.oUtilsMsgs.DisplayError(sErrorMsg)
             
             if (sDICOMRead == 'Y'):
                 oImageViewItem = DicomVolumeDetail(self.lxImageNodes[indImage], self.sPageID, self.sParentDataDir)
@@ -133,9 +123,6 @@ class ImageView:
                 
             if bLoadSuccess and (oImageViewItem.slNode is not None):
                 
-#                 if oImageViewItem.sImageType != 'Segmentation': 
-#                     oImageViewItem.slNode.SetName(oImageViewItem.sNodeName)
-#                     self._loImageViews.append(oImageViewItem)
 
                 # customize node name to prevent illegal characters on defaults
                 oImageViewItem.slNode.SetName(oImageViewItem.sNodeName)
@@ -143,7 +130,7 @@ class ImageView:
 
                 
             else:
-                sMsg = 'Image load Failed : ' + self.sPageID + ':' + oImageViewItem.sImagePath\
+                sMsg = 'BuildViewNodes:Image load Failed : ' + self.sPageID + ':' + oImageViewItem.sImagePath\
                         + "\n\nYou may have selected the wrong folder for the image data."\
                         + "\nExit 3D Slicer and restart the Image Quizzer with the correct directory."
                 self.oUtilsMsgs.DisplayWarning(sMsg)
@@ -170,110 +157,122 @@ class ImageView:
                 it will only get assigned if there were no quiz label maps created and assigned to that widget.
                 (User created label maps segmented as part of the quiz take priority). 
         '''
- 
-        # initialize all layers to None
-        self.ClearWidgets()
-
-        for oViewNode in self._loImageViews:
-
-            # if image type is an RTStruct, ensure that the referenced volume 
-            #    SeriesInstanceUID exists in the list of images to be loaded
-            if oViewNode.sImageType == 'RTStruct':
-                bFoundReferencedVolume = False
-                for oImage in self._loImageViews:
-                    if oViewNode.sVolumeReferenceSeriesUID == oImage.sSeriesInstanceUID:
-                        bFoundReferencedVolume = True
-                        break
-                if bFoundReferencedVolume == False:
-                    sErrorMsg = 'Invalid RTStruct - Referenced Volume SeriesInstanceUID ' \
-                                'does not match any of the image volumes being loaded \n' \
-                                + oViewNode.sImagePath
-                    
-                    self.oUtilsMsgs.DisplayError(sErrorMsg)         
-            
-            
-            # get slicer control objects for the widget
-            slWidget = slicer.app.layoutManager().sliceWidget(oViewNode.sDestination)
-            slWindowLogic = slWidget.sliceLogic()
-            slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
-            slWidgetController = slWidget.sliceController()
-            
-            # turn off link control until all images have been assigned to their destinations
-            slWindowCompositeNode.LinkedControlOff()
-
-            #setup for color tables if defined in the xml attributes for foreground and background images
-            if oViewNode.sColorTableName == '':
-                oViewNode.sColorTableName = 'Grey' # default
-            
-            
-            if oViewNode.sViewLayer == 'Background':
-                slWindowCompositeNode.SetBackgroundVolumeID(slicer.mrmlScene.GetFirstNodeByName(oViewNode.sNodeName).GetID())
-
-                # after defining the inital desired orientation, 
-                #    if the rotatetoacquisition attribute was set,
-                #    rotate the image to the volume plane
-                slWidget.setSliceOrientation(oViewNode.sOrientation)
-                if oViewNode.bRotateToAcquisition == True:
-                    slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
-                    slWidget.mrmlSliceNode().RotateToVolumePlane(slVolumeNode)
-                    self.RotateSliceToImage(oViewNode.sDestination)
-
-                slWidget.fitSliceToBackground()
-                oViewNode.AssignColorTable()
-
-                # turn on label map volume if a label map was loaded for the background image                
-                if oViewNode.slQuizLabelMapNode != None:
-                    slWindowCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
-                else:
-                    # there is no quiz label map node associated with the background,
-                    #    but there may have been one in the foreground;
-                    #    if so, leave it turned on
-                    if slWindowCompositeNode.GetLabelVolumeID ()== None:
-                        slWindowCompositeNode.SetLabelVolumeID('None')
-
+        try:
+            sMsg = ''
+            # initialize all layers to None
+            self.ClearWidgets()
     
-            elif oViewNode.sViewLayer == 'Foreground':
-                slWindowCompositeNode.SetForegroundVolumeID(slicer.mrmlScene.GetFirstNodeByName(oViewNode.sNodeName).GetID())
-                slWidget.setSliceOrientation(oViewNode.sOrientation)
-                slWidgetController.setForegroundOpacity(oViewNode.fOpacity)
-                if oViewNode.bRotateToAcquisition == True:
-                    self.RotateSliceToImage(oViewNode.sDestination)
-
-                oViewNode.AssignColorTable()
-
-                # turn on label map volume if a label map was loaded for the background image                
-                if oViewNode.slQuizLabelMapNode != None:
-                    slWindowCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
-                else:
-                    # there is no quiz label map node associated with the foreground,
-                    #    but there may have been one in the background;
-                    #    if so, leave it turned on
-                    if slWindowCompositeNode.GetLabelVolumeID ()== None:
-                        slWindowCompositeNode.SetLabelVolumeID('None')
-
+            for oViewNode in self._loImageViews:
     
-            elif oViewNode.sViewLayer == 'Label':
-                if slWindowCompositeNode.GetLabelVolumeID() == 'None':
-                    slWindowCompositeNode.SetLabelVolumeID(slicer.mrmlScene.GetFirstNodeByName(oViewNode.sNodeName).GetID())
-#                 print('after set Label Volume ID',slWidget.sliceOrientation)
+                # if image type is an RTStruct, ensure that the referenced volume 
+                #    SeriesInstanceUID exists in the list of images to be loaded
+                if oViewNode.sImageType == 'RTStruct':
+                    bFoundReferencedVolume = False
+                    for oImage in self._loImageViews:
+                        # images that are not Dicom type do not have the series instance property for comparison
+                        if hasattr(oImage, 'sSeriesInstanceUID'):
+                            if oViewNode.sVolumeReferenceSeriesUID == oImage.sSeriesInstanceUID:
+                                bFoundReferencedVolume = True
+                                break
+                    if bFoundReferencedVolume == False:
+                        tb = traceback.format_exc()
+                        sErrorMsg = 'Invalid RTStruct - Referenced Volume SeriesInstanceUID ' \
+                                    'does not match any of the image volumes being loaded \n' \
+                                    'See Page: ' + self.sPageID + ' ' + self.sPageDescriptor \
+                                    + oViewNode.sImagePath \
+                                    + '\n\n' + tb
+                        
+                        self.oUtilsMsgs.DisplayError(sErrorMsg)         
+                
+                
+                # get slicer control objects for the widget
+                slWidget = slicer.app.layoutManager().sliceWidget(oViewNode.sDestination)
+                slWindowLogic = slWidget.sliceLogic()
+                slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
+                slWidgetController = slWidget.sliceController()
+                
+                # turn off link control until all images have been assigned to their destinations
+                slWindowCompositeNode.LinkedControlOff()
     
+                #setup for color tables if defined in the xml attributes for foreground and background images
+                if oViewNode.sColorTableName == '':
+                    oViewNode.sColorTableName = 'Grey' # default
+                
+                
+                if oViewNode.sViewLayer == 'Background':
+                    slWindowCompositeNode.SetBackgroundVolumeID(slicer.mrmlScene.GetFirstNodeByName(oViewNode.sNodeName).GetID())
+    
+                    # after defining the inital desired orientation, 
+                    #    if the rotatetoacquisition attribute was set,
+                    #    rotate the image to the volume plane
+                    slWidget.setSliceOrientation(oViewNode.sOrientation)
+                    if oViewNode.bRotateToAcquisition == True:
+                        slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
+                        slWidget.mrmlSliceNode().RotateToVolumePlane(slVolumeNode)
+                        self.RotateSliceToImage(oViewNode.sDestination)
+    
+                    slWidget.fitSliceToBackground()
+                    oViewNode.AssignColorTable()
+    
+                    # turn on label map volume if a label map was loaded for the background image                
+                    if oViewNode.slQuizLabelMapNode != None:
+                        slWindowCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
+                    else:
+                        # there is no quiz label map node associated with the background,
+                        #    but there may have been one in the foreground;
+                        #    if so, leave it turned on
+                        if slWindowCompositeNode.GetLabelVolumeID ()== None:
+                            slWindowCompositeNode.SetLabelVolumeID('None')
+    
+        
+                elif oViewNode.sViewLayer == 'Foreground':
+                    slWindowCompositeNode.SetForegroundVolumeID(slicer.mrmlScene.GetFirstNodeByName(oViewNode.sNodeName).GetID())
+                    slWidget.setSliceOrientation(oViewNode.sOrientation)
+                    slWidgetController.setForegroundOpacity(oViewNode.fOpacity)
+                    if oViewNode.bRotateToAcquisition == True:
+                        self.RotateSliceToImage(oViewNode.sDestination)
+    
+                    oViewNode.AssignColorTable()
+    
+                    # turn on label map volume if a label map was loaded for the background image                
+                    if oViewNode.slQuizLabelMapNode != None:
+                        slWindowCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
+                    else:
+                        # there is no quiz label map node associated with the foreground,
+                        #    but there may have been one in the background;
+                        #    if so, leave it turned on
+                        if slWindowCompositeNode.GetLabelVolumeID ()== None:
+                            slWindowCompositeNode.SetLabelVolumeID('None')
+    
+        
+                elif oViewNode.sViewLayer == 'Label':
+                    if slWindowCompositeNode.GetLabelVolumeID() == 'None':
+                        slWindowCompositeNode.SetLabelVolumeID(slicer.mrmlScene.GetFirstNodeByName(oViewNode.sNodeName).GetID())
+        
+    
+                elif oViewNode.sViewLayer == 'Segmentation':
+                    # Segmentation nodes are handled differently if they are loaded from Data or Dicom
+                    if oViewNode.GetNodeSource() == 'Dicom':
+                        if not (oViewNode.sRoiVisibilityCode == ''):
+                            self.SetSegmentRoiVisibility(oViewNode)
+                    else:   # source = 'Data'
+                        self.SetSegmentRoiVisibilityFromData(1)
+    
+    
+    
+            # after all images and their label maps have been assigned, adjust the link control
+            if self.bLinkViews == True:
+                slWindowCompositeNode.LinkedControlOn()
+            else:
+                slWindowCompositeNode.LinkedControlOff()
 
-            elif oViewNode.sViewLayer == 'Segmentation':
-                # Segmentation nodes are handled differently if they are loaded from Data or Dicom
-                if oViewNode.GetNodeSource() == 'Dicom':
-                    if not (oViewNode.sRoiVisibilityCode == ''):
-                        self.SetSegmentRoiVisibility(oViewNode)
-                else:   # source = 'Data'
-                    self.SetSegmentRoiVisibilityFromData(1)
-
-
-
-        # after all images and their label maps have been assigned, adjust the link control
-        if self.bLinkViews == True:
-            slWindowCompositeNode.LinkedControlOn()
-        else:
-            slWindowCompositeNode.LinkedControlOff()
-
+        except:
+            tb = traceback.format_exc()
+            sMsg = sMsg + 'AssignNodesToView: Error assigning image objects to the Slicer view nodes.\n' \
+                    + 'See Page: ' + self.sPageID + '_' + self.sPageDescriptor \
+                    + '  Image: ' + oViewNode.sNodeName + '\n' + oViewNode.sImagePath \
+                    + '\n\n' + tb
+            self.oUtilsMsgs.DisplayError(sMsg)
           
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ClearWidgets(self):
@@ -326,7 +325,7 @@ class ImageView:
             slWindowCompositeNode.LinkedControlOff()
             slWindowCompositeNode.SetBackgroundVolumeID(slicer.mrmlScene.GetFirstNodeByName(oImageViewNode.sNodeName).GetID())
     
-            # after defining the inital desired orientation, 
+            # after defining the initial desired orientation, 
             #    if the rotatetoacquisition attribute was set,
             #    rotate the image to the volume plane
             slWidget.setSliceOrientation(llsDestOrient[idx][0])
@@ -342,8 +341,15 @@ class ImageView:
             slWindowCompositeNode.LinkedControlOff()
             lLabelMapNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLLabelMapVolumeNode')
             for slLabelMapNode in lLabelMapNodes:
-                if oImageViewNode.sNodeName in slLabelMapNode.GetName():
-                    slWindowCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
+                # search the list of image objects for this page for an object 
+                #    of type 'LabelMap' with a node name match to the Slicer node
+                for oImage in self._loImageViews:
+                    if oImage.sImageType == 'LabelMap' and oImage.sNodeName == slLabelMapNode.GetName():
+                        # compare the destination of this matching label map with
+                        #    that of the image input as a parameter to this function
+                        if oImage.sDestination == oImageViewNode.sDestination:
+                            # assign this labelmap to the alternate viewing window(s)
+                            slWindowCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
                     
         # display only associated segmentations
         lSegmentationNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSegmentationNode')
@@ -557,32 +563,6 @@ class ImageView:
         
         return dictAttrib
 
-    # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # def AssignLabelMapVisibilityAllNodes(self):
-    #
-    #     lLabelMapNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLLabelMapVolumeNode')
-    #
-    #     for sWidgetName in self.oIOXml.lValidSliceWidgets:
-    #         slWidget = slicer.app.layoutManager().sliceWidget(sWidgetName)
-    #         if slWidget != None:
-    #             slWindowLogic = slWidget.sliceLogic()
-    #             slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
-    #             slWindowCompositeNode.LinkedControlOff()
-    #
-    #             slImageID = slWindowCompositeNode.GetBackgroundVolumeID()
-    #             if slImageID != 'None':
-    #                 slImageNode = slicer.mrmlScene.GetNodeByID(slImageID)
-    #                 sImageName = slImageNode.GetName()
-    #
-    #                 for slLabelMapNode in lLabelMapNodes:
-    #                     if sImageName in slLabelMapNode.GetName():
-    #                         slWindowCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
-    #
-    #         if self.bLinkViews == True:
-    #             slWindowCompositeNode.LinkedControlOn()
-    #         else:
-    #             slWindowCompositeNode.LinkedControlOff()
-                    
     
 ##########################################################################
 #
@@ -677,32 +657,21 @@ class ViewNodeBase:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractXMLNodeElements(self, sParentDataDir):
         
-        sWarningMsg = ''
-        
 
         # Extract Destination (Red, Green, Yellow, Slice4)
         lxDestinationNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'DefaultDestination')
         if len(lxDestinationNodes) == 0:
             self.sDestination = 'Red'
-#             sWarningMsg = sWarningMsg + '\n' + 'Missing XML element: Destination . The default "Red" viewing window will be used.   '
         else:
             self.sDestination = self.oIOXml.GetDataInNode(lxDestinationNodes[0])
             
-#             if len(xDestinationNodes) > 1:
-#                 sWarningMsg = sWarningMsg + '\n' + 'There can only be one viewing destination (Red, Green, Yellow, or Slice4) per image. The first defined destination in the XML will be used.   '
-
-
         # Extract viewing layer (foreground, background, label)
         lxLayerNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Layer')
         if len(lxLayerNodes) == 0: # default
             self.sViewLayer = 'Background'
-#             sWarningMsg = sWarningMsg + '\n' + 'Missing XML element: Layer. The default "Background" will be used.   '
         else:
             self.sViewLayer = self.oIOXml.GetDataInNode(lxLayerNodes[0])
 
-#             if len(xLayerNodes) > 1:
-#                 sWarningMsg = sWarningMsg + '\n' + 'There can only be one viewing layer (foreground, background or label) per image. The first defined layer in the XML will be used.   '
-    
 
         # Extract orientation (axial, sagittal, coronal)
         if (self.sImageType == 'Volume' or self.sImageType == 'VolumeSequence'):
@@ -712,32 +681,17 @@ class ViewNodeBase:
             lxOrientationNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'DefaultOrientation')
             if len(lxOrientationNodes) == 0:
                 self.sOrientation = 'Axial'
-#                 sWarningMsg = sWarningMsg + '\n' + 'Missing XML element: Orientation . The default "Axial" will be used.   '
                 
             else:
                 self.sOrientation = self.oIOXml.GetDataInNode(lxOrientationNodes[0])
 
-#                 if len(xOrientationNodes) > 1:
-#                     sWarningMsg = sWarningMsg + '\n' + 'There can only be one orientation (axial, sagittal, coronal) per image. \nThe first defined orientation in the XML will be used.   '
-            
         # Extract path element
         lxPathNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Path')
 
         if len(lxPathNodes) == 0:
-#             sWarningMsg = sWarningMsg + '\n' + 'Missing XML element: Path . No image will be displayed.'
             self.sImagePath = ''
         else:
             self.sImagePath = os.path.join(sParentDataDir, self.oIOXml.GetDataInNode(lxPathNodes[0]))
-            
-#             if len(xPathNodes) > 1:
-#                 sWarningMsg = sWarningMsg + '\n' + 'There can only be one path per image.  The first defined path will be used.   '
-
-        
-
-        # display warnings
-        if sWarningMsg != '':
-            sWarningMsg = sWarningMsg + '\n' +  self.sNodeName
-            self.oUtilsMsgs.DisplayWarning( sWarningMsg )
             
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -759,31 +713,6 @@ class ViewNodeBase:
         
         return bNodeExists
 
-
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def GetViewState(self):
-#         
-#         # given the view node, window and level
-#         
-#         # access the display node
-#         slDisplayNode = self.slNode.GetDisplayNode()
-#                 
-#         dictAttrib = {}
-#         
-#         if not slDisplayNode == None:
-#             fLevel = slDisplayNode.GetLevel()
-#             fWindow = slDisplayNode.GetWindow()
-#     
-#             # get the slice offset position for the current widget in the layout manager
-#             slWidget = slicer.app.layoutManager().sliceWidget(self.sDestination)
-#             slWindowLogic = slWidget.sliceLogic()
-#             
-#             fSliceOffset = slWindowLogic.GetSliceOffset()
-#             
-#             dictAttrib = { 'Window': str(fWindow), 'Level':  str(fLevel),\
-#                           'SliceOffset': str(fSliceOffset)}
-#         
-#         return dictAttrib
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AssignColorTable(self):
@@ -947,7 +876,6 @@ class DataVolumeDetail(ViewNodeBase):
                     # from the sequence node, slicer creates a ScalarVolumeNode in the subject hierarchy
                     # access the data node through the subject hierarchy
                     slSeqNode = slicer.util.loadNodeFromFile(self.sImagePath,'SequenceFile')
-#                     self.slNode = slSeqNode.GetDataNodeAtValue('0')
                     slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
                     slSHItemID = slSHNode.GetItemChildWithName(slSHNode.GetSceneItemID(), slSeqNode.GetName())
                     self.slNode = slSHNode.GetItemDataNode(slSHItemID)                
@@ -1004,9 +932,6 @@ class DicomVolumeDetail(ViewNodeBase):
         self.ExtractXMLNodeElements(sParentDataDir)
         self.SetQuizLabelMapNode(slLabelMapNode)
         
-        # specifics for Dicom volumes
-#         self.ExtractXMLDicomElements()
-        
         self.ExtractSeriesInstanceUIDs()
 
         # get list of ROIs to be displayed
@@ -1045,8 +970,6 @@ class DicomVolumeDetail(ViewNodeBase):
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadVolume(self):
         bLoadSuccess = self.LoadDicomVolume()
-#         if not (self.sRoiVisibilityCode == 'Empty'):
-#             self.SetSegmentRoiVisibility()
         return bLoadSuccess
         
 
@@ -1094,7 +1017,6 @@ class DicomVolumeDetail(ViewNodeBase):
             sDicomSeriesDir = sHead_Tail[0]
             
             elapsed = time.time() - t
-#             print('Checking if already in db: %s' % elapsed)
             
             # check if already loaded into the database
             for sImportedSeries in lAllSeriesUIDs:
@@ -1107,7 +1029,6 @@ class DicomVolumeDetail(ViewNodeBase):
             #        all series will be imported
             if not bSeriesFoundInDB:
                 elaspsed = time.time() - elapsed
-#                 print('Starting import: %s' % elapsed )                
                 DICOMUtils.importDicom(sDicomSeriesDir)
 
 
@@ -1122,7 +1043,6 @@ class DicomVolumeDetail(ViewNodeBase):
                 bVolumeAlreadyLoaded = True
             else:
                 elaspsed = time.time() - elapsed
-#                 print('Starting load: %s' % elapsed )                
 
                 ####### Function override ... See notes in QuizzerDicomUitls
                 #######     DICOMUtils.loadSeriesByUID([sSeriesUIDToLoad])
@@ -1208,136 +1128,3 @@ class DicomVolumeDetail(ViewNodeBase):
         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def GetAcquisitionVolumePlane(self, slInputNode):
-#         
-#         # extract the scan order from the volume's IJKToRASMatrix in order to determine 
-#         # the original plane of acquisition for the volume
-#         m4ijkToRAS = vtk.vtkMatrix4x4() # initialize
-#         
-#         slInputNode.GetIJKToRASMatrix(m4ijkToRAS)
-#         
-#         sScanOrder = slInputNode.ComputeScanOrderFromIJKToRAS(m4ijkToRAS)
-#         
-#         # order abbreviations:
-#         #    I: inferior
-#         #    S: superior
-#         #    A: anterior
-#         #    P: posterior
-#         #    R: right
-#         #    L: left
-#         
-#         if sScanOrder == 'IS' or sScanOrder == 'SI':
-#             return 'Axial'
-#         elif sScanOrder == 'PA' or sScanOrder == 'AP':
-#             return 'Coronal'
-#         elif sScanOrder == 'LR' or sScanOrder == 'RL':
-#             return 'Sagittal'
-#         
-#          
-
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def CheckForLabelMapNodeExists(self, sROIName):
-#         
-#         bNodeExists = False
-#         
-#         # get Slicer's subject hierarchy node (SHNode)
-#         
-#         slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-#         
-#         
-#         # get the item ID for the Patient through the Study Series Instance UID
-#         
-#         slStudyItemID = slSHNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(), self.sStudyInstanceUID)
-# 
-# 
-#         # using slicers vtk Item Id for the Volume, get the ROI names (children)
-#         
-#         slStudyChildren = vtk.vtkIdList()    # initialize to ItemId type
-#         slSHNode.GetItemChildren(slStudyItemID, slStudyChildren) # populate children variable
-#         
-#         for indChild in range(slStudyChildren.GetNumberOfIds()):
-#             # get id
-#             slChildId = slStudyChildren.GetId(indChild)
-#             # get datanode
-#             slChildDataNode = slSHNode.GetItemDataNode(slChildId)
-#             
-#             #check if class name matches
-#             if (slChildDataNode.GetClassName() == 'vtkMRMLLabelMapVolumeNode'):
-#                 # check if name matches
-#                 if (slChildDataNode.GetName() == sROIName):
-#                     bNodeExists = True
-#                     
-#         
-#         return bNodeExists
-        
-
-# ##########################################################################
-# #
-# #   Class SubjectHierarchyDetail
-# #
-# ##########################################################################
-# 
-# class SubjectHierarchyDetail:
-#     
-#     def __init__(self,  parent=None):
-#         
-#         self.slSHNode = None
-#         self.slSegDisplayNode = None
-#         self.slSegDataNode = None
-#         
-#         self.slStudyItemId = ''
-#         self.slRTStructItemId = ''
-#         self.slSegDisplayNodeId = ''
-# 
-#         
-#         self.slRTStructChildren = None
-#         self.slStudyChildren = None
-#         
-#         self.lsSubjectHierarchyROINames = []
-#         
-#     
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def TraverseSubjectHierarchy(self, sStudyInstanceUID, sSeriesInstanceUID):
-#         
-#         # get Slicer's subject hierarchy node (SHNode)
-#         
-#         self.slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-#         
-#         
-#         # get the item ID for the Patient study through the Study Series Instance UID
-#         
-#         self.slStudyItemID = self.slSHNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(), sStudyInstanceUID)
-# 
-# 
-#         # using slicers vtk Item Id for the Volume, get the ROI names (children)
-#         
-#         self.slStudyChildren = vtk.vtkIdList()    # initialize to ItemId type
-#         self.slSHNode.GetItemChildren(self.slStudyItemID, self.slStudyChildren) # populate children variable
-# 
-#         # get the item ID for the RTStruct through the RTStruct Series Instance UID
-#         
-#         self.slRTStructItemId = self.slSHNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(), sSeriesInstanceUID)
-# 
-# 
-#         # using slicers vtk Item Id for the RTStruct, get the ROI names (children)
-#         
-#         self.slRTStructChildren = vtk.vtkIdList()    # initialize to ItemId type
-#         self.slSHNode.GetItemChildren(self.slRTStructItemId, self.slRTStructChildren) # populate children variable
-#         
-#         
-#         # get ROI child Item ID and store the child (ROI) name
-#         
-#         self.lsSubjectHierarchyROINames = []
-#         for indROI in range(self.slRTStructChildren.GetNumberOfIds()):
-#             slROIItemId = self.slRTStructChildren.GetId(indROI)
-#             sROIName = self.slSHNode.GetItemName(slROIItemId)
-#             self.lsSubjectHierarchyROINames.append(sROIName)
-#         
-#         
-#         # get segmentation node name from data node
-#         
-#         self.slSegDataNode = self.slSHNode.GetItemDataNode(self.slRTStructItemId)
-#         self.slSegDisplayNodeId = self.slSegDataNode.GetDisplayNodeID()
-#         self.slSegDisplayNode = slicer.mrmlScene.GetNodeByID(self.slSegDisplayNodeId)
-
