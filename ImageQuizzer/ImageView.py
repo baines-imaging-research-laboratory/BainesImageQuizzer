@@ -349,6 +349,7 @@ class ImageView:
                 #         any labelmaps loaded through xml file
                 if slLabelMapNode.GetName() == oImageViewNode.sNodeName + '-bainesquizlabel':
                     bLabelMapMatchFound = True
+                    break
                 else:
                     # search the page xml list of image objects for an object 
                     #    of type 'LabelMap' with a node name match to the Slicer node
@@ -358,10 +359,11 @@ class ImageView:
                             #    that of the image input as a parameter to this function
                             if oImage.sDestination == oImageViewNode.sDestination:
                                 bLabelMapMatchFound = True
+                                break
                                 
-                if bLabelMapMatchFound:
-                    # assign labelmap to the alternate viewing window(s)
-                    slWindowCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
+            if bLabelMapMatchFound:
+                # assign labelmap to the alternate viewing window(s)
+                slWindowCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
 
 
         #turn off all segmentation display nodes
