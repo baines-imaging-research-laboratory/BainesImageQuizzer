@@ -317,8 +317,7 @@ class Session:
         self.sViewingMode = self.qComboNPlanesList.currentText
         
         if self.sViewingMode == "3 Planes":
-            # self.dictNPlanesOrientDest = {"Axial":"Red", "Coronal":"Green", "Sagittal":"Yellow"}
-            self.llsNPlanesOrientDest = [["Axial","Red"],["Coronal","Green"],["Sagittal","Yellow"]]
+            self.llsNPlanesOrientDest = [["Axial","Red"],["Sagittal","Green"],["Coronal","Yellow"]]
         elif self.sViewingMode == "1 Plane Axial":
             # self.dictNPlanesOrientDest = {"Axial":"Red"}
             self.llsNPlanesOrientDest = [["Axial","Red"]]

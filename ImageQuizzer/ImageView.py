@@ -306,7 +306,7 @@ class ImageView:
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AssignNPlanes(self, oImageViewNode, llsDestOrient):
-        ''' Display the selected image node in the viewing mode selected by the user : 3 Planes or 1 Plane axial/coronal/sagittal
+        ''' Display the selected image node in the viewing mode selected by the user : 3 Planes or 1 Plane axial/sagittal/coronal
         '''
         self.ClearWidgets()
         if len(llsDestOrient) == 1:
