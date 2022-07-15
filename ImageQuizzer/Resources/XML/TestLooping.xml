@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Session ROIColorFile="PiRadsStudy">
+	<Page ID="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y" EnableSegmentEditor="Y" Loop="Y">
+		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" LabelMapID="DCE-contour">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\ProstateDCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y" LabelMapID="ADC-contour">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\adc.nrrd</Path>
+		</Image>
+		<Image ID="T2-N4" Type="Volume" RotateToAcquisition="Y" LabelMapID="T2-contour">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\t2ax-N4.nrrd</Path>
+		</Image>
+		<QuestionSet ID="PI-RADS" Descriptor="Contouring Exercise">
+			<Question Type="InfoBox" Descriptor="Segmentation Instructions">
+				<Option>In Segment Editor tab, select volume to create segments.</Option>
+				<Option>     Click Edit Selected Label Map collapsible button to access the segmenting tools.</Option>
+				<Option>     Select contour color to match PI-RADS category.</Option>
+				<Option>This may be repeated if segments are to be created on different volumes.</Option>
+			</Question>
+			<Question Type="IntegerValue" Descriptor="Overall PI-RADS" Min="1" Max="5">
+				<Option>Enter overall PI-RADS score:</Option>
+			</Question>
+			<Question Type="CheckBox" Descriptor="Testing">
+				<Option>QS1 Test 1</Option>
+				<Option>QS1 Test 2</Option>
+				<Option>QS1 Test 3</Option>
+			</Question>
+		</QuestionSet>
+		<QuestionSet ID="PI-RADS" Descriptor="Second QSet Test">
+			<Question Type="CheckBox" Descriptor="Testing">
+				<Option>QS2 Test 1</Option>
+				<Option>QS2 Test 2</Option>
+				<Option>QS2 Test 3</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page ID="IGPC2026" Descriptor="Multiparametric_MRI" LinkViews="Y" EnableSegmentEditor="Y" Loop="Y">
+		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" DisplayLabelMapID='DCE-contour'>
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\ProstateDCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y" DisplayLabelMapID='ADC-contour'>
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\adc.nrrd</Path>
+		</Image>
+		<Image ID="T2-N4" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID='T2-contour'>
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\t2ax-N4.nrrd</Path>
+		</Image>
+		<Image ID="K-Trans" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Foreground</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\ktrans.nrrd</Path>
+		</Image>
+		<QuestionSet ID="Segmentation" Descriptor="Self-Assessment">
+			<Question Type="Radio" Descriptor="How did you do?">
+				<Option>Great</Option>
+				<Option>Not bad</Option>
+				<Option>Could be better</Option>
+				<Option>Terrible</Option>
+			</Question>
+			<Question Type="CheckBox" Descriptor="Testing">
+				<Option>QS1 Test 1</Option>
+				<Option>QS1 Test 2</Option>
+				<Option>QS1 Test 3</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>

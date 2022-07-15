@@ -33,6 +33,7 @@
 		<xs:attribute name="EnableSegmentEditor" type="yesnoType" default="N" />
 		<xs:attribute name="SegmentRequiredOnAnyImage" type="yesnoType" default="N"/>
 		<xs:attribute name="MinMarkupLinesRequiredOnAnyImage" type="xs:positiveInteger"/>
+		<xs:attribute name="Loop" type="yesnoType" default="N" />
 	</xs:complexType>
 </xs:element>
 

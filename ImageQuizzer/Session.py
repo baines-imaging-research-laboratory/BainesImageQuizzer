@@ -410,12 +410,21 @@ class Session:
         # use lambda to pass argument to this PyQt slot without invoking the function on setup
         self._btnExit.connect('clicked(bool)',lambda: self.onExitButtonClicked('ExitBtn'))
 
+        # Repeat button
+        self._btnRepeat = qt.QPushButton("Repeat")
+        self._btnRepeat.toolTip = "Save current responses and repeat."
+        self._btnRepeat.enabled = False
+        self._btnRepeat.visible = False
+        self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
+        self._btnRepeat.connect('clicked(bool)', self.onRepeatButtonClicked)
+        
 
         self.qButtonGrpBoxLayout.addWidget(self._btnExit)
         self.qButtonGrpBoxLayout.addWidget(qProgressLabel)
         self.qButtonGrpBoxLayout.addWidget(self.progress)
         self.qButtonGrpBoxLayout.addWidget(self._btnPrevious)
         self.qButtonGrpBoxLayout.addWidget(self._btnNext)
+        self.qButtonGrpBoxLayout.addWidget(self._btnRepeat)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupExtraToolsButtons(self):
@@ -635,6 +644,9 @@ class Session:
     
             else:
                 # this is not the last question set, do a save and display the next page
+                if self._btnNext.text == 'Done':
+                    self._btnNext.setText('Next')
+                
                 bNewPage = True
                 if self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0] == self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex + 1][0]:
                     bNewPage = False
@@ -870,6 +882,13 @@ class Session:
     def onWindowLevelOffClicked(self):
         slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.ViewTransform)
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onRepeatButtonClicked(self):
+        print('Copying page ')
+        if self._iCurrentCompositeIndex + 1 == len(self._l3iPageQuestionGroupCompositeIndices):
+            self._btnNext.setText("Finish")
+        else:
+            self._btnNext.setText("Done")
 
     
     
@@ -1188,6 +1207,10 @@ class Session:
             xPageNode = self.GetCurrentPageNode()
             self.SetMultipleResponseAllowed(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'AllowMultipleResponse'))
             self.SetRequestToEnableSegmentEditorTF(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor'))
+            
+            if self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Loop') == "Y":
+                self._btnRepeat.visible = True
+                self._btnRepeat.enabled = True
     
     
             if self.GetQuizComplete():
