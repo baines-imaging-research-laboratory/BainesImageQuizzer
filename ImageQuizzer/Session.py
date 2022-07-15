@@ -57,6 +57,7 @@ class Session:
         self._bRequestToEnableSegmentEditor = False
         self._bSegmentationModule = False
         self._iSegmentationTabIndex = -1   # default
+        self._bPageLooping = False
         
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
@@ -344,7 +345,13 @@ class Session:
                     lNamesAdded.append(oImageViewNode.sNodeName)
                     self.qComboImageList.addItem(oImageViewNode.sNodeName)
                     
+    #----------
+    def GetPageLooping(self):
+        return self._bPageLooping
 
+    #----------
+    def SetPageLooping(self, bTF):
+        self._bPageLooping = bTF
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -582,6 +589,13 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
         
+        xPageNode = self.GetCurrentPageNode()
+        if self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Loop') == "Y":
+            self.SetPageLooping(True)
+        else:
+            self.SetPageLooping(False)
+            
+            
         # assume not at the end of the quiz
         self._btnNext.setText("Next")
         
@@ -600,6 +614,21 @@ class Session:
             self._btnNext.enabled = True
             self._btnPrevious.enabled = True
 
+        # looping for page
+        if self.GetPageLooping() == True:
+            if self.CheckForLastQuestionSetForPage() == True:
+                self._btnNext.setText("Done")
+                self._btnRepeat.visible = True
+                self._btnRepeat.enabled = True
+            else:
+                self._btnNext.setText("Next")
+                self._btnRepeat.visible = True
+                self._btnRepeat.enabled = False
+        else:
+                self._btnNext.setText("Next")
+                self._btnRepeat.visible = False
+                self._btnRepeat.enabled = False
+
 
         # assign button description           
         if (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
@@ -607,6 +636,7 @@ class Session:
             self._btnNext.setText("Finish")
             
             
+
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -644,9 +674,6 @@ class Session:
     
             else:
                 # this is not the last question set, do a save and display the next page
-                if self._btnNext.text == 'Done':
-                    self._btnNext.setText('Next')
-                
                 bNewPage = True
                 if self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0] == self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex + 1][0]:
                     bNewPage = False
@@ -885,10 +912,6 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onRepeatButtonClicked(self):
         print('Copying page ')
-        if self._iCurrentCompositeIndex + 1 == len(self._l3iPageQuestionGroupCompositeIndices):
-            self._btnNext.setText("Finish")
-        else:
-            self._btnNext.setText("Done")
 
     
     
@@ -1209,9 +1232,9 @@ class Session:
             self.SetRequestToEnableSegmentEditorTF(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor'))
             
             if self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Loop') == "Y":
-                self._btnRepeat.visible = True
-                self._btnRepeat.enabled = True
-    
+                self.SetPageLooping(True)
+            else:
+                self.SetPageLooping(False)
     
             if self.GetQuizComplete():
                 self.SetMultipleResponseAllowed('N') #read only
