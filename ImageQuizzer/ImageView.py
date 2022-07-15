@@ -260,11 +260,11 @@ class ImageView:
     
     
     
-            # after all images and their label maps have been assigned, adjust the link control
-            if self.bLinkViews == True:
-                slWindowCompositeNode.LinkedControlOn()
-            else:
-                slWindowCompositeNode.LinkedControlOff()
+                # adjust the link control for each window
+                if self.bLinkViews == True:
+                    slWindowCompositeNode.LinkedControlOn()
+                else:
+                    slWindowCompositeNode.LinkedControlOff()
 
         except:
             tb = traceback.format_exc()
