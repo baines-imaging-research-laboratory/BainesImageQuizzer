@@ -342,29 +342,35 @@ class ImageView:
             slWindowCompositeNode.LinkedControlOff()
             lLabelMapNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLLabelMapVolumeNode')
             bLabelMapMatchFound = False
+
+            #    label maps may be loaded directly from xml or
+            #        the label map may have been created by the user (name + '-bainesquizlabel')
+            #    User defined label maps will be assigned here as a priority over 
+            #         any labelmaps loaded through xml file
             for slLabelMapNode in lLabelMapNodes:
-                #    label maps may be loaded directly from xml or
-                #        the label map may have been created by the user (name + '-bainesquizlabel')
-                #     prioritize : User defined label maps will be assigned here overwriting
-                #         any labelmaps loaded through xml file
                 if slLabelMapNode.GetName() == oImageViewNode.sNodeName + '-bainesquizlabel':
                     bLabelMapMatchFound = True
+                    slWindowCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
                     break
-                else:
-                    # search the page xml list of image objects for an object 
-                    #    of type 'LabelMap' with a node name match to the Slicer node
+            
+            # a user created label map was not found - continue the search within
+            #    the image objects in the xml page of type 'LabelMap' with
+            #    a destination that matches the destination defined in the xml 
+            #    for the image being displayed in this alternate viewing mode
+            if not bLabelMapMatchFound:
+                for slLabelMapNode in lLabelMapNodes:
                     for oImage in self._loImageViews:
                         if oImage.sImageType == 'LabelMap':
                             # compare the destination of this matching label map with
                             #    that of the image input as a parameter to this function
                             if oImage.sDestination == oImageViewNode.sDestination:
                                 bLabelMapMatchFound = True
+                                slWindowCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
                                 break
-                                
-            if bLabelMapMatchFound:
-                # assign labelmap to the alternate viewing window(s)
-                slWindowCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
+                    if bLabelMapMatchFound:
+                        break
 
+                                
 
         #turn off all segmentation display nodes
         lSegmentationNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSegmentationNode')
