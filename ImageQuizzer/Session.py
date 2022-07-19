@@ -173,6 +173,17 @@ class Session:
     #----------
     #----------
     #----------
+    def GetNavigationIndicesAtIndex(self, iNavInd):
+        return self._l3iNavigationIndices[iNavInd]
+    
+    #----------
+    def NavigationListAppend(self, lNavIndices):
+        self._l3iNavigationIndices.append(lNavIndices)
+        
+    #----------
+    def NavigationListInsertBeforeIndex(self, iNavInd, lNavIndices):
+        self._l3iNavigationIndices.insert(iNavInd, lNavIndices)
+        
     #----------
     #----------
     def SetMultipleResponseAllowed(self, sYN):
@@ -199,7 +210,7 @@ class Session:
     
     #----------
     def GetPageCompleteAttribute(self, iNavigationIndex):
-        iPageIndex = self._l3iNavigationIndices[iNavigationIndex][0]
+        iPageIndex = self.GetNavigationPage(iNavigationIndex)
         xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
 
         sPageComplete = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'PageComplete')
@@ -276,22 +287,22 @@ class Session:
         
     #----------
     def GetCurrentPageNode(self):
-        iPageIndex = self._l3iNavigationIndices[self._iCurrentNavigationIndex][0]
+        iPageIndex = self.GetNavigationPage(self.GetCurrentNavigationIndex())
         xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
         
         return xPageNode
     
     #----------
     def GetCurrentPageIndex(self):
-        return self._l3iNavigationIndices[self._iCurrentNavigationIndex][0]
+        return self.GetNavigationPage(self.GetCurrentNavigationIndex())
     
     #----------
     def GetCurrentQuestionSetIndex(self):
-        return self._l3iNavigationIndices[self._iCurrentNavigationIndex][1]
+        return self.GetNavigationQuestionSet(self.GetCurrentNavigationIndex())
     
     #----------
     def GetCurrentQuestionSetNode(self):
-        iQSetIndex = self._l3iNavigationIndices[self._iCurrentNavigationIndex][1]
+        iQSetIndex = self.GetNavigationQuestionSet(self.GetCurrentNavigationIndex())
         xPageNode = self.GetCurrentPageNode()
         xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', iQSetIndex)
         
@@ -699,7 +710,7 @@ class Session:
             else:
                 # this is not the last question set, do a save and display the next page
                 bNewPage = True
-                if self._l3iNavigationIndices[self.GetCurrentNavigationIndex()][0] == self._l3iNavigationIndices[self.GetCurrentNavigationIndex() + 1][0]:
+                if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() + 1):
                     bNewPage = False
                 bSuccess, sMsg = self.PerformSave('NextBtn')
                 
@@ -752,7 +763,7 @@ class Session:
                 
             bNewPage = True
             if self.GetCurrentNavigationIndex() > 0:
-                if self._l3iNavigationIndices[self.GetCurrentNavigationIndex()][0] == self._l3iNavigationIndices[self.GetCurrentNavigationIndex() - 1][0]:
+                if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() - 1):
                     bNewPage = False
     
             bSuccess, sMsg = self.PerformSave('PreviousBtn')
@@ -1077,7 +1088,7 @@ class Session:
             #        1        0        2
             #    - there can be numerous questions in each question set
             for iQuestionSetIndex in range(len(xQuestionSets)):
-                self._l3iNavigationIndices.append([iPageIndex,iQuestionSetIndex, iPageGroup])
+                self.NavigationListAppend([iPageIndex,iQuestionSetIndex, iPageGroup])
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ShuffleNavigationList(self, lRandIndices):
@@ -1102,9 +1113,12 @@ class Session:
         lShuffledCompositeIndices = []
         
         for indRand in range(len(lRandIndices)):
+            # for indOrig in range(len(self.GetNavigationList())):
+            #     if self._l3iNavigationIndices[indOrig][2] == lRandIndices[indRand] :
+            #         lShuffledCompositeIndices.append(self._l3iNavigationIndices[indOrig])
             for indOrig in range(len(self.GetNavigationList())):
-                if self._l3iNavigationIndices[indOrig][2] == lRandIndices[indRand] :
-                    lShuffledCompositeIndices.append(self._l3iNavigationIndices[indOrig])
+                if self.GetNavigationPageGroup(indOrig) == lRandIndices[indRand] :
+                    lShuffledCompositeIndices.append( self.GetNavigationIndicesAtIndex(indOrig))
         
         return lShuffledCompositeIndices
    
@@ -1185,7 +1199,7 @@ class Session:
             # assume multiple question sets for the page
             # check if next page in the composite index is different than the current page
             #    if yes - we have reached the last question set
-            if not( self._l3iNavigationIndices[self.GetCurrentNavigationIndex()][0] == self._l3iNavigationIndices[self.GetCurrentNavigationIndex() + 1][0]):
+            if not( self.GetNavigationPage(self.GetCurrentNavigationIndex())) == self.GetNavigationPage(self.GetCurrentNavigationIndex() + 1):
                 bLastQuestionSet = True            
            
             
@@ -1998,7 +2012,7 @@ class Session:
 
             if qtAns == qt.QMessageBox.Yes:
                 iResumeNavigationIndex = 0
-                iPageIndex = self._l3iNavigationIndices[iResumeNavigationIndex][0]
+                iPageIndex = self.GetNavigationPage(iResumeNavigationIndex)
                 self.SetupPageState(iPageIndex)
                 
             else:
@@ -2008,7 +2022,7 @@ class Session:
             # loop through composite navigation index to search for the first page without a "PageComplete='Y'"
             for indNav in range(len(self.GetNavigationList())):
                 if not self.GetQuizResuming():
-                    iPageIndex = self._l3iNavigationIndices[indNav][0]
+                    iPageIndex = self.GetNavigationPage(indNav)
                     xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
                     self.SetupPageState(iPageIndex)
                     
