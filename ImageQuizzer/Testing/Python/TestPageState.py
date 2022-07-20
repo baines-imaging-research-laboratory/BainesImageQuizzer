@@ -146,8 +146,8 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_UpdatePageCompletionLevelForMarkupLines_NoLinesReq())
         tupResults.append(self.test_UpdatePageCompletionLevelForMarkupLines_AnyLinesReq())
         tupResults.append(self.test_UpdatePageCompletionLevelForMarkupLines_SpecificLinesReq())
-        
-        tupResults.append(self.test_UpdateSegmentation())
+        #
+        # tupResults.append(self.test_UpdateSegmentation())
 
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
@@ -189,8 +189,8 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         # self.oPageState = PageState(self.oSession)
         self.oPageState.InitializeStates(self.oSession, xPage)
         
-        lExpectedl2iCompletedMarkupLines = [[0,0],[0,0],[0,0],[-1,0]]
-        if self.oPageState.l2iCompletedMarkupLines == lExpectedl2iCompletedMarkupLines:
+        lExpectedl3iCompletedMarkupLines = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
+        if self.oPageState.l3iCompletedMarkupLines == lExpectedl3iCompletedMarkupLines:
             bTestResult = True
         else:
             bTestResult = False
@@ -230,8 +230,8 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         
         iExpectedMinimumNumberOfLines = 3
         sExpectedMarkupLineRequiredState = 'AnyLinesReq'
-        lExpectedl2iCompletedMarkupLines = [[0,0],[0,0],[0,0],[-1,0]]
-        if self.oPageState.l2iCompletedMarkupLines == lExpectedl2iCompletedMarkupLines \
+        lExpectedl3iCompletedMarkupLines = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
+        if self.oPageState.l3iCompletedMarkupLines == lExpectedl3iCompletedMarkupLines \
                 and self.oPageState.sMarkupLineRequiredState == sExpectedMarkupLineRequiredState \
                 and self.oPageState.iMarkupLinesOnAnyImageMinimum == iExpectedMinimumNumberOfLines:
             bTestResult = True
@@ -271,8 +271,8 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         
         iExpectedMinimumNumberOfLines = 0
         sExpectedMarkupLineRequiredState = 'SpecificLinesReq'
-        lExpectedl2iCompletedMarkupLines = [[2,0],[5,0],[0,0],[-1,0]]
-        if self.oPageState.l2iCompletedMarkupLines == lExpectedl2iCompletedMarkupLines \
+        lExpectedl3iCompletedMarkupLines = [[0,2,0],[0,5,0],[0,0,0],[0,5,0]]
+        if self.oPageState.l3iCompletedMarkupLines == lExpectedl3iCompletedMarkupLines \
                 and self.oPageState.sMarkupLineRequiredState == sExpectedMarkupLineRequiredState \
                 and self.oPageState.iMarkupLinesOnAnyImageMinimum == iExpectedMinimumNumberOfLines:
             bTestResult = True
@@ -321,9 +321,9 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         self.oPageState.InitializeStates(self.oSession, xPage)
         
         self.oPageState.UpdateMarkupLinesCompletionList(xPage)
-        l2iExpectedList = [[2,2],[5,1],[0,1],[-1,0]]
+        l3iExpectedList = [[0,2,2],[0,5,1],[0,0,1],[0,5,0]]
         
-        if self.oPageState.l2iCompletedMarkupLines == l2iExpectedList:
+        if self.oPageState.l3iCompletedMarkupLines == l3iExpectedList:
             bTestResult = True
         else:
             bTestResult = False
@@ -352,7 +352,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         
         # test no markup lines required
         self.oPageState.sMarkupLineRequiredState = 'NoLinesReq'
-        self.oPageState.l2iCompletedMarkupLines = [[2,2],[5,1],[0,1],[-1,0]]
+        self.oPageState.l3iCompletedMarkupLines = [[1,2,2],[1,5,1],[1,0,1],[1,0,0]]
         self.oPageState.UpdatePageCompletionLevelForMarkupLines(xPage)
         
         bExpectedCompleted = True
@@ -385,7 +385,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         self.oPageState.InitializeStates(self.oSession, xPage)
         self.oPageState.sMarkupLineRequiredState = 'AnyLinesReq'
         self.oPageState.iMarkupLinesOnAnyImageMinimum = 2
-        self.oPageState.l2iCompletedMarkupLines = [[0,2],[0,1],[0,1],[-1,0]]
+        self.oPageState.l3iCompletedMarkupLines = [[0,0,2],[0,0,1],[0,0,1],[0,0,0]]
         self.oPageState.UpdatePageCompletionLevelForMarkupLines(xPage)
         
         bExpectedCompleted = True
@@ -395,7 +395,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         self.oPageState.InitializeStates(self.oSession, xPage)
         self.oPageState.sMarkupLineRequiredState = 'AnyLinesReq'
         self.oPageState.iMarkupLinesOnAnyImageMinimum = 5
-        self.oPageState.l2iCompletedMarkupLines = [[0,2],[0,1],[0,1],[-1,0]]
+        self.oPageState.l3iCompletedMarkupLines = [[0,0,2],[0,0,1],[0,0,1],[0,0,0]]
         self.oPageState.UpdatePageCompletionLevelForMarkupLines(xPage)
         
         bExpectedCompleted = False
@@ -405,7 +405,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         self.oPageState.InitializeStates(self.oSession, xPage)
         self.oPageState.sMarkupLineRequiredState = 'AnyLinesReq'
         self.oPageState.iMarkupLinesOnAnyImageMinimum = 1 
-        self.oPageState.l2iCompletedMarkupLines = [[0,2],[0,1],[0,1],[-1,0]]
+        self.oPageState.l3iCompletedMarkupLines = [[0,0,2],[0,0,1],[0,0,1],[0,0,0]]
         self.oPageState.UpdatePageCompletionLevelForMarkupLines(xPage)
         
         bExpectedCompleted = True
@@ -438,7 +438,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         
         self.oPageState.InitializeStates(self.oSession, xPage)
         self.oPageState.sMarkupLineRequiredState = 'SpecificLinesReq'
-        self.oPageState.l2iCompletedMarkupLines = [[2,2],[0,1],[0,1],[-1,0]]
+        self.oPageState.l3iCompletedMarkupLines = [[0,2,2],[0,0,1],[0,0,1],[0,0,0]]
         self.oPageState.UpdatePageCompletionLevelForMarkupLines(xPage)
         
         bExpectedCompleted = True
@@ -447,7 +447,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
 
         self.oPageState.InitializeStates(self.oSession, xPage)
         self.oPageState.sMarkupLineRequiredState = 'SpecificLinesReq'
-        self.oPageState.l2iCompletedMarkupLines = [[2,2],[0,1],[3,1],[-1,0]]
+        self.oPageState.l3iCompletedMarkupLines = [[0,2,2],[0,0,1],[0,3,1],[0,0,0]]
         self.oPageState.UpdatePageCompletionLevelForMarkupLines(xPage)
         
         bExpectedCompleted = False

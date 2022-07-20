@@ -124,9 +124,9 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         logic = TestSessionLogic()
 
         tupResults = []
-        tupResults.append(self.test_BuildPageQuestionCompositeIndexList())
-        tupResults.append(self.test_ShufflePageQuestionGroupCompositeIndexList())
-        tupResults.append(self.test_ShuffleCompositeIndexList_WithZero())
+        tupResults.append(self.test_BuildNavigationList())
+        tupResults.append(self.test_ShuffleNavigationList())
+        tupResults.append(self.test_ShuffleNavigationList_WithZero())
 
         tupResults.append(self.test_ValidatePageGroupNumbers_MissingPageGroup())
         tupResults.append(self.test_ValidatePageGroupNumbers_InvalidNumber())
@@ -150,7 +150,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
  
 
     #------------------------------------------- 
-    def test_BuildPageQuestionCompositeIndexList(self):
+    def test_BuildNavigationList(self):
         bTestResult = True
         self.fnName = sys._getframe().f_code.co_name
         
@@ -176,8 +176,8 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         self.oSession = Session()
         self.oSession.SetFilesIO(self._oFilesIO)
         self.oSession.SetIOXml(self.oIOXml)
-        self.oSession.BuildPageQuestionCompositeIndexList()
-        lCompositeIndicesResult = self.oSession.GetCompositeIndicesList()
+        self.oSession.BuildNavigationList()
+        lCompositeIndicesResult = self.oSession.GetNavigationList()
         
         if lCompositeIndicesResult == lExpectedCompositeIndices :
             bTestResult = True
@@ -191,7 +191,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         return tupResult
 
     #------------------------------------------- 
-    def test_ShufflePageQuestionGroupCompositeIndexList(self):
+    def test_ShuffleNavigationList(self):
         bTestResult = True
         self.fnName = sys._getframe().f_code.co_name
         
@@ -220,7 +220,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         lCompositeTestIndices.append([4,0,3])
         lCompositeTestIndices.append([4,1,3])
         
-        self.oSession.SetCompositeIndicesList(lCompositeTestIndices)
+        self.oSession.SetNavigationList(lCompositeTestIndices)
         
         
         lExpectedShuffledOrder = []
@@ -237,7 +237,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         lRandIndices = [2,3,1]
         
         # call function to rebuild the composite indices list
-        lCompositeIndicesResult = self.oSession.ShufflePageQuestionGroupCompositeIndexList(lRandIndices)
+        lCompositeIndicesResult = self.oSession.ShuffleNavigationList(lRandIndices)
         
         # validate result with expected
         if lCompositeIndicesResult == lExpectedShuffledOrder :
@@ -249,7 +249,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         return tupResult
 
     #------------------------------------------- 
-    def test_ShuffleCompositeIndexList_WithZero(self):
+    def test_ShuffleNavigationList_WithZero(self):
         bTestResult = True
         self.fnName = sys._getframe().f_code.co_name
         
@@ -268,7 +268,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         lCompositeTestIndices.append([6,1,3])
         lCompositeTestIndices.append([7,0,0])
       
-        self.oSession.SetCompositeIndicesList(lCompositeTestIndices)
+        self.oSession.SetNavigationList(lCompositeTestIndices)
         
         
         lExpectedShuffledOrder = []
@@ -289,7 +289,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         lRandIndices = [0,2,3,1]
         
         # call function to rebuild the composite indices list
-        lCompositeIndicesResult = self.oSession.ShufflePageQuestionGroupCompositeIndexList(lRandIndices)
+        lCompositeIndicesResult = self.oSession.ShuffleNavigationList(lRandIndices)
         
         # validate result with expected
         if lCompositeIndicesResult == lExpectedShuffledOrder :
