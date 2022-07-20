@@ -1646,7 +1646,7 @@ class Session:
         loImageNodes = []
         lsRequiredOrientations = []
         dictNPlanesOrientDest = {}
-        bResetFitToBackground = False
+        lBackgroundWidgetsToReset = []
         
         if not self.bNPlanesViewingMode:
             loImageNodes = self.oImageView.GetImageViewList()
@@ -1704,8 +1704,10 @@ class Session:
                         # no state element was found 
                         # capture the destination if this was a background layer
                         if oImageNode.sViewLayer == 'Background':
-                            sWidgetDestination = oImageNode.sDestination
-                            bResetFitToBackground = True
+                            if not self.bNPlanesViewingMode:
+                                lBackgroundWidgetsToReset.append(oImageNode.sDestination)
+                            else:
+                                lBackgroundWidgetsToReset.append(dictNPlanesOrientDest[sRequiredOrientation])
                                             
             # in the special case where no previous state was found for a background slice,
             #    reset the widget to the center field of view
@@ -1713,10 +1715,9 @@ class Session:
             #      processed after the background layer and changed the slice offset
             #    (This is particularly important for Background layers that have an image with 
             #     only one slice (eg. histology) )
-            if bResetFitToBackground:
+            for sWidgetDestination in lBackgroundWidgetsToReset:
                 slWidget = slicer.app.layoutManager().sliceWidget(sWidgetDestination)
                 slWidget.fitSliceToBackground()
-                
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetStateElementsForMatchingImagePath(self, sCurrentImagePath):
         
