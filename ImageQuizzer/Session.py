@@ -949,8 +949,34 @@ class Session:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onRepeatButtonClicked(self):
-        print('Copying page ')
+        
+        indPageToRepeat = self.GetCurrentPageIndex()
+        xPageToRepeatNode = self.GetCurrentPageNode()
+        
+        # find the next xml page that has Rep 0 (move past all repeated pages for this loop)
+        indNextPageWithRep0 = self.oIOXml.GetIndexOfNextChildWithAttributeValue(xPageToRepeatNode, "Page", indPageToRepeat, "Rep", 0)
 
+        # insert a copy of the current page and update navigation index
+        self.oIOXml.InsertElementBeforeIndex(self.oIOXml.GetRootNode(), xPageToRepeatNode, indNextPageWithRep0)
+        self.SetCurrentNavigationIndex(self.GetCurrentNavigationIndex() + 1)
+        
+        # update the repeated page
+        self.AdjustXMLForRepeatedPage()
+        
+        self.BuildNavigationList()
+        # if randomization is requested - shuffle the page/questionset list
+        sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'RandomizePageGroups')
+        if sRandomizeRequired == 'Y':
+            # check if xnl already holds a set of randomized indices otherwise, call randomizing function
+            liRandIndices = self.GetStoredRandomizedIndices()
+            if liRandIndices == []:
+                # get the unique list  of all Page Group numbers to randomize
+                #    this was set during xml validation during the initial read
+                liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
+                liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
+                self.AddRandomizedIndicesToXML(liRandIndices)
+             
+            self.SetNavigationList( self.ShuffleNavigationList(liRandIndices) )
     
     
     
@@ -1897,7 +1923,12 @@ class Session:
             xPreviousPage = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), "Page", self.GetCurrentNavigationIndex() -1 )
             sPreviousRepNum = self.oIOXml.GetValueOfNodeAttribute(xPreviousPage, "Rep")
             
-            iPreviousRepNum = int(sPreviousRepNum)
+            try:
+                iPreviousRepNum = int(sPreviousRepNum)
+            except:
+                iPreviousRepNum =0
+                self.oIOXml.UpdateAtributesInElement(xPreviousPage, {"Rep":"0"})
+                
             sNewRepNum = str(iPreviousRepNum + 1)
             dictAttrib = {"Rep":sNewRepNum}
             self.oIOXml.UpdateAtributesInElement(xNewRepeatPage, dictAttrib)    
