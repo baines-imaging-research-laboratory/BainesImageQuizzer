@@ -664,7 +664,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
     def test_AppendElement(self):
         
         self.fnName = sys._getframe().f_code.co_name
-        bTestResult = True
+        bTestResult = False
         
         xRoot = etree.Element("Session")
         etree.SubElement(xRoot,"Page", Rep="0")
@@ -688,7 +688,10 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         etree.SubElement(xExpectedRoot,"Page", Rep="2")
 
         
-        if xRoot == xExpectedRoot:
+        sRoot = etree.tostring(xRoot)
+        sExpectedRoot = etree.tostring(xExpectedRoot)
+        
+        if sRoot == sExpectedRoot:
             bTestResult = True
         
         tupResult = self.fnName, bTestResult
@@ -698,7 +701,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
     def test_InsertElementBeforeIndex(self):
         
         self.fnName = sys._getframe().f_code.co_name
-        bTestResult = True
+        bTestResult = False
         
         xRoot = etree.Element("Session")
         etree.SubElement(xRoot,"Page", Rep="0")
@@ -726,7 +729,10 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         etree.SubElement(xExpectedRoot,"Page", Rep="0")
         
         
-        if xRoot == xExpectedRoot:
+        sRoot = etree.tostring(xRoot)
+        sExpectedRoot = etree.tostring(xExpectedRoot)
+        
+        if sRoot == sExpectedRoot:
             bTestResult = True
         
         tupResult = self.fnName, bTestResult

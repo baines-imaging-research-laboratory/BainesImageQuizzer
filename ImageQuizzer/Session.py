@@ -151,6 +151,9 @@ class Session:
         self._l4iNavigationIndices = lIndices
         
     #----------
+    def ClearNavigationList(self):
+        self._l4iNavigationIndices = []
+    #----------
     def GetCurrentNavigationIndex(self):
         return self._iCurrentNavigationIndex
     
@@ -1052,8 +1055,9 @@ class Session:
             The information is gathered by querying the XML quiz.
         '''
         # given the root of the xml document build composite navigation list 
-        #     of indices for each page, question sets, and page group within
+        #     of indices for each page, question sets, page group and rep number
         
+        self.ClearNavigationList()
         # get Page nodes
         xPages = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
 
@@ -1099,7 +1103,7 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ShuffleNavigationList(self, lRandIndices):
         ''' This function will shuffle the original list as read in from the quiz xml,  that holds the
-            "[page number,questionset number, page group number]" according to the randomized index list input.
+            "[page number,questionset number, page group number, rep number]" according to the randomized index list input.
             The question sets always follow with the page, they are never randomized.
             The page groups are randomized. 
                  If more than one page has the same group number, they will remain in the order they were read in.
@@ -1881,6 +1885,51 @@ class Session:
             
         return bSuccess, sMsg
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def AdjustXMLForRepeatedPage(self):
+        
+        sMsg = ''
+        try:
+            
+            xNewRepeatPage = self.GetCurrentPageNode()
+            
+            # get last rep number to increment current rep
+            xPreviousPage = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), "Page", self.GetCurrentNavigationIndex() -1 )
+            sPreviousRepNum = self.oIOXml.GetValueOfNodeAttribute(xPreviousPage, "Rep")
+            
+            iPreviousRepNum = int(sPreviousRepNum)
+            sNewRepNum = str(iPreviousRepNum + 1)
+            dictAttrib = {"Rep":sNewRepNum}
+            self.oIOXml.UpdateAtributesInElement(xNewRepeatPage, dictAttrib)    
+            
+            self.oIOXml.UpdateAtributesInElement(xNewRepeatPage, {"PageComplete":"N"})
+                
+            # remove LabelmapPath and MarkupLinePath elements
+            lxImages = self.oIOXml.GetChildren(xNewRepeatPage, 'Image')
+            for xImage in lxImages:
+                self.oIOXml.RemoveAllElements(xImage, "LabelMapPath")
+                self.oIOXml.RemoveAllElements(xImage, "MarkupLinePath")
+                
+            # remove Response elements
+            lxQuestionSets = self.oIOXml.GetChildren(xNewRepeatPage, "QuestionSet")
+            for xQuestionSet in lxQuestionSets:
+                lxQuestions = self.oIOXml.GetChildren(xQuestionSet, "Question")
+                for xQuestion in lxQuestions:
+                    lxOptions = self.oIOXml.GetChildren(xQuestion, "Option")
+                    for xOption in lxOptions:
+                        self.oIOXml.RemoveAllElements(xOption, "Response")
+        
+        except:
+            tb = traceback.format_exc()
+            iPage = self.GetCurrentPageIndex() + 1
+            sMsg = 'AdjustXMLForRepeatedPage: Trouble updating repeated page.' + \
+                    'Previous page rep number should be a string that can be converted to an integer.' +\
+                    'Check the functionality of CopyPage.' \
+                    '\nSee Page: ' + str(iPage) + '\n\n' + tb
+            self.oUtilsMsgs.DisplayError(sMsg)
+        
+        
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddXmlElements(self):
         
