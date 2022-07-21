@@ -39,7 +39,7 @@ class Session:
         self._sLoginTime = ''
 
         self._iCurrentNavigationIndex = 0
-        self._l3iNavigationIndices = []
+        self._l4iNavigationIndices = []
 
         self._xPageNode = None
         self.sPageID = ''
@@ -144,11 +144,11 @@ class Session:
     
     #----------
     def GetNavigationList(self):
-        return self._l3iNavigationIndices
+        return self._l4iNavigationIndices
 
     #----------
     def SetNavigationList(self, lIndices):
-        self._l3iNavigationIndices = lIndices
+        self._l4iNavigationIndices = lIndices
         
     #----------
     def GetCurrentNavigationIndex(self):
@@ -160,29 +160,29 @@ class Session:
         
     #----------
     def GetNavigationPage(self, iNavInd):
-        return self._l3iNavigationIndices[iNavInd][0]
+        return self._l4iNavigationIndices[iNavInd][0]
     
     #----------
     def GetNavigationQuestionSet(self, iNavInd):
-        return self._l3iNavigationIndices[iNavInd][1]
+        return self._l4iNavigationIndices[iNavInd][1]
     
     #----------
     def GetNavigationPageGroup(self, iNavInd):
-        return self._l3iNavigationIndices[iNavInd][2]
+        return self._l4iNavigationIndices[iNavInd][2]
     
     #----------
     #----------
     #----------
     def GetNavigationIndicesAtIndex(self, iNavInd):
-        return self._l3iNavigationIndices[iNavInd]
+        return self._l4iNavigationIndices[iNavInd]
     
     #----------
     def NavigationListAppend(self, lNavIndices):
-        self._l3iNavigationIndices.append(lNavIndices)
+        self._l4iNavigationIndices.append(lNavIndices)
         
     #----------
     def NavigationListInsertBeforeIndex(self, iNavInd, lNavIndices):
-        self._l3iNavigationIndices.insert(iNavInd, lNavIndices)
+        self._l4iNavigationIndices.insert(iNavInd, lNavIndices)
         
     #----------
     #----------
@@ -1071,6 +1071,12 @@ class Session:
             except:
                 # assign a unique page number if no group number exists
                 iPageGroup = iPageNum
+                
+            sRepNum = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Rep')
+            try:
+                iRepNum = int(sRepNum)
+            except:
+                iRepNum = 0
             
             # if there are no question sets for the page, insert a blank shell
             #    - this allows images to load
@@ -1082,13 +1088,13 @@ class Session:
             #    - if there are 2 pages and the 1st page has 2 question sets, 2nd page has 1 question set,
             #        and each page is in a different page group
             #        the indices will look like this:
-            #        Page    QS    PageGroup
-            #        0        0        1
-            #        0        1        1
-            #        1        0        2
+            #        Page    QS    PageGroup  Rep
+            #        0        0        1       0
+            #        0        1        1       0
+            #        1        0        2       0
             #    - there can be numerous questions in each question set
             for iQuestionSetIndex in range(len(xQuestionSets)):
-                self.NavigationListAppend([iPageIndex,iQuestionSetIndex, iPageGroup])
+                self.NavigationListAppend([iPageIndex,iQuestionSetIndex, iPageGroup, iRepNum])
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ShuffleNavigationList(self, lRandIndices):
@@ -1099,23 +1105,20 @@ class Session:
                  If more than one page has the same group number, they will remain in the order they were read in.
             
             eg.     Original XML List         Randomized Page Group indices      Shuffled Composite List
-                       Page   QS  Grp                    Indices                      Page   QS    Grp
-                       0      0     1                        2                         2      0     2
-                       0      1     1                        3                         2      1     2
-                       1      0     1                        1                         3      0     2
-                       2      0     2                                                  4      0     3
-                       2      1     2                                                  4      1     3
-                       3      0     2                                                  0      0     1
-                       4      0     3                                                  0      1     1
-                       4      1     3                                                  1      0     1
+                       Page   QS   Grp   Rep             Indices                   Page   QS   Grp   Rep
+                       0      0     1     0                 2                       2     0     2     0
+                       0      1     1     0                 3                       2     1     2     0
+                       1      0     1     0                 4                       3     0     2     0
+                       2      0     2     0                 0                       4     0     3     0
+                       2      1     2     0                 1                       4     1     3     0
+                       3      0     2     0                                         0     0     1     0
+                       4      0     3     0                                         0     1     1     0
+                       4      1     3     0                                         1     0     1     0
         '''
     
         lShuffledCompositeIndices = []
         
         for indRand in range(len(lRandIndices)):
-            # for indOrig in range(len(self.GetNavigationList())):
-            #     if self._l3iNavigationIndices[indOrig][2] == lRandIndices[indRand] :
-            #         lShuffledCompositeIndices.append(self._l3iNavigationIndices[indOrig])
             for indOrig in range(len(self.GetNavigationList())):
                 if self.GetNavigationPageGroup(indOrig) == lRandIndices[indRand] :
                     lShuffledCompositeIndices.append( self.GetNavigationIndicesAtIndex(indOrig))

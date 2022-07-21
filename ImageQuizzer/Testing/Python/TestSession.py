@@ -125,6 +125,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
         tupResults = []
         tupResults.append(self.test_BuildNavigationList())
+        tupResults.append(self.test_BuildNavigationList_RepNumbers())
         tupResults.append(self.test_ShuffleNavigationList())
         tupResults.append(self.test_ShuffleNavigationList_WithZero())
 
@@ -167,10 +168,66 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         self.oIOXml.SetRootNode(xRoot)
         
         lExpectedCompositeIndices = []
-        lExpectedCompositeIndices.append([0,0,1])
-        lExpectedCompositeIndices.append([0,1,1])
-        lExpectedCompositeIndices.append([1,0,2])
-        lExpectedCompositeIndices.append([2,0,3])
+        lExpectedCompositeIndices.append([0,0,1,0])
+        lExpectedCompositeIndices.append([0,1,1,0])
+        lExpectedCompositeIndices.append([1,0,2,0])
+        lExpectedCompositeIndices.append([2,0,3,0])
+        
+        
+        self.oSession = Session()
+        self.oSession.SetFilesIO(self._oFilesIO)
+        self.oSession.SetIOXml(self.oIOXml)
+        self.oSession.BuildNavigationList()
+        lCompositeIndicesResult = self.oSession.GetNavigationList()
+        
+        if lCompositeIndicesResult == lExpectedCompositeIndices :
+            bTestResult = True
+        else:
+            bTestResult = False
+            
+        # set quiz as complete for test purposes - so as not to trigger error message
+        self.oSession.SetQuizComplete(True)
+
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #------------------------------------------- 
+    def test_BuildNavigationList_RepNumbers(self):
+        bTestResult = True
+        self.fnName = sys._getframe().f_code.co_name
+        
+        # build XML
+        xRoot = etree.Element("Session")
+        xPage1 = etree.SubElement(xRoot,"Page")
+        xPage2 = etree.SubElement(xRoot,"Page")
+        xPage3 = etree.SubElement(xRoot,"Page")
+        xPage4 = etree.SubElement(xRoot,"Page")
+        xPage5 = etree.SubElement(xRoot,"Page")
+        xQS1 = etree.SubElement(xPage1, "QuestionSet")
+        xQS2 = etree.SubElement(xPage1, "QuestionSet")
+        xQS1 = etree.SubElement(xPage2, "QuestionSet")
+        xQS1 = etree.SubElement(xPage3, "QuestionSet")
+        xQS1 = etree.SubElement(xPage4, "QuestionSet")
+        xQS1 = etree.SubElement(xPage5, "QuestionSet")
+        
+        dAttrib = {"PageGroup":"1"}
+        self.oIOXml.UpdateAtributesInElement(xPage1, dAttrib)
+        self.oIOXml.UpdateAtributesInElement(xPage2, dAttrib)
+        self.oIOXml.UpdateAtributesInElement(xPage3, dAttrib)
+        self.oIOXml.UpdateAtributesInElement(xPage4, dAttrib)
+        self.oIOXml.UpdateAtributesInElement(xPage5, dAttrib)
+        dAttrib = {"Rep":"1"}
+        self.oIOXml.UpdateAtributesInElement(xPage4, dAttrib)
+        
+        self.oIOXml.SetRootNode(xRoot)
+        
+        lExpectedCompositeIndices = []
+        lExpectedCompositeIndices.append([0,0,1,0])
+        lExpectedCompositeIndices.append([0,1,1,0])
+        lExpectedCompositeIndices.append([1,0,1,0])
+        lExpectedCompositeIndices.append([2,0,1,0])
+        lExpectedCompositeIndices.append([3,0,1,1])
+        lExpectedCompositeIndices.append([4,0,1,0])
         
         
         self.oSession = Session()
@@ -198,40 +255,40 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         # build page/question set/page group composite indices list for testing
         '''
             eg.     Original XML List         Randomized Page Group indices      Shuffled Composite List
-                       Page   QS  Grp                    Indices                      Page   QS    Grp
-                       0      0     1                        2                         2      0     2
-                       0      1     1                        3                         2      1     2
-                       1      0     1                        4                         3      0     2
-                       2      0     2                        0                         4      0     3
-                       2      1     2                        1                         4      1     3
-                       3      0     2                                                  0      0     1
-                       4      0     3                                                  0      1     1
-                       4      1     3                                                  1      0     1
+                       Page   QS   Grp   Rep             Indices                   Page   QS   Grp   Rep
+                       0      0     1     0                 2                       2     0     2     0
+                       0      1     1     0                 3                       2     1     2     0
+                       1      0     1     0                 4                       3     0     2     0
+                       2      0     2     0                 0                       4     0     3     0
+                       2      1     2     0                 1                       4     1     3     0
+                       3      0     2     0                                         0     0     1     0
+                       4      0     3     0                                         0     1     1     0
+                       4      1     3     0                                         1     0     1     0
         
         '''
         
         lCompositeTestIndices = []
-        lCompositeTestIndices.append([0,0,1])
-        lCompositeTestIndices.append([0,1,1])
-        lCompositeTestIndices.append([1,0,1])
-        lCompositeTestIndices.append([2,0,2])
-        lCompositeTestIndices.append([2,1,2])
-        lCompositeTestIndices.append([3,0,2])
-        lCompositeTestIndices.append([4,0,3])
-        lCompositeTestIndices.append([4,1,3])
+        lCompositeTestIndices.append([0,0,1,0])
+        lCompositeTestIndices.append([0,1,1,0])
+        lCompositeTestIndices.append([1,0,1,0])
+        lCompositeTestIndices.append([2,0,2,0])
+        lCompositeTestIndices.append([2,1,2,0])
+        lCompositeTestIndices.append([3,0,2,0])
+        lCompositeTestIndices.append([4,0,3,0])
+        lCompositeTestIndices.append([4,1,3,0])
         
         self.oSession.SetNavigationList(lCompositeTestIndices)
         
         
         lExpectedShuffledOrder = []
-        lExpectedShuffledOrder.append([2,0,2])
-        lExpectedShuffledOrder.append([2,1,2])
-        lExpectedShuffledOrder.append([3,0,2])
-        lExpectedShuffledOrder.append([4,0,3])
-        lExpectedShuffledOrder.append([4,1,3])
-        lExpectedShuffledOrder.append([0,0,1])
-        lExpectedShuffledOrder.append([0,1,1])
-        lExpectedShuffledOrder.append([1,0,1])
+        lExpectedShuffledOrder.append([2,0,2,0])
+        lExpectedShuffledOrder.append([2,1,2,0])
+        lExpectedShuffledOrder.append([3,0,2,0])
+        lExpectedShuffledOrder.append([4,0,3,0])
+        lExpectedShuffledOrder.append([4,1,3,0])
+        lExpectedShuffledOrder.append([0,0,1,0])
+        lExpectedShuffledOrder.append([0,1,1,0])
+        lExpectedShuffledOrder.append([1,0,1,0])
         
         # assign a set of randomized unique page groups
         lRandIndices = [2,3,1]
@@ -256,33 +313,33 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         # build page/question set/page group composite indices list for testing
         
         lCompositeTestIndices = []
-        lCompositeTestIndices.append([0,0,1])
-        lCompositeTestIndices.append([0,1,1])
-        lCompositeTestIndices.append([1,0,0])
-        lCompositeTestIndices.append([2,0,1])
-        lCompositeTestIndices.append([3,0,2])
-        lCompositeTestIndices.append([3,1,2])
-        lCompositeTestIndices.append([4,0,0])
-        lCompositeTestIndices.append([5,0,2])
-        lCompositeTestIndices.append([6,0,3])
-        lCompositeTestIndices.append([6,1,3])
-        lCompositeTestIndices.append([7,0,0])
+        lCompositeTestIndices.append([0,0,1,0])
+        lCompositeTestIndices.append([0,1,1,0])
+        lCompositeTestIndices.append([1,0,0,0])
+        lCompositeTestIndices.append([2,0,1,0])
+        lCompositeTestIndices.append([3,0,2,0])
+        lCompositeTestIndices.append([3,1,2,0])
+        lCompositeTestIndices.append([4,0,0,0])
+        lCompositeTestIndices.append([5,0,2,0])
+        lCompositeTestIndices.append([6,0,3,0])
+        lCompositeTestIndices.append([6,1,3,0])
+        lCompositeTestIndices.append([7,0,0,0])
       
         self.oSession.SetNavigationList(lCompositeTestIndices)
         
         
         lExpectedShuffledOrder = []
-        lExpectedShuffledOrder.append([1,0,0])
-        lExpectedShuffledOrder.append([4,0,0])
-        lExpectedShuffledOrder.append([7,0,0])
-        lExpectedShuffledOrder.append([3,0,2])
-        lExpectedShuffledOrder.append([3,1,2])
-        lExpectedShuffledOrder.append([5,0,2])
-        lExpectedShuffledOrder.append([6,0,3])
-        lExpectedShuffledOrder.append([6,1,3])
-        lExpectedShuffledOrder.append([0,0,1])
-        lExpectedShuffledOrder.append([0,1,1])
-        lExpectedShuffledOrder.append([2,0,1])
+        lExpectedShuffledOrder.append([1,0,0,0])
+        lExpectedShuffledOrder.append([4,0,0,0])
+        lExpectedShuffledOrder.append([7,0,0,0])
+        lExpectedShuffledOrder.append([3,0,2,0])
+        lExpectedShuffledOrder.append([3,1,2,0])
+        lExpectedShuffledOrder.append([5,0,2,0])
+        lExpectedShuffledOrder.append([6,0,3,0])
+        lExpectedShuffledOrder.append([6,1,3,0])
+        lExpectedShuffledOrder.append([0,0,1,0])
+        lExpectedShuffledOrder.append([0,1,1,0])
+        lExpectedShuffledOrder.append([2,0,1,0])
         
         # assign a set of randomized unique page groups
         #    (code for creating the unique randomized numbers always puts zero first)
