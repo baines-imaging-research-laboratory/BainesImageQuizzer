@@ -5,6 +5,7 @@ import sys
 import unittest
 import random
 import traceback
+from copy import deepcopy
 
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
@@ -174,6 +175,8 @@ class Session:
         return self._l4iNavigationIndices[iNavInd][2]
     
     #----------
+    def GetNavigationRepNum(self, iNavInd):
+        return self._l4iNavigationIndices[iNavInd][3]
     #----------
     #----------
     def GetNavigationIndicesAtIndex(self, iNavInd):
@@ -182,7 +185,7 @@ class Session:
     #----------
     def NavigationListAppend(self, lNavIndices):
         self._l4iNavigationIndices.append(lNavIndices)
-        
+    
     #----------
     def NavigationListInsertBeforeIndex(self, iNavInd, lNavIndices):
         self._l4iNavigationIndices.insert(iNavInd, lNavIndices)
@@ -630,12 +633,23 @@ class Session:
         xPageNode = self.GetCurrentPageNode()
         if self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Loop') == "Y":
             self.SetPageLooping(True)
+            if self.CheckForLastQuestionSetForPage() == True:
+                self._btnRepeat.visible = True
+                self._btnRepeat.enabled = True
+            else:
+                self._btnRepeat.visible = True
+                self._btnRepeat.enabled = False
         else:
             self.SetPageLooping(False)
+            self._btnRepeat.visible = False
+            self._btnRepeat.enabled = False
             
             
-        # assume not at the end of the quiz
-        self._btnNext.setText("Next")
+        # assign button description           
+        if (self.GetCurrentNavigationIndex() == len(self.GetNavigationList()) - 1):
+            self._btnNext.setText("Finish")
+        else:
+            self._btnNext.setText("Next")
         
         # beginning of quiz
         if (self.GetCurrentNavigationIndex() == 0):
@@ -652,26 +666,7 @@ class Session:
             self._btnNext.enabled = True
             self._btnPrevious.enabled = True
 
-        # looping for page
-        if self.GetPageLooping() == True:
-            if self.CheckForLastQuestionSetForPage() == True:
-                self._btnNext.setText("Done")
-                self._btnRepeat.visible = True
-                self._btnRepeat.enabled = True
-            else:
-                self._btnNext.setText("Next")
-                self._btnRepeat.visible = True
-                self._btnRepeat.enabled = False
-        else:
-                self._btnNext.setText("Next")
-                self._btnRepeat.visible = False
-                self._btnRepeat.enabled = False
 
-
-        # assign button description           
-        if (self.GetCurrentNavigationIndex() == len(self.GetNavigationList()) - 1):
-            # last question of last image view
-            self._btnNext.setText("Finish")
             
             
 
@@ -950,37 +945,53 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onRepeatButtonClicked(self):
         
+        self.PerformSave('Next')
         indPageToRepeat = self.GetCurrentPageIndex()
-        xPageToRepeatNode = self.GetCurrentPageNode()
+        
+        
+        xCopyOfPageToRepeatNode = self.oIOXml.CopyElement(self.GetCurrentPageNode())
         
         # find the next xml page that has Rep 0 (move past all repeated pages for this loop)
-        indNextPageWithRep0 = self.oIOXml.GetIndexOfNextChildWithAttributeValue(xPageToRepeatNode, "Page", indPageToRepeat, "Rep", 0)
+        indNextPageWithRep0 = self.oIOXml.GetIndexOfNextChildWithAttributeValue(self.oIOXml.GetRootNode(), "Page", indPageToRepeat + 1, "Rep", "0")
 
-        # insert a copy of the current page and update navigation index
-        self.oIOXml.InsertElementBeforeIndex(self.oIOXml.GetRootNode(), xPageToRepeatNode, indNextPageWithRep0)
-        self.SetCurrentNavigationIndex(self.GetCurrentNavigationIndex() + 1)
+        if indNextPageWithRep0 != -1:
+            self.oIOXml.InsertElementBeforeIndex(self.oIOXml.GetRootNode(), xCopyOfPageToRepeatNode, indNextPageWithRep0)
+        else:
+            # attribute was not found
+            self.oIOXml.AppendElement(self.oIOXml.GetRootNode(), xCopyOfPageToRepeatNode)
         
+        self.BuildNavigationList()
+        
+        xPrevNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), "Page", indNextPageWithRep0 - 1)
+        iPrevRepNum = int(self.oIOXml.GetValueOfNodeAttribute(xPrevNode, "Rep"))
+        iNewNavInd = self.FindNewRepeatedPosition(indNextPageWithRep0, iPrevRepNum)
+        self.SetCurrentNavigationIndex(iNewNavInd)
+    
         # update the repeated page
         self.AdjustXMLForRepeatedPage()
         
-        self.BuildNavigationList()
-        # if randomization is requested - shuffle the page/questionset list
-        sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'RandomizePageGroups')
-        if sRandomizeRequired == 'Y':
-            # check if xnl already holds a set of randomized indices otherwise, call randomizing function
-            liRandIndices = self.GetStoredRandomizedIndices()
-            if liRandIndices == []:
-                # get the unique list  of all Page Group numbers to randomize
-                #    this was set during xml validation during the initial read
-                liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
-                liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
-                self.AddRandomizedIndicesToXML(liRandIndices)
-             
-            self.SetNavigationList( self.ShuffleNavigationList(liRandIndices) )
-    
+        self.progress.setMaximum(len(self.GetNavigationList()))
+        self.progress.setValue(self.GetCurrentNavigationIndex())
+        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+
+        self.EnableButtons()
+        self.DisplayQuizLayout()
+        self.DisplayImageLayout()
     
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def FindNewRepeatedPosition(self, iSearchPageNum, iSearchRepNum):
+        indFound = -1
+        
+        for iNavInd in range(len(self.GetNavigationList())):
+            iPgNum = self.GetNavigationPage(iNavInd)
+            iRepNum = self.GetNavigationRepNum(iNavInd)
+            
+            if iPgNum == iSearchPageNum and iRepNum == iSearchRepNum :
+                indFound = iNavInd
+                
+        return indFound
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #-------------------------------------------
@@ -1017,24 +1028,29 @@ class Session:
                 # set up ROI colors for segmenting
                 sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
                 self.oFilesIO.SetupROIColorFile(sColorFileName)
+                
+                self.oFilesIO.SetupLoopingInitialization(xRootNode)
     
     
-                # build the list of indices page/questionset as read in by the XML
+                # build the list of indices page/questionset as read in by the XML 
+                #    list is shuffled if randomizing is requested
                 self.BuildNavigationList()
-                # if randomization is requested - shuffle the page/questionset list
-                sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
-                if sRandomizeRequired == 'Y':
-                    # check if xnl already holds a set of randomized indices otherwise, call randomizing function
-                    liRandIndices = self.GetStoredRandomizedIndices()
-                    if liRandIndices == []:
-                        # get the unique list  of all Page Group numbers to randomize
-                        #    this was set during xml validation during the initial read
-                        liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
-                        liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
-                        self.AddRandomizedIndicesToXML(liRandIndices)
-                     
-                    self.SetNavigationList( self.ShuffleNavigationList(liRandIndices) )
-        
+                
+                # # if randomization is requested - shuffle the page/questionset list
+                # sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
+                # if sRandomizeRequired == 'Y':
+                #     # check if xnl already holds a set of randomized indices otherwise, call randomizing function
+                #     liRandIndices = self.GetStoredRandomizedIndices()
+                #     if liRandIndices == []:
+                #         # get the unique list  of all Page Group numbers to randomize
+                #         #    this was set during xml validation during the initial read
+                #         liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
+                #         liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
+                #         self.AddRandomizedIndicesToXML(liRandIndices)
+                #
+                #     self.SetNavigationList( self.ShuffleNavigationList(liRandIndices) )
+                #
+
         
                 
                 
@@ -1125,6 +1141,22 @@ class Session:
             #    - there can be numerous questions in each question set
             for iQuestionSetIndex in range(len(xQuestionSets)):
                 self.NavigationListAppend([iPageIndex,iQuestionSetIndex, iPageGroup, iRepNum])
+                
+                
+        # if randomization is requested - shuffle the page/questionset list
+        sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'RandomizePageGroups')
+        if sRandomizeRequired == 'Y':
+            # check if xnl already holds a set of randomized indices otherwise, call randomizing function
+            liRandIndices = self.GetStoredRandomizedIndices()
+            if liRandIndices == []:
+                # get the unique list  of all Page Group numbers to randomize
+                #    this was set during xml validation during the initial read
+                liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
+                liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
+                self.AddRandomizedIndicesToXML(liRandIndices)
+             
+            self.SetNavigationList( self.ShuffleNavigationList(liRandIndices) )
+    
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ShuffleNavigationList(self, lRandIndices):
@@ -1923,16 +1955,9 @@ class Session:
             xPreviousPage = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), "Page", self.GetCurrentNavigationIndex() -1 )
             sPreviousRepNum = self.oIOXml.GetValueOfNodeAttribute(xPreviousPage, "Rep")
             
-            try:
-                iPreviousRepNum = int(sPreviousRepNum)
-            except:
-                iPreviousRepNum =0
-                self.oIOXml.UpdateAtributesInElement(xPreviousPage, {"Rep":"0"})
-                
+            iPreviousRepNum = int(sPreviousRepNum)
             sNewRepNum = str(iPreviousRepNum + 1)
-            dictAttrib = {"Rep":sNewRepNum}
-            self.oIOXml.UpdateAtributesInElement(xNewRepeatPage, dictAttrib)    
-            
+            self.oIOXml.UpdateAtributesInElement(xNewRepeatPage, {"Rep":sNewRepNum})    
             self.oIOXml.UpdateAtributesInElement(xNewRepeatPage, {"PageComplete":"N"})
                 
             # remove LabelmapPath and MarkupLinePath elements

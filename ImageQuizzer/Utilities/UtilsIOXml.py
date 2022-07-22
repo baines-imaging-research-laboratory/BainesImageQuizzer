@@ -382,17 +382,27 @@ class UtilsIOXml:
         
         iSearchIndex = 0
         for elem in xParentNode.findall(sChildTagName):
-            if iSearchIndex == indFrom:
+            if iSearchIndex >= indFrom:
                 sSearchValue = self.GetValueOfNodeAttribute(elem, sAttrib)
                 if sSearchValue == sAttribValue:
                     iNextInd = iSearchIndex
                     break
+                else:
+                    iSearchIndex = iSearchIndex + 1
                 
             else:
                 iSearchIndex = iSearchIndex + 1
                 
         return iNextInd
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CopyElement(self, xElemToCopy):
+        ''' Create a copy of the element that is not shared by reference to the original
+        '''
+        sElemToCopy = etree.tostring(xElemToCopy)
+        xNewCopiedElem = etree.fromstring(sElemToCopy)
+        
+        return xNewCopiedElem
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def prettify(self, elem):
         

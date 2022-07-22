@@ -1433,4 +1433,30 @@ class UtilsFilesIO:
                             break # continue in for loop for next label map path element
                 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetupLoopingInitialization(self, xRootNode):
+        
+        # if Loop="Y" for any page in the quiz, add Rep="0" to each page if not defined
+        
+        bLoopingInQuiz = False
+        
+        lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
+        for xPageNode in lxPages:
+            sLoopAllowed = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "Loop")
+            if sLoopAllowed == "Y":
+                bLoopingInQuiz = True
+                break
+            
+        if bLoopingInQuiz:
+            for xPageNode in lxPages:
+                sRepNum = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "Rep")
+                try:
+                    int(sRepNum)
+                except:
+                    # not a valid integer - create/set the attribute to 0
+                    self.oIOXml.UpdateAtributesInElement(xPageNode, {"Rep":"0"})
+
     
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

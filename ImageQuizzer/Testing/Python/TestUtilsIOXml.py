@@ -164,6 +164,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_GetIndexOfNextChildWithAttributeValue())
         tupResults.append(self.test_AppendElement())
         tupResults.append(self.test_InsertElementBeforeIndex())
+        tupResults.append(self.test_CopyElement())
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
 
@@ -738,6 +739,20 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         tupResult = self.fnName, bTestResult
         return tupResult
     #-------------------------------------------
+    def test_CopyElement(self):
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = False
+
+        xRoot = etree.Element("Session")
+        
+        newRoot = self.oIOXml.CopyElement(xRoot)
+        if id(xRoot) != id(newRoot):
+            bTestResult = True
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
     #-------------------------------------------
     #-------------------------------------------
         

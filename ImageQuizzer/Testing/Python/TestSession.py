@@ -830,8 +830,9 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         sAdjustedXML = etree.tostring(xAdjustedRoot)
         sExpectedXML = etree.tostring(xExpectedRoot)
         
-        print(sAdjustedXML)
-        print(sExpectedXML)
+        # for debug
+        # print(sAdjustedXML)
+        # print(sExpectedXML)
         
         if sAdjustedXML == sExpectedXML:
             bTestResult = True
