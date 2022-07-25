@@ -617,7 +617,7 @@ class UtilsFilesIO:
                             
                     # If the image type is an RTStruct, validate the ROIs element
                     sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
-                    if sImageType == 'RTStruct':
+                    if sImageType == 'RTStruct' or sImageType == 'Segmentation':
                         sValidationMsg = self.ValidateRequiredElement(xImage, 'ROIs', sPageReference)
                         sMsg = sMsg + sValidationMsg
                         

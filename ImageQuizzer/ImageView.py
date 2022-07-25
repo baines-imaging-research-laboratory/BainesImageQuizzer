@@ -641,6 +641,7 @@ class ViewNodeBase:
         self.fOpacity = 0.5
         
         self.slQuizLabelMapNode = None
+        self.lsRoiList = []
         
 
     #----------
@@ -675,7 +676,18 @@ class ViewNodeBase:
     def SetQuizLabelMapNode(self, slNodeInput):
         self.slQuizLabelMapNode = slNodeInput
 
+    #----------
+    def SetROIList(self, lsRois):
+        self.lsRoiList= lsRois
+        
+    #----------
+    def GetROIList(self):
+        return self.lsRoiList
     
+    #----------
+    def AppendToROIList(self, sRoiName):
+        self.lsRoiList.append(sRoiName)
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractImageAttributes(self):
         ''' Assign image attributes to the image node properties.
@@ -841,6 +853,36 @@ class ViewNodeBase:
         return slSeqBrowserNode
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ReadXMLRoiElements(self):
+        ''' For Image type is RTStuct, XML holds a visibility code and (if applicable)
+            a list of ROI names
+            
+            The visibility code is as follows: 
+           'All' : turn on visibility of all ROIs in RTStruct
+           'None': turn off visibility of all ROIs in RTStruct
+           'Ignore' : turn on all ROIs except the ones listed
+           'Select' : turn on visibility of only ROIs listed
+        '''
+        
+        # get XML ROIs element
+        lxRoisNode = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'ROIs')
+        
+        # get visibility code from the attribute
+        #    if the attribute doesn't exist, the code remains as it was initialized
+        if len(lxRoisNode) > 0 :
+            self.sRoiVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(lxRoisNode[0], 'ROIVisibilityCode')
+
+        if (self.sRoiVisibilityCode == 'Select' or self.sRoiVisibilityCode == 'Ignore'):
+            
+            # get list of ROI children
+            lxRoiChildren = self.oIOXml.GetChildren(lxRoisNode[0], 'ROI')
+
+            for indRoi in range(len(lxRoiChildren)):
+                sRoiName = self.oIOXml.GetDataInNode(lxRoiChildren[indRoi])
+#                 self.lsRoiList.append(sRoiName)
+                self.AppendToROIList(sRoiName)
+                
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
 ##########################################################################
 #
@@ -867,6 +909,10 @@ class DataVolumeDetail(ViewNodeBase):
         self.ExtractXMLNodeElements(sParentDataDir)
         self.SetQuizLabelMapNode(slLabelMapNode)
         
+        # get list of ROIs to be displayed
+        self.SetROIList([])
+        if self.sImageType == 'Segmentation':
+            self.ReadXMLRoiElements()
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadVolume(self):
@@ -967,7 +1013,7 @@ class DicomVolumeDetail(ViewNodeBase):
         self.sVolumeReferenceSeriesUID = ''
         self.sSeriesInstanceUID = ''
         self.sStudyInstanceUID = ''
-        self.lsRoiList = []
+#         self.lsRoiList = []
         
 
         #--------------------
@@ -983,6 +1029,7 @@ class DicomVolumeDetail(ViewNodeBase):
         self.ExtractSeriesInstanceUIDs()
 
         # get list of ROIs to be displayed
+        self.SetROIList([])
         if self.sImageType == 'RTStruct':
             self.ReadXMLRoiElements()
             
@@ -1144,35 +1191,6 @@ class DicomVolumeDetail(ViewNodeBase):
         return bLoadSuccess
 
         
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ReadXMLRoiElements(self):
-        ''' For Image type is RTStuct, XML holds a visibility code and (if applicable)
-            a list of ROI names
-            
-            The visibility code is as follows: 
-           'All' : turn on visibility of all ROIs in RTStruct
-           'None': turn off visibility of all ROIs in RTStruct
-           'Ignore' : turn on all ROIs except the ones listed
-           'Select' : turn on visibility of only ROIs listed
-        '''
-        
-        # get XML ROIs element
-        lxRoisNode = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'ROIs')
-        
-        # get visibility code from the attribute
-        #    if the attribute doesn't exist, the code remains as it was initialized
-        if len(lxRoisNode) > 0 :
-            self.sRoiVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(lxRoisNode[0], 'ROIVisibilityCode')
-
-        if (self.sRoiVisibilityCode == 'Select' or self.sRoiVisibilityCode == 'Ignore'):
-            
-            # get list of ROI children
-            lxRoiChildren = self.oIOXml.GetChildren(lxRoisNode[0], 'ROI')
-
-            for indRoi in range(len(lxRoiChildren)):
-                sRoiName = self.oIOXml.GetDataInNode(lxRoiChildren[indRoi])
-                self.lsRoiList.append(sRoiName)
-                
         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
