@@ -14,6 +14,7 @@ from DICOMLib import DICOMUtils
 
 import logging
 import time
+import traceback
 
 import DicomRtImportExportPlugin
 import DICOMVolumeSequencePlugin
@@ -544,6 +545,7 @@ class UtilsFilesIO:
                 sMsg = sMsg + sValidationMsg
                 
                 sPageID = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ID')
+                sPageReference = str(iPageNum) # initialize
                 
                 # Image element validations
                 lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
@@ -675,7 +677,11 @@ class UtilsFilesIO:
             bSuccess = False
             self.oUtilsMsgs.DisplayWarning('Quiz Validation Errors \n' + sMsg)
             # after warning, reset the message for calling function to display error and exit
-            sMsg = 'See Administrator: ERROR in quiz XML validation. --Exiting--'
+            tb = traceback.format_exc()
+            self.oUtilsMsgs.DisplayWarning('Quiz Validation Errors \n' + sMsg)
+            # after warning, reset the message for calling function to display error and exit
+            sMsg = 'See Administrator: ERROR in quiz XML validation. --Exiting--'\
+                   + "\n\n" + tb 
             
             
         return bSuccess, sMsg
