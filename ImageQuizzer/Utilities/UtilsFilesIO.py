@@ -556,20 +556,6 @@ class UtilsFilesIO:
                     sNodeNameID = sPageID + '_' + sImageID
                     sPageReference = str(iPageNum) + ' ' + sNodeNameID
 
-                    # Validate  frequency (one required element) and content
-                    # >>>>>>>>>>>>>>> Elements
-                    sValidationMsg = self.ValidateRequiredElement(xImage, 'Path', sPageReference)
-                    sMsg = sMsg + sValidationMsg
-                    
-                    sValidationMsg = self.ValidateElementOptions(xImage, 'Layer', sPageReference, self.oIOXml.lValidLayers)
-                    sMsg = sMsg + sValidationMsg
-                    
-                    sValidationMsg = self.ValidateElementOptions(xImage, 'DefaultDestination', sPageReference, self.oIOXml.lValidSliceWidgets)
-                    sMsg = sMsg + sValidationMsg
-                    
-                    sValidationMsg = self.ValidateElementOptions(xImage, 'DefaultOrientation', sPageReference, self.oIOXml.lValidOrientations)
-                    sMsg = sMsg + sValidationMsg
-     
                     # >>>>>>>>>>>>>>> Attributes
                     sValidationMsg = self.ValidateRequiredAttribute(xImage, 'ID', sPageReference)
                     sMsg = sMsg + sValidationMsg
@@ -583,7 +569,23 @@ class UtilsFilesIO:
                     sValidationMsg = self.ValidateOpacity(xImage, iPageNum)
                     sMsg = sMsg + sValidationMsg
 
+                    # >>>>>>>>>>>>>>> Elements
+                    sValidationMsg = self.ValidateRequiredElement(xImage, 'Path', sPageReference)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    sValidationMsg = self.ValidateElementOptions(xImage, 'Layer', sPageReference, self.oIOXml.lValidLayers)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    sValidationMsg = self.ValidateElementOptions(xImage, 'DefaultDestination', sPageReference, self.oIOXml.lValidSliceWidgets)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
+                    if not (sImageType == 'Segmentation' or sImageType == 'RTStruct'):
+                        sValidationMsg = self.ValidateElementOptions(xImage, 'DefaultOrientation', sPageReference, self.oIOXml.lValidOrientations)
+                        sMsg = sMsg + sValidationMsg
+                    
                     # >>>>>>>>>>>>>>>
+     
 
                     # For any page, test that a path always has only one associated PageID_ImageID (aka node name)
                     #    (Otherwise, the quizzer will reload the same image with a different node name)

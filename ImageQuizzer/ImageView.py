@@ -53,6 +53,7 @@ class ImageView:
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
         self.sParentDataDir = sParentDataDir
+        self.xPageNode = xPageNode
 
 
         # get ID and descriptor
@@ -251,13 +252,16 @@ class ImageView:
         
     
                 elif oViewNode.sViewLayer == 'Segmentation':
-                    # Segmentation nodes are handled differently if they are loaded from Data or Dicom
+                    
                     if oViewNode.GetNodeSource() == 'Dicom':
                         if not (oViewNode.sRoiVisibilityCode == ''):
-                            self.SetSegmentRoiVisibility(oViewNode)
+                            lsSegRoiNames, slSegDisplayNode, slSegDataNode = oViewNode.GetROISegmentNamesAndNodes()
                     else:   # source = 'Data'
-                        self.SetSegmentRoiVisibilityFromData(1)
+                        slSegDataNode = None
+                        lsSegRoiNames, slSegDisplayNode = oViewNode.GetROISegmentNamesAndNodes(self.xPageNode)
     
+
+                    self.SetSegmentRoiVisibility(oViewNode, slSegDataNode, slSegDisplayNode, lsSegRoiNames )
     
     
                 # adjust the link control for each window
@@ -416,41 +420,41 @@ class ImageView:
         lLabelMapNodes.UnRegister(slicer.mrmlScene)    
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetSegmentRoiVisibility(self,oViewNode):
+    def SetSegmentRoiVisibility(self,oViewNode, slSegDataNode, slSegDisplayNode, lsSubjectHierarchyROINames):
         # in order to set visibility, you have to traverse Slicer's subject hierarchy
         # accessing the segmentation node, its children (to get ROI names) and its data node
         
         
-        # get Slicer's subject hierarchy node (SHNode)
-        
-        slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
-        
-        
-        # get the item ID for the RTStruct through the RTStruct Series Instance UID
-        
-        slRTStructItemId = slSHNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(), oViewNode.sSeriesInstanceUID)
-
-
-        # using slicers vtk Item Id for the RTStruct, get the ROI names (children)
-        
-        slRTStructChildren = vtk.vtkIdList()    # initialize to ItemId type
-        slSHNode.GetItemChildren(slRTStructItemId, slRTStructChildren) # populate children variable
-        
-        
-        # get ROI child Item ID and store the child (ROI) name
-        
-        lsSubjectHierarchyROINames = []
-        for indROI in range(slRTStructChildren.GetNumberOfIds()):
-            slROIItemId = slRTStructChildren.GetId(indROI)
-            sROIName = slSHNode.GetItemName(slROIItemId)
-            lsSubjectHierarchyROINames.append(sROIName)
-        
-        
-        # get segmentation node name from data node
-        
-        slSegDataNode = slSHNode.GetItemDataNode(slRTStructItemId)
-        slSegDisplayNodeId = slSegDataNode.GetDisplayNodeID()
-        slSegDisplayNode = slicer.mrmlScene.GetNodeByID(slSegDisplayNodeId)
+#         # get Slicer's subject hierarchy node (SHNode)
+#         
+#         slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+#         
+#         
+#         # get the item ID for the RTStruct through the RTStruct Series Instance UID
+#         
+#         slRTStructItemId = slSHNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(), oViewNode.sSeriesInstanceUID)
+# 
+# 
+#         # using slicers vtk Item Id for the RTStruct, get the ROI names (children)
+#         
+#         slRTStructChildren = vtk.vtkIdList()    # initialize to ItemId type
+#         slSHNode.GetItemChildren(slRTStructItemId, slRTStructChildren) # populate children variable
+#         
+#         
+#         # get ROI child Item ID and store the child (ROI) name
+#         
+#         lsSubjectHierarchyROINames = []
+#         for indROI in range(slRTStructChildren.GetNumberOfIds()):
+#             slROIItemId = slRTStructChildren.GetId(indROI)
+#             sROIName = slSHNode.GetItemName(slROIItemId)
+#             lsSubjectHierarchyROINames.append(sROIName)
+#         
+#         
+#         # get segmentation node name from data node
+#         
+#         slSegDataNode = slSHNode.GetItemDataNode(slRTStructItemId)
+#         slSegDisplayNodeId = slSegDataNode.GetDisplayNodeID()
+#         slSegDisplayNode = slicer.mrmlScene.GetNodeByID(slSegDisplayNodeId)
 
         # assign segmentation display node to the requested viewing window destination
         lsViewIDs = []
@@ -488,7 +492,8 @@ class ImageView:
         
         # turn on segmentation node visibility 
         #    (necessary when this display is coming after a 'previous' button selection)
-        slSegDataNode.SetDisplayVisibility(True)
+        if slSegDataNode != None: # coming from DICOM
+            slSegDataNode.SetDisplayVisibility(True)
         
         # adjust visibility of each ROI as per user's request
         
@@ -854,7 +859,7 @@ class ViewNodeBase:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ReadXMLRoiElements(self):
-        ''' For Image type is RTStuct, XML holds a visibility code and (if applicable)
+        ''' For Image types RTStuct or Segmentation, XML holds a visibility code and (if applicable)
             a list of ROI names
             
             The visibility code is as follows: 
@@ -882,6 +887,7 @@ class ViewNodeBase:
 #                 self.lsRoiList.append(sRoiName)
                 self.AppendToROIList(sRoiName)
                 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
 ##########################################################################
@@ -992,8 +998,49 @@ class DataVolumeDetail(ViewNodeBase):
         
         
         return bLoadSuccess
-    
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetROISegmentNamesAndNodes(self, xPageNode):
+        ''' For a data volume, search all segmentation nodes that match the target destination of image being displayed.
+            Get the associated segmentation display and data nodes and the ROI names.
+        '''
+        slSegDisplayNode = None
+        lsROINames = []
+        bFoundSegNode = False
+
+        slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+
+        lSegNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSegmentationNode')
+        
+        lxImages = self.oIOXml.GetChildren(xPageNode, 'Image')
+        
+        
+        for indParentSegNode in range(lSegNodes.GetNumberOfItems()):
+            if not bFoundSegNode:
+                slParentSegNode = lSegNodes.GetItemAsObject(indParentSegNode)
+                sParentSegNodeName = slParentSegNode.GetName()
+                slSegDisplayNode = slParentSegNode.GetDisplayNode()
+                
+                # look for xml Image entry for this page that matches this segmentation node
+                for xImage in lxImages:
+                    sXmlNodeName = self.GetPageID() + '_' + self.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
+                    if sXmlNodeName == sParentSegNodeName:
+                        lxDestinations = self.oIOXml.GetChildren(xImage, 'DefaultDestination')
+                        sXmlDestination = self.oIOXml.GetDataInNode(lxDestinations[0])
+                        if sXmlDestination == self.sDestination:
+                            # get all segments in this segmentation node
+                            bFoundSegNode = True
+                            lSegmentations = slParentSegNode.GetSegmentation()
+                            
+                            for indSegment in range(lSegmentations.GetNumberOfSegments()):
+                                
+                                slSegNode = lSegmentations.GetNthSegment(indSegment)
+                                sSegNodeName = slSegNode.GetName()
+                                lsROINames.append(sSegNodeName)
+
+
+
+        return lsROINames, slSegDisplayNode
 
 ##########################################################################
 #
@@ -1190,7 +1237,51 @@ class DicomVolumeDetail(ViewNodeBase):
 
         return bLoadSuccess
 
-        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetROISegmentNamesAndNodes(self):
+        ''' For a DICOM volume, get the associated segmentation node loaded from the RTStruct.
+            Return the segmentation data and display nodes as well as the names of the ROIs.
+        '''
+        slSegDataNode = None
+        slSegDisplayNode = None
+        lsROINames = []
         
 
+        
+                # get Slicer's subject hierarchy node (SHNode)
+        
+        slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
+        
+        
+        # get the item ID for the RTStruct through the RTStruct Series Instance UID
+        
+        slRTStructItemId = slSHNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(), self.sSeriesInstanceUID)
+
+
+        # using slicers vtk Item Id for the RTStruct, get the ROI names (children)
+        
+        slRTStructChildren = vtk.vtkIdList()    # initialize to ItemId type
+        slSHNode.GetItemChildren(slRTStructItemId, slRTStructChildren) # populate children variable
+        
+        
+        # get ROI child Item ID and store the child (ROI) name
+        
+        lsSubjectHierarchyROINames = []
+        for indROI in range(slRTStructChildren.GetNumberOfIds()):
+            slROIItemId = slRTStructChildren.GetId(indROI)
+            sROIName = slSHNode.GetItemName(slROIItemId)
+            lsSubjectHierarchyROINames.append(sROIName)
+        
+        
+        # get segmentation node name from data node
+        
+        slSegDataNode = slSHNode.GetItemDataNode(slRTStructItemId)
+        slSegDisplayNodeId = slSegDataNode.GetDisplayNodeID()
+        slSegDisplayNode = slicer.mrmlScene.GetNodeByID(slSegDisplayNodeId)
+
+
+
+        return lsROINames, slSegDisplayNode, slSegDataNode
+        
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
