@@ -627,6 +627,12 @@ class UtilsFilesIO:
                             sMsg = sMsg + sValidationMsg
                             sValidationMsg = self.ValidateAttributeOptions(lxROIs[0], 'ROIVisibilityCode', sPageReference, self.oIOXml.lValidRoiVisibilityCodes)
                             sMsg = sMsg + sValidationMsg
+                            
+                            # if the visibility code is Select or Ignore, there must be an ROI element(s) with the name(s) present
+                            sVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(lxROIs[0], 'ROIVisibilityCode')
+                            if sVisibilityCode == 'Select' or sVisibilityCode == 'Ignore':
+                                sValidationMsg = self.ValidateRequiredElement(lxROIs[0], 'ROI', sPageReference, True)  # True for multiple elements allowed
+                                sMsg = sMsg + sValidationMsg
 
                 # >>>>>>>>>>>>>>>
                 # validate attributes 'SegmentRequired' and 'SegmentRequiredOnAnyImage'
@@ -687,19 +693,23 @@ class UtilsFilesIO:
         return bSuccess, sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateRequiredElement(self, xParentElement, sElementName, sPageReference):
+    def ValidateRequiredElement(self, xParentElement, sElementName, sPageReference, bMultipleAllowed=False):
         '''
-            This function checks that there is exactly one child element for the input parent element.
-            If there is a valid list of options input as a parameter, the function checks that the
-            data stored in the element exists in that list.
+            This function checks that there is exactly one child element for the input parent element if the flag for
+            multiples has not been set to true.
         '''
         sMsg = ''
+        sMsgPrefix = '\nError for ' + sElementName + ' Element. '
+        sMsgMissing = 'Required element is missing.'
+        sMsgMultipleNotAllowed = 'More than one of this element was found. Only one is allowed.'
+        sMsgEnding = '  See Page:' + sPageReference
         
         lxChildren = self.oIOXml.GetChildren(xParentElement, sElementName)
-        if len(lxChildren) != 1:
-            sMsg = sMsg + '\nError for ' + sElementName + ' Element.   See Page:' + sPageReference\
-                     + '\n   .....There is either more than 1 of these elements or it is missing.'
-        
+        if len(lxChildren) == 0:
+            sMsg = sMsgPrefix +  sMsgMissing + sMsgEnding
+        elif len(lxChildren) >1 and bMultipleAllowed == False:
+            sMsg = sMsgPrefix + sMsgMultipleNotAllowed + sMsgEnding
+                     
         return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -708,17 +718,22 @@ class UtilsFilesIO:
             This function checks that the data stored in the xml element exists in the list of valid options.
         '''
         sMsg = ''
+        sValidOptions = ''
+        for sOption in lValidOptions:
+            sValidOptions = sValidOptions + ', ' + sOption
         
         lxChildren = self.oIOXml.GetChildren(xParentElement, sElementName)
 
         for xChild in lxChildren:
             sDataValue = self.oIOXml.GetDataInNode(xChild)
             if sDataValue not in lValidOptions:
-                sValidOptions = ''
-                for sOption in lValidOptions:
-                    sValidOptions = sValidOptions + ', ' + sOption
                 sMsg = sMsg + '\nNot a valid option for ' + sElementName + ' : ' + sDataValue + '   See Page:' + sPageReference\
                         + '\n   .....Valid options are:' + sValidOptions
+
+        if len(lxChildren) == 0:
+            sMsg = sMsg + '\nMissing Element: ' + sElementName + '   See Page:' + sPageReference\
+                        + '\n   .....Valid options are:' + sValidOptions
+            
 
         return sMsg
                         
@@ -735,6 +750,10 @@ class UtilsFilesIO:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ValidateAttributeOptions(self, xParentElement, sAttributeName, sPageReference, lValidOptions):
+        ''' Given the list of valid options, the function checks that the
+            data stored in the element exists in that list.
+        '''
+        
         sMsg = ''
         
         sDataValue = self.oIOXml.GetValueOfNodeAttribute(xParentElement, sAttributeName)
