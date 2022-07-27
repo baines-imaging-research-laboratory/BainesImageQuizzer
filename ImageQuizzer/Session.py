@@ -636,13 +636,17 @@ class Session:
             if self.CheckForLastQuestionSetForPage() == True:
                 self._btnRepeat.visible = True
                 self._btnRepeat.enabled = True
+                self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
             else:
                 self._btnRepeat.visible = True
                 self._btnRepeat.enabled = False
+                self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white}")
+
         else:
             self.SetPageLooping(False)
             self._btnRepeat.visible = False
             self._btnRepeat.enabled = False
+            self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white}")
             
             
         # assign button description           
@@ -969,6 +973,12 @@ class Session:
     
         # update the repeated page
         self.AdjustXMLForRepeatedPage()
+        self.BuildNavigationList()  # repeated here to pick up attribute adjustments for Rep#
+
+
+        self._loQuestionSets = []
+        slicer.mrmlScene.Clear()
+
         
         self.progress.setMaximum(len(self.GetNavigationList()))
         self.progress.setValue(self.GetCurrentNavigationIndex())
@@ -1954,11 +1964,25 @@ class Session:
             # get last rep number to increment current rep
             xPreviousPage = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), "Page", self.GetCurrentNavigationIndex() -1 )
             sPreviousRepNum = self.oIOXml.GetValueOfNodeAttribute(xPreviousPage, "Rep")
+            sPreviousPageID = self.oIOXml.GetValueOfNodeAttribute(xPreviousPage, 'ID')
             
+            
+            
+            self.oIOXml.UpdateAtributesInElement(xNewRepeatPage, {"PageComplete":"N"})
             iPreviousRepNum = int(sPreviousRepNum)
             sNewRepNum = str(iPreviousRepNum + 1)
-            self.oIOXml.UpdateAtributesInElement(xNewRepeatPage, {"Rep":sNewRepNum})    
-            self.oIOXml.UpdateAtributesInElement(xNewRepeatPage, {"PageComplete":"N"})
+            self.oIOXml.UpdateAtributesInElement(xNewRepeatPage, {"Rep":sNewRepNum})
+            
+            iSubIndex = sPreviousPageID.find('_-Rep')
+            if iSubIndex >=0:
+                sStrippedPageID = sPreviousPageID[0:iSubIndex]
+            else:
+                sStrippedPageID = sPreviousPageID
+            
+            sNewPageID = sStrippedPageID + '_-Rep' + str(sNewRepNum)
+            self.oIOXml.UpdateAtributesInElement(xNewRepeatPage, {"ID":sNewPageID})
+            
+            
                 
             # remove LabelmapPath and MarkupLinePath elements
             lxImages = self.oIOXml.GetChildren(xNewRepeatPage, 'Image')
