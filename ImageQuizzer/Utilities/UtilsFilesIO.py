@@ -642,6 +642,7 @@ class UtilsFilesIO:
                   
             # >>>>>>>>>>>>>>>
             # validate that each page has a PageGroup attribute if the session requires page group randomization
+            #    a quiz that has no PageGroup attributes will be assigned the default numbers during the session setup
             sRandomizeRequested = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
             if sRandomizeRequested == "Y":
                 sValidationMsg = self.ValidatePageGroupNumbers(xRootNode)
@@ -1438,7 +1439,6 @@ class UtilsFilesIO:
         # if Loop="Y" for any page in the quiz, add Rep="0" to each page if not defined
         
         bLoopingInQuiz = False
-        
         lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
         for xPageNode in lxPages:
             sLoopAllowed = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "Loop")
@@ -1453,10 +1453,27 @@ class UtilsFilesIO:
                     int(sRepNum)
                 except:
                     # not a valid integer - create/set the attribute to 0
-                    self.oIOXml.UpdateAtributesInElement(xPageNode, {"Rep":"0"})
-
-    
+                    self.oIOXml.UpdateAttributesInElement(xPageNode, {"Rep":"0"})
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetupPageGroupInitialization(self, xRootNode):
+        ''' If no PageGroup attribute exists, update the XML to initialize each page
+            to a unique number.
+        '''
+        
+        bPageGroupFound = False
+         
+        lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
+        for xPageNode in lxPages:
+            sPageGroupNum = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "PageGroup")
+            if sPageGroupNum != '':
+                bPageGroupFound = True
+                break
+       
+        if not bPageGroupFound:
+            for iPageNum in range(len(lxPages)):
+                xPageNode = self.oIOXml.GetNthChild(xRootNode, "Page", iPageNum)
+                self.oIOXml.UpdateAttributesInElement(xPageNode, {"PageGroup":str(iPageNum)})
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

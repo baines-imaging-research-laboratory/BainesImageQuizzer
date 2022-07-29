@@ -949,48 +949,73 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onRepeatButtonClicked(self):
         
-        self.PerformSave('Next')
-        indPageToRepeat = self.GetCurrentPageIndex()
+        try:        
+            bSuccess = True
+            sMsg = ''
+            
+            bSuccess, sMsg = self.PerformSave('NextBtn')
+            if bSuccess:
+                indPageToRepeat = self.GetCurrentPageIndex()
+                
+                
+                xCopyOfPageToRepeatNode = self.oIOXml.CopyElement(self.GetCurrentPageNode())
+                iCopiedRepNum = int(self.oIOXml.GetValueOfNodeAttribute(xCopyOfPageToRepeatNode, "Rep"))
+                
+                # find the next xml page that has Rep 0 (move past all repeated pages for this loop)
+                indNextXmlPageWithRep0 = self.oIOXml.GetIndexOfNextChildWithAttributeValue(self.oIOXml.GetRootNode(), "Page", indPageToRepeat + 1, "Rep", "0")
+        
+                if indNextXmlPageWithRep0 != -1:
+                    self.oIOXml.InsertElementBeforeIndex(self.oIOXml.GetRootNode(), xCopyOfPageToRepeatNode, indNextXmlPageWithRep0)
+                else:
+                    # attribute was not found
+                    self.oIOXml.AppendElement(self.oIOXml.GetRootNode(), xCopyOfPageToRepeatNode)
+                
+                self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+                self.BuildNavigationList()
+                
+                # xPrevNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), "Page", indNextXmlPageWithRep0 - 1)
+                # iPrevRepNum = int(self.oIOXml.GetValueOfNodeAttribute(xPrevNode, "Rep"))
+                # iNewNavInd = self.FindNewRepeatedPosition(indNextXmlPageWithRep0, iPrevRepNum)
+                iNewNavInd = self.FindNewRepeatedPosition(indNextXmlPageWithRep0, iCopiedRepNum)
+                self.SetCurrentNavigationIndex(iNewNavInd)
+            
+                # update the repeated page
+                self.AdjustXMLForRepeatedPage()
+                self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+                self.BuildNavigationList()  # repeated here to pick up attribute adjustments for Rep#
+                self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
         
         
-        xCopyOfPageToRepeatNode = self.oIOXml.CopyElement(self.GetCurrentPageNode())
+                self._loQuestionSets = []
+                slicer.mrmlScene.Clear()
         
-        # find the next xml page that has Rep 0 (move past all repeated pages for this loop)
-        indNextPageWithRep0 = self.oIOXml.GetIndexOfNextChildWithAttributeValue(self.oIOXml.GetRootNode(), "Page", indPageToRepeat + 1, "Rep", "0")
+                
+                self.progress.setMaximum(len(self.GetNavigationList()))
+                self.progress.setValue(self.GetCurrentNavigationIndex())
+        
+                self.EnableButtons()
+                self.DisplayQuizLayout()
+                self.DisplayImageLayout()
+                
+            else:
+                if sMsg != '':
+                    self.oUtilsMsgs.DisplayWarning( sMsg )
 
-        if indNextPageWithRep0 != -1:
-            self.oIOXml.InsertElementBeforeIndex(self.oIOXml.GetRootNode(), xCopyOfPageToRepeatNode, indNextPageWithRep0)
-        else:
-            # attribute was not found
-            self.oIOXml.AppendElement(self.oIOXml.GetRootNode(), xCopyOfPageToRepeatNode)
-        
-        self.BuildNavigationList()
-        
-        xPrevNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), "Page", indNextPageWithRep0 - 1)
-        iPrevRepNum = int(self.oIOXml.GetValueOfNodeAttribute(xPrevNode, "Rep"))
-        iNewNavInd = self.FindNewRepeatedPosition(indNextPageWithRep0, iPrevRepNum)
-        self.SetCurrentNavigationIndex(iNewNavInd)
-    
-        # update the repeated page
-        self.AdjustXMLForRepeatedPage()
-        self.BuildNavigationList()  # repeated here to pick up attribute adjustments for Rep#
-
-
-        self._loQuestionSets = []
-        slicer.mrmlScene.Clear()
-
-        
-        self.progress.setMaximum(len(self.GetNavigationList()))
-        self.progress.setValue(self.GetCurrentNavigationIndex())
-        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-
-        self.EnableButtons()
-        self.DisplayQuizLayout()
-        self.DisplayImageLayout()
+        except:
+            iPage = self.GetCurrentPageIndex() + 1
+            tb = traceback.format_exc()
+            sMsg = "onRepeatButtonClicked: Error repeating this page. Current page: " + str(iPage) \
+                   + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
     
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def FindNewRepeatedPosition(self, iSearchPageNum, iSearchRepNum):
+        ''' this function scans the navigation compositie indices to match 
+            the Page and Rep numbers of the new repeated page that was inserted
+            into the xml file. If there is more than one question set, the index
+            to the last question set will be captured
+        '''
         indFound = -1
         
         for iNavInd in range(len(self.GetNavigationList())):
@@ -999,6 +1024,7 @@ class Session:
             
             if iPgNum == iSearchPageNum and iRepNum == iSearchRepNum :
                 indFound = iNavInd
+                # no break here in case there is more than one question set
                 
         return indFound
     
@@ -1040,6 +1066,7 @@ class Session:
                 self.oFilesIO.SetupROIColorFile(sColorFileName)
                 
                 self.oFilesIO.SetupLoopingInitialization(xRootNode)
+                self.oFilesIO.SetupPageGroupInitialization(xRootNode)
     
     
                 # build the list of indices page/questionset as read in by the XML 
@@ -1962,16 +1989,16 @@ class Session:
             xNewRepeatPage = self.GetCurrentPageNode()
             
             # get last rep number to increment current rep
-            xPreviousPage = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), "Page", self.GetCurrentNavigationIndex() -1 )
+            xPreviousPage = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), "Page", self.GetNavigationPage( self.GetCurrentNavigationIndex() -1 ) )
             sPreviousRepNum = self.oIOXml.GetValueOfNodeAttribute(xPreviousPage, "Rep")
             sPreviousPageID = self.oIOXml.GetValueOfNodeAttribute(xPreviousPage, 'ID')
             
             
             
-            self.oIOXml.UpdateAtributesInElement(xNewRepeatPage, {"PageComplete":"N"})
+            self.oIOXml.UpdateAttributesInElement(xNewRepeatPage, {"PageComplete":"N"})
             iPreviousRepNum = int(sPreviousRepNum)
             sNewRepNum = str(iPreviousRepNum + 1)
-            self.oIOXml.UpdateAtributesInElement(xNewRepeatPage, {"Rep":sNewRepNum})
+            self.oIOXml.UpdateAttributesInElement(xNewRepeatPage, {"Rep":sNewRepNum})
             
             iSubIndex = sPreviousPageID.find('_-Rep')
             if iSubIndex >=0:
@@ -1980,7 +2007,7 @@ class Session:
                 sStrippedPageID = sPreviousPageID
             
             sNewPageID = sStrippedPageID + '_-Rep' + str(sNewRepNum)
-            self.oIOXml.UpdateAtributesInElement(xNewRepeatPage, {"ID":sNewPageID})
+            self.oIOXml.UpdateAttributesInElement(xNewRepeatPage, {"ID":sNewPageID})
             
             
                 
@@ -2118,7 +2145,7 @@ class Session:
             dictAttrib['LogoutTime'] = sLogoutTime
                 
             # reset the Login element
-            self.oIOXml.UpdateAtributesInElement(xLoginNode, dictAttrib)
+            self.oIOXml.UpdateAttributesInElement(xLoginNode, dictAttrib)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetNavigationIndexIfResumeRequired(self):
@@ -2272,7 +2299,7 @@ class Session:
         dictAttrib['UserName'] = self.oFilesIO.GetUsername()
             
         # reset the Login element
-        self.oIOXml.UpdateAtributesInElement(xRootNode, dictAttrib)
+        self.oIOXml.UpdateAttributesInElement(xRootNode, dictAttrib)
 
         self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
         

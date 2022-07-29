@@ -339,7 +339,7 @@ class UtilsIOXml:
             xParentNode.remove(xElem)
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def UpdateAtributesInElement(self, xElement, dictAttrib):
+    def UpdateAttributesInElement(self, xElement, dictAttrib):
         
         # for each key, value in the dictionary, update the element attributes
         for sKey, sValue in dictAttrib.items():
