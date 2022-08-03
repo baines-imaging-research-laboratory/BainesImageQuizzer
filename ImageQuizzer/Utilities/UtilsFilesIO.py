@@ -1458,7 +1458,8 @@ class UtilsFilesIO:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupPageGroupInitialization(self, xRootNode):
         ''' If no PageGroup attribute exists, update the XML to initialize each page
-            to a unique number.
+            to a unique number. Start PageGroup numbers at '1'. ('0' has specialized
+            meaning when randomizing page groups.
         '''
         
         bPageGroupFound = False
@@ -1473,7 +1474,7 @@ class UtilsFilesIO:
         if not bPageGroupFound:
             for iPageNum in range(len(lxPages)):
                 xPageNode = self.oIOXml.GetNthChild(xRootNode, "Page", iPageNum)
-                self.oIOXml.UpdateAttributesInElement(xPageNode, {"PageGroup":str(iPageNum)})
+                self.oIOXml.UpdateAttributesInElement(xPageNode, {"PageGroup":str(iPageNum + 1)})
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

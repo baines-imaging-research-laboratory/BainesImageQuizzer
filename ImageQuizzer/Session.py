@@ -955,33 +955,31 @@ class Session:
             
             bSuccess, sMsg = self.PerformSave('NextBtn')
             if bSuccess:
-                indPageToRepeat = self.GetCurrentPageIndex()
+                indXmlPageToRepeat = self.GetCurrentPageIndex()
                 
                 
-                xCopyOfPageToRepeatNode = self.oIOXml.CopyElement(self.GetCurrentPageNode())
-                iCopiedRepNum = int(self.oIOXml.GetValueOfNodeAttribute(xCopyOfPageToRepeatNode, "Rep"))
+                xCopyOfXmlPageToRepeatNode = self.oIOXml.CopyElement(self.GetCurrentPageNode())
+                iCopiedRepNum = int(self.oIOXml.GetValueOfNodeAttribute(xCopyOfXmlPageToRepeatNode, "Rep"))
                 
                 # find the next xml page that has Rep 0 (move past all repeated pages for this loop)
-                indNextXmlPageWithRep0 = self.oIOXml.GetIndexOfNextChildWithAttributeValue(self.oIOXml.GetRootNode(), "Page", indPageToRepeat + 1, "Rep", "0")
+                indNextXmlPageWithRep0 = self.oIOXml.GetIndexOfNextChildWithAttributeValue(self.oIOXml.GetRootNode(), "Page", indXmlPageToRepeat + 1, "Rep", "0")
         
                 if indNextXmlPageWithRep0 != -1:
-                    self.oIOXml.InsertElementBeforeIndex(self.oIOXml.GetRootNode(), xCopyOfPageToRepeatNode, indNextXmlPageWithRep0)
+                    self.oIOXml.InsertElementBeforeIndex(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode, indNextXmlPageWithRep0)
                 else:
                     # attribute was not found
-                    self.oIOXml.AppendElement(self.oIOXml.GetRootNode(), xCopyOfPageToRepeatNode)
+                    self.oIOXml.AppendElement(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode)
+                    indNextXmlPageWithRep0 = self.oIOXml.GetNumChildrenByName(self.oIOXml.GetRootNode(), 'Page') - 1
                 
-                self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-                self.BuildNavigationList()
+                self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())    # for debug
+                self.BuildNavigationList() # update after adding xml page
                 
-                # xPrevNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), "Page", indNextXmlPageWithRep0 - 1)
-                # iPrevRepNum = int(self.oIOXml.GetValueOfNodeAttribute(xPrevNode, "Rep"))
-                # iNewNavInd = self.FindNewRepeatedPosition(indNextXmlPageWithRep0, iPrevRepNum)
                 iNewNavInd = self.FindNewRepeatedPosition(indNextXmlPageWithRep0, iCopiedRepNum)
                 self.SetCurrentNavigationIndex(iNewNavInd)
             
                 # update the repeated page
                 self.AdjustXMLForRepeatedPage()
-                self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+                self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())    # for debug
                 self.BuildNavigationList()  # repeated here to pick up attribute adjustments for Rep#
                 self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
         
@@ -1011,11 +1009,12 @@ class Session:
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def FindNewRepeatedPosition(self, iSearchPageNum, iSearchRepNum):
-        ''' this function scans the navigation compositie indices to match 
+        ''' this function scans the navigation composite indices to match 
             the Page and Rep numbers of the new repeated page that was inserted
-            into the xml file. If there is more than one question set, the index
-            to the last question set will be captured
+            into the xml file. If there is more than one question set, 
+            the navigation index of the first question set is returned.
         '''
+
         indFound = -1
         
         for iNavInd in range(len(self.GetNavigationList())):
@@ -1024,7 +1023,8 @@ class Session:
             
             if iPgNum == iSearchPageNum and iRepNum == iSearchRepNum :
                 indFound = iNavInd
-                # no break here in case there is more than one question set
+                break
+
                 
         return indFound
     
