@@ -72,7 +72,7 @@ class Session:
         self.bNPlanesViewingMode = False
         self.sViewingMode = "Default"
         self.loCurrentXMLImageViewNodes = []
-
+        self.liImageDisplayOrder = []
 
 
     def __del__(self):
@@ -353,6 +353,30 @@ class Session:
     def SetPageLooping(self, bTF):
         self._bPageLooping = bTF
 
+    #----------
+    def ReorderImageIndexToEnd(self, iIndexToMove):
+        # move index to end of list
+        liRearrangedOrder = []
+        
+        for i in range(len(self.liImageDisplayOrder)):
+            if self.liImageDisplayOrder(i) != iIndexToMove:
+                liRearrangedOrder.append(self.liImageDisplayOrder(i))
+                
+        liRearrangedOrder.append(iIndexToMove)
+        
+        return liRearrangedOrder
+                
+    #----------
+    def InitializeImageDisplayOrderIndices(self):
+        # create original order for Images to be displayed based on XML
+        self.liImageDisplayOrder = []
+        lxImageElements = self.oIOXml.GetChildren(self.GetCurrentPageNode(), 'Image')
+        for i in range(len(lxImageElements)):
+            self.liImageDisplayOrder.append(i)
+            
+    #----------
+    def GetImageDisplayOrderIndices(self):
+        return self.liImageDisplayOrder
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -697,6 +721,7 @@ class Session:
                 
                     self._iCurrentCompositeIndex = self._iCurrentCompositeIndex + 1
                     self.progress.setValue(self._iCurrentCompositeIndex)
+                    self.InitializeImageDisplayOrderIndices()
                     
                     self.EnableButtons()
            
@@ -742,6 +767,7 @@ class Session:
                 slicer.mrmlScene.Clear()
                 self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
                 self.progress.setValue(self._iCurrentCompositeIndex)
+                self.InitializeImageDisplayOrderIndices()
         
                 if self._iCurrentCompositeIndex < 0:
                     # reset to beginning
@@ -957,6 +983,7 @@ class Session:
     
                 # build the list of indices page/questionset as read in by the XML
                 self.BuildPageQuestionCompositeIndexList()
+                self.InitializeImageDisplayOrderIndices()
                 # if randomization is requested - shuffle the page/questionset list
                 sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
                 if sRandomizeRequired == 'Y':
@@ -1302,7 +1329,7 @@ class Session:
             self.oFilesIO.LoadSavedMarkupLines(self)
     
             # assign each image node and its label map (if applicable) to the viewing widget
-            self.oImageView.AssignNodesToView()
+            self.oImageView.AssignNodesToView(self.GetImageDisplayOrderIndices())
             
             self.SetNPlanesComboBoxImageNames()
     
