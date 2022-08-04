@@ -18,6 +18,12 @@
 			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
+		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Brain\Segmentation.seg.nrrd</Path>
+		</Image>
 		<Image ID="R-FG-2_Moving Volume" Type="Volume">
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Foreground</Layer>

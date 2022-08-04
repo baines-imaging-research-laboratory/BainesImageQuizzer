@@ -303,14 +303,16 @@ class Session:
     def GetNPlanesImageComboBoxSelection(self):
         # get selected image name from combo box
         sImageName = self.qComboImageList.currentText
-        
+        iXmlIndex = 0
         # determine which image is to be displayed in an alternate viewing mode (3 Planes or 1 Plane)
         loImageViewNodes = self.oImageView.GetImageViewList()
         for oImageViewNode in loImageViewNodes:
             if oImageViewNode.sNodeName == sImageName:
                 break
+            else:
+                iXmlIndex = iXmlIndex + 1
             
-        return oImageViewNode
+        return oImageViewNode, iXmlIndex
         
     #----------
     def SetNPlanesView(self):
@@ -355,12 +357,13 @@ class Session:
 
     #----------
     def ReorderImageIndexToEnd(self, iIndexToMove):
-        # move index to end of list
+        # move index to end of list to prioritize the image state of
+        #    the last viewed image in the 1 or 3 Planes view mode
         liRearrangedOrder = []
         
         for i in range(len(self.liImageDisplayOrder)):
-            if self.liImageDisplayOrder(i) != iIndexToMove:
-                liRearrangedOrder.append(self.liImageDisplayOrder(i))
+            if self.liImageDisplayOrder[i] != iIndexToMove:
+                liRearrangedOrder.append(self.liImageDisplayOrder[i])
                 
         liRearrangedOrder.append(iIndexToMove)
         
@@ -894,7 +897,6 @@ class Session:
         ''' return viewing nodes to original layout for this page in the xml
         '''
         sMsg = ''
-        # oImageNodeOverride = self.GetNPlanesImageComboBoxSelection()
         
         bSuccess, sMsg  = self.PerformSave('ResetView')
 
@@ -917,7 +919,8 @@ class Session:
 
         self.CaptureAndSaveImageState()
         
-        oImageNodeOverride = self.GetNPlanesImageComboBoxSelection()
+        oImageNodeOverride, iXmlImageIndex = self.GetNPlanesImageComboBoxSelection()
+        self.liImageDisplayOrder = self.ReorderImageIndexToEnd(iXmlImageIndex)
         self.SetNPlanesView()
         self.oImageView.AssignNPlanes(oImageNodeOverride, self.llsNPlanesOrientDest)
         self.bNPlanesViewingMode = True
