@@ -944,7 +944,7 @@ class DataVolumeDetail(ViewNodeBase):
         return lsROINames, slSegDisplayNode, slParentSegNode
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetSegmentRoiVisibility(self, slSegDisplayNode, slSegNode, lsSubjectHierarchyROINames):
+    def SetSegmentRoiVisibility(self, slSegDisplayNode, slSegNode, lsROINames):
         # Set visibility of Segments loaded as 'Data' image node (on = 1; off = 0)
         #
         # get list of all segmentation nodes
@@ -952,41 +952,54 @@ class DataVolumeDetail(ViewNodeBase):
         self.SetDisplayViewNodeIDs( slSegDisplayNode)
 
         
-        
-        
-        
-        
-        
         slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
         slSceneItemID = slSHNode.GetSceneItemID()
         slPlugin = slicer.qSlicerSubjectHierarchySegmentsPlugin()
  
-        lSegNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSegmentationNode')
+
+        liSubjectHierarchyIDs = []
+        sSegNodeName = slSegNode.GetName()
+        iSegNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sSegNodeName)
+         
+        # for each Segmentation node, get all segmentation ids
+        lSegmentations = slSegNode.GetSegmentation()
+         
+        for indSegment in range(lSegmentations.GetNumberOfSegments()):
+             
+            slSegNode = lSegmentations.GetNthSegment(indSegment)
+            sSegNodeName = slSegNode.GetName()
+             
+            iSegmentSubjectHierarchyId = slSHNode.GetItemChildWithName(iSegNodeID, sSegNodeName)
+            liSubjectHierarchyIDs.append(iSegmentSubjectHierarchyId)
+             
+
+        # using the slicer plugin, set the visibility
+
+        if (self.sRoiVisibilityCode == 'All'):
+            for indSHId in range(len(liSubjectHierarchyIDs)):
+                slPlugin.setDisplayVisibility(indSHId, True)
+                
+        if (self.sRoiVisibilityCode == 'None'):
+            for indSHId in range(len(liSubjectHierarchyIDs)):
+                slPlugin.setDisplayVisibility(indSHId, False)
+                
+        # turn ON all ROI's and then turn OFF user's list    
+        if (self.sRoiVisibilityCode == 'Ignore'):
+            for indSHId in range(len(liSubjectHierarchyIDs)):
+                slPlugin.setDisplayVisibility(indSHId, True)
+            for indUserList in range(len(self.lsRoiList)):
+                iSegmentSubjectHierarchyId = slSHNode.GetItemChildWithName(iSegNodeID, self.lsRoiList[indUserList])
+                slPlugin.setDisplayVisibility(iSegmentSubjectHierarchyId, False)
+            
+        # turn OFF all ROI's and then turn ON user's list    
+        if (self.sRoiVisibilityCode == 'Select'):
+            for indSHId in range(len(liSubjectHierarchyIDs)):
+                slPlugin.setDisplayVisibility(indSHId, False)
+            for indUserList in range(len(self.lsRoiList)):
+                iSegmentSubjectHierarchyId = slSHNode.GetItemChildWithName(iSegNodeID, self.lsRoiList[indUserList])
+                slPlugin.setDisplayVisibility(iSegmentSubjectHierarchyId, True)
         
-        for indParentSegNode in range(lSegNodes.GetNumberOfItems()):
-            
-            slParentSegNode = lSegNodes.GetItemAsObject(indParentSegNode)
-            sParentSegNodeName = slParentSegNode.GetName()
-            iParentSegNodeID = slSHNode.GetItemChildWithName(slSceneItemID, sParentSegNodeName)
-            
-            # for each Segmentation node, get all segmentations
-            lSegmentations = slParentSegNode.GetSegmentation()
-            
-            for indSegment in range(lSegmentations.GetNumberOfSegments()):
-                
-                slSegNode = lSegmentations.GetNthSegment(indSegment)
-                sSegNodeName = slSegNode.GetName()
-                
-                iSegmentSubjectHierarchyId = slSHNode.GetItemChildWithName(iParentSegNodeID, sSegNodeName)
-                
-                # using the slicer plugin, set the visibility
-                slPlugin.setDisplayVisibility(iSegmentSubjectHierarchyId, 1)
-
-        # clean up memory leaks
-        #    getting a node by ID (slSegDisplayNode) doesn't seem to cause a memory leak
-        #    getting nodes by class does create a memory leak so you have to unregister it!
-        lSegNodes.UnRegister(slicer.mrmlScene)
-
+ 
 
 ##########################################################################
 #
@@ -1190,7 +1203,6 @@ class DicomVolumeDetail(ViewNodeBase):
         '''
         slSegDataNode = None
         slSegDisplayNode = None
-        lsROINames = []
         
 
         
@@ -1227,7 +1239,7 @@ class DicomVolumeDetail(ViewNodeBase):
 
 
 
-        return lsROINames, slSegDisplayNode, slSegDataNode
+        return lsSubjectHierarchyROINames, slSegDisplayNode, slSegDataNode
         
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1270,41 +1282,6 @@ class DicomVolumeDetail(ViewNodeBase):
 
 
         self.SetDisplayViewNodeIDs( slSegDisplayNode)
-
-
-#         # assign segmentation display node to the requested viewing window destination
-#         lsViewIDs = []
-#         
-#         # get viewing window node ID (1st object of node)
-#         slViewingNode = slicer.mrmlScene.GetNodesByName(oViewNode.sDestination)
-#         oSlicerViewNodeItem = slViewingNode.GetItemAsObject(0)
-#         sViewID = oSlicerViewNodeItem.GetID()
-# 
-#         lsViewIDs.append(sViewID)
-#         
-#         # if this segmentation display node was already assigned to a viewing window,
-#         #    capture the previous assignment and append the new request
-#         tupPreviousViewAssignments = slSegDisplayNode.GetViewNodeIDs()
-#         lsRemainingPreviousAssignments = []
-#         if len(tupPreviousViewAssignments) > 0:
-# 
-#             # extract first element of tuple and a list with the rest of the elements 
-#             #    (following python syntax rules for tuples) 
-#             sFirstPreviousAssignment, *lsRemainingPreviousAssignments = tupPreviousViewAssignments
-# 
-#             # the current requested view ID (sViewID) may already be in the list of
-#             #    previous assignments. Don't bother appending.
-#             #    (This may occur when this display is coming after a 'previous' button selection)
-#             if not (sFirstPreviousAssignment == sViewID):
-#                 lsViewIDs.append(sFirstPreviousAssignment)
-#                 if len(lsRemainingPreviousAssignments) >0:
-#                     for indTupList in range(len(lsRemainingPreviousAssignments)):
-#                         if not (lsRemainingPreviousAssignments[indTupList] == sViewID):
-#                             lsViewIDs.append(lsRemainingPreviousAssignments[indTupList])
-#                 
-#         # assign all requested view destinations to the display node
-#         slSegDisplayNode.SetViewNodeIDs(lsViewIDs)
-#         
 
 
 
