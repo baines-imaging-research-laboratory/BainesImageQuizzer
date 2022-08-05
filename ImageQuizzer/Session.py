@@ -357,8 +357,12 @@ class Session:
 
     #----------
     def ReorderImageIndexToEnd(self, iIndexToMove):
-        # move index to end of list to prioritize the image state of
-        #    the last viewed image in the 1 or 3 Planes view mode
+        ''' Move index to end of list to prioritize the image state of
+            the last viewed image in the 1 or 3 Planes view mode.
+            This is used in the apply image state function.
+            (It prevents the state being overridden because of the order of images read in from the xml file.)
+        '''
+
         liRearrangedOrder = []
         
         for i in range(len(self.liImageDisplayOrder)):
@@ -371,7 +375,9 @@ class Session:
                 
     #----------
     def InitializeImageDisplayOrderIndices(self):
-        # create original order for Images to be displayed based on XML
+        ''' default to the original order for Images to be displayed based on image elements
+            stored in the XML file
+        '''
         self.liImageDisplayOrder = []
         lxImageElements = self.oIOXml.GetChildren(self.GetCurrentPageNode(), 'Image')
         for i in range(len(lxImageElements)):
@@ -444,21 +450,11 @@ class Session:
         # use lambda to pass argument to this PyQt slot without invoking the function on setup
         self._btnExit.connect('clicked(bool)',lambda: self.onExitButtonClicked('ExitBtn'))
 
-        # # Repeat button
-        # self._btnRepeat = qt.QPushButton("Repeat")
-        # self._btnRepeat.toolTip = "Save current responses and repeat."
-        # self._btnRepeat.enabled = False
-        # self._btnRepeat.visible = False
-        # self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
-        # self._btnRepeat.connect('clicked(bool)', self.onRepeatButtonClicked)
-        
-
         self.qButtonGrpBoxLayout.addWidget(self._btnExit)
         self.qButtonGrpBoxLayout.addWidget(qProgressLabel)
         self.qButtonGrpBoxLayout.addWidget(self.progress)
         self.qButtonGrpBoxLayout.addWidget(self._btnPrevious)
         self.qButtonGrpBoxLayout.addWidget(self._btnNext)
-        # self.qButtonGrpBoxLayout.addWidget(self._btnRepeat)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupExtraToolsButtons(self):
@@ -640,22 +636,6 @@ class Session:
         else:
             self._btnNext.enabled = True
             self._btnPrevious.enabled = True
-
-        # # looping for page
-        # if self.GetPageLooping() == True:
-        #     if self.CheckForLastQuestionSetForPage() == True:
-        #         self._btnNext.setText("Done")
-        #         self._btnRepeat.visible = True
-        #         self._btnRepeat.enabled = True
-        #     else:
-        #         self._btnNext.setText("Next")
-        #         self._btnRepeat.visible = True
-        #         self._btnRepeat.enabled = False
-        # else:
-        #         self._btnNext.setText("Next")
-        #         self._btnRepeat.visible = False
-        #         self._btnRepeat.enabled = False
-
 
         # assign button description           
         if (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
@@ -938,12 +918,6 @@ class Session:
     def onWindowLevelOffClicked(self):
         slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.ViewTransform)
 
-    # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # def onRepeatButtonClicked(self):
-    #     print('Copying page ')
-
-    
-    
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1649,11 +1623,11 @@ class Session:
                 lsRequiredOrientations.append(self.llsNPlanesOrientDest[i][0])
                 dictNPlanesOrientDest.update({self.llsNPlanesOrientDest[i][0] : self.llsNPlanesOrientDest[i][1]})
             
-        for ind in range(len(self.liImageDisplayOrder)):
+        for ind in range(len(self.GetImageDisplayOrderIndices())):
             if self.bNPlanesViewingMode:
                 oImageNode = loImageNodes[ind]
             else:
-                oImageNode = loImageNodes[self.liImageDisplayOrder[ind]]
+                oImageNode = loImageNodes[self.GetImageDisplayOrderIndices()[ind]]
                 
             dictImageState = {}
             
