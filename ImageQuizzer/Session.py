@@ -72,7 +72,7 @@ class Session:
         self.bNPlanesViewingMode = False
         self.sViewingMode = "Default"
         self.loCurrentXMLImageViewNodes = []
-
+        self.liImageDisplayOrder = []
 
 
     def __del__(self):
@@ -303,14 +303,16 @@ class Session:
     def GetNPlanesImageComboBoxSelection(self):
         # get selected image name from combo box
         sImageName = self.qComboImageList.currentText
-        
+        iXmlIndex = 0
         # determine which image is to be displayed in an alternate viewing mode (3 Planes or 1 Plane)
         loImageViewNodes = self.oImageView.GetImageViewList()
         for oImageViewNode in loImageViewNodes:
             if oImageViewNode.sNodeName == sImageName:
                 break
+            else:
+                iXmlIndex = iXmlIndex + 1
             
-        return oImageViewNode
+        return oImageViewNode, iXmlIndex
         
     #----------
     def SetNPlanesView(self):
@@ -353,6 +355,37 @@ class Session:
     def SetPageLooping(self, bTF):
         self._bPageLooping = bTF
 
+    #----------
+    def ReorderImageIndexToEnd(self, iIndexToMove):
+        ''' Move index to end of list to prioritize the image state of
+            the last viewed image in the 1 or 3 Planes view mode.
+            This is used in the apply image state function.
+            (It prevents the state being overridden because of the order of images read in from the xml file.)
+        '''
+
+        liRearrangedOrder = []
+        
+        for i in range(len(self.liImageDisplayOrder)):
+            if self.liImageDisplayOrder[i] != iIndexToMove:
+                liRearrangedOrder.append(self.liImageDisplayOrder[i])
+                
+        liRearrangedOrder.append(iIndexToMove)
+        
+        return liRearrangedOrder
+                
+    #----------
+    def InitializeImageDisplayOrderIndices(self):
+        ''' default to the original order for Images to be displayed based on image elements
+            stored in the XML file
+        '''
+        self.liImageDisplayOrder = []
+        lxImageElements = self.oIOXml.GetChildren(self.GetCurrentPageNode(), 'Image')
+        for i in range(len(lxImageElements)):
+            self.liImageDisplayOrder.append(i)
+            
+    #----------
+    def GetImageDisplayOrderIndices(self):
+        return self.liImageDisplayOrder
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -417,21 +450,11 @@ class Session:
         # use lambda to pass argument to this PyQt slot without invoking the function on setup
         self._btnExit.connect('clicked(bool)',lambda: self.onExitButtonClicked('ExitBtn'))
 
-        # Repeat button
-        self._btnRepeat = qt.QPushButton("Repeat")
-        self._btnRepeat.toolTip = "Save current responses and repeat."
-        self._btnRepeat.enabled = False
-        self._btnRepeat.visible = False
-        self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
-        self._btnRepeat.connect('clicked(bool)', self.onRepeatButtonClicked)
-        
-
         self.qButtonGrpBoxLayout.addWidget(self._btnExit)
         self.qButtonGrpBoxLayout.addWidget(qProgressLabel)
         self.qButtonGrpBoxLayout.addWidget(self.progress)
         self.qButtonGrpBoxLayout.addWidget(self._btnPrevious)
         self.qButtonGrpBoxLayout.addWidget(self._btnNext)
-        self.qButtonGrpBoxLayout.addWidget(self._btnRepeat)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupExtraToolsButtons(self):
@@ -614,22 +637,6 @@ class Session:
             self._btnNext.enabled = True
             self._btnPrevious.enabled = True
 
-        # looping for page
-        if self.GetPageLooping() == True:
-            if self.CheckForLastQuestionSetForPage() == True:
-                self._btnNext.setText("Done")
-                self._btnRepeat.visible = True
-                self._btnRepeat.enabled = True
-            else:
-                self._btnNext.setText("Next")
-                self._btnRepeat.visible = True
-                self._btnRepeat.enabled = False
-        else:
-                self._btnNext.setText("Next")
-                self._btnRepeat.visible = False
-                self._btnRepeat.enabled = False
-
-
         # assign button description           
         if (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
             # last question of last image view
@@ -697,6 +704,7 @@ class Session:
                 
                     self._iCurrentCompositeIndex = self._iCurrentCompositeIndex + 1
                     self.progress.setValue(self._iCurrentCompositeIndex)
+                    self.InitializeImageDisplayOrderIndices()
                     
                     self.EnableButtons()
            
@@ -742,6 +750,7 @@ class Session:
                 slicer.mrmlScene.Clear()
                 self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
                 self.progress.setValue(self._iCurrentCompositeIndex)
+                self.InitializeImageDisplayOrderIndices()
         
                 if self._iCurrentCompositeIndex < 0:
                     # reset to beginning
@@ -868,7 +877,6 @@ class Session:
         ''' return viewing nodes to original layout for this page in the xml
         '''
         sMsg = ''
-        # oImageNodeOverride = self.GetNPlanesImageComboBoxSelection()
         
         bSuccess, sMsg  = self.PerformSave('ResetView')
 
@@ -891,7 +899,8 @@ class Session:
 
         self.CaptureAndSaveImageState()
         
-        oImageNodeOverride = self.GetNPlanesImageComboBoxSelection()
+        oImageNodeOverride, iXmlImageIndex = self.GetNPlanesImageComboBoxSelection()
+        self.liImageDisplayOrder = self.ReorderImageIndexToEnd(iXmlImageIndex)
         self.SetNPlanesView()
         self.oImageView.AssignNPlanes(oImageNodeOverride, self.llsNPlanesOrientDest)
         self.bNPlanesViewingMode = True
@@ -909,12 +918,6 @@ class Session:
     def onWindowLevelOffClicked(self):
         slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.ViewTransform)
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onRepeatButtonClicked(self):
-        print('Copying page ')
-
-    
-    
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -957,6 +960,7 @@ class Session:
     
                 # build the list of indices page/questionset as read in by the XML
                 self.BuildPageQuestionCompositeIndexList()
+                self.InitializeImageDisplayOrderIndices()
                 # if randomization is requested - shuffle the page/questionset list
                 sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
                 if sRandomizeRequired == 'Y':
@@ -1613,12 +1617,18 @@ class Session:
         if not self.bNPlanesViewingMode:
             loImageNodes = self.oImageView.GetImageViewList()
         else:
-            loImageNodes.append(self.GetNPlanesImageComboBoxSelection())
+            oImageNodeOverride, iXmlImageIndex = self.GetNPlanesImageComboBoxSelection()
+            loImageNodes.append(oImageNodeOverride)
             for i in range(len(self.llsNPlanesOrientDest)):
                 lsRequiredOrientations.append(self.llsNPlanesOrientDest[i][0])
                 dictNPlanesOrientDest.update({self.llsNPlanesOrientDest[i][0] : self.llsNPlanesOrientDest[i][1]})
             
-        for oImageNode in loImageNodes:
+        for ind in range(len(self.GetImageDisplayOrderIndices())):
+            if self.bNPlanesViewingMode:
+                oImageNode = loImageNodes[ind]
+            else:
+                oImageNode = loImageNodes[self.GetImageDisplayOrderIndices()[ind]]
+                
             dictImageState = {}
             
             if (oImageNode.sImageType == "Volume" or oImageNode.sImageType == "VolumeSequence"):

@@ -164,7 +164,6 @@ class ImageView:
             self.ClearWidgets()
     
             for oViewNode in self._loImageViews:
-    
                 # if image type is an RTStruct, ensure that the referenced volume 
                 #    SeriesInstanceUID exists in the list of images to be loaded
                 if oViewNode.sImageType == 'RTStruct':
