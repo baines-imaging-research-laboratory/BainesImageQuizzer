@@ -580,7 +580,7 @@ class UtilsFilesIO:
                     sMsg = sMsg + sValidationMsg
                     
                     sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
-                    if not (sImageType == 'Segmentation' or sImageType == 'RTStruct'):
+                    if not (sImageType == 'Segmentation' or sImageType == 'RTStruct' or sImageType == 'LabelMap'):
                         sValidationMsg = self.ValidateElementOptions(xImage, 'DefaultOrientation', sPageReference, self.oIOXml.lValidOrientations)
                         sMsg = sMsg + sValidationMsg
                     
