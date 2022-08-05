@@ -1623,7 +1623,7 @@ class Session:
                 lsRequiredOrientations.append(self.llsNPlanesOrientDest[i][0])
                 dictNPlanesOrientDest.update({self.llsNPlanesOrientDest[i][0] : self.llsNPlanesOrientDest[i][1]})
             
-        for ind in range(len(self.GetImageDisplayOrderIndices())):
+        for ind in range(len(loImageNodes)):
             if self.bNPlanesViewingMode:
                 oImageNode = loImageNodes[ind]
             else:
