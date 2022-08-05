@@ -148,7 +148,7 @@ class ImageView:
  
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def AssignNodesToView(self, liImageDisplayOrderIndices):
+    def AssignNodesToView(self):
         ''' For each image node in the list, assign it to the destination widget (from list of valid widgets)
             If the background image has a corresponding label map created by the user in the quiz,
                 assign the widget's label map setting otherwise set it to None.
@@ -162,9 +162,7 @@ class ImageView:
             # initialize all layers to None
             self.ClearWidgets()
     
-            # for oViewNode in self._loImageViews:
-            for ind in range(len(liImageDisplayOrderIndices)):
-                oViewNode = self._loImageViews[liImageDisplayOrderIndices[ind]]
+            for oViewNode in self._loImageViews:
                 # if image type is an RTStruct, ensure that the referenced volume 
                 #    SeriesInstanceUID exists in the list of images to be loaded
                 if oViewNode.sImageType == 'RTStruct':

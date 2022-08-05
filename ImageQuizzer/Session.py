@@ -444,13 +444,13 @@ class Session:
         # use lambda to pass argument to this PyQt slot without invoking the function on setup
         self._btnExit.connect('clicked(bool)',lambda: self.onExitButtonClicked('ExitBtn'))
 
-        # Repeat button
-        self._btnRepeat = qt.QPushButton("Repeat")
-        self._btnRepeat.toolTip = "Save current responses and repeat."
-        self._btnRepeat.enabled = False
-        self._btnRepeat.visible = False
-        self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
-        self._btnRepeat.connect('clicked(bool)', self.onRepeatButtonClicked)
+        # # Repeat button
+        # self._btnRepeat = qt.QPushButton("Repeat")
+        # self._btnRepeat.toolTip = "Save current responses and repeat."
+        # self._btnRepeat.enabled = False
+        # self._btnRepeat.visible = False
+        # self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
+        # self._btnRepeat.connect('clicked(bool)', self.onRepeatButtonClicked)
         
 
         self.qButtonGrpBoxLayout.addWidget(self._btnExit)
@@ -458,7 +458,7 @@ class Session:
         self.qButtonGrpBoxLayout.addWidget(self.progress)
         self.qButtonGrpBoxLayout.addWidget(self._btnPrevious)
         self.qButtonGrpBoxLayout.addWidget(self._btnNext)
-        self.qButtonGrpBoxLayout.addWidget(self._btnRepeat)
+        # self.qButtonGrpBoxLayout.addWidget(self._btnRepeat)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupExtraToolsButtons(self):
@@ -641,20 +641,20 @@ class Session:
             self._btnNext.enabled = True
             self._btnPrevious.enabled = True
 
-        # looping for page
-        if self.GetPageLooping() == True:
-            if self.CheckForLastQuestionSetForPage() == True:
-                self._btnNext.setText("Done")
-                self._btnRepeat.visible = True
-                self._btnRepeat.enabled = True
-            else:
-                self._btnNext.setText("Next")
-                self._btnRepeat.visible = True
-                self._btnRepeat.enabled = False
-        else:
-                self._btnNext.setText("Next")
-                self._btnRepeat.visible = False
-                self._btnRepeat.enabled = False
+        # # looping for page
+        # if self.GetPageLooping() == True:
+        #     if self.CheckForLastQuestionSetForPage() == True:
+        #         self._btnNext.setText("Done")
+        #         self._btnRepeat.visible = True
+        #         self._btnRepeat.enabled = True
+        #     else:
+        #         self._btnNext.setText("Next")
+        #         self._btnRepeat.visible = True
+        #         self._btnRepeat.enabled = False
+        # else:
+        #         self._btnNext.setText("Next")
+        #         self._btnRepeat.visible = False
+        #         self._btnRepeat.enabled = False
 
 
         # assign button description           
@@ -938,9 +938,9 @@ class Session:
     def onWindowLevelOffClicked(self):
         slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.ViewTransform)
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onRepeatButtonClicked(self):
-        print('Copying page ')
+    # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # def onRepeatButtonClicked(self):
+    #     print('Copying page ')
 
     
     
@@ -1332,7 +1332,7 @@ class Session:
             self.oFilesIO.LoadSavedMarkupLines(self)
     
             # assign each image node and its label map (if applicable) to the viewing widget
-            self.oImageView.AssignNodesToView(self.GetImageDisplayOrderIndices())
+            self.oImageView.AssignNodesToView()
             
             self.SetNPlanesComboBoxImageNames()
     
@@ -1643,12 +1643,18 @@ class Session:
         if not self.bNPlanesViewingMode:
             loImageNodes = self.oImageView.GetImageViewList()
         else:
-            loImageNodes.append(self.GetNPlanesImageComboBoxSelection())
+            oImageNodeOverride, iXmlImageIndex = self.GetNPlanesImageComboBoxSelection()
+            loImageNodes.append(oImageNodeOverride)
             for i in range(len(self.llsNPlanesOrientDest)):
                 lsRequiredOrientations.append(self.llsNPlanesOrientDest[i][0])
                 dictNPlanesOrientDest.update({self.llsNPlanesOrientDest[i][0] : self.llsNPlanesOrientDest[i][1]})
             
-        for oImageNode in loImageNodes:
+        for ind in range(len(self.liImageDisplayOrder)):
+            if self.bNPlanesViewingMode:
+                oImageNode = loImageNodes[ind]
+            else:
+                oImageNode = loImageNodes[self.liImageDisplayOrder[ind]]
+                
             dictImageState = {}
             
             if (oImageNode.sImageType == "Volume" or oImageNode.sImageType == "VolumeSequence"):
