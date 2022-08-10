@@ -1,4 +1,53 @@
 <Session>
+	<Page ID="Test ROI Display" Descriptor="Phantom">
+		<Image Type="Volume" ID="TinyPhantom">
+			<DefaultDestination>Red</DefaultDestination>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="TinyPhantom">
+			<DefaultDestination>Green</DefaultDestination>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="TinyPhantom">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<DefaultOrientation>Coronal</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Segmentation" ID="TinyPhantom-Segmentation">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="Ignore">
+				<ROI>Segment_1</ROI>
+				<ROI>Segment_2</ROI>
+			</ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="TinyPhantom-Segmentation">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>Segment_2</ROI>
+			</ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="TinyPhantom-Segmentation">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All">
+			</ROIs>
+		</Image>
+		<QuestionSet ID="ROI Display" Descriptor="Phantom segmentations">
+			<Question Type="InfoBox" Descriptor="ROI Data load">
+				<Option>Segmentation layer testing - loaded as Data volume</Option> 
+			</Question>
+		</QuestionSet>
+	</Page>
 	<Page ID="CL PT001" Descriptor="Multiparametric_MRI" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
 		<Image DicomRead="Y" Type="Volume" ID="T1W MR">
 			<DefaultDestination>Red</DefaultDestination>

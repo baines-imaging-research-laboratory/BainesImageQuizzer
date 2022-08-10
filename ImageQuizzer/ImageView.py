@@ -254,11 +254,10 @@ class ImageView:
                     
                     if oViewNode.GetNodeSource() == 'Dicom':
                         if not (oViewNode.sRoiVisibilityCode == ''):
-                            lsSegRoiNames, slSegDisplayNode, slSegDataNode = oViewNode.GetROISegmentNamesAndNodes()
-                            oViewNode.SetSegmentRoiVisibility(slSegDataNode, slSegDisplayNode, lsSegRoiNames )
+                            slSegDisplayNode, slSegDataNode, lsSegRoiNames = oViewNode.GetROISegmentNamesAndNodes()
+                            oViewNode.SetSegmentRoiVisibility(slSegDisplayNode, slSegDataNode, lsSegRoiNames )
                     else:   # source = 'Data'
-#                         slSegDataNode = None
-                        lsSegRoiNames, slSegDisplayNode, slSegNode = oViewNode.GetROISegmentNamesAndNodes(self.xPageNode)
+                        slSegDisplayNode, slSegNode, lsSegRoiNames = oViewNode.GetROISegmentNamesAndNodes(self.xPageNode)
                         oViewNode.SetSegmentRoiVisibility(slSegDisplayNode, slSegNode, lsSegRoiNames )
     
 
@@ -374,61 +373,89 @@ class ImageView:
                     if bLabelMapMatchFound:
                         break
 
-#         #turn off all segmentation display nodes
-#         lSegmentationNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSegmentationNode')
-#         for idx in range(lSegmentationNodes.GetNumberOfItems()):
-#             slSegNode = lSegmentationNodes.GetItemAsObject(idx)
-#             slSegDisplayNode = slSegNode.GetDisplayNode()
-#             slSegDisplayNode.SetVisibility(False)
-#         
-#         bSegmentationMatchFound = False
-#         # display only associated segmentations
-#         for idx in range(lSegmentationNodes.GetNumberOfItems()):
-#             slSegNode = lSegmentationNodes.GetItemAsObject(idx)
-#             slSegDisplayNode = slSegNode.GetDisplayNode()
-#             
-#             # Segmentation may be loaded as a DICOM or as a DATA Volume
-#             # Search until a match is found
-#             sNodeReference = slSegNode.GetNodeReference('referenceImageGeometryRef')
-#             if sNodeReference != None:
-#                 # loaded as a DICOM
-#                 if oImageViewNode.slNode.GetID() == sNodeReference.GetID():
-#                     bSegmentationMatchFound = True
-#                     break
-#             else:
-#                 # search the page list of xml image objects for an object 
-#                 #    of type 'Segmentation' with a node name match to the Slicer node
-#                 for oImage in self._loImageViews:
-#                     if oImage.sImageType == 'Segmentation' and oImage.sNodeName == slSegNode.GetName():
-#                         # compare the destination of this matching label map with
-#                         #    that of the image input as a parameter to this function
-#                         if oImage.sDestination == oImageViewNode.sDestination:
-#                             # assign this segmentation to the alternate viewing window(s)
-#                             bSegmentationMatchFound = True
-#                             break
-#                             
-#         if bSegmentationMatchFound:
+        #turn off all segmentation display nodes
+        lSegmentationNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSegmentationNode')
+        for idx in range(lSegmentationNodes.GetNumberOfItems()):
+            slSegNode = lSegmentationNodes.GetItemAsObject(idx)
+            slSegDisplayNode = slSegNode.GetDisplayNode()
+            slSegDisplayNode.SetVisibility(False)
+         
+        bSegmentationMatchFound = False
+        # display only associated segmentations
+        for idx in range(lSegmentationNodes.GetNumberOfItems()):
+            slSegNode = lSegmentationNodes.GetItemAsObject(idx)
+            slSegDisplayNode = slSegNode.GetDisplayNode()
+             
+            # Segmentation may be loaded as a DICOM or as a DATA Volume
+            # Search until a match is found
+            sNodeReference = slSegNode.GetNodeReference('referenceImageGeometryRef')
+            if sNodeReference != None:
+                # loaded as a DICOM
+                if oImageViewNode.slNode.GetID() == sNodeReference.GetID():
+                    bSegmentationMatchFound = True
+                    
+                    for oImage in self._loImageViews:
+                        if oImage.sImageType == 'RTStruct' and oImage.sNodeName == slSegNode.GetName():
+                            # compare the destination of this matching label map with
+                            #    that of the image input as a parameter to this function
+                            if oImage.sDestination == oImageViewNode.sDestination:
+                                # assign this segmentation to the alternate viewing window(s)
+                                bSegmentationMatchFound = True
+                                slSegDisplayNode, slSegDataNode, lsSegRoiNames = oImage.GetROISegmentNamesAndNodes()
+                     
+                                oImage.SetSegmentRoiVisibility(slSegDisplayNode, slSegDataNode, lsSegRoiNames )
+                                break
+                    
+                    
+                    
+                    
+                    break
+                
+
+            
+            
+            
+            
+            else: # for loading as data
+                # search the page list of xml image objects for an object 
+                #    of type 'Segmentation' with a node name match to the Slicer node
+                for oImage in self._loImageViews:
+                    if oImage.sImageType == 'Segmentation' and oImage.sNodeName == slSegNode.GetName():
+                        # compare the destination of this matching label map with
+                        #    that of the image input as a parameter to this function
+                        if oImage.sDestination == oImageViewNode.sDestination:
+                            # assign this segmentation to the alternate viewing window(s)
+                            bSegmentationMatchFound = True
+                            break
+                             
+        if bSegmentationMatchFound:
+            slSegDisplayNode.SetVisibility(True)
+            slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeRed')
+            slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeGreen')
+            slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeYellow')
+                
+#         ##### WORK  - Attempt at making this work for NPlanes - 
+#         #            This image node is the volume - not the segmentation so it is failing
+#         if oImageViewNode.GetNodeSource() == 'Dicom':
+# 
+#             slSegDisplayNode, slSegDataNode, lsSegRoiNames = oImageViewNode.GetROISegmentNamesAndNodes()
+# 
+#             oImageViewNode.SetSegmentRoiVisibility(slSegDisplayNode, slSegDataNode, lsSegRoiNames )
+# 
 #             slSegDisplayNode.SetVisibility(True)
 #             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeRed')
 #             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeGreen')
 #             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeYellow')
-                
-
-        if oImageViewNode.GetNodeSource() == 'Dicom' and oImageViewNode.sImageType == 'RTStruct':
-            lsSegRoiNames, slSegDisplayNode, slSegDataNode = oImageViewNode.GetROISegmentNamesAndNodes()
-
-            oImageViewNode.SetSegmentRoiVisibility(slSegDataNode, slSegDisplayNode, lsSegRoiNames )
-            slSegDisplayNode.SetVisibility(True)
-            slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeRed')
-            slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeGreen')
-            slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeYellow')
-        elif oImageViewNode.GetNodeSource() == 'Data' and oImageViewNode.sImageType == 'Segmentation':   # source = 'Data'
-            lsSegRoiNames, slSegDisplayNode, slSegNode = oImageViewNode.GetROISegmentNamesAndNodes(self.xPageNode)
-            oImageViewNode.SetSegmentRoiVisibility(slSegDisplayNode, slSegNode, lsSegRoiNames )
-            slSegDisplayNode.SetVisibility(True)
-            slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeRed')
-            slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeGreen')
-            slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeYellow')
+#             
+#         elif oImageViewNode.GetNodeSource() == 'Data':
+# 
+#             slSegDisplayNode, slSegNode, lsSegRoiNames = oImageViewNode.GetROISegmentNamesAndNodes(self.xPageNode)
+#             oImageViewNode.SetSegmentRoiVisibility(slSegDisplayNode, slSegNode, lsSegRoiNames )
+# 
+#             slSegDisplayNode.SetVisibility(True)
+#             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeRed')
+#             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeGreen')
+#             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeYellow')
 
 
 
@@ -952,17 +979,17 @@ class DataVolumeDetail(ViewNodeBase):
                                 
                                 for indSegment in range(lSegmentations.GetNumberOfSegments()):
                                     
-                                    slSegNode = lSegmentations.GetNthSegment(indSegment)
-                                    sSegNodeName = slSegNode.GetName()
-                                    lsSegROINames.append(sSegNodeName)
+                                    slSegmentNode = lSegmentations.GetNthSegment(indSegment)
+                                    sSegmentNodeName = slSegmentNode.GetName()
+                                    lsSegROINames.append(sSegmentNodeName)
 
 
 
-        return lsSegROINames, slSegDisplayNode, slSegNode
+        return slSegDisplayNode, slSegNode, lsSegROINames
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSegmentRoiVisibility(self, slSegDisplayNode, slSegNode, lsROINames):
-        # Set visibility of Segments loaded as 'Data' image node (on = 1; off = 0)
+        # Set visibility of Segments loaded as 'Data' image node
         #
         # get list of all segmentation nodes
         
@@ -994,16 +1021,16 @@ class DataVolumeDetail(ViewNodeBase):
 
         if (self.sRoiVisibilityCode == 'All'):
             for indSHId in range(len(liSubjectHierarchyIDs)):
-                slPlugin.setDisplayVisibility(indSHId, True)
+                slPlugin.setDisplayVisibility(liSubjectHierarchyIDs[indSHId], True)
                 
         if (self.sRoiVisibilityCode == 'None'):
             for indSHId in range(len(liSubjectHierarchyIDs)):
-                slPlugin.setDisplayVisibility(indSHId, False)
+                slPlugin.setDisplayVisibility(liSubjectHierarchyIDs[indSHId], False)
                 
         # turn ON all ROI's and then turn OFF user's list    
         if (self.sRoiVisibilityCode == 'Ignore'):
             for indSHId in range(len(liSubjectHierarchyIDs)):
-                slPlugin.setDisplayVisibility(indSHId, True)
+                slPlugin.setDisplayVisibility(liSubjectHierarchyIDs[indSHId], True)
             for indUserList in range(len(self.lsRoiList)):
                 iSegmentSubjectHierarchyId = slSHNode.GetItemChildWithName(iSegNodeID, self.lsRoiList[indUserList])
                 slPlugin.setDisplayVisibility(iSegmentSubjectHierarchyId, False)
@@ -1011,7 +1038,7 @@ class DataVolumeDetail(ViewNodeBase):
         # turn OFF all ROI's and then turn ON user's list    
         if (self.sRoiVisibilityCode == 'Select'):
             for indSHId in range(len(liSubjectHierarchyIDs)):
-                slPlugin.setDisplayVisibility(indSHId, False)
+                slPlugin.setDisplayVisibility(liSubjectHierarchyIDs[indSHId], False)
             for indUserList in range(len(self.lsRoiList)):
                 iSegmentSubjectHierarchyId = slSHNode.GetItemChildWithName(iSegNodeID, self.lsRoiList[indUserList])
                 slPlugin.setDisplayVisibility(iSegmentSubjectHierarchyId, True)
@@ -1248,7 +1275,6 @@ class DicomVolumeDetail(ViewNodeBase):
             lsSubjectHierarchyROINames.append(sROIName)
         
         
-        # get segmentation node name from data node
         
         slSegDataNode = slSHNode.GetItemDataNode(slRTStructItemId)
         slSegDisplayNodeId = slSegDataNode.GetDisplayNodeID()
@@ -1256,12 +1282,12 @@ class DicomVolumeDetail(ViewNodeBase):
 
 
 
-        return lsSubjectHierarchyROINames, slSegDisplayNode, slSegDataNode
+        return slSegDisplayNode, slSegDataNode, lsSubjectHierarchyROINames
         
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetSegmentRoiVisibility(self, slSegDataNode, slSegDisplayNode, lsSubjectHierarchyROINames):
+    def SetSegmentRoiVisibility(self, slSegDisplayNode, slSegDataNode, lsSubjectHierarchyROINames):
         # in order to set visibility, you have to traverse Slicer's subject hierarchy
         # accessing the segmentation node, its children (to get ROI names) and its data node
         
@@ -1332,10 +1358,4 @@ class DicomVolumeDetail(ViewNodeBase):
             for indUserList in range(len(self.lsRoiList)):
                 slSegDisplayNode.SetSegmentVisibility(self.lsRoiList[indUserList], True)
                 
-#         # clean up memory leaks
-#         #    getting a node by ID (slSegDisplayNode) doesn't seem to cause a memory leak
-#         #    getting nodes by class does create a memory leak so you have to unregister it!
-#         slViewingNode.UnRegister(slicer.mrmlScene)
-#     
-        
 
