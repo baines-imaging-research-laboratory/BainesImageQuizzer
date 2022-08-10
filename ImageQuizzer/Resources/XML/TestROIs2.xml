@@ -48,7 +48,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="CL PT001" Descriptor="Multiparametric_MRI" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
+	<Page ID="CL PT001" Descriptor="Multiparametric_MRI" AllowMultipleResponse="Y" EnableSegmentEditor="Y" Layout="TwoOverTwo">
 		<Image DicomRead="Y" Type="Volume" ID="T1W MR">
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
@@ -87,6 +87,19 @@
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\BrainDWI\Segment_1-label.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="TinyPhantom">
+			<DefaultDestination>Slice4</DefaultDestination>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Segmentation" ID="TinyPhantom-Segmentation">
+			<DefaultDestination>Slice4</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All">
+			</ROIs>
 		</Image>
 		<QuestionSet ID="QS-Checkup" Descriptor="First Question Set">
 			<Question Type="CheckBox" Descriptor="Test Items:">

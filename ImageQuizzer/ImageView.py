@@ -426,6 +426,11 @@ class ImageView:
                         if oImage.sDestination == oImageViewNode.sDestination:
                             # assign this segmentation to the alternate viewing window(s)
                             bSegmentationMatchFound = True
+                            slSegDisplayNode, slSegNode, lsSegRoiNames = oImage.GetROISegmentNamesAndNodes(self.xPageNode)
+                            oImage.SetSegmentRoiVisibility(slSegDisplayNode, slSegNode, lsSegRoiNames )
+
+                            
+                            
                             break
                              
         if bSegmentationMatchFound:
