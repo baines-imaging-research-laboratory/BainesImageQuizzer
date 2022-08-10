@@ -2027,6 +2027,8 @@ class Session:
         self._iCurrentCompositeIndex = iResumeCompIndex
         # adjust if the resume question set is not the first on the page
         self.AdjustToCurrentQuestionSet()
+        # reset the default order of image indices based on the new page
+        self.InitializeImageDisplayOrderIndices()
     
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

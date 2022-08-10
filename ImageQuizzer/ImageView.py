@@ -374,47 +374,64 @@ class ImageView:
                     if bLabelMapMatchFound:
                         break
 
-                                
+#         #turn off all segmentation display nodes
+#         lSegmentationNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSegmentationNode')
+#         for idx in range(lSegmentationNodes.GetNumberOfItems()):
+#             slSegNode = lSegmentationNodes.GetItemAsObject(idx)
+#             slSegDisplayNode = slSegNode.GetDisplayNode()
+#             slSegDisplayNode.SetVisibility(False)
+#         
+#         bSegmentationMatchFound = False
+#         # display only associated segmentations
+#         for idx in range(lSegmentationNodes.GetNumberOfItems()):
+#             slSegNode = lSegmentationNodes.GetItemAsObject(idx)
+#             slSegDisplayNode = slSegNode.GetDisplayNode()
+#             
+#             # Segmentation may be loaded as a DICOM or as a DATA Volume
+#             # Search until a match is found
+#             sNodeReference = slSegNode.GetNodeReference('referenceImageGeometryRef')
+#             if sNodeReference != None:
+#                 # loaded as a DICOM
+#                 if oImageViewNode.slNode.GetID() == sNodeReference.GetID():
+#                     bSegmentationMatchFound = True
+#                     break
+#             else:
+#                 # search the page list of xml image objects for an object 
+#                 #    of type 'Segmentation' with a node name match to the Slicer node
+#                 for oImage in self._loImageViews:
+#                     if oImage.sImageType == 'Segmentation' and oImage.sNodeName == slSegNode.GetName():
+#                         # compare the destination of this matching label map with
+#                         #    that of the image input as a parameter to this function
+#                         if oImage.sDestination == oImageViewNode.sDestination:
+#                             # assign this segmentation to the alternate viewing window(s)
+#                             bSegmentationMatchFound = True
+#                             break
+#                             
+#         if bSegmentationMatchFound:
+#             slSegDisplayNode.SetVisibility(True)
+#             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeRed')
+#             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeGreen')
+#             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeYellow')
+                
 
-        #turn off all segmentation display nodes
-        lSegmentationNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSegmentationNode')
-        for idx in range(lSegmentationNodes.GetNumberOfItems()):
-            slSegNode = lSegmentationNodes.GetItemAsObject(idx)
-            slSegDisplayNode = slSegNode.GetDisplayNode()
-            slSegDisplayNode.SetVisibility(False)
-        
-        bSegmentationMatchFound = False
-        # display only associated segmentations
-        for idx in range(lSegmentationNodes.GetNumberOfItems()):
-            slSegNode = lSegmentationNodes.GetItemAsObject(idx)
-            slSegDisplayNode = slSegNode.GetDisplayNode()
-            
-            # Segmentation may be loaded as a DICOM or as a DATA Volume
-            # Search until a match is found
-            sNodeReference = slSegNode.GetNodeReference('referenceImageGeometryRef')
-            if sNodeReference != None:
-                # loaded as a DICOM
-                if oImageViewNode.slNode.GetID() == sNodeReference.GetID():
-                    bSegmentationMatchFound = True
-                    break
-            else:
-                # search the page list of xml image objects for an object 
-                #    of type 'Segmentation' with a node name match to the Slicer node
-                for oImage in self._loImageViews:
-                    if oImage.sImageType == 'Segmentation' and oImage.sNodeName == slSegNode.GetName():
-                        # compare the destination of this matching label map with
-                        #    that of the image input as a parameter to this function
-                        if oImage.sDestination == oImageViewNode.sDestination:
-                            # assign this segmentation to the alternate viewing window(s)
-                            bSegmentationMatchFound = True
-                            break
-                            
-        if bSegmentationMatchFound:
+        if oImageViewNode.GetNodeSource() == 'Dicom' and oImageViewNode.sImageType == 'RTStruct':
+            lsSegRoiNames, slSegDisplayNode, slSegDataNode = oImageViewNode.GetROISegmentNamesAndNodes()
+
+            oImageViewNode.SetSegmentRoiVisibility(slSegDataNode, slSegDisplayNode, lsSegRoiNames )
             slSegDisplayNode.SetVisibility(True)
             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeRed')
             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeGreen')
             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeYellow')
-                
+        elif oImageViewNode.GetNodeSource() == 'Data' and oImageViewNode.sImageType == 'Segmentation':   # source = 'Data'
+            lsSegRoiNames, slSegDisplayNode, slSegNode = oImageViewNode.GetROISegmentNamesAndNodes(self.xPageNode)
+            oImageViewNode.SetSegmentRoiVisibility(slSegDisplayNode, slSegNode, lsSegRoiNames )
+            slSegDisplayNode.SetVisibility(True)
+            slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeRed')
+            slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeGreen')
+            slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeYellow')
+
+
+
                     
         # clean up memory leaks
         lLabelMapNodes.UnRegister(slicer.mrmlScene)    
@@ -902,46 +919,46 @@ class DataVolumeDetail(ViewNodeBase):
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetROISegmentNamesAndNodes(self, xPageNode):
-        ''' For a data volume, search all segmentation nodes that match the target destination of image being displayed.
-            Get the associated segmentation display and data nodes and the ROI names.
+        ''' For a data volume, search all segmentation nodes for the one that matches the target destination of image being displayed.
+            Get the associated segmentation display node and the names of the ROIs stored in this matched segmentation node.
         '''
         slSegDisplayNode = None
-        lsROINames = []
+        lsSegROINames = []
         bFoundSegNode = False
-
-        slSHNode = slicer.vtkMRMLSubjectHierarchyNode.GetSubjectHierarchyNode(slicer.mrmlScene)
 
         lSegNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSegmentationNode')
         
         lxImages = self.oIOXml.GetChildren(xPageNode, 'Image')
         
         
-        for indParentSegNode in range(lSegNodes.GetNumberOfItems()):
+        for indSegNode in range(lSegNodes.GetNumberOfItems()):
             if not bFoundSegNode:
-                slParentSegNode = lSegNodes.GetItemAsObject(indParentSegNode)
-                sParentSegNodeName = slParentSegNode.GetName()
-                slSegDisplayNode = slParentSegNode.GetDisplayNode()
+                slSegNode = lSegNodes.GetItemAsObject(indSegNode)
+                sSegNodeName = slSegNode.GetName()
+                slSegDisplayNode = slSegNode.GetDisplayNode()
                 
                 # look for xml Image entry for this page that matches this segmentation node
                 for xImage in lxImages:
-                    sXmlNodeName = self.GetPageID() + '_' + self.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
-                    if sXmlNodeName == sParentSegNodeName:
-                        lxDestinations = self.oIOXml.GetChildren(xImage, 'DefaultDestination')
-                        sXmlDestination = self.oIOXml.GetDataInNode(lxDestinations[0])
-                        if sXmlDestination == self.sDestination:
-                            # get all segments in this segmentation node
-                            bFoundSegNode = True
-                            lSegmentations = slParentSegNode.GetSegmentation()
-                            
-                            for indSegment in range(lSegmentations.GetNumberOfSegments()):
+                    if not bFoundSegNode:
+                        sXmlNodeName = self.GetPageID() + '_' + self.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
+                        if sXmlNodeName == sSegNodeName:
+                            lxDestinations = self.oIOXml.GetChildren(xImage, 'DefaultDestination')
+                            sXmlDestination = self.oIOXml.GetDataInNode(lxDestinations[0])
+                            if sXmlDestination == self.sDestination:
+                                # found a matching segmentation node to the image being displayed
+                                # get all segment names in this segmentation node
+                                bFoundSegNode = True
+                                lSegmentations = slSegNode.GetSegmentation()
                                 
-                                slSegNode = lSegmentations.GetNthSegment(indSegment)
-                                sSegNodeName = slSegNode.GetName()
-                                lsROINames.append(sSegNodeName)
+                                for indSegment in range(lSegmentations.GetNumberOfSegments()):
+                                    
+                                    slSegNode = lSegmentations.GetNthSegment(indSegment)
+                                    sSegNodeName = slSegNode.GetName()
+                                    lsSegROINames.append(sSegNodeName)
 
 
 
-        return lsROINames, slSegDisplayNode, slParentSegNode
+        return lsSegROINames, slSegDisplayNode, slSegNode
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSegmentRoiVisibility(self, slSegDisplayNode, slSegNode, lsROINames):
