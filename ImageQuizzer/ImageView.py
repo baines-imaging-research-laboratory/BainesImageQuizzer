@@ -259,7 +259,7 @@ class ImageView:
                     else:   # source = 'Data'
                         slSegDisplayNode, slSegNode = oViewNode.GetROISegmentNamesAndNodes(self.xPageNode)
                         oViewNode.SetSegmentRoiVisibility(slSegDisplayNode, slSegNode )
-    
+                    slSegDisplayNode.SetVisibility(True)
 
     
     
@@ -380,60 +380,47 @@ class ImageView:
             slSegDisplayNode = slSegNode.GetDisplayNode()
             slSegDisplayNode.SetVisibility(False)
          
-        bSegmentationMatchFound = False
+        bSegmentationNodeMatchFound = False
         # display only associated segmentations
         for idx in range(lSegmentationNodes.GetNumberOfItems()):
-            slSegNode = lSegmentationNodes.GetItemAsObject(idx)
-            slSegDisplayNode = slSegNode.GetDisplayNode()
-             
-            # Segmentation may be loaded as a DICOM or as a DATA Volume
-            # Search until a match is found
-            sNodeReference = slSegNode.GetNodeReference('referenceImageGeometryRef')
-            if sNodeReference != None:
-                # loaded as a DICOM
-                if oImageForNPlanesNode.slNode.GetID() == sNodeReference.GetID():
-                    bSegmentationMatchFound = True
-                    
-                    for oImage in self._loImageViews:
-                        if oImage.sImageType == 'RTStruct' and oImage.sNodeName == slSegNode.GetName():
-                            # compare the destination of this matching label map with
-                            #    that of the image input as a parameter to this function
-                            if oImage.sDestination == oImageForNPlanesNode.sDestination:
-                                # assign this segmentation to the alternate viewing window(s)
-                                bSegmentationMatchFound = True
-                                slSegDisplayNode, slSegDataNode, lsSegRoiNames = oImage.GetROISegmentNamesAndNodes()
-                     
-                                oImage.SetSegmentRoiVisibility(slSegDisplayNode, slSegDataNode, lsSegRoiNames )
-                                break
-                    
-                    
-                    
-                    
-                    break
+            if not bSegmentationNodeMatchFound:
+                slSegNode = lSegmentationNodes.GetItemAsObject(idx)
+                slSegDisplayNode = slSegNode.GetDisplayNode()
+                 
+                # Segmentation may be loaded as a DICOM or as a DATA Volume
+                # Search until a match is found
+                sNodeReference = slSegNode.GetNodeReference('referenceImageGeometryRef')
+                if sNodeReference != None:
+                    # loaded as a DICOM
+                    if oImageForNPlanesNode.slNode.GetID() == sNodeReference.GetID():
+                        bSegmentationNodeMatchFound = True
+                        
+                        for oImage in self._loImageViews:
+                            if oImage.sImageType == 'RTStruct' and oImage.sNodeName == slSegNode.GetName():
+                                # compare the destination of this matching label map with
+                                #    that of the image input as a parameter to this function
+                                if oImage.sDestination == oImageForNPlanesNode.sDestination:
+                                    slSegDisplayNode, slSegDataNode, lsSegRoiNames = oImage.GetROISegmentNamesAndNodes()
+                                    oImage.SetSegmentRoiVisibility(slSegDisplayNode, slSegDataNode, lsSegRoiNames )
+                                    break   # found the xml image match
+                        
+                        break   # completed tasks when the Segmentation Node match was found
                 
-
-            
-            
-            
-            
-            else: # for loading as data
-                # search the page list of xml image objects for an object 
-                #    of type 'Segmentation' with a node name match to the Slicer node
-                for oImage in self._loImageViews:
-                    if oImage.sImageType == 'Segmentation' and oImage.sNodeName == slSegNode.GetName():
-                        # compare the destination of this matching label map with
-                        #    that of the image input as a parameter to this function
-                        if oImage.sDestination == oImageForNPlanesNode.sDestination:
-                            # assign this segmentation to the alternate viewing window(s)
-                            bSegmentationMatchFound = True
-                            slSegDisplayNode, slSegNode = oImage.GetROISegmentNamesAndNodes(self.xPageNode)
-                            oImage.SetSegmentRoiVisibility(slSegDisplayNode, slSegNode )
-
-                            
-                            
-                            break
+                
+                else: # for loading as data
+                    # search the page list of xml image objects for an object 
+                    #    of type 'Segmentation' with a node name match to the Slicer node
+                    for oImage in self._loImageViews:
+                        if oImage.sImageType == 'Segmentation' and oImage.sNodeName == slSegNode.GetName():
+                            # compare the destination of this matching label map with
+                            #    that of the image to be displayed in N Planes
+                            if oImage.sDestination == oImageForNPlanesNode.sDestination:
+                                bSegmentationNodeMatchFound = True
+                                oImage.SetSegmentRoiVisibility(slSegDisplayNode, slSegNode )
+                                break  # found the xml image match
                              
-        if bSegmentationMatchFound:
+        if bSegmentationNodeMatchFound:
+            # assign this segmentation to the alternate viewing window(s)
             slSegDisplayNode.SetVisibility(True)
             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeRed')
             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeGreen')

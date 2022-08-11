@@ -304,6 +304,7 @@ class Session:
         # get selected image name from combo box
         sImageName = self.qComboImageList.currentText
         iXmlIndex = 0
+        oImageViewNode = None
         # determine which image is to be displayed in an alternate viewing mode (3 Planes or 1 Plane)
         loImageViewNodes = self.oImageView.GetImageViewList()
         for oImageViewNode in loImageViewNodes:
@@ -314,6 +315,10 @@ class Session:
             
         return oImageViewNode, iXmlIndex
         
+    #----------
+    def GetNPlanesComboBoxCount(self):
+        return self.qComboImageList.count
+    
     #----------
     def SetNPlanesView(self):
         
@@ -896,20 +901,23 @@ class Session:
     def onNPlanesViewClicked(self):
         ''' display the requested image in the requested viewing mode
         '''
-
-        self.CaptureAndSaveImageState()
-        
-        oImageNodeOverride, iXmlImageIndex = self.GetNPlanesImageComboBoxSelection()
-        self.liImageDisplayOrder = self.ReorderImageIndexToEnd(iXmlImageIndex)
-        self.SetNPlanesView()
-        self.oImageView.AssignNPlanes(oImageNodeOverride, self.llsNPlanesOrientDest)
-        self.bNPlanesViewingMode = True
-
-        #    the current image node being displayed in an alternate view may have been 
-        #    repeated in different orientations in the xml
-        self.loCurrentXMLImageViewNodes = self.GetMatchingXMLImageNodes(oImageNodeOverride.sImagePath)
-        self.ApplySavedImageState()
-        
+        if self.GetNPlanesComboBoxCount() > 0:
+            self.CaptureAndSaveImageState()
+            
+            oImageNodeOverride, iXmlImageIndex = self.GetNPlanesImageComboBoxSelection()
+            self.liImageDisplayOrder = self.ReorderImageIndexToEnd(iXmlImageIndex)
+            self.SetNPlanesView()
+            self.oImageView.AssignNPlanes(oImageNodeOverride, self.llsNPlanesOrientDest)
+            self.bNPlanesViewingMode = True
+    
+            #    the current image node being displayed in an alternate view may have been 
+            #    repeated in different orientations in the xml
+            self.loCurrentXMLImageViewNodes = self.GetMatchingXMLImageNodes(oImageNodeOverride.sImagePath)
+            self.ApplySavedImageState()
+        else:
+            sMsg = 'No images have been loaded to display in an alternate viewing mode.'
+            self.oUtilsMsgs.DisplayWarning(sMsg)
+            
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onWindowLevelOnClicked(self):
         slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.AdjustWindowLevel)
