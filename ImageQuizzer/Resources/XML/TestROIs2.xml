@@ -19,23 +19,6 @@
 			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
 		</Image>
 		<Image Type="Segmentation" ID="TinyPhantom-Segmentation">
-			<DefaultDestination>Red</DefaultDestination>
-			<Layer>Segmentation</Layer>
-			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
-			<ROIs ROIVisibilityCode="Ignore">
-				<ROI>Segment_1</ROI>
-				<ROI>Segment_2</ROI>
-			</ROIs>
-		</Image>
-		<Image Type="Segmentation" ID="TinyPhantom-Segmentation">
-			<DefaultDestination>Green</DefaultDestination>
-			<Layer>Segmentation</Layer>
-			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
-			<ROIs ROIVisibilityCode="Select">
-				<ROI>Segment_2</ROI>
-			</ROIs>
-		</Image>
-		<Image Type="Segmentation" ID="TinyPhantom-Segmentation">
 			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>

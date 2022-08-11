@@ -1,5 +1,5 @@
 <Session>
-	<Page ID="TinyPatient" Descriptor="DicomSeries" EnableSegmentEditor="Y">
+	<Page ID="TinyPatient" Descriptor="DicomSeries">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
@@ -48,7 +48,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="TinyPatient" Descriptor="DicomSeries" EnableSegmentEditor="Y">
+	<Page ID="TinyPatient" Descriptor="DicomSeries">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
@@ -97,7 +97,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="TinyPatient" Descriptor="DicomSeries" EnableSegmentEditor="Y">
+	<Page ID="TinyPatient" Descriptor="DicomSeries">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
@@ -143,7 +143,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="TinyPatient" Descriptor="DicomSeries" EnableSegmentEditor="Y">
+	<Page ID="TinyPatient" Descriptor="DicomSeries">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>

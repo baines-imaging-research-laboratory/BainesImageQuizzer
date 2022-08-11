@@ -257,8 +257,8 @@ class ImageView:
                             slSegDisplayNode, slSegDataNode, lsSegRoiNames = oViewNode.GetROISegmentNamesAndNodes()
                             oViewNode.SetSegmentRoiVisibility(slSegDisplayNode, slSegDataNode, lsSegRoiNames )
                     else:   # source = 'Data'
-                        slSegDisplayNode, slSegNode, lsSegRoiNames = oViewNode.GetROISegmentNamesAndNodes(self.xPageNode)
-                        oViewNode.SetSegmentRoiVisibility(slSegDisplayNode, slSegNode, lsSegRoiNames )
+                        slSegDisplayNode, slSegNode = oViewNode.GetROISegmentNamesAndNodes(self.xPageNode)
+                        oViewNode.SetSegmentRoiVisibility(slSegDisplayNode, slSegNode )
     
 
     
@@ -308,7 +308,7 @@ class ImageView:
 
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def AssignNPlanes(self, oImageViewNode, llsDestOrient):
+    def AssignNPlanes(self, oImageForNPlanesNode, llsDestOrient):
         ''' Display the selected image node in the viewing mode selected by the user : 3 Planes or 1 Plane axial/sagittal/coronal
         '''
         self.ClearWidgets()
@@ -327,19 +327,19 @@ class ImageView:
             
             # turn off link control 
             slWindowCompositeNode.LinkedControlOff()
-            slWindowCompositeNode.SetBackgroundVolumeID(slicer.mrmlScene.GetFirstNodeByName(oImageViewNode.sNodeName).GetID())
+            slWindowCompositeNode.SetBackgroundVolumeID(slicer.mrmlScene.GetFirstNodeByName(oImageForNPlanesNode.sNodeName).GetID())
     
             # after defining the initial desired orientation, 
             #    if the rotatetoacquisition attribute was set,
             #    rotate the image to the volume plane
             slWidget.setSliceOrientation(llsDestOrient[idx][0])
-            if oImageViewNode.bRotateToAcquisition == True:
+            if oImageForNPlanesNode.bRotateToAcquisition == True:
                 slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
                 slWidget.mrmlSliceNode().RotateToVolumePlane(slVolumeNode)
                 self.RotateSliceToImage(llsDestOrient[idx][1])
     
             slWidget.fitSliceToBackground()
-            oImageViewNode.AssignColorTable()
+            oImageForNPlanesNode.AssignColorTable()
             
             # display any associated label maps
             slWindowCompositeNode.LinkedControlOff()
@@ -351,7 +351,7 @@ class ImageView:
             #    User defined label maps will be assigned here as a priority over 
             #         any labelmaps loaded through xml file
             for slLabelMapNode in lLabelMapNodes:
-                if slLabelMapNode.GetName() == oImageViewNode.sNodeName + '-bainesquizlabel':
+                if slLabelMapNode.GetName() == oImageForNPlanesNode.sNodeName + '-bainesquizlabel':
                     bLabelMapMatchFound = True
                     slWindowCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
                     break
@@ -366,7 +366,7 @@ class ImageView:
                         if oImage.sImageType == 'LabelMap':
                             # compare the destination of this matching label map with
                             #    that of the image input as a parameter to this function
-                            if oImage.sDestination == oImageViewNode.sDestination:
+                            if oImage.sDestination == oImageForNPlanesNode.sDestination:
                                 bLabelMapMatchFound = True
                                 slWindowCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
                                 break
@@ -391,14 +391,14 @@ class ImageView:
             sNodeReference = slSegNode.GetNodeReference('referenceImageGeometryRef')
             if sNodeReference != None:
                 # loaded as a DICOM
-                if oImageViewNode.slNode.GetID() == sNodeReference.GetID():
+                if oImageForNPlanesNode.slNode.GetID() == sNodeReference.GetID():
                     bSegmentationMatchFound = True
                     
                     for oImage in self._loImageViews:
                         if oImage.sImageType == 'RTStruct' and oImage.sNodeName == slSegNode.GetName():
                             # compare the destination of this matching label map with
                             #    that of the image input as a parameter to this function
-                            if oImage.sDestination == oImageViewNode.sDestination:
+                            if oImage.sDestination == oImageForNPlanesNode.sDestination:
                                 # assign this segmentation to the alternate viewing window(s)
                                 bSegmentationMatchFound = True
                                 slSegDisplayNode, slSegDataNode, lsSegRoiNames = oImage.GetROISegmentNamesAndNodes()
@@ -423,11 +423,11 @@ class ImageView:
                     if oImage.sImageType == 'Segmentation' and oImage.sNodeName == slSegNode.GetName():
                         # compare the destination of this matching label map with
                         #    that of the image input as a parameter to this function
-                        if oImage.sDestination == oImageViewNode.sDestination:
+                        if oImage.sDestination == oImageForNPlanesNode.sDestination:
                             # assign this segmentation to the alternate viewing window(s)
                             bSegmentationMatchFound = True
-                            slSegDisplayNode, slSegNode, lsSegRoiNames = oImage.GetROISegmentNamesAndNodes(self.xPageNode)
-                            oImage.SetSegmentRoiVisibility(slSegDisplayNode, slSegNode, lsSegRoiNames )
+                            slSegDisplayNode, slSegNode = oImage.GetROISegmentNamesAndNodes(self.xPageNode)
+                            oImage.SetSegmentRoiVisibility(slSegDisplayNode, slSegNode )
 
                             
                             
@@ -439,31 +439,6 @@ class ImageView:
             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeGreen')
             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeYellow')
                 
-#         ##### WORK  - Attempt at making this work for NPlanes - 
-#         #            This image node is the volume - not the segmentation so it is failing
-#         if oImageViewNode.GetNodeSource() == 'Dicom':
-# 
-#             slSegDisplayNode, slSegDataNode, lsSegRoiNames = oImageViewNode.GetROISegmentNamesAndNodes()
-# 
-#             oImageViewNode.SetSegmentRoiVisibility(slSegDisplayNode, slSegDataNode, lsSegRoiNames )
-# 
-#             slSegDisplayNode.SetVisibility(True)
-#             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeRed')
-#             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeGreen')
-#             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeYellow')
-#             
-#         elif oImageViewNode.GetNodeSource() == 'Data':
-# 
-#             slSegDisplayNode, slSegNode, lsSegRoiNames = oImageViewNode.GetROISegmentNamesAndNodes(self.xPageNode)
-#             oImageViewNode.SetSegmentRoiVisibility(slSegDisplayNode, slSegNode, lsSegRoiNames )
-# 
-#             slSegDisplayNode.SetVisibility(True)
-#             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeRed')
-#             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeGreen')
-#             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeYellow')
-
-
-
                     
         # clean up memory leaks
         lLabelMapNodes.UnRegister(slicer.mrmlScene)    
@@ -971,32 +946,20 @@ class DataVolumeDetail(ViewNodeBase):
                 
                 # look for xml Image entry for this page that matches this segmentation node
                 for xImage in lxImages:
-                    if not bFoundSegNode:
-                        sXmlNodeName = self.GetPageID() + '_' + self.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
-                        if sXmlNodeName == sSegNodeName:
-                            lxDestinations = self.oIOXml.GetChildren(xImage, 'DefaultDestination')
-                            sXmlDestination = self.oIOXml.GetDataInNode(lxDestinations[0])
-                            if sXmlDestination == self.sDestination:
-                                # found a matching segmentation node to the image being displayed
-                                # get all segment names in this segmentation node
-                                bFoundSegNode = True
-                                lSegmentations = slSegNode.GetSegmentation()
-                                
-                                for indSegment in range(lSegmentations.GetNumberOfSegments()):
-                                    
-                                    slSegmentNode = lSegmentations.GetNthSegment(indSegment)
-                                    sSegmentNodeName = slSegmentNode.GetName()
-                                    lsSegROINames.append(sSegmentNodeName)
+                    sXmlNodeName = self.GetPageID() + '_' + self.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
+                    if sXmlNodeName == sSegNodeName:
+                        lxDestinations = self.oIOXml.GetChildren(xImage, 'DefaultDestination')
+                        sXmlDestination = self.oIOXml.GetDataInNode(lxDestinations[0])
+                        if sXmlDestination == self.sDestination:
+                            # found a matching segmentation node to the image being displayed
+                            bFoundSegNode = True
+                            break
 
-
-
-        return slSegDisplayNode, slSegNode, lsSegROINames
+        return slSegDisplayNode, slSegNode
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetSegmentRoiVisibility(self, slSegDisplayNode, slSegNode, lsROINames):
+    def SetSegmentRoiVisibility(self, slSegDisplayNode, slSegNode):
         # Set visibility of Segments loaded as 'Data' image node
-        #
-        # get list of all segmentation nodes
         
         self.SetDisplayViewNodeIDs( slSegDisplayNode)
 
