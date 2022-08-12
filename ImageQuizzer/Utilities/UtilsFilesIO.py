@@ -16,8 +16,8 @@ import logging
 import time
 import traceback
 
-import DicomRtImportExportPlugin
-import DICOMVolumeSequencePlugin
+# import DicomRtImportExportPlugin
+# import DICOMVolumeSequencePlugin
 
 
 ##########################################################################

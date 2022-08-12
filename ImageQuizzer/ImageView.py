@@ -814,13 +814,6 @@ class ViewNodeBase:
     
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetAllDisplayViewNodeIDsOn(self, slSegDisplayNode):
-        slSegDisplayNode.SetVisibility(True)
-        slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeRed')
-        slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeGreen')
-        slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeYellow')
-            
-
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
