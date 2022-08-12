@@ -301,17 +301,49 @@ class Session:
         
     #----------
     def GetNPlanesImageComboBoxSelection(self):
+        ''' return the index and image view object to the xml image that matches the image name and 
+            orientation selected in the combo boxes
+        '''
+        
+        # orientation has been defined in the NPlanes orientation-destination variable
+        if len(self.GetNPlanesView()) > 1:
+            sSelectedOrientation = 'All'   # all 3 planes was selected
+        else:
+            sSelectedOrientation = self.GetNPlanesViewOrientation(0)  # 1 Plane in a specific orientation
+        
         # get selected image name from combo box
         sImageName = self.qComboImageList.currentText
         iXmlIndex = 0
         oImageViewNode = None
+        bFoundFirstNameMatch = False
+        bFoundOrientationMatch = False
+        
         # determine which image is to be displayed in an alternate viewing mode (3 Planes or 1 Plane)
         loImageViewNodes = self.oImageView.GetImageViewList()
         for oImageViewNode in loImageViewNodes:
             if oImageViewNode.sNodeName == sImageName:
-                break
+                if not bFoundFirstNameMatch:
+                    bFoundFirstNameMatch = True
+                    iXmlFirstNameMatch = iXmlIndex
+                    oImageViewNodeFirstNameMatch = oImageViewNode
+                if sSelectedOrientation == 'All':
+                    break
+                else:
+                    if sSelectedOrientation == oImageViewNode.sOrientation:
+                        bFoundOrientationMatch = True
+                        break
+                    else:
+                        iXmlIndex = iXmlIndex + 1
+
+            
             else:
                 iXmlIndex = iXmlIndex + 1
+        
+        # There may not have been an xml element with the selected orientation view
+        #    Reset to the first name match
+        if not bFoundOrientationMatch:
+            iXmlIndex = iXmlFirstNameMatch
+            oImageViewNode = oImageViewNodeFirstNameMatch
             
         return oImageViewNode, iXmlIndex
         
@@ -327,16 +359,21 @@ class Session:
         if self.sViewingMode == "3 Planes":
             self.llsNPlanesOrientDest = [["Axial","Red"],["Sagittal","Green"],["Coronal","Yellow"]]
         elif self.sViewingMode == "1 Plane Axial":
-            # self.dictNPlanesOrientDest = {"Axial":"Red"}
             self.llsNPlanesOrientDest = [["Axial","Red"]]
         elif self.sViewingMode == "1 Plane Sagittal":
-            # self.dictNPlanesOrientDest = {"Sagittal":"Red"}
             self.llsNPlanesOrientDest = [["Sagittal","Red"]]
         elif self.sViewingMode == "1 Plane Coronal":
-            # self.dictNPlanesOrientDest = {"Coronal":"Red"}
             self.llsNPlanesOrientDest = [["Coronal","Red"]]
             
-            
+    #----------
+    def GetNPlanesView(self):
+        return self.llsNPlanesOrientDest
+                
+    #----------
+    def GetNPlanesViewOrientation(self, indPlane):
+
+        return self.llsNPlanesOrientDest[indPlane][0]
+
     #----------
     def SetNPlanesComboBoxImageNames(self):
         
@@ -904,9 +941,9 @@ class Session:
         if self.GetNPlanesComboBoxCount() > 0:
             self.CaptureAndSaveImageState()
             
+            self.SetNPlanesView()
             oImageNodeOverride, iXmlImageIndex = self.GetNPlanesImageComboBoxSelection()
             self.liImageDisplayOrder = self.ReorderImageIndexToEnd(iXmlImageIndex)
-            self.SetNPlanesView()
             self.oImageView.AssignNPlanes(oImageNodeOverride, self.llsNPlanesOrientDest)
             self.bNPlanesViewingMode = True
     

@@ -254,7 +254,6 @@ class ImageView:
                     
                     if oViewNode.GetNodeSource() == 'Dicom':
                         if not (oViewNode.sRoiVisibilityCode == ''):
-#                             slSegDisplayNode, slSegDataNode, lsSegRoiNames = oViewNode.GetROISegmentNamesAndNodes()
                             slSegDisplayNode, slSegDataNode = oViewNode.GetSegmentationNodes()
                             lsSegRoiNames = oViewNode.GetROIIdentifiers()
                             oViewNode.SetSegmentRoiVisibility(slSegDisplayNode, slSegDataNode, lsSegRoiNames )
@@ -412,7 +411,6 @@ class ImageView:
                                 # compare the destination of this matching label map with
                                 #    that of the image input as a parameter to this function
                                 if oImage.sDestination == oImageForNPlanesNode.sDestination:
-#                                     slSegDisplayNode, slSegDataNode, lsSegRoiNames = oImage.GetROISegmentNamesAndNodes()
                                     slSegDisplayNode, slSegDataNode = oImage.GetSegmentationNodes()
                                     lsSegRoiNames = oImage.GetROIIdentifiers()
                                     oImage.SetSegmentRoiVisibility(slSegDisplayNode, slSegDataNode, lsSegRoiNames )
