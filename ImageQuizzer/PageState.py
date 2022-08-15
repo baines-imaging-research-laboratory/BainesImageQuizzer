@@ -206,14 +206,6 @@ class PageState:
         for iImgIdx in range(len(lxImageNodes)):
             xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', iImgIdx)
             lxMarkupLinePathNodes = self.oIOXml.GetChildren(xImageNode, 'MarkupLinePath')
-#             xLayerNode = self.oIOXml.GetNthChild(xImageNode,'Layer',0)
-#             sLayer = self.oIOXml.GetDataInNode(xLayerNode)
-#             if sLayer == 'Segmentation' or sLayer == 'Label':
-#                 # use code = -1 for not applicable 
-#                 self.l2iCompletedSegmentations[iImgIdx] = [-1, iCompletedTF]
-#                 self.l3iCompletedMarkupLines[iImgIdx] = [-1, iCompletedTF, 0]
-#             
-#             else:
 
             
             ##########################

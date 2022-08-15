@@ -77,16 +77,6 @@ class Session:
 
 
     def __del__(self):
-#         if not self.GetQuizComplete():
-#             # check first if there is a Quiz Results path
-#             #    quiz validation errors may result in user's directory not being created
-#             sMsg = 'Image Quizzer Exiting - Performing final cleanup.'
-#             if self.oFilesIO != None:
-#                 sResultsPath = self.oFilesIO.GetUserQuizResultsPath()
-#                 if sResultsPath != '':
-#                     sMsg = sMsg + ' - User response file is saved.'
-#                     self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-#             self.oUtilsMsgs.DisplayInfo(sMsg)
 
         # clean up of editor observers and nodes that may cause memory leaks (color table?)
         if self.GetSegmentationTabIndex() > 0:
@@ -953,9 +943,6 @@ class Session:
             bSuccess = True
             sMsg = ''
             
-            bNewPage = True
-            if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() + 1):
-                bNewPage = False
             bSuccess, sMsg = self.PerformSave('NextBtn')
             if bSuccess:
                 indXmlPageToRepeat = self.GetCurrentPageIndex()
@@ -993,10 +980,9 @@ class Session:
                 
                 self.progress.setMaximum(len(self.GetNavigationList()))
                 self.progress.setValue(self.GetCurrentNavigationIndex())
-        
+                
                 self.EnableButtons()
-                if bNewPage:
-                    self.SetupPageState(self.GetCurrentPageIndex())
+                self.SetupPageState(self.GetCurrentPageIndex())
                 self.DisplayQuizLayout()
                 self.DisplayImageLayout()
                 
@@ -1077,23 +1063,6 @@ class Session:
                 # build the list of indices page/questionset as read in by the XML 
                 #    list is shuffled if randomizing is requested
                 self.BuildNavigationList()
-                
-                # # if randomization is requested - shuffle the page/questionset list
-                # sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
-                # if sRandomizeRequired == 'Y':
-                #     # check if xnl already holds a set of randomized indices otherwise, call randomizing function
-                #     liRandIndices = self.GetStoredRandomizedIndices()
-                #     if liRandIndices == []:
-                #         # get the unique list  of all Page Group numbers to randomize
-                #         #    this was set during xml validation during the initial read
-                #         liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
-                #         liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
-                #         self.AddRandomizedIndicesToXML(liRandIndices)
-                #
-                #     self.SetNavigationList( self.ShuffleNavigationList(liRandIndices) )
-                #
-
-        
                 
                 
                 # check for partial or completed quiz
@@ -1893,51 +1862,6 @@ class Session:
         
         return xHistoricalChildElement
     
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def GetXmlElementFromImagePathHistory(self, xImageNodeToMatch, sChildTagName):  
-#         """ Start searching the xml file for a matching image on a previous page
-#             This is based on the 'Path' element for the current node to match. The
-#             historical element must have the same 'Path' element value.
-#             If this is a Dicom series, the Path points directly to a dicom slice within
-#             the Dicom series.
-#             Extract the latest element of the required child 
-#                 (in case there is more than one element with this name).
-#             The most recent element will be returned.
-#         """
-#         xHistoricalChildElement = None
-#
-#         xPathElement = self.oIOXml.GetNthChild(xImageNodeToMatch, 'Path', 0)
-#         sPathToMatch = self.oIOXml.GetDataInNode(xPathElement)
-#
-#         # start searching pages in reverse order - to get most recent setting
-#         # first match will end the search
-#         bHistoricalElementFound = False
-#         for iPageIndex in range(self.GetCurrentPageIndex()-1, -1, -1):
-#             xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
-#
-#             if bHistoricalElementFound == False:
-#                 #get all Image children
-#                 lxImageElementsToSearch = self.oIOXml.GetChildren(xPageNode, 'Image')
-#                 if len(lxImageElementsToSearch) > 0:
-#
-#                     for xImageNode in lxImageElementsToSearch:
-#
-#                         xPotentialPathElement = self.oIOXml.GetNthChild(xImageNode, 'Path', 0)
-#                         sPotentialPath = self.oIOXml.GetDataInNode(xPotentialPathElement)
-#
-#                         # test for match of both the Path and Series Instance UID
-# #                         if sPotentialPath == sPathToMatch and sPotentialSeriesInstanceUID == sSeriesInstanceUIDToMatch:
-#                         if sPotentialPath == sPathToMatch:
-# #                             print('found prior image instance: ', iPageIndex, ' ', sPotentialPath)
-#
-#                             # capture most recent (based on response time) historical element of interest
-#                             xHistoricalChildElement = self.oIOXml.GetLatestChildElement(xImageNode, sChildTagName)
-#                             bHistoricalElementFound = True
-#
-#
-#         return xHistoricalChildElement
-#
-#
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def WriteResponsesToXml(self):
