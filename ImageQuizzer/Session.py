@@ -470,9 +470,9 @@ class Session:
         self.qButtonGrpBoxLayout.addWidget(self._btnExit)
         self.qButtonGrpBoxLayout.addWidget(qProgressLabel)
         self.qButtonGrpBoxLayout.addWidget(self.progress)
+        self.qButtonGrpBoxLayout.addWidget(self._btnRepeat)
         self.qButtonGrpBoxLayout.addWidget(self._btnPrevious)
         self.qButtonGrpBoxLayout.addWidget(self._btnNext)
-        self.qButtonGrpBoxLayout.addWidget(self._btnRepeat)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupExtraToolsButtons(self):
@@ -633,14 +633,14 @@ class Session:
         xPageNode = self.GetCurrentPageNode()
         if self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Loop') == "Y":
             self.SetPageLooping(True)
-            if self.CheckForLastQuestionSetForPage() == True:
-                self._btnRepeat.visible = True
-                self._btnRepeat.enabled = True
-                self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
-            else:
-                self._btnRepeat.visible = True
-                self._btnRepeat.enabled = False
-                self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white}")
+            self._btnRepeat.visible = True
+            self._btnRepeat.enabled = False
+            self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white}")
+            # only enable Repeat button in looping if the page is not complete and the user is on the last question set
+            if self.GetPageCompleteAttribute(self.GetCurrentNavigationIndex()) != "Y":
+                if self.CheckForLastQuestionSetForPage() == True:
+                    self._btnRepeat.enabled = True
+                    self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
 
         else:
             self.SetPageLooping(False)
@@ -953,6 +953,9 @@ class Session:
             bSuccess = True
             sMsg = ''
             
+            bNewPage = True
+            if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() + 1):
+                bNewPage = False
             bSuccess, sMsg = self.PerformSave('NextBtn')
             if bSuccess:
                 indXmlPageToRepeat = self.GetCurrentPageIndex()
@@ -992,6 +995,8 @@ class Session:
                 self.progress.setValue(self.GetCurrentNavigationIndex())
         
                 self.EnableButtons()
+                if bNewPage:
+                    self.SetupPageState(self.GetCurrentPageIndex())
                 self.DisplayQuizLayout()
                 self.DisplayImageLayout()
                 
