@@ -547,6 +547,11 @@ class UtilsFilesIO:
                 sPageID = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ID')
                 sPageReference = str(iPageNum) # initialize
                 
+                # for any page, make sure there is matching Images Volume to Segmentation or Volume to LabelMap for each destination
+                sValidationMsg = self.ValidateImageToSegmentationSync(xPage, sPageReference)
+                sMsg = sMsg + sValidationMsg
+
+                
                 # Image element validations
                 lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
                 for xImage in lxImageElements:
@@ -617,7 +622,7 @@ class UtilsFilesIO:
                             lPathAndNodeNames.append(tupPathAndID)
                             
                             
-                    # If the image type is an RTStruct, validate the ROIs element
+                    # If the image type is an RTStruct or Segmentation, validate the ROIs element
                     sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
                     if sImageType == 'RTStruct' or sImageType == 'Segmentation':
                         sValidationMsg = self.ValidateRequiredElement(xImage, 'ROIs', sPageReference)
@@ -635,6 +640,8 @@ class UtilsFilesIO:
                             if sVisibilityCode == 'Select' or sVisibilityCode == 'Ignore':
                                 sValidationMsg = self.ValidateRequiredElement(lxROIs[0], 'ROI', sPageReference, True)  # True for multiple elements allowed
                                 sMsg = sMsg + sValidationMsg
+
+                    
 
                 # >>>>>>>>>>>>>>>
                 # validate attributes 'SegmentRequired' and 'SegmentRequiredOnAnyImage'
@@ -1007,6 +1014,120 @@ class UtilsFilesIO:
         return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateImageToSegmentationSync(self, xPageNode, sPageReference):
+        '''
+        '''
+        sMsg = ''
+        lxAllImages = []
+        llDestImageVolume = []
+        llDestSegmentation = []
+        llDestLabelMap = []
+        llDestRTStruct = []
+        llDestSegImageType = []
+        
+        # collect images and their destinations
+        lxAllImages = self.oIOXml.GetChildren(xPageNode, 'Image')
+        
+        for xImage in lxAllImages:
+            
+            sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
+            xDestination = self.oIOXml.GetNthChild(xImage, 'DefaultDestination', 0)
+            sDestination = self.oIOXml.GetDataInNode(xDestination)
+            xImagePath = self.oIOXml.GetNthChild(xImage, 'Path', 0)
+            sImagePath = self.oIOXml.GetDataInNode(xImagePath)
+            
+            if sImageType == 'Volume' or sImageType == 'VolumeSequence':
+                llDestImageVolume.append([sDestination, sImagePath])
+            elif sImageType == 'Segmentation':
+                llDestSegmentation.append([sDestination, sImagePath])
+            elif sImageType == 'LabelMap':
+                llDestLabelMap.append([sDestination, sImagePath])
+            elif sImageType == 'RTStruct':
+                llDestRTStruct.append([sDestination, sImagePath])
+                
+
+            
+           
+        llDestSegImageType = llDestSegmentation
+        sSegImageType = 'Segmentation'
+        sSegmentationMsg = self.MatchSegsAndVolumes(sSegImageType, llDestSegImageType, llDestImageVolume)
+        
+        llDestSegImageType = llDestLabelMap
+        sSegImageType = 'LabelMap'
+        sLabelMapMsg = self.MatchSegsAndVolumes(sSegImageType, llDestSegImageType, llDestImageVolume)
+        
+        llDestSegImageType = llDestRTStruct
+        sSegImageType = 'RTStruct'
+        sRTStructMsg = self.MatchSegsAndVolumes(sSegImageType, llDestSegImageType, llDestImageVolume)
+
+        sMsg = sMsg + sSegmentationMsg + sLabelMapMsg + sRTStructMsg
+        if sMsg != '':
+            sMsg = sMsg + '\nSee Page: ' + sPageReference
+
+        return sMsg
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def MatchSegsAndVolumes(self, sSegImageType, llDestSegImageType, llDestImageVolume):
+        
+        sMsg = ''
+        
+        for indSegTypeToMatch in range(len(llDestSegImageType)):
+            
+            # there must be an image volume to sync with the  destination of this segmentation type of image
+            sSegTypeDestToMatch = llDestSegImageType[indSegTypeToMatch][0]
+            sSegTypePathToMatch = llDestSegImageType[indSegTypeToMatch][1]
+            lDestMatchedImagePaths = []
+            
+            for indVol in range(len(llDestImageVolume)):
+                if llDestImageVolume[indVol][0] == sSegTypeDestToMatch:
+                    lDestMatchedImagePaths.append(llDestImageVolume[indVol][1])
+                    
+                    
+            if len(lDestMatchedImagePaths) > 0:        
+                # image volumes found at that destination
+                # there may have been more than one image found (FG and BG)
+                # check if they are repeated in another destination
+                lAllDests = []
+                for ind in range(len(lDestMatchedImagePaths)):
+                    sMatchedPathToSearch = lDestMatchedImagePaths[ind]
+                    for ind in range(len(llDestImageVolume)):
+                        if sMatchedPathToSearch == llDestImageVolume[ind][1]:
+                            lAllDests.append(llDestImageVolume[ind][0])
+                
+                    if len(lAllDests) > 0:
+                        # the same image volume is repeated in other destinations
+                        # there needs to be the same seg type image in those destinations
+                        iNumMatches = 0
+                        for indDest in range(len(lAllDests)):
+                            sDest = lAllDests[indDest]
+                            for indSeg in range(len(llDestSegImageType)):
+                                if (sSegTypePathToMatch == llDestSegImageType[indSeg][1]):
+                                    if llDestSegImageType[indSeg][0] == sDest:
+                                        iNumMatches = iNumMatches + 1
+                        
+                    if iNumMatches == len(lAllDests):
+                        pass
+                    else:
+                        sMsg = sMsg + '\n\nYou do not have a ' + sSegImageType + ' xml entry for each ' +\
+                                'of the associated image volume entries.' +\
+                                '\n(eg. Vol1 is on Red and Green; there must be the same ' + sSegImageType + ' entry for these destinations' +\
+                                '\nImages defined as ' + sSegImageType + ' and Volumes are not in sync.'
+                        break
+    
+                        
+                    
+                    
+                    
+            else:
+                sMsg = sMsg + '\n\nYou have a ' + sSegImageType + ' type of image defined in the xml ' +\
+                        '\nwith no matching volume in the same default destination.' +\
+                        '\nImages defined as ' + sSegImageType + ' and Volumes are not in sync.'
+                        
+            
+
+       
+        
+        return sMsg
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExportResultsItemToFile(self, sItemName, sPath, slNode):
         """ Use Slicer's storage node to export node to a file
