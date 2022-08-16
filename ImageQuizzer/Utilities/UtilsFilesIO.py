@@ -1121,7 +1121,7 @@ class UtilsFilesIO:
                     if oSession._bSegmentationModule == True:   # if there is a segmentation module
                         if oSession.GetSegmentationTabEnabled() == True:    # if the tab is enabled
                             qtAns = oSession.oUtilsMsgs.DisplayOkCancel(\
-                                                'No label maps were created. Do you want to continue?')
+                                                'No contours were created. Do you want to continue?')
                             if qtAns == qt.QMessageBox.Ok:
                                 # user did not create a label map but there may be no lesions to segment
                                 # continue with the save

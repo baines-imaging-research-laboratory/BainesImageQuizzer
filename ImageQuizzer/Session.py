@@ -939,64 +939,69 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onRepeatButtonClicked(self):
         
-        try:        
-            bSuccess = True
-            sMsg = ''
-            
-            bSuccess, sMsg = self.PerformSave('NextBtn')
-            if bSuccess:
-                indXmlPageToRepeat = self.GetCurrentPageIndex()
+        qtAns = self.oUtilsMsgs.DisplayOkCancel(\
+                            "Are you sure you want to repeat this set of images and questions?" +\
+                            "\nIf No, click 'Cancel' and press 'Next' to continue.")
+        if qtAns == qt.QMessageBox.Ok:
                 
-                
-                xCopyOfXmlPageToRepeatNode = self.oIOXml.CopyElement(self.GetCurrentPageNode())
-                iCopiedRepNum = int(self.oIOXml.GetValueOfNodeAttribute(xCopyOfXmlPageToRepeatNode, "Rep"))
-                
-                # find the next xml page that has Rep 0 (move past all repeated pages for this loop)
-                indNextXmlPageWithRep0 = self.oIOXml.GetIndexOfNextChildWithAttributeValue(self.oIOXml.GetRootNode(), "Page", indXmlPageToRepeat + 1, "Rep", "0")
-        
-                if indNextXmlPageWithRep0 != -1:
-                    self.oIOXml.InsertElementBeforeIndex(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode, indNextXmlPageWithRep0)
-                else:
-                    # attribute was not found
-                    self.oIOXml.AppendElement(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode)
-                    indNextXmlPageWithRep0 = self.oIOXml.GetNumChildrenByName(self.oIOXml.GetRootNode(), 'Page') - 1
-                
-                self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())    # for debug
-                self.BuildNavigationList() # update after adding xml page
-                
-                iNewNavInd = self.FindNewRepeatedPosition(indNextXmlPageWithRep0, iCopiedRepNum)
-                self.SetCurrentNavigationIndex(iNewNavInd)
-            
-                # update the repeated page
-                self.AdjustXMLForRepeatedPage()
-                self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())    # for debug
-                self.BuildNavigationList()  # repeated here to pick up attribute adjustments for Rep#
-                self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-        
-        
-                self._loQuestionSets = []
-                slicer.mrmlScene.Clear()
-        
-                
-                self.progress.setMaximum(len(self.GetNavigationList()))
-                self.progress.setValue(self.GetCurrentNavigationIndex())
-                
-                self.EnableButtons()
-                self.SetupPageState(self.GetCurrentPageIndex())
-                self.DisplayQuizLayout()
-                self.DisplayImageLayout()
-                
-            else:
-                if sMsg != '':
-                    self.oUtilsMsgs.DisplayWarning( sMsg )
+            try:        
+                bSuccess = True
+                sMsg = ''
 
-        except:
-            iPage = self.GetCurrentPageIndex() + 1
-            tb = traceback.format_exc()
-            sMsg = "onRepeatButtonClicked: Error repeating this page. Current page: " + str(iPage) \
-                   + "\n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
+                bSuccess, sMsg = self.PerformSave('NextBtn')
+                if bSuccess:
+                    indXmlPageToRepeat = self.GetCurrentPageIndex()
+                    
+                    
+                    xCopyOfXmlPageToRepeatNode = self.oIOXml.CopyElement(self.GetCurrentPageNode())
+                    iCopiedRepNum = int(self.oIOXml.GetValueOfNodeAttribute(xCopyOfXmlPageToRepeatNode, "Rep"))
+                    
+                    # find the next xml page that has Rep 0 (move past all repeated pages for this loop)
+                    indNextXmlPageWithRep0 = self.oIOXml.GetIndexOfNextChildWithAttributeValue(self.oIOXml.GetRootNode(), "Page", indXmlPageToRepeat + 1, "Rep", "0")
+            
+                    if indNextXmlPageWithRep0 != -1:
+                        self.oIOXml.InsertElementBeforeIndex(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode, indNextXmlPageWithRep0)
+                    else:
+                        # attribute was not found
+                        self.oIOXml.AppendElement(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode)
+                        indNextXmlPageWithRep0 = self.oIOXml.GetNumChildrenByName(self.oIOXml.GetRootNode(), 'Page') - 1
+                    
+                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())    # for debug
+                    self.BuildNavigationList() # update after adding xml page
+                    
+                    iNewNavInd = self.FindNewRepeatedPosition(indNextXmlPageWithRep0, iCopiedRepNum)
+                    self.SetCurrentNavigationIndex(iNewNavInd)
+                
+                    # update the repeated page
+                    self.AdjustXMLForRepeatedPage()
+                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())    # for debug
+                    self.BuildNavigationList()  # repeated here to pick up attribute adjustments for Rep#
+                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+            
+            
+                    self._loQuestionSets = []
+                    slicer.mrmlScene.Clear()
+            
+                    
+                    self.progress.setMaximum(len(self.GetNavigationList()))
+                    self.progress.setValue(self.GetCurrentNavigationIndex())
+                    
+                    self.EnableButtons()
+                    self.SetupPageState(self.GetCurrentPageIndex())
+                    self.DisplayQuizLayout()
+                    self.DisplayImageLayout()
+                    
+                else:
+                    if sMsg != '':
+                        self.oUtilsMsgs.DisplayWarning( sMsg )
     
+            except:
+                iPage = self.GetCurrentPageIndex() + 1
+                tb = traceback.format_exc()
+                sMsg = "onRepeatButtonClicked: Error repeating this page. Current page: " + str(iPage) \
+                       + "\n\n" + tb 
+                self.oUtilsMsgs.DisplayError(sMsg)
+
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def FindNewRepeatedPosition(self, iSearchPageNum, iSearchRepNum):
