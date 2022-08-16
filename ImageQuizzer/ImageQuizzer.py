@@ -57,16 +57,24 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         sModuleName = 'ImageQuizzer'
         sSourceDirForQuiz = 'Resources/XML'
         
-        # previous and current release dates
-        # Note: Version 1.0 should be used with Slicer v9.11.20200930
-        # self.sVersion = "Image Quizzer   v1.0   Release Date: May 10, 2022"
-        # Note: Version 2.0 should be used with Slicer v9.11.2021022
-        self.sVersion = "Image Quizzer   v2.0   Release Date: TBD"
 
         self.oUtilsMsgs = UtilsMsgs()
         self.oFilesIO = UtilsFilesIO()
         self.oFilesIO.SetModuleDirs(sModuleName, sSourceDirForQuiz)
         
+        # previous and current release dates
+        # Note: Version 1.0 should be used with Slicer v4.11.20200930
+        # self.sVersion = "Image Quizzer   v1.0 "  #  Release Date: May 10, 2022
+        # Note: Version 2.0 should be used with Slicer v4.11.2021022
+        self.sVersion = "Image Quizzer v2.0"  # Release Date: Aug ??, 2022
+
+        sSlicerVersion = slicer.app.applicationVersion
+        if sSlicerVersion != '4.11.20210226':
+            sMsg = 'This version of Image Quizzer requires 3D Slicer v4.11.20210226' +\
+                    '\n You are running 3D Slicer v' + sSlicerVersion
+            self.oUtilsMsgs.DisplayError(sMsg)
+
+
 #         # capture Slicer's default database location
 #         self.oFilesIO.SetDefaultDatabaseDir(slicer.dicomDatabase.databaseDirectory)
 
