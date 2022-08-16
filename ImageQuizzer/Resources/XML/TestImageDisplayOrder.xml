@@ -25,6 +25,11 @@
 			<Path>ImageVolumes\Brain\Segmentation.seg.nrrd</Path>
 			<ROIs ROIVisibilityCode="All"></ROIs>
 		</Image>
+		<Image Type="LabelMap" ID="Mask" RotateToAcquisition="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Label</Layer>
+			<Path>ImageVolumes\Brain\Fixed Volume-Labelmap.nrrd</Path>
+		</Image>
 		<Image ID="RG-FG-2_Moving Volume" Type="Volume">
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Foreground</Layer>
@@ -55,6 +60,11 @@
 			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\Brain\Segmentation.seg.nrrd</Path>
 			<ROIs ROIVisibilityCode="All"></ROIs>
+		</Image>
+		<Image Type="LabelMap" ID="Mask" RotateToAcquisition="Y">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Label</Layer>
+			<Path>ImageVolumes\Brain\Fixed Volume-Labelmap.nrrd</Path>
 		</Image>
 		<Image ID="RG-FG-2_Moving Volume" Type="Volume">
 			<DefaultDestination>Green</DefaultDestination>
