@@ -59,8 +59,20 @@
 		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Segmentation</Layer>
-			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1-GoldStandard.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode='All'></ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1-GoldStandard.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode='All'></ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1-GoldStandard.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode='All'></ROIs>
 		</Image>
 		<QuestionSet ID="Gold Standard Display" Descriptor="">
 			<Question Type="InfoBox" Descriptor="Compare to gold standard">

@@ -40,7 +40,7 @@
 			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\ADC.nii</Path>
 		</Image>
-		<Image ID="In_Vivo_2D_T2" Type="Volume" LabelMapID="2DT2-Contour" RotateToAcquisition="Y">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" LabelMapID="2DT2-Contour" RotateToAcquisition="Y" SegmentRequired="Y">
 			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
@@ -52,7 +52,7 @@
 			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\PSMA PET.nii</Path>
 		</Image>
-		<Image ID="In_Vivo_2D_T2" Type="Volume" LabelMapID="2DT2-Contour" RotateToAcquisition="Y">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" LabelMapID="2DT2-Contour" RotateToAcquisition="Y" SegmentRequired="Y">
 			<DefaultDestination>Slice4</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
@@ -79,17 +79,18 @@
 		</QuestionSet>
 	</Page>
 	<Page ID="IGPC2026" Descriptor="Gold Standard" LinkViews="Y" Layout="OneUpRedSlice" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
-		<Image ID="In_Vivo_2D_T2" Type="Volume" DisplayLabelMapID="2DT2-Contour" RotateToAcquisition="Y" LabelMapID="Modified 2DT2">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" DisplayLabelMapID="2DT2-Contour" RotateToAcquisition="Y" LabelMapID="Modified 2DT2" SegmentRequired="Y">
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
 		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
-			<DefaultDestination>Yellow</DefaultDestination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\2DT2-GoldStandard.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All"></ROIs>
 		</Image>
 		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer" >
 			<Question Type="InfoBox" Descriptor="Review">
@@ -109,10 +110,11 @@
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
 		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
-			<DefaultDestination>Yellow</DefaultDestination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\2DT2-GoldStandard.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All"></ROIs>
 		</Image>
 		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer" >
 			<Question Type="InfoBox" Descriptor="Review">

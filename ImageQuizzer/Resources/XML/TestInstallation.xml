@@ -90,7 +90,7 @@
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<QuestionSet ID="Test Dicom Read" Descriptor="Try the following:">
-			<Question Type="Radio" Descriptor="Zoom and Pan">
+			<Question Type="Radio" Descriptor="Zoom (Rt-click drag) and Pan (middle-click drag)">
 				<Option>Yes</Option>
 				<Option>No</Option>
 			</Question>
@@ -98,9 +98,9 @@
 				<Option>Yes</Option>
 				<Option>No</Option>
 			</Question>
-			<Question Type="CheckBox"  Descriptor="Try changing the viewing window configuration:">
+			<Question Type="CheckBox"  Descriptor="Using the Extra Tools change the viewing window configuration:">
 				<Option>Select a single viewing window (eg. Red only)</Option>
-				<Option>Return to two over two view</Option>
+				<Option>Return to default view</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
@@ -156,6 +156,9 @@
 			<Question Type="InfoBox" Descriptor="Dynamic Contrast Enhanced Imaging">
 				<Option>Try the controls to run the time sequence.</Option>
 			</Question>
+			<Question Type="IntegerValue" Descriptor="Sample numeric entry:" Max="5">
+				<Option>Enter an integer value (characters not accepted):</Option>
+			</Question>
 		</QuestionSet>
 		<QuestionSet ID="Test Volume Sequence" Descriptor="Test Sequence Volumes">
 			<Question Type="InfoBox" Descriptor="Segmenting">
@@ -172,8 +175,16 @@
 				<Option>Undo/Redo</Option>
 				<Option>Erase</Option>
 			</Question>
-			<Question Type="IntegerValue" Descriptor="Sample numeric entry:" Max="5">
-				<Option>Enter an integer value (characters not accepted):</Option>
+			<Question Type="InfoBox" Descriptor="Editor Shortcuts">
+				<Option>e        ...Toggle label with erase mode</Option>
+				<Option>z        ...Undo</Option>
+				<Option>y        ...Redo</Option>
+				<Option>o        ...Toggle label outline</Option>
+				<Option>t        ...Toggle foreground/background</Option>
+				<Option>p        ...Paint tool</Option>
+				<Option>d        ...Draw tool</Option>
+				<Option>c        ...Show colour box</Option>
+				<Option>Rt click ...Apply (in Draw mode)</Option>
 			</Question>
 		</QuestionSet>
 	</Page>

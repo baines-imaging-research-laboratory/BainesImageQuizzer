@@ -59,7 +59,6 @@
 			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_moving.nii</Path>
 		</Image>
-<!--
 		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Segmentation</Layer>
@@ -71,7 +70,6 @@
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\Brain\Fixed Volume-Labelmap.nrrd</Path>
 		</Image>
--->
 	</Page>
 	<Page ID="Mixed" Descriptor="BG-FG Testing" LinkViews="N" EnableSegmentEditor="Y" Layout="TwoOverTwo">
 		<Image ID="Y-BG-1_T2-N4" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID='T2-contour'>
@@ -95,7 +93,6 @@
 		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Segmentation</Layer>
-			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\Brain\Segmentation.seg.nrrd</Path>
 			<ROIs ROIVisibilityCode="All"></ROIs>
 		</Image>

@@ -548,7 +548,7 @@ class UtilsFilesIO:
                 sPageReference = str(iPageNum) # initialize
                 
                 # for any page, make sure there is matching Images Volume to Segmentation or Volume to LabelMap for each destination
-                sValidationMsg = self.ValidateImageToSegmentationSync(xPage, sPageReference)
+                sValidationMsg = self.ValidateImageToSegmentationMatch(xPage, sPageReference)
                 sMsg = sMsg + sValidationMsg
 
                 
@@ -1014,7 +1014,7 @@ class UtilsFilesIO:
         return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateImageToSegmentationSync(self, xPageNode, sPageReference):
+    def ValidateImageToSegmentationMatch(self, xPageNode, sPageReference):
         '''
         '''
         sMsg = ''
@@ -1048,82 +1048,79 @@ class UtilsFilesIO:
 
             
            
-        llDestSegImageType = llDestSegmentation
-        sSegImageType = 'Segmentation'
-        sSegmentationMsg = self.MatchSegsAndVolumes(sSegImageType, llDestSegImageType, llDestImageVolume)
+        sSegmentationMsg = self.SyncSegsAndVolumes(llDestImageVolume, 'Segmentation', llDestSegmentation)
         
-        llDestSegImageType = llDestLabelMap
-        sSegImageType = 'LabelMap'
-        sLabelMapMsg = self.MatchSegsAndVolumes(sSegImageType, llDestSegImageType, llDestImageVolume)
+        sLabelMapMsg = self.SyncSegsAndVolumes(llDestImageVolume, 'LabelMap', llDestLabelMap)
         
-        llDestSegImageType = llDestRTStruct
-        sSegImageType = 'RTStruct'
-        sRTStructMsg = self.MatchSegsAndVolumes(sSegImageType, llDestSegImageType, llDestImageVolume)
+        sRTStructMsg = self.SyncSegsAndVolumes(llDestImageVolume, 'RTStruct', llDestRTStruct)
 
         sMsg = sMsg + sSegmentationMsg + sLabelMapMsg + sRTStructMsg
         if sMsg != '':
-            sMsg = sMsg + '\nSee Page: ' + sPageReference
+            sMsg = sMsg + '\n----------See Page: ' + sPageReference
 
         return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def MatchSegsAndVolumes(self, sSegImageType, llDestSegImageType, llDestImageVolume):
+    def SyncSegsAndVolumes(self, llDestImageVolume, sSegImageType, llDestSegImageType):
         
         sMsg = ''
+        bMismatchFound = False
         
         for indSegTypeToMatch in range(len(llDestSegImageType)):
-            
-            # there must be an image volume to sync with the  destination of this segmentation type of image
-            sSegTypeDestToMatch = llDestSegImageType[indSegTypeToMatch][0]
-            sSegTypePathToMatch = llDestSegImageType[indSegTypeToMatch][1]
-            lDestMatchedImagePaths = []
-            
-            for indVol in range(len(llDestImageVolume)):
-                if llDestImageVolume[indVol][0] == sSegTypeDestToMatch:
-                    lDestMatchedImagePaths.append(llDestImageVolume[indVol][1])
-                    
-                    
-            if len(lDestMatchedImagePaths) > 0:        
-                # image volumes found at that destination
-                # there may have been more than one image found (FG and BG)
-                # check if they are repeated in another destination
-                lAllDests = []
-                for ind in range(len(lDestMatchedImagePaths)):
-                    sMatchedPathToSearch = lDestMatchedImagePaths[ind]
-                    for ind in range(len(llDestImageVolume)):
-                        if sMatchedPathToSearch == llDestImageVolume[ind][1]:
-                            lAllDests.append(llDestImageVolume[ind][0])
+            if not bMismatchFound:
+                # there must be an image volume to sync with the  destination of this segmentation type of image
+                sSegTypeDestToMatch = llDestSegImageType[indSegTypeToMatch][0]
+                sSegTypePathToMatch = llDestSegImageType[indSegTypeToMatch][1]
+                lDestMatchedVolImagePaths = []
                 
-                    if len(lAllDests) > 0:
-                        # the same image volume is repeated in other destinations
-                        # there needs to be the same seg type image in those destinations
-                        iNumMatches = 0
-                        for indDest in range(len(lAllDests)):
-                            sDest = lAllDests[indDest]
-                            for indSeg in range(len(llDestSegImageType)):
-                                if (sSegTypePathToMatch == llDestSegImageType[indSeg][1]):
-                                    if llDestSegImageType[indSeg][0] == sDest:
-                                        iNumMatches = iNumMatches + 1
+                for indVol in range(len(llDestImageVolume)):
+                    if llDestImageVolume[indVol][0] == sSegTypeDestToMatch:
+                        lDestMatchedVolImagePaths.append(llDestImageVolume[indVol][1])
                         
-                    if iNumMatches == len(lAllDests):
-                        pass
-                    else:
-                        sMsg = sMsg + '\n\nYou do not have a ' + sSegImageType + ' xml entry for each ' +\
-                                'of the associated image volume entries.' +\
-                                '\n(eg. Vol1 is on Red and Green; there must be the same ' + sSegImageType + ' entry for these destinations' +\
-                                '\nImages defined as ' + sSegImageType + ' and Volumes are not in sync.'
-                        break
-    
                         
+                if len(lDestMatchedVolImagePaths) > 0:        
+                    # image volumes found at that destination
+                    # there may have been more than one image found (FG and BG)
+                    # check if they are repeated in another destination
+                    lAllDests = []
+                    for indMatchedPath in range(len(lDestMatchedVolImagePaths)):
+                        sMatchedVolPathToSearch = lDestMatchedVolImagePaths[indMatchedPath]
+                        for indMatchedPath in range(len(llDestImageVolume)):
+                            if sMatchedVolPathToSearch == llDestImageVolume[indMatchedPath][1]:
+                                if llDestImageVolume[indMatchedPath][0] not in lAllDests: # only keep FG or BG
+                                    lAllDests.append(llDestImageVolume[indMatchedPath][0])
                     
-                    
-                    
-            else:
-                sMsg = sMsg + '\n\nYou have a ' + sSegImageType + ' type of image defined in the xml ' +\
-                        '\nwith no matching volume in the same default destination.' +\
-                        '\nImages defined as ' + sSegImageType + ' and Volumes are not in sync.'
+                        if len(lAllDests) > 0:
+                            # the same image volume is repeated in other destinations
+                            # there needs to be the same seg type image in those destinations
+                            iNumMatches = 0
+                            for indDest in range(len(lAllDests)):
+                                sDest = lAllDests[indDest]
+                                for indSeg in range(len(llDestSegImageType)):
+                                    if (sSegTypePathToMatch == llDestSegImageType[indSeg][1]):
+                                        if llDestSegImageType[indSeg][0] == sDest:
+                                            iNumMatches = iNumMatches + 1
+                            
+                        if iNumMatches == len(lAllDests):
+                            pass
+                        else:
+                            sMsg = sMsg + '\n\nYou do not have a ' + sSegImageType + ' xml entry for each ' +\
+                                    'of the associated image volume entries.' +\
+                                    '\n(eg. If Vol1 is on Red and Green; there must be the same ' + sSegImageType + ' entry for each of these destinations' +\
+                                    '\n.....Images defined as ' + sSegImageType + ' and Volumes are not in sync.'
+                            bMismatchFound = True
+                            break
+        
+                            
                         
-            
+                        
+                        
+                else:
+                    sMsg = sMsg + '\n\nYou have a ' + sSegImageType + ' type of image defined in the xml ' +\
+                            '\nwith no matching volume in the same default destination.' +\
+                            '\n.....Images defined as ' + sSegImageType + ' and Volumes are not in sync.'
+                            
+                
 
        
         

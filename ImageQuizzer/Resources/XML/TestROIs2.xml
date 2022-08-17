@@ -25,6 +25,20 @@
 			<ROIs ROIVisibilityCode="All">
 			</ROIs>
 		</Image>
+		<Image Type="Segmentation" ID="TinyPhantom-Segmentation">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All">
+			</ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="TinyPhantom-Segmentation">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All">
+			</ROIs>
+		</Image>
 		<QuestionSet ID="ROI Display" Descriptor="Phantom segmentations">
 			<Question Type="InfoBox" Descriptor="ROI Data load">
 				<Option>Segmentation layer testing - loaded as Data volume</Option> 
