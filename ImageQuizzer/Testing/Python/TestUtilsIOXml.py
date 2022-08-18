@@ -676,7 +676,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         xNewElem = etree.Element("Page")
         dNewAttrib = {"Rep":"2"}
-        self.oIOXml.UpdateAtributesInElement(xNewElem, dNewAttrib)
+        self.oIOXml.UpdateAttributesInElement(xNewElem, dNewAttrib)
 
         self.oIOXml.AppendElement(xRoot, xNewElem)
 
@@ -715,7 +715,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         xNewElem = etree.Element("Page")
         dNewAttrib = {"Rep":"2"}
-        self.oIOXml.UpdateAtributesInElement(xNewElem, dNewAttrib)
+        self.oIOXml.UpdateAttributesInElement(xNewElem, dNewAttrib)
         
         self.oIOXml.InsertElementBeforeIndex(xRoot, xNewElem, 5)
 
