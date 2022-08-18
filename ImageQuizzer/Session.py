@@ -1138,12 +1138,12 @@ class Session:
                 
                 self.oFilesIO.SetupLoopingInitialization(xRootNode)
                 self.oFilesIO.SetupPageGroupInitialization(xRootNode)
-                self.InitializeImageDisplayOrderIndices()
     
     
                 # build the list of indices page/questionset as read in by the XML 
                 #    list is shuffled if randomizing is requested
                 self.BuildNavigationList()
+                self.InitializeImageDisplayOrderIndices()
                 
                 
                 # check for partial or completed quiz
@@ -1238,7 +1238,7 @@ class Session:
         # if randomization is requested - shuffle the page/questionset list
         sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'RandomizePageGroups')
         if sRandomizeRequired == 'Y':
-            # check if xnl already holds a set of randomized indices otherwise, call randomizing function
+            # check if xml already holds a set of randomized indices otherwise, call randomizing function
             liRandIndices = self.GetStoredRandomizedIndices()
             if liRandIndices == []:
                 # get the unique list  of all Page Group numbers to randomize
@@ -2016,13 +2016,13 @@ class Session:
             sNewRepNum = str(iPreviousRepNum + 1)
             self.oIOXml.UpdateAttributesInElement(xNewRepeatPage, {"Rep":sNewRepNum})
             
-            iSubIndex = sPreviousPageID.find('_-Rep')
+            iSubIndex = sPreviousPageID.find('-Rep')
             if iSubIndex >=0:
                 sStrippedPageID = sPreviousPageID[0:iSubIndex]
             else:
                 sStrippedPageID = sPreviousPageID
             
-            sNewPageID = sStrippedPageID + '_-Rep' + str(sNewRepNum)
+            sNewPageID = sStrippedPageID + '-Rep' + str(sNewRepNum)
             self.oIOXml.UpdateAttributesInElement(xNewRepeatPage, {"ID":sNewPageID})
             
             

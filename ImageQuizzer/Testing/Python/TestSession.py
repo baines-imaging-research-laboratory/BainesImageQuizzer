@@ -794,7 +794,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         xExpPage0 = etree.SubElement(xExpectedRoot,"Page")
         xExpPage1 = etree.SubElement(xExpectedRoot,"Page")
         xExpPage2 = etree.SubElement(xExpectedRoot,"Page", {"Rep":"0"})
-        xExpPage3NewRepeat = etree.SubElement(xExpectedRoot,"Page", {"ID":"_-Rep1", "Rep":"1", "PageComplete":"N"})
+        xExpPage3NewRepeat = etree.SubElement(xExpectedRoot,"Page", {"ID":"-Rep1", "Rep":"1", "PageComplete":"N"})
         xExpPage4 = etree.SubElement(xExpectedRoot,"Page")
  
         xExpIm1 = etree.SubElement(xExpPage3NewRepeat, "Image")
@@ -830,9 +830,9 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         sAdjustedXML = etree.tostring(xAdjustedRoot)
         sExpectedXML = etree.tostring(xExpectedRoot)
         
-        # for debug
-        print(sAdjustedXML)
-        print(sExpectedXML)
+        # # for debug
+        # print(sAdjustedXML)
+        # print(sExpectedXML)
         
         if sAdjustedXML == sExpectedXML:
             bTestResult = True
