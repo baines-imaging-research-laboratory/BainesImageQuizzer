@@ -161,6 +161,10 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_GetLastChild())
         tupResults.append(self.test_GetLastChild_DoesNotExist())
 
+        tupResults.append(self.test_GetIndexOfNextChildWithAttributeValue())
+        tupResults.append(self.test_AppendElement())
+        tupResults.append(self.test_InsertElementBeforeIndex())
+        tupResults.append(self.test_CopyElement())
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
 
@@ -632,7 +636,126 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
     
     #-------------------------------------------
+    def test_GetIndexOfNextChildWithAttributeValue(self):
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        
+        xRoot = etree.Element("Session")
+        etree.SubElement(xRoot,"Page", Rep="0")
+        etree.SubElement(xRoot,"Page", Rep="0")
+        etree.SubElement(xRoot,"Page", Rep="0")
+        etree.SubElement(xRoot,"Page", Rep="0")
+        etree.SubElement(xRoot,"Page", Rep="1")
+        etree.SubElement(xRoot,"Page", Rep="2")
+        etree.SubElement(xRoot,"Page", Rep="0")
+        etree.SubElement(xRoot,"Page", Rep="0")
+
+        # search from index 4 for the next child with Rep="0"
+        iExpectedIndex = 6
+        iNextInd = self.oIOXml.GetIndexOfNextChildWithAttributeValue(xRoot, 'Page', 4, 'Rep', '0')
+        
+        if iNextInd == iExpectedIndex:
+            bTestResult = True
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+        
     #-------------------------------------------
+    def test_AppendElement(self):
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = False
+        
+        xRoot = etree.Element("Session")
+        etree.SubElement(xRoot,"Page", Rep="0")
+        etree.SubElement(xRoot,"Page", Rep="0")
+        etree.SubElement(xRoot,"Page", Rep="0")
+        etree.SubElement(xRoot,"Page", Rep="0")
+        etree.SubElement(xRoot,"Page", Rep="1")
+
+        xNewElem = etree.Element("Page")
+        dNewAttrib = {"Rep":"2"}
+        self.oIOXml.UpdateAttributesInElement(xNewElem, dNewAttrib)
+
+        self.oIOXml.AppendElement(xRoot, xNewElem)
+
+        xExpectedRoot = etree.Element("Session")
+        etree.SubElement(xExpectedRoot,"Page", Rep="0")
+        etree.SubElement(xExpectedRoot,"Page", Rep="0")
+        etree.SubElement(xExpectedRoot,"Page", Rep="0")
+        etree.SubElement(xExpectedRoot,"Page", Rep="0")
+        etree.SubElement(xExpectedRoot,"Page", Rep="1")
+        etree.SubElement(xExpectedRoot,"Page", Rep="2")
+
+        
+        sRoot = etree.tostring(xRoot)
+        sExpectedRoot = etree.tostring(xExpectedRoot)
+        
+        if sRoot == sExpectedRoot:
+            bTestResult = True
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #-------------------------------------------
+    def test_InsertElementBeforeIndex(self):
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = False
+        
+        xRoot = etree.Element("Session")
+        etree.SubElement(xRoot,"Page", Rep="0")
+        etree.SubElement(xRoot,"Page", Rep="0")
+        etree.SubElement(xRoot,"Page", Rep="0")
+        etree.SubElement(xRoot,"Page", Rep="0")
+        etree.SubElement(xRoot,"Page", Rep="1")
+        etree.SubElement(xRoot,"Page", Rep="0")
+        etree.SubElement(xRoot,"Page", Rep="0")
+        
+        xNewElem = etree.Element("Page")
+        dNewAttrib = {"Rep":"2"}
+        self.oIOXml.UpdateAttributesInElement(xNewElem, dNewAttrib)
+        
+        self.oIOXml.InsertElementBeforeIndex(xRoot, xNewElem, 5)
+
+        xExpectedRoot = etree.Element("Session")
+        etree.SubElement(xExpectedRoot,"Page", Rep="0")
+        etree.SubElement(xExpectedRoot,"Page", Rep="0")
+        etree.SubElement(xExpectedRoot,"Page", Rep="0")
+        etree.SubElement(xExpectedRoot,"Page", Rep="0")
+        etree.SubElement(xExpectedRoot,"Page", Rep="1")
+        etree.SubElement(xExpectedRoot,"Page", Rep="2")
+        etree.SubElement(xExpectedRoot,"Page", Rep="0")
+        etree.SubElement(xExpectedRoot,"Page", Rep="0")
+        
+        
+        sRoot = etree.tostring(xRoot)
+        sExpectedRoot = etree.tostring(xExpectedRoot)
+        
+        if sRoot == sExpectedRoot:
+            bTestResult = True
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+    #-------------------------------------------
+    def test_CopyElement(self):
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = False
+
+        xRoot = etree.Element("Session")
+        
+        newRoot = self.oIOXml.CopyElement(xRoot)
+        if id(xRoot) != id(newRoot):
+            bTestResult = True
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #-------------------------------------------
+    #-------------------------------------------
+        
     # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     # Helper functions
     # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

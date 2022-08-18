@@ -324,6 +324,14 @@ class UtilsIOXml:
 #         xParentNode.insert(1, elem)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def InsertElementBeforeIndex(self, xParentNode, xElement, iInd):
+        xParentNode.insert(iInd, xElement)
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def AppendElement(self, xParentNode, xElement):
+        xParentNode.append(xElement)
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def RemoveAllElements(self, xParentNode, sTagName):
         ''' from the parent node, remove all children with the input tag name
         '''
@@ -331,7 +339,7 @@ class UtilsIOXml:
             xParentNode.remove(xElem)
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def UpdateAtributesInElement(self, xElement, dictAttrib):
+    def UpdateAttributesInElement(self, xElement, dictAttrib):
         
         # for each key, value in the dictionary, update the element attributes
         for sKey, sValue in dictAttrib.items():
@@ -364,7 +372,37 @@ class UtilsIOXml:
         
         return bRequired
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetIndexOfNextChildWithAttributeValue(self, xParentNode, sChildTagName, indFrom, sAttrib, sAttribValue):
+        ''' given an index to search from, search the attributes in the child that matches the input
+            attribute value
+        '''
+        
+        iNextInd = -1
+        
+        iSearchIndex = 0
+        for elem in xParentNode.findall(sChildTagName):
+            if iSearchIndex >= indFrom:
+                sSearchValue = self.GetValueOfNodeAttribute(elem, sAttrib)
+                if sSearchValue == sAttribValue:
+                    iNextInd = iSearchIndex
+                    break
+                else:
+                    iSearchIndex = iSearchIndex + 1
+                
+            else:
+                iSearchIndex = iSearchIndex + 1
+                
+        return iNextInd
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CopyElement(self, xElemToCopy):
+        ''' Create a copy of the element that is not shared by reference to the original
+        '''
+        sElemToCopy = etree.tostring(xElemToCopy)
+        xNewCopiedElem = etree.fromstring(sElemToCopy)
+        
+        return xNewCopiedElem
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def prettify(self, elem):
         

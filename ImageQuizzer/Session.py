@@ -5,6 +5,7 @@ import sys
 import unittest
 import random
 import traceback
+from copy import deepcopy
 
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
@@ -38,8 +39,8 @@ class Session:
         
         self._sLoginTime = ''
 
-        self._iCurrentCompositeIndex = 0
-        self._l3iPageQuestionGroupCompositeIndices = []
+        self._iCurrentNavigationIndex = 0
+        self._l4iNavigationIndices = []
 
         self._xPageNode = None
         self.sPageID = ''
@@ -76,16 +77,6 @@ class Session:
 
 
     def __del__(self):
-#         if not self.GetQuizComplete():
-#             # check first if there is a Quiz Results path
-#             #    quiz validation errors may result in user's directory not being created
-#             sMsg = 'Image Quizzer Exiting - Performing final cleanup.'
-#             if self.oFilesIO != None:
-#                 sResultsPath = self.oFilesIO.GetUserQuizResultsPath()
-#                 if sResultsPath != '':
-#                     sMsg = sMsg + ' - User response file is saved.'
-#                     self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-#             self.oUtilsMsgs.DisplayInfo(sMsg)
 
         # clean up of editor observers and nodes that may cause memory leaks (color table?)
         if self.GetSegmentationTabIndex() > 0:
@@ -143,13 +134,53 @@ class Session:
         return self._lsPreviousResponses
     
     #----------
-    def SetCompositeIndicesList(self, lIndices):
-        self._l3iPageQuestionGroupCompositeIndices = lIndices
+    def GetNavigationList(self):
+        return self._l4iNavigationIndices
+
+    #----------
+    def SetNavigationList(self, lIndices):
+        self._l4iNavigationIndices = lIndices
         
     #----------
-    def GetCompositeIndicesList(self):
-        return self._l3iPageQuestionGroupCompositeIndices
-
+    def ClearNavigationList(self):
+        self._l4iNavigationIndices = []
+    #----------
+    def GetCurrentNavigationIndex(self):
+        return self._iCurrentNavigationIndex
+    
+    #----------
+    def SetCurrentNavigationIndex(self, iInd):
+        self._iCurrentNavigationIndex = iInd
+        
+    #----------
+    def GetNavigationPage(self, iNavInd):
+        return self._l4iNavigationIndices[iNavInd][0]
+    
+    #----------
+    def GetNavigationQuestionSet(self, iNavInd):
+        return self._l4iNavigationIndices[iNavInd][1]
+    
+    #----------
+    def GetNavigationPageGroup(self, iNavInd):
+        return self._l4iNavigationIndices[iNavInd][2]
+    
+    #----------
+    def GetNavigationRepNum(self, iNavInd):
+        return self._l4iNavigationIndices[iNavInd][3]
+    #----------
+    #----------
+    def GetNavigationIndicesAtIndex(self, iNavInd):
+        return self._l4iNavigationIndices[iNavInd]
+    
+    #----------
+    def NavigationListAppend(self, lNavIndices):
+        self._l4iNavigationIndices.append(lNavIndices)
+    
+    #----------
+    def NavigationListInsertBeforeIndex(self, iNavInd, lNavIndices):
+        self._l4iNavigationIndices.insert(iNavInd, lNavIndices)
+        
+    #----------
     #----------
     def SetMultipleResponseAllowed(self, sYN):
         
@@ -174,8 +205,8 @@ class Session:
         return self._bRequestToEnableSegmentEditor
     
     #----------
-    def GetPageCompleteAttribute(self, iCompIndex):
-        iPageIndex = self._l3iPageQuestionGroupCompositeIndices[iCompIndex][0]
+    def GetPageCompleteAttribute(self, iNavigationIndex):
+        iPageIndex = self.GetNavigationPage(iNavigationIndex)
         xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
 
         sPageComplete = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'PageComplete')
@@ -252,22 +283,22 @@ class Session:
         
     #----------
     def GetCurrentPageNode(self):
-        iPageIndex = self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0]
+        iPageIndex = self.GetNavigationPage(self.GetCurrentNavigationIndex())
         xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
         
         return xPageNode
     
     #----------
     def GetCurrentPageIndex(self):
-        return self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0]
+        return self.GetNavigationPage(self.GetCurrentNavigationIndex())
     
     #----------
     def GetCurrentQuestionSetIndex(self):
-        return self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][1]
+        return self.GetNavigationQuestionSet(self.GetCurrentNavigationIndex())
     
     #----------
     def GetCurrentQuestionSetNode(self):
-        iQSetIndex = self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][1]
+        iQSetIndex = self.GetNavigationQuestionSet(self.GetCurrentNavigationIndex())
         xPageNode = self.GetCurrentPageNode()
         xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', iQSetIndex)
         
@@ -492,9 +523,19 @@ class Session:
         # use lambda to pass argument to this PyQt slot without invoking the function on setup
         self._btnExit.connect('clicked(bool)',lambda: self.onExitButtonClicked('ExitBtn'))
 
+        # Repeat button
+        self._btnRepeat = qt.QPushButton("Repeat")
+        self._btnRepeat.toolTip = "Save current responses and repeat."
+        self._btnRepeat.enabled = False
+        self._btnRepeat.visible = False
+        self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
+        self._btnRepeat.connect('clicked(bool)', self.onRepeatButtonClicked)
+        
+
         self.qButtonGrpBoxLayout.addWidget(self._btnExit)
         self.qButtonGrpBoxLayout.addWidget(qProgressLabel)
         self.qButtonGrpBoxLayout.addWidget(self.progress)
+        self.qButtonGrpBoxLayout.addWidget(self._btnRepeat)
         self.qButtonGrpBoxLayout.addWidget(self._btnPrevious)
         self.qButtonGrpBoxLayout.addWidget(self._btnNext)
 
@@ -657,20 +698,35 @@ class Session:
         xPageNode = self.GetCurrentPageNode()
         if self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Loop') == "Y":
             self.SetPageLooping(True)
+            self._btnRepeat.visible = True
+            self._btnRepeat.enabled = False
+            self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white}")
+            # only enable Repeat button in looping if the page is not complete and the user is on the last question set
+            if self.GetPageCompleteAttribute(self.GetCurrentNavigationIndex()) != "Y":
+                if self.CheckForLastQuestionSetForPage() == True:
+                    self._btnRepeat.enabled = True
+                    self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
+
         else:
             self.SetPageLooping(False)
+            self._btnRepeat.visible = False
+            self._btnRepeat.enabled = False
+            self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white}")
             
             
-        # assume not at the end of the quiz
-        self._btnNext.setText("Next")
+        # assign button description           
+        if (self.GetCurrentNavigationIndex() == len(self.GetNavigationList()) - 1):
+            self._btnNext.setText("Finish")
+        else:
+            self._btnNext.setText("Next")
         
         # beginning of quiz
-        if (self._iCurrentCompositeIndex == 0):
+        if (self.GetCurrentNavigationIndex() == 0):
             self._btnNext.enabled = True
             self._btnPrevious.enabled = False
 
         # end of quiz
-        elif (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
+        elif (self.GetCurrentNavigationIndex() == len(self.GetNavigationList()) - 1):
             self._btnNext.enabled = True
             self._btnPrevious.enabled = True
 
@@ -679,11 +735,6 @@ class Session:
             self._btnNext.enabled = True
             self._btnPrevious.enabled = True
 
-        # assign button description           
-        if (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
-            # last question of last image view
-            self._btnNext.setText("Finish")
-            
             
 
 
@@ -713,7 +764,7 @@ class Session:
             if self.sViewingMode != 'Default':
                 self.onResetViewClicked()
     
-            if self._iCurrentCompositeIndex + 1 == len(self._l3iPageQuestionGroupCompositeIndices):
+            if self.GetCurrentNavigationIndex() + 1 == len(self.GetNavigationList()):
     
                 # the last question was answered - check if user is ready to exit
                 self.onExitButtonClicked('Finish') # a save is done in here
@@ -724,7 +775,7 @@ class Session:
             else:
                 # this is not the last question set, do a save and display the next page
                 bNewPage = True
-                if self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0] == self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex + 1][0]:
+                if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() + 1):
                     bNewPage = False
                 bSuccess, sMsg = self.PerformSave('NextBtn')
                 
@@ -744,8 +795,8 @@ class Session:
                         for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
                             self.oQuizWidgets.qQuizLayout.itemAt(i).widget().setParent(None)
                 
-                    self._iCurrentCompositeIndex = self._iCurrentCompositeIndex + 1
-                    self.progress.setValue(self._iCurrentCompositeIndex)
+                    self.SetCurrentNavigationIndex(self.GetCurrentNavigationIndex() + 1 )
+                    self.progress.setValue(self.GetCurrentNavigationIndex())
                     self.InitializeImageDisplayOrderIndices()
                     
                     self.EnableButtons()
@@ -777,8 +828,8 @@ class Session:
                 self.onResetViewClicked()
                 
             bNewPage = True
-            if self._iCurrentCompositeIndex > 0:
-                if self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0] == self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex - 1][0]:
+            if self.GetCurrentNavigationIndex() > 0:
+                if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() - 1):
                     bNewPage = False
     
             bSuccess, sMsg = self.PerformSave('PreviousBtn')
@@ -790,13 +841,13 @@ class Session:
                 ########################################    
     
                 slicer.mrmlScene.Clear()
-                self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
-                self.progress.setValue(self._iCurrentCompositeIndex)
+                self.SetCurrentNavigationIndex(self.GetCurrentNavigationIndex() - 1)
+                self.progress.setValue(self.GetCurrentNavigationIndex())
                 self.InitializeImageDisplayOrderIndices()
         
-                if self._iCurrentCompositeIndex < 0:
+                if self.GetCurrentNavigationIndex() < 0:
                     # reset to beginning
-                    self._iCurrentCompositeIndex = 0
+                    self.SetCurrentNavigationIndex( 0 )
                 
                 self.EnableButtons()
                 
@@ -823,11 +874,11 @@ class Session:
     def onExitButtonClicked(self,sCaller):
 
         try:
-            self.progress.setValue(self._iCurrentCompositeIndex + 1)
-            if len(self._l3iPageQuestionGroupCompositeIndices) >0:
-                iProgressPercent = int((self._iCurrentCompositeIndex + 1) / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
+            self.progress.setValue(self.GetCurrentNavigationIndex() + 1)
+            if len(self.GetNavigationList()) >0:
+                iProgressPercent = int((self.GetCurrentNavigationIndex() + 1) / len(self.GetNavigationList()) * 100)
             else:
-                # error in creating the composite index - assign percent to 100 for exiting
+                # error in creating the composite navigation index - assign percent to 100 for exiting
                 self.oUtilsMsgs.DisplayError('ERROR creating quiz indices - Exiting')
             self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
             
@@ -849,8 +900,8 @@ class Session:
     
             # if code reaches here, either the exit was cancelled or there was 
             # an error in the save
-            self.progress.setValue(self._iCurrentCompositeIndex)
-            iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
+            self.progress.setValue(self.GetCurrentNavigationIndex())
+            iProgressPercent = int(self.GetCurrentNavigationIndex() / len(self.GetNavigationList()) * 100)
             self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
     
         except:
@@ -963,8 +1014,91 @@ class Session:
     def onWindowLevelOffClicked(self):
         slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.ViewTransform)
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onRepeatButtonClicked(self):
+        qtAns = self.oUtilsMsgs.DisplayOkCancel(\
+                            "Are you sure you want to repeat this set of images and questions?" +\
+                            "\nIf No, click 'Cancel' and press 'Next' to continue.")
+        if qtAns == qt.QMessageBox.Ok:
+            try:        
+                bSuccess = True
+                sMsg = ''
+
+                bSuccess, sMsg = self.PerformSave('NextBtn')
+                if bSuccess:
+                    indXmlPageToRepeat = self.GetCurrentPageIndex()
+                    
+                    
+                    xCopyOfXmlPageToRepeatNode = self.oIOXml.CopyElement(self.GetCurrentPageNode())
+                    iCopiedRepNum = int(self.oIOXml.GetValueOfNodeAttribute(xCopyOfXmlPageToRepeatNode, "Rep"))
+                    
+                    # find the next xml page that has Rep 0 (move past all repeated pages for this loop)
+                    indNextXmlPageWithRep0 = self.oIOXml.GetIndexOfNextChildWithAttributeValue(self.oIOXml.GetRootNode(), "Page", indXmlPageToRepeat + 1, "Rep", "0")
+            
+                    if indNextXmlPageWithRep0 != -1:
+                        self.oIOXml.InsertElementBeforeIndex(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode, indNextXmlPageWithRep0)
+                    else:
+                        # attribute was not found
+                        self.oIOXml.AppendElement(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode)
+                        indNextXmlPageWithRep0 = self.oIOXml.GetNumChildrenByName(self.oIOXml.GetRootNode(), 'Page') - 1
+                    
+                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())    # for debug
+                    self.BuildNavigationList() # update after adding xml page
+                    
+                    iNewNavInd = self.FindNewRepeatedPosition(indNextXmlPageWithRep0, iCopiedRepNum)
+                    self.SetCurrentNavigationIndex(iNewNavInd)
+                
+                    # update the repeated page
+                    self.AdjustXMLForRepeatedPage()
+                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())    # for debug
+                    self.BuildNavigationList()  # repeated here to pick up attribute adjustments for Rep#
+                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+            
+            
+                    self._loQuestionSets = []
+                    slicer.mrmlScene.Clear()
+            
+                    
+                    self.progress.setMaximum(len(self.GetNavigationList()))
+                    self.progress.setValue(self.GetCurrentNavigationIndex())
+                    
+                    self.EnableButtons()
+                    self.SetupPageState(self.GetCurrentPageIndex())
+                    self.DisplayQuizLayout()
+                    self.DisplayImageLayout()
+                    
+                else:
+                    if sMsg != '':
+                        self.oUtilsMsgs.DisplayWarning( sMsg )
+    
+            except:
+                iPage = self.GetCurrentPageIndex() + 1
+                tb = traceback.format_exc()
+                sMsg = "onRepeatButtonClicked: Error repeating this page. Current page: " + str(iPage) \
+                       + "\n\n" + tb 
+                self.oUtilsMsgs.DisplayError(sMsg)
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def FindNewRepeatedPosition(self, iSearchPageNum, iSearchRepNum):
+        ''' this function scans the navigation composite indices to match 
+            the Page and Rep numbers of the new repeated page that was inserted
+            into the xml file. If there is more than one question set, 
+            the navigation index of the first question set is returned.
+        '''
+
+        indFound = -1
+        
+        for iNavInd in range(len(self.GetNavigationList())):
+            iPgNum = self.GetNavigationPage(iNavInd)
+            iRepNum = self.GetNavigationRepNum(iNavInd)
+            
+            if iPgNum == iSearchPageNum and iRepNum == iSearchRepNum :
+                indFound = iNavInd
+                break
+
+                
+        return indFound
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #-------------------------------------------
@@ -1001,33 +1135,22 @@ class Session:
                 # set up ROI colors for segmenting
                 sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
                 self.oFilesIO.SetupROIColorFile(sColorFileName)
-    
-    
-                # build the list of indices page/questionset as read in by the XML
-                self.BuildPageQuestionCompositeIndexList()
+                
+                self.oFilesIO.SetupLoopingInitialization(xRootNode)
+                self.oFilesIO.SetupPageGroupInitialization(xRootNode)
                 self.InitializeImageDisplayOrderIndices()
-                # if randomization is requested - shuffle the page/questionset list
-                sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
-                if sRandomizeRequired == 'Y':
-                    # check if xnl already holds a set of randomized indices otherwise, call randomizing function
-                    liRandIndices = self.GetStoredRandomizedIndices()
-                    if liRandIndices == []:
-                        # get the unique list  of all Page Group numbers to randomize
-                        #    this was set during xml validation during the initial read
-                        liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
-                        liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
-                        self.AddRandomizedIndicesToXML(liRandIndices)
-                     
-                    self._l3iPageQuestionGroupCompositeIndices = self.ShufflePageQuestionGroupCompositeIndexList(liRandIndices)
-        
-        
+    
+    
+                # build the list of indices page/questionset as read in by the XML 
+                #    list is shuffled if randomizing is requested
+                self.BuildNavigationList()
                 
                 
                 # check for partial or completed quiz
-                self.SetCompositeIndexIfResumeRequired()
+                self.SetNavigationIndexIfResumeRequired()
                             
-                self.progress.setMaximum(len(self._l3iPageQuestionGroupCompositeIndices))
-                self.progress.setValue(self._iCurrentCompositeIndex)
+                self.progress.setMaximum(len(self.GetNavigationList()))
+                self.progress.setValue(self.GetCurrentNavigationIndex())
         
                 self.EnableButtons()
                 self.DisplayQuizLayout()
@@ -1060,14 +1183,15 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def BuildPageQuestionCompositeIndexList(self):
+    def BuildNavigationList(self):
         ''' This function sets up the page and question set indices which
             are used to coordinate the next and previous buttons.
             The information is gathered by querying the XML quiz.
         '''
-        # given the root of the xml document build composite list 
-        #     of indices for each page and the question sets within
+        # given the root of the xml document build composite navigation list 
+        #     of indices for each page, question sets, page group and rep number
         
+        self.ClearNavigationList()
         # get Page nodes
         xPages = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
 
@@ -1085,6 +1209,12 @@ class Session:
             except:
                 # assign a unique page number if no group number exists
                 iPageGroup = iPageNum
+                
+            sRepNum = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Rep')
+            try:
+                iRepNum = int(sRepNum)
+            except:
+                iRepNum = 0
             
             # if there are no question sets for the page, insert a blank shell
             #    - this allows images to load
@@ -1096,40 +1226,56 @@ class Session:
             #    - if there are 2 pages and the 1st page has 2 question sets, 2nd page has 1 question set,
             #        and each page is in a different page group
             #        the indices will look like this:
-            #        Page    QS    PageGroup
-            #        0        0        1
-            #        0        1        1
-            #        1        0        2
+            #        Page    QS    PageGroup  Rep
+            #        0        0        1       0
+            #        0        1        1       0
+            #        1        0        2       0
             #    - there can be numerous questions in each question set
             for iQuestionSetIndex in range(len(xQuestionSets)):
-                self._l3iPageQuestionGroupCompositeIndices.append([iPageIndex,iQuestionSetIndex, iPageGroup])
+                self.NavigationListAppend([iPageIndex,iQuestionSetIndex, iPageGroup, iRepNum])
+                
+                
+        # if randomization is requested - shuffle the page/questionset list
+        sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'RandomizePageGroups')
+        if sRandomizeRequired == 'Y':
+            # check if xnl already holds a set of randomized indices otherwise, call randomizing function
+            liRandIndices = self.GetStoredRandomizedIndices()
+            if liRandIndices == []:
+                # get the unique list  of all Page Group numbers to randomize
+                #    this was set during xml validation during the initial read
+                liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
+                liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
+                self.AddRandomizedIndicesToXML(liRandIndices)
+             
+            self.SetNavigationList( self.ShuffleNavigationList(liRandIndices) )
+    
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ShufflePageQuestionGroupCompositeIndexList(self, lRandIndices):
+    def ShuffleNavigationList(self, lRandIndices):
         ''' This function will shuffle the original list as read in from the quiz xml,  that holds the
-            "[page number,questionset number, page group number]" according to the randomized index list input.
+            "[page number,questionset number, page group number, rep number]" according to the randomized index list input.
             The question sets always follow with the page, they are never randomized.
             The page groups are randomized. 
                  If more than one page has the same group number, they will remain in the order they were read in.
             
             eg.     Original XML List         Randomized Page Group indices      Shuffled Composite List
-                       Page   QS  Grp                    Indices                      Page   QS    Grp
-                       0      0     1                        2                         2      0     2
-                       0      1     1                        3                         2      1     2
-                       1      0     1                        1                         3      0     2
-                       2      0     2                                                  4      0     3
-                       2      1     2                                                  4      1     3
-                       3      0     2                                                  0      0     1
-                       4      0     3                                                  0      1     1
-                       4      1     3                                                  1      0     1
+                       Page   QS   Grp   Rep             Indices                   Page   QS   Grp   Rep
+                       0      0     1     0                 2                       2     0     2     0
+                       0      1     1     0                 3                       2     1     2     0
+                       1      0     1     0                 4                       3     0     2     0
+                       2      0     2     0                 0                       4     0     3     0
+                       2      1     2     0                 1                       4     1     3     0
+                       3      0     2     0                                         0     0     1     0
+                       4      0     3     0                                         0     1     1     0
+                       4      1     3     0                                         1     0     1     0
         '''
     
         lShuffledCompositeIndices = []
         
         for indRand in range(len(lRandIndices)):
-            for indOrig in range(len(self._l3iPageQuestionGroupCompositeIndices)):
-                if self._l3iPageQuestionGroupCompositeIndices[indOrig][2] == lRandIndices[indRand] :
-                    lShuffledCompositeIndices.append(self._l3iPageQuestionGroupCompositeIndices[indOrig])
+            for indOrig in range(len(self.GetNavigationList())):
+                if self.GetNavigationPageGroup(indOrig) == lRandIndices[indRand] :
+                    lShuffledCompositeIndices.append( self.GetNavigationIndicesAtIndex(indOrig))
         
         return lShuffledCompositeIndices
    
@@ -1202,7 +1348,7 @@ class Session:
         bLastQuestionSet = False
         
         # check if at the end of the quiz
-        if (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
+        if (self.GetCurrentNavigationIndex() == len(self.GetNavigationList()) - 1):
             bLastQuestionSet = True
 
         else:
@@ -1210,7 +1356,7 @@ class Session:
             # assume multiple question sets for the page
             # check if next page in the composite index is different than the current page
             #    if yes - we have reached the last question set
-            if not( self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0] == self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex + 1][0]):
+            if not( self.GetNavigationPage(self.GetCurrentNavigationIndex())) == self.GetNavigationPage(self.GetCurrentNavigationIndex() + 1):
                 bLastQuestionSet = True            
            
             
@@ -1297,7 +1443,7 @@ class Session:
                     self.SegmentationTabEnabler(self.GetRequestToEnableSegmentEditorTF())
                 else:
                     sSavedResponseCompletionLevel = self.oPageState.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
-                    sPageComplete = self.GetPageCompleteAttribute(self._iCurrentCompositeIndex)
+                    sPageComplete = self.GetPageCompleteAttribute(self.GetCurrentNavigationIndex())
                     if sPageComplete == 'Y':
                         qWidgetQuestionSetForm.setEnabled(False)
                         self.SegmentationTabEnabler(False)
@@ -1323,7 +1469,7 @@ class Session:
             xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
             self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
             self.sPageID = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'ID')
-            iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
+            iProgressPercent = int(self.GetCurrentNavigationIndex() / len(self.GetNavigationList()) * 100)
             self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
                 
         except:
@@ -1378,7 +1524,7 @@ class Session:
         elif self.sPageLayout == 'SideBySideRedYellow' :
             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutSideBySideView)
         else:
-            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutSideBySideView)
+            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
                     
     
     
@@ -1803,51 +1949,6 @@ class Session:
         
         return xHistoricalChildElement
     
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def GetXmlElementFromImagePathHistory(self, xImageNodeToMatch, sChildTagName):  
-#         """ Start searching the xml file for a matching image on a previous page
-#             This is based on the 'Path' element for the current node to match. The
-#             historical element must have the same 'Path' element value.
-#             If this is a Dicom series, the Path points directly to a dicom slice within
-#             the Dicom series.
-#             Extract the latest element of the required child 
-#                 (in case there is more than one element with this name).
-#             The most recent element will be returned.
-#         """
-#         xHistoricalChildElement = None
-#
-#         xPathElement = self.oIOXml.GetNthChild(xImageNodeToMatch, 'Path', 0)
-#         sPathToMatch = self.oIOXml.GetDataInNode(xPathElement)
-#
-#         # start searching pages in reverse order - to get most recent setting
-#         # first match will end the search
-#         bHistoricalElementFound = False
-#         for iPageIndex in range(self.GetCurrentPageIndex()-1, -1, -1):
-#             xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
-#
-#             if bHistoricalElementFound == False:
-#                 #get all Image children
-#                 lxImageElementsToSearch = self.oIOXml.GetChildren(xPageNode, 'Image')
-#                 if len(lxImageElementsToSearch) > 0:
-#
-#                     for xImageNode in lxImageElementsToSearch:
-#
-#                         xPotentialPathElement = self.oIOXml.GetNthChild(xImageNode, 'Path', 0)
-#                         sPotentialPath = self.oIOXml.GetDataInNode(xPotentialPathElement)
-#
-#                         # test for match of both the Path and Series Instance UID
-# #                         if sPotentialPath == sPathToMatch and sPotentialSeriesInstanceUID == sSeriesInstanceUIDToMatch:
-#                         if sPotentialPath == sPathToMatch:
-# #                             print('found prior image instance: ', iPageIndex, ' ', sPotentialPath)
-#
-#                             # capture most recent (based on response time) historical element of interest
-#                             xHistoricalChildElement = self.oIOXml.GetLatestChildElement(xImageNode, sChildTagName)
-#                             bHistoricalElementFound = True
-#
-#
-#         return xHistoricalChildElement
-#
-#
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def WriteResponsesToXml(self):
@@ -1895,6 +1996,63 @@ class Session:
             
         return bSuccess, sMsg
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def AdjustXMLForRepeatedPage(self):
+        
+        sMsg = ''
+        try:
+            
+            xNewRepeatPage = self.GetCurrentPageNode()
+            
+            # get last rep number to increment current rep
+            xPreviousPage = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), "Page", self.GetNavigationPage( self.GetCurrentNavigationIndex() -1 ) )
+            sPreviousRepNum = self.oIOXml.GetValueOfNodeAttribute(xPreviousPage, "Rep")
+            sPreviousPageID = self.oIOXml.GetValueOfNodeAttribute(xPreviousPage, 'ID')
+            
+            
+            
+            self.oIOXml.UpdateAttributesInElement(xNewRepeatPage, {"PageComplete":"N"})
+            iPreviousRepNum = int(sPreviousRepNum)
+            sNewRepNum = str(iPreviousRepNum + 1)
+            self.oIOXml.UpdateAttributesInElement(xNewRepeatPage, {"Rep":sNewRepNum})
+            
+            iSubIndex = sPreviousPageID.find('_-Rep')
+            if iSubIndex >=0:
+                sStrippedPageID = sPreviousPageID[0:iSubIndex]
+            else:
+                sStrippedPageID = sPreviousPageID
+            
+            sNewPageID = sStrippedPageID + '_-Rep' + str(sNewRepNum)
+            self.oIOXml.UpdateAttributesInElement(xNewRepeatPage, {"ID":sNewPageID})
+            
+            
+                
+            # remove LabelmapPath and MarkupLinePath elements
+            lxImages = self.oIOXml.GetChildren(xNewRepeatPage, 'Image')
+            for xImage in lxImages:
+                self.oIOXml.RemoveAllElements(xImage, "LabelMapPath")
+                self.oIOXml.RemoveAllElements(xImage, "MarkupLinePath")
+                
+            # remove Response elements
+            lxQuestionSets = self.oIOXml.GetChildren(xNewRepeatPage, "QuestionSet")
+            for xQuestionSet in lxQuestionSets:
+                lxQuestions = self.oIOXml.GetChildren(xQuestionSet, "Question")
+                for xQuestion in lxQuestions:
+                    lxOptions = self.oIOXml.GetChildren(xQuestion, "Option")
+                    for xOption in lxOptions:
+                        self.oIOXml.RemoveAllElements(xOption, "Response")
+        
+        except:
+            tb = traceback.format_exc()
+            iPage = self.GetCurrentPageIndex() + 1
+            sMsg = 'AdjustXMLForRepeatedPage: Trouble updating repeated page.' + \
+                    'Previous page rep number should be a string that can be converted to an integer.' +\
+                    'Check the functionality of CopyPage.' \
+                    '\nSee Page: ' + str(iPage) + '\n\n' + tb
+            self.oUtilsMsgs.DisplayError(sMsg)
+        
+        
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddXmlElements(self):
         
@@ -2003,19 +2161,19 @@ class Session:
             dictAttrib['LogoutTime'] = sLogoutTime
                 
             # reset the Login element
-            self.oIOXml.UpdateAtributesInElement(xLoginNode, dictAttrib)
+            self.oIOXml.UpdateAttributesInElement(xLoginNode, dictAttrib)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetCompositeIndexIfResumeRequired(self):
+    def SetNavigationIndexIfResumeRequired(self):
         ''' Scan the user's quiz file for existing responses in case the user
             exited the quiz prematurely (before it was complete) on the last login
         '''
         # We assume the quiz pages and question sets are presented sequentially as stored in the
-        # composite index (which takes into account randomization of the pages if requested)
+        # composite navigation index (which takes into account randomization of the pages if requested)
 
             
         # initialize
-        iResumeCompIndex = 0
+        iResumeNavigationIndex = 0
         self.SetQuizResuming(False)
         iPageIndex = 0
         xPageNode = None
@@ -2029,24 +2187,24 @@ class Session:
             qtAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
 
             if qtAns == qt.QMessageBox.Yes:
-                iResumeCompIndex = 0
-                iPageIndex = self._l3iPageQuestionGroupCompositeIndices[iResumeCompIndex][0]
+                iResumeNavigationIndex = 0
+                iPageIndex = self.GetNavigationPage(iResumeNavigationIndex)
                 self.SetupPageState(iPageIndex)
                 
             else:
                 self.ExitOnQuizComplete("This quiz was completed. Exiting")
         else:        
     
-            # loop through composite index to search for the first page without a "PageComplete='Y'"
-            for indCI in range(len(self._l3iPageQuestionGroupCompositeIndices)):
+            # loop through composite navigation index to search for the first page without a "PageComplete='Y'"
+            for indNav in range(len(self.GetNavigationList())):
                 if not self.GetQuizResuming():
-                    iPageIndex = self._l3iPageQuestionGroupCompositeIndices[indCI][0]
+                    iPageIndex = self.GetNavigationPage(indNav)
                     xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
                     self.SetupPageState(iPageIndex)
                     
                     sPageComplete = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'PageComplete')
                     if sPageComplete != 'Y':    # found first page that was not complete
-                        iResumeCompIndex = indCI
+                        iResumeNavigationIndex = indNav
                         self.SetQuizResuming(True)
             
             self.oPageState.UpdateCompletionLists(xPageNode)
@@ -2060,16 +2218,16 @@ class Session:
                 #    was not set because the segmentation requirements were not met
                 if indQSet < len(liCompletedQuestionSets) -1:
                     if liCompletedQuestionSets[indQSet] == 1:
-                        iResumeCompIndex = iResumeCompIndex + 1
+                        iResumeNavigationIndex = iResumeNavigationIndex + 1
                 
             # Display a message to user if resuming (special case if resuming on first page)
-            # if not iResumeCompIndex == self._iCurrentCompositeIndex:
-            if (not iResumeCompIndex == self._iCurrentCompositeIndex) or\
-                (iResumeCompIndex == 0 and dtLastLogin != ''):
+            # if not iResumeNavigationIndex == self.GetCurrentNavigationIndex():
+            if (not iResumeNavigationIndex == self.GetCurrentNavigationIndex()) or\
+                (iResumeNavigationIndex == 0 and dtLastLogin != ''):
                 self.oUtilsMsgs.DisplayInfo('Resuming quiz from previous login session.')
                 self.SetQuizResuming(True)
     
-        self._iCurrentCompositeIndex = iResumeCompIndex
+        self.SetCurrentNavigationIndex(iResumeNavigationIndex)
         # adjust if the resume question set is not the first on the page
         self.AdjustToCurrentQuestionSet()
         # reset the default order of image indices based on the new page
@@ -2123,7 +2281,7 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExitOnQuizComplete(self, sMsg):
 
-        # the last index in the composite indices list was reached
+        # the last index in the composite navigation indices list was reached
         # the quiz was completed - exit
         
         self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
@@ -2159,7 +2317,7 @@ class Session:
         dictAttrib['UserName'] = self.oFilesIO.GetUsername()
             
         # reset the Login element
-        self.oIOXml.UpdateAtributesInElement(xRootNode, dictAttrib)
+        self.oIOXml.UpdateAttributesInElement(xRootNode, dictAttrib)
 
         self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
         

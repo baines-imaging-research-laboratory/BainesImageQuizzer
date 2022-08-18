@@ -31,16 +31,16 @@
 				<Option>Enter overall PI-RADS score:</Option>
 			</Question>
 			<Question Type="CheckBox" Descriptor="Testing">
-				<Option>QS1 Test 1</Option>
-				<Option>QS1 Test 2</Option>
-				<Option>QS1 Test 3</Option>
+				<Option>Intro QS1 Test 1</Option>
+				<Option>Intro QS1 Test 2</Option>
+				<Option>Intro QS1 Test 3</Option>
 			</Question>
 		</QuestionSet>
 		<QuestionSet ID="PI-RADS" Descriptor="Second QSet Test">
 			<Question Type="CheckBox" Descriptor="Testing">
-				<Option>QS2 Test 1</Option>
-				<Option>QS2 Test 2</Option>
-				<Option>QS2 Test 3</Option>
+				<Option>Intro QS2 Test 1</Option>
+				<Option>Intro QS2 Test 2</Option>
+				<Option>Intro QS2 Test 3</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
@@ -65,9 +65,9 @@
 		</Image>
 		<QuestionSet ID="PI-RADS" Descriptor="QSet1">
 			<Question Type="CheckBox" Descriptor="Testing">
-				<Option>QS Test 1</Option>
-				<Option>QS Test 2</Option>
-				<Option>QS Test 3</Option>
+				<Option>1st Page Looping QS Test 1</Option>
+				<Option>1st Page Looping QS Test 2</Option>
+				<Option>1st Page Looping QS Test 3</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
@@ -101,16 +101,16 @@
 				<Option>Enter overall PI-RADS score:</Option>
 			</Question>
 			<Question Type="CheckBox" Descriptor="Testing">
-				<Option>QS1 Test 1</Option>
-				<Option>QS1 Test 2</Option>
-				<Option>QS1 Test 3</Option>
+				<Option>2nd Page Looping QS1 Test 1</Option>
+				<Option>2nd Page Looping QS1 Test 2</Option>
+				<Option>2nd Page Looping QS1 Test 3</Option>
 			</Question>
 		</QuestionSet>
 		<QuestionSet ID="PI-RADS" Descriptor="Second QSet Test">
 			<Question Type="CheckBox" Descriptor="Testing">
-				<Option>QS2 Test 1</Option>
-				<Option>QS2 Test 2</Option>
-				<Option>QS2 Test 3</Option>
+				<Option>2nd Page Looping QS2 Test 1</Option>
+				<Option>2nd Page Looping QS2 Test 2</Option>
+				<Option>2nd Page Looping QS2 Test 3</Option>
 			</Question>
 		</QuestionSet>
 	</Page>
@@ -140,16 +140,10 @@
 			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\ktrans.nrrd</Path>
 		</Image>
 		<QuestionSet ID="Segmentation" Descriptor="Self-Assessment">
-			<Question Type="Radio" Descriptor="How did you do?">
-				<Option>Great</Option>
-				<Option>Not bad</Option>
-				<Option>Could be better</Option>
-				<Option>Terrible</Option>
-			</Question>
-			<Question Type="CheckBox" Descriptor="Testing">
-				<Option>QS Test 1</Option>
-				<Option>QS Test 2</Option>
-				<Option>QS Test 3</Option>
+		<Question Type="CheckBox" Descriptor="Testing">
+				<Option>3rd Page Looping QS Test 1</Option>
+				<Option>3rd Page Looping QS Test 2</Option>
+				<Option>3rd Page Looping QS Test 3</Option>
 			</Question>
 		</QuestionSet>
 	</Page>

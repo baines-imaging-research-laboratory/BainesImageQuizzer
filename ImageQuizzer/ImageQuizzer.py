@@ -56,11 +56,25 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         sModuleName = 'ImageQuizzer'
         sSourceDirForQuiz = 'Resources/XML'
+        
 
         self.oUtilsMsgs = UtilsMsgs()
         self.oFilesIO = UtilsFilesIO()
         self.oFilesIO.SetModuleDirs(sModuleName, sSourceDirForQuiz)
         
+        # previous and current release dates
+        # Note: Version 1.0 should be used with Slicer v4.11.20200930
+        # self.sVersion = "Image Quizzer   v1.0 "  #  Release Date: May 10, 2022
+        # Note: Version 2.0 should be used with Slicer v4.11.2021022
+        self.sVersion = "Image Quizzer v2.0"  # Release Date: Aug ??, 2022
+
+        sSlicerVersion = slicer.app.applicationVersion
+        if sSlicerVersion != '4.11.20210226':
+            sMsg = 'This version of Image Quizzer requires 3D Slicer v4.11.20210226' +\
+                    '\n You are running 3D Slicer v' + sSlicerVersion
+            self.oUtilsMsgs.DisplayError(sMsg)
+
+
 #         # capture Slicer's default database location
 #         self.oFilesIO.SetDefaultDatabaseDir(slicer.dicomDatabase.databaseDirectory)
 
@@ -145,6 +159,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.qUserLoginWidget = qt.QWidget()
         self.qUserLoginWidget.setLayout(qUserLoginLayout)
         self.qUserLoginWidget.setWindowModality(2)
+        self.qUserLoginWidget.setWindowTitle(self.sVersion)
          
 
         qTitleGroupBox = qt.QGroupBox()
@@ -289,7 +304,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         # File Picker
         self.qDBLocationFileDialog = qt.QFileDialog()
         sDefaultWorkingDir = os.path.expanduser('~\Documents')
-        sDataLocation = self.qDBLocationFileDialog.getExistingDirectory(None, "Select Directory", sDefaultWorkingDir, qt.QFileDialog.ShowDirsOnly )
+        sDataLocation = self.qDBLocationFileDialog.getExistingDirectory(None, "SELECT DIRECTORY FOR IMAGE DATABASE", sDefaultWorkingDir, qt.QFileDialog.ShowDirsOnly )
         
         if sDataLocation != '':
             self.oFilesIO.SetupUserAndDataDirs(sDataLocation)
@@ -320,7 +335,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
  
         # get quiz filename
         self.quizInputFileDialog = qt.QFileDialog()
-        sSelectedQuizPath = self.quizInputFileDialog.getOpenFileName(self.qUserLoginWidget, "Open File", self.oFilesIO.GetXmlQuizDir(), "XML files (*.xml)" )
+        sSelectedQuizPath = self.quizInputFileDialog.getOpenFileName(self.qUserLoginWidget, "SELECT QUIZ FILE", self.oFilesIO.GetXmlQuizDir(), "XML files (*.xml)" )
  
         # check that file was selected
         if not sSelectedQuizPath:

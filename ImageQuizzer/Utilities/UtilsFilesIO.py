@@ -659,6 +659,7 @@ class UtilsFilesIO:
                   
             # >>>>>>>>>>>>>>>
             # validate that each page has a PageGroup attribute if the session requires page group randomization
+            #    a quiz that has no PageGroup attributes will be assigned the default numbers during the session setup
             sRandomizeRequested = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
             if sRandomizeRequested == "Y":
                 sValidationMsg = self.ValidatePageGroupNumbers(xRootNode)
@@ -1265,7 +1266,7 @@ class UtilsFilesIO:
                     if oSession._bSegmentationModule == True:   # if there is a segmentation module
                         if oSession.GetSegmentationTabEnabled() == True:    # if the tab is enabled
                             qtAns = oSession.oUtilsMsgs.DisplayOkCancel(\
-                                                'No label maps were created. Do you want to continue?')
+                                                'No contours were created. Do you want to continue?')
                             if qtAns == qt.QMessageBox.Ok:
                                 # user did not create a label map but there may be no lesions to segment
                                 # continue with the save
@@ -1578,4 +1579,47 @@ class UtilsFilesIO:
                             break # continue in for loop for next label map path element
                 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetupLoopingInitialization(self, xRootNode):
+        
+        # if Loop="Y" for any page in the quiz, add Rep="0" to each page if not defined
+        
+        bLoopingInQuiz = False
+        lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
+        for xPageNode in lxPages:
+            sLoopAllowed = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "Loop")
+            if sLoopAllowed == "Y":
+                bLoopingInQuiz = True
+                break
+            
+        if bLoopingInQuiz:
+            for xPageNode in lxPages:
+                sRepNum = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "Rep")
+                try:
+                    int(sRepNum)
+                except:
+                    # not a valid integer - create/set the attribute to 0
+                    self.oIOXml.UpdateAttributesInElement(xPageNode, {"Rep":"0"})
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetupPageGroupInitialization(self, xRootNode):
+        ''' If no PageGroup attribute exists, update the XML to initialize each page
+            to a unique number. Start PageGroup numbers at '1'. ('0' has specialized
+            meaning when randomizing page groups.
+        '''
+        
+        bPageGroupFound = False
+         
+        lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
+        for xPageNode in lxPages:
+            sPageGroupNum = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "PageGroup")
+            if sPageGroupNum != '':
+                bPageGroupFound = True
+                break
+       
+        if not bPageGroupFound:
+            for iPageNum in range(len(lxPages)):
+                xPageNode = self.oIOXml.GetNthChild(xRootNode, "Page", iPageNum)
+                self.oIOXml.UpdateAttributesInElement(xPageNode, {"PageGroup":str(iPageNum + 1)})
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
