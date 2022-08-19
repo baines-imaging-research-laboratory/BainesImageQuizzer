@@ -262,6 +262,18 @@ class Session:
         return bTF
     
     #----------
+    def EnableMarkupLinesTF(self, bTF):
+        
+        self.btnAddMarkupsLine.enabled = bTF
+        self.btnClearLines.enabled = bTF
+        if bTF:
+            self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+            self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
+        else:
+            self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: white }")
+            self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white }")
+
+    #----------
     def GetAllQuestionSetsForNthPage(self, iPageIndex):
         self._xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
         xNodesAllQuestionSets = self.oIOXml.GetChildren(self._xPageNode, 'QuestionSet')
@@ -1441,20 +1453,23 @@ class Session:
                 if self.GetMultipleResponseAllowed() or self.GetQuizResuming():
                     qWidgetQuestionSetForm.setEnabled(True)
                     self.SegmentationTabEnabler(self.GetRequestToEnableSegmentEditorTF())
+                    self.EnableMarkupLinesTF(True)
                 else:
+                    # Multiple Responses are not allowed AND this is not a Quiz Resuming state
                     sSavedResponseCompletionLevel = self.oPageState.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
                     sPageComplete = self.GetPageCompleteAttribute(self.GetCurrentNavigationIndex())
                     if sPageComplete == 'Y':
                         qWidgetQuestionSetForm.setEnabled(False)
                         self.SegmentationTabEnabler(False)
+                        self.EnableMarkupLinesTF(False)
                     else:
                         # page not complete - check for question and segmentation completion
                         qWidgetQuestionSetForm.setEnabled(True)
                         self.SegmentationTabEnabler(self.GetRequestToEnableSegmentEditorTF())
+                        self.EnableMarkupLinesTF(True)  # no maximum number of lines
     
                         if sSavedResponseCompletionLevel == 'AllResponses':
                             qWidgetQuestionSetForm.setEnabled(False)
-    #                         if self.loPageCompletionState[self.GetCurrentPageIndex()].GetSegmentationsCompletedState():
                         if self.oPageState.GetSegmentationsCompletedState():
                             self.SegmentationTabEnabler(False)
                         
