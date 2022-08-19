@@ -617,6 +617,9 @@ class Session:
         self.btnCrosshairsOff.connect('clicked(bool)',self.onCrosshairsOffClicked)
         self.qCrossHairsGrpBoxLayout.addWidget(self.btnCrosshairsOff)
 
+        self.chkSliceIntersections = qt.QCheckBox('Slice Intersections')
+        self.chkSliceIntersections.stateChanged.connect(self.SliceIntersectionsStateChange)
+        self.qCrossHairsGrpBoxLayout.addWidget(self.chkSliceIntersections)
 
         self.tabExtraToolsLayout.addWidget(self.qCrossHairsGrpBox)
 
@@ -977,6 +980,22 @@ class Session:
         slCrosshairNode.SetCrosshairBehavior(1) # offset jump slice
         slCrosshairNode.SetCrosshairMode(0)     # basic intersection
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SliceIntersectionsStateChange(self, int):
+        viewNodeRed = slicer.mrmlScene.GetNodeByID('vtkMRMLSliceCompositeNodeRed')
+        viewNodeGreen = slicer.mrmlScene.GetNodeByID('vtkMRMLSliceCompositeNodeGreen')
+        viewNodeYellow = slicer.mrmlScene.GetNodeByID('vtkMRMLSliceCompositeNodeYellow')
+        
+        if self.chkSliceIntersections.isChecked():
+            viewNodeRed.SetSliceIntersectionVisibility(1)
+            viewNodeGreen.SetSliceIntersectionVisibility(1)
+            viewNodeYellow.SetSliceIntersectionVisibility(1)
+        else:
+            viewNodeRed.SetSliceIntersectionVisibility(0)
+            viewNodeGreen.SetSliceIntersectionVisibility(0)
+            viewNodeYellow.SetSliceIntersectionVisibility(0)
+
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onResetViewClicked(self):
         ''' return viewing nodes to original layout for this page in the xml
