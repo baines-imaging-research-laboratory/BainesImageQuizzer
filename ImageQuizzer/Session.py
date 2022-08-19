@@ -262,6 +262,18 @@ class Session:
         return bTF
     
     #----------
+    def EnableMarkupLinesTF(self, bTF):
+        
+        self.btnAddMarkupsLine.enabled = bTF
+        self.btnClearLines.enabled = bTF
+        if bTF:
+            self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+            self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
+        else:
+            self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: white }")
+            self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white }")
+
+    #----------
     def GetAllQuestionSetsForNthPage(self, iPageIndex):
         self._xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
         xNodesAllQuestionSets = self.oIOXml.GetChildren(self._xPageNode, 'QuestionSet')
@@ -605,6 +617,9 @@ class Session:
         self.btnCrosshairsOff.connect('clicked(bool)',self.onCrosshairsOffClicked)
         self.qCrossHairsGrpBoxLayout.addWidget(self.btnCrosshairsOff)
 
+        self.chkSliceIntersections = qt.QCheckBox('Slice Intersections')
+        self.chkSliceIntersections.stateChanged.connect(self.SliceIntersectionsStateChange)
+        self.qCrossHairsGrpBoxLayout.addWidget(self.chkSliceIntersections)
 
         self.tabExtraToolsLayout.addWidget(self.qCrossHairsGrpBox)
 
@@ -965,6 +980,22 @@ class Session:
         slCrosshairNode.SetCrosshairBehavior(1) # offset jump slice
         slCrosshairNode.SetCrosshairMode(0)     # basic intersection
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SliceIntersectionsStateChange(self, int):
+        viewNodeRed = slicer.mrmlScene.GetNodeByID('vtkMRMLSliceCompositeNodeRed')
+        viewNodeGreen = slicer.mrmlScene.GetNodeByID('vtkMRMLSliceCompositeNodeGreen')
+        viewNodeYellow = slicer.mrmlScene.GetNodeByID('vtkMRMLSliceCompositeNodeYellow')
+        
+        if self.chkSliceIntersections.isChecked():
+            viewNodeRed.SetSliceIntersectionVisibility(1)
+            viewNodeGreen.SetSliceIntersectionVisibility(1)
+            viewNodeYellow.SetSliceIntersectionVisibility(1)
+        else:
+            viewNodeRed.SetSliceIntersectionVisibility(0)
+            viewNodeGreen.SetSliceIntersectionVisibility(0)
+            viewNodeYellow.SetSliceIntersectionVisibility(0)
+
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onResetViewClicked(self):
         ''' return viewing nodes to original layout for this page in the xml
@@ -1441,20 +1472,23 @@ class Session:
                 if self.GetMultipleResponseAllowed() or self.GetQuizResuming():
                     qWidgetQuestionSetForm.setEnabled(True)
                     self.SegmentationTabEnabler(self.GetRequestToEnableSegmentEditorTF())
+                    self.EnableMarkupLinesTF(True)
                 else:
+                    # Multiple Responses are not allowed AND this is not a Quiz Resuming state
                     sSavedResponseCompletionLevel = self.oPageState.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
                     sPageComplete = self.GetPageCompleteAttribute(self.GetCurrentNavigationIndex())
                     if sPageComplete == 'Y':
                         qWidgetQuestionSetForm.setEnabled(False)
                         self.SegmentationTabEnabler(False)
+                        self.EnableMarkupLinesTF(False)
                     else:
                         # page not complete - check for question and segmentation completion
                         qWidgetQuestionSetForm.setEnabled(True)
                         self.SegmentationTabEnabler(self.GetRequestToEnableSegmentEditorTF())
+                        self.EnableMarkupLinesTF(True)  # no maximum number of lines
     
                         if sSavedResponseCompletionLevel == 'AllResponses':
                             qWidgetQuestionSetForm.setEnabled(False)
-    #                         if self.loPageCompletionState[self.GetCurrentPageIndex()].GetSegmentationsCompletedState():
                         if self.oPageState.GetSegmentationsCompletedState():
                             self.SegmentationTabEnabler(False)
                         
