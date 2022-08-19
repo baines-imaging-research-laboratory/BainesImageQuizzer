@@ -1,8 +1,6 @@
 import os, sys
-import warnings
-import vtk, qt, ctk, slicer
-
-from Utilities.UtilsMsgs import *
+# import warnings
+# import vtk, qt, ctk, slicer
 
 import xml.dom.minidom
 
@@ -63,7 +61,6 @@ class UtilsIOXml:
         self._xRootNode = None
         
         self.sTimestampFormat = "%Y%m%d_%H:%M:%S.%f"
-        self.oUtilsMsgs = UtilsMsgs()
         self.lValidSliceWidgets = ['Red', 'Green', 'Yellow', 'Slice4'] # Slice4 for two over two layout
         self.lValidLayouts = ['TwoOverTwo', 'OneUpRedSlice', 'SideBySideRedYellow', 'FourUp']
         self.lValidLayers = ['Foreground', 'Background', 'Segmentation', 'Label']
@@ -75,7 +72,7 @@ class UtilsIOXml:
     
     #----------
     def setupTestEnvironment(self):
-         # check if function is being called from unittesting
+        # check if function is being called from unittesting
         if "testing" in os.environ:
             self.sTestMode = os.environ.get("testing")
         else:
@@ -116,9 +113,6 @@ class UtilsIOXml:
   
                 else:
                     bSuccess = False
-                    if self.sTestMode == "0":
-                        sErrorMsg = "ERROR", "Not a valid quiz - Invalid XML root node:" + sXmlPath
-                        self.oUtilsMsgs.DisplayError(sErrorMsg)
                     raise NameError('Invalid XML root node: %s' % sXmlPath)
  
                 
@@ -127,16 +121,10 @@ class UtilsIOXml:
  
             except:
                 bSuccess = False
-                if self.sTestMode == "0":
-                    sErrorMsg = "ERROR", "Not a valid quiz - Parsing XML file error:" + sXmlPath
-                    self.oUtilsMsgs.DisplayError(sErrorMsg)
                 raise Exception('Parsing XML file error: %s' % sXmlPath)
                  
         else:
             bSuccess = False
-            if self.sTestMode == "0":
-                sErrorMsg = "ERROR", "XML file does not exist:" + sXmlPath
-                self.oUtilsMsgs.DisplayError(sErrorMsg)
             raise Exception('XML file does not exist: %s' % sXmlPath)
          
 
@@ -162,10 +150,6 @@ class UtilsIOXml:
         """
         given an xml node, return the number of children with the specified tagname
         """
-        
-#         iNumChildren = xParentNode.getElementsByTagName(sChildTagName).length
-
-#         iNumChildren = xParentNode.countChildren()
 
         iNumChildren = len(xParentNode.findall(sChildTagName))
         return iNumChildren
@@ -175,8 +159,6 @@ class UtilsIOXml:
         """
         given an xml node, return the child nodes with the specified tagname
         """
-        
-#         xmlChildren = xParentNode.getElementsByTagName(sChildTagName)
 
         lxChildren = xParentNode.findall(sChildTagName)
         
@@ -187,13 +169,8 @@ class UtilsIOXml:
         """
         given an xml node, return the nth child node with the specified tagname
         """
-        
-#         xmlChildNode = xParentNode.getElementsByTagName(sChildTagName)[iIndex]
 
         xmlChildNode = None
-
-        # for elem in parent[indElem].iter(sElemName):
-        #     print(elem.tag, elem.attrib, elem.text)
 
         ind = 0
         for elem in xParentNode.findall(sChildTagName):
@@ -252,12 +229,6 @@ class UtilsIOXml:
     def GetListOfNodeAttributes(self, xNode):
         # given a node, return a list of all its attributes
         
-#         listOfAttributes = []
-#         for index in range(0,xNode.attributes.length):
-#             (name, value) = xNode.attributes.items()[index]
-#             tupAttribute = name, value
-#             listOfAttributes.append(tupAttribute)
-
         # attributes are stored in dictionary format
         listOfAttributes = []
         lNames = list(xNode.attrib.keys())
@@ -277,8 +248,6 @@ class UtilsIOXml:
         # given a node and an attribute name, get the value
         #   if the attribute did not exist, return null string
         
-#         sAttributeValue = xNode.getAttribute(sAttributeName)
-
         try:
             dictAttribs = xNode.attrib
             sAttributeValue = dictAttribs[sAttributeName]
@@ -317,11 +286,6 @@ class UtilsIOXml:
         elem = xParentNode.makeelement(sTagName, dictAttrib)
         elem.text = sText
         xParentNode.append(elem)
-
-#         elem = etree.Element(sTagName)
-#         elem.text = sText
-#         elem.attrib = dictAttrib
-#         xParentNode.insert(1, elem)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def InsertElementBeforeIndex(self, xParentNode, xElement, iInd):
