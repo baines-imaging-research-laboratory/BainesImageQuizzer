@@ -281,6 +281,26 @@ class UtilsIOXml:
         return sData
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CreateParentNode(self, sTagName, dictAttrib):
+        
+        xNode = etree.Element(sTagName)
+        
+        for attrib, value in dictAttrib.items():
+            xNode.set(attrib, value)
+        
+        return xNode
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CreateSubNode(self, xParentNode, sTagName, dictAttrib):
+        
+        xSubNode = etree.SubElement(xParentNode, sTagName)
+        
+        for attrib, value in dictAttrib.items():
+            xSubNode.set(attrib, value)
+        
+        return xSubNode
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddElement(self, xParentNode, sTagName, sText, dictAttrib):
         
         elem = xParentNode.makeelement(sTagName, dictAttrib)
