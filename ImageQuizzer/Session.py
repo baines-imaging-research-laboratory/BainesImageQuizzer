@@ -1769,52 +1769,53 @@ class Session:
         bAddedNewElement = False
         
         try:
-            lsDestOrientNode = []
-            llsNodeProperties = []
-            
-            if not self.bNPlanesViewingMode:
-                # quizzer is in the default view mode - get state from assigned widgets
-                for oImageNode in self.oImageView.GetImageViewList():
-                    if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
-                        lsDestOrientNode = [oImageNode.sDestination, oImageNode.sOrientation, oImageNode]
-                        llsNodeProperties.append(lsDestOrientNode)
-            else:
-                # quizzer was in alternate viewing mode - set up the list to hold current view's orientation, destination and image node
-                for oImageNode in self.loCurrentXMLImageViewNodes:
-                    
-                    for i in range(len(self.llsNPlanesOrientDest)):
-                        llsNodeProperties.append([self.llsNPlanesOrientDest[i][1], self.llsNPlanesOrientDest[i][0], oImageNode])
-            
-            
-            # for each image, capture the slice, window and level settings of the current mode being displayed 
-            #        before changing the selection or resetting to default
-            #        (eg. what was the state for the images in 1-Plane Axial view before changing to default view)
-            for idx in range(len(llsNodeProperties)):
-                sWidgetName = llsNodeProperties[idx][0]
-                sOrientation = llsNodeProperties[idx][1]
-                oImageNode = llsNodeProperties[idx][2]
-
-                if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
-    
-                    dictAttribState = self.oImageView.GetViewState(oImageNode.slNode, sWidgetName)
-                    dictViewModeAttributes = {"Orientation": sOrientation, "Destination": sWidgetName, "ViewingMode": self.sViewingMode}
-                    dictAttribState.update(dictViewModeAttributes)
-                    
-                    if oImageNode.sImageType == 'VolumeSequence':
-                        slAssociatedSequenceBrowserNode = oImageNode.GetAssociatedSequenceBrowserNode()
-                        if slAssociatedSequenceBrowserNode != None:
-                            sFrameNumber = str(slAssociatedSequenceBrowserNode.GetSelectedItemNumber())
-                            dictFrameAttribute = {'Frame':sFrameNumber}
-                            dictAttribState.update(dictFrameAttribute)
-    
-                    # check if xml State element exists
-                    xImage = oImageNode.GetXmlImageElement()
-                    # add image state element (tagged with response time)
-                    self.AddImageStateElement(xImage, dictAttribState)
-                    bAddedNewElement = True     # at least one element added
+            if not self.GetQuizComplete():
+                lsDestOrientNode = []
+                llsNodeProperties = []
+                
+                if not self.bNPlanesViewingMode:
+                    # quizzer is in the default view mode - get state from assigned widgets
+                    for oImageNode in self.oImageView.GetImageViewList():
+                        if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
+                            lsDestOrientNode = [oImageNode.sDestination, oImageNode.sOrientation, oImageNode]
+                            llsNodeProperties.append(lsDestOrientNode)
+                else:
+                    # quizzer was in alternate viewing mode - set up the list to hold current view's orientation, destination and image node
+                    for oImageNode in self.loCurrentXMLImageViewNodes:
                         
-            if bAddedNewElement:
-                self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+                        for i in range(len(self.llsNPlanesOrientDest)):
+                            llsNodeProperties.append([self.llsNPlanesOrientDest[i][1], self.llsNPlanesOrientDest[i][0], oImageNode])
+                
+                
+                # for each image, capture the slice, window and level settings of the current mode being displayed 
+                #        before changing the selection or resetting to default
+                #        (eg. what was the state for the images in 1-Plane Axial view before changing to default view)
+                for idx in range(len(llsNodeProperties)):
+                    sWidgetName = llsNodeProperties[idx][0]
+                    sOrientation = llsNodeProperties[idx][1]
+                    oImageNode = llsNodeProperties[idx][2]
+    
+                    if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
+        
+                        dictAttribState = self.oImageView.GetViewState(oImageNode.slNode, sWidgetName)
+                        dictViewModeAttributes = {"Orientation": sOrientation, "Destination": sWidgetName, "ViewingMode": self.sViewingMode}
+                        dictAttribState.update(dictViewModeAttributes)
+                        
+                        if oImageNode.sImageType == 'VolumeSequence':
+                            slAssociatedSequenceBrowserNode = oImageNode.GetAssociatedSequenceBrowserNode()
+                            if slAssociatedSequenceBrowserNode != None:
+                                sFrameNumber = str(slAssociatedSequenceBrowserNode.GetSelectedItemNumber())
+                                dictFrameAttribute = {'Frame':sFrameNumber}
+                                dictAttribState.update(dictFrameAttribute)
+        
+                        # check if xml State element exists
+                        xImage = oImageNode.GetXmlImageElement()
+                        # add image state element (tagged with response time)
+                        self.AddImageStateElement(xImage, dictAttribState)
+                        bAddedNewElement = True     # at least one element added
+                            
+                if bAddedNewElement:
+                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
     
         except:
             bSuccess = False
@@ -2318,9 +2319,6 @@ class Session:
 
         # the last index in the composite navigation indices list was reached
         # the quiz was completed - exit
-        
-        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-        self.SetQuizComplete(True)
         
         self.oUtilsMsgs.DisplayInfo('Quiz Complete - Exiting')
         slicer.util.exit(status=EXIT_SUCCESS)
