@@ -1,9 +1,9 @@
 <Session>
 	<Page ID="XXXXX" Descriptor="xx" AllowMultipleResponse="xx">
 		<Image Type="XXXXX" ID="XXXXX" RotateToAcquisition="xx" >
-			<Destination>xx</Destination>
+			<DefaultDestination>xx</DefaultDestination>
 			<Layer>xx</Layer>
-			<Orientation>xx</Orientation>
+			<DefaultOrientation>xx</DefaultOrientation>
 			<Path>XXXXX</Path>
 		</Image>
 		<QuestionSet ID="XXXXX" Descriptor="xx" AllowMultipleResponse="x">
