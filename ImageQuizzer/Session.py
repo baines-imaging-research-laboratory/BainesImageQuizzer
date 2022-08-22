@@ -1194,8 +1194,9 @@ class Session:
                 else:
                     self.SetupPageState(self.GetCurrentPageIndex())     # create new state object
                     
-                self.AddSessionLoginTimestamp()
-                self.AddUserNameAttribute()
+                if not self.GetQuizComplete():
+                    self.AddSessionLoginTimestamp()
+                    self.AddUserNameAttribute()
 
         except:
             iPage = self.GetCurrentPageIndex() + 1
@@ -2226,7 +2227,7 @@ class Session:
                 self.SetupPageState(iPageIndex)
                 
             else:
-                self.ExitOnQuizComplete("This quiz was completed. Exiting")
+                self.ExitOnQuizComplete()
         else:        
     
             # loop through composite navigation index to search for the first page without a "PageComplete='Y'"
@@ -2313,7 +2314,7 @@ class Session:
         return dtLastTimestamp
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ExitOnQuizComplete(self, sMsg):
+    def ExitOnQuizComplete(self):
 
         # the last index in the composite navigation indices list was reached
         # the quiz was completed - exit
