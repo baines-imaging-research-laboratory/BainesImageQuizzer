@@ -750,7 +750,11 @@ class Session:
             self._btnNext.enabled = True
             self._btnPrevious.enabled = True
 
-            
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def DisableButtons(self):
+        self._btnNext.enabled = False
+        self._btnPrevious.enabled = False
+        self._btnRepeat.enabled = False
 
 
 
@@ -776,6 +780,7 @@ class Session:
             bSuccess = True
             sMsg = ''
             
+            self.DisableButtons()    
             if self.sViewingMode != 'Default':
                 self.onResetViewClicked()
     
@@ -814,8 +819,6 @@ class Session:
                     self.progress.setValue(self.GetCurrentNavigationIndex())
                     self.InitializeImageDisplayOrderIndices()
                     
-                    self.EnableButtons()
-           
                     if bNewPage:
                         self.SetupPageState(self.GetCurrentPageIndex())
                     self.DisplayQuizLayout()
@@ -825,6 +828,8 @@ class Session:
                     if sMsg != '':
                         self.oUtilsMsgs.DisplayWarning( sMsg )
 
+                self.EnableButtons()
+                
         except:
             iPage = self.GetCurrentPageIndex() + 1
             tb = traceback.format_exc()
@@ -838,7 +843,8 @@ class Session:
         try:
             bSuccess = True
             sMsg = ''
-    
+
+            self.DisableButtons()    
             if self.sViewingMode != 'Default':
                 self.onResetViewClicked()
                 
@@ -864,8 +870,6 @@ class Session:
                     # reset to beginning
                     self.SetCurrentNavigationIndex( 0 )
                 
-                self.EnableButtons()
-                
                 self.AdjustToCurrentQuestionSet()
                 
                 if bNewPage:
@@ -877,6 +881,9 @@ class Session:
             else:
                 if sMsg != '':
                     self.oUtilsMsgs.DisplayWarning( sMsg )
+
+            self.EnableButtons()
+
 
         except:
             iPage = self.GetCurrentPageIndex() + 1
@@ -1055,6 +1062,7 @@ class Session:
                 bSuccess = True
                 sMsg = ''
 
+                self.DisableButtons()    
                 bSuccess, sMsg = self.PerformSave('NextBtn')
                 if bSuccess:
                     indXmlPageToRepeat = self.GetCurrentPageIndex()
@@ -1093,7 +1101,6 @@ class Session:
                     self.progress.setMaximum(len(self.GetNavigationList()))
                     self.progress.setValue(self.GetCurrentNavigationIndex())
                     
-                    self.EnableButtons()
                     self.SetupPageState(self.GetCurrentPageIndex())
                     self.DisplayQuizLayout()
                     self.DisplayImageLayout()
@@ -1102,6 +1109,8 @@ class Session:
                     if sMsg != '':
                         self.oUtilsMsgs.DisplayWarning( sMsg )
     
+                self.EnableButtons()
+                
             except:
                 iPage = self.GetCurrentPageIndex() + 1
                 tb = traceback.format_exc()
@@ -1183,7 +1192,6 @@ class Session:
                 self.progress.setMaximum(len(self.GetNavigationList()))
                 self.progress.setValue(self.GetCurrentNavigationIndex())
         
-                self.EnableButtons()
                 self.DisplayQuizLayout()
                 self.DisplayImageLayout()
     
@@ -1197,6 +1205,8 @@ class Session:
                 if not self.GetQuizComplete():
                     self.AddSessionLoginTimestamp()
                     self.AddUserNameAttribute()
+                    
+                self.EnableButtons()
 
         except:
             iPage = self.GetCurrentPageIndex() + 1
