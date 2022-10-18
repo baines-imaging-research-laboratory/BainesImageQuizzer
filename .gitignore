@@ -10,3 +10,20 @@ ImageQuizzer/__pycache__/
 ImageQuizzer/ImageQuizzer\.templateOrig
 
 QuizProgress\.JPG
+
+\.idea/
+/.metadata/
+
+ImageQuizzer/Testing/Python/__pycache__/
+
+ImageQuizzer/Users/
+
+ImageQuizzer/ImageQuizzerData/Users/
+
+ImageQuizzer/ImageQuizzerData/SlicerDICOMDatabase/
+*.cproject
+ImageQuizzer/.vs/
+ImageQuizzer/out/
+ImageQuizzer/Testing/Python/out/
+ImageQuizzerShutdown.bat
+ImageQuizzer/Resources/ColorFiles/QuizzerROIColorTable.txt

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Session>
+	<Targets>
+		<Target name="Patient1" descriptor="PlanningCT" format="nrrd" type="series">
+		</Target>
+		<Target name="Patient1" descriptor="Follow-up 1" format="nrrd" type="series">
+		</Target>
+	</Targets>
+</Session>
