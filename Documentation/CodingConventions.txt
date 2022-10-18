@@ -8,12 +8,16 @@ dt: datetime
 l: list
 o: class object
 
+ls: list of strings
+li: list of integers
+lls: list of list of strings
+
+dict: dictionary
+
 
 x:  variable associated with xml
 sl: variable associated with Slicer functionality
 q:  variable associated with Python Qt
-
-
 
 Examples:
 

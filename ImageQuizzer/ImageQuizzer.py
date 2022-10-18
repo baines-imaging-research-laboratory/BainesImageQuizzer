@@ -5,8 +5,8 @@ from Session import *
 from pip._vendor.distlib._backport.shutil import copyfile
 from slicer.util import findChild
 
-from Utilities import *
-from UtilsIO import *
+from Utilities.UtilsMsgs import *
+from Utilities.UtilsFilesIO import *
 
 import importlib.util
 
@@ -56,11 +56,25 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         sModuleName = 'ImageQuizzer'
         sSourceDirForQuiz = 'Resources/XML'
+        
 
         self.oUtilsMsgs = UtilsMsgs()
-        self.oFilesIO = UtilsIO()
+        self.oFilesIO = UtilsFilesIO()
         self.oFilesIO.SetModuleDirs(sModuleName, sSourceDirForQuiz)
         
+        # previous and current release dates
+        # Note: Version 1.0 should be used with Slicer v4.11.20200930
+        # self.sVersion = "Image Quizzer   v1.0 "  #  Release Date: May 10, 2022
+        # Note: Version 2.0 should be used with Slicer v4.11.2021022
+        self.sVersion = "Image Quizzer v2.0.0"  # Release Date: TBD (3rd quarter 2022)
+
+        sSlicerVersion = slicer.app.applicationVersion
+        if sSlicerVersion != '4.11.20210226':
+            sMsg = 'This version of Image Quizzer requires 3D Slicer v4.11.20210226' +\
+                    '\n You are running 3D Slicer v' + sSlicerVersion
+            self.oUtilsMsgs.DisplayError(sMsg)
+
+
 #         # capture Slicer's default database location
 #         self.oFilesIO.SetDefaultDatabaseDir(slicer.dicomDatabase.databaseDirectory)
 
@@ -145,6 +159,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.qUserLoginWidget = qt.QWidget()
         self.qUserLoginWidget.setLayout(qUserLoginLayout)
         self.qUserLoginWidget.setWindowModality(2)
+        self.qUserLoginWidget.setWindowTitle(self.sVersion)
          
 
         qTitleGroupBox = qt.QGroupBox()
@@ -177,18 +192,18 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         # Add vertical spacer
         qUserLoginLayout.addSpacing(10)
         
-        self.qUserGrpBox = qt.QGroupBox()
-        self.qUserGrpBox.setTitle('User name')
-        self.qUserGrpBoxLayout = qt.QVBoxLayout()
-        self.qUserGrpBox.setLayout(self.qUserGrpBoxLayout)
-
-        self.lineGetUserName = qt.QLineEdit()
-        self.lineGetUserName.setText(os.getlogin())
-        self.lineGetUserName.setReadOnly(True)
-        self.qUserGrpBoxLayout.addWidget(self.lineGetUserName)
-        self.qUserGrpBox.setEnabled(True)
-        
-        qUserLoginLayout.addWidget(self.qUserGrpBox)
+#         self.qUserGrpBox = qt.QGroupBox()
+#         self.qUserGrpBox.setTitle('User name')
+#         self.qUserGrpBoxLayout = qt.QVBoxLayout()
+#         self.qUserGrpBox.setLayout(self.qUserGrpBoxLayout)
+# 
+#         self.comboGetUserName = qt.QComboBox()
+#         self.comboGetUserName.addItem(os.getlogin())
+#         self.qUserGrpBoxLayout.addWidget(self.comboGetUserName)
+#         self.qUserGrpBox.setEnabled(True)
+#         
+#         
+#         qUserLoginLayout.addWidget(self.qUserGrpBox)
 
         
         ################################
@@ -215,6 +230,21 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
  
         self.qLblDataLocation = qt.QLabel('Selected data location:')
         qDBGrpBoxLayout.addWidget(self.qLblDataLocation)
+
+
+        qDBGrpBoxLayout.addSpacing(10)
+        self.qUserGrpBox = qt.QGroupBox()
+        self.qUserGrpBox.setTitle('User name')
+        self.qUserGrpBoxLayout = qt.QVBoxLayout()
+        self.qUserGrpBox.setLayout(self.qUserGrpBoxLayout)
+
+        self.comboGetUserName = qt.QComboBox()
+        self.comboGetUserName.addItem(os.getlogin())
+        self.qUserGrpBoxLayout.addWidget(self.comboGetUserName)
+        self.qUserGrpBox.setEnabled(True)
+        
+        
+        qDBGrpBoxLayout.addWidget(self.qUserGrpBox)
 
         
         # Add vertical spacer
@@ -274,13 +304,21 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         # File Picker
         self.qDBLocationFileDialog = qt.QFileDialog()
         sDefaultWorkingDir = os.path.expanduser('~\Documents')
-        sDataLocation = self.qDBLocationFileDialog.getExistingDirectory(None, "Select Directory", sDefaultWorkingDir, qt.QFileDialog.ShowDirsOnly )
+        sDataLocation = self.qDBLocationFileDialog.getExistingDirectory(None, "SELECT DIRECTORY FOR IMAGE DATABASE", sDefaultWorkingDir, qt.QFileDialog.ShowDirsOnly )
         
         if sDataLocation != '':
             self.oFilesIO.SetupUserAndDataDirs(sDataLocation)
             
             self.qLblDataLocation.setText(self.oFilesIO.GetDataParentDir())
             self.qQuizSelectionGrpBox.setEnabled(True)
+            
+            # populate user name list in combo box
+            sUsersParentDir = self.oFilesIO.GetUsersParentDir()
+            lSubFolders = [f.name for f in os.scandir(sUsersParentDir) if f.is_dir()]
+            if os.getlogin() in lSubFolders:
+                lSubFolders.remove(os.getlogin())
+            self.comboGetUserName.addItems(lSubFolders)
+            
         else:
             sMsg = 'No location was selected for image database'
             self.oUtilsMsgs.DisplayWarning(sMsg)
@@ -297,7 +335,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
  
         # get quiz filename
         self.quizInputFileDialog = qt.QFileDialog()
-        sSelectedQuizPath = self.quizInputFileDialog.getOpenFileName(self.qUserLoginWidget, "Open File", self.oFilesIO.GetXmlQuizDir(), "XML files (*.xml)" )
+        sSelectedQuizPath = self.quizInputFileDialog.getOpenFileName(self.qUserLoginWidget, "SELECT QUIZ FILE", self.oFilesIO.GetXmlQuizDir(), "XML files (*.xml)" )
  
         # check that file was selected
         if not sSelectedQuizPath:
@@ -329,7 +367,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
         else:
             
-            self.oFilesIO.SetUsernameAndDir(self.lineGetUserName.text)
+            self.oFilesIO.SetUsernameAndDir(self.comboGetUserName.currentText)
 
             # check for errors in quiz xml layout before populating the user response folder
             bSuccess, sMsg = self.oFilesIO.ValidateQuiz()

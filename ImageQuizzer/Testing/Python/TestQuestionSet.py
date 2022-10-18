@@ -198,6 +198,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
                 oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
                 
                 oQuestion._lsOptions_setter(lsOptions)
+                oQuestion._sGrpBoxLayout_setter('Vertical')
 
                 
                 bTestResult, qWidgetBox = oQuestion.BuildQuestion()
@@ -225,6 +226,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         sQuestionDescriptor = sGroupTitle + ' ...Test No Errors for Radio Buttons'
         oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
         oQuestion._lsOptions_setter(lsOptions)
+        oQuestion._sGrpBoxLayout_setter('Vertical')
 
         bTestResult, qGrpBox = oQuestion.BuildQuestion()
         slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
@@ -247,6 +249,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         sQuestionDescriptor = sGroupTitle + ' ...Test No Errors for Check Boxes'
         oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
         oQuestion._lsOptions_setter(lsOptions)
+        oQuestion._sGrpBoxLayout_setter('Vertical')
         
         bTestResult, qGrpBox = oQuestion.BuildQuestion()
         slicer.modules.TestQuestionSetWidget.groupsLayout.addWidget(qGrpBox)
@@ -350,6 +353,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
                     sQuestionDescriptor = sGroupTitle + '...' + self.lsClassNames[i]
                     oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
                     oQuestion._lsOptions_setter(lsOptions)
+                    oQuestion._sGrpBoxLayout_setter('Vertical')
 
                     
                     bFnResultSuccess, qGrpBox = oQuestion.BuildQuestion() 
@@ -474,6 +478,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         sQuestionDescriptor = sGroupTitle + ' ...Test Capture Reponse for Radio Buttons'
         oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
         oQuestion._lsOptions_setter(lsOptions)
+        oQuestion._sGrpBoxLayout_setter('Horizontal')
         
         
         bBuildResult, qGrpBox = oQuestion.BuildQuestion()
@@ -513,6 +518,7 @@ class TestQuestionSetTest(ScriptedLoadableModuleTest):
         sQuestionDescriptor = sGroupTitle + ' ...Test Capture Reponse for Check Boxes'
         oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
         oQuestion._lsOptions_setter(lsOptions)
+        oQuestion._sGrpBoxLayout_setter('Vertical')
         
         
         bBuildResult, qGrpBox = oQuestion.BuildQuestion()

@@ -1,27 +1,27 @@
 <Session RandomizePageGroups="Y">
 	<Page ID="Patient1" Descriptor="PlanningCT" PageGroup="1a" EnableSegmentEditor="N">
 		<Image Type="Volume" ID="Fixed Volume" LabelMapID="Brain-fixed-contour">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
 		<Image ID="Unregistered" Type="Volume" Opacity="15">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Foreground</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_moving.nii</Path>
 		</Image>
 		<Image Type="Volume" ID="Fixed Volume">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Sagittal</Orientation>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="Fixed Volume">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
 		<QuestionSet ID="QS-Intro" Descriptor="Introduction to Quiz">

@@ -1,45 +1,45 @@
 <Session ROIColorFile="PET_PSMA">
-	<Page ID="Patient1" Descriptor="PET PSMA Study" EnableSegmentEditor="Y">
+	<Page ID="Patient1" Descriptor="PET PSMA Study" EnableSegmentEditor="Y" Layout="TwoOverTwo">
 		<Image DicomRead="Y" Type="Volume" ID="CT" RotateToAcquisition="Y">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\PETCTFusion\CT1\26556672</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CT" RotateToAcquisition="Y">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Sagittal</Orientation>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\PETCTFusion\CT1\26556672</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CT" RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\PETCTFusion\CT1\26556672</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Foreground</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\PETCTFusion\PET1\26558596</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Foreground</Layer>
-			<Orientation>Sagittal</Orientation>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\PETCTFusion\PET1\26558596</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Foreground</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\PETCTFusion\PET1\26558596</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
-			<Destination>Slice4</Destination>
+			<DefaultDestination>Slice4</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\PETCTFusion\PET1\26558596</Path>
 		</Image>
 		<QuestionSet ID="PET PSMA Study" Descriptor="">
@@ -49,47 +49,47 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient2" Descriptor="PET PSMA Study" EnableSegmentEditor="Y">
+	<Page ID="Patient2" Descriptor="PET PSMA Study" EnableSegmentEditor="Y" Layout="TwoOverTwo">
 		<Image DicomRead="Y" Type="Volume" ID="CT" RotateToAcquisition="Y">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\PETCTFusion\CT2\26552420</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CT" RotateToAcquisition="Y">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Sagittal</Orientation>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\PETCTFusion\CT2\26552420</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CT" RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\PETCTFusion\CT2\26552420</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Foreground</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\PETCTFusion\PET2\26554163</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Foreground</Layer>
-			<Orientation>Sagittal</Orientation>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\PETCTFusion\PET2\26554163</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat'>
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Foreground</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\PETCTFusion\PET2\26554163</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
-			<Destination>Slice4</Destination>
+			<DefaultDestination>Slice4</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\PETCTFusion\PET2\26554163</Path>
 		</Image>
 		<QuestionSet ID="PET PSMA Study" Descriptor="">

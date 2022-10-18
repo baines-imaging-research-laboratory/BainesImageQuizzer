@@ -1,21 +1,21 @@
 <Session ROIColorFile="ROIColors_Brain">
 	<Page ID="Patient 1" Descriptor="Contouring Challenge" AllowMultipleResponse="Y"  EnableSegmentEditor="Y" SegmentRequiredOnAnyImage="Y">
 		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" LabelMapID="MR_Contour">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="MR" RotateToAcquisition="Y">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Sagittal</Orientation>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="MR" RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
 		<QuestionSet ID="Contouring Challenge" Descriptor="">
@@ -39,28 +39,40 @@
 	</Page>
 	<Page ID="Patient 1" Descriptor="Contouring Challenge"  EnableSegmentEditor="Y" SegmentRequiredOnAnyImage="Y">
 		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" DisplayLabelMapID="MR_Contour">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" DisplayLabelMapID="MR_Contour">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Sagittal</Orientation>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" DisplayLabelMapID="MR_Contour">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
 		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Segmentation</Layer>
-			<Orientation>Axial</Orientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1-GoldStandard.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode='All'></ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1-GoldStandard.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode='All'></ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1-GoldStandard.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode='All'></ROIs>
 		</Image>
 		<QuestionSet ID="Gold Standard Display" Descriptor="">
 			<Question Type="InfoBox" Descriptor="Compare to gold standard">

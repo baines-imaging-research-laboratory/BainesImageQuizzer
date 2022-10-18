@@ -1,0 +1,131 @@
+<Session>
+	<Page ID="Mixed" Descriptor="BG-FG Testing" LinkViews="N" EnableSegmentEditor="Y" Layout="TwoOverTwo">
+		<Image ID="Y-BG-1_T2-N4" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID='T2-contour'>
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\t2ax-N4.nrrd</Path>
+		</Image>
+		<Image ID="Y-FG-2_K-Trans" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Foreground</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\ktrans.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="RG-BG-1_Fixed Volume" LabelMapID="Brain-fixed-contour" SegmentRequired="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
+		</Image>
+		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\Brain\Segmentation.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All"></ROIs>
+		</Image>
+		<Image Type="LabelMap" ID="Mask" RotateToAcquisition="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Label</Layer>
+			<Path>ImageVolumes\Brain\Fixed Volume-Labelmap.nrrd</Path>
+		</Image>
+		<Image ID="RG-FG-2_Moving Volume" Type="Volume">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Foreground</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nii</Path>
+		</Image>
+		<Image Type="Volume" ID="4-FG-1_PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+			<DefaultDestination>Slice4</DefaultDestination>
+			<Layer>Foreground</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\PETCTFusion\PET1.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="4-BG-2_CT" RotateToAcquisition="Y">
+			<DefaultDestination>Slice4</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\PETCTFusion\CT1.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="RG-BG-1_Fixed Volume" LabelMapID="Brain-fixed-contour" SegmentRequired="Y">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
+		</Image>
+		<Image ID="RG-FG-2_Moving Volume" Type="Volume">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Foreground</Layer>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nii</Path>
+		</Image>
+		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\Brain\Segmentation.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All"></ROIs>
+		</Image>
+		<Image Type="LabelMap" ID="Mask" RotateToAcquisition="Y">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Label</Layer>
+			<Path>ImageVolumes\Brain\Fixed Volume-Labelmap.nrrd</Path>
+		</Image>
+	</Page>
+	<Page ID="Mixed" Descriptor="BG-FG Testing" LinkViews="N" EnableSegmentEditor="Y" Layout="TwoOverTwo">
+		<Image ID="Y-BG-1_T2-N4" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID='T2-contour'>
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\t2ax-N4.nrrd</Path>
+		</Image>
+		<Image ID="Y-FG-2_K-Trans" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Foreground</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\ktrans.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="R-BG-1_Fixed Volume" LabelMapID="Brain-fixed-contour" SegmentRequired="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
+		</Image>
+		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\Brain\Segmentation.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All"></ROIs>
+		</Image>
+		<Image ID="R-FG-2_Moving Volume" Type="Volume">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Foreground</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nii</Path>
+		</Image>
+		<Image Type="Volume" ID="4-FG-1_PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
+			<DefaultDestination>Slice4</DefaultDestination>
+			<Layer>Foreground</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\PETCTFusion\PET1.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="4-BG-2_CT" RotateToAcquisition="Y">
+			<DefaultDestination>Slice4</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\PETCTFusion\CT1.nrrd</Path>
+		</Image>
+		<Image DicomRead="Y" Type="Volume" ID="G-FG-1_RTDose" ColorTable="Dose_Color_Table" Opacity=".3">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Foreground</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\TinyRtStudy\dose_1.2.826.0.1.3680043.8.274.1.1.6549911257.77961.3133305374.424.dcm</Path>
+		</Image>
+		<Image DicomRead="Y" Type="Volume" ID="G-BG-2_CTSeries">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+		</Image>
+	</Page>
+
+</Session>
