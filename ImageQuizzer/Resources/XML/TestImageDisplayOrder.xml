@@ -12,7 +12,7 @@
 			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\ktrans.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="RG-BG-1_Fixed Volume" LabelMapID="Brain-fixed-contour" SegmentRequired="Y">
+		<Image Type="Volume" ID="RG-BG-1_Fixed Volume" LabelMapID="Brain-fixed-contour" SegmentRequired="Y" InitialSliceOffset="62.36">
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
@@ -29,7 +29,7 @@
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\Brain\Fixed Volume-Labelmap.nrrd</Path>
 		</Image>
-		<Image ID="RG-FG-2_Moving Volume" Type="Volume">
+		<Image ID="RG-FG-2_Moving Volume" Type="Volume" InitialSliceOffset="-55.2">
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Foreground</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
@@ -47,13 +47,13 @@
 			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\PETCTFusion\CT1.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="RG-BG-1_Fixed Volume" LabelMapID="Brain-fixed-contour" SegmentRequired="Y">
+		<Image Type="Volume" ID="RG-BG-1_Fixed Volume" LabelMapID="Brain-fixed-contour" SegmentRequired="Y" InitialSliceOffset="-51.01">
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
-		<Image ID="RG-FG-2_Moving Volume" Type="Volume">
+		<Image ID="RG-FG-2_Moving Volume" Type="Volume" InitialSliceOffset="114.7">
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Foreground</Layer>
 			<DefaultOrientation>Sagittal</DefaultOrientation>

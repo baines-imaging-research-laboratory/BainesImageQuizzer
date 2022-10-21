@@ -57,6 +57,7 @@
 		<xs:attribute name="Opacity" type="boundedFloatType" />
 		<xs:attribute name="SegmentRequired" type="yesnoType" default="N"/>
 		<xs:attribute name="MinMarkupLinesRequired" type="xs:positiveInteger"/>
+		<xs:attribute name="InitialSliceOffset" type="xs:float"/>
 	</xs:complexType>
 </xs:element>
 

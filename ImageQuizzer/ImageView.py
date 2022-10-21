@@ -210,8 +210,11 @@ class ImageView:
                         slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
                         slWidget.mrmlSliceNode().RotateToVolumePlane(slVolumeNode)
                         self.RotateSliceToImage(oViewNode.sDestination)
-    
-                    slWidget.fitSliceToBackground()
+                        if oViewNode.fInitialSliceOffset != None:
+                            slWindowLogic.SetSliceOffset(oViewNode.fInitialSliceOffset)
+                        else:
+                            slWidget.fitSliceToBackground()
+
                     oViewNode.AssignColorTable()
     
                     # turn on label map volume if a label map was loaded for the background image                
@@ -231,6 +234,8 @@ class ImageView:
                     slWidgetController.setForegroundOpacity(oViewNode.fOpacity)
                     if oViewNode.bRotateToAcquisition == True:
                         self.RotateSliceToImage(oViewNode.sDestination)
+                        if oViewNode.fInitialSliceOffset != None:
+                            slWindowLogic.SetSliceOffset(oViewNode.fInitialSliceOffset)
     
                     oViewNode.AssignColorTable()
     
@@ -524,6 +529,7 @@ class ViewNodeBase:
         self.sColorTableName = ''
         self.bRotateToAcquisition = False
         self.fOpacity = 0.5
+        self.fInitialSliceOffset = None
         
         self.slQuizLabelMapNode = None
         self.lsRoiList = []
@@ -597,7 +603,13 @@ class ViewNodeBase:
             self.fOpacity = float(sOpacity)
         else:
             self.fOpacity = 0.5 # NOTE: you must assign the default here - it is not inherited
-    
+            
+        sInitialSliceOffset = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'InitialSliceOffset')
+        if sInitialSliceOffset != '':
+            self.fInitialSliceOffset = float(sInitialSliceOffset)
+        else:
+            self.fInitialSliceOffset = None
+            
         self.sNodeName =  self.GetPageID() + '_' + sImageID
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

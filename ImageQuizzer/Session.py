@@ -1850,6 +1850,7 @@ class Session:
         lsRequiredOrientations = []
         dictNPlanesOrientDest = {}
         lBackgroundWidgetsToReset = []
+        dictBackgroundWidgetsToResetWithOffsets = {}
         
         if not self.bNPlanesViewingMode:
             loImageNodes = self.oImageView.GetImageViewList()
@@ -1911,22 +1912,33 @@ class Session:
                             oImageNode.SetImageState(dictImageState, sDestinationOverride)
                     else:
                         # no state element was found 
-                        # capture the destination if this was a background layer
+                        # capture the destination and initial slice offset if this was a background layer
                         if oImageNode.sViewLayer == 'Background':
                             if not self.bNPlanesViewingMode:
                                 lBackgroundWidgetsToReset.append(oImageNode.sDestination)
+                                dictBackgroundWidgetsToResetWithOffsets[oImageNode.sDestination] = oImageNode.fInitialSliceOffset
                             else:
                                 lBackgroundWidgetsToReset.append(dictNPlanesOrientDest[sRequiredOrientation])
+                                dictBackgroundWidgetsToResetWithOffsets[dictNPlanesOrientDest[sRequiredOrientation]] = oImageNode.fInitialSliceOffset
                                             
-            # in the special case where no previous state was found for a background slice,
-            #    reset the widget to the center field of view
-            #    - this is necessary because a foreground layer for this widget may have been
-            #      processed after the background layer and changed the slice offset
-            #    (This is particularly important for Background layers that have an image with 
+            # In the special case where no previous state was found for a background slice,
+            #    reset the widget to the center field of view or to the initial slice offset (if this
+            #    was set in the xml for the image)
+            #    - this is necessary because a foreground layer for this widget may be
+            #      processed after the background layer (depending on xml order) and changed the slice offset
+            #    NOTE: (This is particularly important for Background layers that have an image with 
             #     only one slice (eg. histology) )
+            #    NOTE: This code is inside the loop processing each image node. If a foreground node 
+            #        is processed after a background node, all the background widgets need to be reset
+            #        to the initially set slice offset (if defined) or fit to background 
             for sWidgetDestination in lBackgroundWidgetsToReset:
                 slWidget = slicer.app.layoutManager().sliceWidget(sWidgetDestination)
-                slWidget.fitSliceToBackground()
+                slWindowLogic = slWidget.sliceLogic()
+                if dictBackgroundWidgetsToResetWithOffsets[sWidgetDestination] != None :
+                    slWindowLogic.SetSliceOffset(dictBackgroundWidgetsToResetWithOffsets[sWidgetDestination])
+                else:
+                    slWidget.fitSliceToBackground() # default
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetStateElementsForMatchingImagePath(self, sCurrentImagePath):
         

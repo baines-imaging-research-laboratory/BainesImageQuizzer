@@ -1,18 +1,18 @@
 <Session ROIColorFile="ROIColors_Brain">
 	<Page ID="Patient 1" Descriptor="Contouring Challenge" AllowMultipleResponse="Y"  EnableSegmentEditor="Y" SegmentRequiredOnAnyImage="Y">
-		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" LabelMapID="MR_Contour">
+		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" LabelMapID="MR_Contour" InitialSliceOffset="25">
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="MR" RotateToAcquisition="Y">
+		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" InitialSliceOffset="0.468">
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="MR" RotateToAcquisition="Y">
+		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" InitialSliceOffset="35.15">
 			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Coronal</DefaultOrientation>
