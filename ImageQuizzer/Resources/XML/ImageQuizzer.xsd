@@ -12,6 +12,7 @@
 		</xs:sequence>
 		<xs:attribute name="ROIColorFile" type="xs:string" />
 		<xs:attribute name="RandomizePageGroups" type="yesnoType" default="N" />
+		<xs:attribute name="ContourVisibility" type="contourVisibilityType"/>
 	</xs:complexType>
 </xs:element>
 
@@ -58,6 +59,7 @@
 		<xs:attribute name="SegmentRequired" type="yesnoType" default="N"/>
 		<xs:attribute name="MinMarkupLinesRequired" type="xs:positiveInteger"/>
 		<xs:attribute name="InitialSliceOffset" type="xs:float"/>
+		<xs:attribute name="ContourVisibility" type="contourVisibilityType"/>
 	</xs:complexType>
 </xs:element>
 
@@ -194,6 +196,13 @@
   <xs:restriction base="xs:float">
 	<xs:minInclusive value="0" />
 	<xs:maxInclusive value="1" />
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="contourVisibilityType">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="Fill"/>
+    <xs:enumeration value="Outline"/>
   </xs:restriction>
 </xs:simpleType>
 

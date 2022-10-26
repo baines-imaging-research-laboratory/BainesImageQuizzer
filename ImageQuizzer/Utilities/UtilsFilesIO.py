@@ -533,7 +533,15 @@ class UtilsFilesIO:
         try:
             # open requested quiz xml 
             bSuccess, xRootNode = self.oIOXml.OpenXml(self.GetXmlQuizPath(),'Session')
+
+            # >>>>>>>>>>>>>>>
+            # check options for ContourVisibility at the Session level
+            sContourVisibility = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ContourVisibility')
+            if not (sContourVisibility == 'Fill' or sContourVisibility == 'Outline' or sContourVisibility == ''):
+                sValidationMsg = "\nContourVisibility value must be 'Fill' or 'Outline'. See attribute in Session"
+                sMsg = sMsg + sValidationMsg
             
+            # >>>>>>>>>>>>>>>
             lxPageElements = self.oIOXml.GetChildren(xRootNode, 'Page')
             
             iPageNum = 0
@@ -589,6 +597,12 @@ class UtilsFilesIO:
                         sValidationMsg = self.ValidateElementOptions(xImage, 'DefaultOrientation', sPageReference, self.oIOXml.lValidOrientations)
                         sMsg = sMsg + sValidationMsg
                     
+                    # check options for ContourVisibility at the image level
+                    sContourVisibility = self.oIOXml.GetValueOfNodeAttribute(xImage, 'ContourVisibility')
+                    if not (sContourVisibility == 'Fill' or sContourVisibility == 'Outline' or sContourVisibility == ''):
+                        sValidationMsg = "\nContourVisibility value must be 'Fill' or 'Outline'. See image attributes in Page:" + str(iPageNum)
+                        sMsg = sMsg + sValidationMsg
+                        
                     # >>>>>>>>>>>>>>>
      
 
@@ -675,6 +689,7 @@ class UtilsFilesIO:
                 sROIColorFilePath = self.GetCustomROIColorTablePath(sROIColorFile)
             if not os.path.isfile(sROIColorFilePath):
                 sMsg = sMsg + '\nCustom ROIColorFile does not exist in the directory with the quiz.' + sROIColorFilePath
+                
                 
             
             # >>>>>>>>>>>>>>>

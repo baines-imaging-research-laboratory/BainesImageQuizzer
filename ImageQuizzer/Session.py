@@ -59,6 +59,7 @@ class Session:
         self._bSegmentationModule = False
         self._iSegmentationTabIndex = -1   # default
         self._bPageLooping = False
+        self._sContourVisibility = 'Outline'
         
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
@@ -471,6 +472,21 @@ class Session:
     #----------
     def GetImageDisplayOrderIndices(self):
         return self.liImageDisplayOrder
+    
+    #----------
+    def GetContourVisibility(self):
+        return self._sContourVisibility
+    
+    #----------
+    def SetContourVisibility(self, xRootNode):
+        # quiz validation checked for valid values
+        # if no attribute exists, set with the default
+        self._sContourVisibility = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ContourVisibility')
+        if self._sContourVisibility == '':
+            self._sContourVisibility = 'Outline'  # default
+
+    #----------
+    #----------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1176,6 +1192,9 @@ class Session:
                 sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
                 self.oFilesIO.SetupROIColorFile(sColorFileName)
                 
+                # set contour visibility default for Session
+                self.SetContourVisibility(xRootNode)
+                
                 self.oFilesIO.SetupLoopingInitialization(xRootNode)
                 self.oFilesIO.SetupPageGroupInitialization(xRootNode)
     
@@ -1535,7 +1554,7 @@ class Session:
     
             # set up the images on the page
             self.oImageView = ImageView()
-            self.oImageView.RunSetup(self.GetCurrentPageNode(), self.oFilesIO.GetDataParentDir())
+            self.oImageView.RunSetup(self.GetCurrentPageNode(), self.oFilesIO.GetDataParentDir(), self.GetContourVisibility())
     
             # load label maps and markup lines if a path has been stored in the xml for the images on this page
             self.oFilesIO.LoadSavedLabelMaps(self)
