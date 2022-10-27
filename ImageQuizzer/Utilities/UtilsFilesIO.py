@@ -541,6 +541,10 @@ class UtilsFilesIO:
                 sValidationMsg = "\nContourVisibility value must be 'Fill' or 'Outline'. See attribute in Session"
                 sMsg = sMsg + sValidationMsg
             
+            # check matches of LabelMapID with DisplayLabelMapID
+            sValidationMsg = self.ValidateDisplayLabelMapID()
+            sMsg = sMsg + sValidationMsg
+                       
             # >>>>>>>>>>>>>>>
             lxPageElements = self.oIOXml.GetChildren(xRootNode, 'Page')
             
@@ -1026,6 +1030,68 @@ class UtilsFilesIO:
             if sDestination == 'Slice4' and sLayoutSetting != 'TwoOverTwo':
                 sMsg = sMsg + "\nAssigning an image to Slice4 requires the Page Layout attribute to be set to 'TwoOverTwo'."\
                         + "\nSee Page:" + str(iPageReference)
+        
+        return sMsg
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateDisplayLabelMapID(self):
+        ''' For all instances of DisplayLabelMapID, ensure that there is a corresponding
+            LabelMapID. This can help trap spelling mistakes. (This is not checked
+            for a 'previous instance' of LabelMapID if RandomizePageGroups attribute
+            is set to 'Y'.
+        '''
+        sMsg = ''
+        l2tupDisplayLabelMapIDs = []
+        l2tupLabelMapIDs = []
+        sRandomizeSetting = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'RandomizePageGroups')
+        if sRandomizeSetting == 'Y':
+            bTestForPrevious = False
+        else:
+            bTestForPrevious = True
+        
+        lxPageNodes = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
+        
+        # collect all instances of LabelMapID and DisplayLabelMapID and which page they are set
+        for idxPage in range(len(lxPageNodes)):
+            xPageNode = lxPageNodes[idxPage]
+            lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
+    
+            for idxImage in range(len(lxImageNodes)):
+                xImageNode = lxImageNodes[idxImage]
+                sLabelMapID = self.oIOXml.GetValueOfNodeAttribute(xImageNode, 'LabelMapID')
+                sDisplayLabelMapID = self.oIOXml.GetValueOfNodeAttribute(xImageNode, 'DisplayLabelMapID')
+                if sLabelMapID != '':
+                    l2tupLabelMapIDs.append([sLabelMapID, idxPage])
+                if sDisplayLabelMapID != '':
+                    l2tupDisplayLabelMapIDs.append([sDisplayLabelMapID, idxPage])
+        
+        # for every DisplayLabelMapID confirm there is a LabelMapID
+        
+        for idxDisplayLabelMapID in range(len(l2tupDisplayLabelMapIDs)):
+            tupDisplayLabelMapIDItem = l2tupDisplayLabelMapIDs[idxDisplayLabelMapID]
+            sDisplayLabelMapIDToSearch = tupDisplayLabelMapIDItem[0]
+            iDisplayLabelMapIDPage = tupDisplayLabelMapIDItem[1]
+
+            bFoundMatch = False
+            for idxLabelMapID in range(len(l2tupLabelMapIDs)):
+                
+                if not bFoundMatch:
+                    tupLableMapIDItem = l2tupLabelMapIDs[idxLabelMapID]
+                    sLabelMapIDToCompare = tupLableMapIDItem[0]
+                    iLabelMapIDPage = tupLableMapIDItem[1]
+                    
+                    if sLabelMapIDToCompare == sDisplayLabelMapIDToSearch:
+                        if bTestForPrevious:
+                            if iLabelMapIDPage < iDisplayLabelMapIDPage:
+                                bFoundMatch = True
+                                break
+                        else:   # randomize is set , ignore page test
+                            bFoundMatch = True
+            
+            if not bFoundMatch:
+                sMsg = sMsg + "\nMissing 'LabelMapID' setting for 'DisplayLabelMap': "\
+                            + sDisplayLabelMapIDToSearch + '   See Page #: '\
+                            + str(iDisplayLabelMapIDPage + 1)
         
         return sMsg
         

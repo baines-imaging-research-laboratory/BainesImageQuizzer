@@ -1,0 +1,140 @@
+<Session ContourVisibility='Outline' RandomizePageGroups='N'>
+<!--
+-->
+	<Page ID="Patient1" Descriptor="PlanningCT" EnableSegmentEditor="Y" PageGroup='1'>
+		<Image Type="Volume" ID="Fixed Volume" LabelMapID="Brain-fixed-contour" SegmentRequired="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
+		</Image>
+		<Image ID="Moving" Type="Volume" LabelMapID="Brain-moving-contour">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Foreground</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nii</Path>
+		</Image>
+		<Image Type="Volume" ID="Fixed Volume" SegmentRequired="Y" ContourVisibility='Fill'>
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="Fixed Volume" SegmentRequired="Y">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Coronal</DefaultOrientation>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
+		</Image>
+		<QuestionSet ID="QS-Intro" Descriptor="Introduction to Quiz">
+			<Question Type="CheckBox" Descriptor="Test Items:">
+				<Option>Segment Editor off, Don't allow multiple Response</Option> 
+				<Option>NRRD and NIFTI, background and foreground on Red</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page ID="Patient1" Descriptor="Follow-up 1" AllowMultipleResponse="Y" EnableSegmentEditor="Y" PageGroup='2'>
+		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour" DisplayLabelMapID="Brain-moving-contour" SegmentRequired="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour" DisplayLabelMapID="Brain-moving-contour" SegmentRequired="Y">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour" DisplayLabelMapID="Brain-moving-contour" SegmentRequired="Y">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Coronal</DefaultOrientation>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
+		</Image>
+		<QuestionSet ID="QS-Observation" Descriptor="What is your Assessment">
+			<Question Type="CheckBox" Descriptor="Test Items:">
+				<Option>Segment Editor on, allow multiple response, rotate to acquisition</Option> 
+				<Option>Different question types</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page ID="Patient2" Descriptor="Mixed Displays" LinkViews="N" AllowMultipleResponse="Y" EnableSegmentEditor="Y" PageGroup='3'>
+		<Image Type="Volume"  ID="Brain CT" DisplayLabelMapID="Brain-fixed-contour" RotateToAcquisition="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="Moving" DisplayLabelMapID="Brain-moving-contour" RotateToAcquisition="Y" SegmentRequired="Y" ContourVisibility='Fill'>
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="Case00Prostate" RotateToAcquisition="Y" ContourVisibility='Fill'>
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Prostate\Case00.mhd</Path>
+		</Image>
+		<Image Type="LabelMap" ID="Case00Prostate Segmentation" ContourVisibility='Fill'>
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Label</Layer>
+			<Path>ImageVolumes\Prostate\Case00_segmentation.mhd</Path>
+		</Image>
+		<QuestionSet ID="QS-Demo" Descriptor="Demo buttons">
+			<Question Type="Radio" Descriptor="Demo Radios">
+				<Option>Yes</Option>
+				<Option>Maybe</Option>
+				<Option>No</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page ID="Patient 1" Descriptor="Contouring Challenge"  EnableSegmentEditor="Y" SegmentRequiredOnAnyImage="Y" PageGroup='4'>
+		<Image Type="Volume" ID="MR" RotateToAcquisition="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" >
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
+			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" ContourVisibility='Fill'>
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Coronal</DefaultOrientation>
+			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
+		</Image>
+		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1-GoldStandard.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode='All'></ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1-GoldStandard.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode='All'></ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y" ContourVisibility='Fill'>
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1-GoldStandard.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode='All'></ROIs>
+		</Image>
+		<QuestionSet ID="Gold Standard Display" Descriptor="">
+			<Question Type="Radio" Descriptor="Years of experience:">
+				<Option>less than 1</Option>
+				<Option>1 - 2</Option>
+				<Option>2 - 5</Option>
+				<Option>more than 5</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>
