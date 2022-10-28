@@ -601,12 +601,6 @@ class UtilsFilesIO:
                         sValidationMsg = self.ValidateElementOptions(xImage, 'DefaultOrientation', sPageReference, self.oIOXml.lValidOrientations)
                         sMsg = sMsg + sValidationMsg
                     
-                    # check options for ContourVisibility at the image level
-                    sContourVisibility = self.oIOXml.GetValueOfNodeAttribute(xImage, 'ContourVisibility')
-                    if not (sContourVisibility == 'Fill' or sContourVisibility == 'Outline' or sContourVisibility == ''):
-                        sValidationMsg = "\nContourVisibility value must be 'Fill' or 'Outline'. See image attributes in Page:" + str(iPageNum)
-                        sMsg = sMsg + sValidationMsg
-                        
                     # >>>>>>>>>>>>>>>
      
 

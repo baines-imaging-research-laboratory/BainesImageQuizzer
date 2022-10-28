@@ -198,8 +198,9 @@ class ImageView:
                 slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
                 slWidgetController = slWidget.sliceController()
                 
-                # assign widget contour visibility to handle labelmaps
-                slWidgetController.showLabelOutline(oViewNode.GetLabelMapContourVisibility())
+                if oViewNode.sViewLayer != 'Segmentation':
+                    # assign widget contour visibility to handle labelmaps
+                    slWidgetController.showLabelOutline(oViewNode.GetLabelMapContourVisibility())
                 
                 # turn off link control until all images have been assigned to their destinations
                 slWindowCompositeNode.LinkedControlOff()
@@ -546,7 +547,6 @@ class ViewNodeBase:
         self.bRotateToAcquisition = False
         self.fOpacity = 0.5
         self.fInitialSliceOffset = None
-        self.sImageContourVisibility = ''
         
         self.slQuizLabelMapNode = None
         self.lsRoiList = []
@@ -658,7 +658,7 @@ class ViewNodeBase:
         if sContourVisibility != '':
             self.sContourVisibility = sContourVisibility
         else:
-            self.sContourVisibility = self.oSession.sContourVisibility # us default for the session
+            self.sContourVisibility = self.oSession.sContourVisibility # use default for the session
             
         self.sNodeName =  self.GetPageID() + '_' + sImageID
 

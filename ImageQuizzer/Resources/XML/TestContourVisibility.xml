@@ -1,6 +1,6 @@
 <Session ContourVisibility='Outline' RandomizePageGroups='N'>
 <!--
--->
+
 	<Page ID="Patient1" Descriptor="PlanningCT" EnableSegmentEditor="Y" PageGroup='1'>
 		<Image Type="Volume" ID="Fixed Volume" LabelMapID="Brain-fixed-contour" SegmentRequired="Y">
 			<DefaultDestination>Red</DefaultDestination>
@@ -91,32 +91,33 @@
 			</Question>
 		</QuestionSet>
 	</Page>
+-->
 	<Page ID="Patient 1" Descriptor="Contouring Challenge"  EnableSegmentEditor="Y" SegmentRequiredOnAnyImage="Y" PageGroup='4'>
-		<Image Type="Volume" ID="MR" RotateToAcquisition="Y">
+		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" ContourVisibility='Outline'>
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" >
+		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" ContourVisibility='Outline'>
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" ContourVisibility='Fill'>
+		<Image Type="Volume" ID="MR" RotateToAcquisition="Y" ContourVisibility='Outline'>
 			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 		</Image>
-		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
+		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y" ContourVisibility='Fill'>
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1-GoldStandard.seg.nrrd</Path>
 			<ROIs ROIVisibilityCode='All'></ROIs>
 		</Image>
-		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
+		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y" ContourVisibility='Fill'>
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\BrainTumor1\MRBrainTumor1-GoldStandard.seg.nrrd</Path>
