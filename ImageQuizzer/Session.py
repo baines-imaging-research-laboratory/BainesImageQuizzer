@@ -935,6 +935,7 @@ class Session:
                 else:
                     if sMsg != '':
                         self.oUtilsMsgs.DisplayWarning( sMsg )
+                    self.EnableButtons()
     
             # if code reaches here, either the exit was cancelled or there was 
             # an error in the save
