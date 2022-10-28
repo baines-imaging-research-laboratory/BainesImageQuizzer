@@ -17,13 +17,9 @@ New Features:
 				<DefaultOrientation>Coronal</DefaultOrientation>
 				<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 			</Image>
-	- Added attribute 'ContourVisibility' at the Session and/or the Image level
+	- Added attribute 'ContourVisibility' at the Session level
 		- Options: 'Fill' (solid display) or 'Outline' (default)
 		- This setting applies to images loaded as a label map as well as a segmentation.
-		- If set at the Session level, the entire quiz will present the contours as defined.
-		- If not set at the Session level, the quiz will use the default presentation.
-		- If set at the Image level, this will override the Session value for that image only.
-			Moving to the next or previous page will return the display to the Session assignment.
 
 Modifications:
 	- XML attribute changes (not backwards compatible with previous versions)

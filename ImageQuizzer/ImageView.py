@@ -198,10 +198,9 @@ class ImageView:
                 slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
                 slWidgetController = slWidget.sliceController()
                 
-                if oViewNode.sViewLayer != 'Segmentation':
-                    # assign widget contour visibility to handle labelmaps
-                    slWidgetController.showLabelOutline(oViewNode.GetLabelMapContourVisibility())
-                
+                # assign widget contour visibility to handle labelmaps
+                slWidgetController.showLabelOutline(self.GetLabelMapContourVisibility())
+            
                 # turn off link control until all images have been assigned to their destinations
                 slWindowCompositeNode.LinkedControlOff()
     
@@ -304,7 +303,7 @@ class ImageView:
         iNumSegments = oViewNode.GetSlicerViewNode().GetSegmentation().GetNumberOfSegments()
         for idx in range(iNumSegments):
             # assign each segment to the contour visibility setting
-            slSegDisplayNode.SetSegmentOpacity2DFill(oViewNode.GetSlicerViewNode().GetSegmentation().GetNthSegmentID(idx), oViewNode.GetSegmentationContourVisibility())
+            slSegDisplayNode.SetSegmentOpacity2DFill(oViewNode.GetSlicerViewNode().GetSegmentation().GetNthSegmentID(idx), self.GetSegmentationContourVisibility())
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ClearWidgets(self):
@@ -599,20 +598,6 @@ class ViewNodeBase:
     def AppendToROIList(self, sRoiName):
         self.lsRoiList.append(sRoiName)
         
-    #----------
-    def GetLabelMapContourVisibility(self):
-        if self.sContourVisibility == 'Outline':
-            return True
-        else:
-            return False  # for 'Fill'
-        
-    #----------
-    def GetSegmentationContourVisibility(self):
-        if self.sContourVisibility == 'Outline':
-            return False
-        else:
-            return True  # for 'Fill'
-
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def RunSetup(self):
         self.sClassName = type(self).__name__
@@ -653,12 +638,6 @@ class ViewNodeBase:
             self.fInitialSliceOffset = float(sInitialSliceOffset)
         else:
             self.fInitialSliceOffset = None
-            
-        sContourVisibility = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'ContourVisibility')
-        if sContourVisibility != '':
-            self.sContourVisibility = sContourVisibility
-        else:
-            self.sContourVisibility = self.oSession.sContourVisibility # use default for the session
             
         self.sNodeName =  self.GetPageID() + '_' + sImageID
 

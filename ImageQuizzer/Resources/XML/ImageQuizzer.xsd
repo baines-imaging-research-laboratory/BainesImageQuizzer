@@ -59,7 +59,6 @@
 		<xs:attribute name="SegmentRequired" type="yesnoType" default="N"/>
 		<xs:attribute name="MinMarkupLinesRequired" type="xs:positiveInteger"/>
 		<xs:attribute name="InitialSliceOffset" type="xs:float"/>
-		<xs:attribute name="ContourVisibility" type="contourVisibilityType"/>
 	</xs:complexType>
 </xs:element>
 
