@@ -40,19 +40,24 @@ class ImageView:
         
         self.sParentDataDir = ''
         self.sContourVisibility = 'Outline'
+        self.fContourOpacity = 0.5
         
         
     #----------
     def GetImageViewList(self):
         return self._loImageViews
 
+    #----------    
+    def SetContourVisibility(self, sInputOutlineOrFill):
+        self.sContourVisibility = sInputOutlineOrFill
+        
     #----------
     def GetLabelMapContourVisibility(self):
         if self.sContourVisibility == 'Outline':
             return True
         else:
             return False  # for 'Fill'
-        
+ 
     #----------
     def GetSegmentationContourVisibility(self):
         if self.sContourVisibility == 'Outline':
@@ -60,16 +65,22 @@ class ImageView:
         else:
             return True  # for 'Fill'
         
+    #----------
+    def GetContourOpacity(self):
+        return self.fContourOpacity
+    
+    #----------
+    def SetContourOpacity(self, fInput):
+        self.fContourOpacity = fInput
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def RunSetup(self, xPageNode, sParentDataDir, sContourVisibility):
+    def RunSetup(self, xPageNode, sParentDataDir):
 
         # self.quizLayout = quizLayout
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
         self.sParentDataDir = sParentDataDir
         self.xPageNode = xPageNode
-        self.sContourVisibility = sContourVisibility
 
 
         # get ID and descriptor
@@ -298,12 +309,26 @@ class ImageView:
             self.oUtilsMsgs.DisplayError(sMsg)
           
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetLabelMapOutlineOrFill(self, lsLayoutWidgets):
+        
+        for sDestination in lsLayoutWidgets:
+            # get slicer control objects for the widget
+            slWidget = slicer.app.layoutManager().sliceWidget(sDestination)
+            slWindowLogic = slWidget.sliceLogic()
+            slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
+            slWidgetController = slWidget.sliceController()
+            
+            slWidgetController.showLabelOutline(self.GetLabelMapContourVisibility())
+            slWidgetController.setLabelMapOpacity(self.GetContourOpacity())
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSegmentationOutlineOrFill(self, oViewNode, slSegDisplayNode):
         # for the segmentation node, get number of associated segments
         iNumSegments = oViewNode.GetSlicerViewNode().GetSegmentation().GetNumberOfSegments()
         for idx in range(iNumSegments):
             # assign each segment to the contour visibility setting
             slSegDisplayNode.SetSegmentOpacity2DFill(oViewNode.GetSlicerViewNode().GetSegmentation().GetNthSegmentID(idx), self.GetSegmentationContourVisibility())
+            slSegDisplayNode.SetOpacity(self.GetContourOpacity())
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ClearWidgets(self):
@@ -1243,9 +1268,14 @@ class DicomVolumeDetail(ViewNodeBase):
         return bLoadSuccess
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetSegmentationNodes(self):
+    def GetSegmentationNodes(self, xPageNode=None):
         ''' Segmentations loaded in as DICOMs use the associated display and data nodes
             in order to set the ROI visibility. 
+            
+            Note: xPageNode is not used in this function (for node source = DICOM).
+                    This is set here as an input variable since Session calls this function
+                    to set up contour visibility. Session could be dealing with 
+                    either a DICOM or Data source.)
         '''
 
         slSegDataNode = None
