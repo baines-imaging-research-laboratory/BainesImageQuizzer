@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session ROIColorFile="PiRadsStudy">
 	<Page ID="IGPC2026" Descriptor="Intro" LinkViews="Y" Layout="TwoOverTwo" AllowMultipleResponse="Y"  EnableSegmentEditor="N">
-		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y">
+		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" DicomRead="Y">
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
-			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\DICOM\DCE\I00001</Path>
 		</Image>
 		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y">
 			<DefaultDestination>Red</DefaultDestination>

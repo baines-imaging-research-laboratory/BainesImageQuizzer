@@ -11,7 +11,6 @@ from Utilities.UtilsMsgs import *
 from Utilities.UtilsIOXml import *
 
 from DICOMLib import DICOMUtils
-import QuizzerDICOMUtils
 
 import ssl
 # from DICOMLib.DICOMUtils import loadPatientByUID
@@ -1142,6 +1141,7 @@ class DicomVolumeDetail(ViewNodeBase):
             tags['studyUID'] = "0020,000D"
             tags['seriesDescription'] = "0008,103E"
             tags['seriesNumber'] = "0020,0011"
+            tags["sopInstanceUID"] = "0008,0018"
             
             # using the path defined by the user to one of the files in the series,
             # access dicom information stored in that series
@@ -1157,6 +1157,7 @@ class DicomVolumeDetail(ViewNodeBase):
             sSeriesNumber = database.fileValue(self.sImagePath, tags['seriesNumber'])
 
             self.sStudyInstanceUID = database.fileValue(self.sImagePath, tags['studyUID'])
+            sSOPInstanceUID = database.fileValue(self.sImagePath, tags['sopInstanceUID'])
 
             
             # extract directory that stores the dicom series from defined image path
@@ -1191,9 +1192,7 @@ class DicomVolumeDetail(ViewNodeBase):
             else:
                 elaspsed = time.time() - elapsed
 
-                ####### Function override ... See notes in QuizzerDicomUitls
-                #######     DICOMUtils.loadSeriesByUID([sSeriesUIDToLoad])
-                QuizzerDICOMUtils.loadSeriesByUID([sSeriesUIDToLoad])
+                DICOMUtils.loadByInstanceUID(sSOPInstanceUID)
                 slNodeId = slSubjectHierarchyNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(),sSeriesUIDToLoad)
                 
 ##### for debug on visibility

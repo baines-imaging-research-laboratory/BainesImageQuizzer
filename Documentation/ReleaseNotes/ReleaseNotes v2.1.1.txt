@@ -1,6 +1,6 @@
 Release Notes
 
-Image Quizzer v2.1.0
+Image Quizzer v2.1.1
 	Baines Imaging Lab, LRCP, London Health Sciences Centre, London, ON, Canada
 
 Requirements:
@@ -24,4 +24,11 @@ New Features:
 Modifications:
 	- XML attribute changes (not backwards compatible with previous versions)
 		- new attribute 'InitialSliceOffset' added to Image element
-		- 
+
+
+
+Fix:
+	- Reading DICOM images sometimes would load a volume multiple times.
+		- Image Quizzer code was modified to load DICOM images using the SOPInstanceUID function.
+		  This function takes into account the confidence associated with each Slicer plugin that
+		  is available for loading the image and chooses the one with the highest confidence.
