@@ -39,21 +39,37 @@ class ImageView:
         self.bLinkViews = False
         
         self.sParentDataDir = ''
+        self.sContourVisibility = 'Outline'
         
         
     #----------
     def GetImageViewList(self):
         return self._loImageViews
 
+    #----------
+    def GetLabelMapContourVisibility(self):
+        if self.sContourVisibility == 'Outline':
+            return True
+        else:
+            return False  # for 'Fill'
+        
+    #----------
+    def GetSegmentationContourVisibility(self):
+        if self.sContourVisibility == 'Outline':
+            return False
+        else:
+            return True  # for 'Fill'
+        
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def RunSetup(self, xPageNode, sParentDataDir):
+    def RunSetup(self, xPageNode, sParentDataDir, sContourVisibility):
 
         # self.quizLayout = quizLayout
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
         self.sParentDataDir = sParentDataDir
         self.xPageNode = xPageNode
+        self.sContourVisibility = sContourVisibility
 
 
         # get ID and descriptor
@@ -78,8 +94,6 @@ class ImageView:
                 
         # reset field of view to maximize background
         slicer.util.resetSliceViews()
-                
-                
             
 
     #-----------------------------------------------
@@ -106,30 +120,24 @@ class ImageView:
         
         # for each image
         for indImage in range(len(self.lxImageNodes)):
-
             
             # Extract the type of volume to be displayed 
             #     if not a DICOM - assume it is a 'Data' volume
             sDICOMRead = self.oIOXml.GetValueOfNodeAttribute(self.lxImageNodes[indImage], 'DicomRead')
             
             if (sDICOMRead == 'Y'):
-                oImageViewItem = DicomVolumeDetail(self.lxImageNodes[indImage], self.sPageID, self.sParentDataDir)
-            
+                oImageViewItem = DicomVolumeDetail(self, indImage)
             else:
-                oImageViewItem = DataVolumeDetail(self.lxImageNodes[indImage], self.sPageID, self.sParentDataDir)
-                    
+                oImageViewItem = DataVolumeDetail(self, indImage)
                 
             bLoadSuccess = oImageViewItem.LoadVolume()
-            
+
                 
             if bLoadSuccess and (oImageViewItem.slNode is not None):
-                
-
                 # customize node name to prevent illegal characters on defaults
                 oImageViewItem.slNode.SetName(oImageViewItem.sNodeName)
                 self._loImageViews.append(oImageViewItem)
 
-                
             else:
                 sMsg = 'BuildViewNodes:Image load Failed : ' + self.sPageID + ':' + oImageViewItem.sImagePath\
                         + "\n\nYou may have selected the wrong folder for the image data."\
@@ -141,7 +149,6 @@ class ImageView:
         
         # all images loaded
         progressBar.close()
-
          
     #-----------------------------------------------
     #         Manage Views
@@ -191,6 +198,9 @@ class ImageView:
                 slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
                 slWidgetController = slWidget.sliceController()
                 
+                # assign widget contour visibility to handle labelmaps
+                slWidgetController.showLabelOutline(self.GetLabelMapContourVisibility())
+            
                 # turn off link control until all images have been assigned to their destinations
                 slWindowCompositeNode.LinkedControlOff()
     
@@ -210,8 +220,11 @@ class ImageView:
                         slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
                         slWidget.mrmlSliceNode().RotateToVolumePlane(slVolumeNode)
                         self.RotateSliceToImage(oViewNode.sDestination)
-    
-                    slWidget.fitSliceToBackground()
+                        if oViewNode.fInitialSliceOffset != None:
+                            slWindowLogic.SetSliceOffset(oViewNode.fInitialSliceOffset)
+                        else:
+                            slWidget.fitSliceToBackground()
+
                     oViewNode.AssignColorTable()
     
                     # turn on label map volume if a label map was loaded for the background image                
@@ -231,6 +244,8 @@ class ImageView:
                     slWidgetController.setForegroundOpacity(oViewNode.fOpacity)
                     if oViewNode.bRotateToAcquisition == True:
                         self.RotateSliceToImage(oViewNode.sDestination)
+                        if oViewNode.fInitialSliceOffset != None:
+                            slWindowLogic.SetSliceOffset(oViewNode.fInitialSliceOffset)
     
                     oViewNode.AssignColorTable()
     
@@ -264,6 +279,7 @@ class ImageView:
 
                     oViewNode.SetDisplayViewNodeIDs( slSegDisplayNode)
                     slSegDisplayNode.SetVisibility(True)
+                    self.SetSegmentationOutlineOrFill(oViewNode, slSegDisplayNode)
 
     
     
@@ -281,6 +297,14 @@ class ImageView:
                     + '\n\n' + tb
             self.oUtilsMsgs.DisplayError(sMsg)
           
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetSegmentationOutlineOrFill(self, oViewNode, slSegDisplayNode):
+        # for the segmentation node, get number of associated segments
+        iNumSegments = oViewNode.GetSlicerViewNode().GetSegmentation().GetNumberOfSegments()
+        for idx in range(iNumSegments):
+            # assign each segment to the contour visibility setting
+            slSegDisplayNode.SetSegmentOpacity2DFill(oViewNode.GetSlicerViewNode().GetSegmentation().GetNthSegmentID(idx), self.GetSegmentationContourVisibility())
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ClearWidgets(self):
         # make sure the widget exists in case the default layout changes
@@ -440,8 +464,6 @@ class ImageView:
             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeGreen')
             slSegDisplayNode.AddViewNodeID('vtkMRMLSliceNodeYellow')
                  
-        
-        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetLabelMapVisibility(self, iOnOff):
         
@@ -505,12 +527,14 @@ class ImageView:
 
 class ViewNodeBase:
 
-    def __init__(self,  parent=None):
+    def __init__(self, oSession, iImageIndex, parent=None):
         self.sClassName = type(self).__name__
         self.parent = parent
+        self.oSession = oSession
+        self.iImageIndex = iImageIndex
+        
     
         self.sNodeSource = ''
-        self.sPageID = ''
         self.slNode = None
         self.sDestination = ''
         self.sOrientation = ''
@@ -518,18 +542,18 @@ class ViewNodeBase:
         self.sImageType = ''
         self.sImagePath = ''
         self.sNodeName = ''
-#         self.sFormat=''
-        self._xImageElement = None
-#         self._sPageID = ''
         self.sColorTableName = ''
         self.bRotateToAcquisition = False
         self.fOpacity = 0.5
+        self.fInitialSliceOffset = None
         
         self.slQuizLabelMapNode = None
         self.lsRoiList = []
         self.sRoiVisibilityCode = ''
         
-
+        
+        self.RunSetup()
+        
     #----------
     def SetNodeSource(self, sInput):
         self._sNodeSource = sInput
@@ -539,8 +563,8 @@ class ViewNodeBase:
         return self._sNodeSource
     
     #----------
-    def SetXmlImageElement(self, xInput):
-        self._xImageElement = xInput
+    def SetXmlImageElement(self, iImageIndex):
+        self._xImageElement = self.oSession.lxImageNodes[iImageIndex]
         
     #----------
     def GetXmlImageElement(self):
@@ -575,6 +599,17 @@ class ViewNodeBase:
         self.lsRoiList.append(sRoiName)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def RunSetup(self):
+        self.sClassName = type(self).__name__
+        self.oIOXml = UtilsIOXml()
+        self.oUtilsMsgs = UtilsMsgs()
+        
+        self.SetXmlImageElement(self.iImageIndex)
+        self.SetPageID(self.oSession.sPageID)
+        self.ExtractImageAttributes()
+        self.ExtractXMLNodeElements(self.oSession.sParentDataDir)
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractImageAttributes(self):
         ''' Assign image attributes to the image node properties.
             Validation of these attributes for acceptable values was carried out when the quiz was loaded.
@@ -597,7 +632,13 @@ class ViewNodeBase:
             self.fOpacity = float(sOpacity)
         else:
             self.fOpacity = 0.5 # NOTE: you must assign the default here - it is not inherited
-    
+            
+        sInitialSliceOffset = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'InitialSliceOffset')
+        if sInitialSliceOffset != '':
+            self.fInitialSliceOffset = float(sInitialSliceOffset)
+        else:
+            self.fInitialSliceOffset = None
+            
         self.sNodeName =  self.GetPageID() + '_' + sImageID
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -638,7 +679,6 @@ class ViewNodeBase:
             self.sImagePath = ''
         else:
             self.sImagePath = os.path.join(sParentDataDir, self.oIOXml.GetDataInNode(lxPathNodes[0]))
-            
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForNodeExists(self, sNodeClass):
@@ -658,7 +698,6 @@ class ViewNodeBase:
             bNodeExists = False
         
         return bNodeExists
-
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AssignColorTable(self):
@@ -718,7 +757,6 @@ class ViewNodeBase:
                 slAssociatedSequenceBrowserNode = self.GetAssociatedSequenceBrowserNode()
                 if slAssociatedSequenceBrowserNode != None:
                     slAssociatedSequenceBrowserNode.SetSelectedItemNumber(int(dictImageState['Frame']))
-                
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetAssociatedSequenceBrowserNode(self):
@@ -826,21 +864,13 @@ class ViewNodeBase:
 class DataVolumeDetail(ViewNodeBase):
     
     
-    def __init__(self, xImage, sPageID, sParentDataDir, slLabelMapNode=None):
-        self.sClassName = type(self).__name__
-        self.oIOXml = UtilsIOXml()
-        self.oUtilsMsgs = UtilsMsgs()
-
+    def __init__(self, oSession, iImageIndex):
+        # super-class
+        ViewNodeBase.__init__(self, oSession, iImageIndex)
 
         #--------------------
-        
-        # functions from base class
         self.SetNodeSource('Data')
-        self.SetXmlImageElement(xImage)
-        self.SetPageID(sPageID)
-        self.ExtractImageAttributes()
-        self.ExtractXMLNodeElements(sParentDataDir)
-        self.SetQuizLabelMapNode(slLabelMapNode)
+        # self.SetQuizLabelMapNode(slLabelMapNode)
         
         # get list of ROIs to be displayed
         self.SetROIList([])
@@ -1035,27 +1065,18 @@ class DataVolumeDetail(ViewNodeBase):
 class DicomVolumeDetail(ViewNodeBase):
     
     
-    def __init__(self, xImage, sPageID, sParentDataDir, slLabelMapNode=None):
-        self.sClassName = type(self).__name__
-        self.oIOXml = UtilsIOXml()
-        self.oUtilsMsgs = UtilsMsgs()
+    def __init__(self, oSession, iImageIndex):
+        # super-class
+        ViewNodeBase.__init__(self,oSession, iImageIndex)
         
-#         self.sRoiVisibilityCode = ''
         self.sVolumeReferenceSeriesUID = ''
         self.sSeriesInstanceUID = ''
         self.sStudyInstanceUID = ''
-#         self.lsRoiList = []
         
 
         #--------------------
-        
-        # functions from base class
         self.SetNodeSource('Dicom')
-        self.SetXmlImageElement(xImage)
-        self.SetPageID(sPageID)
-        self.ExtractImageAttributes()
-        self.ExtractXMLNodeElements(sParentDataDir)
-        self.SetQuizLabelMapNode(slLabelMapNode)
+        # self.SetQuizLabelMapNode(slLabelMapNode)
         
         self.ExtractSeriesInstanceUIDs()
 

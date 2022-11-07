@@ -1,0 +1,170 @@
+<Session>
+	<Page ID="1-1" Descriptor="1-1" LinkViews="Y">
+		<Image Type="Volume" ID="MR" DicomRead="N" RotateToAcquisition="Y" InitialSliceOffset="-31.75">
+			<DefaultDestination>Red</DefaultDestination>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="MR" DicomRead="N" RotateToAcquisition="Y" InitialSliceOffset="-40.35">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="MR" DicomRead="N" RotateToAcquisition="Y" InitialSliceOffset="-35.56">
+			<DefaultDestination>Green</DefaultDestination>
+			<DefaultOrientation>Coronal</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Segmentation" ID="RS" DicomRead="N" RotateToAcquisition="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>Segment_1</ROI>
+			</ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="RS" DicomRead="N" RotateToAcquisition="Y">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>Segment_1</ROI>
+			</ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="RS" DicomRead="N" RotateToAcquisition="Y">
+			<DefaultDestination>Green</DefaultDestination>
+			<DefaultOrientation>Coronal</DefaultOrientation>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>Segment_1</ROI>
+			</ROIs>
+		</Image>
+		<QuestionSet ID="AppearanceScore" Descriptor="Score Appearance">
+			<Question Type="Radio" Descriptor="Appearance Options">
+				<Option>Homogeneous</Option>
+				<Option>Heterogeneous</Option>
+				<Option>Cystic (Simple)</Option>
+				<Option>Cystic (Complex)</Option>
+				<Option>Necrosis</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page ID="1-2" Descriptor="1-2" LinkViews="Y">
+		<Image Type="Volume" ID="MR" DicomRead="N" RotateToAcquisition="Y" InitialSliceOffset="-31.75">
+			<DefaultDestination>Red</DefaultDestination>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="MR" DicomRead="N" RotateToAcquisition="Y" InitialSliceOffset="117.03">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="MR" DicomRead="N" RotateToAcquisition="Y" InitialSliceOffset="-67.77">
+			<DefaultDestination>Green</DefaultDestination>
+			<DefaultOrientation>Coronal</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Segmentation" ID="RS" DicomRead="N" RotateToAcquisition="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>Segment_2</ROI>
+			</ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="RS" DicomRead="N" RotateToAcquisition="Y">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>Segment_2</ROI>
+			</ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="RS" DicomRead="N" RotateToAcquisition="Y">
+			<DefaultDestination>Green</DefaultDestination>
+			<DefaultOrientation>Coronal</DefaultOrientation>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>Segment_2</ROI>
+			</ROIs>
+		</Image>
+		<QuestionSet ID="AppearanceScore" Descriptor="Score Appearance">
+			<Question Type="Radio" Descriptor="Appearance Options">
+				<Option>Homogeneous</Option>
+				<Option>Heterogeneous</Option>
+				<Option>Cystic (Simple)</Option>
+				<Option>Cystic (Complex)</Option>
+				<Option>Necrosis</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page ID="1-2" Descriptor="1-2" LinkViews="Y">
+		<Image Type="Volume" ID="MR" DicomRead="N" RotateToAcquisition="Y" InitialSliceOffset="-107.42">
+			<DefaultDestination>Red</DefaultDestination>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="MR" DicomRead="N" RotateToAcquisition="Y" InitialSliceOffset="-17.23">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="MR" DicomRead="N" RotateToAcquisition="Y" InitialSliceOffset="-67.77">
+			<DefaultDestination>Green</DefaultDestination>
+			<DefaultOrientation>Coronal</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Segmentation" ID="RS" DicomRead="N" RotateToAcquisition="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>Segment_3</ROI>
+			</ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="RS" DicomRead="N" RotateToAcquisition="Y">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>Segment_3</ROI>
+			</ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="RS" DicomRead="N" RotateToAcquisition="Y">
+			<DefaultDestination>Green</DefaultDestination>
+			<DefaultOrientation>Coronal</DefaultOrientation>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>Segment_3</ROI>
+			</ROIs>
+		</Image>
+		<QuestionSet ID="AppearanceScore" Descriptor="Score Appearance">
+			<Question Type="Radio" Descriptor="Appearance Options">
+				<Option>Homogeneous</Option>
+				<Option>Heterogeneous</Option>
+				<Option>Cystic (Simple)</Option>
+				<Option>Cystic (Complex)</Option>
+				<Option>Necrosis</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>

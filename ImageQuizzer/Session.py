@@ -59,6 +59,7 @@ class Session:
         self._bSegmentationModule = False
         self._iSegmentationTabIndex = -1   # default
         self._bPageLooping = False
+        self._sContourVisibility = 'Outline'
         
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
@@ -471,6 +472,21 @@ class Session:
     #----------
     def GetImageDisplayOrderIndices(self):
         return self.liImageDisplayOrder
+    
+    #----------
+    def GetContourVisibility(self):
+        return self._sContourVisibility
+    
+    #----------
+    def SetContourVisibility(self, xRootNode):
+        # quiz validation checked for valid values
+        # if no attribute exists, set with the default
+        self._sContourVisibility = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ContourVisibility')
+        if self._sContourVisibility == '':
+            self._sContourVisibility = 'Outline'  # default
+
+    #----------
+    #----------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -919,6 +935,7 @@ class Session:
                 else:
                     if sMsg != '':
                         self.oUtilsMsgs.DisplayWarning( sMsg )
+                    self.EnableButtons()
     
             # if code reaches here, either the exit was cancelled or there was 
             # an error in the save
@@ -1175,6 +1192,9 @@ class Session:
                 # set up ROI colors for segmenting
                 sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
                 self.oFilesIO.SetupROIColorFile(sColorFileName)
+                
+                # set contour visibility default for Session
+                self.SetContourVisibility(xRootNode)
                 
                 self.oFilesIO.SetupLoopingInitialization(xRootNode)
                 self.oFilesIO.SetupPageGroupInitialization(xRootNode)
@@ -1535,7 +1555,7 @@ class Session:
     
             # set up the images on the page
             self.oImageView = ImageView()
-            self.oImageView.RunSetup(self.GetCurrentPageNode(), self.oFilesIO.GetDataParentDir())
+            self.oImageView.RunSetup(self.GetCurrentPageNode(), self.oFilesIO.GetDataParentDir(), self.GetContourVisibility())
     
             # load label maps and markup lines if a path has been stored in the xml for the images on this page
             self.oFilesIO.LoadSavedLabelMaps(self)
@@ -1849,7 +1869,8 @@ class Session:
         loImageNodes = []
         lsRequiredOrientations = []
         dictNPlanesOrientDest = {}
-        lBackgroundWidgetsToReset = []
+        dictBackgroundWidgetsToResetWithOffsets = {}
+        idxCurrentPage = self.GetCurrentPageIndex()
         
         if not self.bNPlanesViewingMode:
             loImageNodes = self.oImageView.GetImageViewList()
@@ -1874,31 +1895,58 @@ class Session:
                     lsRequiredOrientations = [oImageNode.sOrientation]
                     
                 bLatestWindowLevelFound = False
-                lxAllStateElements = self.GetStateElementsForMatchingImagePath(self.oFilesIO.GetRelativeDataPath(oImageNode.sImagePath))
+                lxAllStateElements, liPageIndexForStateElements = self.GetStateElementsForMatchingImagePath(self.oFilesIO.GetRelativeDataPath(oImageNode.sImagePath))
     
                 for sRequiredOrientation in lsRequiredOrientations:
-                    bFound = False
+                    bFoundOrientation = False
                     
-                    if not bFound:
-    
-                        for idx in reversed(range(len(lxAllStateElements))):
-                            xState = lxAllStateElements[idx]
-                            dictImageState = self.oIOXml.GetAttributes(xState)
+                    for idxImageStateElement in reversed(range(len(lxAllStateElements))):
+                        xState = lxAllStateElements[idxImageStateElement]
+                        dictImageState = self.oIOXml.GetAttributes(xState)
 
-                            # get first instance in the reversed search for the window/level
-                            # then continue search for matching orientation to get the slice offset
-                            if not bLatestWindowLevelFound:
-                                sLevel = dictImageState['Level']
-                                sWindow = dictImageState['Window']
-                                bLatestWindowLevelFound = True
-    
-            # for debug                print('Required:', sRequiredOrientation, ',    ',dictImageState["ResponseTime"], ',  ',dictImageState["ViewingMode"], ',  ',dictImageState["Orientation"], ',  ',dictImageState["SliceOffset"])
-                            if dictImageState["Orientation"] == sRequiredOrientation:
-                                bFound = True
-                                break
-                                
-                    if bFound:
-                        # update with latest window/level
+                        # get first instance in the reversed search for the window/level
+                        # then continue search for matching orientation to get the slice offset
+                        if not bLatestWindowLevelFound:
+                            sLevel = dictImageState['Level']
+                            sWindow = dictImageState['Window']
+                            bLatestWindowLevelFound = True
+
+        # for debug
+        #                print('Required:', sRequiredOrientation, ',    ',dictImageState["ResponseTime"], ',  ',dictImageState["ViewingMode"], ',  ',dictImageState["Orientation"], ',  ',dictImageState["SliceOffset"])
+                        if dictImageState["Orientation"] == sRequiredOrientation:
+                            bFoundOrientation = True
+                            break
+                    
+                    # capture the destination and offset if this was a background layer for later reset to center the field of view
+                    #    - this is necessary because a foreground layer for a widget may be processed
+                    #      after the background layer (depending on xml order) which may change the slice offset
+                    #    (This is particularly important for Background layers that have an image with
+                    #     only one slice (eg. histology) )
+
+                    # work with destination depending on the viewing mode        
+                    if not self.bNPlanesViewingMode:
+                        sDestination = oImageNode.sDestination
+                    else:
+                        sDestination = dictNPlanesOrientDest[sRequiredOrientation]
+                        
+                    if dictImageState != {} :
+                        # a previous image state was found (regardless of correct orientation)
+                        if oImageNode.sViewLayer == 'Background' and idxCurrentPage != liPageIndexForStateElements[idxImageStateElement]:
+                            # image state element was from a previous page
+                            #    update slice offset with current page initial offset if defined
+                            if oImageNode.fInitialSliceOffset != None:
+                                dictBackgroundWidgetsToResetWithOffsets[sDestination] = oImageNode.fInitialSliceOffset
+                            else:
+                                dictBackgroundWidgetsToResetWithOffsets[sDestination] = float(dictImageState['SliceOffset'])
+                        else:
+                            if oImageNode.sViewLayer == 'Background' and idxCurrentPage == liPageIndexForStateElements[idxImageStateElement]:
+                                # image state element was from current page
+                                #    update slice offset with saved offset
+                                dictBackgroundWidgetsToResetWithOffsets[sDestination] = float(dictImageState['SliceOffset'])
+                            
+                            
+                    if bFoundOrientation:
+                        # update with most recent window/level
                         if bLatestWindowLevelFound:
                             dictImageState["Window"] = sWindow
                             dictImageState["Level"] = sLevel
@@ -1906,31 +1954,34 @@ class Session:
                         if not self.bNPlanesViewingMode:
                             oImageNode.SetImageState(dictImageState)
                         else:
+                            # for NPlanes viewing mode, adjust with the destination override
                             xImage = oImageNode.GetXmlImageElement()
                             sDestinationOverride = dictNPlanesOrientDest[sRequiredOrientation]
                             oImageNode.SetImageState(dictImageState, sDestinationOverride)
+                    
                     else:
-                        # no state element was found 
-                        # capture the destination if this was a background layer
+                        # no state element was found - 
+                        #    capture destination and assign the offset to the initial if defined 
+                        #    (will be None if not defined)
                         if oImageNode.sViewLayer == 'Background':
-                            if not self.bNPlanesViewingMode:
-                                lBackgroundWidgetsToReset.append(oImageNode.sDestination)
-                            else:
-                                lBackgroundWidgetsToReset.append(dictNPlanesOrientDest[sRequiredOrientation])
+                            dictBackgroundWidgetsToResetWithOffsets[sDestination] = oImageNode.fInitialSliceOffset
                                             
-            # in the special case where no previous state was found for a background slice,
-            #    reset the widget to the center field of view
-            #    - this is necessary because a foreground layer for this widget may have been
-            #      processed after the background layer and changed the slice offset
-            #    (This is particularly important for Background layers that have an image with 
-            #     only one slice (eg. histology) )
-            for sWidgetDestination in lBackgroundWidgetsToReset:
-                slWidget = slicer.app.layoutManager().sliceWidget(sWidgetDestination)
-                slWidget.fitSliceToBackground()
+            # first reset identified widgets to the default - fit to the background
+            for key in dictBackgroundWidgetsToResetWithOffsets:
+                slWidget = slicer.app.layoutManager().sliceWidget(key)
+                slWidget.fitSliceToBackground() # default
+            # re-adjust with captured offset
+            for key in dictBackgroundWidgetsToResetWithOffsets:
+                slWidget = slicer.app.layoutManager().sliceWidget(key)
+                slWindowLogic = slWidget.sliceLogic()
+                if dictBackgroundWidgetsToResetWithOffsets[key] != None :
+                    slWindowLogic.SetSliceOffset(dictBackgroundWidgetsToResetWithOffsets[key])
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetStateElementsForMatchingImagePath(self, sCurrentImagePath):
         
         lxAllStateElements = []
+        liPageIndexForStateElements = []
         
         lxPages = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
         
@@ -1953,8 +2004,9 @@ class Session:
                                 lStateElements = self.oIOXml.GetChildren(xImage, 'State')
                                 for xState in lStateElements:
                                     lxAllStateElements.append(xState)
+                                    liPageIndexForStateElements.append(iPageIdx)
                         
-        return lxAllStateElements
+        return lxAllStateElements, liPageIndexForStateElements
                 
         
         
