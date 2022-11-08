@@ -492,63 +492,79 @@ class Session:
         if self._sSessionContourVisibility == '':
             self._sSessionContourVisibility = 'Outline'  # default
             
-        self.SetContourVisibilityRadioButtons(self._sSessionContourVisibility)
+        self.SetContourVisibilityCheckBox(self._sSessionContourVisibility)
+        
     #----------
-    def SetContourVisibilityRadioButtons(self, sVisibility): 
+    def SetContourVisibilityCheckBox(self, sVisibility): 
+        # set the contour visibility widget in Extra Tools 
             
-        if sVisibility == 'Outline':
-            self.qRadioBtnOutline.setChecked(True)
+        if sVisibility == 'Fill':
+            self.qChkBoxFillOrOutline.setChecked(True)
         else:
-            self.qRadioBtnFill.setChecked(True)
+            self.qChkBoxFillOrOutline.setChecked(False)
 
     #----------
     def GetSessionContourOpacityDefault(self):
+        # default for opacity for the session
+        
         return self._sSessionContourOpacity
 
     #----------
-    def SetContourDisplayOutlineOrFill(self):
+    def GetContourDisplayState(self):
+        # get current settings from the extra tools widgets describing the contour display state
         
-        if self.oImageView != None:
-            if self.qRadioBtnFill.isChecked():
-                self.oImageView.SetContourVisibility('Fill')
-            else:
-                self.oImageView.SetContourVisibility('Outline')
-            
-            self.oImageView.SetLabelMapOutlineOrFill(self.lsLayoutWidgets)
+        bFill = self.qChkBoxFillOrOutline.checked
+        if bFill:
+            sFillOrOutline = 'Fill'
+        else:
+            sFillOrOutline = 'Outline'
+
+        iSliderValue = self.qVisibilityOpacity.value
+        if self.qVisibilityOpacity.maximum > self.qVisibilityOpacity.minimum:
+            fOpacity = iSliderValue / (self.qVisibilityOpacity.maximum - self.qVisibilityOpacity.minimum)
+        else:
+            fOpacity = self.GetSessionContourOpacityDefault()
+        
+        return sFillOrOutline, iSliderValue, fOpacity
     
-            xPageNode = self.GetCurrentPageNode()
-            loImageViewNodes = self.oImageView.GetImageViewList()
-            for oViewNode in loImageViewNodes:
-                if oViewNode.sViewLayer == 'Segmentation':
-                    slSegDisplayNode, slSegDataNode = oViewNode.GetSegmentationNodes(xPageNode)
-                    self.oImageView.SetSegmentationOutlineOrFill(oViewNode, slSegDisplayNode)
-                
+    #----------
+    def ResetContourDisplayState(self, sFillOrOutline, iSliderValue, fOpacity):
+        
+        self.SetContourVisibilityCheckBox(sFillOrOutline)           # tool widget Fill/Outline
+        self.SetSliderToolFromContourOpacity(fOpacity)              # tool widget Opacity
+        self.SetContourOpacityFromSliderValue(iSliderValue)         # image view property
+        
     #----------
     def SetContourOpacityFromSliderValue(self, iSliderValue):
+        # set the ContourOpacity property of the image view object based on slider valud for opacity
         
         if self.oImageView != None:
-            self.oImageView.SetContourOpacity(self.GetSessionContourOpacityDefault())
-            if self.qVisibilityOpacity.maximum > self.qVisibilityOpacity.minimum:
+            if self.qVisibilityOpacity.maximum > self.qVisibilityOpacity.minimum:  # no div by zero
                 self.oImageView.SetContourOpacity(iSliderValue / (self.qVisibilityOpacity.maximum - self.qVisibilityOpacity.minimum))
-                # reset outline or fill
-                self.SetContourDisplayOutlineOrFill()
+            else:
+                self.oImageView.SetContourOpacity(self.GetSessionContourOpacityDefault())
+                
+            # reset outline or fill
+            self.onContourDisplayStateChanged()
         
     #----------
     def SetSliderToolFromContourOpacity(self, fOpacity):
-
-        if self.qVisibilityOpacity.maximum > self.qVisibilityOpacity.minimum:
-            fOpacity = self.GetSessionContourOpacityDefault()
+        # set Slider widget position for opacity
+        
+        #
+        # if self.qVisibilityOpacity.maximum > self.qVisibilityOpacity.minimum:
+        #     fOpacity = self.GetSessionContourOpacityDefault()
             
         iSliderValue = int(fOpacity * (self.qVisibilityOpacity.maximum - self.qVisibilityOpacity.minimum))    
         self.qVisibilityOpacity.setValue(iSliderValue)
 
     #----------
     def ResetContourVisibilityToSessionDefault(self):
+        # reset widgets and the imageView property to the session default of contour visibility 
         
-        self.SetSliderToolFromContourOpacity(self.GetSessionContourOpacityDefault())
-        self.SetContourVisibilityRadioButtons(self.GetSessionContourVisibilityDefault())
-
-        self.SetContourOpacityFromSliderValue(self.qVisibilityOpacity.value)
+        self.SetContourVisibilityCheckBox(self.GetSessionContourVisibilityDefault())    # tool widget Fill/Outline
+        self.SetSliderToolFromContourOpacity(self.GetSessionContourOpacityDefault())    # tool widget Opacity
+        self.SetContourOpacityFromSliderValue(self.qVisibilityOpacity.value)            # image view property
 
     #----------
     #----------
@@ -783,43 +799,28 @@ class Session:
         # >>>>>>>>>>>>>>>>>>>>
         # Contour visibility tools
         self.qContourVisibilityGrpBox = qt.QGroupBox()
-        self.qContourVisibilityGrpBox.setTitle('Contour Visibility - Display options and opacity')
+        self.qContourVisibilityGrpBox.setTitle('Contour Visibility - Fill/Outline & Opacity')
         self.qContourVisibilityGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
         self.qContourVisibilityGrpBoxLayout = qt.QHBoxLayout()
         self.qContourVisibilityGrpBox.setLayout(self.qContourVisibilityGrpBoxLayout)
 
-        # qContourLabel = qt.QLabel("Select viewing window:")
-        # self.qContourVisibilityGrpBoxLayout.addWidget(qContourLabel)
-        
-        # self.qWidgetAndSegmentationList = qt.QComboBox()
-        # self.qContourVisibilityGrpBoxLayout.addWidget(self.qWidgetAndSegmentationList)
-        
-        self.VisibilitySelectionsGrpBox = qt.QGroupBox()
-        self.VisibilitySelectionsGrpBoxLayout = qt.QHBoxLayout()
-        self.VisibilitySelectionsGrpBox.setLayout(self.VisibilitySelectionsGrpBoxLayout)
-        
-        self.qRadioBtnOutline = qt.QRadioButton('Outline')
-        self.qRadioBtnOutline.setChecked(True)
-        self.VisibilitySelectionsGrpBoxLayout.addWidget(self.qRadioBtnOutline)
-        self.qRadioBtnOutline.toggled.connect(self.SetContourDisplayOutlineOrFill)
+        self.qChkBoxFillOrOutline = qt.QCheckBox('Fill')
+        self.qChkBoxFillOrOutline.stateChanged.connect(self.onContourDisplayStateChanged)
+        self.qContourVisibilityGrpBoxLayout.addWidget(self.qChkBoxFillOrOutline)
+        self.qContourVisibilityGrpBoxLayout.addSpacing(30)
 
-        self.qRadioBtnFill = qt.QRadioButton('Fill')
-        self.VisibilitySelectionsGrpBoxLayout.addWidget(self.qRadioBtnFill)
-        self.qRadioBtnFill.toggled.connect(self.SetContourDisplayOutlineOrFill)
-
-        self.qContourVisibilityGrpBoxLayout.addWidget(self.VisibilitySelectionsGrpBox)
-        
         self.qVisibilityOpacity = qt.QSlider(QtCore.Qt.Horizontal)
         self.qVisibilityOpacity.setMinimum(0)
-        self.qVisibilityOpacity.setMaximum(10)
-        self.qVisibilityOpacity.setValue(5)
-        self.qVisibilityOpacity.setTickInterval(1)
-        self.qVisibilityOpacity.setTickPosition(qt.QSlider.TicksBelow)
+        self.qVisibilityOpacity.setMaximum(100)
+        self.qVisibilityOpacity.setValue(50)
         self.qVisibilityOpacity.setPageStep(1)
         self.qVisibilityOpacity.connect("valueChanged(int)", self.SetContourOpacityFromSliderValue)
-        
         self.qContourVisibilityGrpBoxLayout.addWidget(self.qVisibilityOpacity)
-        
+        self.qContourVisibilityGrpBoxLayout.addSpacing(30)
+
+        qLabelOpacity = qt.QLabel('Opacity')
+        qLabelOpacity.setMinimumWidth(200)
+        self.qContourVisibilityGrpBoxLayout.addWidget(qLabelOpacity)
         
 
         self.tabExtraToolsLayout.addWidget(self.qContourVisibilityGrpBox)
@@ -1138,12 +1139,15 @@ class Session:
         bSuccess, sMsg  = self.PerformSave('ResetView')
 
         if bSuccess:
+            sFillOrOutline, iOpacitySliderValue, fOpacity = self.GetContourDisplayState()
             self.AdjustToCurrentQuestionSet()
             self.bNPlanesViewingMode = False
             self.sViewingMode = "Default"
             self.loCurrentXMLImageViewNodes = []
             self.DisplayQuizLayout()
             self.DisplayImageLayout()
+            
+            self.ResetContourDisplayState(sFillOrOutline, iOpacitySliderValue, fOpacity)
 
         else:
             if sMsg != '':
@@ -1244,6 +1248,26 @@ class Session:
                        + "\n\n" + tb 
                 self.oUtilsMsgs.DisplayError(sMsg)
     
+    #----------
+    def onContourDisplayStateChanged(self):
+        # when user changes a contour visibility widget setting in the extra tools tab,
+        #    adjust the image view property and turn on fill/outline for label maps and segmentations
+        
+        if self.oImageView != None:
+            if self.qChkBoxFillOrOutline.isChecked():
+                self.oImageView.SetContourVisibility('Fill')
+            else:
+                self.oImageView.SetContourVisibility('Outline')
+            
+            self.oImageView.SetLabelMapOutlineOrFill(self.lsLayoutWidgets)
+    
+            xPageNode = self.GetCurrentPageNode()
+            loImageViewNodes = self.oImageView.GetImageViewList()
+            for oViewNode in loImageViewNodes:
+                if oViewNode.sViewLayer == 'Segmentation':
+                    slSegDisplayNode, slSegDataNode = oViewNode.GetSegmentationNodes(xPageNode)
+                    self.oImageView.SetSegmentationOutlineOrFill(oViewNode, slSegDisplayNode)
+                
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def FindNewRepeatedPosition(self, iSearchPageNum, iSearchRepNum):
         ''' this function scans the navigation composite indices to match 
@@ -1666,7 +1690,6 @@ class Session:
             self.oImageView = ImageView()
             self.oImageView.RunSetup(self.GetCurrentPageNode(), self.oFilesIO.GetDataParentDir())
             self.ResetContourVisibilityToSessionDefault()
-            # self.oImageView.SetContourVisibility(self.GetSessionContourVisibilityDefault())
     
             # load label maps and markup lines if a path has been stored in the xml for the images on this page
             self.oFilesIO.LoadSavedLabelMaps(self)
