@@ -59,7 +59,8 @@ class Session:
         self._bSegmentationModule = False
         self._iSegmentationTabIndex = -1   # default
         self._bPageLooping = False
-        self._sContourVisibility = 'Outline'
+        self._sSessionContourVisibility = 'Outline'
+        self._sSessionContourOpacity = 0.5
         
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
@@ -409,6 +410,10 @@ class Session:
         elif self.sViewingMode == "1 Plane Coronal":
             self.llsNPlanesOrientDest = [["Coronal","Red"]]
             
+        # add widget to contour visibility list
+        self.lsLayoutWidgets = []
+        self.lsLayoutWidgets.append('Red')
+        
     #----------
     def GetNPlanesView(self):
         return self.llsNPlanesOrientDest
@@ -474,17 +479,94 @@ class Session:
         return self.liImageDisplayOrder
     
     #----------
-    def GetContourVisibility(self):
-        return self._sContourVisibility
+    #----------   Contours outline/fill and opacity
+    #----------
+    def GetSessionContourVisibilityDefault(self):
+        return self._sSessionContourVisibility
     
     #----------
-    def SetContourVisibility(self, xRootNode):
+    def SetSessionContourVisibilityDefault(self, xRootNode):
         # quiz validation checked for valid values
         # if no attribute exists, set with the default
-        self._sContourVisibility = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ContourVisibility')
-        if self._sContourVisibility == '':
-            self._sContourVisibility = 'Outline'  # default
+        self._sSessionContourVisibility = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ContourVisibility')
+        if self._sSessionContourVisibility == '':
+            self._sSessionContourVisibility = 'Outline'  # default
+            
+        self.SetContourVisibilityCheckBox(self._sSessionContourVisibility)
+        
+    #----------
+    def SetContourVisibilityCheckBox(self, sVisibility): 
+        # set the contour visibility widget in Extra Tools 
+            
+        if sVisibility == 'Fill':
+            self.qChkBoxFillOrOutline.setChecked(True)
+        else:
+            self.qChkBoxFillOrOutline.setChecked(False)
 
+    #----------
+    def GetSessionContourOpacityDefault(self):
+        # default for opacity for the session
+        
+        return self._sSessionContourOpacity
+
+    #----------
+    def GetContourDisplayState(self):
+        # get current settings from the extra tools widgets describing the contour display state
+        
+        bFill = self.qChkBoxFillOrOutline.checked
+        if bFill:
+            sFillOrOutline = 'Fill'
+        else:
+            sFillOrOutline = 'Outline'
+
+        iSliderValue = self.qVisibilityOpacity.value
+        if self.qVisibilityOpacity.maximum > self.qVisibilityOpacity.minimum:
+            fOpacity = iSliderValue / (self.qVisibilityOpacity.maximum - self.qVisibilityOpacity.minimum)
+        else:
+            fOpacity = self.GetSessionContourOpacityDefault()
+        
+        return sFillOrOutline, iSliderValue, fOpacity
+    
+    #----------
+    def ResetContourDisplayState(self, sFillOrOutline, iSliderValue, fOpacity):
+        
+        self.SetContourVisibilityCheckBox(sFillOrOutline)           # tool widget Fill/Outline
+        self.SetSliderToolFromContourOpacity(fOpacity)              # tool widget Opacity
+        self.SetContourOpacityFromSliderValue(iSliderValue)         # image view property
+        
+    #----------
+    def SetContourOpacityFromSliderValue(self, iSliderValue):
+        # set the ContourOpacity property of the image view object based on slider valud for opacity
+        
+        if self.oImageView != None:
+            if self.qVisibilityOpacity.maximum > self.qVisibilityOpacity.minimum:  # no div by zero
+                self.oImageView.SetContourOpacity(iSliderValue / (self.qVisibilityOpacity.maximum - self.qVisibilityOpacity.minimum))
+            else:
+                self.oImageView.SetContourOpacity(self.GetSessionContourOpacityDefault())
+                
+            # reset outline or fill
+            self.onContourDisplayStateChanged()
+        
+    #----------
+    def SetSliderToolFromContourOpacity(self, fOpacity):
+        # set Slider widget position for opacity
+        
+        #
+        # if self.qVisibilityOpacity.maximum > self.qVisibilityOpacity.minimum:
+        #     fOpacity = self.GetSessionContourOpacityDefault()
+            
+        iSliderValue = int(fOpacity * (self.qVisibilityOpacity.maximum - self.qVisibilityOpacity.minimum))    
+        self.qVisibilityOpacity.setValue(iSliderValue)
+
+    #----------
+    def ResetContourVisibilityToSessionDefault(self):
+        # reset widgets and the imageView property to the session default of contour visibility 
+        
+        self.SetContourVisibilityCheckBox(self.GetSessionContourVisibilityDefault())    # tool widget Fill/Outline
+        self.SetSliderToolFromContourOpacity(self.GetSessionContourOpacityDefault())    # tool widget Opacity
+        self.SetContourOpacityFromSliderValue(self.qVisibilityOpacity.value)            # image view property
+
+    #----------
     #----------
     #----------
 
@@ -575,13 +657,6 @@ class Session:
         self.tabExtraToolsLayout = qt.QVBoxLayout()
 
         
-        # add horizontal layout
-        self.qLineToolsGrpBox = qt.QGroupBox()
-        self.qLineToolsGrpBox.setTitle('Line Measurement')
-        self.qLineToolsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
-        self.qLineToolsGrpBoxLayout = qt.QHBoxLayout()
-        self.qLineToolsGrpBox.setLayout(self.qLineToolsGrpBoxLayout)
-
 
         # >>>>>>>>>>>>>>>>>>>>
         # Window/Level interactive mode
@@ -683,6 +758,12 @@ class Session:
 
         # >>>>>>>>>>>>>>>>>>>>
         # Ruler tools
+        self.qLineToolsGrpBox = qt.QGroupBox()
+        self.qLineToolsGrpBox.setTitle('Line Measurement')
+        self.qLineToolsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
+        self.qLineToolsGrpBoxLayout = qt.QHBoxLayout()
+        self.qLineToolsGrpBox.setLayout(self.qLineToolsGrpBoxLayout)
+
         qLineToolLabel = qt.QLabel('Ruler:')
         self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabel)
         self.qLineToolsGrpBoxLayout.addSpacing(10)
@@ -715,8 +796,37 @@ class Session:
 
         self.tabExtraToolsLayout.addWidget(self.qLineToolsGrpBox)
 
+        # >>>>>>>>>>>>>>>>>>>>
+        # Contour visibility tools
+        self.qContourVisibilityGrpBox = qt.QGroupBox()
+        self.qContourVisibilityGrpBox.setTitle('Contour Visibility - Fill/Outline & Opacity')
+        self.qContourVisibilityGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
+        self.qContourVisibilityGrpBoxLayout = qt.QHBoxLayout()
+        self.qContourVisibilityGrpBox.setLayout(self.qContourVisibilityGrpBoxLayout)
 
+        self.qChkBoxFillOrOutline = qt.QCheckBox('Fill')
+        self.qChkBoxFillOrOutline.stateChanged.connect(self.onContourDisplayStateChanged)
+        self.qContourVisibilityGrpBoxLayout.addWidget(self.qChkBoxFillOrOutline)
+        self.qContourVisibilityGrpBoxLayout.addSpacing(30)
+
+        self.qVisibilityOpacity = qt.QSlider(QtCore.Qt.Horizontal)
+        self.qVisibilityOpacity.setMinimum(0)
+        self.qVisibilityOpacity.setMaximum(100)
+        self.qVisibilityOpacity.setValue(50)
+        self.qVisibilityOpacity.setPageStep(1)
+        self.qVisibilityOpacity.connect("valueChanged(int)", self.SetContourOpacityFromSliderValue)
+        self.qContourVisibilityGrpBoxLayout.addWidget(self.qVisibilityOpacity)
+        self.qContourVisibilityGrpBoxLayout.addSpacing(30)
+
+        qLabelOpacity = qt.QLabel('Opacity')
+        qLabelOpacity.setMinimumWidth(200)
+        self.qContourVisibilityGrpBoxLayout.addWidget(qLabelOpacity)
         
+
+        self.tabExtraToolsLayout.addWidget(self.qContourVisibilityGrpBox)
+        
+        # >>>>>>>>>>>>>>>>>>>>
+        # >>>>>>>>>>>>>>>>>>>>
         # >>>>>>>>>>>>>>>>>>>>
         self.tabExtraToolsLayout.addStretch()
         
@@ -1029,12 +1139,15 @@ class Session:
         bSuccess, sMsg  = self.PerformSave('ResetView')
 
         if bSuccess:
+            sFillOrOutline, iOpacitySliderValue, fOpacity = self.GetContourDisplayState()
             self.AdjustToCurrentQuestionSet()
             self.bNPlanesViewingMode = False
             self.sViewingMode = "Default"
             self.loCurrentXMLImageViewNodes = []
             self.DisplayQuizLayout()
             self.DisplayImageLayout()
+            
+            self.ResetContourDisplayState(sFillOrOutline, iOpacitySliderValue, fOpacity)
 
         else:
             if sMsg != '':
@@ -1135,6 +1248,26 @@ class Session:
                        + "\n\n" + tb 
                 self.oUtilsMsgs.DisplayError(sMsg)
     
+    #----------
+    def onContourDisplayStateChanged(self):
+        # when user changes a contour visibility widget setting in the extra tools tab,
+        #    adjust the image view property and turn on fill/outline for label maps and segmentations
+        
+        if self.oImageView != None:
+            if self.qChkBoxFillOrOutline.isChecked():
+                self.oImageView.SetContourVisibility('Fill')
+            else:
+                self.oImageView.SetContourVisibility('Outline')
+            
+            self.oImageView.SetLabelMapOutlineOrFill(self.lsLayoutWidgets)
+    
+            xPageNode = self.GetCurrentPageNode()
+            loImageViewNodes = self.oImageView.GetImageViewList()
+            for oViewNode in loImageViewNodes:
+                if oViewNode.sViewLayer == 'Segmentation':
+                    slSegDisplayNode, slSegDataNode = oViewNode.GetSegmentationNodes(xPageNode)
+                    self.oImageView.SetSegmentationOutlineOrFill(oViewNode, slSegDisplayNode)
+                
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def FindNewRepeatedPosition(self, iSearchPageNum, iSearchRepNum):
         ''' this function scans the navigation composite indices to match 
@@ -1194,7 +1327,7 @@ class Session:
                 self.oFilesIO.SetupROIColorFile(sColorFileName)
                 
                 # set contour visibility default for Session
-                self.SetContourVisibility(xRootNode)
+                self.SetSessionContourVisibilityDefault(xRootNode)
                 
                 self.oFilesIO.SetupLoopingInitialization(xRootNode)
                 self.oFilesIO.SetupPageGroupInitialization(xRootNode)
@@ -1555,7 +1688,8 @@ class Session:
     
             # set up the images on the page
             self.oImageView = ImageView()
-            self.oImageView.RunSetup(self.GetCurrentPageNode(), self.oFilesIO.GetDataParentDir(), self.GetContourVisibility())
+            self.oImageView.RunSetup(self.GetCurrentPageNode(), self.oFilesIO.GetDataParentDir())
+            self.ResetContourVisibilityToSessionDefault()
     
             # load label maps and markup lines if a path has been stored in the xml for the images on this page
             self.oFilesIO.LoadSavedLabelMaps(self)
@@ -1566,7 +1700,7 @@ class Session:
             
             self.SetNPlanesComboBoxImageNames()
     
-            self.ApplySavedImageState() 
+            self.ApplySavedImageState()
         
         except:
             iPage = self.GetCurrentPageIndex() + 1
@@ -1578,20 +1712,35 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetViewingLayout(self, xmlPageNode):
         
+        # clear combo box
+        self.lsLayoutWidgets = []
         # set the requested layout for images
         self.sPageLayout = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Layout')
         if self.sPageLayout == 'TwoOverTwo' :
             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
+            self.lsLayoutWidgets.append('Red')
+            self.lsLayoutWidgets.append('Green')
+            self.lsLayoutWidgets.append('Yellow')
+            self.lsLayoutWidgets.append('Slice4')
         elif self.sPageLayout == 'OneUpRedSlice' :
             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutOneUpRedSliceView)
+            self.lsLayoutWidgets.append('Red')
         elif self.sPageLayout == 'FourUp' :
             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
+            self.lsLayoutWidgets.append('Red')
+            self.lsLayoutWidgets.append('Green')
+            self.lsLayoutWidgets.append('Yellow')
         elif self.sPageLayout == 'SideBySideRedYellow' :
             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutSideBySideView)
+            self.lsLayoutWidgets.append('Red')
+            self.lsLayoutWidgets.append('Yellow')
         else:
             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
+            self.lsLayoutWidgets.append('Red')
+            self.lsLayoutWidgets.append('Green')
+            self.lsLayoutWidgets.append('Yellow')
+            self.lsLayoutWidgets.append('Slice4')
                     
-    
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplaySavedResponse(self):
