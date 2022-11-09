@@ -1,6 +1,6 @@
 Release Notes
 
-Image Quizzer v2.1.1
+Image Quizzer v2.2.1
 	Baines Imaging Lab, LRCP, London Health Sciences Centre, London, ON, Canada
 
 Requirements:
@@ -8,7 +8,8 @@ Requirements:
 	SlicerRT extension
 	
 New Features:
-	- Added attribute 'InitialSliceOffset' at the Image level
+	
+	- (v2.1) Added attribute 'InitialSliceOffset' at the Image level
 		- when image is initially loaded, it will be displayed at the offset (in mm) set in the quiz xml file
 		- example:
 			<Image Type="Volume" ID="MR" RotateToAcquisition="Y" InitialSliceOffset="35.15">
@@ -17,18 +18,20 @@ New Features:
 				<DefaultOrientation>Coronal</DefaultOrientation>
 				<Path>ImageVolumes\BrainTumor1\MRBrainTumor1.nrrd</Path>
 			</Image>
-	- Added attribute 'ContourVisibility' at the Session level
+	- (v2.1) Added attribute 'ContourVisibility' at the Session level
 		- Options: 'Fill' (solid display) or 'Outline' (default)
 		- This setting applies to images loaded as a label map as well as a segmentation.
+	- (v2.2) Added ContourVisibility controls to Extra Tools tab
+		- User can toggle whether contours appear as outlines or filled.
+		- User can also change the opacity of the contours.
 
 Modifications:
-	- XML attribute changes (not backwards compatible with previous versions)
+	- (v2.1) XML attribute changes (not backwards compatible with previous versions)
 		- new attribute 'InitialSliceOffset' added to Image element
 
 
-
 Fix:
-	- Reading DICOM images sometimes would load a volume multiple times.
+	- (v2.2.1) Reading DICOM images sometimes would load a volume multiple times.
 		- Image Quizzer code was modified to load DICOM images using the SOPInstanceUID function.
 		  This function takes into account the confidence associated with each Slicer plugin that
 		  is available for loading the image and chooses the one with the highest confidence.
