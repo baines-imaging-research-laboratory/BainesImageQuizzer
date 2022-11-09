@@ -799,7 +799,7 @@ class Session:
         # >>>>>>>>>>>>>>>>>>>>
         # Contour visibility tools
         self.qContourVisibilityGrpBox = qt.QGroupBox()
-        self.qContourVisibilityGrpBox.setTitle('Contour Visibility - Fill/Outline & Opacity')
+        self.qContourVisibilityGrpBox.setTitle('Contour Visibility - Fill/Outline and Opacity')
         self.qContourVisibilityGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
         self.qContourVisibilityGrpBoxLayout = qt.QHBoxLayout()
         self.qContourVisibilityGrpBox.setLayout(self.qContourVisibilityGrpBoxLayout)

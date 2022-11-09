@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Session ROIColorFile="PiRadsStudy">
+	<Page ID="IGPCxxx" Descriptor="DCE Contouring" LinkViews="Y" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
+		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" DicomRead="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\TestDicomDCE\IGPC2-026.MR.MMR_PELVIS_MMR.0031.0001.2016.05.11.12.40.24.890625.175644657.IMA</Path>
+		</Image>
+		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" DicomRead="Y">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Coronal</DefaultOrientation>
+			<Path>ImageVolumes\TestDicomDCE\IGPC2-026.MR.MMR_PELVIS_MMR.0031.0001.2016.05.11.12.40.24.890625.175644657.IMA</Path>
+		</Image>
+		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" DicomRead="Y">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
+			<Path>ImageVolumes\TestDicomDCE\IGPC2-026.MR.MMR_PELVIS_MMR.0031.0001.2016.05.11.12.40.24.890625.175644657.IMA</Path>
+		</Image>
+		<QuestionSet ID="PI-RADS" Descriptor="Contouring Exercise">
+			<Question Type="InfoBox" Descriptor="Segmentation Instructions">
+				<Option>In Segment Editor tab, select volume to create segments.</Option>
+				<Option>     Click Edit Selected Label Map collapsible button to access the segmenting tools.</Option>
+				<Option>     Select contour color to match PI-RADS category.</Option>
+				<Option>This may be repeated if segments are to be created on different volumes.</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>
