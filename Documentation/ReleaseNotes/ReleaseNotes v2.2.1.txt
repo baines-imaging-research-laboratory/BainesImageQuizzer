@@ -35,3 +35,6 @@ Fix:
 		- Image Quizzer code was modified to load DICOM images using the SOPInstanceUID function.
 		  This function takes into account the confidence associated with each Slicer plugin that
 		  is available for loading the image and chooses the one with the highest confidence.
+	- Fix display using Viewing Display options in Extra Tools tab for time series image volumes.
+		  Sometimes, the image would not be displayed at all, or when being the "Reset to default"
+		  button is pressed, the state of the image (slice number being observed) would not be retained. 
