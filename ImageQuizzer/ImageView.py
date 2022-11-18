@@ -580,11 +580,11 @@ class ViewNodeBase:
         
     #----------
     def SetNodeSource(self, sInput):
-        self._sNodeSource = sInput
+        self.sNodeSource = sInput
         
     #----------
     def GetNodeSource(self):
-        return self._sNodeSource
+        return self.sNodeSource
     
     #----------
     def SetXmlImageElement(self, iImageIndex):
@@ -1226,35 +1226,9 @@ class DicomVolumeDetail(ViewNodeBase):
 #                 print('SH eye: ',iOnOrOff, slNodeId)
 #####
                     
-            
-            if slNodeId == 0:
-                
-                # a multivolume type of node is not detected in the subject hierarchy using the GetItemByUID
-                # (because there are multiple UID's ???)
-                # if the the node ID is still 0 at this point,
-                # search for a multivolume node containing SeriesDescription
 
-                iNumNodes = slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLMultiVolumeNode')
-                
-                if iNumNodes > 0:
-                    for idx in range(iNumNodes):
-                        slMultiVolumeNode = slicer.mrmlScene.GetNthNodeByClass(idx, 'vtkMRMLMultiVolumeNode')
-                        sNodeName = slMultiVolumeNode.GetName()
-                        if sSeriesDescription in sNodeName:
-                            self.slNode = slMultiVolumeNode
-                            self.sNodeName = self.slNode.GetName()
-                            bLoadSuccess = True
-                            break
-                else:
-                    bLoadSuccess = False
-
-            else:
-                # load is complete with a valid node id
-                # update the class properties with the slicer node and node name 
-                self.slNode = slSubjectHierarchyNode.GetItemDataNode(slNodeId)
-#                 self.sNodeName = self.slNode.GetName()
-                bLoadSuccess = True
-                        
+            self.slNode = slSubjectHierarchyNode.GetItemDataNode(slNodeId)
+            bLoadSuccess = True            
             
         
         else:
