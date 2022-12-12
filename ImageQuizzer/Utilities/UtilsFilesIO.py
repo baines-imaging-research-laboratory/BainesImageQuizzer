@@ -240,6 +240,9 @@ class UtilsFilesIO:
     def GetDefaultROIColorFilePath(self):
         return os.path.join(self.GetResourcesROIColorFilesDir(), self.GetDefaultROIColorTableName() + '.txt')
 
+    #----------
+    def GetResourcesConfigDir(self):
+        return os.path.join(self.GetScriptedModulesPath(),'Resources','Config')
 
     #----------
     #----------Page Groups
@@ -343,6 +346,46 @@ class UtilsFilesIO:
                                              self.GetQuizzerROIColorTableNameWithExt()) )
         copyfile(sROIColorFilePath, self.GetQuizzerROIColorTablePath() )
                 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetupEmailResults(self, sEmailResultsTo):
+        """ Setup if request was set to have the quiz results emailed upon completion.
+        """
+        if sEmailResultsTo != '':
+            # get path to config file
+            sConfigPathFilename = os.path.join(self.GetResourcesConfigDir(),\
+                                               'smtp_config_paths.txt')
+            sConfigFilename = self.ConfigParse(sConfigPathFilename,'paths','config')
+            
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ConfigParse(self, sFullPath, sCategory, sItem):
+        """ Function to parse config file given the category and item.
+            Syntax:
+                [sCategory]
+                sItem=xxxxxxx
+            Any lines beginning with '#' are ignored
+        """
+        sCategorySyntax = '[' + sCategory + ']'
+        sItemSyntax = sItem + '='
+        
+        with open(sFullPath, mode='r', encoding='utf-8') as sConfigPathsFile:
+            sLine = sConfigPathsFile.readline()
+            iCnt = 1
+            while sLine:
+                if sLine[0] != '#':
+                    if sLine.find(sCategorySyntax):
+                        # search for item in category group
+                        while sLine:
+                            sLine = sConfigPathsFile.readline()
+                            if sLine.find(sItemSyntax):
+                                sItemValue = # remainder of line
+                            
+                            sLine = sConfigPathsFile.readline()
+                        
+                sLine = sConfigPathsFile.readline()
+                    
+                    
+                    
+            
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupForUserQuizResults(self):
         

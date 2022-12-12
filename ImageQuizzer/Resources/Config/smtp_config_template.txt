@@ -1,4 +1,4 @@
-#Email Utility Config File
+#Image Quizzer email utility smtp config File
 
 [smtp]
 host=your_host_server

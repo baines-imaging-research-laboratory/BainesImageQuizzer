@@ -1331,6 +1331,10 @@ class Session:
                 
                 self.oFilesIO.SetupLoopingInitialization(xRootNode)
                 self.oFilesIO.SetupPageGroupInitialization(xRootNode)
+                
+                sEmailResultsTo = self.oIOXml.GetValueOfNodeAGetValueOfNodeAttribute(xRootNode, 'EmailResultsTo')
+                self.oFilesIO.SetupEmailResults(sEmailResultsTo)
+                    
     
     
                 # build the list of indices page/questionset as read in by the XML 
