@@ -1,4 +1,4 @@
-# email smtp config paths
+# Image Quizzer email smtp config paths
 
 [paths]
 contacts=path_to_contacts.txt

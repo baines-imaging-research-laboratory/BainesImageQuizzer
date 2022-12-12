@@ -10,6 +10,7 @@ from copy import deepcopy
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
+from Utilities.UtilsEmail import *
 
 from Question import *
 from ImageView import *
@@ -66,6 +67,7 @@ class Session:
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
         self.oPageState = PageState()
+        self.oUtilsEmail = UtilsEmail()
 
         self.oImageView = None
         
@@ -1332,9 +1334,8 @@ class Session:
                 self.oFilesIO.SetupLoopingInitialization(xRootNode)
                 self.oFilesIO.SetupPageGroupInitialization(xRootNode)
                 
-                sEmailResultsTo = self.oIOXml.GetValueOfNodeAGetValueOfNodeAttribute(xRootNode, 'EmailResultsTo')
-                self.oFilesIO.SetupEmailResults(sEmailResultsTo)
-                    
+                self.oUtilsEmail.SetupEmailResults(self.oFilesIO, \
+                                self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'EmailResultsTo'))
     
     
                 # build the list of indices page/questionset as read in by the XML 
