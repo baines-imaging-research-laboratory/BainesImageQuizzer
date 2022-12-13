@@ -3,6 +3,7 @@ import os, sys
 # import vtk, qt, ctk, slicer
 
 import xml.dom.minidom
+import shutil
 
 from datetime import datetime
 
@@ -433,4 +434,19 @@ class UtilsIOXml:
 
 
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ZipXml(self, sQuizName, sQuizFolderPath):
+        """ Zip the quiz results in the user's folder.
+        """
         
+        try:
+            sOutputFilename = ''
+            sOutputFilename = sQuizName
+            shutil.make_archive(sOutputFilename, 'zip', sQuizFolderPath)
+            
+            return sOutputFilename
+            
+        except:
+            raise Exception('Trouble archiving the quiz results folder.')
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -62,6 +62,7 @@ class Session:
         self._bPageLooping = False
         self._sSessionContourVisibility = 'Outline'
         self._sSessionContourOpacity = 0.5
+        self._bEmailResults = False
         
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
@@ -129,6 +130,13 @@ class Session:
     def LoginTime(self):
         return self._sLoginTime
     
+    #----------
+    def SetEmailResultsRequest(self, bInput):
+        self._bEmailResults = bInput
+        
+    #----------
+    def GetEmailResultsRequest(self):
+        return self._bEmailResults
     #----------
     def SetPreviousResponses(self, lInputResponses):
         self._lsPreviousResponses = lInputResponses
@@ -1035,11 +1043,25 @@ class Session:
             sMsg = 'Do you wish to exit?'
             if sCaller == 'ExitBtn':
                 sMsg = sMsg + ' \nYour responses will be saved. Quiz may be resumed.'
+            else:
+                if sCaller == 'Finish':
+                    sMsg = sMsg + " \nYour quiz is complete and your responses will be locked." \
+                                + " \n\nIf you wish to resume at a later time, press 'Cancel' here, then use the 'Exit' button."
     
             qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
             if qtAns == qt.QMessageBox.Ok:
                 bSuccess, sMsg = self.PerformSave(sCaller)
                 if bSuccess:
+                    
+                    if self.GetEmailResultsRequest() and self.GetQuizComplete():
+                        sArchiveFilenameWithPath = os.path.join(self.oFilesIO.GetUserDir(), self.oFilesIO.GetQuizFilenameNoExt())
+                        sPathToZipFile = self.oIOXml.ZipXml(sArchiveFilenameWithPath, self.oFilesIO.GetUserQuizResultsDir())
+                        if sPathToZipFile != '':
+                            self.oUtilsEmail.SendEmail(sPathToZipFile)
+                        else:
+                            sMsg = 'Trouble archiving quiz results: ' + sPathToZipFile
+                            self.oUtilsMsgs.DisplayError(sMsg)
+                            
                     # update shutdown batch file to remove SlicerDICOMDatabase
                     self.oFilesIO.CreateShutdownBatchFile()
             
@@ -1316,7 +1338,9 @@ class Session:
                 
                 sMsg = self.oUtilsEmail.SetupEmailResults(self.oFilesIO, \
                                 self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'EmailResultsTo'))
-                if sMsg != '':
+                if sMsg == '':
+                    self.SetEmailResultsRequest(True)
+                else:
                     raise
 
                 self.SetupWidgets(slicerMainLayout)
@@ -1871,6 +1895,7 @@ class Session:
                                     self.AddPageCompleteAttribute(self.GetCurrentPageIndex())
                                     if sCaller == 'Finish':
                                         self.AddQuizCompleteAttribute()
+                                        self.SetQuizComplete(True)
                                 else:
                                     bSuccess = False
                                 

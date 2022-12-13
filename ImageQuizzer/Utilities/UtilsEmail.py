@@ -151,6 +151,9 @@ class UtilsEmail:
         return sItemValue
                     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SendEmail(self, sPathToZipFile):
+        pass
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     
                     

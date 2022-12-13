@@ -177,6 +177,12 @@ class UtilsFilesIO:
         return self._sXmlQuizFilename
     
     #----------
+    def GetQuizFilenameNoExt(self):
+        sFilenameNoExt = os.path.splitext(self.GetQuizFilename())[0]
+        
+        return sFilenameNoExt
+    
+    #----------
     def GetFilenameWithExtFromPath(self, sFilePath):
         sDir,sFilenameWithExt = os.path.split(sFilePath)
 
