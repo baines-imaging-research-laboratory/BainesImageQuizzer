@@ -1304,15 +1304,21 @@ class Session:
         try:
             self.SetFilesIO(oFilesIO)
     
+            sMsg = ''
             # open xml and check for root node
             bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizResultsPath(),'Session')
     
             if not bSuccess:
-                sErrorMsg = "ERROR", "Not a valid quiz - Trouble with XML syntax."
-                self.oUtilsMsgs.DisplayError(sErrorMsg)
+                sMsg = "ERROR", "Not a valid quiz - Trouble with XML syntax."
+                raise
     
             else:
-    
+                
+                sMsg = self.oUtilsEmail.SetupEmailResults(self.oFilesIO, \
+                                self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'EmailResultsTo'))
+                if sMsg != '':
+                    raise
+
                 self.SetupWidgets(slicerMainLayout)
                 self.oQuizWidgets.qLeftWidget.activateWindow()
                 
@@ -1334,19 +1340,16 @@ class Session:
                 self.oFilesIO.SetupLoopingInitialization(xRootNode)
                 self.oFilesIO.SetupPageGroupInitialization(xRootNode)
                 
-                self.oUtilsEmail.SetupEmailResults(self.oFilesIO, \
-                                self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'EmailResultsTo'))
-    
     
                 # build the list of indices page/questionset as read in by the XML 
                 #    list is shuffled if randomizing is requested
                 self.BuildNavigationList()
                 self.InitializeImageDisplayOrderIndices()
                 
-                
                 # check for partial or completed quiz
                 self.SetNavigationIndexIfResumeRequired()
                             
+
                 self.progress.setMaximum(len(self.GetNavigationList()))
                 self.progress.setValue(self.GetCurrentNavigationIndex())
         
@@ -1367,9 +1370,13 @@ class Session:
                 self.EnableButtons()
 
         except:
-            iPage = self.GetCurrentPageIndex() + 1
+            if self.GetNavigationList() == []:
+                iPage = 0
+            else:
+                iPage = self.GetCurrentPageIndex() + 1
+                
             tb = traceback.format_exc()
-            sMsg = "RunSetup: Error trying to set up the quiz. Page: " + str(iPage) \
+            sMsg = sMsg + "RunSetup: Error trying to set up the quiz. Page: " + str(iPage) \
                    + "\n\n" + tb 
             self.oUtilsMsgs.DisplayError(sMsg)
             
