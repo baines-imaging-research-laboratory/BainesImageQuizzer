@@ -1053,20 +1053,7 @@ class Session:
                 bSuccess, sMsg = self.PerformSave(sCaller)
                 if bSuccess:
                     
-                    if self.GetEmailResultsRequest() and self.GetQuizComplete():
-                        sMsg = 'Ready to email results?'
-                        qtEmailAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
-
-                        if qtEmailAns == qt.QMessageBox.Yes:
-
-                            sArchiveFilenameWithPath = os.path.join(self.oFilesIO.GetUserDir(), self.oFilesIO.GetQuizFilenameNoExt())
-                            sPathToZipFile = self.oIOXml.ZipXml(sArchiveFilenameWithPath, self.oFilesIO.GetUserQuizResultsDir())
-                            
-                            if sPathToZipFile != '':
-                                self.oUtilsEmail.SendEmail(sPathToZipFile)
-                            else:
-                                sMsg = 'Trouble archiving quiz results: ' + sPathToZipFile
-                                self.oUtilsMsgs.DisplayError(sMsg)
+                    self.QueryThenSendEmailResults()
                             
                     # update shutdown batch file to remove SlicerDICOMDatabase
                     self.oFilesIO.CreateShutdownBatchFile()
@@ -1342,11 +1329,11 @@ class Session:
     
             else:
                 
-                sMsg = self.oUtilsEmail.SetupEmailResults(self.oFilesIO, \
+                bEmailRequest, sMsg = self.oUtilsEmail.SetupEmailResults(self.oFilesIO, \
                                 self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'EmailResultsTo'))
-                if sMsg == '':
-                    self.SetEmailResultsRequest(True)
-                else:
+                
+                self.SetEmailResultsRequest(bEmailRequest)
+                if sMsg != '':
                     raise
 
                 self.SetupWidgets(slicerMainLayout)
@@ -2473,7 +2460,13 @@ class Session:
         
         if self.GetQuizComplete():
             # quiz does not allow for changing responses - review is allowed
-            sMsg = 'Quiz has already been completed and responses cannot be modified. \nWould you like to review the quiz? (Click No to exit).'
+            sMsg = 'Quiz has already been completed and responses cannot be modified.'\
+                    + ' \nWould you like to review the quiz? '
+            if self.GetEmailResultsRequest():
+                sMsg = sMsg + '\n\nClick No to exit. You will have the option to email results.'
+            else:
+                sMsg = sMsg + '\n\nClick No to exit.'
+                
             qtAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
 
             if qtAns == qt.QMessageBox.Yes:
@@ -2570,10 +2563,10 @@ class Session:
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExitOnQuizComplete(self):
-
-        # the last index in the composite navigation indices list was reached
-        # the quiz was completed - exit
-        
+        """ the last index in the composite navigation indices list was reached
+            the quiz was completed - exit
+        """
+        self.QueryThenSendEmailResults()
         self.oUtilsMsgs.DisplayInfo('Quiz Complete - Exiting')
         slicer.util.exit(status=EXIT_SUCCESS)
         
@@ -2585,6 +2578,24 @@ class Session:
         xmlLastLoginElement.set('QuizComplete','Y')
         self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def QueryThenSendEmailResults(self):
+        
+        if self.GetEmailResultsRequest() and self.GetQuizComplete():
+            sMsg = 'Ready to email results?'
+            qtEmailAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
+    
+            if qtEmailAns == qt.QMessageBox.Yes:
+    
+                sArchiveFilenameWithPath = os.path.join(self.oFilesIO.GetUserDir(), self.oFilesIO.GetQuizFilenameNoExt())
+                sPathToZipFile = self.oIOXml.ZipXml(sArchiveFilenameWithPath, self.oFilesIO.GetUserQuizResultsDir())
+                
+                if sPathToZipFile != '':
+                    self.oUtilsEmail.SendEmail(sPathToZipFile)
+                else:
+                    sMsg = 'Trouble archiving quiz results: ' + sPathToZipFile
+                    self.oUtilsMsgs.DisplayError(sMsg)
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddPageCompleteAttribute(self, idxPage):
         ''' add attribute to current page element to indicate all 

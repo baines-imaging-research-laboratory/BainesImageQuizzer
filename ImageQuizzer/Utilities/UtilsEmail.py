@@ -40,9 +40,12 @@ class UtilsEmail:
         """
         
         try:
+            
+            bEmailRequest = False
             sMsg = ''
+            
             if sEmailResultsTo != '':
-
+                bEmailRequest = True
                 sSmtpConfigFile = os.path.join(oFilesIO.GetResourcesConfigDir(), 'smtp_config.txt')
                 
                 if sSmtpConfigFile != '':
@@ -79,7 +82,7 @@ class UtilsEmail:
             sMsg = "SetupEmailResults: Error setting up email configuration\n " \
                    + self.GetEmailConfiguration() + '\n\n'+  tb 
                    
-        return sMsg
+        return bEmailRequest, sMsg
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ParseConfigFile(self, sFullFilename, sCategory, sItem):
