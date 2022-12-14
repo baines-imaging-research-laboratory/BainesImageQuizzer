@@ -444,7 +444,7 @@ class UtilsIOXml:
             sOutputFilename = sQuizName
             shutil.make_archive(sOutputFilename, 'zip', sQuizFolderPath)
             
-            return sOutputFilename
+            return sOutputFilename + '.zip'
             
         except:
             raise Exception('Trouble archiving the quiz results folder.')

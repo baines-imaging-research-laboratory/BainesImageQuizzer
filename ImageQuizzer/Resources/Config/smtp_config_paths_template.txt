@@ -1,6 +1,0 @@
-# Image Quizzer email smtp config paths
-
-[paths]
-contacts=path_to_contacts.txt
-template=path_to_email_message.txt
-config=path_to_smtp_config.txt

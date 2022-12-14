@@ -1054,13 +1054,19 @@ class Session:
                 if bSuccess:
                     
                     if self.GetEmailResultsRequest() and self.GetQuizComplete():
-                        sArchiveFilenameWithPath = os.path.join(self.oFilesIO.GetUserDir(), self.oFilesIO.GetQuizFilenameNoExt())
-                        sPathToZipFile = self.oIOXml.ZipXml(sArchiveFilenameWithPath, self.oFilesIO.GetUserQuizResultsDir())
-                        if sPathToZipFile != '':
-                            self.oUtilsEmail.SendEmail(sPathToZipFile)
-                        else:
-                            sMsg = 'Trouble archiving quiz results: ' + sPathToZipFile
-                            self.oUtilsMsgs.DisplayError(sMsg)
+                        sMsg = 'Ready to email results?'
+                        qtEmailAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
+
+                        if qtEmailAns == qt.QMessageBox.Yes:
+
+                            sArchiveFilenameWithPath = os.path.join(self.oFilesIO.GetUserDir(), self.oFilesIO.GetQuizFilenameNoExt())
+                            sPathToZipFile = self.oIOXml.ZipXml(sArchiveFilenameWithPath, self.oFilesIO.GetUserQuizResultsDir())
+                            
+                            if sPathToZipFile != '':
+                                self.oUtilsEmail.SendEmail(sPathToZipFile)
+                            else:
+                                sMsg = 'Trouble archiving quiz results: ' + sPathToZipFile
+                                self.oUtilsMsgs.DisplayError(sMsg)
                             
                     # update shutdown batch file to remove SlicerDICOMDatabase
                     self.oFilesIO.CreateShutdownBatchFile()
