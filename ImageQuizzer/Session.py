@@ -10,6 +10,7 @@ from copy import deepcopy
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
+from Utilities.UtilsEmail import *
 
 from Question import *
 from ImageView import *
@@ -61,11 +62,13 @@ class Session:
         self._bPageLooping = False
         self._sSessionContourVisibility = 'Outline'
         self._sSessionContourOpacity = 0.5
+        self._bEmailResults = False
         
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
         self.oPageState = PageState()
+        self.oUtilsEmail = UtilsEmail()
 
         self.oImageView = None
         
@@ -127,6 +130,13 @@ class Session:
     def LoginTime(self):
         return self._sLoginTime
     
+    #----------
+    def SetEmailResultsRequest(self, bInput):
+        self._bEmailResults = bInput
+        
+    #----------
+    def GetEmailResultsRequest(self):
+        return self._bEmailResults
     #----------
     def SetPreviousResponses(self, lInputResponses):
         self._lsPreviousResponses = lInputResponses
@@ -1033,11 +1043,18 @@ class Session:
             sMsg = 'Do you wish to exit?'
             if sCaller == 'ExitBtn':
                 sMsg = sMsg + ' \nYour responses will be saved. Quiz may be resumed.'
+            else:
+                if sCaller == 'Finish':
+                    sMsg = sMsg + " \nYour quiz is complete and your responses will be locked." \
+                                + " \n\nIf you wish to resume at a later time, press 'Cancel' here, then use the 'Exit' button."
     
             qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
             if qtAns == qt.QMessageBox.Ok:
                 bSuccess, sMsg = self.PerformSave(sCaller)
                 if bSuccess:
+                    
+                    self.QueryThenSendEmailResults()
+                            
                     # update shutdown batch file to remove SlicerDICOMDatabase
                     self.oFilesIO.CreateShutdownBatchFile()
             
@@ -1302,15 +1319,23 @@ class Session:
         try:
             self.SetFilesIO(oFilesIO)
     
+            sMsg = ''
             # open xml and check for root node
             bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizResultsPath(),'Session')
     
             if not bSuccess:
-                sErrorMsg = "ERROR", "Not a valid quiz - Trouble with XML syntax."
-                self.oUtilsMsgs.DisplayError(sErrorMsg)
+                sMsg = "ERROR", "Not a valid quiz - Trouble with XML syntax."
+                raise
     
             else:
-    
+                
+                bEmailRequest, sMsg = self.oUtilsEmail.SetupEmailResults(self.oFilesIO, \
+                                self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'EmailResultsTo'))
+                
+                self.SetEmailResultsRequest(bEmailRequest)
+                if sMsg != '':
+                    raise
+
                 self.SetupWidgets(slicerMainLayout)
                 self.oQuizWidgets.qLeftWidget.activateWindow()
                 
@@ -1331,17 +1356,17 @@ class Session:
                 
                 self.oFilesIO.SetupLoopingInitialization(xRootNode)
                 self.oFilesIO.SetupPageGroupInitialization(xRootNode)
-    
+                
     
                 # build the list of indices page/questionset as read in by the XML 
                 #    list is shuffled if randomizing is requested
                 self.BuildNavigationList()
                 self.InitializeImageDisplayOrderIndices()
                 
-                
                 # check for partial or completed quiz
                 self.SetNavigationIndexIfResumeRequired()
                             
+
                 self.progress.setMaximum(len(self.GetNavigationList()))
                 self.progress.setValue(self.GetCurrentNavigationIndex())
         
@@ -1362,9 +1387,13 @@ class Session:
                 self.EnableButtons()
 
         except:
-            iPage = self.GetCurrentPageIndex() + 1
+            if self.GetNavigationList() == []:
+                iPage = 0
+            else:
+                iPage = self.GetCurrentPageIndex() + 1
+                
             tb = traceback.format_exc()
-            sMsg = "RunSetup: Error trying to set up the quiz. Page: " + str(iPage) \
+            sMsg = sMsg + "RunSetup: Error trying to set up the quiz. Page: " + str(iPage) \
                    + "\n\n" + tb 
             self.oUtilsMsgs.DisplayError(sMsg)
             
@@ -1859,6 +1888,7 @@ class Session:
                                     self.AddPageCompleteAttribute(self.GetCurrentPageIndex())
                                     if sCaller == 'Finish':
                                         self.AddQuizCompleteAttribute()
+                                        self.SetQuizComplete(True)
                                 else:
                                     bSuccess = False
                                 
@@ -2430,7 +2460,13 @@ class Session:
         
         if self.GetQuizComplete():
             # quiz does not allow for changing responses - review is allowed
-            sMsg = 'Quiz has already been completed and responses cannot be modified. \nWould you like to review the quiz? (Click No to exit).'
+            sMsg = 'Quiz has already been completed and responses cannot be modified.'\
+                    + ' \nWould you like to review the quiz? '
+            if self.GetEmailResultsRequest():
+                sMsg = sMsg + '\n\nClick No to exit. You will have the option to email results.'
+            else:
+                sMsg = sMsg + '\n\nClick No to exit.'
+                
             qtAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
 
             if qtAns == qt.QMessageBox.Yes:
@@ -2527,10 +2563,10 @@ class Session:
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExitOnQuizComplete(self):
-
-        # the last index in the composite navigation indices list was reached
-        # the quiz was completed - exit
-        
+        """ the last index in the composite navigation indices list was reached
+            the quiz was completed - exit
+        """
+        self.QueryThenSendEmailResults()
         self.oUtilsMsgs.DisplayInfo('Quiz Complete - Exiting')
         slicer.util.exit(status=EXIT_SUCCESS)
         
@@ -2542,6 +2578,24 @@ class Session:
         xmlLastLoginElement.set('QuizComplete','Y')
         self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def QueryThenSendEmailResults(self):
+        
+        if self.GetEmailResultsRequest() and self.GetQuizComplete():
+            sMsg = 'Ready to email results?'
+            qtEmailAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
+    
+            if qtEmailAns == qt.QMessageBox.Yes:
+    
+                sArchiveFilenameWithPath = os.path.join(self.oFilesIO.GetUserDir(), self.oFilesIO.GetQuizFilenameNoExt())
+                sPathToZipFile = self.oIOXml.ZipXml(sArchiveFilenameWithPath, self.oFilesIO.GetUserQuizResultsDir())
+                
+                if sPathToZipFile != '':
+                    self.oUtilsEmail.SendEmail(sPathToZipFile)
+                else:
+                    sMsg = 'Trouble archiving quiz results: ' + sPathToZipFile
+                    self.oUtilsMsgs.DisplayError(sMsg)
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddPageCompleteAttribute(self, idxPage):
         ''' add attribute to current page element to indicate all 
