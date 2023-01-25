@@ -1213,6 +1213,10 @@ class Session:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onRepeatButtonClicked(self):
+        ''' Function to manage repeating a page node when user requests a repeat (looping).
+            This is generally used for multiple lesions.
+        '''
+        
         qtAns = self.oUtilsMsgs.DisplayOkCancel(\
                             "Are you sure you want to repeat this set of images and questions?" +\
                             "\nIf No, click 'Cancel' and press 'Next' to continue.")
@@ -1224,35 +1228,10 @@ class Session:
                 self.DisableButtons()    
                 bSuccess, sMsg = self.PerformSave('NextBtn')
                 if bSuccess:
-                    indXmlPageToRepeat = self.GetCurrentPageIndex()
                     
-                    
-                    xCopyOfXmlPageToRepeatNode = self.oIOXml.CopyElement(self.GetCurrentPageNode())
-                    iCopiedRepNum = int(self.oIOXml.GetValueOfNodeAttribute(xCopyOfXmlPageToRepeatNode, "Rep"))
-                    
-                    # find the next xml page that has Rep 0 (move past all repeated pages for this loop)
-                    indNextXmlPageWithRep0 = self.oIOXml.GetIndexOfNextChildWithAttributeValue(self.oIOXml.GetRootNode(), "Page", indXmlPageToRepeat + 1, "Rep", "0")
-            
-                    if indNextXmlPageWithRep0 != -1:
-                        self.oIOXml.InsertElementBeforeIndex(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode, indNextXmlPageWithRep0)
-                    else:
-                        # attribute was not found
-                        self.oIOXml.AppendElement(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode)
-                        indNextXmlPageWithRep0 = self.oIOXml.GetNumChildrenByName(self.oIOXml.GetRootNode(), 'Page') - 1
-                    
-                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())    # for debug
-                    self.BuildNavigationList() # update after adding xml page
-                    
-                    iNewNavInd = self.FindNewRepeatedPosition(indNextXmlPageWithRep0, iCopiedRepNum)
-                    self.SetCurrentNavigationIndex(iNewNavInd)
-                
-                    # update the repeated page
-                    self.AdjustXMLForRepeatedPage()
-                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())    # for debug
-                    self.BuildNavigationList()  # repeated here to pick up attribute adjustments for Rep#
-                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-            
-            
+                    self.CreateRepeatedPageNode()
+
+                    # cleanup
                     self._loQuestionSets = []
                     slicer.mrmlScene.Clear()
             
@@ -2332,7 +2311,50 @@ class Session:
         return bSuccess, sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CreateRepeatedPageNode(self, sXmlFilePath = None):
+        ''' Function to copy the current page into the xml allowing the user to create new segments or  
+            measurement lines for the same image. 
+        '''
+        # allow for testing environment to use a pre-set testing file path
+        if sXmlFilePath == None:
+            sXmlFilePath = self.oFilesIO.GetUserQuizResultsPath()   # for live run
+        
+        indXmlPageToRepeat = self.GetCurrentPageIndex()
+        
+        
+        xCopyOfXmlPageToRepeatNode = self.oIOXml.CopyElement(self.GetCurrentPageNode())
+        iCopiedRepNum = int(self.oIOXml.GetValueOfNodeAttribute(xCopyOfXmlPageToRepeatNode, "Rep"))
+        
+        # find the next xml page that has Rep 0 (move past all repeated pages for this loop)
+        indNextXmlPageWithRep0 = self.oIOXml.GetIndexOfNextChildWithAttributeValue(self.oIOXml.GetRootNode(), "Page", indXmlPageToRepeat + 1, "Rep", "0")
+
+        if indNextXmlPageWithRep0 != -1:
+            self.oIOXml.InsertElementBeforeIndex(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode, indNextXmlPageWithRep0)
+        else:
+            # attribute was not found
+            self.oIOXml.AppendElement(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode)
+            indNextXmlPageWithRep0 = self.oIOXml.GetNumChildrenByName(self.oIOXml.GetRootNode(), 'Page') - 1
+        
+        self.oIOXml.SaveXml(sXmlFilePath)    # for debug
+        self.BuildNavigationList() # update after adding xml page
+        
+        iNewNavInd = self.FindNewRepeatedPosition(indNextXmlPageWithRep0, iCopiedRepNum)
+        self.SetCurrentNavigationIndex(iNewNavInd)
+    
+        # update the repeated page
+        self.AdjustXMLForRepeatedPage()
+        self.oIOXml.SaveXml(sXmlFilePath)    # for debug
+        self.BuildNavigationList()  # repeated here to pick up attribute adjustments for Rep#
+        self.oIOXml.SaveXml(sXmlFilePath)
+
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AdjustXMLForRepeatedPage(self):
+        ''' Function to update the newly repeated Page node.
+            The Page ID attribute will have '-Rep#' appended.
+            Any previously stored label map and markup line paths are removed.
+            Ay previously stored responses to questions will be removed.
+        '''
         
         sMsg = ''
         try:

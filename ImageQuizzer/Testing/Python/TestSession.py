@@ -154,11 +154,10 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         
         tupResults.append(self.test_ValidateImageOpacity())
         tupResults.append(self.test_AdjustXMLForRepeatedPage())
+        tupResults.append(self.test_TestMultipleRepeats())
 
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
-        
-        self.CreateTestXmlForLooping()
         
         #>>>>>>>>>>> cleanup <<<<<<<<<<<<
  
@@ -166,8 +165,8 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         #    ie. display error messages when not testing
         os.environ["testing"] = "0"
         
-        # remove temp files >>>>>>>> comment out for debugging
         
+        # REMOVE TEMP FILES >>>>>>>> comment out for debugging
         if os.path.exists(self.sTempDir) and os.path.isdir(self.sTempDir):
             shutil.rmtree(self.sTempDir)
 
@@ -928,7 +927,8 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         
         self.oIOXml.SetRootNode(xRoot)
         
-        sFullFile = self.sTempDir + '\\PreLoop.xml'
+        # for debug
+        sFullFile = self.sTempDir + '\\PreLoop.xml' 
         self.oIOXml.SaveXml(sFullFile)
         
          
@@ -955,16 +955,148 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         return tupResult
         
     #-------------------------------------------
-    #-------------------------------------------
-    #-------------------------------------------
-    def CreateTestXmlForLooping(self):
+    def test_TestMultipleRepeats(self):
+        ''' Function to test looping - repeat a Page
+            There are multiple consecutive tests to pass. For each test the composite navigation  
+            list changes and the next test results are based on the previous test resulting navigation list.
+        '''
+        self.fnName = sys._getframe().f_code.co_name
+        sMsg = ''
+        bTestResult = True
+        liTestResults = []
+        
+        # Set up an xml file with the basic elements and question sets for testing.
+        xRoot = self.CreateTestXmlForRepeating()
 
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        #############
+        # for debug visualization - save inputs and outputs to temp files
+        # comment out the deletion of these files at the end of 'runTest' if you need to visualize the xml structure
+        sResultsPath = self.sTempDir + '\\Results.xml'
+        sFullFile = self.sTempDir + '\\PreLoop.xml'
+        self.oIOXml.SaveXml(sFullFile)
+        #############
+
+        
+        self.oSession.BuildNavigationList()
+            # print(self.oSession.GetNavigationList())
+        '''
+        # composite indices syntax: [page, question set, page group, repetition]
+        # Pre-loop composite navigation list = [[0, 0, 1, 0],        # xPage0   Pt1/QS0
+                                                [0, 1, 1, 0],        # xPage0   Pt1/QS1
+                                                [1, 0, 0, 0],        # xPage1   Pt2/QS0
+                                                [2, 0, 1, 0],        # xPage2   Pt3/QS0
+                                                [3, 0, 2, 0],        # xPage3   Pt4/QS0
+                                                [3, 1, 2, 0],        # xPage3   Pt4/QS1
+                                                [4, 0, 0, 0],        # xPage4   Pt5/QS0
+                                                [5, 0, 2, 0],        # xPage5   Pt6/QS0
+                                                [6, 0, 3, 0],        # xPage6   Pt7/QS0
+                                                [6, 1, 3, 0],        # xPage6   Pt7/QS1
+                                                [7, 0, 0, 0]]        # xPage7   Pt8/QS0
+        '''
+        
+        # nav index------------->      0             1             2             3             4             5             6             7             8             9            10            11            12            13              14             15           16           
+        # Pre-Loop                [[0, 0, 1, 0], [0, 1, 1, 0], [1, 0, 0, 0], [2, 0, 1, 0], [3, 0, 2, 0], [3, 1, 2, 0], [4, 0, 0, 0], [5, 0, 2, 0], [6, 0, 3, 0], [6, 1, 3, 0], [7, 0, 0, 0]] 
+        # Repeat nav 3 (Pt3)
+        liExpectedResults_Test1 = [[0, 0, 1, 0], [0, 1, 1, 0], [1, 0, 0, 0], [2, 0, 1, 0], [3, 0, 1, 1], [4, 0, 2, 0], [4, 1, 2, 0], [5, 0, 0, 0], [6, 0, 2, 0], [7, 0, 3, 0], [7, 1, 3, 0], [8, 0, 0, 0]]
+        # Repeat nav 5 (Pt4) (page with 2 question sets)
+        liExpectedResults_Test2 = [[0, 0, 1, 0], [0, 1, 1, 0], [1, 0, 0, 0], [2, 0, 1, 0], [3, 0, 1, 1], [4, 0, 2, 0], [4, 1, 2, 0], [5, 0, 2, 1], [5, 1, 2, 1], [6, 0, 0, 0], [7, 0, 2, 0], [8, 0, 3, 0], [8, 1, 3, 0], [9, 0, 0, 0]]
+        # Repeat nav 3 (Pt3 again) from Rep0 position
+        liExpectedResults_Test3 = [[0, 0, 1, 0], [0, 1, 1, 0], [1, 0, 0, 0], [2, 0, 1, 0], [3, 0, 1, 1], [4, 0, 1, 2], [5, 0, 2, 0], [5, 1, 2, 0], [6, 0, 2, 1], [6, 1, 2, 1], [7, 0, 0, 0], [8, 0, 2, 0], [9, 0, 3, 0], [9, 1, 3, 0], [10, 0, 0, 0]]
+        # Repeat nav 5 (Pt3 again) from Rep2 position
+        liExpectedResults_Test4 = [[0, 0, 1, 0], [0, 1, 1, 0], [1, 0, 0, 0], [2, 0, 1, 0], [3, 0, 1, 1], [4, 0, 1, 2], [5, 0, 1, 3], [6, 0, 2, 0], [6, 1, 2, 0], [7, 0, 2, 1], [7, 1, 2, 1], [8, 0, 0, 0], [9, 0, 2, 0], [10, 0, 3, 0], [10, 1, 3, 0], [11, 0, 0, 0]]
+        # Repeat nav 15 (Pt8) append 
+        liExpectedResults_Test5 = [[0, 0, 1, 0], [0, 1, 1, 0], [1, 0, 0, 0], [2, 0, 1, 0], [3, 0, 1, 1], [4, 0, 1, 2], [5, 0, 1, 3], [6, 0, 2, 0], [6, 1, 2, 0], [7, 0, 2, 1], [7, 1, 2, 1], [8, 0, 0, 0], [9, 0, 2, 0], [10, 0, 3, 0], [10, 1, 3, 0], [11, 0, 0, 0], [12, 0, 0, 1]]
+
+        liResults_test1 = []
+        
+        ########### Test 1
+        #     Repeat nav index 3 - loop on Page with only one question set
+        self.oSession.SetCurrentNavigationIndex(3) # repeat xPage2 (3 in composite list - 0-based)
+        self.oSession.CreateRepeatedPageNode(sResultsPath)
+        liResults_test1 = self.oSession.GetNavigationList()
+            # print(liResults_test1)
+        # resulting list has a new composite index at nav 4 with the rep index = 1  (increased page index)
+        # all remaining composite indices are from Pre-Loop nav 4 to end  but page index is increased by 1 
+        bResult = [lambda:0, lambda:1][liResults_test1 == liExpectedResults_Test1]()
+        liTestResults.append(bResult)
+
+
+        
+        ########### Test 2
+        #     Repeat nav 5 (Pt4) (page with 2 question sets)
+        self.oSession.SetCurrentNavigationIndex(5) # repeat xPage4 (5 in updated composite list - 0-based)
+        self.oSession.CreateRepeatedPageNode(sResultsPath)
+        liResults_test2 = self.oSession.GetNavigationList()
+            # print(liResults_test2)
+        # resulting list has two new composite indices at positions 7 and 8 (increased page index)
+        # all remaining composite indices are from TestResult1 nav 7 to end but page index is increased by 1
+        bResult = [lambda:0, lambda:1][liResults_test2 == liExpectedResults_Test2]()
+        liTestResults.append(bResult)
+
+
+        ########### Test 3
+        #     Repeat nav 3 (Pt3 again) from Rep0 position
+        self.oSession.SetCurrentNavigationIndex(3) # repeat xPage2 again
+        self.oSession.CreateRepeatedPageNode(sResultsPath)
+        liResults_test3 = self.oSession.GetNavigationList()
+            # print(liResults_test3)
+        # resulting list has a new composite index at nav 5 with the rep index = 2  (increased page index)
+        # all remaining composite indices are from TestResult2 nav 5 to end  but page index is increased by 1 
+        bResult = [lambda:0, lambda:1][liResults_test3 == liExpectedResults_Test3]()
+        liTestResults.append(bResult)
+
+
+
+        ########### Test 4
+        #     Repeat nav 5 (Pt3 again) from Rep2 position
+        self.oSession.SetCurrentNavigationIndex(5) # repeat xPage2 again - but from Rep2 position
+        self.oSession.CreateRepeatedPageNode(sResultsPath)
+        liResults_test4 = self.oSession.GetNavigationList()
+            # print(liResults_test4)
+        # resulting list has a new composite index at nav 6 with the rep index = 3  (increased page index)
+        # all remaining composite indices are from TestResult3 nav 6 to end  but page index is increased by 1 
+        bResult = [lambda:0, lambda:1][liResults_test4 == liExpectedResults_Test4]()
+        liTestResults.append(bResult)
+
+
+        ########### Test 5
+        #     Repeat nav 15 (Pt8) last Page - new Page is appended
+        self.oSession.SetCurrentNavigationIndex(15) # repeat last page - append
+        self.oSession.CreateRepeatedPageNode(sResultsPath)
+        liResults_test5 = self.oSession.GetNavigationList()
+            # print(liResults_test5)
+        # resulting list has a new composite index appended at nav 16 with the rep index = 1  (increased page index)
+        bResult = [lambda:0, lambda:1][liResults_test5 == liExpectedResults_Test5]()
+        liTestResults.append(bResult)
+
+        ############ End testing ###########
+
+        ########## Check for any failed tests    
+        if any(i == 0 for i in liTestResults):
+            bTestResult = False
+    
+        tupResult = self.fnName, bTestResult
+        return tupResult
+        
+    #-------------------------------------------
+    #-------------------------------------------
+    #
+    #        Helper Functions
+    #
+    #-------------------------------------------
+    #-------------------------------------------
+    def CreateTestXmlForRepeating(self):
+        ''' A helper function to create an xml file for testing the Repeat functionality. (Looping)
+        '''
 
         # lCompositeTestIndices = []
         # lCompositeTestIndices.append([0,0,1,0])
         # lCompositeTestIndices.append([0,1,1,0])
         # lCompositeTestIndices.append([1,0,0,0])
-        # lCompositeTestIndices.append([2,0,1,0])   # Repeat here -navigation at 3 (0-based)
+        # lCompositeTestIndices.append([2,0,1,0])
         # lCompositeTestIndices.append([3,0,2,0])
         # lCompositeTestIndices.append([3,1,2,0])
         # lCompositeTestIndices.append([4,0,0,0])
@@ -974,12 +1106,10 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         # lCompositeTestIndices.append([7,0,0,0])
 
         
-        
-        
         xRoot = etree.Element("Session")
         xPage0 = etree.SubElement(xRoot,"Page", {"PageGroup":"1", "Rep":"0","ID":"Pt1"})
         xPage1 = etree.SubElement(xRoot,"Page", {"PageGroup":"0", "Rep":"0","ID":"Pt2"})
-        xPage2 = etree.SubElement(xRoot,"Page", {"PageGroup":"1", "Rep":"0", "ID":"Pt3 PageToRepeat"}) # nav = 3 (2 QS on Page 0)
+        xPage2 = etree.SubElement(xRoot,"Page", {"PageGroup":"1", "Rep":"0","ID":"Pt3"}) # nav = 3 (2 QS on Page 0)
         xPage3 = etree.SubElement(xRoot,"Page", {"PageGroup":"2", "Rep":"0","ID":"Pt4"})
         xPage4 = etree.SubElement(xRoot,"Page", {"PageGroup":"0", "Rep":"0","ID":"Pt5"})
         xPage5 = etree.SubElement(xRoot,"Page", {"PageGroup":"2", "Rep":"0","ID":"Pt6"})
@@ -1001,69 +1131,8 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         QS7 = etree.SubElement(xPage7,'QuestionSet',  {"ID":"QS0"})
         
         
+        return xRoot
         
-        
-        self.oIOXml.SetRootNode(xRoot)
-        
-        sFullFile = self.sTempDir + '\\PreLoop.xml'
-        self.oIOXml.SaveXml(sFullFile)
-        
-        self.oSession.BuildNavigationList()
-        print(self.oSession.GetNavigationList())
-        
-        self.oSession.SetCurrentNavigationIndex(3) # repeat xPage2 (3 in composite list - 0-based)
-
-
-#    >>>>>>>>>>>>>>> Repeat composite index # 3 (0-based)
-        indXmlPageToRepeat = self.oSession.GetCurrentPageIndex()
-        # indXmlPageToRepeat = self.oSession.GetCurrentNavigationIndex()
-        print('Repeat',indXmlPageToRepeat)
-        
-        
-        xCopyOfXmlPageToRepeatNode = self.oIOXml.CopyElement(self.oSession.GetCurrentPageNode())
-        iCopiedRepNum = int(self.oIOXml.GetValueOfNodeAttribute(xCopyOfXmlPageToRepeatNode, "Rep"))
-        sCopiedPageID = (self.oIOXml.GetValueOfNodeAttribute(xCopyOfXmlPageToRepeatNode,"ID"))
-        print('CopiedPgID      :', sCopiedPageID)
-        print('CopiedPageGroup :',self.oIOXml.GetValueOfNodeAttribute(xCopyOfXmlPageToRepeatNode,"PageGroup") )
-        
-        # find the next xml page that has Rep 0 (move past all repeated pages for this loop)
-        indNextXmlPageWithRep0 = self.oIOXml.GetIndexOfNextChildWithAttributeValue(self.oIOXml.GetRootNode(), "Page", indXmlPageToRepeat + 1, "Rep", "0")
-        print('NextPageRep0    :',indNextXmlPageWithRep0)
-
-        if indNextXmlPageWithRep0 != -1:
-            self.oIOXml.InsertElementBeforeIndex(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode, indNextXmlPageWithRep0)
-        else:
-            # attribute was not found
-            self.oIOXml.AppendElement(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode)
-            indNextXmlPageWithRep0 = self.oIOXml.GetNumChildrenByName(self.oIOXml.GetRootNode(), 'Page') - 1
-
-        
-        self.oSession.BuildNavigationList() # update after adding xml page
-        
-        iNewNavInd = self.oSession.FindNewRepeatedPosition(indNextXmlPageWithRep0, iCopiedRepNum)
-        self.oSession.SetCurrentNavigationIndex(iNewNavInd)
-        
-        self.oSession.AdjustXMLForRepeatedPage()
-        self.oSession.BuildNavigationList()  # repeated here to pick up attribute adjustments for Rep#
-        print(self.oSession.GetNavigationList())
-
-        # lCompositeTestIndices = []
-        # lCompositeTestIndices.append([0,0,1,0])
-        # lCompositeTestIndices.append([0,1,1,0])
-        # lCompositeTestIndices.append([1,0,0,0])
-        # lCompositeTestIndices.append([2,0,1,0])   # Repeat here -navigation at 3 (0-based)
-        # lCompositeTestIndices.append([3,0,1,1])   # after loop - repeated page
-        # lCompositeTestIndices.append([4,0,2,0])
-        # lCompositeTestIndices.append([4,1,2,0])
-        # lCompositeTestIndices.append([5,0,0,0])
-        # lCompositeTestIndices.append([6,0,2,0])
-        # lCompositeTestIndices.append([7,0,3,0])
-        # lCompositeTestIndices.append([7,1,3,0])
-        # lCompositeTestIndices.append([8,0,0,0])
-        
-        sFullFile = self.sTempDir + '\\PostLoop.xml'
-        self.oIOXml.SaveXml(sFullFile)
-
     #-------------------------------------------
     #-------------------------------------------
 
