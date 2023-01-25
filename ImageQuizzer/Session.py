@@ -80,13 +80,22 @@ class Session:
         self.loCurrentXMLImageViewNodes = []
         self.liImageDisplayOrder = []
 
+        self.setupTestEnvironment()
 
+    #----------
     def __del__(self):
 
         # clean up of editor observers and nodes that may cause memory leaks (color table?)
         if self.GetSegmentationTabIndex() > 0:
             slicer.modules.quizzereditor.widgetRepresentation().self().exit()
 
+    #----------
+    def setupTestEnvironment(self):
+        # check if function is being called from unit testing
+        if "testing" in os.environ:
+            self.sTestMode = os.environ.get("testing")
+        else:
+            self.sTestMode = "0"
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -307,6 +316,9 @@ class Session:
         
     #----------
     def GetCurrentPageNode(self):
+        ''' From the current navigation index in the composite indices list, get the page index.
+            Return the nth page node (using the page index) from the root.
+        '''
         iPageIndex = self.GetNavigationPage(self.GetCurrentNavigationIndex())
         xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
         
@@ -1481,8 +1493,10 @@ class Session:
             The question sets always follow with the page, they are never randomized.
             The page groups are randomized. 
                  If more than one page has the same group number, they will remain in the order they were read in.
+                 
+            e.g. Randomized Page Group order : 2,3,1
             
-            eg.     Original XML List         Randomized Page Group indices      Shuffled Composite List
+                     Original XML List                Randomized Page           Shuffled Composite List
                        Page   QS   Grp   Rep             Indices                   Page   QS   Grp   Rep
                        0      0     1     0                 2                       2     0     2     0
                        0      1     1     0                 3                       2     1     2     0
@@ -1539,10 +1553,13 @@ class Session:
         # convert indices into a string
         sIndicesToStore = ''
         iCounter = 0
-        for iNum in liIndices:
+        liAdjustedIndices = []
+        liAdjustedIndices = self.AdjustIndicesForReadWrite(liIndices, 'increase')
+        
+        for iNum in liAdjustedIndices:
             iCounter = iCounter + 1
             sIndicesToStore = sIndicesToStore + str(iNum)
-            if iCounter < len(liIndices):
+            if iCounter < len(liAdjustedIndices):
                 sIndicesToStore = sIndicesToStore + ','
                 
         dictAttrib = {}     # no attributes for this element
@@ -1557,6 +1574,7 @@ class Session:
 
         liRandIndices = []
         liStoredRandIndices = []
+        liAdjustedStoredRandIndices = []
         
         xRandIndicesNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'RandomizedPageGroupIndices', 0)
         if xRandIndicesNode != None:
@@ -1564,9 +1582,48 @@ class Session:
             # liStoredRandIndices = list(map(int,sStoredRandIndices))
             liStoredRandIndices = [int(s) for s in sStoredRandIndices.split(",")]
         
+        liAdjustedStoredRandIndices = self.AdjustIndicesForReadWrite(liStoredRandIndices, 'decrease')
         
-        return liStoredRandIndices
+        return liAdjustedStoredRandIndices
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def AdjustIndicesForReadWrite(self, liIndices, sAdjustment):
+        ''' 
+            When writing to XML, increase page indices by one to reflect actual Page element index.
+            When reading from XML, decrease the stored indices for Python's 0-based indexing.
+            
+            The code uses 0-based indexing. This can be confusing for the study administrator since
+            all other Page # references use 1-based indexing. To reduce confusion, the indices are adjusted
+            when being stored in the results XML.
+        '''
+        
+        sMsg = ""
+        if sAdjustment == 'increase':
+            iAdjustment = 1
+        elif sAdjustment == 'decrease':
+            iAdjustment = -1
+        else:
+            sMsg = "AdjustIndicesForReadWrite: Invalid argument. Must be 'increase' or 'decrease'."
+            if self.sTestMode == "1":
+                raise
+            else:
+                sMsg = sMsg + "\n\n" + tb
+                self.oUtilsMsgs.DisplayError(sMsg)
+        
+        liAdjustedIndices= []
+        for iNum in range(len(liIndices)):
+            liAdjustedIndices.append(liIndices[iNum] + iAdjustment)
+        
+        if any(i < 0 for i in liAdjustedIndices):
+            sMsg = "AdjustIndicesForReadWrite: Stored randomized indices cannot have a zero." 
+            if self.sTestMode == "1":
+                raise
+            else:
+                sMsg = sMsg + "\n\n" + tb
+                self.oUtilsMsgs.DisplayError(sMsg)
+
+            
+        return liAdjustedIndices
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForLastQuestionSetForPage(self):
         bLastQuestionSet = False
@@ -1588,17 +1645,18 @@ class Session:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AdjustToCurrentQuestionSet(self):
-        
-        # if there are multiple question sets for a page, the list of question sets must
-        #    include all previous question sets - up to the one being displayed
-        #    (eg. if a page has 4 Qsets, and we are going back to Qset 3,
-        #    we need to collect question set indices 0, and 1 first,
-        #    then continue processing for index 2 which will be appended in DisplayQuestionSet function)
-        
-        # This function is called 
-        #    - when the previous button is pressed or
-        #    - if a resume is required into a question set that is not the first for the page
-        #    - if the ResetView button in Extra Tools is pressed  
+        '''
+            if there are multiple question sets for a page, the list of question sets must
+               include all previous question sets - up to the one being displayed
+               (eg. if a page has 4 Qsets, and we are going back to Qset 3,
+               we need to collect question set indices 0, and 1 first,
+               then continue processing for index 2 which will be appended in DisplayQuestionSet function)
+            
+            This function is called 
+               - when the previous button is pressed or
+               - if a resume is required into a question set that is not the first for the page
+               - if the ResetView button in Extra Tools is pressed  
+        '''
         
         self._loQuestionSets = [] # initialize
         indQSet = self.GetCurrentQuestionSetIndex()
@@ -2285,7 +2343,6 @@ class Session:
             xPreviousPage = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), "Page", self.GetNavigationPage( self.GetCurrentNavigationIndex() -1 ) )
             sPreviousRepNum = self.oIOXml.GetValueOfNodeAttribute(xPreviousPage, "Rep")
             sPreviousPageID = self.oIOXml.GetValueOfNodeAttribute(xPreviousPage, 'ID')
-            
             
             
             self.oIOXml.UpdateAttributesInElement(xNewRepeatPage, {"PageComplete":"N"})
