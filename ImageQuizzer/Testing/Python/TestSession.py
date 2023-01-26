@@ -148,14 +148,10 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_GetStoredRandomizedIndices())
         tupResults.append(self.test_AddRandomizedIndicesToXML())
         
-        tupResults.append(self.test_AdjustIndicesForReadWrite())
-        tupResults.append(self.test_AdjustIndicesForReadWrite_InvalidArgument())
-        tupResults.append(self.test_AdjustIndicesForReadWrite_NegativeValue())
-        
         tupResults.append(self.test_ValidateImageOpacity())
         tupResults.append(self.test_AdjustXMLForRepeatedPage())
         tupResults.append(self.test_TestMultipleRepeats())
-        tupResults.append(self.test_RepeatingWithRandomizedPages())
+        tupResults.append(self.test_LoopingWithRandomizedPages())
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
         
@@ -166,9 +162,9 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         os.environ["testing"] = "0"
         
         
-        # # REMOVE TEMP FILES >>>>>>>> comment out for debugging
-        # if os.path.exists(self.sTempDir) and os.path.isdir(self.sTempDir):
-        #     shutil.rmtree(self.sTempDir)
+        # REMOVE TEMP FILES >>>>>>>> comment out for debugging
+        if os.path.exists(self.sTempDir) and os.path.isdir(self.sTempDir):
+            shutil.rmtree(self.sTempDir)
 
     #------------------------------------------- 
     def test_BuildNavigationList(self):
@@ -596,13 +592,13 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         etree.SubElement(xRoot,"Page", PageGroup="0")
         etree.SubElement(xRoot,"Page", PageGroup="1")
         child = etree.SubElement(xRoot,"RandomizedPageGroupIndices")
-        child.text = '1,6,4,2,5,3' # adjusted from 0 to 1 -based indexing
+        child.text = '0,5,3,1,4,2' 
         self.oIOXml.SetRootNode(xRoot)
         
         liExpectedIndices = [0,5,3,1,4,2]
-        liAdjustedStoredIndices = self.oSession.GetStoredRandomizedIndices()
+        liStoredIndices = self.oSession.GetStoredRandomizedIndices()
         
-        if liAdjustedStoredIndices == liExpectedIndices:
+        if liStoredIndices == liExpectedIndices:
             bTestResult = True
         else:
             bTestResult = False
@@ -622,7 +618,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         etree.SubElement(xRoot,"Page", PageGroup="0")
         self.oIOXml.SetRootNode(xRoot)
         
-        liIndices = [1,6,4,2,5,3]
+        liIndices = [0,5,3,1,4,2]
         self.oSession.AddRandomizedIndicesToXML(liIndices)
 
         # read the updated xml to get what was stored 
@@ -660,81 +656,6 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         else:
             bTestResult = False
         
-        tupResult = self.fnName, bTestResult
-        return tupResult
-        
-    #------------------------------------------- 
-    def test_AdjustIndicesForReadWrite(self):
-        ''' test that will increase & decrease list of indices by one
-            used for write/read  to/from XML (respectively) to adjust for
-            Python's 0-based indexing and how the administrator interprets
-            the Page indices.
-        '''
-        self.fnName = sys._getframe().f_code.co_name
-        sMsg = ''
-        bTestResult = True
-        
-        liZeroBasedPageIndices = [3,4,0,1,2,5,6]
-        liOneBasedXMLPageIndices = [4,5,1,2,3,6,7]
-        
-        liAdjustedIndicesIncreased = self.oSession.AdjustIndicesForReadWrite(liZeroBasedPageIndices, 'increase')
-        liAdjustedIndicesDecreased = self.oSession.AdjustIndicesForReadWrite(liOneBasedXMLPageIndices, 'decrease')
-        
-        if (liAdjustedIndicesIncreased == liOneBasedXMLPageIndices) and (liAdjustedIndicesDecreased == liZeroBasedPageIndices):
-            bTestResult = True
-        else:
-            bTestResult = False
-        
-        
-        tupResult = self.fnName, bTestResult
-        return tupResult
-        
-    #------------------------------------------- 
-    def test_AdjustIndicesForReadWrite_InvalidArgument(self):
-        ''' test that captures when an invalid argument is passed to the function.
-        '''
-        self.fnName = sys._getframe().f_code.co_name
-        sMsg = ''
-        bTestResult = True
-
-        liOneBasedXMLPageIndices = [4,5,1,2,3,6,7]
-        
-        try:
-            with self.assertRaises(Exception) as context:
-                liAdjustedIndicesDecreased = self.oSession.AdjustIndicesForReadWrite(liOneBasedXMLPageIndices, 'invalid')
-                
-            sMsg = context.exception.args[0]
-            if sMsg.find("AdjustIndicesForReadWrite: Invalid argument. Must be 'increase' or 'decrease'.") >=0:
-                bTestResult = True
-               
-        except:
-            bTestResult = False
-    
-        tupResult = self.fnName, bTestResult
-        return tupResult
-        
-    #------------------------------------------- 
-    def test_AdjustIndicesForReadWrite_NegativeValue(self):
-        ''' test that captures when a negative value appears in the list after the 
-            list was adjusted by decreasing the values by one.
-        '''
-        self.fnName = sys._getframe().f_code.co_name
-        sMsg = ''
-        bTestResult = True
-
-        liOneBasedXMLPageIndices = [4,5,0,2,3,6,7]  # there should not be any zeros in the stored list
-        
-        try:
-            with self.assertRaises(Exception) as context:
-                liAdjustedIndicesDecreased = self.oSession.AdjustIndicesForReadWrite(liOneBasedXMLPageIndices, 'invalid')
-                
-            sMsg = context.exception.args[0]
-            if sMsg.find("AdjustIndicesForReadWrite: Stored randomized indices cannot have a zero.") >=0:
-                bTestResult = True
-               
-        except:
-            bTestResult = False
-    
         tupResult = self.fnName, bTestResult
         return tupResult
         
@@ -966,7 +887,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         liTestResults = []
         
         # Set up an xml file with the basic elements and question sets for testing.
-        xRoot = self.CreateTestXmlForRepeating()
+        xRoot = self.CreateTestXmlForLooping()
 
 
         self.oIOXml.SetRootNode(xRoot)
@@ -1082,14 +1003,16 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         return tupResult
         
     #-------------------------------------------
-    def test_RepeatingWithRandomizedPages(self):
-        ''' test that randomized indices stored in the xml are updated when Pages are
-            repeating (looping)
+    def test_LoopingWithRandomizedPages(self):
+        ''' Test that randomized pages are handled properly when looping is introduced.
+            Each test builds on the previous test results.
+            The shuffled composite list continues to expand with each test.
         '''
         
         self.fnName = sys._getframe().f_code.co_name
         sMsg = ''
         bTestResult = True
+        liTestResults = []
 
         #############
         # for debug visualization - save inputs and outputs to temp files
@@ -1100,30 +1023,129 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         #############
 
         # build xml
-        xRoot = self.CreateTestXmlForRepeating()
-        xRoot.set("RandomizePageGroups","Y")
+        xRoot = self.CreateTestXmlForLooping()
+
+        
         self.oIOXml.SetRootNode(xRoot)
         self.oIOXml.SaveXml(sFullFile)
         
         self.oSession.BuildNavigationList()
-        print(self.oSession.GetNavigationList())
+            #print(self.oSession.GetNavigationList())
         
         # set up for randomizing given a randomized list of PageGroup indices
+        self.oSession.SetRandomizeRequired('Y')
+        liRandIndices = [0,2,3,1]
+        self.oSession.AddRandomizedIndicesToXML(liRandIndices)
         # liRandIndices = [2,3,1] # PageGroup numbers
         # self.oSession.SetNavigationList( self.oSession.ShuffleNavigationList(liRandIndices) )
         self.oSession.BuildNavigationList()
-        print(self.oSession.GetNavigationList())
+        liResults_test0 = self.oSession.GetNavigationList()
+            #print(liResults_test0)
+        
+        '''
+        # composite indices syntax: [page, question set, page group, repetition]
+        # Pre-loop composite navigation list = [[0, 0, 1, 0],        # xPage0   Pt1/QS0
+                                                [0, 1, 1, 0],        # xPage0   Pt1/QS1
+                                                [1, 0, 0, 0],        # xPage1   Pt2/QS0
+                                                [2, 0, 1, 0],        # xPage2   Pt3/QS0
+                                                [3, 0, 2, 0],        # xPage3   Pt4/QS0
+                                                [3, 1, 2, 0],        # xPage3   Pt4/QS1
+                                                [4, 0, 0, 0],        # xPage4   Pt5/QS0
+                                                [5, 0, 2, 0],        # xPage5   Pt6/QS0
+                                                [6, 0, 3, 0],        # xPage6   Pt7/QS0
+                                                [6, 1, 3, 0],        # xPage6   Pt7/QS1
+                                                [7, 0, 0, 0]]        # xPage7   Pt8/QS0
+        '''
+        
+        # check that the composite navigation list matches the requested page order
+        # nav index------------->      0             1             2             3             4             5             6             7             8             9            10            11            12            13              14             15           16           
+        # Pre-Loop                [[0, 0, 1, 0], [0, 1, 1, 0], [1, 0, 0, 0], [2, 0, 1, 0], [3, 0, 2, 0], [3, 1, 2, 0], [4, 0, 0, 0], [5, 0, 2, 0], [6, 0, 3, 0], [6, 1, 3, 0], [7, 0, 0, 0]] 
+        # Test 0 - shuffled based on page groups - no looping 
+        liExpectedResults_Test0 = [[1, 0, 0, 0], [4, 0, 0, 0], [7, 0, 0, 0], [3, 0, 2, 0], [3, 1, 2, 0], [5, 0, 2, 0], [6, 0, 3, 0], [6, 1, 3, 0], [0, 0, 1, 0], [0, 1, 1, 0], [2, 0, 1, 0]]
+        # Test 1 - repeat at nav 1 (Pt 5 - only one question set)
+        liExpectedResults_Test1 = [[1, 0, 0, 0], [4, 0, 0, 0], [5, 0, 0, 1], [8, 0, 0, 0], [3, 0, 2, 0], [3, 1, 2, 0], [6, 0, 2, 0], [7, 0, 3, 0], [7, 1, 3, 0], [0, 0, 1, 0], [0, 1, 1, 0], [2, 0, 1, 0]]
+        # Test 2 - repeat at nav 4 (Pt 4 - two question sets)
+        liExpectedResults_Test2 = [[1, 0, 0, 0], [5, 0, 0, 0], [6, 0, 0, 1], [9, 0, 0, 0], [3, 0, 2, 0], [3, 1, 2, 0], [4, 0, 2, 1], [4, 1, 2, 1],[7, 0, 2, 0], [8, 0, 3, 0], [8, 1, 3, 0], [0, 0, 1, 0], [0, 1, 1, 0], [2, 0, 1, 0]]
+        # Test 3 - repeat at nav 13 (last entry - Pt 3 - one question set)
+        liExpectedResults_Test3 = [[1, 0, 0, 0], [6, 0, 0, 0], [7, 0, 0, 1], [10, 0, 0, 0], [4, 0, 2, 0], [4, 1, 2, 0], [5, 0, 2, 1], [5, 1, 2, 1],[8, 0, 2, 0], [9, 0, 3, 0], [9, 1, 3, 0], [0, 0, 1, 0], [0, 1, 1, 0], [2, 0, 1, 0], [3, 0, 1, 1]]
+        # Test 4 - repeat at nav 0 (first entry - Pt 2 - one question set)
+        liExpectedResults_Test4 = [[1, 0, 0, 0], [2, 0, 0, 1], [7, 0, 0, 0], [8, 0, 0, 1], [11, 0, 0, 0], [5, 0, 2, 0], [5, 1, 2, 0], [6, 0, 2, 1], [6, 1, 2, 1],[9, 0, 2, 0], [10, 0, 3, 0], [10, 1, 3, 0], [0, 0, 1, 0], [0, 1, 1, 0], [3, 0, 1, 0], [4, 0, 1, 1]]
+
         
         
-        # check that the list of randomized page indices stored in the xml match the expected list
-        # Expected page order 0-based: [ 1,4,7,3,5,6,0,2]
-        lExpectedStoredPageOrder = [2,5,8,4,6,1,3] # 1-based
+        
+        bResult = [lambda:0, lambda:1][liResults_test0 == liExpectedResults_Test0]()
+        liTestResults.append(bResult)
         
         # repeat a page
-        # check that the list of randomized page indices stored in the xml have been updated
+        # use nav index 3 (Pt2 with 1 question set)
+        
+        
+        ########### Test 1
+        #     Repeat nav index 1 - (Pt 5 - page index 4) loop on Page with only one question set
+        self.oSession.SetCurrentNavigationIndex(1) 
+        self.oSession.CreateRepeatedPageNode(sResultsPath)
+        liResults_test1 = self.oSession.GetNavigationList()
+            #print(liResults_test1)
+        # resulting list has a new composite index at nav 2 with the rep index = 1  (increased page index)
+        # all other composite indices are from Shuffled_Test0 - 
+        # page indices for other list items are increased by 1 except for page indices < 4
+        # (in this example, list items with page indices 0,1,2 and 3 remain the same)
+        bResult = [lambda:0, lambda:1][liResults_test1 == liExpectedResults_Test1]()
+        liTestResults.append(bResult)
+        
+        
+        ########### Test 2
+        #     Repeat nav index 4 - (Pt 4 - page index 3) loop on Page with two question sets
+        self.oSession.SetCurrentNavigationIndex(4) 
+        self.oSession.CreateRepeatedPageNode(sResultsPath)
+        liResults_test2 = self.oSession.GetNavigationList()
+            #print(liResults_test2)
+        # resulting list has two new composite indices at nav 6 and nav 7 with the rep index = 1  (increased page index)
+        # any pages prior to page index 4 remain the same
+        # all other composite indices are from liResults_test1 - 
+        # page indices for other list items are increased by 1 except for page indices < 3
+        # (in this example, list items with page indices 0,1 and 2 remain the same)
+        bResult = [lambda:0, lambda:1][liResults_test2 == liExpectedResults_Test2]()
+        liTestResults.append(bResult)
+        
+        
+        ########### Test 3
+        #     Repeat nav index 13 - (Pt 3 - page index 2) loop on last Page with one question set
+        self.oSession.SetCurrentNavigationIndex(13) 
+        self.oSession.CreateRepeatedPageNode(sResultsPath)
+        liResults_test3 = self.oSession.GetNavigationList()
+            #print(liResults_test3)
+        # resulting list has one new composite index at nav 14 with the rep index = 1  (increased page index)
+        # all other composite indices are from liResults_test2 - 
+        # page indices for other list items are increased by 1 except for page indices < 3
+        # (in this example, list items with page indices 0,1 and 2 remain the same)
+        bResult = [lambda:0, lambda:1][liResults_test3 == liExpectedResults_Test3]()
+        liTestResults.append(bResult)
+        
+        
+        ########### Test 4
+        #     Repeat nav index 0 - (Pt 2 - page index 1) loop on first Page with one question set
+        self.oSession.SetCurrentNavigationIndex(0) 
+        self.oSession.CreateRepeatedPageNode(sResultsPath)
+        liResults_test4 = self.oSession.GetNavigationList()
+            #print(liResults_test4)
+        # resulting list has one new composite index at nav 1 with the rep index = 1  (increased page index)
+        # all other composite indices are from liResults_test3 - 
+        # page indices for other list items are increased by 1 except for page indices < 1
+        # (in this example, list items with page indices 0 and 1 remain the same)
+        bResult = [lambda:0, lambda:1][liResults_test4 == liExpectedResults_Test4]()
+        liTestResults.append(bResult)
         
         
         
+        
+        ############ End testing ###########
+
+        ########## Check for any failed tests    
+        if any(i == 0 for i in liTestResults):
+            bTestResult = False
+
     
         tupResult = self.fnName, bTestResult
         return tupResult
@@ -1139,8 +1161,8 @@ class TestSessionTest(ScriptedLoadableModuleTest):
     #
     #-------------------------------------------
     #-------------------------------------------
-    def CreateTestXmlForRepeating(self):
-        ''' A helper function to create an xml file for testing the Repeat functionality. (Looping)
+    def CreateTestXmlForLooping(self):
+        ''' A helper function to create an xml file for testing the Loop functionality.
         '''
 
         # lCompositeTestIndices = []

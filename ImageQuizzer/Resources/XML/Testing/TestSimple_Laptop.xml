@@ -46,7 +46,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="Patient1" Descriptor="Follow-up 1" PageGroup="1" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
+	<Page ID="Patient1" Descriptor="Follow-up 1" PageGroup="1" AllowMultipleResponse="Y" EnableSegmentEditor="Y" Loop="Y">
 		<Image Type="Volume" ID="Moving Volume" RotateToAcquisition="Y" LabelMapID="Brain-moving-contour" SegmentRequired="Y">
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
@@ -98,7 +98,7 @@
 			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_moving.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="Case00Prostate" DisplayLabelMapID="Prostate-contour" RotateToAcquisition="Y" MinMarkupLinesRequired="2">
+		<Image Type="Volume" ID="Case00Prostate" RotateToAcquisition="Y" MinMarkupLinesRequired="2">
 			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
@@ -121,7 +121,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="3" EnableSegmentEditor="N">
+	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="0" EnableSegmentEditor="N">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
@@ -151,7 +151,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="3" EnableSegmentEditor="Y" MinMarkupLinesRequiredOnAnyImage="3">
+	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="0" EnableSegmentEditor="Y" MinMarkupLinesRequiredOnAnyImage="3">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
@@ -214,7 +214,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="CL PT001" Descriptor="Multiparametric_MRI" PageGroup="4" AllowMultipleResponse="Y">
+	<Page ID="CL PT001" Descriptor="Multiparametric_MRI" PageGroup="4" AllowMultipleResponse="Y" Loop="Y">
 		<Image DicomRead="Y" Type="Volume" ID="T1W MR">
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>

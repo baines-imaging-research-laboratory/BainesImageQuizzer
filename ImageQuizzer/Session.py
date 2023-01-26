@@ -63,6 +63,7 @@ class Session:
         self._sSessionContourVisibility = 'Outline'
         self._sSessionContourOpacity = 0.5
         self._bEmailResults = False
+        self._bRandomizeRequired = False
         
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
@@ -587,6 +588,20 @@ class Session:
         self.SetContourVisibilityCheckBox(self.GetSessionContourVisibilityDefault())    # tool widget Fill/Outline
         self.SetSliderToolFromContourOpacity(self.GetSessionContourOpacityDefault())    # tool widget Opacity
         self.SetContourOpacityFromSliderValue(self.qVisibilityOpacity.value)            # image view property
+
+    #----------
+    def SetRandomizeRequired(self, sYN=None):
+        # set randomize required to input value (from unit tests) or from the stored xml attribute
+        if sYN == None:
+            sYN = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(),'RandomizePageGroups')
+        if sYN == 'Y':
+            self._bRandomizeRequired = True
+        else:
+            self._bRandomizeRequired = False
+            
+    #----------
+    def GetRandomizeRequired(self):
+        return self._bRandomizeRequired
 
     #----------
     #----------
@@ -1338,12 +1353,11 @@ class Session:
                     self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
                     './/Page', 'EnableSegmentEditor','Y'))
                 
-                # set up ROI colors for segmenting
+                # set up and initialize Session attributes
                 sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
                 self.oFilesIO.SetupROIColorFile(sColorFileName)
-                
-                # set contour visibility default for Session
                 self.SetSessionContourVisibilityDefault(xRootNode)
+                self.SetRandomizeRequired()
                 
                 self.oFilesIO.SetupLoopingInitialization(xRootNode)
                 self.oFilesIO.SetupPageGroupInitialization(xRootNode)
@@ -1451,8 +1465,7 @@ class Session:
                 
                 
         # if randomization is requested - shuffle the page/questionset list
-        sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'RandomizePageGroups')
-        if sRandomizeRequired == 'Y':
+        if self.GetRandomizeRequired():
             # check if xml already holds a set of randomized indices otherwise, call randomizing function
             liRandIndices = self.GetStoredRandomizedIndices()
             if liRandIndices == []:
@@ -1532,13 +1545,11 @@ class Session:
         # convert indices into a string
         sIndicesToStore = ''
         iCounter = 0
-        liAdjustedIndices = []
-        liAdjustedIndices = self.AdjustIndicesForReadWrite(liIndices, 'increase')
         
-        for iNum in liAdjustedIndices:
+        for iNum in liIndices:
             iCounter = iCounter + 1
             sIndicesToStore = sIndicesToStore + str(iNum)
-            if iCounter < len(liAdjustedIndices):
+            if iCounter < len(liIndices):
                 sIndicesToStore = sIndicesToStore + ','
                 
         dictAttrib = {}     # no attributes for this element
@@ -1553,56 +1564,14 @@ class Session:
 
         liRandIndices = []
         liStoredRandIndices = []
-        liAdjustedStoredRandIndices = []
         
         xRandIndicesNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'RandomizedPageGroupIndices', 0)
         if xRandIndicesNode != None:
             sStoredRandIndices = self.oIOXml.GetDataInNode(xRandIndicesNode)
-            # liStoredRandIndices = list(map(int,sStoredRandIndices))
             liStoredRandIndices = [int(s) for s in sStoredRandIndices.split(",")]
         
-        liAdjustedStoredRandIndices = self.AdjustIndicesForReadWrite(liStoredRandIndices, 'decrease')
-        
-        return liAdjustedStoredRandIndices
+        return liStoredRandIndices
     
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def AdjustIndicesForReadWrite(self, liIndices, sAdjustment):
-        ''' 
-            When writing to XML, increase page indices by one to reflect actual Page element index.
-            When reading from XML, decrease the stored indices for Python's 0-based indexing.
-            
-            The code uses 0-based indexing. This can be confusing for the study administrator since
-            all other Page # references use 1-based indexing. To reduce confusion, the indices are adjusted
-            when being stored in the results XML.
-        '''
-        
-        sMsg = ""
-        if sAdjustment == 'increase':
-            iAdjustment = 1
-        elif sAdjustment == 'decrease':
-            iAdjustment = -1
-        else:
-            sMsg = "AdjustIndicesForReadWrite: Invalid argument. Must be 'increase' or 'decrease'."
-            if self.sTestMode == "1":
-                raise
-            else:
-                sMsg = sMsg + "\n\n" + tb
-                self.oUtilsMsgs.DisplayError(sMsg)
-        
-        liAdjustedIndices= []
-        for iNum in range(len(liIndices)):
-            liAdjustedIndices.append(liIndices[iNum] + iAdjustment)
-        
-        if any(i < 0 for i in liAdjustedIndices):
-            sMsg = "AdjustIndicesForReadWrite: Stored randomized indices cannot have a zero." 
-            if self.sTestMode == "1":
-                raise
-            else:
-                sMsg = sMsg + "\n\n" + tb
-                self.oUtilsMsgs.DisplayError(sMsg)
-
-            
-        return liAdjustedIndices
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForLastQuestionSetForPage(self):
         bLastQuestionSet = False
