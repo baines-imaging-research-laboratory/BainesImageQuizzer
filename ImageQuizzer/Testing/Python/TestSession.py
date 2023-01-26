@@ -155,7 +155,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_ValidateImageOpacity())
         tupResults.append(self.test_AdjustXMLForRepeatedPage())
         tupResults.append(self.test_TestMultipleRepeats())
-
+        tupResults.append(self.test_RepeatingWithRandomizedPages())
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
         
@@ -166,9 +166,9 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         os.environ["testing"] = "0"
         
         
-        # REMOVE TEMP FILES >>>>>>>> comment out for debugging
-        if os.path.exists(self.sTempDir) and os.path.isdir(self.sTempDir):
-            shutil.rmtree(self.sTempDir)
+        # # REMOVE TEMP FILES >>>>>>>> comment out for debugging
+        # if os.path.exists(self.sTempDir) and os.path.isdir(self.sTempDir):
+        #     shutil.rmtree(self.sTempDir)
 
     #------------------------------------------- 
     def test_BuildNavigationList(self):
@@ -622,7 +622,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         etree.SubElement(xRoot,"Page", PageGroup="0")
         self.oIOXml.SetRootNode(xRoot)
         
-        liIndices = [0,5,3,1,4,2] # 0-based
+        liIndices = [1,6,4,2,5,3]
         self.oSession.AddRandomizedIndicesToXML(liIndices)
 
         # read the updated xml to get what was stored 
@@ -1082,6 +1082,57 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         return tupResult
         
     #-------------------------------------------
+    def test_RepeatingWithRandomizedPages(self):
+        ''' test that randomized indices stored in the xml are updated when Pages are
+            repeating (looping)
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        sMsg = ''
+        bTestResult = True
+
+        #############
+        # for debug visualization - save inputs and outputs to temp files
+        # comment out the deletion of these files at the end of 'runTest' if you need to visualize the xml structure
+        sResultsPath = self.sTempDir + '\\Results.xml'
+        sFullFile = self.sTempDir + '\\PreLoop.xml'
+        self.oIOXml.SaveXml(sFullFile)
+        #############
+
+        # build xml
+        xRoot = self.CreateTestXmlForRepeating()
+        xRoot.set("RandomizePageGroups","Y")
+        self.oIOXml.SetRootNode(xRoot)
+        self.oIOXml.SaveXml(sFullFile)
+        
+        self.oSession.BuildNavigationList()
+        print(self.oSession.GetNavigationList())
+        
+        # set up for randomizing given a randomized list of PageGroup indices
+        # liRandIndices = [2,3,1] # PageGroup numbers
+        # self.oSession.SetNavigationList( self.oSession.ShuffleNavigationList(liRandIndices) )
+        self.oSession.BuildNavigationList()
+        print(self.oSession.GetNavigationList())
+        
+        
+        # check that the list of randomized page indices stored in the xml match the expected list
+        # Expected page order 0-based: [ 1,4,7,3,5,6,0,2]
+        lExpectedStoredPageOrder = [2,5,8,4,6,1,3] # 1-based
+        
+        # repeat a page
+        # check that the list of randomized page indices stored in the xml have been updated
+        
+        
+        
+    
+        tupResult = self.fnName, bTestResult
+        return tupResult
+        
+    #-------------------------------------------
+    #-------------------------------------------
+
+    
+    #-------------------------------------------
     #-------------------------------------------
     #
     #        Helper Functions
@@ -1109,7 +1160,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         xRoot = etree.Element("Session")
         xPage0 = etree.SubElement(xRoot,"Page", {"PageGroup":"1", "Rep":"0","ID":"Pt1"})
         xPage1 = etree.SubElement(xRoot,"Page", {"PageGroup":"0", "Rep":"0","ID":"Pt2"})
-        xPage2 = etree.SubElement(xRoot,"Page", {"PageGroup":"1", "Rep":"0","ID":"Pt3"}) # nav = 3 (2 QS on Page 0)
+        xPage2 = etree.SubElement(xRoot,"Page", {"PageGroup":"1", "Rep":"0","ID":"Pt3"})
         xPage3 = etree.SubElement(xRoot,"Page", {"PageGroup":"2", "Rep":"0","ID":"Pt4"})
         xPage4 = etree.SubElement(xRoot,"Page", {"PageGroup":"0", "Rep":"0","ID":"Pt5"})
         xPage5 = etree.SubElement(xRoot,"Page", {"PageGroup":"2", "Rep":"0","ID":"Pt6"})
