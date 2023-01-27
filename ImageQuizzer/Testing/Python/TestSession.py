@@ -162,7 +162,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         os.environ["testing"] = "0"
         
         
-        # REMOVE TEMP FILES >>>>>>>> comment out for debugging
+        # REMOVE TEMP FILES >>>>>>>> comment out for debugging for visualization
         if os.path.exists(self.sTempDir) and os.path.isdir(self.sTempDir):
             shutil.rmtree(self.sTempDir)
 

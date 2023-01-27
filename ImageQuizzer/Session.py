@@ -682,9 +682,9 @@ class Session:
         self.qButtonGrpBoxLayout.addWidget(self._btnExit)
         self.qButtonGrpBoxLayout.addWidget(qProgressLabel)
         self.qButtonGrpBoxLayout.addWidget(self.progress)
-        self.qButtonGrpBoxLayout.addWidget(self._btnRepeat)
         self.qButtonGrpBoxLayout.addWidget(self._btnPrevious)
         self.qButtonGrpBoxLayout.addWidget(self._btnNext)
+        self.qButtonGrpBoxLayout.addWidget(self._btnRepeat)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupExtraToolsButtons(self):
@@ -884,6 +884,12 @@ class Session:
                 if self.CheckForLastQuestionSetForPage() == True:
                     self._btnRepeat.enabled = True
                     self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
+            else:
+                # page is complete - enable if multiple responses are allowed
+                if self.GetMultipleResponseAllowed() == True:
+                    self._btnRepeat.enabled = True
+                    self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
+                    
 
         else:
             self.SetPageLooping(False)
@@ -939,6 +945,18 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onNextButtonClicked(self):
 
+        if self._btnRepeat.enabled == True:
+            if self._btnNext.text == 'Finish':
+                sNextPhrase = 'Finish'
+            else:
+                sNextPhrase = 'move to Next set'
+            sMsg = "You have the option to repeat this set of images and questions." +\
+                    "\nClick 'OK' to " + sNextPhrase + " otherwise click 'Cancel'."
+
+            qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
+            if qtAns == qt.QMessageBox.Cancel:
+                return
+        
         try:        
             bSuccess = True
             sMsg = ''

@@ -205,7 +205,10 @@ class UtilsFilesIO:
         xPageNode = oSession.GetCurrentPageNode()
         sPageIndex = str(oSession.GetCurrentPageIndex() + 1)
         sPageID = oSession.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
-        sDirName = os.path.join(self.GetUserQuizResultsDir(), 'Pg'+ sPageIndex + '_' + sPageID )
+        sPageDescriptor = oSession.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
+        sPageGroup = oSession.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
+        # sDirName = os.path.join(self.GetUserQuizResultsDir(), 'Pg'+ sPageIndex + '_' + sPageID )
+        sDirName = os.path.join(self.GetUserQuizResultsDir(), 'PgGroup' + sPageGroup + '_' + sPageID + '_' + sPageDescriptor )
 
         return sDirName
         
