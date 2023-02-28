@@ -1500,19 +1500,19 @@ class Session:
     def ShuffleNavigationList(self, lRandIndices):
         ''' This function will shuffle the original list as read in from the quiz xml,  that holds the
             "[page number,questionset number, page group number, rep number]" according to the randomized index list input.
-            The question sets always follow with the page, they are never randomized.
+            The question sets always remain in the same order as read in with the page, they are never randomized.
             The page groups are randomized. 
                  If more than one page has the same group number, they will remain in the order they were read in.
                  
             e.g. Randomized Page Group order : 2,3,1
             
                      Original XML List                Randomized Page           Shuffled Composite List
-                       Page   QS   Grp   Rep             Indices                   Page   QS   Grp   Rep
+                       Page   QS   Grp   Rep             Groups                   Page   QS   Grp   Rep
                        0      0     1     0                 2                       2     0     2     0
                        0      1     1     0                 3                       2     1     2     0
-                       1      0     1     0                 4                       3     0     2     0
-                       2      0     2     0                 0                       4     0     3     0
-                       2      1     2     0                 1                       4     1     3     0
+                       1      0     1     0                 1                       3     0     2     0
+                       2      0     2     0                                         4     0     3     0
+                       2      1     2     0                                         4     1     3     0
                        3      0     2     0                                         0     0     1     0
                        4      0     3     0                                         0     1     1     0
                        4      1     3     0                                         1     0     1     0
