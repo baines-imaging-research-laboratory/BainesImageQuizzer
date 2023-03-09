@@ -1,0 +1,83 @@
+<Session RandomizePageGroups="N">
+	<Page ID="TinyPatient" Descriptor="DicomSeries" PageGroup="3" EnableSegmentEditor="Y">
+		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
+			<Destination>Red</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+		</Image>
+		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
+			<Destination>Yellow</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Sagittal</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+		</Image>
+		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
+			<Destination>Green</Destination>
+			<Layer>Background</Layer>
+			<Orientation>Coronal</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
+		</Image>
+		<Image DicomRead="Y" Type="Volume" ID="RTDose" ColorTable="Dose_Color_Table" Opacity=".3">
+			<Destination>Red</Destination>
+			<Layer>Foreground</Layer>
+			<Orientation>Axial</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\dose_1.2.826.0.1.3680043.8.274.1.1.6549911257.77961.3133305374.424.dcm</Path>
+		</Image>
+		<Image DicomRead="Y" Type="Volume" ID="RTDose" ColorTable="Dose_Color_Table" Opacity=".3">
+			<Destination>Yellow</Destination>
+			<Layer>Foreground</Layer>
+			<Orientation>Sagittal</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\dose_1.2.826.0.1.3680043.8.274.1.1.6549911257.77961.3133305374.424.dcm</Path>
+		</Image>
+		<Image DicomRead="Y" Type="Volume" ID="RTDose" ColorTable="Dose_Color_Table" Opacity=".3">
+			<Destination>Green</Destination>
+			<Layer>Foreground</Layer>
+			<Orientation>Coronal</Orientation>
+			<Path>ImageVolumes\TinyRtStudy\dose_1.2.826.0.1.3680043.8.274.1.1.6549911257.77961.3133305374.424.dcm</Path>
+		</Image>
+		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
+			<Destination>Red</Destination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>Tumor_Contour</ROI>
+				<ROI>Body_Contour</ROI>
+			</ROIs>
+		</Image>
+		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
+			<Destination>Yellow</Destination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>Tumor_Contour</ROI>
+				<ROI>Body_Contour</ROI>
+			</ROIs>
+		</Image>
+		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
+			<Destination>Green</Destination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>Tumor_Contour</ROI>
+				<ROI>Body_Contour</ROI>
+			</ROIs>
+		</Image>
+		<QuestionSet ID="QS-Checkup" Descriptor="What's your progress">
+			<Question Type="CheckBox" Descriptor="Test Items:">
+				<Option>DICOM with RTStruct on Segmentation Layer</Option>
+			</Question>
+			<Question Type="Radio" Descriptor="Milestone check box test">
+				<Option>Planning CT</Option>
+				<Option>Follow-up 3 mos</Option>
+				<Option>Follow-up 6 mos</Option>
+			</Question>
+		</QuestionSet>
+		<QuestionSet>
+			<Question Type="InfoBox" Descriptor="Another set of questions">
+				<Option>No response required.</Option>
+				<Option>Just another question set test.</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>

@@ -1,0 +1,188 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+<!--  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ root Session -->
+<xs:element name="Session">
+	<xs:complexType>
+		<xs:sequence>
+			<xs:choice minOccurs="0" maxOccurs="unbounded">
+				<xs:element name="Login"/>
+				<xs:element ref="Page" />
+			</xs:choice>
+		</xs:sequence>
+		<xs:attribute name="ROIColorFile" type="xs:string" />
+		<xs:attribute name="RandomizePageGroups" type="yesnoType" default="N" />
+	</xs:complexType>
+</xs:element>
+
+<!--  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Pages -->
+<xs:element name="Page">
+	<xs:complexType>
+		<xs:sequence>
+			<xs:choice minOccurs="1" maxOccurs="unbounded" >
+				<xs:element ref="QuestionSet"/>
+				<xs:element ref="Image"/>
+			</xs:choice>
+		</xs:sequence>
+		<xs:attribute name="ID" type="xs:string" use="required" />
+		<xs:attribute name="Descriptor" type="xs:string" />
+		<xs:attribute name="LinkViews" type="yesnoType" default="N" />
+		<xs:attribute name="Layout" type="layoutType" default="FourUp" />
+		<xs:attribute name="PageGroup" type="xs:integer" />
+		<xs:attribute name="AllowMultipleResponse" type="yesnoType" default="N" />
+		<xs:attribute name="EnableSegmentEditor" type="yesnoType" default="N" />
+		<xs:attribute name="SegmentRequiredOnAnyImage" type="yesnoType" default="N"/>
+	</xs:complexType>
+</xs:element>
+
+<!--  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Images -->
+<xs:element name="Image">
+	<xs:complexType>
+		<xs:all>
+			<xs:element name="Path" minOccurs="1" maxOccurs="1" />
+			<xs:element name="Destination" type="destinationType" minOccurs="0" maxOccurs="1" />
+			<xs:element name="Orientation" type="orientationType" minOccurs="0" maxOccurs="1" />
+			<xs:element name="Layer" type="layerType" minOccurs="0" maxOccurs="1" />
+			<xs:element ref="ROIs" minOccurs="0" maxOccurs="1" />
+		</xs:all>
+		<xs:attribute name="Type" use="required" type="imageType" />
+		<xs:attribute name="DicomRead" type="yesnoType" default="N"/>
+		<xs:attribute name="ID" use="required" />
+		<xs:attribute name="LabelMapID" type="xs:string" />
+		<xs:attribute name="DisplayLabelMapID" type="xs:string" />
+		<xs:attribute name="RotateToAcquisition" type="yesnoType" default="N" />
+		<xs:attribute name="ColorTable" type="xs:string" />
+		<xs:attribute name="Opacity" type="boundedFloatType" />
+		<xs:attribute name="SegmentRequired" type="yesnoType" default="N"/>
+	</xs:complexType>
+</xs:element>
+
+<xs:element name="ROIs">
+	<xs:complexType>
+		<xs:sequence>
+			<xs:element name="ROI" minOccurs="0" maxOccurs="unbounded" />
+		</xs:sequence>
+		<xs:attribute name="ROIVisibilityCode" type="roiInclusionType" use="required"/>
+	</xs:complexType>
+</xs:element>
+
+
+
+<!--  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Questions -->
+<xs:element name="QuestionSet">
+	<xs:complexType>
+		<xs:sequence>
+			<xs:element ref="Question" minOccurs="0" maxOccurs="unbounded" />
+		</xs:sequence>
+		<xs:attribute name="ID" type="xs:string" />
+		<xs:attribute name="Descriptor" type="xs:string" />
+	</xs:complexType>
+</xs:element>
+
+<xs:element name="Question">
+	<xs:complexType>
+		<xs:sequence>
+			<xs:element ref="Option" minOccurs="0" maxOccurs="unbounded"  />
+		</xs:sequence>
+		<xs:attribute name="Type" use="required" type="questionType" />
+		<xs:attribute name="Descriptor" />
+		<xs:attribute name="Min" />
+		<xs:attribute name="Max" />
+	</xs:complexType>
+</xs:element>
+
+<xs:element name="Option">
+	<xs:complexType mixed="true" >
+		<xs:sequence>
+			<xs:element name="Response" minOccurs="0" maxOccurs="unbounded" />
+		</xs:sequence>
+		<xs:attribute name="LoginTime" />
+		<xs:attribute name="ResponseTime" />
+	</xs:complexType>
+</xs:element>
+
+
+
+<!--  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Accepted values -->
+
+<xs:simpleType name="questionType">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="CheckBox"/>
+    <xs:enumeration value="Radio"/>
+    <xs:enumeration value="InfoBox"/>
+    <xs:enumeration value="Text"/>
+    <xs:enumeration value="IntegerValue"/>
+    <xs:enumeration value="FloatValue"/>
+  </xs:restriction>
+</xs:simpleType>
+
+
+<xs:simpleType name="imageType">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="Volume"/>
+    <xs:enumeration value="VolumeSequence"/>
+    <xs:enumeration value="LabelMap"/>
+    <xs:enumeration value="Segmentation"/>
+    <xs:enumeration value="RTStruct"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="yesnoType">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="Y"/>
+    <xs:enumeration value="N"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="destinationType">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="Red"/>
+    <xs:enumeration value="Green"/>
+    <xs:enumeration value="Yellow"/>
+	<xs:enumeration value="Slice4"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="orientationType">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="Axial"/>
+    <xs:enumeration value="Sagittal"/>
+    <xs:enumeration value="Coronal"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="layerType">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="Foreground"/>
+    <xs:enumeration value="Background"/>
+    <xs:enumeration value="Label"/>
+    <xs:enumeration value="Segmentation"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="roiInclusionType">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="All"/>
+    <xs:enumeration value="Select"/>
+    <xs:enumeration value="None"/>
+    <xs:enumeration value="Ignore"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="layoutType">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="OneUpRedSlice"/>
+    <xs:enumeration value="FourUp"/>
+    <xs:enumeration value="TwoOverTwo"/>
+    <xs:enumeration value="SideBySideRedYellow"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="boundedFloatType">
+  <xs:restriction base="xs:float">
+	<xs:minInclusive value="0" />
+	<xs:maxInclusive value="1" />
+  </xs:restriction>
+</xs:simpleType>
+
+</xs:schema>
