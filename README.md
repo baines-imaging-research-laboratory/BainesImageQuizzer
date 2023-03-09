@@ -15,7 +15,7 @@ For documentation, see https://baines-imaging-research-laboratory.github.io/Imag
 
 ## Credits
 
-Carol A. Johnson[1] (Author), David A. Palma[1-3], Aaron D. Ward[1-3] (Research Supervisor)
-[1]Baines Imaging Research Laboratory, London Regional Cancer Program, London, Canada; Department of [2]Medical Biophysics, [3]Department of Oncology, Western University, London, Canada
+Carol A. Johnson<sup>1</sup> (Author), David A. Palma<sup>1-3</sup>, Aaron D. Ward<sup>1-3</sup> (Research Supervisor)
+<sup>1</sup>Baines Imaging Research Laboratory, London Regional Cancer Program, London, Canada; Department of <sup>2</sup>Medical Biophysics, <sup>3</sup>Department of Oncology, Western University, London, Canada
 
         https://www.bainesimaging.com/
