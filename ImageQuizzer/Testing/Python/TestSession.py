@@ -2,7 +2,7 @@ import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 from Session import *
 from TestingStatus import *
-from Utilities import *
+from Utilities.UtilsIOXml import *
 
 import xml.dom.minidom
 
@@ -108,7 +108,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
         sModuleName = 'ImageQuizzer'
 
-        self._oFilesIO = UtilsIO()
+        self._oFilesIO = UtilsFilesIO()
         self.oIOXml = UtilsIOXml()
         
         # create/set environment variable to be checked in UtilsIOXml class
@@ -124,9 +124,10 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         logic = TestSessionLogic()
 
         tupResults = []
-        tupResults.append(self.test_BuildPageQuestionCompositeIndexList())
-        tupResults.append(self.test_ShufflePageQuestionGroupCompositeIndexList())
-        tupResults.append(self.test_ShuffleCompositeIndexList_WithZero())
+        tupResults.append(self.test_BuildNavigationList())
+        tupResults.append(self.test_BuildNavigationList_RepNumbers())
+        tupResults.append(self.test_ShuffleNavigationList())
+        tupResults.append(self.test_ShuffleNavigationList_WithZero())
 
         tupResults.append(self.test_ValidatePageGroupNumbers_MissingPageGroup())
         tupResults.append(self.test_ValidatePageGroupNumbers_InvalidNumber())
@@ -140,6 +141,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_AddRandomizedIndicesToXML())
         
         tupResults.append(self.test_ValidateImageOpacity())
+        tupResults.append(self.test_AdjustXMLForRepeatedPage())
 
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
@@ -150,7 +152,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
  
 
     #------------------------------------------- 
-    def test_BuildPageQuestionCompositeIndexList(self):
+    def test_BuildNavigationList(self):
         bTestResult = True
         self.fnName = sys._getframe().f_code.co_name
         
@@ -167,17 +169,17 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         self.oIOXml.SetRootNode(xRoot)
         
         lExpectedCompositeIndices = []
-        lExpectedCompositeIndices.append([0,0,1])
-        lExpectedCompositeIndices.append([0,1,1])
-        lExpectedCompositeIndices.append([1,0,2])
-        lExpectedCompositeIndices.append([2,0,3])
+        lExpectedCompositeIndices.append([0,0,1,0])
+        lExpectedCompositeIndices.append([0,1,1,0])
+        lExpectedCompositeIndices.append([1,0,2,0])
+        lExpectedCompositeIndices.append([2,0,3,0])
         
         
         self.oSession = Session()
         self.oSession.SetFilesIO(self._oFilesIO)
         self.oSession.SetIOXml(self.oIOXml)
-        self.oSession.BuildPageQuestionCompositeIndexList()
-        lCompositeIndicesResult = self.oSession.GetCompositeIndicesList()
+        self.oSession.BuildNavigationList()
+        lCompositeIndicesResult = self.oSession.GetNavigationList()
         
         if lCompositeIndicesResult == lExpectedCompositeIndices :
             bTestResult = True
@@ -191,53 +193,109 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         return tupResult
 
     #------------------------------------------- 
-    def test_ShufflePageQuestionGroupCompositeIndexList(self):
+    def test_BuildNavigationList_RepNumbers(self):
+        bTestResult = True
+        self.fnName = sys._getframe().f_code.co_name
+        
+        # build XML
+        xRoot = etree.Element("Session")
+        xPage1 = etree.SubElement(xRoot,"Page")
+        xPage2 = etree.SubElement(xRoot,"Page")
+        xPage3 = etree.SubElement(xRoot,"Page")
+        xPage4 = etree.SubElement(xRoot,"Page")
+        xPage5 = etree.SubElement(xRoot,"Page")
+        xQS1 = etree.SubElement(xPage1, "QuestionSet")
+        xQS2 = etree.SubElement(xPage1, "QuestionSet")
+        xQS1 = etree.SubElement(xPage2, "QuestionSet")
+        xQS1 = etree.SubElement(xPage3, "QuestionSet")
+        xQS1 = etree.SubElement(xPage4, "QuestionSet")
+        xQS1 = etree.SubElement(xPage5, "QuestionSet")
+        
+        dAttrib = {"PageGroup":"1"}
+        self.oIOXml.UpdateAttributesInElement(xPage1, dAttrib)
+        self.oIOXml.UpdateAttributesInElement(xPage2, dAttrib)
+        self.oIOXml.UpdateAttributesInElement(xPage3, dAttrib)
+        self.oIOXml.UpdateAttributesInElement(xPage4, dAttrib)
+        self.oIOXml.UpdateAttributesInElement(xPage5, dAttrib)
+        dAttrib = {"Rep":"1"}
+        self.oIOXml.UpdateAttributesInElement(xPage4, dAttrib)
+        
+        self.oIOXml.SetRootNode(xRoot)
+        
+        lExpectedCompositeIndices = []
+        lExpectedCompositeIndices.append([0,0,1,0])
+        lExpectedCompositeIndices.append([0,1,1,0])
+        lExpectedCompositeIndices.append([1,0,1,0])
+        lExpectedCompositeIndices.append([2,0,1,0])
+        lExpectedCompositeIndices.append([3,0,1,1])
+        lExpectedCompositeIndices.append([4,0,1,0])
+        
+        
+        self.oSession = Session()
+        self.oSession.SetFilesIO(self._oFilesIO)
+        self.oSession.SetIOXml(self.oIOXml)
+        self.oSession.BuildNavigationList()
+        lCompositeIndicesResult = self.oSession.GetNavigationList()
+        
+        if lCompositeIndicesResult == lExpectedCompositeIndices :
+            bTestResult = True
+        else:
+            bTestResult = False
+            
+        # set quiz as complete for test purposes - so as not to trigger error message
+        self.oSession.SetQuizComplete(True)
+
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #------------------------------------------- 
+    def test_ShuffleNavigationList(self):
         bTestResult = True
         self.fnName = sys._getframe().f_code.co_name
         
         # build page/question set/page group composite indices list for testing
         '''
             eg.     Original XML List         Randomized Page Group indices      Shuffled Composite List
-                       Page   QS  Grp                    Indices                      Page   QS    Grp
-                       0      0     1                        2                         2      0     2
-                       0      1     1                        3                         2      1     2
-                       1      0     1                        4                         3      0     2
-                       2      0     2                        0                         4      0     3
-                       2      1     2                        1                         4      1     3
-                       3      0     2                                                  0      0     1
-                       4      0     3                                                  0      1     1
-                       4      1     3                                                  1      0     1
+                       Page   QS   Grp   Rep             Indices                   Page   QS   Grp   Rep
+                       0      0     1     0                 2                       2     0     2     0
+                       0      1     1     0                 3                       2     1     2     0
+                       1      0     1     0                 4                       3     0     2     0
+                       2      0     2     0                 0                       4     0     3     0
+                       2      1     2     0                 1                       4     1     3     0
+                       3      0     2     0                                         0     0     1     0
+                       4      0     3     0                                         0     1     1     0
+                       4      1     3     0                                         1     0     1     0
         
         '''
         
         lCompositeTestIndices = []
-        lCompositeTestIndices.append([0,0,1])
-        lCompositeTestIndices.append([0,1,1])
-        lCompositeTestIndices.append([1,0,1])
-        lCompositeTestIndices.append([2,0,2])
-        lCompositeTestIndices.append([2,1,2])
-        lCompositeTestIndices.append([3,0,2])
-        lCompositeTestIndices.append([4,0,3])
-        lCompositeTestIndices.append([4,1,3])
+        lCompositeTestIndices.append([0,0,1,0])
+        lCompositeTestIndices.append([0,1,1,0])
+        lCompositeTestIndices.append([1,0,1,0])
+        lCompositeTestIndices.append([2,0,2,0])
+        lCompositeTestIndices.append([2,1,2,0])
+        lCompositeTestIndices.append([3,0,2,0])
+        lCompositeTestIndices.append([4,0,3,0])
+        lCompositeTestIndices.append([4,1,3,0])
         
-        self.oSession.SetCompositeIndicesList(lCompositeTestIndices)
+        self.oSession.SetNavigationList(lCompositeTestIndices)
         
         
         lExpectedShuffledOrder = []
-        lExpectedShuffledOrder.append([2,0,2])
-        lExpectedShuffledOrder.append([2,1,2])
-        lExpectedShuffledOrder.append([3,0,2])
-        lExpectedShuffledOrder.append([4,0,3])
-        lExpectedShuffledOrder.append([4,1,3])
-        lExpectedShuffledOrder.append([0,0,1])
-        lExpectedShuffledOrder.append([0,1,1])
-        lExpectedShuffledOrder.append([1,0,1])
+        lExpectedShuffledOrder.append([2,0,2,0])
+        lExpectedShuffledOrder.append([2,1,2,0])
+        lExpectedShuffledOrder.append([3,0,2,0])
+        lExpectedShuffledOrder.append([4,0,3,0])
+        lExpectedShuffledOrder.append([4,1,3,0])
+        lExpectedShuffledOrder.append([0,0,1,0])
+        lExpectedShuffledOrder.append([0,1,1,0])
+        lExpectedShuffledOrder.append([1,0,1,0])
         
         # assign a set of randomized unique page groups
         lRandIndices = [2,3,1]
         
         # call function to rebuild the composite indices list
-        lCompositeIndicesResult = self.oSession.ShufflePageQuestionGroupCompositeIndexList(lRandIndices)
+        lCompositeIndicesResult = self.oSession.ShuffleNavigationList(lRandIndices)
         
         # validate result with expected
         if lCompositeIndicesResult == lExpectedShuffledOrder :
@@ -249,47 +307,47 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         return tupResult
 
     #------------------------------------------- 
-    def test_ShuffleCompositeIndexList_WithZero(self):
+    def test_ShuffleNavigationList_WithZero(self):
         bTestResult = True
         self.fnName = sys._getframe().f_code.co_name
         
         # build page/question set/page group composite indices list for testing
         
         lCompositeTestIndices = []
-        lCompositeTestIndices.append([0,0,1])
-        lCompositeTestIndices.append([0,1,1])
-        lCompositeTestIndices.append([1,0,0])
-        lCompositeTestIndices.append([2,0,1])
-        lCompositeTestIndices.append([3,0,2])
-        lCompositeTestIndices.append([3,1,2])
-        lCompositeTestIndices.append([4,0,0])
-        lCompositeTestIndices.append([5,0,2])
-        lCompositeTestIndices.append([6,0,3])
-        lCompositeTestIndices.append([6,1,3])
-        lCompositeTestIndices.append([7,0,0])
+        lCompositeTestIndices.append([0,0,1,0])
+        lCompositeTestIndices.append([0,1,1,0])
+        lCompositeTestIndices.append([1,0,0,0])
+        lCompositeTestIndices.append([2,0,1,0])
+        lCompositeTestIndices.append([3,0,2,0])
+        lCompositeTestIndices.append([3,1,2,0])
+        lCompositeTestIndices.append([4,0,0,0])
+        lCompositeTestIndices.append([5,0,2,0])
+        lCompositeTestIndices.append([6,0,3,0])
+        lCompositeTestIndices.append([6,1,3,0])
+        lCompositeTestIndices.append([7,0,0,0])
       
-        self.oSession.SetCompositeIndicesList(lCompositeTestIndices)
+        self.oSession.SetNavigationList(lCompositeTestIndices)
         
         
         lExpectedShuffledOrder = []
-        lExpectedShuffledOrder.append([1,0,0])
-        lExpectedShuffledOrder.append([4,0,0])
-        lExpectedShuffledOrder.append([7,0,0])
-        lExpectedShuffledOrder.append([3,0,2])
-        lExpectedShuffledOrder.append([3,1,2])
-        lExpectedShuffledOrder.append([5,0,2])
-        lExpectedShuffledOrder.append([6,0,3])
-        lExpectedShuffledOrder.append([6,1,3])
-        lExpectedShuffledOrder.append([0,0,1])
-        lExpectedShuffledOrder.append([0,1,1])
-        lExpectedShuffledOrder.append([2,0,1])
+        lExpectedShuffledOrder.append([1,0,0,0])
+        lExpectedShuffledOrder.append([4,0,0,0])
+        lExpectedShuffledOrder.append([7,0,0,0])
+        lExpectedShuffledOrder.append([3,0,2,0])
+        lExpectedShuffledOrder.append([3,1,2,0])
+        lExpectedShuffledOrder.append([5,0,2,0])
+        lExpectedShuffledOrder.append([6,0,3,0])
+        lExpectedShuffledOrder.append([6,1,3,0])
+        lExpectedShuffledOrder.append([0,0,1,0])
+        lExpectedShuffledOrder.append([0,1,1,0])
+        lExpectedShuffledOrder.append([2,0,1,0])
         
         # assign a set of randomized unique page groups
         #    (code for creating the unique randomized numbers always puts zero first)
         lRandIndices = [0,2,3,1]
         
         # call function to rebuild the composite indices list
-        lCompositeIndicesResult = self.oSession.ShufflePageQuestionGroupCompositeIndexList(lRandIndices)
+        lCompositeIndicesResult = self.oSession.ShuffleNavigationList(lRandIndices)
         
         # validate result with expected
         if lCompositeIndicesResult == lExpectedShuffledOrder :
@@ -686,7 +744,105 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         tupResult = self.fnName, bTestResult
         return tupResult
         
-    #------------------------------------------- 
+    #-------------------------------------------
+    def test_AdjustXMLForRepeatedPage(self):
+
+        self.fnName = sys._getframe().f_code.co_name
+        sMsg = ''
+        bTestResult = False
+
+        # build XML
+        xRoot = etree.Element("Session")
+        xPage0 = etree.SubElement(xRoot,"Page")
+        xPage1 = etree.SubElement(xRoot,"Page")
+        xPage2 = etree.SubElement(xRoot,"Page", {"Rep":"0"})    # previous page
+        xPage3 = etree.SubElement(xRoot,"Page")
+        xPage4 = etree.SubElement(xRoot,"Page")
+
+        
+        xIm1 = etree.SubElement(xPage3, "Image")
+        xIm2 = etree.SubElement(xPage3, "Image")
+        xIm3 = etree.SubElement(xPage3, "Image")
+         
+        xLMPath = etree.SubElement(xIm1, "LabelMapPath")
+        xState = etree.SubElement(xIm1, "State")
+        xMULinePath = etree.SubElement(xIm2, "MarkupLinePath")
+        xState = etree.SubElement(xIm2, "State")
+        xState = etree.SubElement(xIm3, "State")
+        
+        QS0 = etree.SubElement(xPage0,'QuestionSet')
+        QS1 = etree.SubElement(xPage1,'QuestionSet')
+        QS2 = etree.SubElement(xPage2,'QuestionSet')
+        Q2 = etree.SubElement(QS2,'Question')
+        O2 = etree.SubElement(Q2, 'Option')
+        R2 = etree.SubElement(O2, 'Response')
+        QS3 = etree.SubElement(xPage3,'QuestionSet')
+        Q3 = etree.SubElement(QS3,'Question')
+        O3 = etree.SubElement(Q3, 'Option')
+        R3 = etree.SubElement(O3, 'Response')
+        QS4 = etree.SubElement(xPage4,'QuestionSet')
+        
+        
+        
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        
+        #>>>>>>>>>>>>>>>>>>>>>>>
+
+        xExpectedRoot = etree.Element("Session")
+        xExpPage0 = etree.SubElement(xExpectedRoot,"Page")
+        xExpPage1 = etree.SubElement(xExpectedRoot,"Page")
+        xExpPage2 = etree.SubElement(xExpectedRoot,"Page", {"Rep":"0"})
+        xExpPage3NewRepeat = etree.SubElement(xExpectedRoot,"Page", {"ID":"-Rep1", "Rep":"1", "PageComplete":"N"})
+        xExpPage4 = etree.SubElement(xExpectedRoot,"Page")
+ 
+        xExpIm1 = etree.SubElement(xExpPage3NewRepeat, "Image")
+        xExpIm2 = etree.SubElement(xExpPage3NewRepeat, "Image")
+        xExpIm3 = etree.SubElement(xExpPage3NewRepeat, "Image")
+          
+        xState = etree.SubElement(xExpIm1, "State")
+        xState = etree.SubElement(xExpIm2, "State")
+        xState = etree.SubElement(xExpIm3, "State")
+
+        # QuestionSet elements are automatically added in the BuildNavigationList function
+        QS0 = etree.SubElement(xExpPage0,'QuestionSet')
+        QS1 = etree.SubElement(xExpPage1,'QuestionSet')
+        QS2 = etree.SubElement(xExpPage2,'QuestionSet')
+        Q2 = etree.SubElement(QS2,'Question')
+        O2 = etree.SubElement(Q2, 'Option')
+        R2 = etree.SubElement(O2, 'Response')
+        QS3 = etree.SubElement(xExpPage3NewRepeat,'QuestionSet')
+        Q3 = etree.SubElement(QS3,'Question')
+        O3 = etree.SubElement(Q3, 'Option')
+        QS4 = etree.SubElement(xExpPage4,'QuestionSet')
+
+         
+        
+        #>>>>>>>>>>>>>>>>>>>>>>>
+        
+        self.oSession.BuildNavigationList()
+        # set current index to the repeated xml element
+        self.oSession.SetCurrentNavigationIndex(3)
+        self.oSession.AdjustXMLForRepeatedPage()
+        
+        xAdjustedRoot = self.oIOXml.GetRootNode()
+        sAdjustedXML = etree.tostring(xAdjustedRoot)
+        sExpectedXML = etree.tostring(xExpectedRoot)
+        
+        # # for debug
+        # print(sAdjustedXML)
+        # print(sExpectedXML)
+        
+        if sAdjustedXML == sExpectedXML:
+            bTestResult = True
+    
+        tupResult = self.fnName, bTestResult
+        return tupResult
+        
+    #-------------------------------------------
+    #-------------------------------------------
+    #-------------------------------------------
 
 ##########################################################################################
 #                      Launching from main (Reload and Test button)

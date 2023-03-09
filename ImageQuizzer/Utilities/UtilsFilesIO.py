@@ -2,7 +2,8 @@ import os, sys
 import warnings
 import vtk, qt, ctk, slicer
 
-from Utilities import *
+from Utilities.UtilsIOXml import *
+from Utilities.UtilsMsgs import *
 
 from shutil import copyfile
 import shutil
@@ -13,19 +14,20 @@ from DICOMLib import DICOMUtils
 
 import logging
 import time
+import traceback
 
-import DicomRtImportExportPlugin
-import DICOMVolumeSequencePlugin
+# import DicomRtImportExportPlugin
+# import DICOMVolumeSequencePlugin
 
 
 ##########################################################################
 #
-#   class UtilsIO
+#   class UtilsFilesIO
 #
 ##########################################################################
 
-class UtilsIO:
-    """ Class UtilsIO
+class UtilsFilesIO:
+    """ Class UtilsFilesIO
         - to set up path and filenames for the Image Quizzer module
         - to handle disk input/output
     """
@@ -158,6 +160,11 @@ class UtilsIO:
         return sInputPath.replace(self.GetUserDir()+'\\','')
 
     #----------
+    def GetRelativeDataPath(self, sInputPath):
+        # remove absolute path to user folders
+        return sInputPath.replace(self.GetDataParentDir()+'\\','')
+
+    #----------
     def GetAbsoluteDataPath(self, sInputPath):
         return os.path.join(self._sDataParentDir, sInputPath)
     
@@ -182,6 +189,20 @@ class UtilsIO:
 
         return sFilenameNoExt
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetFolderNameForPageResults(self, oSession):
+        """ Quiz results (eg. LabelMaps, MarkupLines) are stored in a directory where the name is derived from the 
+            current page of the Session.
+        """
+        
+        # get page info from the session's current page to create directory
+        xPageNode = oSession.GetCurrentPageNode()
+        sPageIndex = str(oSession.GetCurrentPageIndex() + 1)
+        sPageID = oSession.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
+        sDirName = os.path.join(self.GetUserQuizResultsDir(), 'Pg'+ sPageIndex + '_' + sPageID )
+
+        return sDirName
+        
 
 
     #----------
@@ -512,7 +533,19 @@ class UtilsIO:
         try:
             # open requested quiz xml 
             bSuccess, xRootNode = self.oIOXml.OpenXml(self.GetXmlQuizPath(),'Session')
+
+            # >>>>>>>>>>>>>>>
+            # check options for ContourVisibility at the Session level
+            sContourVisibility = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ContourVisibility')
+            if not (sContourVisibility == 'Fill' or sContourVisibility == 'Outline' or sContourVisibility == ''):
+                sValidationMsg = "\nContourVisibility value must be 'Fill' or 'Outline'. See attribute in Session"
+                sMsg = sMsg + sValidationMsg
             
+            # check matches of LabelMapID with DisplayLabelMapID
+            sValidationMsg = self.ValidateDisplayLabelMapID()
+            sMsg = sMsg + sValidationMsg
+                       
+            # >>>>>>>>>>>>>>>
             lxPageElements = self.oIOXml.GetChildren(xRootNode, 'Page')
             
             iPageNum = 0
@@ -524,6 +557,12 @@ class UtilsIO:
                 sMsg = sMsg + sValidationMsg
                 
                 sPageID = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ID')
+                sPageReference = str(iPageNum) # initialize
+                
+                # for any page, make sure there is matching Images Volume to Segmentation or Volume to LabelMap for each destination
+                sValidationMsg = self.ValidateImageToSegmentationMatch(xPage, sPageReference)
+                sMsg = sMsg + sValidationMsg
+
                 
                 # Image element validations
                 lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
@@ -534,20 +573,6 @@ class UtilsIO:
                     sNodeNameID = sPageID + '_' + sImageID
                     sPageReference = str(iPageNum) + ' ' + sNodeNameID
 
-                    # Validate  frequency (one required element) and content
-                    # >>>>>>>>>>>>>>> Elements
-                    sValidationMsg = self.ValidateRequiredElement(xImage, 'Path', sPageReference)
-                    sMsg = sMsg + sValidationMsg
-                    
-                    sValidationMsg = self.ValidateElementOptions(xImage, 'Layer', sPageReference, self.oIOXml.lValidLayers)
-                    sMsg = sMsg + sValidationMsg
-                    
-                    sValidationMsg = self.ValidateElementOptions(xImage, 'Destination', sPageReference, self.oIOXml.lValidSliceWidgets)
-                    sMsg = sMsg + sValidationMsg
-                    
-                    sValidationMsg = self.ValidateElementOptions(xImage, 'Orientation', sPageReference, self.oIOXml.lValidOrientations)
-                    sMsg = sMsg + sValidationMsg
-     
                     # >>>>>>>>>>>>>>> Attributes
                     sValidationMsg = self.ValidateRequiredAttribute(xImage, 'ID', sPageReference)
                     sMsg = sMsg + sValidationMsg
@@ -561,7 +586,23 @@ class UtilsIO:
                     sValidationMsg = self.ValidateOpacity(xImage, iPageNum)
                     sMsg = sMsg + sValidationMsg
 
+                    # >>>>>>>>>>>>>>> Elements
+                    sValidationMsg = self.ValidateRequiredElement(xImage, 'Path', sPageReference)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    sValidationMsg = self.ValidateElementOptions(xImage, 'Layer', sPageReference, self.oIOXml.lValidLayers)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    sValidationMsg = self.ValidateElementOptions(xImage, 'DefaultDestination', sPageReference, self.oIOXml.lValidSliceWidgets)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
+                    if not (sImageType == 'Segmentation' or sImageType == 'RTStruct' or sImageType == 'LabelMap'):
+                        sValidationMsg = self.ValidateElementOptions(xImage, 'DefaultOrientation', sPageReference, self.oIOXml.lValidOrientations)
+                        sMsg = sMsg + sValidationMsg
+                    
                     # >>>>>>>>>>>>>>>
+     
 
                     # For any page, test that a path always has only one associated PageID_ImageID (aka node name)
                     #    (Otherwise, the quizzer will reload the same image with a different node name)
@@ -593,9 +634,9 @@ class UtilsIO:
                             lPathAndNodeNames.append(tupPathAndID)
                             
                             
-                    # If the image type is an RTStruct, validate the ROIs element
+                    # If the image type is an RTStruct or Segmentation, validate the ROIs element
                     sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
-                    if sImageType == 'RTStruct':
+                    if sImageType == 'RTStruct' or sImageType == 'Segmentation':
                         sValidationMsg = self.ValidateRequiredElement(xImage, 'ROIs', sPageReference)
                         sMsg = sMsg + sValidationMsg
                         
@@ -605,15 +646,32 @@ class UtilsIO:
                             sMsg = sMsg + sValidationMsg
                             sValidationMsg = self.ValidateAttributeOptions(lxROIs[0], 'ROIVisibilityCode', sPageReference, self.oIOXml.lValidRoiVisibilityCodes)
                             sMsg = sMsg + sValidationMsg
+                            
+                            # if the visibility code is Select or Ignore, there must be an ROI element(s) with the name(s) present
+                            sVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(lxROIs[0], 'ROIVisibilityCode')
+                            if sVisibilityCode == 'Select' or sVisibilityCode == 'Ignore':
+                                sValidationMsg = self.ValidateRequiredElement(lxROIs[0], 'ROI', sPageReference, True)  # True for multiple elements allowed
+                                sMsg = sMsg + sValidationMsg
+
+                    
 
                 # >>>>>>>>>>>>>>>
                 # validate attributes 'SegmentRequired' and 'SegmentRequiredOnAnyImage'
                 sValidationMsg = self.ValidateSegmentRequiredSettings(xPage, iPageNum)
                 sMsg = sMsg + sValidationMsg
                             
-                                
+                # >>>>>>>>>>>>>>>
+                # validate attributes 'SegmentRequired' and 'MinMarkupLinesRequiredOnAnyImage'
+                sValidationMsg = self.ValidateMarkupLinesRequiredSettings(xPage, sPageReference)
+                sMsg = sMsg + sValidationMsg
+                            
+                # Slice4 assignments and TwoOverTwo layout
+                sValidationMsg = self.ValidateSlice4Layout(xPage, sPageReference)
+                sMsg = sMsg + sValidationMsg
+                  
             # >>>>>>>>>>>>>>>
             # validate that each page has a PageGroup attribute if the session requires page group randomization
+            #    a quiz that has no PageGroup attributes will be assigned the default numbers during the session setup
             sRandomizeRequested = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
             if sRandomizeRequested == "Y":
                 sValidationMsg = self.ValidatePageGroupNumbers(xRootNode)
@@ -629,6 +687,7 @@ class UtilsIO:
                 sROIColorFilePath = self.GetCustomROIColorTablePath(sROIColorFile)
             if not os.path.isfile(sROIColorFilePath):
                 sMsg = sMsg + '\nCustom ROIColorFile does not exist in the directory with the quiz.' + sROIColorFilePath
+                
                 
             
             # >>>>>>>>>>>>>>>
@@ -647,25 +706,33 @@ class UtilsIO:
             bSuccess = False
             self.oUtilsMsgs.DisplayWarning('Quiz Validation Errors \n' + sMsg)
             # after warning, reset the message for calling function to display error and exit
-            sMsg = 'See Administrator: ERROR in quiz XML validation. --Exiting--'
+            tb = traceback.format_exc()
+            self.oUtilsMsgs.DisplayWarning('Quiz Validation Errors \n' + sMsg)
+            # after warning, reset the message for calling function to display error and exit
+            sMsg = 'See Administrator: ERROR in quiz XML validation. --Exiting--'\
+                   + "\n\n" + tb 
             
             
         return bSuccess, sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateRequiredElement(self, xParentElement, sElementName, sPageReference):
+    def ValidateRequiredElement(self, xParentElement, sElementName, sPageReference, bMultipleAllowed=False):
         '''
-            This function checks that there is exactly one child element for the input parent element.
-            If there is a valid list of options input as a parameter, the function checks that the
-            data stored in the element exists in that list.
+            This function checks that there is exactly one child element for the input parent element if the flag for
+            multiples has not been set to true.
         '''
         sMsg = ''
+        sMsgPrefix = '\nError for ' + sElementName + ' Element. '
+        sMsgMissing = 'Required element is missing.'
+        sMsgMultipleNotAllowed = 'More than one of this element was found. Only one is allowed.'
+        sMsgEnding = '  See Page:' + sPageReference
         
         lxChildren = self.oIOXml.GetChildren(xParentElement, sElementName)
-        if len(lxChildren) != 1:
-            sMsg = sMsg + '\nError for ' + sElementName + ' Element.   See Page:' + sPageReference\
-                     + '\n   .....There is either more than 1 of these elements or it is missing.'
-        
+        if len(lxChildren) == 0:
+            sMsg = sMsgPrefix +  sMsgMissing + sMsgEnding
+        elif len(lxChildren) >1 and bMultipleAllowed == False:
+            sMsg = sMsgPrefix + sMsgMultipleNotAllowed + sMsgEnding
+                     
         return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -674,17 +741,22 @@ class UtilsIO:
             This function checks that the data stored in the xml element exists in the list of valid options.
         '''
         sMsg = ''
+        sValidOptions = ''
+        for sOption in lValidOptions:
+            sValidOptions = sValidOptions + ', ' + sOption
         
         lxChildren = self.oIOXml.GetChildren(xParentElement, sElementName)
 
         for xChild in lxChildren:
             sDataValue = self.oIOXml.GetDataInNode(xChild)
             if sDataValue not in lValidOptions:
-                sValidOptions = ''
-                for sOption in lValidOptions:
-                    sValidOptions = sValidOptions + ', ' + sOption
                 sMsg = sMsg + '\nNot a valid option for ' + sElementName + ' : ' + sDataValue + '   See Page:' + sPageReference\
                         + '\n   .....Valid options are:' + sValidOptions
+
+        if len(lxChildren) == 0:
+            sMsg = sMsg + '\nMissing Element: ' + sElementName + '   See Page:' + sPageReference\
+                        + '\n   .....Valid options are:' + sValidOptions
+            
 
         return sMsg
                         
@@ -701,6 +773,10 @@ class UtilsIO:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ValidateAttributeOptions(self, xParentElement, sAttributeName, sPageReference, lValidOptions):
+        ''' Given the list of valid options, the function checks that the
+            data stored in the element exists in that list.
+        '''
+        
         sMsg = ''
         
         sDataValue = self.oIOXml.GetValueOfNodeAttribute(xParentElement, sAttributeName)
@@ -838,14 +914,14 @@ class UtilsIO:
             if sEnableSegmentEditorSetting != "Y":
                 sMsg = sMsg + sErrorMsgEnableEditor + str(iPageReference)
                 
-        if sSegmentOnAnyImageSetting == "Y" and bFoundSegmentRequiredForImage == True:
-            sMsg = sMsg + sErrorMsgSegmentOnAnyImage + str(iPageReference)
-                
-
         # if a segment required attribute was found for an image, ensure:
         #    - that it is not on an image set to Layer="Segmentation" or "Label"
         #    - that all images with that same path have the same attribute setting
         
+        if sSegmentOnAnyImageSetting == "Y" and bFoundSegmentRequiredForImage == True:
+            sMsg = sMsg + sErrorMsgSegmentOnAnyImage + str(iPageReference)
+                
+
         if bFoundSegmentRequiredForImage:
             bMismatch = False
             for idxOuterLoop in range(len(l2tupImageSettings)):
@@ -865,6 +941,306 @@ class UtilsIO:
         
         return sMsg
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateMarkupLinesRequiredSettings(self, xPageNode, iPageReference):
+        
+        sMsg = ''
+        sErrorMsgMarkupLinesOnAnyImage = "\nContradicting attributes. You cannot have both 'MinMarkupLinesRequired' on an image and 'MinMarkupLinesRequiredOnAnyImage' on a page. See Page: "
+        sErrorMsgMismatchMarkupLinesRequired = "\nAll image elements with the same path (but different destinations) must have the same attribute 'MinMarkupLinesRequired' setting. See Page: "
+        sErrorMsgMarkupLinesRequiredOnWrongLayer = "\n'MinMarkupLinesRequired' attribute cannot be on an image assigned to Layer='Segmentation' or 'Label' See Page: "
+        
+        bFoundMarkupLinesRequiredForImage = False
+        l2tupImageSettings = []
+
+        sMarkupLinesOnAnyImageSetting = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'MinMarkupLinesRequiredOnAnyImage')
+        lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
+        
+
+        for idx in range(len(lxImageNodes)):
+            xImageNode = lxImageNodes[idx]
+
+            # collect settings for image
+            sMarkupLinesRequiredSetting = self.oIOXml.GetValueOfNodeAttribute(xImageNode, 'MinMarkupLinesRequired')
+            if sMarkupLinesRequiredSetting == '':
+                iNumRequiredLines = 0
+            else:
+                iNumRequiredLines = int(sMarkupLinesRequiredSetting)
+                
+                
+            sImageLayerNode = self.oIOXml.GetLastChild(xImageNode, 'Layer')
+            sImageLayer = self.oIOXml.GetDataInNode(sImageLayerNode)
+            sImagePathNode = self.oIOXml.GetLastChild(xImageNode,'Path')
+            sImagePath = self.oIOXml.GetDataInNode(sImagePathNode)
+            tupImageSettings = [sImagePath, sMarkupLinesRequiredSetting]
+            l2tupImageSettings.append(tupImageSettings)
+
+
+            if iNumRequiredLines > 0:
+                bFoundMarkupLinesRequiredForImage = True
+                if (sImageLayer=="Segmentation" or sImageLayer=="Label"):
+                    sMsg = sMsg + sErrorMsgMarkupLinesRequiredOnWrongLayer + str(iPageReference)
+
+        # if a markup line required attribute was found for an image, ensure:
+        #    - that it is not on an image set to Layer="Segmentation" or "Label"
+        #    - that all images with that same path have the same attribute setting
+        
+        if sMarkupLinesOnAnyImageSetting != '' and bFoundMarkupLinesRequiredForImage:
+                sMsg = sMsg + sErrorMsgMarkupLinesOnAnyImage + str(iPageReference)
+            
+        if bFoundMarkupLinesRequiredForImage:
+            bMismatch = False
+            for idxOuterLoop in range(len(l2tupImageSettings)):
+                if bMismatch == True:
+                    break
+                sPathToCompare = l2tupImageSettings[idxOuterLoop][0]
+                sSettingToCompare = l2tupImageSettings[idxOuterLoop][1]
+                
+                for idxInnerLoop in range(len(l2tupImageSettings)):
+                    sPath = l2tupImageSettings[idxInnerLoop][0]
+                    sSetting = l2tupImageSettings[idxInnerLoop][1]
+                    if sPathToCompare == sPath:
+                        if sSettingToCompare != sSetting:
+                            sMsg = sMsg + sErrorMsgMismatchMarkupLinesRequired + str(iPageReference)
+                            bMismatch = True
+                            break
+        
+        return sMsg
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateSlice4Layout(self, xPageNode, iPageReference):
+        ''' For all image elements, check if it is assigned to Slice4, 
+            that the Page has the attribute 'Layout="TwoOverTwo" '
+        '''
+        sMsg = ''
+        sLayoutSetting = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Layout')
+        
+        lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
+
+        for idx in range(len(lxImageNodes)):
+            xImageNode = lxImageNodes[idx]
+            xDestination = self.oIOXml.GetNthChild(xImageNode, 'DefaultDestination',0)
+            sDestination = self.oIOXml.GetDataInNode(xDestination)
+            
+            if sDestination == 'Slice4' and sLayoutSetting != 'TwoOverTwo':
+                sMsg = sMsg + "\nAssigning an image to Slice4 requires the Page Layout attribute to be set to 'TwoOverTwo'."\
+                        + "\nSee Page:" + str(iPageReference)
+        
+        return sMsg
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateDisplayLabelMapID(self):
+        ''' For all instances of DisplayLabelMapID, ensure that there is a corresponding
+            LabelMapID. This can help trap spelling mistakes. (This is not checked
+            for a 'previous instance' of LabelMapID if RandomizePageGroups attribute
+            is set to 'Y'.
+        '''
+        sMsg = ''
+        l2tupDisplayLabelMapIDs = []
+        l2tupLabelMapIDs = []
+        sRandomizeSetting = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'RandomizePageGroups')
+        if sRandomizeSetting == 'Y':
+            bTestForPrevious = False
+        else:
+            bTestForPrevious = True
+        
+        lxPageNodes = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
+        
+        # collect all instances of LabelMapID and DisplayLabelMapID and which page they are set
+        for idxPage in range(len(lxPageNodes)):
+            xPageNode = lxPageNodes[idxPage]
+            lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
+    
+            for idxImage in range(len(lxImageNodes)):
+                xImageNode = lxImageNodes[idxImage]
+                sLabelMapID = self.oIOXml.GetValueOfNodeAttribute(xImageNode, 'LabelMapID')
+                sDisplayLabelMapID = self.oIOXml.GetValueOfNodeAttribute(xImageNode, 'DisplayLabelMapID')
+                if sLabelMapID != '':
+                    l2tupLabelMapIDs.append([sLabelMapID, idxPage])
+                if sDisplayLabelMapID != '':
+                    l2tupDisplayLabelMapIDs.append([sDisplayLabelMapID, idxPage])
+        
+        # for every DisplayLabelMapID confirm there is a LabelMapID
+        
+        for idxDisplayLabelMapID in range(len(l2tupDisplayLabelMapIDs)):
+            tupDisplayLabelMapIDItem = l2tupDisplayLabelMapIDs[idxDisplayLabelMapID]
+            sDisplayLabelMapIDToSearch = tupDisplayLabelMapIDItem[0]
+            iDisplayLabelMapIDPage = tupDisplayLabelMapIDItem[1]
+
+            bFoundMatch = False
+            for idxLabelMapID in range(len(l2tupLabelMapIDs)):
+                
+                if not bFoundMatch:
+                    tupLableMapIDItem = l2tupLabelMapIDs[idxLabelMapID]
+                    sLabelMapIDToCompare = tupLableMapIDItem[0]
+                    iLabelMapIDPage = tupLableMapIDItem[1]
+                    
+                    if sLabelMapIDToCompare == sDisplayLabelMapIDToSearch:
+                        if bTestForPrevious:
+                            if iLabelMapIDPage < iDisplayLabelMapIDPage:
+                                bFoundMatch = True
+                                break
+                        else:   # randomize is set , ignore page test
+                            bFoundMatch = True
+            
+            if not bFoundMatch:
+                sMsg = sMsg + "\nMissing 'LabelMapID' setting for 'DisplayLabelMap': "\
+                            + sDisplayLabelMapIDToSearch + '   See Page #: '\
+                            + str(iDisplayLabelMapIDPage + 1)
+        
+        return sMsg
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateImageToSegmentationMatch(self, xPageNode, sPageReference):
+        '''
+        '''
+        sMsg = ''
+        lxAllImages = []
+        llDestImageVolume = []
+        llDestSegmentation = []
+        llDestLabelMap = []
+        llDestRTStruct = []
+        llDestSegImageType = []
+        
+        # collect images and their destinations
+        lxAllImages = self.oIOXml.GetChildren(xPageNode, 'Image')
+        
+        for xImage in lxAllImages:
+            
+            sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
+            xDestination = self.oIOXml.GetNthChild(xImage, 'DefaultDestination', 0)
+            sDestination = self.oIOXml.GetDataInNode(xDestination)
+            xImagePath = self.oIOXml.GetNthChild(xImage, 'Path', 0)
+            sImagePath = self.oIOXml.GetDataInNode(xImagePath)
+            
+            if sImageType == 'Volume' or sImageType == 'VolumeSequence':
+                llDestImageVolume.append([sDestination, sImagePath])
+            elif sImageType == 'Segmentation':
+                llDestSegmentation.append([sDestination, sImagePath])
+            elif sImageType == 'LabelMap':
+                llDestLabelMap.append([sDestination, sImagePath])
+            elif sImageType == 'RTStruct':
+                llDestRTStruct.append([sDestination, sImagePath])
+                
+
+            
+           
+        sSegmentationMsg = self.SyncSegsAndVolumes(llDestImageVolume, 'Segmentation', llDestSegmentation)
+        
+        sLabelMapMsg = self.SyncSegsAndVolumes(llDestImageVolume, 'LabelMap', llDestLabelMap)
+        
+        sRTStructMsg = self.SyncSegsAndVolumes(llDestImageVolume, 'RTStruct', llDestRTStruct)
+
+        sMsg = sMsg + sSegmentationMsg + sLabelMapMsg + sRTStructMsg
+        if sMsg != '':
+            sMsg = sMsg + '\n----------See Page: ' + sPageReference
+
+        return sMsg
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SyncSegsAndVolumes(self, llDestImageVolume, sSegImageType, llDestSegImageType):
+        
+        sMsg = ''
+        bMismatchFound = False
+        
+        for indSegTypeToMatch in range(len(llDestSegImageType)):
+            if not bMismatchFound:
+                # there must be an image volume to sync with the  destination of this segmentation type of image
+                sSegTypeDestToMatch = llDestSegImageType[indSegTypeToMatch][0]
+                sSegTypePathToMatch = llDestSegImageType[indSegTypeToMatch][1]
+                lDestMatchedVolImagePaths = []
+                
+                for indVol in range(len(llDestImageVolume)):
+                    if llDestImageVolume[indVol][0] == sSegTypeDestToMatch:
+                        lDestMatchedVolImagePaths.append(llDestImageVolume[indVol][1])
+                        
+                        
+                if len(lDestMatchedVolImagePaths) > 0:        
+                    # image volumes found at that destination
+                    # there may have been more than one image found (FG and BG)
+                    # check if they are repeated in another destination
+                    lAllDests = []
+                    for indMatchedPath in range(len(lDestMatchedVolImagePaths)):
+                        sMatchedVolPathToSearch = lDestMatchedVolImagePaths[indMatchedPath]
+                        for indMatchedPath in range(len(llDestImageVolume)):
+                            if sMatchedVolPathToSearch == llDestImageVolume[indMatchedPath][1]:
+                                if llDestImageVolume[indMatchedPath][0] not in lAllDests: # only keep FG or BG
+                                    lAllDests.append(llDestImageVolume[indMatchedPath][0])
+                    
+                        if len(lAllDests) > 0:
+                            # the same image volume is repeated in other destinations
+                            # there needs to be the same seg type image in those destinations
+                            iNumMatches = 0
+                            for indDest in range(len(lAllDests)):
+                                sDest = lAllDests[indDest]
+                                for indSeg in range(len(llDestSegImageType)):
+                                    if (sSegTypePathToMatch == llDestSegImageType[indSeg][1]):
+                                        if llDestSegImageType[indSeg][0] == sDest:
+                                            iNumMatches = iNumMatches + 1
+                            
+                        if iNumMatches == len(lAllDests):
+                            pass
+                        else:
+                            sMsg = sMsg + '\n\nYou do not have a ' + sSegImageType + ' xml entry for each ' +\
+                                    'of the associated image volume entries.' +\
+                                    '\n(eg. If Vol1 is on Red and Green; there must be the same ' + sSegImageType + ' entry for each of these destinations' +\
+                                    '\n.....Images defined as ' + sSegImageType + ' and Volumes are not in sync.'
+                            bMismatchFound = True
+                            break
+        
+                            
+                        
+                        
+                        
+                else:
+                    sMsg = sMsg + '\n\nYou have a ' + sSegImageType + ' type of image defined in the xml ' +\
+                            '\nwith no matching volume in the same default destination.' +\
+                            '\n.....Images defined as ' + sSegImageType + ' and Volumes are not in sync.'
+                            
+                
+
+       
+        
+        return sMsg
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ExportResultsItemToFile(self, sItemName, sPath, slNode):
+        """ Use Slicer's storage node to export node to a file
+        """
+        
+        sMsg = ''
+        bSuccess = True
+        
+        try:
+            slStorageNode = slNode.CreateDefaultStorageNode()
+            slStorageNode.SetFileName(sPath)
+            slStorageNode.WriteData(slNode)
+            slStorageNode.UnRegister(slicer.mrmlScene) # for memory leaks
+            
+        except:
+            bSuccess = False
+            sMsg = 'Failed to store ' + sItemName + ' as file: \n' + sPath
+    
+        return bSuccess, sMsg
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CheckForLoadedNodeInScene(self, sFilenameNoExt):
+        """ A label map or markup line is stored on disk with the same name as the node in the mrmlScene.
+            Using the filename for the entity (with no extension) check if it is already
+            loaded into the scene.
+        """
+        bFound = False
+        slNode = None
+        
+        slNodesCollection = slicer.mrmlScene.GetNodesByName(sFilenameNoExt)
+
+        if slNodesCollection.GetNumberOfItems() == 1:
+            bFound = True
+            slNode = slNodesCollection.GetItemAsObject(0)
+
+        # for memory leak
+        slNodesCollection.UnRegister(slicer.mrmlScene)
+              
+        return bFound, slNode
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
     #-------------------------------------------
@@ -914,96 +1290,72 @@ class UtilsIO:
                     if oImageNode.sNodeName + '-bainesquizlabel' == sLabelMapFilename:
                         
                         bLabelMapFound = True  # -bainesquizlabel suffix is associated with an image on the page
+                        bDataVolumeSaved = False
                         
-                        # only write to disk if it hasn't already been done for this image node
-                        #    (it doesn't need to be written for each orientation)
+                        sDirName = self.GetFolderNameForPageResults(oSession)
+                        sPageLabelMapDir = self.CreatePageDir(sDirName)
+                        sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
+                        sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
+                        
                         if not oImageNode.sNodeName in lsLabelMapsStoredForImages:
-
-                            # store the path name in the xml file and the label map in the directory
-                            sDirName = oSession.GetFolderNameForLabelMaps()
-                            sPageLabelMapDir = self.CreatePageDir(sDirName)
-    
-                            sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
-                             
                             # save the label map file to the user's page directory
-                            sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
-    
-                            bDataVolumeSaved, sMsg = self.SaveLabeMapAsDataVolume(sLabelMapPath, slNodeLabelMap) 
+                            bDataVolumeSaved, sMsg = self.ExportResultsItemToFile('LabelMap', sLabelMapPath, slNodeLabelMap) 
                          
                             # update list of names of images that have the label maps stored
                             lsLabelMapsStoredForImages.append(oImageNode.sNodeName)
+                        else:
+                            bDataVolumeSaved = True # already saved
 
 
                         # if label maps were saved as a data volume
                         #    add the label map path element to the image element in the xml
-                        
-#                         if (bDataVolumeSaved * bRTStructSaved):
+                        #    only one label map path element is to be recorded
                         if bDataVolumeSaved:
-                            # update xml storing the path to the label map file with the image element
-                            oSession.AddLabelMapPathElement(oImageNode.GetXmlImageElement(),\
-                                                 self.GetRelativeUserPath(sLabelMapPath))
-                        
-                            bLabelMapsSaved = True  # at least one label map was saved
+                            xLabelMapPathElement = self.oIOXml.GetLastChild(oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                            
+                            if xLabelMapPathElement == None:
+                                # update xml storing the path to the label map file with the image element
+                                oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(),\
+                                                     self.GetRelativeUserPath(sLabelMapPath))
+                            
+                                bLabelMapsSaved = True  # at least one label map was saved
                         else:
                             bLabelMapsSaved = False
-#                             sMsg = sNRRDMsg + sRTStructMsg
                             oSession.oUtilsMsgs.DisplayError(sMsg)
+                            
 
-
-        #####
-        # Display warning if segmentation was required but no user created label map was found.
-        #####
-        #    If there were no label map volume nodes 
-        #    OR if there were label map volume nodes, but there wasn't a -bainesquizlabel suffix 
-        #        to match an image on the page, ie. the labelMaps found flag was left as false
-        #    Check if the segmentation was required and if enabled present the warning
-        if len(lSlicerLabelMapNodes) == 0 or (len(lSlicerLabelMapNodes) > 0 and bLabelMapFound == False):    
-            
-            # user doesn't get the option to cancel if the call was initiated 
-            # from the Close event filter
-            if sCaller != 'EventFilter':
-                if oSession._bSegmentationModule == True:   # if there is a segmentation module
-                    if oSession.GetSegmentationTabEnabled() == True:    # if the tab is enabled
-                        qtAns = oSession.oUtilsMsgs.DisplayOkCancel(\
-                                            'No label maps were created. Do you want to continue?')
-                        if qtAns == qt.QMessageBox.Ok:
-                            # user did not create a label map but there may be no lesions to segment
-                            # continue with the save
-                            bLabelMapsSaved = True
-                        else:
-                            # user wants to resume work on this page
-                            bLabelMapsSaved = False
+        if sCaller != 'ResetView':   # warning not required on a reset
+    
+            #####
+            # Display warning if segmentation was required but no user created label map was found.
+            #####
+            #    If there were no label map volume nodes 
+            #    OR if there were label map volume nodes, but there wasn't a -bainesquizlabel suffix 
+            #        to match an image on the page, ie. the labelMaps found flag was left as false
+            #    Check if the segmentation was required and if enabled present the warning
+            if len(lSlicerLabelMapNodes) == 0 or (len(lSlicerLabelMapNodes) > 0 and bLabelMapFound == False):    
                 
+                # user doesn't get the option to cancel if the call was initiated 
+                # from the Close event filter
+                if sCaller != 'EventFilter':
+                    if oSession._bSegmentationModule == True:   # if there is a segmentation module
+                        if oSession.GetSegmentationTabEnabled() == True:    # if the tab is enabled
+                            qtAns = oSession.oUtilsMsgs.DisplayOkCancel(\
+                                                'No contours were created. Do you want to continue?')
+                            if qtAns == qt.QMessageBox.Ok:
+                                # user did not create a label map but there may be no lesions to segment
+                                # continue with the save
+                                bLabelMapsSaved = True
+                            else:
+                                # user wants to resume work on this page
+                                bLabelMapsSaved = False
                     
-    
-    
+                    
+        if bLabelMapsSaved == True:
+            oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
+
         return bLabelMapsSaved, sMsg
-
-
         
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SaveLabeMapAsDataVolume(self, sLabelMapPath, slNodeLabelMap):
-        """ Use Slicer's storage node to export label map node as a data volume.
-        """
-        
-        sMsg = ''
-        bSuccess = True
-        
-        try:
-            slStorageNode = slNodeLabelMap.CreateDefaultStorageNode()
-            slStorageNode.SetFileName(sLabelMapPath)
-            slStorageNode.WriteData(slNodeLabelMap)
-            slStorageNode.UnRegister(slicer.mrmlScene) # for memory leaks
-            
-        except:
-            bSuccess = False
-            sMsg = 'Failed to store label map as data volume file: \n'\
-                    + sLabelMapPath +\
-                    'See administrator: ' + sys._getframe(  ).f_code.co_name
-    
-    
-        return bSuccess, sMsg
-    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadSavedLabelMaps(self, oSession):
         # when loading label maps created in the quiz, associate it with the correct 
@@ -1018,13 +1370,6 @@ class UtilsIO:
             
             # for each image view, get list of labelmap files stored (may be more than one)
             if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
-
-                # read attribute from xml file whether to use label maps previously created
-                #    by the user in the quiz for this image
-#                 if (oSession.oIOXml.GetValueOfNodeAttribute(oImageNode.GetXmlImageElement(), 'UsePreviousLabelMap') == 'Y'):
-#                     bUsePreviousLabelMap = True
-#                 else:
-#                     bUsePreviousLabelMap = False
 
                 # read attribute from xml file whether to use label maps previously created
                 #    by the user in the quiz for this image
@@ -1067,11 +1412,9 @@ class UtilsIO:
                     
                     # check if label map was already loaded (if between question sets, label map will persisit)
                     sLabelMapNodeName = self.GetFilenameNoExtFromPath(sStoredRelativePath)
-                    bFoundLabelMap, slLabelMapNode = self.CheckForLoadedLabelMapInScene(sLabelMapNodeName)
+                    bFoundLabelMap, slLabelMapNode = self.CheckForLoadedNodeInScene(sLabelMapNodeName)
 
                     # only load the label map once
-                    #    same label map may have been stored multiple times in XML for the page
-                    #    (same image but different orientations)
                     if not sStoredRelativePath in lLoadedLabelMaps:
                         sAbsolutePath = self.GetAbsoluteUserPath(sStoredRelativePath)
                         dictProperties = {'LabelMap' : True}
@@ -1126,7 +1469,7 @@ class UtilsIO:
         sAbsolutePathForSource = oSession.oFilesIO.GetAbsoluteUserPath(sStoredRelativePathForSource)
 
         # create new folder for destination based on current page information
-        sCurrentLabelMapFolderName = oSession.GetFolderNameForLabelMaps()
+        sCurrentLabelMapFolderName = self.GetFolderNameForPageResults(oSession)
         sLabelMapDirForDest = self.CreatePageDir(sCurrentLabelMapFolderName)
         
         # create new file name to which the historical label map is to be copied
@@ -1143,26 +1486,215 @@ class UtilsIO:
 
         # update xml storing the path to the label map file with the image element
         #    for display on the next page
-        oSession.AddLabelMapPathElement(oImageNode.GetXmlImageElement(), self.GetRelativeUserPath(sLabelMapPathForDest))
+        oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(), self.GetRelativeUserPath(sLabelMapPathForDest))
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CheckForLoadedLabelMapInScene(self, sFilenameNoExt):
-        """ A label map is stored on disk with the same name as the node in the mrmlScene.
-            Using the filename for the label map (with no extension) check if it is already
-            loaded into the scene.
-        """
-        bFound = False
-        slNode = None
         
-        slNodesCollection = slicer.mrmlScene.GetNodesByName(sFilenameNoExt)
+    #-------------------------------------------
+    #        MarkupsLine Functions
+    #-------------------------------------------
 
-        if slNodesCollection.GetNumberOfItems() == 1:
-            bFound = True
-            slNode = slNodesCollection.GetItemAsObject(0)
-
-        # for memory leak
-        slNodesCollection.UnRegister(slicer.mrmlScene)
-              
-        return bFound, slNode
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SaveMarkupLines(self, oSession):
+        ''' This function will capture all markup lines, rename them to reflect the associated 
+            reference node and save them in the json format.
+        '''
         
+        sMsg = ''
+        bMarkupLinesSaved = True
+        
+        lsMarkupLineNodes = []
+        lsMarkupLineNodes = slicer.util.getNodesByClass('vtkMRMLMarkupsLineNode')
+
+        for slMarkupLine in lsMarkupLineNodes:
+            iNumPoints = slMarkupLine.GetNumberOfControlPoints()
+            
+            # only work with nodes that have 2 points
+            #    -    just adding the line tool can create a null markup line node (0 control points)
+            #    -    bMarkupLinesSaved flag is still true if no valid lines are available to save
+            if iNumPoints == 2:
+                sAssociatedReferenceNodeID = slMarkupLine.GetNthControlPointAssociatedNodeID(0)
+                sAssociatedReferenceNodeName = slicer.mrmlScene.GetNodeByID(sAssociatedReferenceNodeID).GetName()
+                # update markup line name with associated node only if not already done
+                if slMarkupLine.GetName().find(sAssociatedReferenceNodeName) == -1: 
+                    
+                    # check the scene if the name already exists
+                    #    - if not all lines are created yet and user moves between Next and Previous, a 
+                    #    newly created markup line node may be created with the same base name ('MarkupsLine'),
+                    #    so a suffix needs to be added to the new line name
+                    sLineName = self.CreateUniqueLineName(lsMarkupLineNodes, slMarkupLine.GetName(), sAssociatedReferenceNodeName)
+                    slMarkupLine.SetName(sLineName)
+            
+                # save the markup line in the directory
+                sDirName = self.GetFolderNameForPageResults(oSession)
+                sPageMarkupsLineDir = self.CreatePageDir(sDirName)
+    
+                sMarkupsLineFilenameWithExt = slMarkupLine.GetName() + '.mrk.json'
+                             
+                # save the markup line file to the user's page directory
+                sMarkupsLinePath = os.path.join(sPageMarkupsLineDir, sMarkupsLineFilenameWithExt)
+    
+                 
+            
+                for oImageNode in oSession.oImageView.GetImageViewList():
+                    
+                    # match the markup line to the image to save the path to the correct xml Image node
+                    if slicer.mrmlScene.GetNodeByID(sAssociatedReferenceNodeID).GetName() == oImageNode.sNodeName:
+                        bLineSaved, sMsg = self.ExportResultsItemToFile('MarkupsLine', sMarkupsLinePath, slMarkupLine)
+                        # store the path name in the xml file
+                        if bLineSaved:
+                            
+                            sRelativePathToStoreInXml = self.GetRelativeUserPath(sMarkupsLinePath)
+                            lxLinePathElements = self.oIOXml.GetChildren(oImageNode.GetXmlImageElement(), 'MarkupLinePath')
+                            bPathAlreadyInXml = False
+                            for xPathElement in lxLinePathElements:
+                                sStoredRelativePath = self.oIOXml.GetDataInNode(xPathElement)
+                                if sStoredRelativePath == sRelativePathToStoreInXml:
+                                    bPathAlreadyInXml = True
+                                    bMarkupLinesSaved = True
+                                    break
+                                
+                            if bPathAlreadyInXml == False:   
+                                # update xml storing the path to the markup line file with the image element
+                                oSession.AddPathElement('MarkupLinePath', oImageNode.GetXmlImageElement(),
+                                                        sRelativePathToStoreInXml)
+                                bMarkupLinesSaved = True    # at least one markup line was saved
+                        else:
+                            bMarkupLinesSaved = False
+                            oSession.oUtilsMsgs.DisplayError(sMsg)
+        
+        if bMarkupLinesSaved == True:  
+            oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
+            
+        return bMarkupLinesSaved, sMsg
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CreateUniqueLineName(self, lAllNodeNamesInScene, sSystemGeneratedName, sAssociatedReferenceNodeName):
+        ''' Input parameters:
+                - list of all nodes in the scene
+                - the system generated node name to be changed
+                - name of the associated image node
+            If there is already a node that has the proposed name, we need to add the 'next' integer suffix
+        '''
+
+        sProposedName =  sAssociatedReferenceNodeName  + '_' + sSystemGeneratedName + '_bainesquizline'
+        sUniqueName = sProposedName # default
+         
+        lExistingNamesWithProposedName = []
+        for slNode in lAllNodeNamesInScene:
+            if slNode.GetName().find(sProposedName) >= 0:
+                lExistingNamesWithProposedName.append(slNode.GetName())
+                
+        if len(lExistingNamesWithProposedName) > 0:
+            sSubstringToSearch = 'bainesquizline_'
+            iNewSuffix = self.GetSuffix(lExistingNamesWithProposedName, sSubstringToSearch)
+            if iNewSuffix > 0:
+                sUniqueName = sProposedName + '_' + str(iNewSuffix)
+
+        return sUniqueName
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetSuffix(self, lExistingNamesWithProposedName, sSubstringToSearch ):
+    
+        iNextInteger = 0
+        
+        if len(lExistingNamesWithProposedName) > 0:
+            lExistingSuffixes = []
+            for sName in lExistingNamesWithProposedName:
+                # extract existing numeric suffix if there is one
+                iSubstringStart = sName.find(sSubstringToSearch)
+                if iSubstringStart >= 0:
+                    iSuffixStart = iSubstringStart + len(sSubstringToSearch)
+                    sSuffix = sName[iSuffixStart :]
+                    if sSuffix.isdigit():
+                        lExistingSuffixes.append(int(sSuffix))
+                
+            if len(lExistingSuffixes) > 0:
+                iNextInteger = max(lExistingSuffixes) + 1
+            else:
+                iNextInteger = 1
+    
+        return iNextInteger
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def LoadSavedMarkupLines(self, oSession):
+        ''' Scan the xml for markup line path elements and load the saved file.
+        '''
+        lxImageElements = []
+        lxMarkupLinePaths = []
+        
+        lxImageElements = self.oIOXml.GetChildren( oSession.GetCurrentPageNode(), 'Image')
+        
+        for  xImageNode in lxImageElements:
+            
+            lxMarkupLinePaths = self.oIOXml.GetChildren( xImageNode, 'MarkupLinePath')
+            
+            for xLinePathNode in lxMarkupLinePaths:
+                
+                sStoredRelativePath = self.oIOXml.GetDataInNode( xLinePathNode )
+                if sStoredRelativePath != '':
+                    sAbsolutePath = self.GetAbsoluteUserPath(sStoredRelativePath)
+                    
+                    # check that the markup line does not already exist in the scene 
+                    #    (if relative path has double extension .mrk.json - additional remove .mrk)
+                    sMarkupLineNodeName = self.GetFilenameNoExtFromPath(sStoredRelativePath)
+                    if sMarkupLineNodeName.endswith('.mrk') and sMarkupLineNodeName != '.mrk':
+                        sMarkupLineNodeName = sMarkupLineNodeName[:-len('.mrk')]
+                    bFoundMarkupLine, slMarkupLineNode = self.CheckForLoadedNodeInScene(sMarkupLineNodeName)
+                    
+                    if not bFoundMarkupLine:
+                        if os.path.exists(sAbsolutePath):
+                            # load label map into the scene
+                            slMarkupLineNode = slicer.util.loadMarkups(sAbsolutePath)
+                        else:
+                            sMsg = 'Stored path to markup line file does not exist. Markup line will not be loaded.\n' \
+                                + sAbsolutePath
+                            oSession.oUtilsMsgs.DisplayWarning(sMsg)
+                            break # continue in for loop for next label map path element
+                
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetupLoopingInitialization(self, xRootNode):
+        
+        # if Loop="Y" for any page in the quiz, add Rep="0" to each page if not defined
+        
+        bLoopingInQuiz = False
+        lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
+        for xPageNode in lxPages:
+            sLoopAllowed = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "Loop")
+            if sLoopAllowed == "Y":
+                bLoopingInQuiz = True
+                break
+            
+        if bLoopingInQuiz:
+            for xPageNode in lxPages:
+                sRepNum = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "Rep")
+                try:
+                    int(sRepNum)
+                except:
+                    # not a valid integer - create/set the attribute to 0
+                    self.oIOXml.UpdateAttributesInElement(xPageNode, {"Rep":"0"})
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetupPageGroupInitialization(self, xRootNode):
+        ''' If no PageGroup attribute exists, update the XML to initialize each page
+            to a unique number. Start PageGroup numbers at '1'. ('0' has specialized
+            meaning when randomizing page groups.
+        '''
+        
+        bPageGroupFound = False
+         
+        lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
+        for xPageNode in lxPages:
+            sPageGroupNum = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "PageGroup")
+            if sPageGroupNum != '':
+                bPageGroupFound = True
+                break
+       
+        if not bPageGroupFound:
+            for iPageNum in range(len(lxPages)):
+                xPageNode = self.oIOXml.GetNthChild(xRootNode, "Page", iPageNum)
+                self.oIOXml.UpdateAttributesInElement(xPageNode, {"PageGroup":str(iPageNum + 1)})
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

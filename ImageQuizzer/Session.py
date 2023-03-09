@@ -4,11 +4,15 @@ import vtk, qt, ctk, slicer
 import sys
 import unittest
 import random
+import traceback
+from copy import deepcopy
 
-from Utilities import *
+from Utilities.UtilsIOXml import *
+from Utilities.UtilsMsgs import *
+from Utilities.UtilsFilesIO import *
+
 from Question import *
 from ImageView import *
-from UtilsIO import *
 from PageState import *
 #from ImageQuizzer import *
 
@@ -35,8 +39,8 @@ class Session:
         
         self._sLoginTime = ''
 
-        self._iCurrentCompositeIndex = 0
-        self._l3iPageQuestionGroupCompositeIndices = []
+        self._iCurrentNavigationIndex = 0
+        self._l4iNavigationIndices = []
 
         self._xPageNode = None
         self.sPageID = ''
@@ -54,37 +58,41 @@ class Session:
         self._bRequestToEnableSegmentEditor = False
         self._bSegmentationModule = False
         self._iSegmentationTabIndex = -1   # default
+        self._bPageLooping = False
+        self._sContourVisibility = 'Outline'
         
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
+        self.oPageState = PageState()
 
         self.oImageView = None
         
         self._btnNext = None
         self._btnPrevious = None
+        
+        self.bNPlanesViewingMode = False
+        self.sViewingMode = "Default"
+        self.loCurrentXMLImageViewNodes = []
+        self.liImageDisplayOrder = []
 
 
     def __del__(self):
-#         if not self.GetQuizComplete():
-#             # check first if there is a Quiz Results path
-#             #    quiz validation errors may result in user's directory not being created
-#             sMsg = 'Image Quizzer Exiting - Performing final cleanup.'
-#             if self.oFilesIO != None:
-#                 sResultsPath = self.oFilesIO.GetUserQuizResultsPath()
-#                 if sResultsPath != '':
-#                     sMsg = sMsg + ' - User response file is saved.'
-#                     self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-#             self.oUtilsMsgs.DisplayInfo(sMsg)
 
         # clean up of editor observers and nodes that may cause memory leaks (color table?)
         if self.GetSegmentationTabIndex() > 0:
             slicer.modules.quizzereditor.widgetRepresentation().self().exit()
 
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #-------------------------------------------
     #        Getters / Setters
     #-------------------------------------------
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     #----------
     def SetFilesIO(self, oFilesIO):
@@ -119,13 +127,61 @@ class Session:
         return self._sLoginTime
     
     #----------
-    def SetCompositeIndicesList(self, lIndices):
-        self._l3iPageQuestionGroupCompositeIndices = lIndices
+    def SetPreviousResponses(self, lInputResponses):
+        self._lsPreviousResponses = lInputResponses
         
     #----------
-    def GetCompositeIndicesList(self):
-        return self._l3iPageQuestionGroupCompositeIndices
+    def GetPreviousResponses(self):
+        return self._lsPreviousResponses
+    
+    #----------
+    def GetNavigationList(self):
+        return self._l4iNavigationIndices
 
+    #----------
+    def SetNavigationList(self, lIndices):
+        self._l4iNavigationIndices = lIndices
+        
+    #----------
+    def ClearNavigationList(self):
+        self._l4iNavigationIndices = []
+    #----------
+    def GetCurrentNavigationIndex(self):
+        return self._iCurrentNavigationIndex
+    
+    #----------
+    def SetCurrentNavigationIndex(self, iInd):
+        self._iCurrentNavigationIndex = iInd
+        
+    #----------
+    def GetNavigationPage(self, iNavInd):
+        return self._l4iNavigationIndices[iNavInd][0]
+    
+    #----------
+    def GetNavigationQuestionSet(self, iNavInd):
+        return self._l4iNavigationIndices[iNavInd][1]
+    
+    #----------
+    def GetNavigationPageGroup(self, iNavInd):
+        return self._l4iNavigationIndices[iNavInd][2]
+    
+    #----------
+    def GetNavigationRepNum(self, iNavInd):
+        return self._l4iNavigationIndices[iNavInd][3]
+    #----------
+    #----------
+    def GetNavigationIndicesAtIndex(self, iNavInd):
+        return self._l4iNavigationIndices[iNavInd]
+    
+    #----------
+    def NavigationListAppend(self, lNavIndices):
+        self._l4iNavigationIndices.append(lNavIndices)
+    
+    #----------
+    def NavigationListInsertBeforeIndex(self, iNavInd, lNavIndices):
+        self._l4iNavigationIndices.insert(iNavInd, lNavIndices)
+        
+    #----------
     #----------
     def SetMultipleResponseAllowed(self, sYN):
         
@@ -150,38 +206,34 @@ class Session:
         return self._bRequestToEnableSegmentEditor
     
     #----------
-    def GetPageCompleteAttribute(self, iCompIndex):
-        iPageIndex = self._l3iPageQuestionGroupCompositeIndices[iCompIndex][0]
+    def GetPageCompleteAttribute(self, iNavigationIndex):
+        iPageIndex = self.GetNavigationPage(iNavigationIndex)
         xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
 
         sPageComplete = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'PageComplete')
         
         return sPageComplete
         
-    # #----------
-    # def SetMultipleResponsesAllowedInQuiz(self, bTF):
-    #     # flag for quiz if any question sets allowed for multiple responses
-    #     # this is used for 'resuming' after quiz was completed     
-    #     self._bAllowMultipleResponseInQuiz = bTF
-    #
-    # #----------
-    # def GetMultipleResponsesAllowedInQuiz(self):
-    #     return self._bAllowMultipleResponseInQuiz
     #----------
-    def GetResponseCompletionLevel(self, iTotalItems, iCountedItems):
-        ''' This function may be used to define the number of questions that had 
-            responses stored in the XML or the number of reponses the user
-            made in the quiz form.
+    def SetupPageState(self, iPgIndex):
+        ''' Initialize a new page state object for the page.
+            XML specifics for the input page index are used for initializing.
         '''
+        xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPgIndex)
+        self.oPageState.InitializeStates(self, xPageNode)
+    
+    #----------
+    def AddExtraToolsTab(self):
+
+        # add extra tools tab to quiz widget
+        self.tabExtraTools = qt.QWidget()
+        self.oQuizWidgets.qTabWidget.addTab(self.tabExtraTools,"Extra Tools")
+        self._iExtraToolsTabIndex = self.oQuizWidgets.qTabWidget.count - 1
+        self.oQuizWidgets.qTabWidget.setTabEnabled(self._iExtraToolsTabIndex, True)
         
-        if iCountedItems == iTotalItems:
-            sCompletionLevel = 'AllResponses'
-        elif iCountedItems == 0:
-            sCompletionLevel = 'NoResponses'
-        else:
-            sCompletionLevel = 'PartialResponses'
-        
-        return sCompletionLevel        
+        widget = self.SetupExtraToolsButtons()
+        self.tabExtraTools.setLayout(widget)
+
 
     #----------
     def AddSegmentationModule(self, bTF):
@@ -211,6 +263,18 @@ class Session:
         return bTF
     
     #----------
+    def EnableMarkupLinesTF(self, bTF):
+        
+        self.btnAddMarkupsLine.enabled = bTF
+        self.btnClearLines.enabled = bTF
+        if bTF:
+            self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+            self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
+        else:
+            self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: white }")
+            self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white }")
+
+    #----------
     def GetAllQuestionSetsForNthPage(self, iPageIndex):
         self._xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
         xNodesAllQuestionSets = self.oIOXml.GetChildren(self._xPageNode, 'QuestionSet')
@@ -232,22 +296,22 @@ class Session:
         
     #----------
     def GetCurrentPageNode(self):
-        iPageIndex = self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0]
+        iPageIndex = self.GetNavigationPage(self.GetCurrentNavigationIndex())
         xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
         
         return xPageNode
     
     #----------
     def GetCurrentPageIndex(self):
-        return self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0]
+        return self.GetNavigationPage(self.GetCurrentNavigationIndex())
     
     #----------
     def GetCurrentQuestionSetIndex(self):
-        return self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][1]
+        return self.GetNavigationQuestionSet(self.GetCurrentNavigationIndex())
     
     #----------
     def GetCurrentQuestionSetNode(self):
-        iQSetIndex = self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][1]
+        iQSetIndex = self.GetNavigationQuestionSet(self.GetCurrentNavigationIndex())
         xPageNode = self.GetCurrentPageNode()
         xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', iQSetIndex)
         
@@ -280,85 +344,172 @@ class Session:
         return xAllOptionNodes
         
     #----------
+    def GetNPlanesImageComboBoxSelection(self):
+        ''' return the index and image view object to the xml image that matches the image name and 
+            orientation selected in the combo boxes
+        '''
+        
+        # orientation has been defined in the NPlanes orientation-destination variable
+        if len(self.GetNPlanesView()) > 1:
+            sSelectedOrientation = 'All'   # all 3 planes was selected
+        else:
+            sSelectedOrientation = self.GetNPlanesViewOrientation(0)  # 1 Plane in a specific orientation
+        
+        # get selected image name from combo box
+        sImageName = self.qComboImageList.currentText
+        iXmlIndex = 0
+        oImageViewNode = None
+        bFoundFirstNameMatch = False
+        bFoundOrientationMatch = False
+        
+        # determine which image is to be displayed in an alternate viewing mode (3 Planes or 1 Plane)
+        loImageViewNodes = self.oImageView.GetImageViewList()
+        for oImageViewNode in loImageViewNodes:
+            if oImageViewNode.sNodeName == sImageName:
+                if not bFoundFirstNameMatch:
+                    bFoundFirstNameMatch = True
+                    iXmlFirstNameMatch = iXmlIndex
+                    oImageViewNodeFirstNameMatch = oImageViewNode
+                if sSelectedOrientation == 'All':
+                    break
+                else:
+                    if sSelectedOrientation == oImageViewNode.sOrientation:
+                        bFoundOrientationMatch = True
+                        break
+                    else:
+                        iXmlIndex = iXmlIndex + 1
+
+            
+            else:
+                iXmlIndex = iXmlIndex + 1
+        
+        # There may not have been an xml element with the selected orientation view
+        #    Reset to the first name match
+        if not bFoundOrientationMatch:
+            iXmlIndex = iXmlFirstNameMatch
+            oImageViewNode = oImageViewNodeFirstNameMatch
+            
+        return oImageViewNode, iXmlIndex
+        
+    #----------
+    def GetNPlanesComboBoxCount(self):
+        return self.qComboImageList.count
+    
+    #----------
+    def SetNPlanesView(self):
+        
+        self.sViewingMode = self.qComboNPlanesList.currentText
+        
+        if self.sViewingMode == "3 Planes":
+            self.llsNPlanesOrientDest = [["Axial","Red"],["Sagittal","Green"],["Coronal","Yellow"]]
+        elif self.sViewingMode == "1 Plane Axial":
+            self.llsNPlanesOrientDest = [["Axial","Red"]]
+        elif self.sViewingMode == "1 Plane Sagittal":
+            self.llsNPlanesOrientDest = [["Sagittal","Red"]]
+        elif self.sViewingMode == "1 Plane Coronal":
+            self.llsNPlanesOrientDest = [["Coronal","Red"]]
+            
+    #----------
+    def GetNPlanesView(self):
+        return self.llsNPlanesOrientDest
+                
+    #----------
+    def GetNPlanesViewOrientation(self, indPlane):
+
+        return self.llsNPlanesOrientDest[indPlane][0]
+
+    #----------
+    def SetNPlanesComboBoxImageNames(self):
+        
+        self.qComboImageList.clear()
+        
+        lNamesAdded = []
+        loImageViewNodes = self.oImageView.GetImageViewList()
+        for oImageViewNode in loImageViewNodes:
+            if oImageViewNode.sViewLayer == 'Background' or oImageViewNode.sViewLayer == 'Foreground':
+                if oImageViewNode.sNodeName in lNamesAdded:
+                    pass
+                else:
+                    lNamesAdded.append(oImageViewNode.sNodeName)
+                    self.qComboImageList.addItem(oImageViewNode.sNodeName)
+                    
+    #----------
+    def GetPageLooping(self):
+        return self._bPageLooping
+
+    #----------
+    def SetPageLooping(self, bTF):
+        self._bPageLooping = bTF
+
+    #----------
+    def ReorderImageIndexToEnd(self, iIndexToMove):
+        ''' Move index to end of list to prioritize the image state of
+            the last viewed image in the 1 or 3 Planes view mode.
+            This is used in the apply image state function.
+            (It prevents the state being overridden because of the order of images read in from the xml file.)
+        '''
+
+        liRearrangedOrder = []
+        
+        for i in range(len(self.liImageDisplayOrder)):
+            if self.liImageDisplayOrder[i] != iIndexToMove:
+                liRearrangedOrder.append(self.liImageDisplayOrder[i])
+                
+        liRearrangedOrder.append(iIndexToMove)
+        
+        return liRearrangedOrder
+                
+    #----------
+    def InitializeImageDisplayOrderIndices(self):
+        ''' default to the original order for Images to be displayed based on image elements
+            stored in the XML file
+        '''
+        self.liImageDisplayOrder = []
+        lxImageElements = self.oIOXml.GetChildren(self.GetCurrentPageNode(), 'Image')
+        for i in range(len(lxImageElements)):
+            self.liImageDisplayOrder.append(i)
+            
+    #----------
+    def GetImageDisplayOrderIndices(self):
+        return self.liImageDisplayOrder
+    
+    #----------
+    def GetContourVisibility(self):
+        return self._sContourVisibility
+    
+    #----------
+    def SetContourVisibility(self, xRootNode):
+        # quiz validation checked for valid values
+        # if no attribute exists, set with the default
+        self._sContourVisibility = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ContourVisibility')
+        if self._sContourVisibility == '':
+            self._sContourVisibility = 'Outline'  # default
+
+    #----------
     #----------
 
-    #-------------------------------------------
-    #        Functions
-    #-------------------------------------------
-
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def RunSetup(self, oFilesIO, slicerMainLayout):
-        
-        self.SetFilesIO(oFilesIO)
-
-        # open xml and check for root node
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizResultsPath(),'Session')
-
-        if not bSuccess:
-            sErrorMsg = "ERROR", "Not a valid quiz - Trouble with XML syntax."
-            self.oUtilsMsgs.DisplayError(sErrorMsg)
-
-        else:
-
-            self.SetupWidgets(slicerMainLayout)
-            self.oQuizWidgets.qLeftWidget.activateWindow()
-
-            
-            # turn on functionality if any page contains the attribute
-            self.AddSegmentationModule( \
-                self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
-                './/Page', 'EnableSegmentEditor','Y'))
-            
-            # set up ROI colors for segmenting
-            sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
-            self.oFilesIO.SetupROIColorFile(sColorFileName)
-
-            self.BuildPageStateCompletionStructure()
-            # build the list of indices page/questionset as read in by the XML
-            self.BuildPageQuestionCompositeIndexList()
-            # if randomization is requested - shuffle the page/questionset list
-            sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
-            if sRandomizeRequired == 'Y':
-                # check if xnl already holds a set of randomized indices otherwise, call randomizing function
-                liRandIndices = self.GetStoredRandomizedIndices()
-                if liRandIndices == []:
-                    # get the unique list  of all Page Group numbers to randomize
-                    #    this was set during xml validation during the initial read
-                    liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
-                    liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
-                    self.AddRandomizedIndicesToXML(liRandIndices)
-                 
-                self._l3iPageQuestionGroupCompositeIndices = self.ShufflePageQuestionGroupCompositeIndexList(liRandIndices)
-    
-    
-            
-            
-            # check for partial or completed quiz
-            self.SetCompositeIndexIfResumeRequired()
-                        
-            self.progress.setMaximum(len(self._l3iPageQuestionGroupCompositeIndices))
-            self.progress.setValue(self._iCurrentCompositeIndex)
-    
-            self.EnableButtons()
-            self.DisplayImagesAndQuestions()
-
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #-------------------------------------------
+    #        GUI Setup
+    #-------------------------------------------
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupWidgets(self, slicerMainLayout):
-
 
         self.oQuizWidgets = QuizWidgets(self.oFilesIO)
         self.oQuizWidgets.CreateLeftLayoutAndWidget()
 
-        
         self.SetupButtons()
         self.oQuizWidgets.qLeftLayout.addWidget(self.qButtonGrpBox)
 
         self.oQuizWidgets.AddQuizLayoutWithTabs()
-        
+        self.oQuizWidgets.qTabWidget.currentChanged.connect(self.onTabChanged)
+       
         slicerMainLayout.addWidget(self.oQuizWidgets.qLeftWidget)  
 
-        
-    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupButtons(self):
         
@@ -396,143 +547,217 @@ class Session:
         self._btnExit = qt.QPushButton("Exit")
         self._btnExit.toolTip = "Save quiz and exit Slicer."
         self._btnExit.enabled = True
-        self._btnExit.setStyleSheet("QPushButton{ background-color: rgb(255,0,0); color: black }")
+        self._btnExit.setStyleSheet("QPushButton{ background-color: rgb(255,0,0); color: black; font-weight: bold }")
         # use lambda to pass argument to this PyQt slot without invoking the function on setup
         self._btnExit.connect('clicked(bool)',lambda: self.onExitButtonClicked('ExitBtn'))
 
+        # Repeat button
+        self._btnRepeat = qt.QPushButton("Repeat")
+        self._btnRepeat.toolTip = "Save current responses and repeat."
+        self._btnRepeat.enabled = False
+        self._btnRepeat.visible = False
+        self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
+        self._btnRepeat.connect('clicked(bool)', self.onRepeatButtonClicked)
+        
 
         self.qButtonGrpBoxLayout.addWidget(self._btnExit)
         self.qButtonGrpBoxLayout.addWidget(qProgressLabel)
         self.qButtonGrpBoxLayout.addWidget(self.progress)
+        self.qButtonGrpBoxLayout.addWidget(self._btnRepeat)
         self.qButtonGrpBoxLayout.addWidget(self._btnPrevious)
         self.qButtonGrpBoxLayout.addWidget(self._btnNext)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onNextButtonClicked(self):
+    def SetupExtraToolsButtons(self):
         
-        bSuccess = True
-        sMsg = ''
+        # create buttons
 
-        if self._iCurrentCompositeIndex + 1 == len(self._l3iPageQuestionGroupCompositeIndices):
+        self.tabExtraToolsLayout = qt.QVBoxLayout()
 
-            # the last question was answered - check if user is ready to exit
-            self.onExitButtonClicked('Finish') # a save is done in here
-            
-            # the user may have cancelled the 'finish'
-            # bypass remainder of the 'next' button code
+        
+        # add horizontal layout
+        self.qLineToolsGrpBox = qt.QGroupBox()
+        self.qLineToolsGrpBox.setTitle('Line Measurement')
+        self.qLineToolsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
+        self.qLineToolsGrpBoxLayout = qt.QHBoxLayout()
+        self.qLineToolsGrpBox.setLayout(self.qLineToolsGrpBoxLayout)
 
-        else:
-            # this is not the last question set, do a save and display the next page
-            bSuccess, sMsg = self.PerformSave('NextBtn')
-            
-            if bSuccess:
+
+        # >>>>>>>>>>>>>>>>>>>>
+        # Window/Level interactive mode
+        self.qDisplayMgrGrpBox = qt.QGroupBox()
+        self.qDisplayMgrGrpBox.setTitle("Interactive Mode")
+        self.qDisplayMgrGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
+        self.qDisplayMgrGrpBoxLayout = qt.QHBoxLayout()
+        self.qDisplayMgrGrpBox.setLayout(self.qDisplayMgrGrpBoxLayout)
+        
+        qWindowLevelLabel = qt.QLabel("Window/Level: ")
+        self.qDisplayMgrGrpBoxLayout.addWidget(qWindowLevelLabel)
+        
+        self.btnWindowLevelOn = qt.QPushButton('On')
+        self.btnWindowLevelOn.enabled = True
+        self.btnWindowLevelOn.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+        self.btnWindowLevelOn.connect('clicked(bool)',self.onWindowLevelOnClicked)
+        self.qDisplayMgrGrpBoxLayout.addWidget(self.btnWindowLevelOn)
+
+
+        self.btnWindowLevelOff = qt.QPushButton('Default Cursor')
+        self.btnWindowLevelOff.enabled = True
+        self.btnWindowLevelOff.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
+        self.btnWindowLevelOff.connect('clicked(bool)',self.onWindowLevelOffClicked)
+        self.qDisplayMgrGrpBoxLayout.addWidget(self.btnWindowLevelOff)
+        
+        self.tabExtraToolsLayout.addWidget(self.qDisplayMgrGrpBox)
+        
+        # >>>>>>>>>>>>>>>>>>>>
+        # Crosshairs
+        self.qCrossHairsGrpBox = qt.QGroupBox()
+        self.qCrossHairsGrpBox.setTitle('Crosshairs')
+        self.qCrossHairsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
+        self.qCrossHairsGrpBoxLayout = qt.QHBoxLayout()
+        self.qCrossHairsGrpBox.setLayout(self.qCrossHairsGrpBoxLayout)
+        
+        qCrosshairsLabel = qt.QLabel("Use Shift key to display: ")
+        self.qCrossHairsGrpBoxLayout.addWidget(qCrosshairsLabel)
+        
+        self.btnCrosshairsOn = qt.QPushButton('On')
+        self.btnCrosshairsOn.enabled = True
+        self.btnCrosshairsOn.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+        self.btnCrosshairsOn.connect('clicked(bool)',self.onCrosshairsOnClicked)
+        self.qCrossHairsGrpBoxLayout.addWidget(self.btnCrosshairsOn)
+
+
+        self.btnCrosshairsOff = qt.QPushButton('Off')
+        self.btnCrosshairsOff.enabled = True
+        self.btnCrosshairsOff.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
+        self.btnCrosshairsOff.connect('clicked(bool)',self.onCrosshairsOffClicked)
+        self.qCrossHairsGrpBoxLayout.addWidget(self.btnCrosshairsOff)
+
+        self.chkSliceIntersections = qt.QCheckBox('Slice Intersections')
+        self.chkSliceIntersections.stateChanged.connect(self.SliceIntersectionsStateChange)
+        self.qCrossHairsGrpBoxLayout.addWidget(self.chkSliceIntersections)
+
+        self.tabExtraToolsLayout.addWidget(self.qCrossHairsGrpBox)
+
+        
+        # >>>>>>>>>>>>>>>>>>>>
+        # Viewing modes
+        self.qDisplayOptionsGrpBox = qt.QGroupBox()
+        self.qDisplayOptionsGrpBox.setTitle('Viewing Display Options')
+        self.qDisplayOptionsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
+        self.qDisplayOptionsGrpBoxLayout = qt.QGridLayout()
+        self.qDisplayOptionsGrpBox.setLayout(self.qDisplayOptionsGrpBoxLayout)
+        
+        qViewImageLabel = qt.QLabel("Select image:")
+        self.qDisplayOptionsGrpBoxLayout.addWidget(qViewImageLabel,0,0)
+        
+        self.qComboImageList = qt.QComboBox()
+        self.qDisplayOptionsGrpBoxLayout.addWidget(self.qComboImageList,0,1)
+
+        qViewNPlanesLabel = qt.QLabel("Select view mode:")
+        self.qDisplayOptionsGrpBoxLayout.addWidget(qViewNPlanesLabel,1,0)
+        
+        self.qComboNPlanesList = qt.QComboBox()
+        self.qDisplayOptionsGrpBoxLayout.addWidget(self.qComboNPlanesList,1,1)
+        self.qComboNPlanesList.addItem("3 Planes")
+        self.qComboNPlanesList.addItem("1 Plane Axial")
+        self.qComboNPlanesList.addItem("1 Plane Sagittal")
+        self.qComboNPlanesList.addItem("1 Plane Coronal")
+
+        
+        self.btnNPlanesView = qt.QPushButton('Display view')
+        self.btnNPlanesView.enabled = True
+        self.btnNPlanesView.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+        self.btnNPlanesView.connect('clicked(bool)', self.onNPlanesViewClicked)
+        self.qDisplayOptionsGrpBoxLayout.addWidget(self.btnNPlanesView,0,2)
+
+        
+        self.btnResetView = qt.QPushButton('Reset to default')
+        self.btnResetView.enabled = True
+        self.btnResetView.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
+        self.btnResetView.connect('clicked(bool)', self.onResetViewClicked)
+        self.qDisplayOptionsGrpBoxLayout.addWidget(self.btnResetView,1,2)
+
+        self.tabExtraToolsLayout.addWidget(self.qDisplayOptionsGrpBox)
+        
+
+        # >>>>>>>>>>>>>>>>>>>>
+        # Ruler tools
+        qLineToolLabel = qt.QLabel('Ruler:')
+        self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabel)
+        self.qLineToolsGrpBoxLayout.addSpacing(10)
+        
+        self.btnAddMarkupsLine = qt.QPushButton("Add new line")
+        self.btnAddMarkupsLine.enabled = True
+        self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+        self.btnAddMarkupsLine.connect('clicked(bool)', self.onAddLinesButtonClicked)
+        self.qLineToolsGrpBoxLayout.addWidget(self.btnAddMarkupsLine)
+        self.qLineToolsGrpBoxLayout.addSpacing(10)
+        
+        # remove the last point of markup line created
+        qLineToolLabelTrashPt = qt.QLabel('Remove last point:')
+        self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabelTrashPt)
+ 
+        self.slMarkupsLineWidget = slicer.qSlicerMarkupsPlaceWidget()
+        # Hide all buttons and only show delete button
+        self.slMarkupsLineWidget.buttonsVisible=False
+        self.slMarkupsLineWidget.deleteButton().show()
+        self.qLineToolsGrpBoxLayout.addWidget(self.slMarkupsLineWidget)
+        self.qLineToolsGrpBoxLayout.addSpacing(10)
+        
+        # Clear all markup lines
+        self.btnClearLines = qt.QPushButton("Clear all")
+        self.btnClearLines.toolTip = "Remove all markup lines."
+        self.btnClearLines.enabled = True
+        self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
+        self.btnClearLines.connect('clicked(bool)',self.onClearLinesButtonClicked)
+        self.qLineToolsGrpBoxLayout.addWidget(self.btnClearLines)
+
+        self.tabExtraToolsLayout.addWidget(self.qLineToolsGrpBox)
+
+
+        
+        # >>>>>>>>>>>>>>>>>>>>
+        self.tabExtraToolsLayout.addStretch()
+        
+
+        return self.tabExtraToolsLayout
     
-    
-                ########################################    
-                # set up for next page
-                ########################################    
-                
-                # if last question set, clear list and scene
-                if self.CheckForLastQuestionSetForPage() == True:
-                    self._loQuestionSets = []
-                    slicer.mrmlScene.Clear()
-                else:
-                    # clear quiz widgets only
-                    for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
-                        self.oQuizWidgets.qQuizLayout.itemAt(i).widget().setParent(None)
-            
-                self._iCurrentCompositeIndex = self._iCurrentCompositeIndex + 1
-                self.progress.setValue(self._iCurrentCompositeIndex)
-                
-                self.EnableButtons()
-       
-                self.DisplayImagesAndQuestions()
-    
-            else:
-                if sMsg != '':
-                    self.oUtilsMsgs.DisplayWarning( sMsg )
-                
-        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onPreviousButtonClicked(self):
-        
-        bSuccess = True
-        sMsg = ''
-
-        bSuccess, sMsg = self.PerformSave('PreviousBtn')
-        
-        if bSuccess:
-
-            ########################################    
-            # set up for previous page
-            ########################################    
-
-            slicer.mrmlScene.Clear()
-            self._iCurrentCompositeIndex = self._iCurrentCompositeIndex - 1
-            self.progress.setValue(self._iCurrentCompositeIndex)
-    
-            if self._iCurrentCompositeIndex < 0:
-                # reset to beginning
-                self._iCurrentCompositeIndex = 0
-            
-            self.EnableButtons()
-            
-            self.AdjustForPreviousQuestionSets()
-            
-            self.DisplayImagesAndQuestions()
-               
-        
-        else:
-            if sMsg != '':
-                self.oUtilsMsgs.DisplayWarning( sMsg )
-            
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onExitButtonClicked(self,sCaller):
-
-        self.progress.setValue(self._iCurrentCompositeIndex + 1)
-        if len(self._l3iPageQuestionGroupCompositeIndices) >0:
-            iProgressPercent = int((self._iCurrentCompositeIndex + 1) / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
-        else:
-            # error in creating the composite index - assign percent to 100 for exiting
-            self.oUtilsMsgs.DisplayError('ERROR creating quiz indices - Exiting')
-        self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
-        
-        sMsg = 'Do you wish to exit?'
-        if sCaller == 'ExitBtn':
-            sMsg = sMsg + ' \nYour responses will be saved. Quiz may be resumed.'
-
-        qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
-        if qtAns == qt.QMessageBox.Ok:
-            bSuccess, sMsg = self.PerformSave(sCaller)
-            if bSuccess:
-                # update shutdown batch file to remove SlicerDICOMDatabase
-                self.oFilesIO.CreateShutdownBatchFile()
-        
-                slicer.util.exit(status=EXIT_SUCCESS)
-            else:
-                if sMsg != '':
-                    self.oUtilsMsgs.DisplayWarning( sMsg )
-
-        # if code reaches here, either the exit was cancelled or there was 
-        # an error in the save
-        self.progress.setValue(self._iCurrentCompositeIndex)
-        iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
-        self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
-
-        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
         
-        # assume not at the end of the quiz
-        self._btnNext.setText("Next")
+        xPageNode = self.GetCurrentPageNode()
+        if self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Loop') == "Y":
+            self.SetPageLooping(True)
+            self._btnRepeat.visible = True
+            self._btnRepeat.enabled = False
+            self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white}")
+            # only enable Repeat button in looping if the page is not complete and the user is on the last question set
+            if self.GetPageCompleteAttribute(self.GetCurrentNavigationIndex()) != "Y":
+                if self.CheckForLastQuestionSetForPage() == True:
+                    self._btnRepeat.enabled = True
+                    self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
+
+        else:
+            self.SetPageLooping(False)
+            self._btnRepeat.visible = False
+            self._btnRepeat.enabled = False
+            self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white}")
+            
+            
+        # assign button description           
+        if (self.GetCurrentNavigationIndex() == len(self.GetNavigationList()) - 1):
+            self._btnNext.setText("Finish")
+        else:
+            self._btnNext.setText("Next")
         
         # beginning of quiz
-        if (self._iCurrentCompositeIndex == 0):
+        if (self.GetCurrentNavigationIndex() == 0):
             self._btnNext.enabled = True
             self._btnPrevious.enabled = False
 
         # end of quiz
-        elif (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
+        elif (self.GetCurrentNavigationIndex() == len(self.GetNavigationList()) - 1):
             self._btnNext.enabled = True
             self._btnPrevious.enabled = True
 
@@ -541,39 +766,494 @@ class Session:
             self._btnNext.enabled = True
             self._btnPrevious.enabled = True
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def DisableButtons(self):
+        self._btnNext.enabled = False
+        self._btnPrevious.enabled = False
+        self._btnRepeat.enabled = False
 
-        # assign button description           
-        if (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
-            # last question of last image view
-            self._btnNext.setText("Finish")
+
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def BuildPageStateCompletionStructure(self):
-        ''' From the xml that was read in, set up the structure that will keep track of 
-            page completion states during the quiz.
-            This will help determine whether the quiz or segmentation tabs are to be enabled
-            and where to resume the quiz if re-entering.
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #-------------------------------------------
+    #        GUI Events
+    #-------------------------------------------
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onTabChanged(self):
+        ''' When changing tabs reset segment editor interface
+            to force user to reset the volume to be contoured.
         '''
-        self.loPageCompletionState = []
-        # for each page, create the lists holding the question set states and the segmentation states
-        xPages = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
-        for iPageIndex in range(len(xPages)):
-            xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
+        self.SetSegmentationTabDefaults()
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onNextButtonClicked(self):
+
+        try:        
+            bSuccess = True
+            sMsg = ''
             
-            oPgItem = PageState(self)
-            oPgItem.InitializeStates(xPageNode)
+            self.DisableButtons()    
+            if self.sViewingMode != 'Default':
+                self.onResetViewClicked()
+    
+            if self.GetCurrentNavigationIndex() + 1 == len(self.GetNavigationList()):
+    
+                # the last question was answered - check if user is ready to exit
+                self.onExitButtonClicked('Finish') # a save is done in here
+                
+                # the user may have cancelled the 'finish'
+                # bypass remainder of the 'next' button code
+    
+            else:
+                # this is not the last question set, do a save and display the next page
+                bNewPage = True
+                if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() + 1):
+                    bNewPage = False
+                bSuccess, sMsg = self.PerformSave('NextBtn')
+                
+                if bSuccess:
+        
+        
+                    ########################################    
+                    # set up for next page
+                    ########################################    
+                    
+                    # if last question set, clear list and scene
+                    if self.CheckForLastQuestionSetForPage() == True:
+                        self._loQuestionSets = []
+                        slicer.mrmlScene.Clear()
+                    else:
+                        # clear quiz widgets only
+                        for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
+                            self.oQuizWidgets.qQuizLayout.itemAt(i).widget().setParent(None)
+                
+                    self.SetCurrentNavigationIndex(self.GetCurrentNavigationIndex() + 1 )
+                    self.progress.setValue(self.GetCurrentNavigationIndex())
+                    self.InitializeImageDisplayOrderIndices()
+                    
+                    if bNewPage:
+                        self.SetupPageState(self.GetCurrentPageIndex())
+                    self.DisplayQuizLayout()
+                    self.DisplayImageLayout()
+                            
+                else:
+                    if sMsg != '':
+                        self.oUtilsMsgs.DisplayWarning( sMsg )
+
+                self.EnableButtons()
+                
+        except:
+            iPage = self.GetCurrentPageIndex() + 1
+            tb = traceback.format_exc()
+            sMsg = "onNextButtonClicked: Error moving to next page. Current page: " + str(iPage) \
+                   + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
+                
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onPreviousButtonClicked(self):
+        
+        try:
+            bSuccess = True
+            sMsg = ''
+
+            self.DisableButtons()    
+            if self.sViewingMode != 'Default':
+                self.onResetViewClicked()
+                
+            bNewPage = True
+            if self.GetCurrentNavigationIndex() > 0:
+                if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() - 1):
+                    bNewPage = False
+    
+            bSuccess, sMsg = self.PerformSave('PreviousBtn')
             
-            self.loPageCompletionState.append(oPgItem)
+            if bSuccess:
+    
+                ########################################    
+                # set up for previous page
+                ########################################    
+    
+                slicer.mrmlScene.Clear()
+                self.SetCurrentNavigationIndex(self.GetCurrentNavigationIndex() - 1)
+                self.progress.setValue(self.GetCurrentNavigationIndex())
+                self.InitializeImageDisplayOrderIndices()
+        
+                if self.GetCurrentNavigationIndex() < 0:
+                    # reset to beginning
+                    self.SetCurrentNavigationIndex( 0 )
+                
+                self.AdjustToCurrentQuestionSet()
+                
+                if bNewPage:
+                    self.SetupPageState(self.GetCurrentPageIndex())
+                self.DisplayQuizLayout()
+                self.DisplayImageLayout()
+                   
+            
+            else:
+                if sMsg != '':
+                    self.oUtilsMsgs.DisplayWarning( sMsg )
+
+            self.EnableButtons()
+
+
+        except:
+            iPage = self.GetCurrentPageIndex() + 1
+            tb = traceback.format_exc()
+            sMsg = "onPreviousButtonClicked: Error moving to previous page. Current page: " + str(iPage) \
+                   + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def BuildPageQuestionCompositeIndexList(self):
+    def onExitButtonClicked(self,sCaller):
+
+        try:
+            self.progress.setValue(self.GetCurrentNavigationIndex() + 1)
+            if len(self.GetNavigationList()) >0:
+                iProgressPercent = int((self.GetCurrentNavigationIndex() + 1) / len(self.GetNavigationList()) * 100)
+            else:
+                # error in creating the composite navigation index - assign percent to 100 for exiting
+                self.oUtilsMsgs.DisplayError('ERROR creating quiz indices - Exiting')
+            self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
+            
+            sMsg = 'Do you wish to exit?'
+            if sCaller == 'ExitBtn':
+                sMsg = sMsg + ' \nYour responses will be saved. Quiz may be resumed.'
+    
+            qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
+            if qtAns == qt.QMessageBox.Ok:
+                bSuccess, sMsg = self.PerformSave(sCaller)
+                if bSuccess:
+                    # update shutdown batch file to remove SlicerDICOMDatabase
+                    self.oFilesIO.CreateShutdownBatchFile()
+            
+                    slicer.util.exit(status=EXIT_SUCCESS)
+                else:
+                    if sMsg != '':
+                        self.oUtilsMsgs.DisplayWarning( sMsg )
+                    self.EnableButtons()
+    
+            # if code reaches here, either the exit was cancelled or there was 
+            # an error in the save
+            self.progress.setValue(self.GetCurrentNavigationIndex())
+            iProgressPercent = int(self.GetCurrentNavigationIndex() / len(self.GetNavigationList()) * 100)
+            self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
+    
+        except:
+            iPage = self.GetCurrentPageIndex() + 1
+            tb = traceback.format_exc()
+            sMsg = "onExitButtonClicked: Error exiting quiz. Current page: " + str(iPage) \
+                   + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
+            
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onAddLinesButtonClicked(self):
+        ''' Add a new markup line - using the PlaceMode functionality
+        '''
+        self.slMarkupsLineWidget.setMRMLScene(slicer.mrmlScene)
+        markupsNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsLineNode")
+        self.slMarkupsLineWidget.setCurrentNode(slicer.mrmlScene.GetNodeByID(markupsNode.GetID()))
+        self.slMarkupsLineWidget.setPlaceModeEnabled(True)
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onClearLinesButtonClicked(self):
+        ''' A function to clear all markup line nodes from the scene.
+        '''
+        sMsg = ''
+        xPageNode = self.GetCurrentPageNode()
+        sPageComplete = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageComplete')
+        if sPageComplete == "Y":
+            sMsg = '\nThis page has already been completed. You cannot remove the markup lines.'
+            self.oUtilsMsgs.DisplayWarning(sMsg)
+        else:            
+            slLineNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsLineNode')
+            for node in slLineNodes:
+                slicer.mrmlScene.RemoveNode(node)
+                
+            # remove all markup line elements stored in xml for this page node
+            # and delete the markup line file stored in folder
+            lxImages = self.oIOXml.GetChildren(xPageNode, 'Image')
+            for xImage in lxImages:
+                lxMarkupLines = self.oIOXml.GetChildren(xImage, 'MarkupLinePath')
+                for xMarkupLine in lxMarkupLines:
+                    sPath = self.oIOXml.GetDataInNode(xMarkupLine)
+                    sAbsolutePath = self.oFilesIO.GetAbsoluteUserPath(sPath)
+                    os.remove(sAbsolutePath)
+            
+                self.oIOXml.RemoveAllElements(xImage, 'MarkupLinePath')
+            self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onCrosshairsOnClicked(self):
+        ''' activate the crosshairs tool
+        '''
+        slCrosshairNode = slicer.mrmlScene.GetNodeByID('vtkMRMLCrosshairNodedefault')
+        slCrosshairNode.SetCrosshairBehavior(1) # offset jump slice
+        slCrosshairNode.SetCrosshairMode(2)     # basic intersection
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onCrosshairsOffClicked(self):
+        ''' activate the crosshairs tool
+        '''
+        slCrosshairNode = slicer.mrmlScene.GetNodeByID('vtkMRMLCrosshairNodedefault')
+        slCrosshairNode.SetCrosshairBehavior(1) # offset jump slice
+        slCrosshairNode.SetCrosshairMode(0)     # basic intersection
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SliceIntersectionsStateChange(self, int):
+        viewNodeRed = slicer.mrmlScene.GetNodeByID('vtkMRMLSliceCompositeNodeRed')
+        viewNodeGreen = slicer.mrmlScene.GetNodeByID('vtkMRMLSliceCompositeNodeGreen')
+        viewNodeYellow = slicer.mrmlScene.GetNodeByID('vtkMRMLSliceCompositeNodeYellow')
+        
+        if self.chkSliceIntersections.isChecked():
+            viewNodeRed.SetSliceIntersectionVisibility(1)
+            viewNodeGreen.SetSliceIntersectionVisibility(1)
+            viewNodeYellow.SetSliceIntersectionVisibility(1)
+        else:
+            viewNodeRed.SetSliceIntersectionVisibility(0)
+            viewNodeGreen.SetSliceIntersectionVisibility(0)
+            viewNodeYellow.SetSliceIntersectionVisibility(0)
+
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onResetViewClicked(self):
+        ''' return viewing nodes to original layout for this page in the xml
+        '''
+        sMsg = ''
+        
+        bSuccess, sMsg  = self.PerformSave('ResetView')
+
+        if bSuccess:
+            self.AdjustToCurrentQuestionSet()
+            self.bNPlanesViewingMode = False
+            self.sViewingMode = "Default"
+            self.loCurrentXMLImageViewNodes = []
+            self.DisplayQuizLayout()
+            self.DisplayImageLayout()
+
+        else:
+            if sMsg != '':
+                self.oUtilsMsgs.DisplayError(sMsg)
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onNPlanesViewClicked(self):
+        ''' display the requested image in the requested viewing mode
+        '''
+        if self.GetNPlanesComboBoxCount() > 0:
+            self.CaptureAndSaveImageState()
+            
+            self.SetNPlanesView()
+            oImageNodeOverride, iXmlImageIndex = self.GetNPlanesImageComboBoxSelection()
+            self.liImageDisplayOrder = self.ReorderImageIndexToEnd(iXmlImageIndex)
+            self.oImageView.AssignNPlanes(oImageNodeOverride, self.llsNPlanesOrientDest)
+            self.bNPlanesViewingMode = True
+    
+            #    the current image node being displayed in an alternate view may have been 
+            #    repeated in different orientations in the xml
+            self.loCurrentXMLImageViewNodes = self.GetMatchingXMLImageNodes(oImageNodeOverride.sImagePath)
+            self.ApplySavedImageState()
+        else:
+            sMsg = 'No images have been loaded to display in an alternate viewing mode.'
+            self.oUtilsMsgs.DisplayWarning(sMsg)
+            
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onWindowLevelOnClicked(self):
+        slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.AdjustWindowLevel)
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onWindowLevelOffClicked(self):
+        slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.ViewTransform)
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onRepeatButtonClicked(self):
+        qtAns = self.oUtilsMsgs.DisplayOkCancel(\
+                            "Are you sure you want to repeat this set of images and questions?" +\
+                            "\nIf No, click 'Cancel' and press 'Next' to continue.")
+        if qtAns == qt.QMessageBox.Ok:
+            try:        
+                bSuccess = True
+                sMsg = ''
+
+                self.DisableButtons()    
+                bSuccess, sMsg = self.PerformSave('NextBtn')
+                if bSuccess:
+                    indXmlPageToRepeat = self.GetCurrentPageIndex()
+                    
+                    
+                    xCopyOfXmlPageToRepeatNode = self.oIOXml.CopyElement(self.GetCurrentPageNode())
+                    iCopiedRepNum = int(self.oIOXml.GetValueOfNodeAttribute(xCopyOfXmlPageToRepeatNode, "Rep"))
+                    
+                    # find the next xml page that has Rep 0 (move past all repeated pages for this loop)
+                    indNextXmlPageWithRep0 = self.oIOXml.GetIndexOfNextChildWithAttributeValue(self.oIOXml.GetRootNode(), "Page", indXmlPageToRepeat + 1, "Rep", "0")
+            
+                    if indNextXmlPageWithRep0 != -1:
+                        self.oIOXml.InsertElementBeforeIndex(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode, indNextXmlPageWithRep0)
+                    else:
+                        # attribute was not found
+                        self.oIOXml.AppendElement(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode)
+                        indNextXmlPageWithRep0 = self.oIOXml.GetNumChildrenByName(self.oIOXml.GetRootNode(), 'Page') - 1
+                    
+                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())    # for debug
+                    self.BuildNavigationList() # update after adding xml page
+                    
+                    iNewNavInd = self.FindNewRepeatedPosition(indNextXmlPageWithRep0, iCopiedRepNum)
+                    self.SetCurrentNavigationIndex(iNewNavInd)
+                
+                    # update the repeated page
+                    self.AdjustXMLForRepeatedPage()
+                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())    # for debug
+                    self.BuildNavigationList()  # repeated here to pick up attribute adjustments for Rep#
+                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+            
+            
+                    self._loQuestionSets = []
+                    slicer.mrmlScene.Clear()
+            
+                    
+                    self.progress.setMaximum(len(self.GetNavigationList()))
+                    self.progress.setValue(self.GetCurrentNavigationIndex())
+                    
+                    self.SetupPageState(self.GetCurrentPageIndex())
+                    self.DisplayQuizLayout()
+                    self.DisplayImageLayout()
+                    
+                else:
+                    if sMsg != '':
+                        self.oUtilsMsgs.DisplayWarning( sMsg )
+    
+                self.EnableButtons()
+                
+            except:
+                iPage = self.GetCurrentPageIndex() + 1
+                tb = traceback.format_exc()
+                sMsg = "onRepeatButtonClicked: Error repeating this page. Current page: " + str(iPage) \
+                       + "\n\n" + tb 
+                self.oUtilsMsgs.DisplayError(sMsg)
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def FindNewRepeatedPosition(self, iSearchPageNum, iSearchRepNum):
+        ''' this function scans the navigation composite indices to match 
+            the Page and Rep numbers of the new repeated page that was inserted
+            into the xml file. If there is more than one question set, 
+            the navigation index of the first question set is returned.
+        '''
+
+        indFound = -1
+        
+        for iNavInd in range(len(self.GetNavigationList())):
+            iPgNum = self.GetNavigationPage(iNavInd)
+            iRepNum = self.GetNavigationRepNum(iNavInd)
+            
+            if iPgNum == iSearchPageNum and iRepNum == iSearchRepNum :
+                indFound = iNavInd
+                break
+
+                
+        return indFound
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #-------------------------------------------
+    #        Session Setup
+    #-------------------------------------------
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def RunSetup(self, oFilesIO, slicerMainLayout):
+        
+        try:
+            self.SetFilesIO(oFilesIO)
+    
+            # open xml and check for root node
+            bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizResultsPath(),'Session')
+    
+            if not bSuccess:
+                sErrorMsg = "ERROR", "Not a valid quiz - Trouble with XML syntax."
+                self.oUtilsMsgs.DisplayError(sErrorMsg)
+    
+            else:
+    
+                self.SetupWidgets(slicerMainLayout)
+                self.oQuizWidgets.qLeftWidget.activateWindow()
+                
+                self.AddExtraToolsTab()
+    
+                
+                # turn on functionality if any page contains the attribute
+                self.AddSegmentationModule( \
+                    self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
+                    './/Page', 'EnableSegmentEditor','Y'))
+                
+                # set up ROI colors for segmenting
+                sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
+                self.oFilesIO.SetupROIColorFile(sColorFileName)
+                
+                # set contour visibility default for Session
+                self.SetContourVisibility(xRootNode)
+                
+                self.oFilesIO.SetupLoopingInitialization(xRootNode)
+                self.oFilesIO.SetupPageGroupInitialization(xRootNode)
+    
+    
+                # build the list of indices page/questionset as read in by the XML 
+                #    list is shuffled if randomizing is requested
+                self.BuildNavigationList()
+                self.InitializeImageDisplayOrderIndices()
+                
+                
+                # check for partial or completed quiz
+                self.SetNavigationIndexIfResumeRequired()
+                            
+                self.progress.setMaximum(len(self.GetNavigationList()))
+                self.progress.setValue(self.GetCurrentNavigationIndex())
+        
+                self.DisplayQuizLayout()
+                self.DisplayImageLayout()
+    
+                
+                if self.GetQuizResuming():
+                    # page has been displayed - reset Quiz Resuming to false
+                    self.SetQuizResuming(False)
+                else:
+                    self.SetupPageState(self.GetCurrentPageIndex())     # create new state object
+                    
+                if not self.GetQuizComplete():
+                    self.AddSessionLoginTimestamp()
+                    self.AddUserNameAttribute()
+                    
+                self.EnableButtons()
+
+        except:
+            iPage = self.GetCurrentPageIndex() + 1
+            tb = traceback.format_exc()
+            sMsg = "RunSetup: Error trying to set up the quiz. Page: " + str(iPage) \
+                   + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
+            
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #-------------------------------------------
+    #        Functions
+    #-------------------------------------------
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def BuildNavigationList(self):
         ''' This function sets up the page and question set indices which
             are used to coordinate the next and previous buttons.
             The information is gathered by querying the XML quiz.
         '''
-        # given the root of the xml document build composite list 
-        #     of indices for each page and the question sets within
+        # given the root of the xml document build composite navigation list 
+        #     of indices for each page, question sets, page group and rep number
         
+        self.ClearNavigationList()
         # get Page nodes
         xPages = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
 
@@ -591,6 +1271,12 @@ class Session:
             except:
                 # assign a unique page number if no group number exists
                 iPageGroup = iPageNum
+                
+            sRepNum = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Rep')
+            try:
+                iRepNum = int(sRepNum)
+            except:
+                iRepNum = 0
             
             # if there are no question sets for the page, insert a blank shell
             #    - this allows images to load
@@ -602,40 +1288,56 @@ class Session:
             #    - if there are 2 pages and the 1st page has 2 question sets, 2nd page has 1 question set,
             #        and each page is in a different page group
             #        the indices will look like this:
-            #        Page    QS    PageGroup
-            #        0        0        1
-            #        0        1        1
-            #        1        0        2
+            #        Page    QS    PageGroup  Rep
+            #        0        0        1       0
+            #        0        1        1       0
+            #        1        0        2       0
             #    - there can be numerous questions in each question set
             for iQuestionSetIndex in range(len(xQuestionSets)):
-                self._l3iPageQuestionGroupCompositeIndices.append([iPageIndex,iQuestionSetIndex, iPageGroup])
+                self.NavigationListAppend([iPageIndex,iQuestionSetIndex, iPageGroup, iRepNum])
+                
+                
+        # if randomization is requested - shuffle the page/questionset list
+        sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'RandomizePageGroups')
+        if sRandomizeRequired == 'Y':
+            # check if xml already holds a set of randomized indices otherwise, call randomizing function
+            liRandIndices = self.GetStoredRandomizedIndices()
+            if liRandIndices == []:
+                # get the unique list  of all Page Group numbers to randomize
+                #    this was set during xml validation during the initial read
+                liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
+                liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
+                self.AddRandomizedIndicesToXML(liRandIndices)
+             
+            self.SetNavigationList( self.ShuffleNavigationList(liRandIndices) )
+    
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ShufflePageQuestionGroupCompositeIndexList(self, lRandIndices):
+    def ShuffleNavigationList(self, lRandIndices):
         ''' This function will shuffle the original list as read in from the quiz xml,  that holds the
-            "[page number,questionset number, page group number]" according to the randomized index list input.
+            "[page number,questionset number, page group number, rep number]" according to the randomized index list input.
             The question sets always follow with the page, they are never randomized.
             The page groups are randomized. 
                  If more than one page has the same group number, they will remain in the order they were read in.
             
             eg.     Original XML List         Randomized Page Group indices      Shuffled Composite List
-                       Page   QS  Grp                    Indices                      Page   QS    Grp
-                       0      0     1                        2                         2      0     2
-                       0      1     1                        3                         2      1     2
-                       1      0     1                        1                         3      0     2
-                       2      0     2                                                  4      0     3
-                       2      1     2                                                  4      1     3
-                       3      0     2                                                  0      0     1
-                       4      0     3                                                  0      1     1
-                       4      1     3                                                  1      0     1
+                       Page   QS   Grp   Rep             Indices                   Page   QS   Grp   Rep
+                       0      0     1     0                 2                       2     0     2     0
+                       0      1     1     0                 3                       2     1     2     0
+                       1      0     1     0                 4                       3     0     2     0
+                       2      0     2     0                 0                       4     0     3     0
+                       2      1     2     0                 1                       4     1     3     0
+                       3      0     2     0                                         0     0     1     0
+                       4      0     3     0                                         0     1     1     0
+                       4      1     3     0                                         1     0     1     0
         '''
     
         lShuffledCompositeIndices = []
         
         for indRand in range(len(lRandIndices)):
-            for indOrig in range(len(self._l3iPageQuestionGroupCompositeIndices)):
-                if self._l3iPageQuestionGroupCompositeIndices[indOrig][2] == lRandIndices[indRand] :
-                    lShuffledCompositeIndices.append(self._l3iPageQuestionGroupCompositeIndices[indOrig])
+            for indOrig in range(len(self.GetNavigationList())):
+                if self.GetNavigationPageGroup(indOrig) == lRandIndices[indRand] :
+                    lShuffledCompositeIndices.append( self.GetNavigationIndicesAtIndex(indOrig))
         
         return lShuffledCompositeIndices
    
@@ -708,7 +1410,7 @@ class Session:
         bLastQuestionSet = False
         
         # check if at the end of the quiz
-        if (self._iCurrentCompositeIndex == len(self._l3iPageQuestionGroupCompositeIndices) - 1):
+        if (self.GetCurrentNavigationIndex() == len(self.GetNavigationList()) - 1):
             bLastQuestionSet = True
 
         else:
@@ -716,23 +1418,25 @@ class Session:
             # assume multiple question sets for the page
             # check if next page in the composite index is different than the current page
             #    if yes - we have reached the last question set
-            if not( self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex][0] == self._l3iPageQuestionGroupCompositeIndices[self._iCurrentCompositeIndex + 1][0]):
+            if not( self.GetNavigationPage(self.GetCurrentNavigationIndex())) == self.GetNavigationPage(self.GetCurrentNavigationIndex() + 1):
                 bLastQuestionSet = True            
            
             
         return bLastQuestionSet
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def AdjustForPreviousQuestionSets(self):
+    def AdjustToCurrentQuestionSet(self):
         
         # if there are multiple question sets for a page, the list of question sets must
         #    include all previous question sets - up to the one being displayed
         #    (eg. if a page has 4 Qsets, and we are going back to Qset 3,
         #    we need to collect question set indices 0, and 1 first,
-        #    then continue processing for index 2 which will be appended in Display Page)
+        #    then continue processing for index 2 which will be appended in DisplayQuestionSet function)
         
-        # This function is called when the previous button is pressed or if a
-        # resume is required into a question set that is not the first for the page.
+        # This function is called 
+        #    - when the previous button is pressed or
+        #    - if a resume is required into a question set that is not the first for the page
+        #    - if the ResetView button in Extra Tools is pressed  
         
         self._loQuestionSets = [] # initialize
         indQSet = self.GetCurrentQuestionSetIndex()
@@ -745,89 +1449,135 @@ class Session:
                 oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
                 self._loQuestionSets.append(oQuestionSet)
 
-
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def DisplayImagesAndQuestions(self):
-
-        # extract page and question set indices from the current composite index
+    def DisplayQuizLayout(self):
         
-        xPageNode = self.GetCurrentPageNode()
-        self.SetMultipleResponseAllowed(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'AllowMultipleResponse'))
-        self.SetRequestToEnableSegmentEditorTF(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor'))
-
-        xNodeQuestionSet = self.GetCurrentQuestionSetNode()
-        oQuestionSet = QuestionSet()
-        oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
-        
-        # get question set completion state 
-        sSavedResponseCompletionLevel = self.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
-
-        if self.GetQuizComplete():
-            self.SetMultipleResponseAllowed('N') #read only
-
-
-        # first clear any previous widgets (except push buttons)
-        for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
-            self.oQuizWidgets.qQuizLayout.itemAt(i).widget().setParent(None)
-
-        
-        bBuildSuccess, qWidgetQuestionSetForm = oQuestionSet.BuildQuestionSetForm()
-        
-        if bBuildSuccess:
-            self.oQuizWidgets.qQuizLayout.addWidget(qWidgetQuestionSetForm)
-            self._loQuestionSets.append(oQuestionSet)
-            qWidgetQuestionSetForm.setEnabled(True) # initialize
-
-
-            if sSavedResponseCompletionLevel == 'AllResponses' or sSavedResponseCompletionLevel == 'PartialResponses':
+        try:
+            # extract page and question set indices from the current composite index
+            xNodeQuestionSet = self.GetCurrentQuestionSetNode()
+            oQuestionSet = QuestionSet()
+            oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
+            
+    
+            # first clear any previous widgets (except push buttons)
+            for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
+                self.oQuizWidgets.qQuizLayout.itemAt(i).widget().setParent(None)
+    
+            
+            bBuildSuccess, qWidgetQuestionSetForm = oQuestionSet.BuildQuestionSetForm()
+            
+            if bBuildSuccess:
+                self.slMarkupsLineWidget.setPlaceModeEnabled(True)
+                self.oQuizWidgets.qQuizLayout.addWidget(qWidgetQuestionSetForm)
+                self._loQuestionSets.append(oQuestionSet)
+                qWidgetQuestionSetForm.setEnabled(True) # initialize
+    
+    
+                # if sSavedResponseCompletionLevel == 'AllResponses' or sSavedResponseCompletionLevel == 'PartialResponses':
+                #     self.DisplaySavedResponse()
                 self.DisplaySavedResponse()
-
+                self.SetPreviousResponses([]) # reset for new Question Set
+                
+            ################################################
+            ''' Enable tabs and update the progress bar.
+                This is done after displaying questions and prior to loading images to provide a smooth transition
+                when widgets need to be disabled.
+            '''
+                
+            xPageNode = self.GetCurrentPageNode()
+            self.SetMultipleResponseAllowed(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'AllowMultipleResponse'))
+            self.SetRequestToEnableSegmentEditorTF(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor'))
+            
+            if self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Loop') == "Y":
+                self.SetPageLooping(True)
+            else:
+                self.SetPageLooping(False)
+    
             if self.GetQuizComplete():
+                self.SetMultipleResponseAllowed('N') #read only
                 qWidgetQuestionSetForm.setEnabled(False)
                 self.SegmentationTabEnabler(False)
             else:
-                # # enable widget if not all questions have responses or if user is allowed to 
-                # # input multiple responses
-                # if sSavedResponseCompletionLevel == 'AllResponses':
-                #     qWidgetQuestionSetForm.setEnabled(self.GetMultipleResponseAllowed())
-                #     if self.GetQuizResuming():
-                #         qWidgetQuestionSetForm.setEnabled(True)     # open quiz tab on a resume
-                # if self.GetRequestToEnableSegmentEditorTF():
-                #     if not self.loPageCompletionState[self.GetCurrentPageIndex()].GetSegmentationsCompletedState():
-                #         self.SegmentationTabEnabler(True)
-                #     else:
-                #         self.SegmentationTabEnabler(False)
-                # else:
-                #     self.SegmentationTabEnabler(False)
                 
                 #enable tabs
                 if self.GetMultipleResponseAllowed() or self.GetQuizResuming():
                     qWidgetQuestionSetForm.setEnabled(True)
                     self.SegmentationTabEnabler(self.GetRequestToEnableSegmentEditorTF())
+                    self.EnableMarkupLinesTF(True)
                 else:
-                    sPageComplete = self.GetPageCompleteAttribute(self._iCurrentCompositeIndex)
+                    # Multiple Responses are not allowed AND this is not a Quiz Resuming state
+                    sSavedResponseCompletionLevel = self.oPageState.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
+                    sPageComplete = self.GetPageCompleteAttribute(self.GetCurrentNavigationIndex())
                     if sPageComplete == 'Y':
                         qWidgetQuestionSetForm.setEnabled(False)
                         self.SegmentationTabEnabler(False)
+                        self.EnableMarkupLinesTF(False)
                     else:
                         # page not complete - check for question and segmentation completion
                         qWidgetQuestionSetForm.setEnabled(True)
                         self.SegmentationTabEnabler(self.GetRequestToEnableSegmentEditorTF())
-
+                        self.EnableMarkupLinesTF(True)  # no maximum number of lines
+    
                         if sSavedResponseCompletionLevel == 'AllResponses':
                             qWidgetQuestionSetForm.setEnabled(False)
-                        if self.loPageCompletionState[self.GetCurrentPageIndex()].GetSegmentationsCompletedState():
+                        if self.oPageState.GetSegmentationsCompletedState():
                             self.SegmentationTabEnabler(False)
                         
+                if self.GetSegmentationTabIndex() > 0:
+                    # clear Master and Merge selector boxes
+                    oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
+                    oQuizzerEditorHelperBox.setMasterVolume(None)
 
-                   
-        # add page ID/descriptor to the progress bar
-        xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
-        self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
-        self.sPageID = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'ID')
-        iProgressPercent = int(self._iCurrentCompositeIndex / len(self._l3iPageQuestionGroupCompositeIndices) * 100)
-        self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
+            ################################################
+                
+            # add page ID/descriptor to the progress bar
+            xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
+            self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
+            self.sPageID = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'ID')
+            iProgressPercent = int(self.GetCurrentNavigationIndex() / len(self.GetNavigationList()) * 100)
+            self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
+                
+        except:
+            iPage = self.GetCurrentPageIndex() + 1
+            tb = traceback.format_exc()
+            sMsg = "DisplayQuizLayout: Error trying to display questions. Page: " + str(iPage) \
+                   + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
+            
+        
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def DisplayImageLayout(self):
 
+        try:
+            xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
+            self.SetViewingLayout(xmlPageNode)
+    
+            # set up the images on the page
+            self.oImageView = ImageView()
+            self.oImageView.RunSetup(self.GetCurrentPageNode(), self.oFilesIO.GetDataParentDir(), self.GetContourVisibility())
+    
+            # load label maps and markup lines if a path has been stored in the xml for the images on this page
+            self.oFilesIO.LoadSavedLabelMaps(self)
+            self.oFilesIO.LoadSavedMarkupLines(self)
+    
+            # assign each image node and its label map (if applicable) to the viewing widget
+            self.oImageView.AssignNodesToView()
+            
+            self.SetNPlanesComboBoxImageNames()
+    
+            self.ApplySavedImageState() 
+        
+        except:
+            iPage = self.GetCurrentPageIndex() + 1
+            tb = traceback.format_exc()
+            sMsg = "DisplayImageLayout: Error trying to display images. Page: " + str(iPage) \
+                   + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetViewingLayout(self, xmlPageNode):
+        
         # set the requested layout for images
         self.sPageLayout = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Layout')
         if self.sPageLayout == 'TwoOverTwo' :
@@ -841,26 +1591,8 @@ class Session:
         else:
             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
                     
-        # set up the images on the page
-        self.oImageView = ImageView()
-        self.oImageView.RunSetup(self.GetCurrentPageNode(), qWidgetQuestionSetForm, self.oFilesIO.GetDataParentDir())
-
-        # load label maps if a labelmap path has been stored in the xml for the images on this page
-        self.oFilesIO.LoadSavedLabelMaps(self)
-
-        # assign each image node and its label map (if applicable) to the viewing widget
-        self.oImageView.AssignNodesToView()
-        
-        self.SetSavedImageState() # after loading label maps and setting assigning views
-        
-        if self.GetSegmentationTabIndex() > 0:
-            # clear Master and Merge selector boxes
-            oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
-            oQuizzerEditorHelperBox.setMasterVolume(None)
-
-        # page has been displayed - reset Quiz Resuming to false if applicable
-        self.SetQuizResuming(False)
-        
+    
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplaySavedResponse(self):
 
@@ -872,7 +1604,7 @@ class Session:
          
         # for each question and each option, extract any existing responses from the XML
          
-        lsAllResponsesForQuestion = []
+        lsAllResponsesForQuestions = []
         for indQuestion in range(len(loQuestions)):
             oQuestion = loQuestions[indQuestion]
             xQuestionNode = self.oIOXml.GetNthChild(xNodeQuestionSet, 'Question', indQuestion)
@@ -897,48 +1629,18 @@ class Session:
                 
             oQuestion.PopulateQuestionWithResponses(lsResponseValues)
 
-            lsAllResponsesForQuestion.append(lsResponseValues)
+            # only InfoBox type of question can have all responses equal to null string
+            if self.oIOXml.GetValueOfNodeAttribute(xQuestionNode, 'Type') != "InfoBox" \
+                    and (all(elem == '' for elem in lsResponseValues)):
+                lsResponseValues = []   # reset if all are empty
+
+            lsAllResponsesForQuestions.append(lsResponseValues)
             
     
             lsResponseValues = []  # clear for next set of options 
 
-        self._lsPreviousResponses = lsAllResponsesForQuestion
+        self.SetPreviousResponses(lsAllResponsesForQuestions)
     
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetSavedResponseCompletionLevel(self, xQuestionSetNode):
-        """ Check through all questions for the question set looking for a response. This information
-            comes from the currently saved elements in the XML.
-             
-            Assumption: All'Option' elements have a 'Response' element if the question was answered
-            so we just query the first. 
-            eg: Radio Question     Success?
-                    Opt 1            yes
-                        Response:       y (checked)
-                    Opt 2            no
-          GetSavedResponseCompletionLevel n (not checked)
-        """
-        
-        iNumAnsweredQuestions = 0
-        self._lsPreviousResponses = [] # reset for new Question Set
-        
-        # xQuestionSetNode = self.GetCurrentQuestionSetNode()
-        
-        iNumQuestions = self.oIOXml.GetNumChildrenByName(xQuestionSetNode, 'Question')
-
-        for indQuestion in range(iNumQuestions):
-            # get first option for the question (all (or none) options have a response so just check the first)
-            xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
-            xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', 0)
-         
-            iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode,'Response')
-            if iNumResponses >0:
-                iNumAnsweredQuestions = iNumAnsweredQuestions + 1
-                 
-
-        sSavedResponseCompletionLevel = self.GetResponseCompletionLevel(iNumQuestions, iNumAnsweredQuestions)
-                
-        return sSavedResponseCompletionLevel
-           
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def PerformSave(self, sCaller):
         """ Actions performed here include:
@@ -950,79 +1652,80 @@ class Session:
         sMsg = ''
         bSuccess = True
         
-        bSuccess, sMsg = self.ResetDisplay()
-        idxQuestionSet = self.GetCurrentQuestionSetIndex()
-        idxPage = self.GetCurrentPageIndex()
-        iNumQSets = len(self.GetAllQuestionSetNodesForCurrentPage())
+        if not self.GetQuizComplete():
         
-        if bSuccess:
+            if sCaller != 'ResetView':
+                self.oQuizWidgets.qTabWidget.setCurrentIndex(0)
+            self.SetSegmentationTabDefaults()
+                
+            # bSuccess, sMsg = self.ResetDisplay()
+            idxQuestionSet = self.GetCurrentQuestionSetIndex()
+#             idxPage = self.GetCurrentPageIndex()
+            iNumQSets = len(self.GetAllQuestionSetNodesForCurrentPage())
             
-            # Saving the label maps becomes part of the success level ('AllResponses', 'PartialResponses' 
-            # or 'NoResponses') for capturing all of the required pieces for the question set
-            # (responses and label maps). The label maps therefore must be saved
-            # prior to capturing the responses
-            bSuccess, sMsg = self.oFilesIO.SaveLabelMaps(self, sCaller)
-        
-
             if bSuccess:
-                sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponsesToSave()
-
-                if sCaller == 'NextBtn' or sCaller == 'Finish':
-                    # only write to xml if all responses were captured
-                    if sCaptureSuccessLevel == 'AllResponses':
-                        bSuccess, sMsg = self.WriteResponsesToXml()
-                        if bSuccess:
-                            # update question set with completion code=1
-                            self.loPageCompletionState[idxPage].UpdateQuestionSetCompletionState(idxQuestionSet,1)
-                            # # if this was the last question set, update label maps completion
-                            # if idxQuestionSet == iNumQSets - 1:
-                            #     self.loPageCompletionState[idxPage].UpdateSegmentationCompletionState(self.GetCurrentPageNode())
-                            self.loPageCompletionState[idxPage].UpdateSegmentationCompletionState(self.GetCurrentPageNode())
-                    else:
-                        # update question set with completion code=0
-                        self.loPageCompletionState[idxPage].UpdateQuestionSetCompletionState(idxQuestionSet,0)
-                        bSuccess = False
-                        
-                        
-                        
-                else:  
-                    # Caller must have been the Previous or Exit buttons or a close was 
-                    #     requested (which triggers the event filter)
-                    # Only write if there were responses captured
-                    if sCaptureSuccessLevel == 'AllResponses' or sCaptureSuccessLevel == 'PartialResponses':
-                        bSuccess, sMsg = self.WriteResponsesToXml()
-                    else:
-                        # if no responses were captured 
-                        if sCaptureSuccessLevel == 'NoResponses':
-                            # this isn't the Next button so it is allowed
-                            bSuccess = True
-                        
+                
+                bSuccessLabelMaps, sMsgLabelMaps = self.oFilesIO.SaveLabelMaps(self, sCaller)
+                bSuccessMarkupLines, sMsgMarkupLines = self.oFilesIO.SaveMarkupLines(self)
+                sMsg = sMsg + sMsgLabelMaps + sMsgMarkupLines
+                bSuccess = bSuccessLabelMaps * bSuccessMarkupLines
+    
                 if bSuccess:
-                    #after writing responses, record the image state
-                    if not self.GetQuizComplete():
-                        bSuccess, sMsg = self.CaptureAndSaveImageState()
+                    sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponsesToSave()
                     
                     if sCaller == 'NextBtn' or sCaller == 'Finish':
-                        # if this was the last question set for the page, check for completion
-                        if idxQuestionSet == iNumQSets - 1:
-                            # update if Page is complete (only for Next/Finish - not Previous)
-                            self.loPageCompletionState[idxPage].CheckPageCompletionLevelForQuestionSets()
-                            sLabelMapMsg = self.loPageCompletionState[idxPage].CheckPageCompletionLevelForSegmentations(self.GetCurrentPageNode())
-                            sMsg = sMsg + sLabelMapMsg
-                            if self.loPageCompletionState[idxPage].GetQuestionSetsCompletedState() and \
-                                    self.loPageCompletionState[idxPage].GetSegmentationsCompletedState():
-                                bSuccess = True
-                                self.AddPageCompleteAttribute(idxPage)
-                                if sCaller == 'Finish':
-                                    self.AddQuizCompleteAttribute()
-                            else:
-                                bSuccess = False
+                        # only write to xml if all responses were captured
+                        if sCaptureSuccessLevel == 'AllResponses':
+                            bSuccess, sMsg = self.WriteResponsesToXml()
+                        else:
+                            sMsg = sMsg + '\n All questions must be answered to proceed'
+                            bSuccess = False
                             
+                    else:  
+                        # Caller must have been the Previous or Exit buttons or a close was 
+                        #     requested (which triggers the event filter)
+                        # Only write if there were responses captured
+                        if sCaptureSuccessLevel == 'AllResponses' or sCaptureSuccessLevel == 'PartialResponses':
+                            bSuccess, sMsg = self.WriteResponsesToXml()
+                        else:
+                            # if no responses were captured 
+                            if sCaptureSuccessLevel == 'NoResponses':
+                                # this isn't the Next button so it is allowed
+                                bSuccess = True
+                            
+                    if bSuccess:
+                        #after writing responses, update page states and record the image state
+                        self.oPageState.UpdateCompletionLists(self.GetCurrentPageNode())
+                        self.CaptureAndSaveImageState()
+                        
+                        if sCaller == 'NextBtn' or sCaller == 'Finish':
+                            # if this was the last question set for the page, check for completion
+                            if idxQuestionSet == iNumQSets - 1:
+                                
+                                sCompletionFlagMsg = self.oPageState.UpdateCompletedFlags(self.GetCurrentPageNode())
+                                sMsg = sMsg + sCompletionFlagMsg
+                                
+                                if self.oPageState.GetPageCompletedTF():
+                                    bSuccess = True
+                                    self.AddPageCompleteAttribute(self.GetCurrentPageIndex())
+                                    if sCaller == 'Finish':
+                                        self.AddQuizCompleteAttribute()
+                                else:
+                                    bSuccess = False
+                                
                     
 
         # let calling program handle display of message if not successful            
         return bSuccess, sMsg
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetSegmentationTabDefaults(self):
+        
+        if self.GetSegmentationTabIndex() > 0:
+            slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
+            slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
+            slicer.modules.quizzereditor.widgetRepresentation().self().helper.setMasterVolume(None)
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureNewResponsesToSave(self):
         ''' When moving to another display of Images and QuestionSet (from pressing Next or Previous)
@@ -1065,111 +1768,248 @@ class Session:
                 iNumMissingResponses = iNumMissingResponses + 1
                 
         # define success level
-        sCaptureSuccessLevel = self.GetResponseCompletionLevel(len(loQuestions), len(loQuestions)-iNumMissingResponses)
+        sCaptureSuccessLevel = self.oPageState.CategorizeResponseCompletionLevel(len(loQuestions), len(loQuestions)-iNumMissingResponses)
                 
         return sCaptureSuccessLevel, lsAllResponses, sAllMsgs
        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ResetDisplay(self):
+    def GetMatchingXMLImageNodes(self, sImagePathToSearch):
+        ''' Search the xml image nodes for the current page that have the same
+            path as the image node input to this function
+        '''
+        loMatchingImageNodes = []
         
-        bSuccess = True
-        sMsg = ''
-
-        try:
-            # before leaving the page, if the segmentation is enabled, restore mouse to default cursor
-            if self.GetSegmentationTabIndex() > 0:
-                # if Segmentation editor tab exists
+        loImageViewNodes = self.oImageView.GetImageViewList()
+        for oImageViewNode in loImageViewNodes:
+            if oImageViewNode.sImagePath == sImagePathToSearch:
+                loMatchingImageNodes.append(oImageViewNode)
                 
-                #collapse label editor to encourage selection of master volume
-                slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
+        return loMatchingImageNodes    
                 
-                # reset display to quiz tab
-                self.oQuizWidgets.qTabWidget.setCurrentIndex(0)
-                slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
-            
-        except:
-            bSuccess = False
-            sMsg = 'Reset segmentation state error'
-            
-        return bSuccess, sMsg
-        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureAndSaveImageState(self):
         ''' Save the current image state (window/level, slice number) to the XML.
             This state is reset if the user revisits this page.
+            Special case: User has entered a viewing mode. The widgets no
+            longer hold the default list of images and orientations.
         '''
 
         sMsg = ''
         bSuccess = True
+        bAddedNewElement = False
         
         try:
-            # for each image, capture the slice, window and level settings
-            for oImageNode in self.oImageView.GetImageViewList():
-                if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
-    
-                    dictAttribState = oImageNode.GetViewState()
-    
-                    # check if xml State element exists
-                    xImage = oImageNode.GetXmlImageElement()
-                    iNumStateElements = self.oIOXml.GetNumChildrenByName(xImage, 'State')
-
-                    # add image state element (tagged with response time)
-                    self.AddImageStateElement(xImage, dictAttribState)
+            if not self.GetQuizComplete():
+                lsDestOrientNode = []
+                llsNodeProperties = []
+                
+                if not self.bNPlanesViewingMode:
+                    # quizzer is in the default view mode - get state from assigned widgets
+                    for oImageNode in self.oImageView.GetImageViewList():
+                        if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
+                            lsDestOrientNode = [oImageNode.sDestination, oImageNode.sOrientation, oImageNode]
+                            llsNodeProperties.append(lsDestOrientNode)
+                else:
+                    # quizzer was in alternate viewing mode - set up the list to hold current view's orientation, destination and image node
+                    for oImageNode in self.loCurrentXMLImageViewNodes:
                         
-            self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+                        for i in range(len(self.llsNPlanesOrientDest)):
+                            llsNodeProperties.append([self.llsNPlanesOrientDest[i][1], self.llsNPlanesOrientDest[i][0], oImageNode])
+                
+                
+                # for each image, capture the slice, window and level settings of the current mode being displayed 
+                #        before changing the selection or resetting to default
+                #        (eg. what was the state for the images in 1-Plane Axial view before changing to default view)
+                for idx in range(len(llsNodeProperties)):
+                    sWidgetName = llsNodeProperties[idx][0]
+                    sOrientation = llsNodeProperties[idx][1]
+                    oImageNode = llsNodeProperties[idx][2]
+    
+                    if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
+        
+                        dictAttribState = self.oImageView.GetViewState(oImageNode.slNode, sWidgetName)
+                        dictViewModeAttributes = {"Orientation": sOrientation, "Destination": sWidgetName, "ViewingMode": self.sViewingMode}
+                        dictAttribState.update(dictViewModeAttributes)
+                        
+                        if oImageNode.sImageType == 'VolumeSequence':
+                            slAssociatedSequenceBrowserNode = oImageNode.GetAssociatedSequenceBrowserNode()
+                            if slAssociatedSequenceBrowserNode != None:
+                                sFrameNumber = str(slAssociatedSequenceBrowserNode.GetSelectedItemNumber())
+                                dictFrameAttribute = {'Frame':sFrameNumber}
+                                dictAttribState.update(dictFrameAttribute)
+        
+                        # check if xml State element exists
+                        xImage = oImageNode.GetXmlImageElement()
+                        # add image state element (tagged with response time)
+                        self.AddImageStateElement(xImage, dictAttribState)
+                        bAddedNewElement = True     # at least one element added
+                            
+                if bAddedNewElement:
+                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
     
         except:
             bSuccess = False
-            sMsg = 'Error saving the image state. ' \
-            + '\nCheck that the layout setting in xml quiz ' \
-            + '\nis appropriate for assigned image destinations.'
-            # critical error - exit
-            self.oUtilsMsgs.DisplayError( sMsg )
+            iPage = self.GetCurrentPageIndex() + 1
+            tb = traceback.format_exc()
+            sMsg = "CaptureAndSaveImageState: Error saving the image state. Current page: " + str(iPage) \
+                   + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
             
-        return bSuccess, sMsg
-    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetSavedImageState(self):
-        """ From the xml file, get the image state element. If there was no state element, 
-            check the xml for a previously stored state for this image. (eg. if clinician
-            set the window/level for an image on one page, and that same image is loaded on a subsequent page,
-            the same window/level should be applied. 
+    def ApplySavedImageState(self):
+        """ From the xml file, get the image state elements. 
+            Based on the viewing mode, define the state orientations that need to be searched for and set.
+            Check the xml for the current page for state elements. If the required orientations are
+            not found, search for a previously stored state for this image in the required orientation.
+            (eg. if clinician set the window/level for an image on one page, and that same image is 
+            loaded on a subsequent page, the same window/level should be applied.)
+            
         """
         
-        for oImageNode in self.oImageView.GetImageViewList():
-            dictImageState = {}
-            if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
+        loImageNodes = []
+        lsRequiredOrientations = []
+        dictNPlanesOrientDest = {}
+        dictBackgroundWidgetsToResetWithOffsets = {}
+        idxCurrentPage = self.GetCurrentPageIndex()
         
-                xStateElement = self.oIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'State')
+        if not self.bNPlanesViewingMode:
+            loImageNodes = self.oImageView.GetImageViewList()
+        else:
+            oImageNodeOverride, iXmlImageIndex = self.GetNPlanesImageComboBoxSelection()
+            loImageNodes.append(oImageNodeOverride)
+            for i in range(len(self.llsNPlanesOrientDest)):
+                lsRequiredOrientations.append(self.llsNPlanesOrientDest[i][0])
+                dictNPlanesOrientDest.update({self.llsNPlanesOrientDest[i][0] : self.llsNPlanesOrientDest[i][1]})
+            
+        for ind in range(len(loImageNodes)):
+            if self.bNPlanesViewingMode:
+                oImageNode = loImageNodes[ind]
+            else:
+                oImageNode = loImageNodes[self.GetImageDisplayOrderIndices()[ind]]
                 
-                if xStateElement != None:
-                    dictImageState = self.oIOXml.GetAttributes(xStateElement)
-                else:
-                    xHistoricalStateElement = self.GetXmlElementFromImagePathHistory(oImageNode.GetXmlImageElement(), 'State')
-                    if xHistoricalStateElement != None:
-                        dictImageState = self.oIOXml.GetAttributes(xHistoricalStateElement)
-                    
-                if len(dictImageState) > 0:
-                    oImageNode.SetImageState(dictImageState)
+            dictImageState = {}
             
+            if (oImageNode.sImageType == "Volume" or oImageNode.sImageType == "VolumeSequence"):
 
+                if self.sViewingMode == "Default":
+                    lsRequiredOrientations = [oImageNode.sOrientation]
+                    
+                bLatestWindowLevelFound = False
+                lxAllStateElements, liPageIndexForStateElements = self.GetStateElementsForMatchingImagePath(self.oFilesIO.GetRelativeDataPath(oImageNode.sImagePath))
     
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetFolderNameForLabelMaps(self):
-        """ Label maps are stored in a directory where the name is derived from the 
-            current page of the Session.
-        """
-        
-        # get page info to create directory
-        xPageNode = self.GetCurrentPageNode()
-        sPageIndex = str(self.GetCurrentPageIndex() + 1)
-        sPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
-#         sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
-         
-#         sDirName = os.path.join(self.oFilesIO.GetUserQuizResultsDir(), 'Pg'+ sPageIndex + '_' + sPageID + '_' + sPageDescriptor)
-        sDirName = os.path.join(self.oFilesIO.GetUserQuizResultsDir(), 'Pg'+ sPageIndex + '_' + sPageID )
+                for sRequiredOrientation in lsRequiredOrientations:
+                    bFoundOrientation = False
+                    
+                    for idxImageStateElement in reversed(range(len(lxAllStateElements))):
+                        xState = lxAllStateElements[idxImageStateElement]
+                        dictImageState = self.oIOXml.GetAttributes(xState)
 
-        return sDirName
+                        # get first instance in the reversed search for the window/level
+                        # then continue search for matching orientation to get the slice offset
+                        if not bLatestWindowLevelFound:
+                            sLevel = dictImageState['Level']
+                            sWindow = dictImageState['Window']
+                            bLatestWindowLevelFound = True
+
+        # for debug
+        #                print('Required:', sRequiredOrientation, ',    ',dictImageState["ResponseTime"], ',  ',dictImageState["ViewingMode"], ',  ',dictImageState["Orientation"], ',  ',dictImageState["SliceOffset"])
+                        if dictImageState["Orientation"] == sRequiredOrientation:
+                            bFoundOrientation = True
+                            break
+                    
+                    # capture the destination and offset if this was a background layer for later reset to center the field of view
+                    #    - this is necessary because a foreground layer for a widget may be processed
+                    #      after the background layer (depending on xml order) which may change the slice offset
+                    #    (This is particularly important for Background layers that have an image with
+                    #     only one slice (eg. histology) )
+
+                    # work with destination depending on the viewing mode        
+                    if not self.bNPlanesViewingMode:
+                        sDestination = oImageNode.sDestination
+                    else:
+                        sDestination = dictNPlanesOrientDest[sRequiredOrientation]
+                        
+                    if dictImageState != {} :
+                        # a previous image state was found (regardless of correct orientation)
+                        if oImageNode.sViewLayer == 'Background' and idxCurrentPage != liPageIndexForStateElements[idxImageStateElement]:
+                            # image state element was from a previous page
+                            #    update slice offset with current page initial offset if defined
+                            if oImageNode.fInitialSliceOffset != None:
+                                dictBackgroundWidgetsToResetWithOffsets[sDestination] = oImageNode.fInitialSliceOffset
+                            else:
+                                dictBackgroundWidgetsToResetWithOffsets[sDestination] = float(dictImageState['SliceOffset'])
+                        else:
+                            if oImageNode.sViewLayer == 'Background' and idxCurrentPage == liPageIndexForStateElements[idxImageStateElement]:
+                                # image state element was from current page
+                                #    update slice offset with saved offset
+                                dictBackgroundWidgetsToResetWithOffsets[sDestination] = float(dictImageState['SliceOffset'])
+                            
+                            
+                    if bFoundOrientation:
+                        # update with most recent window/level
+                        if bLatestWindowLevelFound:
+                            dictImageState["Window"] = sWindow
+                            dictImageState["Level"] = sLevel
+                            
+                        if not self.bNPlanesViewingMode:
+                            oImageNode.SetImageState(dictImageState)
+                        else:
+                            # for NPlanes viewing mode, adjust with the destination override
+                            xImage = oImageNode.GetXmlImageElement()
+                            sDestinationOverride = dictNPlanesOrientDest[sRequiredOrientation]
+                            oImageNode.SetImageState(dictImageState, sDestinationOverride)
+                    
+                    else:
+                        # no state element was found - 
+                        #    capture destination and assign the offset to the initial if defined 
+                        #    (will be None if not defined)
+                        if oImageNode.sViewLayer == 'Background':
+                            dictBackgroundWidgetsToResetWithOffsets[sDestination] = oImageNode.fInitialSliceOffset
+                                            
+            # first reset identified widgets to the default - fit to the background
+            for key in dictBackgroundWidgetsToResetWithOffsets:
+                slWidget = slicer.app.layoutManager().sliceWidget(key)
+                slWidget.fitSliceToBackground() # default
+            # re-adjust with captured offset
+            for key in dictBackgroundWidgetsToResetWithOffsets:
+                slWidget = slicer.app.layoutManager().sliceWidget(key)
+                slWindowLogic = slWidget.sliceLogic()
+                if dictBackgroundWidgetsToResetWithOffsets[key] != None :
+                    slWindowLogic.SetSliceOffset(dictBackgroundWidgetsToResetWithOffsets[key])
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetStateElementsForMatchingImagePath(self, sCurrentImagePath):
+        
+        lxAllStateElements = []
+        liPageIndexForStateElements = []
+        
+        lxPages = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
+        
+        # for each page in the xml (up to and including  the current page) get all image elements
+        for iPageIdx in range(len(lxPages)):
+            if iPageIdx <= self.GetCurrentPageIndex():
+                xPage = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIdx)
+                lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
+                
+                # for all images on the page, if a volume type image, collect the State elements
+                for xImage in lxImageElements:
+                    sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
+                    if sImageType == 'Volume' or sImageType == 'VolumeSequence':
+                        
+                        xPath = self.oIOXml.GetLastChild(xImage, 'Path')
+                        if xPath != None:
+                            sPath = self.oIOXml.GetDataInNode(xPath)
+                        if sPath == sCurrentImagePath:
+                            if self.oIOXml.GetNumChildrenByName(xImage, 'State') > 0:
+                                lStateElements = self.oIOXml.GetChildren(xImage, 'State')
+                                for xState in lStateElements:
+                                    lxAllStateElements.append(xState)
+                                    liPageIndexForStateElements.append(iPageIdx)
+                        
+        return lxAllStateElements, liPageIndexForStateElements
+                
+        
+        
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetXmlElementFromAttributeHistory(self, sPageChildrenToSearch, sImageAttributeToMatch, sAttributeValue):
@@ -1207,57 +2047,7 @@ class Session:
         
         return xHistoricalChildElement
     
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetXmlElementFromImagePathHistory(self, xImageNodeToMatch, sChildTagName):  
-        """ Start searching the xml file for a matching image on a previous page
-            This is based on the 'Path' element for the current node to match. The
-            historical element must have the same 'Path' element value.
-            If this is a Dicom series, the Path points directly to a dicom slice within
-            the Dicom series.
-            Extract the latest element of the required child 
-                (in case there is more than one element with this name).
-            The most recent element will be returned.
-        """
-        xHistoricalChildElement = None
-        
-        xPathElement = self.oIOXml.GetNthChild(xImageNodeToMatch, 'Path', 0)
-        sPathToMatch = self.oIOXml.GetDataInNode(xPathElement)
-        
-        # start searching pages in reverse order - to get most recent setting
-        # first match will end the search
-        bHistoricalElementFound = False
-        for iPageIndex in range(self.GetCurrentPageIndex()-1, -1, -1):
-            xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
-            
-            if bHistoricalElementFound == False:
-                #get all Image children
-                lxImageElementsToSearch = self.oIOXml.GetChildren(xPageNode, 'Image')
-                if len(lxImageElementsToSearch) > 0:
-    
-                    for xImageNode in lxImageElementsToSearch:
-    
-                        xPotentialPathElement = self.oIOXml.GetNthChild(xImageNode, 'Path', 0)
-                        sPotentialPath = self.oIOXml.GetDataInNode(xPotentialPathElement)
-                        
-#                         # get series instance UID if it exists
-#                         sPotentialSeriesInstanceUID = ''
-#                         xPotentialSeriesInstanceUID = self.oIOXml.GetNthChild(xImageNode, 'SeriesInstanceUID', 0)
-#                         if xPotentialSeriesInstanceUID != None:
-#                             sPotentialSeriesInstanceUID = self.oIOXml.GetDataInNode(xPotentialSeriesInstanceUID)
-                        
-                        # test for match of both the Path and Series Instance UID
-#                         if sPotentialPath == sPathToMatch and sPotentialSeriesInstanceUID == sSeriesInstanceUIDToMatch:
-                        if sPotentialPath == sPathToMatch:
-#                             print('found prior image instance: ', iPageIndex, ' ', sPotentialPath)
-                            
-                            # capture most recent (based on response time) historical element of interest
-                            xHistoricalChildElement = self.oIOXml.GetLatestChildElement(xImageNode, sChildTagName)
-                            bHistoricalElementFound = True
-                        
-        
-        return xHistoricalChildElement
 
-        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def WriteResponsesToXml(self):
         """ Write captured responses to xml. If this is the first write to the xml
@@ -1275,9 +2065,9 @@ class Session:
             #    - OR allow if the number of questions with responses already 
             #      recorded is 'NoResponses' or 'PartialResponses' (not 'AllResponses')
             
-            # sQuestionsWithRecordedResponses = self.GetQuestionSetResponseCompletionLevel()
-            sQuestionsWithRecordedResponses = self.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
-            
+            # get from xml, the category of saved recorded responses to 
+            #    determine whether the newly captured responses are to be written
+            sQuestionsWithRecordedResponses = self.oPageState.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
             
 
             if ( self.GetMultipleResponseAllowed() == True)  or \
@@ -1286,12 +2076,7 @@ class Session:
                 # check to see if the responses for the question set match 
                 #    what was previously captured
                 #    -only write responses if they have changed
-                if not self._lsNewResponses == self._lsPreviousResponses:
-                    # Responses have been captured, if it's the first set of responses
-                    #    for the session, add in the login timestamp
-                    if self._bFirstResponsesRecordedInXml == False:
-                        self.AddSessionLoginTimestamp()
-                        self._bFirstResponsesRecordedInXml = True
+                if not self._lsNewResponses == self.GetPreviousResponses():
                         
                     self.AddXmlElements()
                     
@@ -1310,9 +2095,66 @@ class Session:
         return bSuccess, sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def AdjustXMLForRepeatedPage(self):
+        
+        sMsg = ''
+        try:
+            
+            xNewRepeatPage = self.GetCurrentPageNode()
+            
+            # get last rep number to increment current rep
+            xPreviousPage = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), "Page", self.GetNavigationPage( self.GetCurrentNavigationIndex() -1 ) )
+            sPreviousRepNum = self.oIOXml.GetValueOfNodeAttribute(xPreviousPage, "Rep")
+            sPreviousPageID = self.oIOXml.GetValueOfNodeAttribute(xPreviousPage, 'ID')
+            
+            
+            
+            self.oIOXml.UpdateAttributesInElement(xNewRepeatPage, {"PageComplete":"N"})
+            iPreviousRepNum = int(sPreviousRepNum)
+            sNewRepNum = str(iPreviousRepNum + 1)
+            self.oIOXml.UpdateAttributesInElement(xNewRepeatPage, {"Rep":sNewRepNum})
+            
+            iSubIndex = sPreviousPageID.find('-Rep')
+            if iSubIndex >=0:
+                sStrippedPageID = sPreviousPageID[0:iSubIndex]
+            else:
+                sStrippedPageID = sPreviousPageID
+            
+            sNewPageID = sStrippedPageID + '-Rep' + str(sNewRepNum)
+            self.oIOXml.UpdateAttributesInElement(xNewRepeatPage, {"ID":sNewPageID})
+            
+            
+                
+            # remove LabelmapPath and MarkupLinePath elements
+            lxImages = self.oIOXml.GetChildren(xNewRepeatPage, 'Image')
+            for xImage in lxImages:
+                self.oIOXml.RemoveAllElements(xImage, "LabelMapPath")
+                self.oIOXml.RemoveAllElements(xImage, "MarkupLinePath")
+                
+            # remove Response elements
+            lxQuestionSets = self.oIOXml.GetChildren(xNewRepeatPage, "QuestionSet")
+            for xQuestionSet in lxQuestionSets:
+                lxQuestions = self.oIOXml.GetChildren(xQuestionSet, "Question")
+                for xQuestion in lxQuestions:
+                    lxOptions = self.oIOXml.GetChildren(xQuestion, "Option")
+                    for xOption in lxOptions:
+                        self.oIOXml.RemoveAllElements(xOption, "Response")
+        
+        except:
+            tb = traceback.format_exc()
+            iPage = self.GetCurrentPageIndex() + 1
+            sMsg = 'AdjustXMLForRepeatedPage: Trouble updating repeated page.' + \
+                    'Previous page rep number should be a string that can be converted to an integer.' +\
+                    'Check the functionality of CopyPage.' \
+                    '\nSee Page: ' + str(iPage) + '\n\n' + tb
+            self.oUtilsMsgs.DisplayError(sMsg)
+        
+        
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddXmlElements(self):
         
-        # using the list of question set responses, isolate respones for each question
+        # using the list of question set responses, isolate responses for each question
         iNumQuestions = len(self._lsNewResponses)
 
         # for each question in the question set responses        
@@ -1352,10 +2194,6 @@ class Session:
         """ Add the image state element to the xml file including window/level
             and slice offset. 
         """
-#             Only add if user has already made a change to the quiz responses. 
-#             (ie. ignore if user briefly opens quiz and closes it again)
-#         """
-#         if self._bFirstChangeRecordedInXml:
 
         sNullData = ''
 
@@ -1370,7 +2208,7 @@ class Session:
         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def AddLabelMapPathElement(self, xImageNode, sInputPath):
+    def AddPathElement(self, sElementName, xImageNode, sInputPath):
         
         # add login and response times to the label map path element
         now = datetime.now()
@@ -1378,13 +2216,14 @@ class Session:
         
         dictAttrib = { 'LoginTime': self.LoginTime(), 'ResponseTime': sResponseTime} 
         
-        self.oIOXml.AddElement(xImageNode,'LabelMapPath',sInputPath, dictAttrib)
+        self.oIOXml.AddElement(xImageNode, sElementName, sInputPath, dictAttrib)
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddSessionLoginTimestamp(self):
         ''' Function to add an element holding the login time for the session.
-            Set up the logout time attribute to be updated on each write
+            Set up the logout time attribute to be updated on each write.
+            Also - record the user's name
         '''
 
         now = datetime.now()
@@ -1420,19 +2259,19 @@ class Session:
             dictAttrib['LogoutTime'] = sLogoutTime
                 
             # reset the Login element
-            self.oIOXml.UpdateAtributesInElement(xLoginNode, dictAttrib)
+            self.oIOXml.UpdateAttributesInElement(xLoginNode, dictAttrib)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetCompositeIndexIfResumeRequired(self):
+    def SetNavigationIndexIfResumeRequired(self):
         ''' Scan the user's quiz file for existing responses in case the user
             exited the quiz prematurely (before it was complete) on the last login
         '''
         # We assume the quiz pages and question sets are presented sequentially as stored in the
-        # composite index (which takes into account randomization of the pages if requested)
+        # composite navigation index (which takes into account randomization of the pages if requested)
 
             
         # initialize
-        iResumeCompIndex = 0
+        iResumeNavigationIndex = 0
         self.SetQuizResuming(False)
         iPageIndex = 0
         xPageNode = None
@@ -1446,52 +2285,51 @@ class Session:
             qtAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
 
             if qtAns == qt.QMessageBox.Yes:
-                iResumeCompIndex = 0
+                iResumeNavigationIndex = 0
+                iPageIndex = self.GetNavigationPage(iResumeNavigationIndex)
+                self.SetupPageState(iPageIndex)
+                
             else:
-                self.ExitOnQuizComplete("This quiz was completed. Exiting")
+                self.ExitOnQuizComplete()
         else:        
     
-            # loop through composite index to search for the first page without a "PageComplete='Y'"
-            for indCI in range(len(self._l3iPageQuestionGroupCompositeIndices)):
+            # loop through composite navigation index to search for the first page without a "PageComplete='Y'"
+            for indNav in range(len(self.GetNavigationList())):
                 if not self.GetQuizResuming():
-                    iPageIndex = self._l3iPageQuestionGroupCompositeIndices[indCI][0]
+                    iPageIndex = self.GetNavigationPage(indNav)
                     xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
+                    self.SetupPageState(iPageIndex)
                     
                     sPageComplete = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'PageComplete')
                     if sPageComplete != 'Y':    # found first page that was not complete
-                        iResumeCompIndex = indCI
+                        iResumeNavigationIndex = indNav
                         self.SetQuizResuming(True)
             
+            self.oPageState.UpdateCompletionLists(xPageNode)
             # adjust resuming index based on completion state of the first incomplete page
             #    (some question sets, if more than one exists, may have been completed)
-            iNumQSets = self.oIOXml.GetNumChildrenByName(xPageNode, 'QuestionSet')
-            lxQSetNodes = self.GetAllQuestionSetsForNthPage(iPageIndex)
-            for indQSet in range(iNumQSets):
-                xQuestionSetNode = lxQSetNodes[indQSet]
-                if self.GetSavedResponseCompletionLevel(xQuestionSetNode) == 'AllResponses':
-                    self.loPageCompletionState[iPageIndex].UpdateQuestionSetCompletionState(indQSet,1)
-                    
-                    # only advance if there are more question sets
-                    #    if the last question set has been reached and it is complete then 'PageComplete'
-                    #    was not set because the segmentation requirements were not met
-                    if indQSet < iNumQSets - 1:
-                        iResumeCompIndex = iResumeCompIndex + 1
-
-            if self.loPageCompletionState[iPageIndex].GetQuestionSetsCompletedState() and \
-                        self.loPageCompletionState[iPageIndex].GetSegmentationsCompletedState():
-                iResumeCompIndex = iResumeCompIndex + 1
-
-
+            liCompletedQuestionSets = self.oPageState.GetCompletedQuestionSetsList()
+            
+            for indQSet in range(len(liCompletedQuestionSets)):
+                # only advance if there are more question sets
+                #    if the last question set has been reached and it is complete then 'PageComplete'
+                #    was not set because the segmentation requirements were not met
+                if indQSet < len(liCompletedQuestionSets) -1:
+                    if liCompletedQuestionSets[indQSet] == 1:
+                        iResumeNavigationIndex = iResumeNavigationIndex + 1
+                
             # Display a message to user if resuming (special case if resuming on first page)
-            # if not iResumeCompIndex == self._iCurrentCompositeIndex:
-            if (not iResumeCompIndex == self._iCurrentCompositeIndex) or\
-                (iResumeCompIndex == 0 and dtLastLogin != ''):
+            # if not iResumeNavigationIndex == self.GetCurrentNavigationIndex():
+            if (not iResumeNavigationIndex == self.GetCurrentNavigationIndex()) or\
+                (iResumeNavigationIndex == 0 and dtLastLogin != ''):
                 self.oUtilsMsgs.DisplayInfo('Resuming quiz from previous login session.')
                 self.SetQuizResuming(True)
     
-        self._iCurrentCompositeIndex = iResumeCompIndex
+        self.SetCurrentNavigationIndex(iResumeNavigationIndex)
         # adjust if the resume question set is not the first on the page
-        self.AdjustForPreviousQuestionSets()
+        self.AdjustToCurrentQuestionSet()
+        # reset the default order of image indices based on the new page
+        self.InitializeImageDisplayOrderIndices()
     
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1539,13 +2377,10 @@ class Session:
         return dtLastTimestamp
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ExitOnQuizComplete(self, sMsg):
+    def ExitOnQuizComplete(self):
 
-        # the last index in the composite indices list was reached
+        # the last index in the composite navigation indices list was reached
         # the quiz was completed - exit
-        
-        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-        self.SetQuizComplete(True)
         
         self.oUtilsMsgs.DisplayInfo('Quiz Complete - Exiting')
         slicer.util.exit(status=EXIT_SUCCESS)
@@ -1565,6 +2400,20 @@ class Session:
         '''
         xmlCurrentPageElement = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(),'Page', idxPage)
         xmlCurrentPageElement.set('PageComplete','Y')
+        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def AddUserNameAttribute(self):
+        ''' add attribute to Session to record the user's name
+        '''
+        xRootNode = self.oIOXml.GetRootNode()
+        dictAttrib = self.oIOXml.GetAttributes(xRootNode)
+
+        dictAttrib['UserName'] = self.oFilesIO.GetUsername()
+            
+        # reset the Login element
+        self.oIOXml.UpdateAttributesInElement(xRootNode, dictAttrib)
+
         self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
         
 ##########################################################################

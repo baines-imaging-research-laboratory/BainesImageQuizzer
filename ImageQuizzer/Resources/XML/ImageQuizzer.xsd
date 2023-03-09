@@ -12,6 +12,7 @@
 		</xs:sequence>
 		<xs:attribute name="ROIColorFile" type="xs:string" />
 		<xs:attribute name="RandomizePageGroups" type="yesnoType" default="N" />
+		<xs:attribute name="ContourVisibility" type="contourVisibilityType"/>
 	</xs:complexType>
 </xs:element>
 
@@ -32,6 +33,8 @@
 		<xs:attribute name="AllowMultipleResponse" type="yesnoType" default="N" />
 		<xs:attribute name="EnableSegmentEditor" type="yesnoType" default="N" />
 		<xs:attribute name="SegmentRequiredOnAnyImage" type="yesnoType" default="N"/>
+		<xs:attribute name="MinMarkupLinesRequiredOnAnyImage" type="xs:positiveInteger"/>
+		<xs:attribute name="Loop" type="yesnoType" default="N" />
 	</xs:complexType>
 </xs:element>
 
@@ -40,8 +43,8 @@
 	<xs:complexType>
 		<xs:all>
 			<xs:element name="Path" minOccurs="1" maxOccurs="1" />
-			<xs:element name="Destination" type="destinationType" minOccurs="0" maxOccurs="1" />
-			<xs:element name="Orientation" type="orientationType" minOccurs="0" maxOccurs="1" />
+			<xs:element name="DefaultDestination" type="destinationType" minOccurs="0" maxOccurs="1" />
+			<xs:element name="DefaultOrientation" type="orientationType" minOccurs="0" maxOccurs="1" />
 			<xs:element name="Layer" type="layerType" minOccurs="0" maxOccurs="1" />
 			<xs:element ref="ROIs" minOccurs="0" maxOccurs="1" />
 		</xs:all>
@@ -54,6 +57,8 @@
 		<xs:attribute name="ColorTable" type="xs:string" />
 		<xs:attribute name="Opacity" type="boundedFloatType" />
 		<xs:attribute name="SegmentRequired" type="yesnoType" default="N"/>
+		<xs:attribute name="MinMarkupLinesRequired" type="xs:positiveInteger"/>
+		<xs:attribute name="InitialSliceOffset" type="xs:float"/>
 	</xs:complexType>
 </xs:element>
 
@@ -88,6 +93,7 @@
 		<xs:attribute name="Descriptor" />
 		<xs:attribute name="Min" />
 		<xs:attribute name="Max" />
+		<xs:attribute name="GroupLayout" type="groupLayoutType" />
 	</xs:complexType>
 </xs:element>
 
@@ -113,6 +119,13 @@
     <xs:enumeration value="Text"/>
     <xs:enumeration value="IntegerValue"/>
     <xs:enumeration value="FloatValue"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="groupLayoutType">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="Vertical"/>
+    <xs:enumeration value="Horizontal"/>
   </xs:restriction>
 </xs:simpleType>
 
@@ -182,6 +195,13 @@
   <xs:restriction base="xs:float">
 	<xs:minInclusive value="0" />
 	<xs:maxInclusive value="1" />
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="contourVisibilityType">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="Fill"/>
+    <xs:enumeration value="Outline"/>
   </xs:restriction>
 </xs:simpleType>
 

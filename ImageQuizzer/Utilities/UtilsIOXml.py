@@ -1,7 +1,6 @@
-# from abc import ABC, abstractmethod
 import os, sys
-import warnings
-import vtk, qt, ctk, slicer
+# import warnings
+# import vtk, qt, ctk, slicer
 
 import xml.dom.minidom
 
@@ -43,21 +42,6 @@ except ImportError:
 
 ##########################################################################
 #
-#   class Utilities
-#
-##########################################################################
-
-class Utilities:
-    """ Class Utilities 
-        stub set up for importing all classes in the Utilities file
-    """
-    
-    def __init__(self, parent=None):
-        self.parent = parent
-        
-        
-##########################################################################
-#
 #   class UtilsIOXml
 #
 ##########################################################################
@@ -76,8 +60,7 @@ class UtilsIOXml:
         self._xTree = None
         self._xRootNode = None
         
-        self.sTimestampFormat = "%Y%m%d_%H:%M:%S"
-        self.oUtilsMsgs = UtilsMsgs()
+        self.sTimestampFormat = "%Y%m%d_%H:%M:%S.%f"
         self.lValidSliceWidgets = ['Red', 'Green', 'Yellow', 'Slice4'] # Slice4 for two over two layout
         self.lValidLayouts = ['TwoOverTwo', 'OneUpRedSlice', 'SideBySideRedYellow', 'FourUp']
         self.lValidLayers = ['Foreground', 'Background', 'Segmentation', 'Label']
@@ -89,7 +72,7 @@ class UtilsIOXml:
     
     #----------
     def setupTestEnvironment(self):
-         # check if function is being called from unittesting
+        # check if function is being called from unittesting
         if "testing" in os.environ:
             self.sTestMode = os.environ.get("testing")
         else:
@@ -130,9 +113,6 @@ class UtilsIOXml:
   
                 else:
                     bSuccess = False
-                    if self.sTestMode == "0":
-                        sErrorMsg = "ERROR", "Not a valid quiz - Invalid XML root node:" + sXmlPath
-                        self.oUtilsMsgs.DisplayError(sErrorMsg)
                     raise NameError('Invalid XML root node: %s' % sXmlPath)
  
                 
@@ -141,16 +121,10 @@ class UtilsIOXml:
  
             except:
                 bSuccess = False
-                if self.sTestMode == "0":
-                    sErrorMsg = "ERROR", "Not a valid quiz - Parsing XML file error:" + sXmlPath
-                    self.oUtilsMsgs.DisplayError(sErrorMsg)
                 raise Exception('Parsing XML file error: %s' % sXmlPath)
                  
         else:
             bSuccess = False
-            if self.sTestMode == "0":
-                sErrorMsg = "ERROR", "XML file does not exist:" + sXmlPath
-                self.oUtilsMsgs.DisplayError(sErrorMsg)
             raise Exception('XML file does not exist: %s' % sXmlPath)
          
 
@@ -176,10 +150,6 @@ class UtilsIOXml:
         """
         given an xml node, return the number of children with the specified tagname
         """
-        
-#         iNumChildren = xParentNode.getElementsByTagName(sChildTagName).length
-
-#         iNumChildren = xParentNode.countChildren()
 
         iNumChildren = len(xParentNode.findall(sChildTagName))
         return iNumChildren
@@ -189,8 +159,6 @@ class UtilsIOXml:
         """
         given an xml node, return the child nodes with the specified tagname
         """
-        
-#         xmlChildren = xParentNode.getElementsByTagName(sChildTagName)
 
         lxChildren = xParentNode.findall(sChildTagName)
         
@@ -201,13 +169,8 @@ class UtilsIOXml:
         """
         given an xml node, return the nth child node with the specified tagname
         """
-        
-#         xmlChildNode = xParentNode.getElementsByTagName(sChildTagName)[iIndex]
 
         xmlChildNode = None
-
-        # for elem in parent[indElem].iter(sElemName):
-        #     print(elem.tag, elem.attrib, elem.text)
 
         ind = 0
         for elem in xParentNode.findall(sChildTagName):
@@ -266,12 +229,6 @@ class UtilsIOXml:
     def GetListOfNodeAttributes(self, xNode):
         # given a node, return a list of all its attributes
         
-#         listOfAttributes = []
-#         for index in range(0,xNode.attributes.length):
-#             (name, value) = xNode.attributes.items()[index]
-#             tupAttribute = name, value
-#             listOfAttributes.append(tupAttribute)
-
         # attributes are stored in dictionary format
         listOfAttributes = []
         lNames = list(xNode.attrib.keys())
@@ -291,8 +248,6 @@ class UtilsIOXml:
         # given a node and an attribute name, get the value
         #   if the attribute did not exist, return null string
         
-#         sAttributeValue = xNode.getAttribute(sAttributeName)
-
         try:
             dictAttribs = xNode.attrib
             sAttributeValue = dictAttribs[sAttributeName]
@@ -305,31 +260,45 @@ class UtilsIOXml:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetDataInNode(self, xNode):
         # given a node get the value
-        
-#         xData = 'Empty'
-#         nodes = xNode.childNodes
-#         for node in nodes:
-#             if node.nodeType == node.TEXT_NODE:
-#                 xData =node.data
-# #                 print(xData)
-#             else:
-#                 print('invalid data node  check xml schema' )
-        
-        sData = xNode.text
-        
-        if sData is None:        
+        #   if the node did not exist, return null string
+
+        try:
+            sData = xNode.text
+            
+            if sData is None:        
+                sData = ''
+            else:
+                if '\n' or '\t' in sData: 
+                    # clean up any tabs or line feeds in the data string; replace with null
+                    #    Element tree stores '\n\t\t'  when the text property is empty for an element 
+                    sTab = '\t'
+                    sNull = ''
+                    sLineFeed = '\n'
+                    sData = sData.replace(sTab, sNull)
+                    sData = sData.replace(sLineFeed, sNull)
+        except:
             sData = ''
-        else:
-            if '\n' or '\t' in sData: 
-                # clean up any tabs or line feeds in the data string; replace with null
-                #    Element tree stores '\n\t\t'  when the text property is empty for an element 
-                sTab = '\t'
-                sNull = ''
-                sLineFeed = '\n'
-                sData = sData.replace(sTab, sNull)
-                sData = sData.replace(sLineFeed, sNull)
-                
         return sData
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CreateParentNode(self, sTagName, dictAttrib):
+        
+        xNode = etree.Element(sTagName)
+        
+        for attrib, value in dictAttrib.items():
+            xNode.set(attrib, value)
+        
+        return xNode
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CreateSubNode(self, xParentNode, sTagName, dictAttrib):
+        
+        xSubNode = etree.SubElement(xParentNode, sTagName)
+        
+        for attrib, value in dictAttrib.items():
+            xSubNode.set(attrib, value)
+        
+        return xSubNode
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddElement(self, xParentNode, sTagName, sText, dictAttrib):
@@ -338,13 +307,23 @@ class UtilsIOXml:
         elem.text = sText
         xParentNode.append(elem)
 
-#         elem = etree.Element(sTagName)
-#         elem.text = sText
-#         elem.attrib = dictAttrib
-#         xParentNode.insert(1, elem)
-
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def UpdateAtributesInElement(self, xElement, dictAttrib):
+    def InsertElementBeforeIndex(self, xParentNode, xElement, iInd):
+        xParentNode.insert(iInd, xElement)
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def AppendElement(self, xParentNode, xElement):
+        xParentNode.append(xElement)
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def RemoveAllElements(self, xParentNode, sTagName):
+        ''' from the parent node, remove all children with the input tag name
+        '''
+        for xElem in xParentNode.findall(sTagName):
+            xParentNode.remove(xElem)
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def UpdateAttributesInElement(self, xElement, dictAttrib):
         
         # for each key, value in the dictionary, update the element attributes
         for sKey, sValue in dictAttrib.items():
@@ -377,7 +356,37 @@ class UtilsIOXml:
         
         return bRequired
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetIndexOfNextChildWithAttributeValue(self, xParentNode, sChildTagName, indFrom, sAttrib, sAttribValue):
+        ''' given an index to search from, search the attributes in the child that matches the input
+            attribute value
+        '''
+        
+        iNextInd = -1
+        
+        iSearchIndex = 0
+        for elem in xParentNode.findall(sChildTagName):
+            if iSearchIndex >= indFrom:
+                sSearchValue = self.GetValueOfNodeAttribute(elem, sAttrib)
+                if sSearchValue == sAttribValue:
+                    iNextInd = iSearchIndex
+                    break
+                else:
+                    iSearchIndex = iSearchIndex + 1
+                
+            else:
+                iSearchIndex = iSearchIndex + 1
+                
+        return iNextInd
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CopyElement(self, xElemToCopy):
+        ''' Create a copy of the element that is not shared by reference to the original
+        '''
+        sElemToCopy = etree.tostring(xElemToCopy)
+        xNewCopiedElem = etree.fromstring(sElemToCopy)
+        
+        return xNewCopiedElem
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def prettify(self, elem):
         
@@ -423,43 +432,5 @@ class UtilsIOXml:
             raise Exception('Write XML file error: %s' % sXmlPath)
 
 
-
-##########################################################################
-#
-#   class UtilsMsgs
-#
-##########################################################################
-
-class UtilsMsgs:
-    """ Class UtilsMsgs
-        create message box to handle displaying errors, warnings and general information
-    """
-    
-    def __init__(self, parent=None):
-        self.parent = parent
-        self.msgBox = qt.QMessageBox()
-    
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def DisplayError(self,sErrorMsg):
-        self.msgBox.critical(slicer.util.mainWindow(),"Image Quizzer: ERROR",sErrorMsg)
-        exit()
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def DisplayWarning(self,sWarningMsg):
-        self.msgBox.warning(slicer.util.mainWindow(), 'Image Quizzer: Warning', sWarningMsg)
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def DisplayInfo(self, sTextMsg):
-        self.msgBox.information(slicer.util.mainWindow(), 'Image Quizzer: Information', sTextMsg)
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def DisplayYesNo(self, sMsg):
-        qtAns = self.msgBox.question(slicer.util.mainWindow(),'Image Quizzer: Continue?',sMsg, qt.QMessageBox.Yes, qt.QMessageBox.No)
-        return qtAns
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def DisplayOkCancel(self,sMsg):
-        qtAns = self.msgBox.question(slicer.util.mainWindow(),"Image Quizzer: ",sMsg, qt.QMessageBox.Ok, qt.QMessageBox.Cancel)
-        return qtAns
 
         

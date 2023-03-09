@@ -1,25 +1,25 @@
 <Session>
-	<Page ID="TinyPatient" Descriptor="DicomSeries" EnableSegmentEditor="Y">
+	<Page ID="TinyPatient" Descriptor="DicomSeries">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Sagittal</Orientation>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="Select">
@@ -27,7 +27,7 @@
 			</ROIs>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="Select">
@@ -35,7 +35,7 @@
 			</ROIs>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="Select">
@@ -48,27 +48,27 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="TinyPatient" Descriptor="DicomSeries" EnableSegmentEditor="Y">
+	<Page ID="TinyPatient" Descriptor="DicomSeries">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Sagittal</Orientation>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="Ignore">
@@ -76,7 +76,7 @@
 			</ROIs>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="Ignore">
@@ -84,7 +84,7 @@
 			</ROIs>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="Ignore">
@@ -97,41 +97,41 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="TinyPatient" Descriptor="DicomSeries" EnableSegmentEditor="Y">
+	<Page ID="TinyPatient" Descriptor="DicomSeries">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Sagittal</Orientation>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="All">
 			</ROIs>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="All">
 			</ROIs>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="All">
@@ -143,41 +143,41 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="TinyPatient" Descriptor="DicomSeries" EnableSegmentEditor="Y">
+	<Page ID="TinyPatient" Descriptor="DicomSeries">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Sagittal</Orientation>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Coronal</Orientation>
+			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="None">
 			</ROIs>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="None">
 			</ROIs>
 		</Image>
 		<Image DicomRead="Y" Type="RTStruct" ID="Segmentation">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Segmentation</Layer>
 			<Path>ImageVolumes\TinyRtStudy\rtss_1.2.826.0.1.3680043.8.274.1.1.7145442384.75872.7982248107.258.dcm</Path>
 			<ROIs ROIVisibilityCode="None">

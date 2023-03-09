@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session ROIColorFile="PiRadsStudy">
-	<Page ID="IGPC2026" Descriptor="Intro" LinkViews="Y" Layout="TwoOverTwo" AllowMultipleResponse="Y">
+	<Page ID="IGPC2026" Descriptor="Intro" LinkViews="Y" Layout="TwoOverTwo" AllowMultipleResponse="Y"  EnableSegmentEditor="N">
 		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\ADC.nii</Path>
 		</Image>
 		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
-		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  EnableSegmentEditor="N">
+		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer">
 			<Question Type="InfoBox" Descriptor="Features">
 				<Option>  - zoom, window/level</Option>
 				<Option>  - DCE MRI time sequence tools</Option>
@@ -27,38 +27,38 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="IGPC2026" Descriptor="Segment Required" LinkViews="Y" Layout="TwoOverTwo" AllowMultipleResponse="Y">
+	<Page ID="IGPC2026" Descriptor="Segment Required" LinkViews="Y" Layout="TwoOverTwo" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
 		<Image Type="VolumeSequence" ID="DCE" LabelMapID="DCE-Contour" RotateToAcquisition="Y">
-			<Destination>Green</Destination>
+			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="ADC" LabelMapID="ADC-Contour"  RotateToAcquisition="Y">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\ADC.nii</Path>
 		</Image>
-		<Image ID="In_Vivo_2D_T2" Type="Volume" LabelMapID="2DT2-Contour" RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
+		<Image ID="In_Vivo_2D_T2" Type="Volume" LabelMapID="2DT2-Contour" RotateToAcquisition="Y" SegmentRequired="Y">
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
 		<Image ID="PELVIS_MRAC_PET" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
-			<Destination>Slice4</Destination>
+			<DefaultDestination>Slice4</DefaultDestination>
 			<Layer>Foreground</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\PSMA PET.nii</Path>
 		</Image>
-		<Image ID="In_Vivo_2D_T2" Type="Volume" LabelMapID="2DT2-Contour" RotateToAcquisition="Y">
-			<Destination>Slice4</Destination>
+		<Image ID="In_Vivo_2D_T2" Type="Volume" LabelMapID="2DT2-Contour" RotateToAcquisition="Y" SegmentRequired="Y">
+			<DefaultDestination>Slice4</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
-		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  EnableSegmentEditor="N">
+		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer" >
 			<Question Type="InfoBox" Descriptor="Features:">
 				<Option> - ability to overlay images</Option>
 				<Option>      PET overlay shown with 2DT2</Option>
@@ -66,7 +66,7 @@
 				<Option>      (use with 'Shift' key)</Option>
 			</Question>
 		</QuestionSet>
-		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  EnableSegmentEditor="Y">
+		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer" >
 			<Question Type="InfoBox" Descriptor="Segmentation Instructions">
 				<Option>In Segment Editor tab, select volume to create segments.</Option>
 				<Option>   Click Edit Selected Label Map collapsible button to access the segmenting tools.</Option>
@@ -78,20 +78,21 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="IGPC2026" Descriptor="Gold Standard" LinkViews="Y" Layout="OneUpRedSlice" AllowMultipleResponse="Y">
-		<Image ID="In_Vivo_2D_T2" Type="Volume" DisplayLabelMapID="2DT2-Contour" RotateToAcquisition="Y" LabelMapID="Modified 2DT2">
-			<Destination>Red</Destination>
+	<Page ID="IGPC2026" Descriptor="Gold Standard" LinkViews="Y" Layout="OneUpRedSlice" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" DisplayLabelMapID="2DT2-Contour" RotateToAcquisition="Y" LabelMapID="Modified 2DT2" SegmentRequired="Y">
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
 		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Segmentation</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\2DT2-GoldStandard.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All"></ROIs>
 		</Image>
-		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  EnableSegmentEditor="Y">
+		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer" >
 			<Question Type="InfoBox" Descriptor="Review">
 				<Option>Compare user contour with gold standard.</Option>
 			</Question>
@@ -101,20 +102,21 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="IGPC2026" Descriptor="Gold Standard 2" LinkViews="Y" Layout="OneUpRedSlice" AllowMultipleResponse="Y">
+	<Page ID="IGPC2026" Descriptor="Gold Standard 2" LinkViews="Y" Layout="OneUpRedSlice" AllowMultipleResponse="Y" EnableSegmentEditor="N">
 		<Image ID="In_Vivo_2D_T2" Type="Volume" DisplayLabelMapID="Modified 2DT2" RotateToAcquisition="Y">
-			<Destination>Red</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
 		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
-			<Destination>Yellow</Destination>
+			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Segmentation</Layer>
-			<Orientation>Axial</Orientation>
+			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\2DT2-GoldStandard.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All"></ROIs>
 		</Image>
-		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer"  EnableSegmentEditor="N">
+		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer" >
 			<Question Type="InfoBox" Descriptor="Review">
 				<Option>Compare modified user contour with gold standard.</Option>
 			</Question>
