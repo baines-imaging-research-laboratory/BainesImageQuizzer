@@ -10,6 +10,7 @@ from copy import deepcopy
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
+from Utilities.UtilsEmail import *
 
 from Question import *
 from ImageView import *
@@ -61,11 +62,14 @@ class Session:
         self._bPageLooping = False
         self._sSessionContourVisibility = 'Outline'
         self._sSessionContourOpacity = 0.5
+        self._bEmailResults = False
+        self._bRandomizeRequired = False
         
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
         self.oPageState = PageState()
+        self.oUtilsEmail = UtilsEmail()
 
         self.oImageView = None
         
@@ -77,13 +81,22 @@ class Session:
         self.loCurrentXMLImageViewNodes = []
         self.liImageDisplayOrder = []
 
+        self.setupTestEnvironment()
 
+    #----------
     def __del__(self):
 
         # clean up of editor observers and nodes that may cause memory leaks (color table?)
         if self.GetSegmentationTabIndex() > 0:
             slicer.modules.quizzereditor.widgetRepresentation().self().exit()
 
+    #----------
+    def setupTestEnvironment(self):
+        # check if function is being called from unit testing
+        if "testing" in os.environ:
+            self.sTestMode = os.environ.get("testing")
+        else:
+            self.sTestMode = "0"
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -127,6 +140,13 @@ class Session:
     def LoginTime(self):
         return self._sLoginTime
     
+    #----------
+    def SetEmailResultsRequest(self, bInput):
+        self._bEmailResults = bInput
+        
+    #----------
+    def GetEmailResultsRequest(self):
+        return self._bEmailResults
     #----------
     def SetPreviousResponses(self, lInputResponses):
         self._lsPreviousResponses = lInputResponses
@@ -297,6 +317,9 @@ class Session:
         
     #----------
     def GetCurrentPageNode(self):
+        ''' From the current navigation index in the composite indices list, get the page index.
+            Return the nth page node (using the page index) from the root.
+        '''
         iPageIndex = self.GetNavigationPage(self.GetCurrentNavigationIndex())
         xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
         
@@ -567,6 +590,20 @@ class Session:
         self.SetContourOpacityFromSliderValue(self.qVisibilityOpacity.value)            # image view property
 
     #----------
+    def SetRandomizeRequired(self, sYN=None):
+        # set randomize required to input value (from unit tests) or from the stored xml attribute
+        if sYN == None:
+            sYN = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(),'RandomizePageGroups')
+        if sYN == 'Y':
+            self._bRandomizeRequired = True
+        else:
+            self._bRandomizeRequired = False
+            
+    #----------
+    def GetRandomizeRequired(self):
+        return self._bRandomizeRequired
+
+    #----------
     #----------
     #----------
 
@@ -645,9 +682,9 @@ class Session:
         self.qButtonGrpBoxLayout.addWidget(self._btnExit)
         self.qButtonGrpBoxLayout.addWidget(qProgressLabel)
         self.qButtonGrpBoxLayout.addWidget(self.progress)
-        self.qButtonGrpBoxLayout.addWidget(self._btnRepeat)
         self.qButtonGrpBoxLayout.addWidget(self._btnPrevious)
         self.qButtonGrpBoxLayout.addWidget(self._btnNext)
+        self.qButtonGrpBoxLayout.addWidget(self._btnRepeat)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupExtraToolsButtons(self):
@@ -847,6 +884,12 @@ class Session:
                 if self.CheckForLastQuestionSetForPage() == True:
                     self._btnRepeat.enabled = True
                     self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
+            else:
+                # page is complete - enable if multiple responses are allowed
+                if self.GetMultipleResponseAllowed() == True:
+                    self._btnRepeat.enabled = True
+                    self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
+                    
 
         else:
             self.SetPageLooping(False)
@@ -902,6 +945,18 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onNextButtonClicked(self):
 
+        if self._btnRepeat.enabled == True:
+            if self._btnNext.text == 'Finish':
+                sNextPhrase = 'Finish'
+            else:
+                sNextPhrase = 'move to Next set'
+            sMsg = "You have the option to repeat this set of images and questions." +\
+                    "\nClick 'OK' to " + sNextPhrase + " otherwise click 'Cancel'."
+
+            qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
+            if qtAns == qt.QMessageBox.Cancel:
+                return
+        
         try:        
             bSuccess = True
             sMsg = ''
@@ -1033,11 +1088,18 @@ class Session:
             sMsg = 'Do you wish to exit?'
             if sCaller == 'ExitBtn':
                 sMsg = sMsg + ' \nYour responses will be saved. Quiz may be resumed.'
+            else:
+                if sCaller == 'Finish':
+                    sMsg = sMsg + " \nYour quiz is complete and your responses will be locked." \
+                                + " \n\nIf you wish to resume at a later time, press 'Cancel' here, then use the 'Exit' button."
     
             qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
             if qtAns == qt.QMessageBox.Ok:
                 bSuccess, sMsg = self.PerformSave(sCaller)
                 if bSuccess:
+                    
+                    self.QueryThenSendEmailResults()
+                            
                     # update shutdown batch file to remove SlicerDICOMDatabase
                     self.oFilesIO.CreateShutdownBatchFile()
             
@@ -1184,6 +1246,10 @@ class Session:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onRepeatButtonClicked(self):
+        ''' Function to manage repeating a page node when user requests a repeat (looping).
+            This is generally used for multiple lesions.
+        '''
+        
         qtAns = self.oUtilsMsgs.DisplayOkCancel(\
                             "Are you sure you want to repeat this set of images and questions?" +\
                             "\nIf No, click 'Cancel' and press 'Next' to continue.")
@@ -1195,35 +1261,10 @@ class Session:
                 self.DisableButtons()    
                 bSuccess, sMsg = self.PerformSave('NextBtn')
                 if bSuccess:
-                    indXmlPageToRepeat = self.GetCurrentPageIndex()
                     
-                    
-                    xCopyOfXmlPageToRepeatNode = self.oIOXml.CopyElement(self.GetCurrentPageNode())
-                    iCopiedRepNum = int(self.oIOXml.GetValueOfNodeAttribute(xCopyOfXmlPageToRepeatNode, "Rep"))
-                    
-                    # find the next xml page that has Rep 0 (move past all repeated pages for this loop)
-                    indNextXmlPageWithRep0 = self.oIOXml.GetIndexOfNextChildWithAttributeValue(self.oIOXml.GetRootNode(), "Page", indXmlPageToRepeat + 1, "Rep", "0")
-            
-                    if indNextXmlPageWithRep0 != -1:
-                        self.oIOXml.InsertElementBeforeIndex(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode, indNextXmlPageWithRep0)
-                    else:
-                        # attribute was not found
-                        self.oIOXml.AppendElement(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode)
-                        indNextXmlPageWithRep0 = self.oIOXml.GetNumChildrenByName(self.oIOXml.GetRootNode(), 'Page') - 1
-                    
-                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())    # for debug
-                    self.BuildNavigationList() # update after adding xml page
-                    
-                    iNewNavInd = self.FindNewRepeatedPosition(indNextXmlPageWithRep0, iCopiedRepNum)
-                    self.SetCurrentNavigationIndex(iNewNavInd)
-                
-                    # update the repeated page
-                    self.AdjustXMLForRepeatedPage()
-                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())    # for debug
-                    self.BuildNavigationList()  # repeated here to pick up attribute adjustments for Rep#
-                    self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
-            
-            
+                    self.CreateRepeatedPageNode()
+
+                    # cleanup
                     self._loQuestionSets = []
                     slicer.mrmlScene.Clear()
             
@@ -1302,15 +1343,23 @@ class Session:
         try:
             self.SetFilesIO(oFilesIO)
     
+            sMsg = ''
             # open xml and check for root node
             bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizResultsPath(),'Session')
     
             if not bSuccess:
-                sErrorMsg = "ERROR", "Not a valid quiz - Trouble with XML syntax."
-                self.oUtilsMsgs.DisplayError(sErrorMsg)
+                sMsg = "ERROR", "Not a valid quiz - Trouble with XML syntax."
+                raise
     
             else:
-    
+                
+                bEmailRequest, sMsg = self.oUtilsEmail.SetupEmailResults(self.oFilesIO, \
+                                self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'EmailResultsTo'))
+                
+                self.SetEmailResultsRequest(bEmailRequest)
+                if sMsg != '':
+                    raise
+
                 self.SetupWidgets(slicerMainLayout)
                 self.oQuizWidgets.qLeftWidget.activateWindow()
                 
@@ -1322,26 +1371,25 @@ class Session:
                     self.oIOXml.CheckForRequiredFunctionalityInAttribute( \
                     './/Page', 'EnableSegmentEditor','Y'))
                 
-                # set up ROI colors for segmenting
+                # set up and initialize Session attributes
                 sColorFileName = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
                 self.oFilesIO.SetupROIColorFile(sColorFileName)
-                
-                # set contour visibility default for Session
                 self.SetSessionContourVisibilityDefault(xRootNode)
+                self.SetRandomizeRequired()
                 
                 self.oFilesIO.SetupLoopingInitialization(xRootNode)
                 self.oFilesIO.SetupPageGroupInitialization(xRootNode)
-    
+                
     
                 # build the list of indices page/questionset as read in by the XML 
                 #    list is shuffled if randomizing is requested
                 self.BuildNavigationList()
                 self.InitializeImageDisplayOrderIndices()
                 
-                
                 # check for partial or completed quiz
                 self.SetNavigationIndexIfResumeRequired()
                             
+
                 self.progress.setMaximum(len(self.GetNavigationList()))
                 self.progress.setValue(self.GetCurrentNavigationIndex())
         
@@ -1362,9 +1410,13 @@ class Session:
                 self.EnableButtons()
 
         except:
-            iPage = self.GetCurrentPageIndex() + 1
+            if self.GetNavigationList() == []:
+                iPage = 0
+            else:
+                iPage = self.GetCurrentPageIndex() + 1
+                
             tb = traceback.format_exc()
-            sMsg = "RunSetup: Error trying to set up the quiz. Page: " + str(iPage) \
+            sMsg = sMsg + "RunSetup: Error trying to set up the quiz. Page: " + str(iPage) \
                    + "\n\n" + tb 
             self.oUtilsMsgs.DisplayError(sMsg)
             
@@ -1431,8 +1483,7 @@ class Session:
                 
                 
         # if randomization is requested - shuffle the page/questionset list
-        sRandomizeRequired = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'RandomizePageGroups')
-        if sRandomizeRequired == 'Y':
+        if self.GetRandomizeRequired():
             # check if xml already holds a set of randomized indices otherwise, call randomizing function
             liRandIndices = self.GetStoredRandomizedIndices()
             if liRandIndices == []:
@@ -1449,17 +1500,19 @@ class Session:
     def ShuffleNavigationList(self, lRandIndices):
         ''' This function will shuffle the original list as read in from the quiz xml,  that holds the
             "[page number,questionset number, page group number, rep number]" according to the randomized index list input.
-            The question sets always follow with the page, they are never randomized.
+            The question sets always remain in the same order as read in with the page, they are never randomized.
             The page groups are randomized. 
                  If more than one page has the same group number, they will remain in the order they were read in.
+                 
+            e.g. Randomized Page Group order : 2,3,1
             
-            eg.     Original XML List         Randomized Page Group indices      Shuffled Composite List
-                       Page   QS   Grp   Rep             Indices                   Page   QS   Grp   Rep
+                     Original XML List                Randomized Page           Shuffled Composite List
+                       Page   QS   Grp   Rep             Groups                   Page   QS   Grp   Rep
                        0      0     1     0                 2                       2     0     2     0
                        0      1     1     0                 3                       2     1     2     0
-                       1      0     1     0                 4                       3     0     2     0
-                       2      0     2     0                 0                       4     0     3     0
-                       2      1     2     0                 1                       4     1     3     0
+                       1      0     1     0                 1                       3     0     2     0
+                       2      0     2     0                                         4     0     3     0
+                       2      1     2     0                                         4     1     3     0
                        3      0     2     0                                         0     0     1     0
                        4      0     3     0                                         0     1     1     0
                        4      1     3     0                                         1     0     1     0
@@ -1510,6 +1563,7 @@ class Session:
         # convert indices into a string
         sIndicesToStore = ''
         iCounter = 0
+        
         for iNum in liIndices:
             iCounter = iCounter + 1
             sIndicesToStore = sIndicesToStore + str(iNum)
@@ -1532,9 +1586,7 @@ class Session:
         xRandIndicesNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'RandomizedPageGroupIndices', 0)
         if xRandIndicesNode != None:
             sStoredRandIndices = self.oIOXml.GetDataInNode(xRandIndicesNode)
-            # liStoredRandIndices = list(map(int,sStoredRandIndices))
             liStoredRandIndices = [int(s) for s in sStoredRandIndices.split(",")]
-        
         
         return liStoredRandIndices
     
@@ -1559,17 +1611,18 @@ class Session:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AdjustToCurrentQuestionSet(self):
-        
-        # if there are multiple question sets for a page, the list of question sets must
-        #    include all previous question sets - up to the one being displayed
-        #    (eg. if a page has 4 Qsets, and we are going back to Qset 3,
-        #    we need to collect question set indices 0, and 1 first,
-        #    then continue processing for index 2 which will be appended in DisplayQuestionSet function)
-        
-        # This function is called 
-        #    - when the previous button is pressed or
-        #    - if a resume is required into a question set that is not the first for the page
-        #    - if the ResetView button in Extra Tools is pressed  
+        '''
+            if there are multiple question sets for a page, the list of question sets must
+               include all previous question sets - up to the one being displayed
+               (eg. if a page has 4 Qsets, and we are going back to Qset 3,
+               we need to collect question set indices 0, and 1 first,
+               then continue processing for index 2 which will be appended in DisplayQuestionSet function)
+            
+            This function is called 
+               - when the previous button is pressed or
+               - if a resume is required into a question set that is not the first for the page
+               - if the ResetView button in Extra Tools is pressed  
+        '''
         
         self._loQuestionSets = [] # initialize
         indQSet = self.GetCurrentQuestionSetIndex()
@@ -1859,6 +1912,7 @@ class Session:
                                     self.AddPageCompleteAttribute(self.GetCurrentPageIndex())
                                     if sCaller == 'Finish':
                                         self.AddQuizCompleteAttribute()
+                                        self.SetQuizComplete(True)
                                 else:
                                     bSuccess = False
                                 
@@ -2244,7 +2298,50 @@ class Session:
         return bSuccess, sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CreateRepeatedPageNode(self, sXmlFilePath = None):
+        ''' Function to copy the current page into the xml allowing the user to create new segments or  
+            measurement lines for the same image. 
+        '''
+        # allow for testing environment to use a pre-set testing file path
+        if sXmlFilePath == None:
+            sXmlFilePath = self.oFilesIO.GetUserQuizResultsPath()   # for live run
+        
+        indXmlPageToRepeat = self.GetCurrentPageIndex()
+        
+        
+        xCopyOfXmlPageToRepeatNode = self.oIOXml.CopyElement(self.GetCurrentPageNode())
+        iCopiedRepNum = int(self.oIOXml.GetValueOfNodeAttribute(xCopyOfXmlPageToRepeatNode, "Rep"))
+        
+        # find the next xml page that has Rep 0 (move past all repeated pages for this loop)
+        indNextXmlPageWithRep0 = self.oIOXml.GetIndexOfNextChildWithAttributeValue(self.oIOXml.GetRootNode(), "Page", indXmlPageToRepeat + 1, "Rep", "0")
+
+        if indNextXmlPageWithRep0 != -1:
+            self.oIOXml.InsertElementBeforeIndex(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode, indNextXmlPageWithRep0)
+        else:
+            # attribute was not found
+            self.oIOXml.AppendElement(self.oIOXml.GetRootNode(), xCopyOfXmlPageToRepeatNode)
+            indNextXmlPageWithRep0 = self.oIOXml.GetNumChildrenByName(self.oIOXml.GetRootNode(), 'Page') - 1
+        
+        self.oIOXml.SaveXml(sXmlFilePath)    # for debug
+        self.BuildNavigationList() # update after adding xml page
+        
+        iNewNavInd = self.FindNewRepeatedPosition(indNextXmlPageWithRep0, iCopiedRepNum)
+        self.SetCurrentNavigationIndex(iNewNavInd)
+    
+        # update the repeated page
+        self.AdjustXMLForRepeatedPage()
+        self.oIOXml.SaveXml(sXmlFilePath)    # for debug
+        self.BuildNavigationList()  # repeated here to pick up attribute adjustments for Rep#
+        self.oIOXml.SaveXml(sXmlFilePath)
+
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AdjustXMLForRepeatedPage(self):
+        ''' Function to update the newly repeated Page node.
+            The Page ID attribute will have '-Rep#' appended.
+            Any previously stored label map and markup line paths are removed.
+            Ay previously stored responses to questions will be removed.
+        '''
         
         sMsg = ''
         try:
@@ -2255,7 +2352,6 @@ class Session:
             xPreviousPage = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), "Page", self.GetNavigationPage( self.GetCurrentNavigationIndex() -1 ) )
             sPreviousRepNum = self.oIOXml.GetValueOfNodeAttribute(xPreviousPage, "Rep")
             sPreviousPageID = self.oIOXml.GetValueOfNodeAttribute(xPreviousPage, 'ID')
-            
             
             
             self.oIOXml.UpdateAttributesInElement(xNewRepeatPage, {"PageComplete":"N"})
@@ -2430,7 +2526,13 @@ class Session:
         
         if self.GetQuizComplete():
             # quiz does not allow for changing responses - review is allowed
-            sMsg = 'Quiz has already been completed and responses cannot be modified. \nWould you like to review the quiz? (Click No to exit).'
+            sMsg = 'Quiz has already been completed and responses cannot be modified.'\
+                    + ' \nWould you like to review the quiz? '
+            if self.GetEmailResultsRequest():
+                sMsg = sMsg + '\n\nClick No to exit. You will have the option to email results.'
+            else:
+                sMsg = sMsg + '\n\nClick No to exit.'
+                
             qtAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
 
             if qtAns == qt.QMessageBox.Yes:
@@ -2527,10 +2629,10 @@ class Session:
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExitOnQuizComplete(self):
-
-        # the last index in the composite navigation indices list was reached
-        # the quiz was completed - exit
-        
+        """ the last index in the composite navigation indices list was reached
+            the quiz was completed - exit
+        """
+        self.QueryThenSendEmailResults()
         self.oUtilsMsgs.DisplayInfo('Quiz Complete - Exiting')
         slicer.util.exit(status=EXIT_SUCCESS)
         
@@ -2542,6 +2644,24 @@ class Session:
         xmlLastLoginElement.set('QuizComplete','Y')
         self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def QueryThenSendEmailResults(self):
+        
+        if self.GetEmailResultsRequest() and self.GetQuizComplete():
+            sMsg = 'Ready to email results?'
+            qtEmailAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
+    
+            if qtEmailAns == qt.QMessageBox.Yes:
+    
+                sArchiveFilenameWithPath = os.path.join(self.oFilesIO.GetUserDir(), self.oFilesIO.GetQuizFilenameNoExt())
+                sPathToZipFile = self.oIOXml.ZipXml(sArchiveFilenameWithPath, self.oFilesIO.GetUserQuizResultsDir())
+                
+                if sPathToZipFile != '':
+                    self.oUtilsEmail.SendEmail(sPathToZipFile)
+                else:
+                    sMsg = 'Trouble archiving quiz results: ' + sPathToZipFile
+                    self.oUtilsMsgs.DisplayError(sMsg)
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddPageCompleteAttribute(self, idxPage):
         ''' add attribute to current page element to indicate all 

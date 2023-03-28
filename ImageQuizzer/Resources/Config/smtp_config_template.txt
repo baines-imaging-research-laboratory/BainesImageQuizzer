@@ -1,0 +1,14 @@
+#Image Quizzer email utility smtp config file
+
+[smtp]
+host=your_host_server
+username=address_of_your_host_email_account@example.com
+password=app_password_of_your_host_email_account
+port=your_host_server_port_here
+
+[email]
+from=name_to_appear_in_from<address_of_your_host_email_account@example.com>
+
+
+
+

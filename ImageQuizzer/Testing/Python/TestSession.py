@@ -8,6 +8,8 @@ import xml.dom.minidom
 
 import os
 import sys
+import tempfile
+
 
 
 ##########################################################################
@@ -116,11 +118,17 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         os.environ["testing"] = "1"
         self._oFilesIO.setupTestEnvironment()
 
+        self.sTempDir = os.path.join(tempfile.gettempdir(),'ImageQuizzer')
+        if not os.path.exists(self.sTempDir):
+            os.makedirs(self.sTempDir)
+
     #------------------------------------------- 
     def runTest(self ):
         # Tests are initiated in Slicer by pressing the Reload and Test button
 
         self.setUp()
+        # self.sTempDir = os.path.join(tempfile.gettempdir(),'ImageQuizzer')
+
         logic = TestSessionLogic()
 
         tupResults = []
@@ -142,19 +150,28 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         
         tupResults.append(self.test_ValidateImageOpacity())
         tupResults.append(self.test_AdjustXMLForRepeatedPage())
-
+        tupResults.append(self.test_TestMultipleRepeats())
+        tupResults.append(self.test_LoopingWithRandomizedPages())
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
+        
+        #>>>>>>>>>>> cleanup <<<<<<<<<<<<
  
         # reset to allow for non-testing logic
         #    ie. display error messages when not testing
         os.environ["testing"] = "0"
- 
+        
+        
+        # REMOVE TEMP FILES >>>>>>>> comment out for debugging for visualization
+        if os.path.exists(self.sTempDir) and os.path.isdir(self.sTempDir):
+            shutil.rmtree(self.sTempDir)
 
     #------------------------------------------- 
     def test_BuildNavigationList(self):
         bTestResult = True
         self.fnName = sys._getframe().f_code.co_name
+        
+        # lists: [page, question set, page group, repetition]
         
         # build XML
         xRoot = etree.Element("Session")
@@ -196,6 +213,8 @@ class TestSessionTest(ScriptedLoadableModuleTest):
     def test_BuildNavigationList_RepNumbers(self):
         bTestResult = True
         self.fnName = sys._getframe().f_code.co_name
+
+        # composite indices syntax: [page, question set, page group, repetition]
         
         # build XML
         xRoot = etree.Element("Session")
@@ -252,10 +271,14 @@ class TestSessionTest(ScriptedLoadableModuleTest):
     def test_ShuffleNavigationList(self):
         bTestResult = True
         self.fnName = sys._getframe().f_code.co_name
+
+        # composite indices syntax: [page, question set, page group, repetition]
         
         # build page/question set/page group composite indices list for testing
         '''
-            eg.     Original XML List         Randomized Page Group indices      Shuffled Composite List
+            e.g. Randomized Page Group order : 2,3,1
+            
+                    Original XML List             Randomized Page Indices         Shuffled Composite List
                        Page   QS   Grp   Rep             Indices                   Page   QS   Grp   Rep
                        0      0     1     0                 2                       2     0     2     0
                        0      1     1     0                 3                       2     1     2     0
@@ -310,6 +333,8 @@ class TestSessionTest(ScriptedLoadableModuleTest):
     def test_ShuffleNavigationList_WithZero(self):
         bTestResult = True
         self.fnName = sys._getframe().f_code.co_name
+
+        # composite indices syntax: [page, question set, page group, repetition]
         
         # build page/question set/page group composite indices list for testing
         
@@ -567,12 +592,11 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         etree.SubElement(xRoot,"Page", PageGroup="0")
         etree.SubElement(xRoot,"Page", PageGroup="1")
         child = etree.SubElement(xRoot,"RandomizedPageGroupIndices")
-        child.text = '0,5,3,1,4,2'
+        child.text = '0,5,3,1,4,2' 
         self.oIOXml.SetRootNode(xRoot)
         
         liExpectedIndices = [0,5,3,1,4,2]
         liStoredIndices = self.oSession.GetStoredRandomizedIndices()
-        
         
         if liStoredIndices == liExpectedIndices:
             bTestResult = True
@@ -751,7 +775,44 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         sMsg = ''
         bTestResult = False
 
-        # build XML
+        # build XMLs
+        #>>>>>>>>>>>>>>>>>>>>>>> Expected
+
+        xExpectedRoot = etree.Element("Session")
+        xExpPage0 = etree.SubElement(xExpectedRoot,"Page")
+        xExpPage1 = etree.SubElement(xExpectedRoot,"Page")
+        xExpPage2 = etree.SubElement(xExpectedRoot,"Page", {"Rep":"0"})
+        xExpPage3NewRepeat = etree.SubElement(xExpectedRoot,"Page", {"ID":"-Rep1", "Rep":"1", "PageComplete":"N"})
+        xExpPage4 = etree.SubElement(xExpectedRoot,"Page")
+ 
+        xExpIm1 = etree.SubElement(xExpPage3NewRepeat, "Image")
+        xExpIm2 = etree.SubElement(xExpPage3NewRepeat, "Image")
+        xExpIm3 = etree.SubElement(xExpPage3NewRepeat, "Image")
+          
+        xState = etree.SubElement(xExpIm1, "State")
+        xState = etree.SubElement(xExpIm2, "State")
+        xState = etree.SubElement(xExpIm3, "State")
+
+        # QuestionSet elements are automatically added in the BuildNavigationList function
+        QS0 = etree.SubElement(xExpPage0,'QuestionSet')
+        QS1 = etree.SubElement(xExpPage1,'QuestionSet')
+        QS2 = etree.SubElement(xExpPage2,'QuestionSet')
+        Q2 = etree.SubElement(QS2,'Question')
+        O2 = etree.SubElement(Q2, 'Option')
+        R2 = etree.SubElement(O2, 'Response')
+        QS3 = etree.SubElement(xExpPage3NewRepeat,'QuestionSet')
+        Q3 = etree.SubElement(QS3,'Question')
+        O3 = etree.SubElement(Q3, 'Option')
+        QS4 = etree.SubElement(xExpPage4,'QuestionSet')
+
+        self.oIOXml.SetRootNode(xExpectedRoot)
+        
+        sFullFile = self.sTempDir + '\\ExpectedLoop.xml'
+        self.oIOXml.SaveXml(sFullFile)
+
+        
+        #>>>>>>>>>>>>>>>>>>>>>>> Input
+        
         xRoot = etree.Element("Session")
         xPage0 = etree.SubElement(xRoot,"Page")
         xPage1 = etree.SubElement(xRoot,"Page")
@@ -784,41 +845,14 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         
         
         
-
+        
         self.oIOXml.SetRootNode(xRoot)
         
+        # for debug
+        sFullFile = self.sTempDir + '\\PreLoop.xml' 
+        self.oIOXml.SaveXml(sFullFile)
         
-        #>>>>>>>>>>>>>>>>>>>>>>>
-
-        xExpectedRoot = etree.Element("Session")
-        xExpPage0 = etree.SubElement(xExpectedRoot,"Page")
-        xExpPage1 = etree.SubElement(xExpectedRoot,"Page")
-        xExpPage2 = etree.SubElement(xExpectedRoot,"Page", {"Rep":"0"})
-        xExpPage3NewRepeat = etree.SubElement(xExpectedRoot,"Page", {"ID":"-Rep1", "Rep":"1", "PageComplete":"N"})
-        xExpPage4 = etree.SubElement(xExpectedRoot,"Page")
- 
-        xExpIm1 = etree.SubElement(xExpPage3NewRepeat, "Image")
-        xExpIm2 = etree.SubElement(xExpPage3NewRepeat, "Image")
-        xExpIm3 = etree.SubElement(xExpPage3NewRepeat, "Image")
-          
-        xState = etree.SubElement(xExpIm1, "State")
-        xState = etree.SubElement(xExpIm2, "State")
-        xState = etree.SubElement(xExpIm3, "State")
-
-        # QuestionSet elements are automatically added in the BuildNavigationList function
-        QS0 = etree.SubElement(xExpPage0,'QuestionSet')
-        QS1 = etree.SubElement(xExpPage1,'QuestionSet')
-        QS2 = etree.SubElement(xExpPage2,'QuestionSet')
-        Q2 = etree.SubElement(QS2,'Question')
-        O2 = etree.SubElement(Q2, 'Option')
-        R2 = etree.SubElement(O2, 'Response')
-        QS3 = etree.SubElement(xExpPage3NewRepeat,'QuestionSet')
-        Q3 = etree.SubElement(QS3,'Question')
-        O3 = etree.SubElement(Q3, 'Option')
-        QS4 = etree.SubElement(xExpPage4,'QuestionSet')
-
          
-        
         #>>>>>>>>>>>>>>>>>>>>>>>
         
         self.oSession.BuildNavigationList()
@@ -833,6 +867,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         # # for debug
         # print(sAdjustedXML)
         # print(sExpectedXML)
+        # print(self.oSession.GetNavigationList())
         
         if sAdjustedXML == sExpectedXML:
             bTestResult = True
@@ -841,8 +876,339 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         return tupResult
         
     #-------------------------------------------
+    def test_TestMultipleRepeats(self):
+        ''' Function to test looping - repeat a Page
+            There are multiple consecutive tests to pass. For each test the composite navigation  
+            list changes and the next test results are based on the previous test resulting navigation list.
+        '''
+        self.fnName = sys._getframe().f_code.co_name
+        sMsg = ''
+        bTestResult = True
+        liTestResults = []
+        
+        # Set up an xml file with the basic elements and question sets for testing.
+        xRoot = self.CreateTestXmlForLooping()
+
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        #############
+        # for debug visualization - save inputs and outputs to temp files
+        # comment out the deletion of these files at the end of 'runTest' if you need to visualize the xml structure
+        sResultsPath = self.sTempDir + '\\Results.xml'
+        sFullFile = self.sTempDir + '\\PreLoop.xml'
+        self.oIOXml.SaveXml(sFullFile)
+        #############
+
+        
+        self.oSession.BuildNavigationList()
+            # print(self.oSession.GetNavigationList())
+        '''
+        # composite indices syntax: [page, question set, page group, repetition]
+        # Pre-loop composite navigation list = [[0, 0, 1, 0],        # xPage0   Pt1/QS0
+                                                [0, 1, 1, 0],        # xPage0   Pt1/QS1
+                                                [1, 0, 0, 0],        # xPage1   Pt2/QS0
+                                                [2, 0, 1, 0],        # xPage2   Pt3/QS0
+                                                [3, 0, 2, 0],        # xPage3   Pt4/QS0
+                                                [3, 1, 2, 0],        # xPage3   Pt4/QS1
+                                                [4, 0, 0, 0],        # xPage4   Pt5/QS0
+                                                [5, 0, 2, 0],        # xPage5   Pt6/QS0
+                                                [6, 0, 3, 0],        # xPage6   Pt7/QS0
+                                                [6, 1, 3, 0],        # xPage6   Pt7/QS1
+                                                [7, 0, 0, 0]]        # xPage7   Pt8/QS0
+        '''
+        
+        # nav index------------->      0             1             2             3             4             5             6             7             8             9            10            11            12            13              14             15           16           
+        # Pre-Loop                [[0, 0, 1, 0], [0, 1, 1, 0], [1, 0, 0, 0], [2, 0, 1, 0], [3, 0, 2, 0], [3, 1, 2, 0], [4, 0, 0, 0], [5, 0, 2, 0], [6, 0, 3, 0], [6, 1, 3, 0], [7, 0, 0, 0]] 
+        # Repeat nav 3 (Pt3)
+        liExpectedResults_Test1 = [[0, 0, 1, 0], [0, 1, 1, 0], [1, 0, 0, 0], [2, 0, 1, 0], [3, 0, 1, 1], [4, 0, 2, 0], [4, 1, 2, 0], [5, 0, 0, 0], [6, 0, 2, 0], [7, 0, 3, 0], [7, 1, 3, 0], [8, 0, 0, 0]]
+        # Repeat nav 5 (Pt4) (page with 2 question sets)
+        liExpectedResults_Test2 = [[0, 0, 1, 0], [0, 1, 1, 0], [1, 0, 0, 0], [2, 0, 1, 0], [3, 0, 1, 1], [4, 0, 2, 0], [4, 1, 2, 0], [5, 0, 2, 1], [5, 1, 2, 1], [6, 0, 0, 0], [7, 0, 2, 0], [8, 0, 3, 0], [8, 1, 3, 0], [9, 0, 0, 0]]
+        # Repeat nav 3 (Pt3 again) from Rep0 position
+        liExpectedResults_Test3 = [[0, 0, 1, 0], [0, 1, 1, 0], [1, 0, 0, 0], [2, 0, 1, 0], [3, 0, 1, 1], [4, 0, 1, 2], [5, 0, 2, 0], [5, 1, 2, 0], [6, 0, 2, 1], [6, 1, 2, 1], [7, 0, 0, 0], [8, 0, 2, 0], [9, 0, 3, 0], [9, 1, 3, 0], [10, 0, 0, 0]]
+        # Repeat nav 5 (Pt3 again) from Rep2 position
+        liExpectedResults_Test4 = [[0, 0, 1, 0], [0, 1, 1, 0], [1, 0, 0, 0], [2, 0, 1, 0], [3, 0, 1, 1], [4, 0, 1, 2], [5, 0, 1, 3], [6, 0, 2, 0], [6, 1, 2, 0], [7, 0, 2, 1], [7, 1, 2, 1], [8, 0, 0, 0], [9, 0, 2, 0], [10, 0, 3, 0], [10, 1, 3, 0], [11, 0, 0, 0]]
+        # Repeat nav 15 (Pt8) append 
+        liExpectedResults_Test5 = [[0, 0, 1, 0], [0, 1, 1, 0], [1, 0, 0, 0], [2, 0, 1, 0], [3, 0, 1, 1], [4, 0, 1, 2], [5, 0, 1, 3], [6, 0, 2, 0], [6, 1, 2, 0], [7, 0, 2, 1], [7, 1, 2, 1], [8, 0, 0, 0], [9, 0, 2, 0], [10, 0, 3, 0], [10, 1, 3, 0], [11, 0, 0, 0], [12, 0, 0, 1]]
+
+        liResults_test1 = []
+        
+        ########### Test 1
+        #     Repeat nav index 3 - loop on Page with only one question set
+        self.oSession.SetCurrentNavigationIndex(3) # repeat xPage2 (3 in composite list - 0-based)
+        self.oSession.CreateRepeatedPageNode(sResultsPath)
+        liResults_test1 = self.oSession.GetNavigationList()
+            # print(liResults_test1)
+        # resulting list has a new composite index at nav 4 with the rep index = 1  (increased page index)
+        # all remaining composite indices are from Pre-Loop nav 4 to end  but page index is increased by 1 
+        bResult = [lambda:0, lambda:1][liResults_test1 == liExpectedResults_Test1]()
+        liTestResults.append(bResult)
+
+
+        
+        ########### Test 2
+        #     Repeat nav 5 (Pt4) (page with 2 question sets)
+        self.oSession.SetCurrentNavigationIndex(5) # repeat xPage4 (5 in updated composite list - 0-based)
+        self.oSession.CreateRepeatedPageNode(sResultsPath)
+        liResults_test2 = self.oSession.GetNavigationList()
+            # print(liResults_test2)
+        # resulting list has two new composite indices at positions 7 and 8 (increased page index)
+        # all remaining composite indices are from TestResult1 nav 7 to end but page index is increased by 1
+        bResult = [lambda:0, lambda:1][liResults_test2 == liExpectedResults_Test2]()
+        liTestResults.append(bResult)
+
+
+        ########### Test 3
+        #     Repeat nav 3 (Pt3 again) from Rep0 position
+        self.oSession.SetCurrentNavigationIndex(3) # repeat xPage2 again
+        self.oSession.CreateRepeatedPageNode(sResultsPath)
+        liResults_test3 = self.oSession.GetNavigationList()
+            # print(liResults_test3)
+        # resulting list has a new composite index at nav 5 with the rep index = 2  (increased page index)
+        # all remaining composite indices are from TestResult2 nav 5 to end  but page index is increased by 1 
+        bResult = [lambda:0, lambda:1][liResults_test3 == liExpectedResults_Test3]()
+        liTestResults.append(bResult)
+
+
+
+        ########### Test 4
+        #     Repeat nav 5 (Pt3 again) from Rep2 position
+        self.oSession.SetCurrentNavigationIndex(5) # repeat xPage2 again - but from Rep2 position
+        self.oSession.CreateRepeatedPageNode(sResultsPath)
+        liResults_test4 = self.oSession.GetNavigationList()
+            # print(liResults_test4)
+        # resulting list has a new composite index at nav 6 with the rep index = 3  (increased page index)
+        # all remaining composite indices are from TestResult3 nav 6 to end  but page index is increased by 1 
+        bResult = [lambda:0, lambda:1][liResults_test4 == liExpectedResults_Test4]()
+        liTestResults.append(bResult)
+
+
+        ########### Test 5
+        #     Repeat nav 15 (Pt8) last Page - new Page is appended
+        self.oSession.SetCurrentNavigationIndex(15) # repeat last page - append
+        self.oSession.CreateRepeatedPageNode(sResultsPath)
+        liResults_test5 = self.oSession.GetNavigationList()
+            # print(liResults_test5)
+        # resulting list has a new composite index appended at nav 16 with the rep index = 1  (increased page index)
+        bResult = [lambda:0, lambda:1][liResults_test5 == liExpectedResults_Test5]()
+        liTestResults.append(bResult)
+
+        ############ End testing ###########
+
+        ########## Check for any failed tests    
+        if any(i == 0 for i in liTestResults):
+            bTestResult = False
+    
+        tupResult = self.fnName, bTestResult
+        return tupResult
+        
+    #-------------------------------------------
+    def test_LoopingWithRandomizedPages(self):
+        ''' Test that randomized pages are handled properly when looping is introduced.
+            Each test builds on the previous test results.
+            The shuffled composite list continues to expand with each test.
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        sMsg = ''
+        bTestResult = True
+        liTestResults = []
+
+        #############
+        # for debug visualization - save inputs and outputs to temp files
+        # comment out the deletion of these files at the end of 'runTest' if you need to visualize the xml structure
+        sResultsPath = self.sTempDir + '\\Results.xml'
+        sFullFile = self.sTempDir + '\\PreLoop.xml'
+        self.oIOXml.SaveXml(sFullFile)
+        #############
+
+        # build xml
+        xRoot = self.CreateTestXmlForLooping()
+
+        
+        self.oIOXml.SetRootNode(xRoot)
+        self.oIOXml.SaveXml(sFullFile)
+        
+        self.oSession.BuildNavigationList()
+            #print(self.oSession.GetNavigationList())
+        
+        # set up for randomizing given a randomized list of PageGroup indices
+        self.oSession.SetRandomizeRequired('Y')
+        liRandIndices = [0,2,3,1]
+        self.oSession.AddRandomizedIndicesToXML(liRandIndices)
+        # liRandIndices = [2,3,1] # PageGroup numbers
+        # self.oSession.SetNavigationList( self.oSession.ShuffleNavigationList(liRandIndices) )
+        self.oSession.BuildNavigationList()
+        liResults_test0 = self.oSession.GetNavigationList()
+            #print(liResults_test0)
+        
+        '''
+        # composite indices syntax: [page, question set, page group, repetition]
+        # Pre-loop composite navigation list = [[0, 0, 1, 0],        # xPage0   Pt1/QS0
+                                                [0, 1, 1, 0],        # xPage0   Pt1/QS1
+                                                [1, 0, 0, 0],        # xPage1   Pt2/QS0
+                                                [2, 0, 1, 0],        # xPage2   Pt3/QS0
+                                                [3, 0, 2, 0],        # xPage3   Pt4/QS0
+                                                [3, 1, 2, 0],        # xPage3   Pt4/QS1
+                                                [4, 0, 0, 0],        # xPage4   Pt5/QS0
+                                                [5, 0, 2, 0],        # xPage5   Pt6/QS0
+                                                [6, 0, 3, 0],        # xPage6   Pt7/QS0
+                                                [6, 1, 3, 0],        # xPage6   Pt7/QS1
+                                                [7, 0, 0, 0]]        # xPage7   Pt8/QS0
+        '''
+        
+        # check that the composite navigation list matches the requested page order
+        # nav index------------->      0             1             2             3             4             5             6             7             8             9            10            11            12            13              14             15           16           
+        # Pre-Loop                [[0, 0, 1, 0], [0, 1, 1, 0], [1, 0, 0, 0], [2, 0, 1, 0], [3, 0, 2, 0], [3, 1, 2, 0], [4, 0, 0, 0], [5, 0, 2, 0], [6, 0, 3, 0], [6, 1, 3, 0], [7, 0, 0, 0]] 
+        # Test 0 - shuffled based on page groups - no looping 
+        liExpectedResults_Test0 = [[1, 0, 0, 0], [4, 0, 0, 0], [7, 0, 0, 0], [3, 0, 2, 0], [3, 1, 2, 0], [5, 0, 2, 0], [6, 0, 3, 0], [6, 1, 3, 0], [0, 0, 1, 0], [0, 1, 1, 0], [2, 0, 1, 0]]
+        # Test 1 - repeat at nav 1 (Pt 5 - only one question set)
+        liExpectedResults_Test1 = [[1, 0, 0, 0], [4, 0, 0, 0], [5, 0, 0, 1], [8, 0, 0, 0], [3, 0, 2, 0], [3, 1, 2, 0], [6, 0, 2, 0], [7, 0, 3, 0], [7, 1, 3, 0], [0, 0, 1, 0], [0, 1, 1, 0], [2, 0, 1, 0]]
+        # Test 2 - repeat at nav 4 (Pt 4 - two question sets)
+        liExpectedResults_Test2 = [[1, 0, 0, 0], [5, 0, 0, 0], [6, 0, 0, 1], [9, 0, 0, 0], [3, 0, 2, 0], [3, 1, 2, 0], [4, 0, 2, 1], [4, 1, 2, 1],[7, 0, 2, 0], [8, 0, 3, 0], [8, 1, 3, 0], [0, 0, 1, 0], [0, 1, 1, 0], [2, 0, 1, 0]]
+        # Test 3 - repeat at nav 13 (last entry - Pt 3 - one question set)
+        liExpectedResults_Test3 = [[1, 0, 0, 0], [6, 0, 0, 0], [7, 0, 0, 1], [10, 0, 0, 0], [4, 0, 2, 0], [4, 1, 2, 0], [5, 0, 2, 1], [5, 1, 2, 1],[8, 0, 2, 0], [9, 0, 3, 0], [9, 1, 3, 0], [0, 0, 1, 0], [0, 1, 1, 0], [2, 0, 1, 0], [3, 0, 1, 1]]
+        # Test 4 - repeat at nav 0 (first entry - Pt 2 - one question set)
+        liExpectedResults_Test4 = [[1, 0, 0, 0], [2, 0, 0, 1], [7, 0, 0, 0], [8, 0, 0, 1], [11, 0, 0, 0], [5, 0, 2, 0], [5, 1, 2, 0], [6, 0, 2, 1], [6, 1, 2, 1],[9, 0, 2, 0], [10, 0, 3, 0], [10, 1, 3, 0], [0, 0, 1, 0], [0, 1, 1, 0], [3, 0, 1, 0], [4, 0, 1, 1]]
+
+        
+        
+        
+        bResult = [lambda:0, lambda:1][liResults_test0 == liExpectedResults_Test0]()
+        liTestResults.append(bResult)
+        
+        # repeat a page
+        # use nav index 3 (Pt2 with 1 question set)
+        
+        
+        ########### Test 1
+        #     Repeat nav index 1 - (Pt 5 - page index 4) loop on Page with only one question set
+        self.oSession.SetCurrentNavigationIndex(1) 
+        self.oSession.CreateRepeatedPageNode(sResultsPath)
+        liResults_test1 = self.oSession.GetNavigationList()
+            #print(liResults_test1)
+        # resulting list has a new composite index at nav 2 with the rep index = 1  (increased page index)
+        # all other composite indices are from Shuffled_Test0 - 
+        # page indices for other list items are increased by 1 except for page indices < 4
+        # (in this example, list items with page indices 0,1,2 and 3 remain the same)
+        bResult = [lambda:0, lambda:1][liResults_test1 == liExpectedResults_Test1]()
+        liTestResults.append(bResult)
+        
+        
+        ########### Test 2
+        #     Repeat nav index 4 - (Pt 4 - page index 3) loop on Page with two question sets
+        self.oSession.SetCurrentNavigationIndex(4) 
+        self.oSession.CreateRepeatedPageNode(sResultsPath)
+        liResults_test2 = self.oSession.GetNavigationList()
+            #print(liResults_test2)
+        # resulting list has two new composite indices at nav 6 and nav 7 with the rep index = 1  (increased page index)
+        # any pages prior to page index 4 remain the same
+        # all other composite indices are from liResults_test1 - 
+        # page indices for other list items are increased by 1 except for page indices < 3
+        # (in this example, list items with page indices 0,1 and 2 remain the same)
+        bResult = [lambda:0, lambda:1][liResults_test2 == liExpectedResults_Test2]()
+        liTestResults.append(bResult)
+        
+        
+        ########### Test 3
+        #     Repeat nav index 13 - (Pt 3 - page index 2) loop on last Page with one question set
+        self.oSession.SetCurrentNavigationIndex(13) 
+        self.oSession.CreateRepeatedPageNode(sResultsPath)
+        liResults_test3 = self.oSession.GetNavigationList()
+            #print(liResults_test3)
+        # resulting list has one new composite index at nav 14 with the rep index = 1  (increased page index)
+        # all other composite indices are from liResults_test2 - 
+        # page indices for other list items are increased by 1 except for page indices < 3
+        # (in this example, list items with page indices 0,1 and 2 remain the same)
+        bResult = [lambda:0, lambda:1][liResults_test3 == liExpectedResults_Test3]()
+        liTestResults.append(bResult)
+        
+        
+        ########### Test 4
+        #     Repeat nav index 0 - (Pt 2 - page index 1) loop on first Page with one question set
+        self.oSession.SetCurrentNavigationIndex(0) 
+        self.oSession.CreateRepeatedPageNode(sResultsPath)
+        liResults_test4 = self.oSession.GetNavigationList()
+            #print(liResults_test4)
+        # resulting list has one new composite index at nav 1 with the rep index = 1  (increased page index)
+        # all other composite indices are from liResults_test3 - 
+        # page indices for other list items are increased by 1 except for page indices < 1
+        # (in this example, list items with page indices 0 and 1 remain the same)
+        bResult = [lambda:0, lambda:1][liResults_test4 == liExpectedResults_Test4]()
+        liTestResults.append(bResult)
+        
+        
+        
+        
+        ############ End testing ###########
+
+        ########## Check for any failed tests    
+        if any(i == 0 for i in liTestResults):
+            bTestResult = False
+
+    
+        tupResult = self.fnName, bTestResult
+        return tupResult
+        
     #-------------------------------------------
     #-------------------------------------------
+
+    
+    #-------------------------------------------
+    #-------------------------------------------
+    #
+    #        Helper Functions
+    #
+    #-------------------------------------------
+    #-------------------------------------------
+    def CreateTestXmlForLooping(self):
+        ''' A helper function to create an xml file for testing the Loop functionality.
+        '''
+
+        # lCompositeTestIndices = []
+        # lCompositeTestIndices.append([0,0,1,0])
+        # lCompositeTestIndices.append([0,1,1,0])
+        # lCompositeTestIndices.append([1,0,0,0])
+        # lCompositeTestIndices.append([2,0,1,0])
+        # lCompositeTestIndices.append([3,0,2,0])
+        # lCompositeTestIndices.append([3,1,2,0])
+        # lCompositeTestIndices.append([4,0,0,0])
+        # lCompositeTestIndices.append([5,0,2,0])
+        # lCompositeTestIndices.append([6,0,3,0])
+        # lCompositeTestIndices.append([6,1,3,0])
+        # lCompositeTestIndices.append([7,0,0,0])
+
+        
+        xRoot = etree.Element("Session")
+        xPage0 = etree.SubElement(xRoot,"Page", {"PageGroup":"1", "Rep":"0","ID":"Pt1"})
+        xPage1 = etree.SubElement(xRoot,"Page", {"PageGroup":"0", "Rep":"0","ID":"Pt2"})
+        xPage2 = etree.SubElement(xRoot,"Page", {"PageGroup":"1", "Rep":"0","ID":"Pt3"})
+        xPage3 = etree.SubElement(xRoot,"Page", {"PageGroup":"2", "Rep":"0","ID":"Pt4"})
+        xPage4 = etree.SubElement(xRoot,"Page", {"PageGroup":"0", "Rep":"0","ID":"Pt5"})
+        xPage5 = etree.SubElement(xRoot,"Page", {"PageGroup":"2", "Rep":"0","ID":"Pt6"})
+        xPage6 = etree.SubElement(xRoot,"Page", {"PageGroup":"3", "Rep":"0","ID":"Pt7"})
+        xPage7 = etree.SubElement(xRoot,"Page", {"PageGroup":"0", "Rep":"0","ID":"Pt8"})
+
+        
+        
+        QS0 = etree.SubElement(xPage0,'QuestionSet',  {"ID":"QS0"})
+        QS01 = etree.SubElement(xPage0,'QuestionSet', {"ID":"QS1"})
+        QS1 = etree.SubElement(xPage1,'QuestionSet',  {"ID":"QS0"})
+        QS2 = etree.SubElement(xPage2,'QuestionSet',  {"ID":"QS0"})
+        QS3 = etree.SubElement(xPage3,'QuestionSet',  {"ID":"QS0"})
+        QS31 = etree.SubElement(xPage3,'QuestionSet', {"ID":"QS1"})
+        QS4 = etree.SubElement(xPage4,'QuestionSet',  {"ID":"QS0"})
+        QS5 = etree.SubElement(xPage5,'QuestionSet',  {"ID":"QS0"})
+        QS6 = etree.SubElement(xPage6,'QuestionSet',  {"ID":"QS0"})
+        QS61 = etree.SubElement(xPage6,'QuestionSet', {"ID":"QS1"})
+        QS7 = etree.SubElement(xPage7,'QuestionSet',  {"ID":"QS0"})
+        
+        
+        return xRoot
+        
+    #-------------------------------------------
+    #-------------------------------------------
+
 
 ##########################################################################################
 #                      Launching from main (Reload and Test button)
