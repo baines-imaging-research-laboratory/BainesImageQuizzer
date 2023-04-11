@@ -1009,7 +1009,7 @@ class Session:
                     if sMsg != '':
                         self.oUtilsMsgs.DisplayWarning( sMsg )
 
-                self.EnableButtons()
+            self.EnableButtons()
                 
         except:
             iPage = self.GetCurrentPageIndex() + 1
