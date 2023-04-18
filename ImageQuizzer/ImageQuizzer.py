@@ -1,195 +1,420 @@
 import os
-import unittest
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
-import logging
+from Session import *
+from pip._vendor.distlib._backport.shutil import copyfile
+from slicer.util import findChild
 
+from Utilities.UtilsMsgs import *
+from Utilities.UtilsFilesIO import *
+
+import importlib.util
+
+from slicer import qSlicerMainWindow #for custom eventFilter
 #
-# ImageQuizzer
+
+##########################################################################################
 #
+#                                ImageQuizzer
+#
+##########################################################################################
 
 class ImageQuizzer(ScriptedLoadableModule):
-  """Uses ScriptedLoadableModule base class, available at:
-  https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
-  """
+    """Uses ScriptedLoadableModule base class, available at:
+    https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
+    """
 
-  def __init__(self, parent):
-    ScriptedLoadableModule.__init__(self, parent)
-    self.parent.title = "ImageQuizzer" # TODO make this more human readable by adding spaces
-    self.parent.categories = ["Baines Custom Modules"]
-    self.parent.dependencies = []
-    self.parent.contributors = ["Carol Johnson (Baines Imaging Research Laboratory)"] # replace with "Firstname Lastname (Organization)"
-    self.parent.helpText = """
-This is an example of scripted loadable module bundled in an extension.
-It performs a simple thresholding on the input volume and optionally captures a screenshot.
-AND it runs a quiz!!!
-"""
-    self.parent.helpText += self.getDefaultModuleDocumentationLink()
-    self.parent.acknowledgementText = """
-This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-and Steve Pieper, Isomics, Inc. and was partially funded by NIH grant 3P41RR013218-12S1.
-""" # replace with organization, grant and thanks.
+    def __init__(self, parent):
+        ScriptedLoadableModule.__init__(self, parent)
+        self.parent.title = "Image Quizzer" # TODO make this more human readable by adding spaces
+        self.parent.categories = ["Baines Custom Modules"]
+        self.parent.dependencies = []
+        self.parent.contributors = ["Carol Johnson (Software Developer - Baines Imaging Laboratory)"] # replace with "Firstname Lastname (Organization)"
+        self.parent.helpText = """ This scripted loadable module displays a quiz to be answered based on images shown."""
+        self.parent.helpText += self.getDefaultModuleDocumentationLink()
+        self.parent.acknowledgementText = """ Baines Imaging Research Laboratory. 
+        Principal Investigator: Dr. Aaron Ward.
+        """
 
+    
+
+##########################################################################
 #
 # ImageQuizzerWidget
 #
+##########################################################################
+
 
 class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
     """Uses ScriptedLoadableModuleWidget base class, available at:
     https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
     """
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def __init__(self, parent):
+        ScriptedLoadableModuleWidget.__init__(self,parent)
+        
+        sModuleName = 'ImageQuizzer'
+        sSourceDirForQuiz = 'Resources/XML'
+        
 
+        self.oUtilsMsgs = UtilsMsgs()
+        self.oFilesIO = UtilsFilesIO()
+        self.oFilesIO.SetModuleDirs(sModuleName, sSourceDirForQuiz)
+        
+        # previous and current release dates
+        # Note: Version 1.0 should be used with Slicer v4.11.20200930
+        # self.sVersion = "Image Quizzer   v1.0 "  #  Release Date: May 10, 2022
+        # Note: Version 2.0 should be used with Slicer v4.11.2021022
+        self.sVersion = "Image Quizzer v2.2.1" 
+
+        sSlicerVersion = slicer.app.applicationVersion
+        if sSlicerVersion != '4.11.20210226':
+            sMsg = 'This version of Image Quizzer requires 3D Slicer v4.11.20210226' +\
+                    '\n You are running 3D Slicer v' + sSlicerVersion
+            self.oUtilsMsgs.DisplayError(sMsg)
+
+
+#         # capture Slicer's default database location
+#         self.oFilesIO.SetDefaultDatabaseDir(slicer.dicomDatabase.databaseDirectory)
+
+
+#         self.oCustomEventFilter = customEventFilter()
+#         slicer.util.mainWindow().installEventFilter(self.oCustomEventFilter)        
+         
+        self.lsModulesToToggleVisibilty = ['ModuleToolBar', 'DialogToolBar', 'CaptureToolBar', 'MainToolBar', 'ModuleSelectorToolBar']
+        
+        self.slicerMainLayout = self.layout
+        
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def __del__(self):
+        
+        # unhide Slicer's default toolbars
+        for qtToolBar in slicer.util.mainWindow().findChildren('QToolBar'):
+            if qtToolBar.name in self.lsModulesToToggleVisibilty:
+                qtToolBar.setVisible(True)
+
+        slicer.util.mainWindow().removeEventFilter(self.customEventFilter)
+  
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def setup(self):
         ScriptedLoadableModuleWidget.setup(self)
         
-        # ------------------------------------------------------------------------------------
-        #                                   Global Variables
-        # ------------------------------------------------------------------------------------
+
+        settings = qt.QSettings()
+        settings.setValue('MainWindow/RestoreGeometry', 'true')
+
+        
+        
+        self.qtQuizProgressWidget = qt.QTextEdit()
         #self.logic = ImageQuizzerLogic(self)
-        # -------------------------------------------------------------------------------------
-        # Interaction with 3D Scene
-        #self.interactionNode = slicer.mrmlScene.GetNodeByID("vtkMRMLInteractionNodeSingleton")
-        #  -----------------------------------------------------------------------------------
-        #                        Surface Registration UI setup
-        #  -----------------------------------------------------------------------------------
+        self.slicerLeftWidget= None     
         
         
+        slicer.util.setMenuBarsVisible(True)
         
+###########  For Development mode    ###########    
+        slicer.util.setPythonConsoleVisible(True)
+        slicer.util.setToolbarsVisible(True)
+###########
+
+
+# ###########  For Release mode   ###########
+#         # hide toolbars to prevent users accessing modules outside of the ImageQuizzer
+#         #    Equivalent to toggling through View>Toolbars
+#         #    'ModuleToolBar' includes the Editor module for segmenting
+#         #    'DialogToolBar' for Extensions
+#         #    'MainToolBar' for loading files by Data, Dcm buttons
+#         #    'ModuleSelectorToolBar' to see all the available modules
+#         for qtToolBar in slicer.util.mainWindow().findChildren('QToolBar'):
+#             if qtToolBar.name in self.lsModulesToToggleVisibilty:
+#                 qtToolBar.setVisible(False)
+#
+#
+#         slicer.util.setPythonConsoleVisible(False)
+#         slicer.util.setModuleHelpSectionVisible(False)
+#         slicer.modules.welcome.widgetRepresentation().setVisible(False)
+# ###########
         
-        print ("-------ImageQuizzer Widget SetUp--------")
+
+
+        self.oSession = Session()                    
+        self.oCustomEventFilter = customEventFilter(self.oSession, self.oFilesIO)
+        slicer.util.mainWindow().installEventFilter(self.oCustomEventFilter)        
+
+
+        self.BuildUserLoginWidget()
+        self.qUserLoginWidget.show()
+
+
         
-        
-        
-        #  -----------------------------------------------------------------------------------
-        #                        UI setup
-        #  -----------------------------------------------------------------------------------
-        loader = qt.QUiLoader()
-        moduleName = 'ImageQuizzer'
-        scriptedModulesPath = eval('slicer.modules.%s.path' % moduleName.lower())
-        scriptedModulesPath = os.path.dirname(scriptedModulesPath)
-        path = os.path.join(scriptedModulesPath, 'Resources', 'UI', '%s.ui' %moduleName)
-        print ("path", path)
-         
-        qfile = qt.QFile(path)
-        qfile.open(qt.QFile.ReadOnly)
-        uiWidget = loader.load(qfile, self.parent)
-        self.layout = self.parent.layout()
-        # self.layout.addWidget(uiWidget)
-         
-        #splitter
-        splitter = qt.QSplitter()
-        
-        leftWidget = qt.QWidget()
-        rightWidget = qt.QWidget()
-        
-        splitter.addWidget(leftWidget)
-        splitter.addWidget(rightWidget)
-         
-             
-        #-------------------------------------------
-        #right layout for 2d/3d viewer
-        sceneWidget = slicer.qMRMLLayoutWidget()
-        sceneWidget.setMRMLScene(slicer.mrmlScene)
-        sceneWidget.setLayout(0)
-        
-        rightLayout = qt.QVBoxLayout()
-        rightWidget.setLayout(rightLayout)
-        rightLayout.addWidget(sceneWidget)
-        
-        #-------------------------------------------
-        #   #left layout for quizz
-        leftLayout = qt.QVBoxLayout()
-        leftWidget.setLayout(leftLayout)
-         
-        # Data buttons setup
-        self.buttons = qt.QFrame()
-        self.buttons.setLayout( qt.QHBoxLayout() )
-        leftLayout.addWidget(self.buttons)
-        self.addDataButton = qt.QPushButton("Add Data")
-        self.buttons.layout().addWidget(self.addDataButton)
-        self.addDataButton.connect("clicked()",slicer.app.ioManager().openAddDataDialog)
-        self.loadDCMButton = qt.QPushButton("Load DCM")
-        self.buttons.layout().addWidget(self.loadDCMButton)
-        #  self.loadDCMButton.connect("clicked()",slicer.app.ioManager().openLoadDicomVolumeDialog)
-        
-        
-        # Collapsible button
-        self.sampleCollapsibleButton = ctk.ctkCollapsibleButton()
-        self.sampleCollapsibleButton.text = "Patient Studies"
-        leftLayout.addWidget(self.sampleCollapsibleButton)
-        
-        
-        # Layout within the sample collapsible button
-        self.sampleFormLayout = qt.QFormLayout(self.sampleCollapsibleButton)
-        
-        
-        # the volume selectors
-        self.inputFrame = qt.QFrame(self.sampleCollapsibleButton)
-        self.inputFrame.setLayout(qt.QHBoxLayout())
-        self.sampleFormLayout.addWidget(self.inputFrame)
-        self.inputSelector = qt.QLabel("Studies: ", self.inputFrame)
-        self.inputFrame.layout().addWidget(self.inputSelector)
-        self.inputSelector = slicer.qMRMLNodeComboBox(self.inputFrame)
-        self.inputSelector.nodeTypes = ( ("vtkMRMLScalarVolumeNode"), "" )
-        self.inputSelector.addEnabled = False
-        self.inputSelector.removeEnabled = False
-        self.inputSelector.setMRMLScene( slicer.mrmlScene )
-        self.inputFrame.layout().addWidget(self.inputSelector)
-        
-        #add quizz
-        leftLayout.addWidget(uiWidget)
-        
-        
-            # Next button
-        self.nextButton = qt.QPushButton("Next")
-        self.nextButton.toolTip = "Display next in series."
-        self.nextButton.enabled = True
-        leftLayout.addWidget(self.nextButton)
-        self.nextButton.connect('clicked(bool)',self.onNextButtonClicked)
-        
-        # Back button
-        self.backButton = qt.QPushButton("Back")
-        self.backButton.toolTip = "Display previous series."
-        self.backButton.enabled = True
-        leftLayout.addWidget(self.backButton)
-        
-        #-------------------------------------------
-        # combine left and right layouts 
-        self.layout.addWidget(splitter)
-     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onNextButtonClicked(self):
-##    print("Next volume ...")
-##    #Confirm that the user has selected a node
-##    inputVolume = self.inputSelector.currentNode()
-##    self.inputValidation(inputVolume)
+    def BuildUserLoginWidget(self):
+         
+        # create the widget for user login
+        # This is run in the constructor so that the widget remains in scope
+        qUserLoginLayout = qt.QVBoxLayout()
+        self.qUserLoginWidget = qt.QWidget()
+        self.qUserLoginWidget.setLayout(qUserLoginLayout)
+        self.qUserLoginWidget.setWindowModality(2)
+        self.qUserLoginWidget.setWindowTitle(self.sVersion)
+         
+
+        qTitleGroupBox = qt.QGroupBox()
+        qTitleGroupBoxLayout = qt.QHBoxLayout()
+        qTitleGroupBox.setLayout(qTitleGroupBoxLayout)
+                                
+        qLogoImg = qt.QLabel(self)
+#         sLogoName = 'BainesChevrons.png'
+        sLogoName = 'BainesLogoSmall.png'
+        sLogoPath = os.path.join(self.oFilesIO.GetScriptedModulesPath(),'Resources','Icons',sLogoName)
+        pixmap = qt.QPixmap(sLogoPath)
+        qLogoImg.setPixmap(pixmap)
+#         qLogoImg.setAlignment(QtCore.Qt.AlignRight)
+        qLogoImg.setAlignment(QtCore.Qt.AlignLeft)
+
+        qTitle = qt.QLabel('Image Quizzer - User Login')
+        qTitle.setFont(qt.QFont('Arial',12, qt.QFont.Bold))
+        qTitle.setAlignment(QtCore.Qt.AlignVCenter)
+
+        qTitleGroupBoxLayout.addWidget(qLogoImg)
+        qTitleGroupBoxLayout.addWidget(qTitle)
+        
+        qUserLoginLayout.addWidget(qTitleGroupBox)
+        
+        
+        ################################
+        # Define User folder
+        ################################
  
-        scene = slicer.mrmlScene
-        nNodes = scene.GetNumberOfNodes()
-        #   qt.QMessageBox.information(slicer.util.mainWindow(),'NextVolume ...',nNodes)
+        # Add vertical spacer
+        qUserLoginLayout.addSpacing(10)
         
-        nNodes = scene.GetNumberOfNodesByClass('vtkMRMLScalarVolumeNode')
-        n = scene.GetNthNodeByClass(0,'vtkMRMLScalarVolumeNode')
-        # qt.QMessageBox.information(slicer.util.mainWindow(),'NextVolume ...',nNodes)
-        for idx in range(nNodes):
-            node = scene.GetNthNodeByClass(idx,'vtkMRMLScalarVolumeNode')
-        name = node.GetName()
-        #  qt.QMessageBox.information(slicer.util.mainWindow(),'NextVolume ...',name)
-        self.changeView(node)
+#         self.qUserGrpBox = qt.QGroupBox()
+#         self.qUserGrpBox.setTitle('User name')
+#         self.qUserGrpBoxLayout = qt.QVBoxLayout()
+#         self.qUserGrpBox.setLayout(self.qUserGrpBoxLayout)
+# 
+#         self.comboGetUserName = qt.QComboBox()
+#         self.comboGetUserName.addItem(os.getlogin())
+#         self.qUserGrpBoxLayout.addWidget(self.comboGetUserName)
+#         self.qUserGrpBox.setEnabled(True)
+#         
+#         
+#         qUserLoginLayout.addWidget(self.qUserGrpBox)
 
+        
+        ################################
+        # Get Database location
+        ################################
+        
+        
+        qUserLoginLayout.addSpacing(10)
+
+        qDBGrpBox = qt.QGroupBox()
+        qDBGrpBox.setTitle('1. Select data location')
+        qDBGrpBoxLayout = qt.QVBoxLayout()
+        qDBGrpBox.setLayout(qDBGrpBoxLayout)
+
+        qUserLoginLayout.addWidget(qDBGrpBox)
+
+        
+        btnGetDBLocation = qt.QPushButton("Define location for Image Quizzer data")
+        btnGetDBLocation.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+        btnGetDBLocation.setEnabled(True)
+        btnGetDBLocation.toolTip = "Select folder for Image Quizzer data."
+        btnGetDBLocation.connect('clicked(bool)', self.onApplyQuizzerDataLocation)
+        qDBGrpBoxLayout.addWidget(btnGetDBLocation)
+ 
+        self.qLblDataLocation = qt.QLabel('Selected data location:')
+        qDBGrpBoxLayout.addWidget(self.qLblDataLocation)
+
+
+        qDBGrpBoxLayout.addSpacing(10)
+        self.qUserGrpBox = qt.QGroupBox()
+        self.qUserGrpBox.setTitle('User name')
+        self.qUserGrpBoxLayout = qt.QVBoxLayout()
+        self.qUserGrpBox.setLayout(self.qUserGrpBoxLayout)
+
+        self.comboGetUserName = qt.QComboBox()
+        self.comboGetUserName.addItem(os.getlogin())
+        self.qUserGrpBoxLayout.addWidget(self.comboGetUserName)
+        self.qUserGrpBox.setEnabled(True)
+        
+        
+        qDBGrpBoxLayout.addWidget(self.qUserGrpBox)
+
+        
+        # Add vertical spacer
+        qUserLoginLayout.addSpacing(10)
+        
+        
+        ################################
+        # Get study button
+        ################################
+        
+        self.qQuizSelectionGrpBox = qt.QGroupBox()
+        self.qQuizSelectionGrpBox.setTitle('2. Select Quiz')
+        self.qQuizSelectionGrpBoxLayout = qt.QVBoxLayout()
+        self.qQuizSelectionGrpBox.setLayout(self.qQuizSelectionGrpBoxLayout)
+        self.qQuizSelectionGrpBox.setEnabled(False)
+        
+        # File Picker
+        self.btnGetUserStudy = qt.QPushButton("Choose quiz to launch")
+        self.btnGetUserStudy.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+        self.btnGetUserStudy.setEnabled(True)
+        self.btnGetUserStudy.toolTip = "Select Quiz xml file for launch "
+        self.btnGetUserStudy.connect('clicked(bool)', self.onApplyQuizSelection)
+        self.qQuizSelectionGrpBoxLayout.addWidget(self.btnGetUserStudy)
+ 
+        self.qLblQuizFilename = qt.QLabel('Selected quiz filename')
+        self.qQuizSelectionGrpBoxLayout.addWidget(self.qLblQuizFilename)
+        
+        qUserLoginLayout.addWidget(self.qQuizSelectionGrpBox)
+        
+        
+        # Add vertical spacer
+        qUserLoginLayout.addSpacing(20)
+         
+        ################################
+        # Launch study button (not enabled until study is picked)
+        ################################
+        
+        self.qLaunchGrpBox = qt.QGroupBox()
+        self.qLaunchGrpBox.setTitle('3. Launch Quiz')
+        self.qLaunchGrpBoxLayout = qt.QHBoxLayout()
+        self.qLaunchGrpBox.setLayout(self.qLaunchGrpBoxLayout)
+        self.qLaunchGrpBox.setEnabled(False)
+
+        qUserLoginLayout.addWidget(self.qLaunchGrpBox)
+ 
+ 
+        self.btnLaunchStudy = qt.QPushButton("Begin")
+        self.btnLaunchStudy.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+        self.btnLaunchStudy.connect('clicked(bool)', self.onApplyLaunchQuiz)
+        self.qLaunchGrpBoxLayout.addWidget(self.btnLaunchStudy)
+         
+         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def changeView(self,volToDisplay):
-        print 'changeView: ',volToDisplay.GetName()
-        # Change the views to the selected volume
-        ijkToRAS = vtk.vtkMatrix4x4()
-        volToDisplay.GetIJKToRASMatrix(ijkToRAS)
-        selectionNode = slicer.app.applicationLogic().GetSelectionNode()
-        selectionNode.SetReferenceActiveVolumeID(volToDisplay.GetID())
-        slicer.app.applicationLogic().PropagateVolumeSelection(0)
-        slicer.util.delayDisplay(volToDisplay.GetName())
+
+    def onApplyQuizzerDataLocation(self):
+        
+        # File Picker
+        self.qDBLocationFileDialog = qt.QFileDialog()
+        sDefaultWorkingDir = os.path.expanduser('~\Documents')
+        sDataLocation = self.qDBLocationFileDialog.getExistingDirectory(None, "SELECT DIRECTORY FOR IMAGE DATABASE", sDefaultWorkingDir, qt.QFileDialog.ShowDirsOnly )
+        
+        if sDataLocation != '':
+            self.oFilesIO.SetupUserAndDataDirs(sDataLocation)
+            
+            self.qLblDataLocation.setText(self.oFilesIO.GetDataParentDir())
+            self.qQuizSelectionGrpBox.setEnabled(True)
+            
+            # populate user name list in combo box
+            sUsersParentDir = self.oFilesIO.GetUsersParentDir()
+            lSubFolders = [f.name for f in os.scandir(sUsersParentDir) if f.is_dir()]
+            if os.getlogin() in lSubFolders:
+                lSubFolders.remove(os.getlogin())
+            self.comboGetUserName.addItems(lSubFolders)
+            
+        else:
+            sMsg = 'No location was selected for image database'
+            self.oUtilsMsgs.DisplayWarning(sMsg)
+            self.qUserLoginWidget.raise_()
+            
+                
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onApplyQuizSelection(self):
+        
+        # set to default
+        self.qLaunchGrpBox.setEnabled(True)
+        self.qLblQuizFilename.text = ""
+ 
+        # get quiz filename
+        self.quizInputFileDialog = qt.QFileDialog()
+        sSelectedQuizPath = self.quizInputFileDialog.getOpenFileName(self.qUserLoginWidget, "SELECT QUIZ FILE", self.oFilesIO.GetXmlQuizDir(), "XML files (*.xml)" )
+ 
+        # check that file was selected
+        if not sSelectedQuizPath:
+            sMsg = 'No quiz was selected'
+            self.oUtilsMsgs.DisplayWarning(sMsg)
+            self.qUserLoginWidget.raise_()
+
+        else:
+            # enable the launch button
+            self.qLblQuizFilename.setText(sSelectedQuizPath)
+            self.qLaunchGrpBox.setEnabled(True)
+            self.qUserLoginWidget.show()
+            self.qUserLoginWidget.activateWindow()
+            
+            self.oFilesIO.SetXmlQuizPathAndFilename(sSelectedQuizPath)
+         
+ 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onApplyLaunchQuiz(self):
+        
+        sMsg = ''
+        bSuccess = True
+        # open the database - if not successful, allow user to reselect
+        bDBSetupSuccess, sMsg = self.oFilesIO.OpenSelectedDatabase()
+
+        if not bDBSetupSuccess:
+            self.oUtilsMsgs.DisplayError(sMsg)
+            self.qUserLoginWidget.raise_()
+
+        else:
+            
+            self.oFilesIO.SetUsernameAndDir(self.comboGetUserName.currentText)
+
+            # check for errors in quiz xml layout before populating the user response folder
+            bSuccess, sMsg = self.oFilesIO.ValidateQuiz()
+
+            if bSuccess:
+                # create user and results folders if it doesn't exist
+                self.oFilesIO.SetupForUserQuizResults()
     
+                ##### for debug... #####
+    #             self.oFilesIO.PrintDirLocations()
+                ########################
+    
+    
+                # copy file from Resource into user folder
+                if self.oFilesIO.PopulateUserQuizFolder(): # success
+    
+                    # turn off login widget modality (hide first)
+                    self.qUserLoginWidget.hide()
+                    self.qUserLoginWidget.setWindowModality(0)
+                    self.qUserLoginWidget.show()
+                    
+                    # start the session
+                    self.oSession.RunSetup(self.oFilesIO, self.slicerMainLayout)
+    
+                    
+                    try:
+                        #provide as much room as possible for the quiz
+                        qDataProbeCollapsibleButton = slicer.util.mainWindow().findChild("QWidget","DataProbeCollapsibleWidget")
+                        qDataProbeCollapsibleButton.collapsed = True
+                        self.reloadCollapsibleButton.collapsed = True
+                    except:
+                        pass
+
+            else:
+                self.oUtilsMsgs.DisplayError(sMsg)
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+
+##########################################################################
+#
+# ImageQuizzerLogic
+#
+##########################################################################
 
 class ImageQuizzerLogic(ScriptedLoadableModuleLogic):
     """This class should implement all the actual
@@ -204,14 +429,47 @@ class ImageQuizzerLogic(ScriptedLoadableModuleLogic):
         ScriptedLoadableModuleLogic.__init__(self)
         self.interface = interface
 
+
+##########################################################################
+#
+# customEventFilter
+#
+##########################################################################
  
- 
- 
- 
-#class ImageQuizzerSlicelet(Slicelet):
-#  """ Creates the interface when module is run as a stand alone gui app.
-#  """
- 
-#  def __init__(self):
-#    super(ImageQuizzerSlicelet,self).__init__(ImageQuizzerWidget)
- 
+class customEventFilter(qt.QObject):
+    """ Custom event filter set up to capture when the user presses the 'X'
+        button on the main window to exit the application.
+    """
+     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def __init__(self, oSession, oFilesIO):
+        qSlicerMainWindow.__init__(self) # required for event filter
+        
+        self.oSession = oSession
+        self.oFilesIO = oFilesIO
+     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def eventFilter(self, obj, event):
+        ''' Function to save current data if the user presses Slicer's 'X' 
+            to exit the quiz.
+        '''
+         
+        self.oUtilsMsgs = UtilsMsgs()
+        if event.type() == qt.QEvent.Close:
+            
+            sExitMsg = 'Image Quizzer Exiting'
+            sUserQuizResultsPath = self.oFilesIO.GetUserQuizResultsPath()
+            
+            if sUserQuizResultsPath != '':
+                sExitMsg = sExitMsg + '\n   Results will be saved.\
+                    \n   Restarting the quiz will resume where you left off.'
+                
+                sCaller = 'EventFilter'
+                bSuccess, sMsg = self.oSession.PerformSave(sCaller)
+                if bSuccess == False:
+                    if sMsg != '':
+                        self.oUtilsMsgs.DisplayWarning(sMsg)
+                    
+            self.oUtilsMsgs.DisplayInfo(sExitMsg)
+            slicer.util.exit(status=EXIT_SUCCESS)
+                    

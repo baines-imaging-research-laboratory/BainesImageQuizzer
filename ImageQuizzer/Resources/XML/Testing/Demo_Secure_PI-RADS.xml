@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Session ROIColorFile="PiRadsStudy">
+	<Page ID="IGPC2026" Descriptor="Intro" LinkViews="Y" Layout="TwoOverTwo" AllowMultipleResponse="Y"  EnableSegmentEditor="N">
+		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" DicomRead="Y">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\DICOM\DCE\IGPC2-026.MR.MMR_PELVIS_MMR.0031.0001.2016.05.11.12.40.24.890625.175644657</Path>
+		</Image>
+		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\ADC.nii</Path>
+		</Image>
+		<Image ID="In_Vivo_2D_T2" Type="Volume" RotateToAcquisition="Y">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+		</Image>
+		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer">
+			<Question Type="InfoBox" Descriptor="Features">
+				<Option>  - zoom, window/level</Option>
+				<Option>  - DCE MRI time sequence tools</Option>
+				<Option>  - images linked for scrolling</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page ID="IGPC2026" Descriptor="Multimodality" LinkViews="Y" Layout="TwoOverTwo" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
+		<Image Type="VolumeSequence" ID="DCE" LabelMapID="DCE-Contour" RotateToAcquisition="Y">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="ADC" LabelMapID="ADC-Contour"  RotateToAcquisition="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\ADC.nii</Path>
+		</Image>
+		<Image ID="In_Vivo_2D_T2" Type="Volume" LabelMapID="2DT2-Contour" RotateToAcquisition="Y" SegmentRequired="Y">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+		</Image>
+		<Image ID="PELVIS_MRAC_PET" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Foreground</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\PSMA PET.nii</Path>
+		</Image>
+		<Image Type="Volume" ID="Slice3" RotateToAcquisition="Y" DicomRead="N">
+			<DefaultDestination>Slice4</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\IGPC2026\Oblique 2D Slices\Histology\Histology and Contours\HistContoured_3.dcm</Path>
+		</Image>
+		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer" >
+			<Question Type="InfoBox" Descriptor="Features:">
+				<Option> - ability to overlay images</Option>
+				<Option>      PET overlay shown with 2DT2</Option>
+				<Option> - crosshair tool displayed on all views</Option>
+				<Option>      (use with 'Shift' key)</Option>
+			</Question>
+		</QuestionSet>
+		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer" >
+			<Question Type="InfoBox" Descriptor="Contouring Instructions">
+				<Option>In Segment Editor tab, select volume to create contours.</Option>
+				<Option>   Click Edit Selected Label Map collapsible button to access the contouring tools.</Option>
+				<Option>   Select contour color to match PI-RADS category.</Option>
+				<Option> </Option>
+			</Question>
+			<Question Type="Radio" Descriptor="Degree of Hypointensity" GroupLayout="Horizontal">
+				<Option>1 (Hyperintense)</Option>
+				<Option>2</Option>
+				<Option>3 (Hypointense)</Option>
+			</Question>
+			<Question Type="Radio" Descriptor="Degree of Homogeneity" GroupLayout="Horizontal">
+				<Option>1 (Heterogeneous)</Option>
+				<Option>2</Option>
+				<Option>3 (Homogeneous)</Option>
+			</Question>
+			<Question Type="CheckBox" Descriptor="Shape">
+				<Option>Round</Option>
+				<Option>Oval</Option>
+				<Option>Lenticular</Option>
+				<Option>Lobulated</Option>
+				<Option>Water-drop</Option>
+				<Option>Wedge</Option>
+				<Option>Linear</Option>
+				<Option>Irregular</Option>
+			</Question>
+			<Question Type="IntegerValue" Descriptor="Overall PI-RADS" Min="1" Max="5">
+				<Option>Enter overall PI-RADS score:</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page ID="IGPC2026" Descriptor="Gold Standard" LinkViews="Y" Layout="OneUpRedSlice" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" DisplayLabelMapID="2DT2-Contour" RotateToAcquisition="Y" LabelMapID="Modified 2DT2" SegmentRequired="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+		</Image>
+		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\2DT2-GoldStandard.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All"></ROIs>
+		</Image>
+		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer" >
+			<Question Type="InfoBox" Descriptor="Review">
+				<Option>Compare user contour with gold standard.</Option>
+			</Question>
+			<Question Type="InfoBox" Descriptor="Modify Segmentation">
+				<Option>Select Segment Editor tab.</Option>
+				<Option>   Adjust contour to match gold standard.</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page ID="IGPC2026" Descriptor="Gold Standard 2" LinkViews="Y" Layout="OneUpRedSlice" AllowMultipleResponse="Y" EnableSegmentEditor="N">
+		<Image ID="In_Vivo_2D_T2" Type="Volume" DisplayLabelMapID="Modified 2DT2" RotateToAcquisition="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+		</Image>
+		<Image Type="Segmentation" ID="Gold" RotateToAcquisition="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\2DT2-GoldStandard.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All"></ROIs>
+		</Image>
+		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer" >
+			<Question Type="InfoBox" Descriptor="Review">
+				<Option>Compare modified user contour with gold standard.</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>

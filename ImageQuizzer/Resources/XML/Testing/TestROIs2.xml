@@ -1,0 +1,114 @@
+<Session>
+	<Page ID="Test ROI Display" Descriptor="Phantom">
+		<Image Type="Volume" ID="TinyPhantom">
+			<DefaultDestination>Red</DefaultDestination>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="TinyPhantom">
+			<DefaultDestination>Green</DefaultDestination>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="TinyPhantom">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<DefaultOrientation>Coronal</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Segmentation" ID="TinyPhantom-Segmentation">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All">
+			</ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="TinyPhantom-Segmentation">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All">
+			</ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="TinyPhantom-Segmentation">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All">
+			</ROIs>
+		</Image>
+		<QuestionSet ID="ROI Display" Descriptor="Phantom segmentations">
+			<Question Type="InfoBox" Descriptor="ROI Data load">
+				<Option>Segmentation layer testing - loaded as Data volume</Option> 
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page ID="CL PT001" Descriptor="Multiparametric_MRI" AllowMultipleResponse="Y" EnableSegmentEditor="Y" Layout="TwoOverTwo">
+		<Image DicomRead="Y" Type="Volume" ID="T1W MR">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\000000.dcm</Path>
+		</Image>
+		<Image DicomRead="Y" Type="Volume" ID="T2W MR">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\000000.dcm</Path>
+		</Image>
+		<Image Type="Volume" ID="DWI">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\BrainDWI\dwi.nrrd</Path>
+		</Image>
+		<Image DicomRead="Y" Type="RTStruct" ID="Seg T2W">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\CentralLibraryPatients\PT001\T2 Dicom with RT Struct\RT Struct.dcm</Path>
+			<ROIs ROIVisibilityCode="All">
+				<ROI>1</ROI>
+			</ROIs>
+		</Image>
+		<Image DicomRead="Y" Type="RTStruct" ID="Seg T1W">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\CentralLibraryPatients\PT001\T1 Dicom with RT Struct\RT Struct.dcm</Path>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>1</ROI>
+			</ROIs>
+		</Image>
+		<Image Type="LabelMap" ID="Contour1">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Label</Layer>
+			<Path>ImageVolumes\BrainDWI\Segment_1-label.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="TinyPhantom">
+			<DefaultDestination>Slice4</DefaultDestination>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Segmentation" ID="TinyPhantom-Segmentation">
+			<DefaultDestination>Slice4</DefaultDestination>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All">
+			</ROIs>
+		</Image>
+		<QuestionSet ID="QS-Checkup" Descriptor="First Question Set">
+			<Question Type="CheckBox" Descriptor="Test Items:">
+				<Option>Two different DICOM series with different RTStructs</Option> 
+				<Option>NRRD file on Green with mask on Label layer</Option>
+			</Question>
+		</QuestionSet>
+		<QuestionSet ID="QS-Checkup" Descriptor="Second Question Set">
+			<Question Type="CheckBox" Descriptor="Test Items:">
+				<Option>Two different DICOM series with different RTStructs</Option> 
+				<Option>NRRD file on Green with mask on Label layer</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>
