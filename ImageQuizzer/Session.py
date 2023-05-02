@@ -61,7 +61,7 @@ class Session:
         self._iSegmentationTabIndex = -1   # default
         self._bPageLooping = False
         self._sSessionContourVisibility = 'Outline'
-        self._sSessionContourOpacity = 0.5
+        self._sSessionContourOpacity = 1.0
         self._bEmailResults = False
         self._bRandomizeRequired = False
         
@@ -559,7 +559,7 @@ class Session:
         
     #----------
     def SetContourOpacityFromSliderValue(self, iSliderValue):
-        # set the ContourOpacity property of the image view object based on slider valud for opacity
+        # set the ContourOpacity property of the image view object based on slider value for opacity
         
         if self.oImageView != None:
             if self.qVisibilityOpacity.maximum > self.qVisibilityOpacity.minimum:  # no div by zero

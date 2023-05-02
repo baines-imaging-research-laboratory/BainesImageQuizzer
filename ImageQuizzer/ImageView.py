@@ -39,7 +39,7 @@ class ImageView:
         
         self.sParentDataDir = ''
         self.sContourVisibility = 'Outline'
-        self.fContourOpacity = 0.5
+        self.fContourOpacity = 1.0
         
         
     #----------
@@ -152,7 +152,7 @@ class ImageView:
                 sMsg = 'BuildViewNodes:Image load Failed : ' + self.sPageID + ':' + oImageViewItem.sImagePath\
                         + "\n\nYou may have selected the wrong folder for the image data."\
                         + "\nExit 3D Slicer and restart the Image Quizzer with the correct database directory."
-                self.oUtilsMsgs.DisplayWarning(sMsg)
+                self.oUtilsMsgs.DisplayError(sMsg)
                  
             progressBar.setValue(indImage + 1)
             slicer.app.processEvents()

@@ -82,7 +82,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 #         self.oCustomEventFilter = customEventFilter()
 #         slicer.util.mainWindow().installEventFilter(self.oCustomEventFilter)        
          
-        self.lsModulesToToggleVisibilty = ['ModuleToolBar', 'DialogToolBar', 'CaptureToolBar', 'MainToolBar', 'ModuleSelectorToolBar']
         
         self.slicerMainLayout = self.layout
         
@@ -113,12 +112,12 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.slicerLeftWidget= None     
         
         
-        slicer.util.setMenuBarsVisible(True)
         
-###########  For Development mode    ###########    
+##########  For Development mode    ###########    
         slicer.util.setPythonConsoleVisible(True)
         slicer.util.setToolbarsVisible(True)
-###########
+        slicer.util.setMenuBarsVisible(True)
+##########
 
 
 # ###########  For Release mode   ###########
@@ -128,14 +127,22 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 #         #    'DialogToolBar' for Extensions
 #         #    'MainToolBar' for loading files by Data, Dcm buttons
 #         #    'ModuleSelectorToolBar' to see all the available modules
+#         #    'ViewersToolBar' to see crosshair options
+#         #    'ViewsToolBar' for different view layouts
+#         #    'MouseModeToolBar' for default, window/level, markups tools
+#          
+#         self.lsModulesToToggleVisibilty = ['ModuleToolBar', 'DialogToolBar', 'CaptureToolBar', 'MainToolBar', 'ModuleSelectorToolBar', 'MouseModeToolBar', 'ViewToolBar', 'ViewersToolBar']
+#  
 #         for qtToolBar in slicer.util.mainWindow().findChildren('QToolBar'):
 #             if qtToolBar.name in self.lsModulesToToggleVisibilty:
 #                 qtToolBar.setVisible(False)
-#
-#
-#         slicer.util.setPythonConsoleVisible(False)
+#  
+#  
+# #        slicer.util.setPythonConsoleVisible(False)
 #         slicer.util.setModuleHelpSectionVisible(False)
 #         slicer.modules.welcome.widgetRepresentation().setVisible(False)
+#         slicer.util.setMenuBarsVisible(False)
+#         slicer.util.mainWindow().showMaximized()
 # ###########
         
 
