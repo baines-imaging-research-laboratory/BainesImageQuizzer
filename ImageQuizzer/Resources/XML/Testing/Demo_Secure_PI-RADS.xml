@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Session ROIColorFile="PiRadsStudy">
 	<Page ID="IGPC2026" Descriptor="Intro" LinkViews="Y" Layout="TwoOverTwo" AllowMultipleResponse="Y"  EnableSegmentEditor="N">
-		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y">
+		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" DicomRead="Y">
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
-			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\DCE.nrrd</Path>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\DICOM\DCE\IGPC2-026.MR.MMR_PELVIS_MMR.0031.0001.2016.05.11.12.40.24.890625.175644657</Path>
 		</Image>
 		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y">
 			<DefaultDestination>Red</DefaultDestination>
@@ -27,7 +27,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="IGPC2026" Descriptor="Segment Required" LinkViews="Y" Layout="TwoOverTwo" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
+	<Page ID="IGPC2026" Descriptor="Multimodality" LinkViews="Y" Layout="TwoOverTwo" AllowMultipleResponse="Y" EnableSegmentEditor="Y">
 		<Image Type="VolumeSequence" ID="DCE" LabelMapID="DCE-Contour" RotateToAcquisition="Y">
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
@@ -47,16 +47,16 @@
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
 		</Image>
 		<Image ID="PELVIS_MRAC_PET" Type="Volume" ColorTable='PET-Heat' RotateToAcquisition="Y">
-			<DefaultDestination>Slice4</DefaultDestination>
+			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Foreground</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\PSMA PET.nii</Path>
 		</Image>
-		<Image ID="In_Vivo_2D_T2" Type="Volume" LabelMapID="2DT2-Contour" RotateToAcquisition="Y" SegmentRequired="Y">
+		<Image Type="Volume" ID="Slice3" RotateToAcquisition="Y" DicomRead="N">
 			<DefaultDestination>Slice4</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
-			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\In_Vivo_2D_T2.nii</Path>
+			<Path>ImageVolumes\IGPC2026\Oblique 2D Slices\Histology\Histology and Contours\HistContoured_3.dcm</Path>
 		</Image>
 		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer" >
 			<Question Type="InfoBox" Descriptor="Features:">
@@ -67,11 +67,31 @@
 			</Question>
 		</QuestionSet>
 		<QuestionSet ID="PI-RADS" Descriptor="Multimodality Imaging of Prostate Cancer" >
-			<Question Type="InfoBox" Descriptor="Segmentation Instructions">
-				<Option>In Segment Editor tab, select volume to create segments.</Option>
-				<Option>   Click Edit Selected Label Map collapsible button to access the segmenting tools.</Option>
+			<Question Type="InfoBox" Descriptor="Contouring Instructions">
+				<Option>In Segment Editor tab, select volume to create contours.</Option>
+				<Option>   Click Edit Selected Label Map collapsible button to access the contouring tools.</Option>
 				<Option>   Select contour color to match PI-RADS category.</Option>
-				<Option>Repeat for each image modality.</Option>
+				<Option> </Option>
+			</Question>
+			<Question Type="Radio" Descriptor="Degree of Hypointensity" GroupLayout="Horizontal">
+				<Option>1 (Hyperintense)</Option>
+				<Option>2</Option>
+				<Option>3 (Hypointense)</Option>
+			</Question>
+			<Question Type="Radio" Descriptor="Degree of Homogeneity" GroupLayout="Horizontal">
+				<Option>1 (Heterogeneous)</Option>
+				<Option>2</Option>
+				<Option>3 (Homogeneous)</Option>
+			</Question>
+			<Question Type="CheckBox" Descriptor="Shape">
+				<Option>Round</Option>
+				<Option>Oval</Option>
+				<Option>Lenticular</Option>
+				<Option>Lobulated</Option>
+				<Option>Water-drop</Option>
+				<Option>Wedge</Option>
+				<Option>Linear</Option>
+				<Option>Irregular</Option>
 			</Question>
 			<Question Type="IntegerValue" Descriptor="Overall PI-RADS" Min="1" Max="5">
 				<Option>Enter overall PI-RADS score:</Option>

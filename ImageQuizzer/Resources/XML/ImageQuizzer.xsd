@@ -12,7 +12,8 @@
 		</xs:sequence>
 		<xs:attribute name="ROIColorFile" type="xs:string" />
 		<xs:attribute name="RandomizePageGroups" type="yesnoType" default="N" />
-		<xs:attribute name="ContourVisibility" type="contourVisibilityType"/>
+		<xs:attribute name="ContourVisibility" type="contourVisibilityType" default="Fill"/>
+		<xs:attribute name="EmailResultsTo" type="xs:string" />
 	</xs:complexType>
 </xs:element>
 

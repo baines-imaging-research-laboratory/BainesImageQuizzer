@@ -66,7 +66,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         # Note: Version 1.0 should be used with Slicer v4.11.20200930
         # self.sVersion = "Image Quizzer   v1.0 "  #  Release Date: May 10, 2022
         # Note: Version 2.0 should be used with Slicer v4.11.2021022
-        self.sVersion = "Image Quizzer v2.1.0" 
+        self.sVersion = "Image Quizzer v2.2.1" 
 
         sSlicerVersion = slicer.app.applicationVersion
         if sSlicerVersion != '4.11.20210226':
@@ -82,7 +82,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 #         self.oCustomEventFilter = customEventFilter()
 #         slicer.util.mainWindow().installEventFilter(self.oCustomEventFilter)        
          
-        self.lsModulesToToggleVisibilty = ['ModuleToolBar', 'DialogToolBar', 'CaptureToolBar', 'MainToolBar', 'ModuleSelectorToolBar']
         
         self.slicerMainLayout = self.layout
         
@@ -113,30 +112,38 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.slicerLeftWidget= None     
         
         
-        slicer.util.setMenuBarsVisible(True)
         
-###########  For Development mode    ###########    
-        slicer.util.setPythonConsoleVisible(True)
-        slicer.util.setToolbarsVisible(True)
+# ##########  For Development mode    ###########    
+#         slicer.util.setPythonConsoleVisible(True)
+#         slicer.util.setToolbarsVisible(True)
+#         slicer.util.setMenuBarsVisible(True)
+# ##########
+
+
+###########  For Release mode   ###########
+        # hide toolbars to prevent users accessing modules outside of the ImageQuizzer
+        #    Equivalent to toggling through View>Toolbars
+        #    'ModuleToolBar' includes the Editor module for segmenting
+        #    'DialogToolBar' for Extensions
+        #    'MainToolBar' for loading files by Data, Dcm buttons
+        #    'ModuleSelectorToolBar' to see all the available modules
+        #    'ViewersToolBar' to see crosshair options
+        #    'ViewsToolBar' for different view layouts
+        #    'MouseModeToolBar' for default, window/level, markups tools
+          
+        self.lsModulesToToggleVisibilty = ['ModuleToolBar', 'DialogToolBar', 'CaptureToolBar', 'MainToolBar', 'ModuleSelectorToolBar', 'MouseModeToolBar', 'ViewToolBar', 'ViewersToolBar']
+  
+        for qtToolBar in slicer.util.mainWindow().findChildren('QToolBar'):
+            if qtToolBar.name in self.lsModulesToToggleVisibilty:
+                qtToolBar.setVisible(False)
+  
+  
+        slicer.util.setPythonConsoleVisible(False)
+        slicer.util.setModuleHelpSectionVisible(False)
+        slicer.modules.welcome.widgetRepresentation().setVisible(False)
+        
+        slicer.util.mainWindow().showMaximized()
 ###########
-
-
-# ###########  For Release mode   ###########
-#         # hide toolbars to prevent users accessing modules outside of the ImageQuizzer
-#         #    Equivalent to toggling through View>Toolbars
-#         #    'ModuleToolBar' includes the Editor module for segmenting
-#         #    'DialogToolBar' for Extensions
-#         #    'MainToolBar' for loading files by Data, Dcm buttons
-#         #    'ModuleSelectorToolBar' to see all the available modules
-#         for qtToolBar in slicer.util.mainWindow().findChildren('QToolBar'):
-#             if qtToolBar.name in self.lsModulesToToggleVisibilty:
-#                 qtToolBar.setVisible(False)
-#
-#
-#         slicer.util.setPythonConsoleVisible(False)
-#         slicer.util.setModuleHelpSectionVisible(False)
-#         slicer.modules.welcome.widgetRepresentation().setVisible(False)
-# ###########
         
 
 
@@ -147,6 +154,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
         self.BuildUserLoginWidget()
         self.qUserLoginWidget.show()
+        
+        slicer.util.mainWindow().showMaximized()
 
 
         

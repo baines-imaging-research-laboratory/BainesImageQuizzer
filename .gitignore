@@ -27,4 +27,6 @@ ImageQuizzer/out/
 ImageQuizzer/Testing/Python/out/
 ImageQuizzerShutdown.bat
 ImageQuizzer/Resources/ColorFiles/QuizzerROIColorTable.txt
+
+ImageQuizzer/Resources/Config/smtp_config.txt
 ImageQuizzer/ImageQuizzerData/

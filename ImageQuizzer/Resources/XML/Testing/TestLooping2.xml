@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Session>
+	<Page ID="IGPC2026" Descriptor="Loop_1QS" LinkViews="Y" EnableSegmentEditor="Y" Loop="Y" AllowMultipleResponse="Y">
+		<Image Type="VolumeSequence" ID="DCE" LabelMapID="DCE-contour">
+			<DefaultDestination>Green</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\ProstateDCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="ADC"  LabelMapID="ADC-contour">
+			<DefaultDestination>Red</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\adc.nrrd</Path>
+		</Image>
+		<Image ID="T2-N4" Type="Volume" LabelMapID="T2-contour">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<Layer>Background</Layer>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\t2ax-N4.nrrd</Path>
+		</Image>
+		<QuestionSet ID="PI-RADS" Descriptor="QSet1">
+			<Question Type="CheckBox" Descriptor="Testing">
+				<Option>1st Page Looping QS Test 1</Option>
+				<Option>1st Page Looping QS Test 2</Option>
+				<Option>1st Page Looping QS Test 3</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>
