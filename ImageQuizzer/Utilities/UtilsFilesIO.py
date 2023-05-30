@@ -177,6 +177,12 @@ class UtilsFilesIO:
         return self._sXmlQuizFilename
     
     #----------
+    def GetQuizFilenameNoExt(self):
+        sFilenameNoExt = os.path.splitext(self.GetQuizFilename())[0]
+        
+        return sFilenameNoExt
+    
+    #----------
     def GetFilenameWithExtFromPath(self, sFilePath):
         sDir,sFilenameWithExt = os.path.split(sFilePath)
 
@@ -199,7 +205,10 @@ class UtilsFilesIO:
         xPageNode = oSession.GetCurrentPageNode()
         sPageIndex = str(oSession.GetCurrentPageIndex() + 1)
         sPageID = oSession.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
-        sDirName = os.path.join(self.GetUserQuizResultsDir(), 'Pg'+ sPageIndex + '_' + sPageID )
+        sPageDescriptor = oSession.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
+        sPageGroup = oSession.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
+        # sDirName = os.path.join(self.GetUserQuizResultsDir(), 'Pg'+ sPageIndex + '_' + sPageID )
+        sDirName = os.path.join(self.GetUserQuizResultsDir(), 'PgGroup' + sPageGroup + '_' + sPageID + '_' + sPageDescriptor )
 
         return sDirName
         
@@ -240,6 +249,9 @@ class UtilsFilesIO:
     def GetDefaultROIColorFilePath(self):
         return os.path.join(self.GetResourcesROIColorFilesDir(), self.GetDefaultROIColorTableName() + '.txt')
 
+    #----------
+    def GetResourcesConfigDir(self):
+        return os.path.join(self.GetScriptedModulesPath(),'Resources','Config')
 
     #----------
     #----------Page Groups
@@ -343,6 +355,7 @@ class UtilsFilesIO:
                                              self.GetQuizzerROIColorTableNameWithExt()) )
         copyfile(sROIColorFilePath, self.GetQuizzerROIColorTablePath() )
                 
+            
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupForUserQuizResults(self):
         
@@ -540,6 +553,13 @@ class UtilsFilesIO:
             if not (sContourVisibility == 'Fill' or sContourVisibility == 'Outline' or sContourVisibility == ''):
                 sValidationMsg = "\nContourVisibility value must be 'Fill' or 'Outline'. See attribute in Session"
                 sMsg = sMsg + sValidationMsg
+                
+            sEmailResultsTo = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'EmailResultsTo')
+            if sEmailResultsTo != '':
+                # ensure that the smtp config file exists
+                sSmtpConfigFile = os.path.join(self.GetResourcesConfigDir(), 'smtp_config.txt')
+                if not (os.path.exists(sSmtpConfigFile)) :
+                    sMsg = sMsg + '\nMissing smtp configuration file for request to email quiz results : ' + sSmtpConfigFile
             
             # check matches of LabelMapID with DisplayLabelMapID
             sValidationMsg = self.ValidateDisplayLabelMapID()

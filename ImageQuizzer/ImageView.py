@@ -11,7 +11,6 @@ from Utilities.UtilsMsgs import *
 from Utilities.UtilsIOXml import *
 
 from DICOMLib import DICOMUtils
-import QuizzerDICOMUtils
 
 import ssl
 # from DICOMLib.DICOMUtils import loadPatientByUID
@@ -40,19 +39,24 @@ class ImageView:
         
         self.sParentDataDir = ''
         self.sContourVisibility = 'Outline'
+        self.fContourOpacity = 1.0
         
         
     #----------
     def GetImageViewList(self):
         return self._loImageViews
 
+    #----------    
+    def SetContourVisibility(self, sInputOutlineOrFill):
+        self.sContourVisibility = sInputOutlineOrFill
+        
     #----------
     def GetLabelMapContourVisibility(self):
         if self.sContourVisibility == 'Outline':
             return True
         else:
             return False  # for 'Fill'
-        
+ 
     #----------
     def GetSegmentationContourVisibility(self):
         if self.sContourVisibility == 'Outline':
@@ -60,16 +64,22 @@ class ImageView:
         else:
             return True  # for 'Fill'
         
+    #----------
+    def GetContourOpacity(self):
+        return self.fContourOpacity
+    
+    #----------
+    def SetContourOpacity(self, fInput):
+        self.fContourOpacity = fInput
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def RunSetup(self, xPageNode, sParentDataDir, sContourVisibility):
+    def RunSetup(self, xPageNode, sParentDataDir):
 
         # self.quizLayout = quizLayout
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
         self.sParentDataDir = sParentDataDir
         self.xPageNode = xPageNode
-        self.sContourVisibility = sContourVisibility
 
 
         # get ID and descriptor
@@ -142,7 +152,7 @@ class ImageView:
                 sMsg = 'BuildViewNodes:Image load Failed : ' + self.sPageID + ':' + oImageViewItem.sImagePath\
                         + "\n\nYou may have selected the wrong folder for the image data."\
                         + "\nExit 3D Slicer and restart the Image Quizzer with the correct database directory."
-                self.oUtilsMsgs.DisplayWarning(sMsg)
+                self.oUtilsMsgs.DisplayError(sMsg)
                  
             progressBar.setValue(indImage + 1)
             slicer.app.processEvents()
@@ -298,12 +308,26 @@ class ImageView:
             self.oUtilsMsgs.DisplayError(sMsg)
           
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetLabelMapOutlineOrFill(self, lsLayoutWidgets):
+        
+        for sDestination in lsLayoutWidgets:
+            # get slicer control objects for the widget
+            slWidget = slicer.app.layoutManager().sliceWidget(sDestination)
+            slWindowLogic = slWidget.sliceLogic()
+            slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
+            slWidgetController = slWidget.sliceController()
+            
+            slWidgetController.showLabelOutline(self.GetLabelMapContourVisibility())
+            slWidgetController.setLabelMapOpacity(self.GetContourOpacity())
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSegmentationOutlineOrFill(self, oViewNode, slSegDisplayNode):
         # for the segmentation node, get number of associated segments
         iNumSegments = oViewNode.GetSlicerViewNode().GetSegmentation().GetNumberOfSegments()
         for idx in range(iNumSegments):
             # assign each segment to the contour visibility setting
             slSegDisplayNode.SetSegmentOpacity2DFill(oViewNode.GetSlicerViewNode().GetSegmentation().GetNthSegmentID(idx), self.GetSegmentationContourVisibility())
+            slSegDisplayNode.SetOpacity(self.GetContourOpacity())
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ClearWidgets(self):
@@ -556,11 +580,11 @@ class ViewNodeBase:
         
     #----------
     def SetNodeSource(self, sInput):
-        self._sNodeSource = sInput
+        self.sNodeSource = sInput
         
     #----------
     def GetNodeSource(self):
-        return self._sNodeSource
+        return self.sNodeSource
     
     #----------
     def SetXmlImageElement(self, iImageIndex):
@@ -1142,6 +1166,7 @@ class DicomVolumeDetail(ViewNodeBase):
             tags['studyUID'] = "0020,000D"
             tags['seriesDescription'] = "0008,103E"
             tags['seriesNumber'] = "0020,0011"
+            tags["sopInstanceUID"] = "0008,0018"
             
             # using the path defined by the user to one of the files in the series,
             # access dicom information stored in that series
@@ -1157,6 +1182,7 @@ class DicomVolumeDetail(ViewNodeBase):
             sSeriesNumber = database.fileValue(self.sImagePath, tags['seriesNumber'])
 
             self.sStudyInstanceUID = database.fileValue(self.sImagePath, tags['studyUID'])
+            sSOPInstanceUID = database.fileValue(self.sImagePath, tags['sopInstanceUID'])
 
             
             # extract directory that stores the dicom series from defined image path
@@ -1191,9 +1217,7 @@ class DicomVolumeDetail(ViewNodeBase):
             else:
                 elaspsed = time.time() - elapsed
 
-                ####### Function override ... See notes in QuizzerDicomUitls
-                #######     DICOMUtils.loadSeriesByUID([sSeriesUIDToLoad])
-                QuizzerDICOMUtils.loadSeriesByUID([sSeriesUIDToLoad])
+                DICOMUtils.loadByInstanceUID(sSOPInstanceUID)
                 slNodeId = slSubjectHierarchyNode.GetItemByUID(slicer.vtkMRMLSubjectHierarchyConstants.GetDICOMUIDName(),sSeriesUIDToLoad)
                 
 ##### for debug on visibility
@@ -1202,35 +1226,9 @@ class DicomVolumeDetail(ViewNodeBase):
 #                 print('SH eye: ',iOnOrOff, slNodeId)
 #####
                     
-            
-            if slNodeId == 0:
-                
-                # a multivolume type of node is not detected in the subject hierarchy using the GetItemByUID
-                # (because there are multiple UID's ???)
-                # if the the node ID is still 0 at this point,
-                # search for a multivolume node containing SeriesDescription
 
-                iNumNodes = slicer.mrmlScene.GetNumberOfNodesByClass('vtkMRMLMultiVolumeNode')
-                
-                if iNumNodes > 0:
-                    for idx in range(iNumNodes):
-                        slMultiVolumeNode = slicer.mrmlScene.GetNthNodeByClass(idx, 'vtkMRMLMultiVolumeNode')
-                        sNodeName = slMultiVolumeNode.GetName()
-                        if sSeriesDescription in sNodeName:
-                            self.slNode = slMultiVolumeNode
-                            self.sNodeName = self.slNode.GetName()
-                            bLoadSuccess = True
-                            break
-                else:
-                    bLoadSuccess = False
-
-            else:
-                # load is complete with a valid node id
-                # update the class properties with the slicer node and node name 
-                self.slNode = slSubjectHierarchyNode.GetItemDataNode(slNodeId)
-#                 self.sNodeName = self.slNode.GetName()
-                bLoadSuccess = True
-                        
+            self.slNode = slSubjectHierarchyNode.GetItemDataNode(slNodeId)
+            bLoadSuccess = True            
             
         
         else:
@@ -1243,9 +1241,14 @@ class DicomVolumeDetail(ViewNodeBase):
         return bLoadSuccess
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetSegmentationNodes(self):
+    def GetSegmentationNodes(self, xPageNode=None):
         ''' Segmentations loaded in as DICOMs use the associated display and data nodes
             in order to set the ROI visibility. 
+            
+            Note: xPageNode is not used in this function (for node source = DICOM).
+                    This is set here as an input variable since Session calls this function
+                    to set up contour visibility. Session could be dealing with 
+                    either a DICOM or Data source.)
         '''
 
         slSegDataNode = None
