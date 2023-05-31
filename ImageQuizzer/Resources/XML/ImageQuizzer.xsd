@@ -60,6 +60,7 @@
 		<xs:attribute name="SegmentRequired" type="yesnoType" default="N"/>
 		<xs:attribute name="MinMarkupLinesRequired" type="xs:positiveInteger"/>
 		<xs:attribute name="InitialSliceOffset" type="xs:float"/>
+		<xs:attribute name="MergeLabelMapsFromRepNum" type="xs:integer" />
 	</xs:complexType>
 </xs:element>
 

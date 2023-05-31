@@ -564,7 +564,7 @@ class UtilsFilesIO:
             # check matches of LabelMapID with DisplayLabelMapID
             sValidationMsg = self.ValidateDisplayLabelMapID()
             sMsg = sMsg + sValidationMsg
-                       
+            
             # >>>>>>>>>>>>>>>
             lxPageElements = self.oIOXml.GetChildren(xRootNode, 'Page')
             
@@ -604,6 +604,10 @@ class UtilsFilesIO:
                     sMsg = sMsg + sValidationMsg
                     
                     sValidationMsg = self.ValidateOpacity(xImage, iPageNum)
+                    sMsg = sMsg + sValidationMsg
+
+                    # check merging of label maps have a matching LabelMapID Image and Loop in Page
+                    sValidationMsg = self.ValidateMergeLabelMapsFromRepNum(xImage, iPageNum)
                     sMsg = sMsg + sValidationMsg
 
                     # >>>>>>>>>>>>>>> Elements
@@ -1109,6 +1113,36 @@ class UtilsFilesIO:
         
         return sMsg
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateMergeLabelMapsFromRepNum(self, xImage, iPageNum):
+        ''' For the attribute MergeLabeMapsFromRepNum , this function makes sure of the following conditions:
+            - there is also a DisplayLabelMapID attribute on that image
+            - an historical xml image exists with a matching LabelMapID value
+            - and the image path of the historical element must match 
+        '''
+
+        sMsg = ''
+        sErrorMsgInvalidInteger = "Invalid integer number assigned to attribute: 'MergeLabelMapsFromRepNum'. See Page #: "
+        sErrorMsgNoDisplayLabelMapIDAttribute = " Image with 'MergeLabelMapsFromRepNum' attribute must also have the 'DisplayLabelMapID' attribute. See Page #: "
+        
+        sMergeLabelMapsFromRepNum = self.oIOXml.GetValueOfNodeAttribute(xImage, 'MergeLabelMapsFromRepNum')
+        if sMergeLabelMapsFromRepNum != '':
+                       
+            try:
+                int(sMergeLabelMapsFromRepNum)
+                
+                # capture the DisplayLabelMapID attribute for this image
+                sDisplayLabelMapLink = self.oIOXml.GetValueOfNodeAttribute(xImage, 'DisplayLabelMapID')
+                if sDisplayLabelMapLink == '':
+                    sMsg = sErrorMsgNoDisplayLabelMapIDAttribute + str(iPageNum)
+                
+            except ValueError:
+                # not a valid integer
+                sMsg = sErrorMsgInvalidInteger + str(iPageNum)
+        
+        
+        return sMsg
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ValidateImageToSegmentationMatch(self, xPageNode, sPageReference):
         '''
