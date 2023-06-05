@@ -165,6 +165,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_AppendElement())
         tupResults.append(self.test_InsertElementBeforeIndex())
         tupResults.append(self.test_CopyElement())
+        tupResults.append(self.test_GetXmlPageAndChildFromAttributeHistory())
         
         logic.sessionTestStatus.DisplayTestResults(tupResults)
 
@@ -753,6 +754,84 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         tupResult = self.fnName, bTestResult
         return tupResult
 
+    #-------------------------------------------
+
+    def test_GetXmlPageAndChildFromAttributeHistory(self):
+                
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = False
+        bTest1 = False
+        bTest2 = False
+        bTest3 = False
+
+        xRoot = etree.Element("Session")
+        xPage0 = etree.SubElement(xRoot,"Page", {"PageGroup":"1", "ID":"Pt1"})
+        xPage1 = etree.SubElement(xRoot,"Page", {"PageGroup":"0", "ID":"Pt2"})
+        xPage2 = etree.SubElement(xRoot,"Page", {"PageGroup":"1", "ID":"Pt3"})
+        xPage3 = etree.SubElement(xRoot,"Page", {"PageGroup":"2", "ID":"Pt4"})
+        xPage4 = etree.SubElement(xRoot,"Page", {"PageGroup":"0", "ID":"Pt5"})
+        xPage5 = etree.SubElement(xRoot,"Page", {"PageGroup":"2", "ID":"Pt6"})
+        xPage6 = etree.SubElement(xRoot,"Page", {"PageGroup":"3", "ID":"Pt7"})
+        xPage7 = etree.SubElement(xRoot,"Page", {"PageGroup":"0", "ID":"Pt8"})
+
+        
+        
+        Im00 = etree.SubElement(xPage0,'Image',  {"ID":"Im00"})
+        Im01 = etree.SubElement(xPage0,'Image',  {"ID":"Im01", "LabelMapID":"RoiX-contour"})
+        Im10 = etree.SubElement(xPage1,'Image',  {"ID":"Im10"})
+        Im11 = etree.SubElement(xPage1,'Image',  {"ID":"Im11"})
+        Im12 = etree.SubElement(xPage1,'Image',  {"ID":"Im12"})
+        Im21 = etree.SubElement(xPage2,'Image',  {"ID":"Im21"})
+        Im22 = etree.SubElement(xPage2,'Image',  {"ID":"Im22", "DisplayLabelMapID":"RoiX-contour"})
+        Im31 = etree.SubElement(xPage3,'Image',  {"ID":"Im31", "LabelMapID":"RoiY-contour"})
+        Im32 = etree.SubElement(xPage3,'Image',  {"ID":"Im32"})
+        Im41 = etree.SubElement(xPage4,'Image',  {"ID":"Im41"})
+        Im42 = etree.SubElement(xPage4,'Image',  {"ID":"Im42"})
+        Im51 = etree.SubElement(xPage5,'Image',  {"ID":"Im51"})
+        Im52 = etree.SubElement(xPage5,'Image',  {"ID":"Im52"})
+        Im61 = etree.SubElement(xPage6,'Image',  {"ID":"Im61", "DisplayLabelMapID":"RoiY-contour"})
+        Im62 = etree.SubElement(xPage6,'Image',  {"ID":"Im62"})
+
+        self.oIOXml.SetRootNode(xRoot)
+
+        
+        # Test1 - check that matching attribute is not found
+        xImageElement, xPageElement = self.oIOXml.GetXmlPageAndChildFromAttributeHistory(7, "Image","DisplayLabelMapID", "XXX")
+        if xImageElement == None and xPageElement == None:
+            bTest1 = True
+        
+        
+        # Test2 - check that matching attribute belongs to Pt1 and Im01
+        xImageElement, xPageElement = self.oIOXml.GetXmlPageAndChildFromAttributeHistory(7, "Image","LabelMapID", "RoiX-contour")
+        sImID =  self.oIOXml.GetValueOfNodeAttribute(xImageElement,"ID")
+        sPtID =  self.oIOXml.GetValueOfNodeAttribute(xPageElement,"ID")
+        if sImID == "Im01" and sPtID == "Pt1":
+            bTest2 = True
+        # print("Im ID:", sImID,  "   Pt ID:", sPtID)
+        
+        # Test3 - look for historical that doesn't fall on the first page to make sure the function breaks after the find
+        xImageElement, xPageElement = self.oIOXml.GetXmlPageAndChildFromAttributeHistory(7, "Image","LabelMapID", "RoiY-contour")
+        sImID =  self.oIOXml.GetValueOfNodeAttribute(xImageElement,"ID")
+        sPtID =  self.oIOXml.GetValueOfNodeAttribute(xPageElement,"ID")
+        if sImID == "Im31" and sPtID == "Pt4":
+            bTest3 = True
+        # print("Im ID:", sImID,  "   Pt ID:", sPtID)
+        
+               
+        # print(etree.tostring(xRoot, encoding='utf8').decode('utf8'))
+        if bTest1 & bTest2 & bTest3:
+            bTestResult = True
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #-------------------------------------------
+    
+    ### NOTE : FOR NEXT TEST - Watch for what root is being used.
+    ###        test_GetXmlPageAndChildFromAttributeHistory did a 
+    ###            self.oIOXml.SetRootNode(xRoot)
+    ###        with a different tree structure from the helper function
+    
     #-------------------------------------------
     #-------------------------------------------
         

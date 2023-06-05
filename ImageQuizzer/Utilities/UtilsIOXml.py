@@ -381,6 +381,45 @@ class UtilsIOXml:
         return iNextInd
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetXmlPageAndChildFromAttributeHistory(self, iCrrentPageIndex, sChildToSearch, sImageAttributeToMatch, sAttributeValue):
+        ''' Function will return the historical elements (page and child)  that contains the attribute requested for the search.
+            This attribute is associated with a child of the 'Page' element.
+            The search goes through the pages in reverse. 
+                For each page, the requested children are searched (forward) for the requested attribute.
+            When found, the xml child element that contains the attribute is returned as well as the parent Page element.
+        '''
+        
+        xHistoricalChildElement = None
+        xHistoricalPageElement = None
+        
+        # start searching pages in reverse order - to get most recent setting
+        # first match will end the search
+        bHistoricalElementFound = False
+        for iPageIndex in range(iCrrentPageIndex-1, -1, -1):
+            xPageNode = self.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
+        
+            if bHistoricalElementFound == False:
+                
+                if xPageNode != None:
+                    #get all requested children
+                    lxChildElementsToSearch = self.GetChildren(xPageNode, sChildToSearch)
+                    if len(lxChildElementsToSearch) > 0:
+        
+                        for xImageNode in lxChildElementsToSearch:
+                            
+                            # get image attribute
+                            sPotentialAttributeValue = self.GetValueOfNodeAttribute(xImageNode, sImageAttributeToMatch)
+                            if sPotentialAttributeValue == sAttributeValue:
+                                xHistoricalChildElement = xImageNode
+                                bHistoricalElementFound = True
+                                xHistoricalPageElement = xPageNode
+                                break
+            else:
+                break
+        
+        return xHistoricalChildElement, xHistoricalPageElement
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CopyElement(self, xElemToCopy):
         ''' Create a copy of the element that is not shared by reference to the original
         '''

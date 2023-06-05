@@ -16,8 +16,6 @@ import logging
 import time
 import traceback
 
-# import DicomRtImportExportPlugin
-# import DICOMVolumeSequencePlugin
 
 
 ##########################################################################
@@ -607,7 +605,7 @@ class UtilsFilesIO:
                     sMsg = sMsg + sValidationMsg
 
                     # check merging of label maps have a matching LabelMapID Image and Loop in Page
-                    sValidationMsg = self.ValidateMergeLabelMapsFromRepNum(xImage, iPageNum)
+                    sValidationMsg = self.ValidateMergeLabelMapsFromRepNum(xImage, xPage, iPageNum)
                     sMsg = sMsg + sValidationMsg
 
                     # >>>>>>>>>>>>>>> Elements
@@ -1054,13 +1052,14 @@ class UtilsFilesIO:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ValidateDisplayLabelMapID(self):
         ''' For all instances of DisplayLabelMapID, ensure that there is a corresponding
-            LabelMapID. This can help trap spelling mistakes. (This is not checked
+            LabelMapID. This can help trap spelling mistakes. 
+            (This is not checked
             for a 'previous instance' of LabelMapID if RandomizePageGroups attribute
-            is set to 'Y'.
+            is set to 'Y'.)
         '''
         sMsg = ''
-        l2tupDisplayLabelMapIDs = []
-        l2tupLabelMapIDs = []
+        l3tupDisplayLabelMapIDs = []
+        l3tupLabelMapIDs = []
         sRandomizeSetting = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'RandomizePageGroups')
         if sRandomizeSetting == 'Y':
             bTestForPrevious = False
@@ -1078,67 +1077,104 @@ class UtilsFilesIO:
                 xImageNode = lxImageNodes[idxImage]
                 sLabelMapID = self.oIOXml.GetValueOfNodeAttribute(xImageNode, 'LabelMapID')
                 sDisplayLabelMapID = self.oIOXml.GetValueOfNodeAttribute(xImageNode, 'DisplayLabelMapID')
+                xImagePath = self.oIOXml.GetNthChild(xImageNode, 'Path', 0)
+                sImagePath = self.oIOXml.GetDataInNode(xImagePath)
+
                 if sLabelMapID != '':
-                    l2tupLabelMapIDs.append([sLabelMapID, idxPage])
+                    l3tupLabelMapIDs.append([sLabelMapID, idxPage, sImagePath])
                 if sDisplayLabelMapID != '':
-                    l2tupDisplayLabelMapIDs.append([sDisplayLabelMapID, idxPage])
+                    l3tupDisplayLabelMapIDs.append([sDisplayLabelMapID, idxPage, sImagePath])
         
         # for every DisplayLabelMapID confirm there is a LabelMapID
         
-        for idxDisplayLabelMapID in range(len(l2tupDisplayLabelMapIDs)):
-            tupDisplayLabelMapIDItem = l2tupDisplayLabelMapIDs[idxDisplayLabelMapID]
+        for idxDisplayLabelMapID in range(len(l3tupDisplayLabelMapIDs)):
+            tupDisplayLabelMapIDItem = l3tupDisplayLabelMapIDs[idxDisplayLabelMapID]
             sDisplayLabelMapIDToSearch = tupDisplayLabelMapIDItem[0]
             iDisplayLabelMapIDPage = tupDisplayLabelMapIDItem[1]
+            sDisplayLabelMapIDPath = tupDisplayLabelMapIDItem[2]
 
             bFoundMatch = False
-            for idxLabelMapID in range(len(l2tupLabelMapIDs)):
+            for idxLabelMapID in range(len(l3tupLabelMapIDs)):
                 
                 if not bFoundMatch:
-                    tupLableMapIDItem = l2tupLabelMapIDs[idxLabelMapID]
+                    tupLableMapIDItem = l3tupLabelMapIDs[idxLabelMapID]
                     sLabelMapIDToCompare = tupLableMapIDItem[0]
                     iLabelMapIDPage = tupLableMapIDItem[1]
+                    sLabelMapIDPath = tupLableMapIDItem[2]
                     
                     if sLabelMapIDToCompare == sDisplayLabelMapIDToSearch:
                         if bTestForPrevious:
-                            if iLabelMapIDPage < iDisplayLabelMapIDPage:
+                            if (iLabelMapIDPage < iDisplayLabelMapIDPage) and (sLabelMapIDPath == sDisplayLabelMapIDPath):
                                 bFoundMatch = True
                                 break
                         else:   # randomize is set , ignore page test
                             bFoundMatch = True
             
             if not bFoundMatch:
-                sMsg = sMsg + "\nMissing 'LabelMapID' setting for 'DisplayLabelMap': "\
-                            + sDisplayLabelMapIDToSearch + '   See Page #: '\
+                sMsg = sMsg + "\nMissing historical 'LabelMapID' setting to match 'DisplayLabelMapID': " + sDisplayLabelMapIDToSearch \
+                            + " ...OR... the historical image Path for LabelMapID does not match the image Path where DisplayLabelMapID is requested."\
+                            + '\nSee Page #: '\
                             + str(iDisplayLabelMapIDPage + 1)
         
         return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateMergeLabelMapsFromRepNum(self, xImage, iPageNum):
+    def ValidateMergeLabelMapsFromRepNum(self, xImage, xPage, iPageNum):
         ''' For the attribute MergeLabeMapsFromRepNum , this function makes sure of the following conditions:
             - there is also a DisplayLabelMapID attribute on that image
-            - an historical xml image exists with a matching LabelMapID value
-            - and the image path of the historical element must match 
+            - an historical xml image exists on a page with Loop=Y and with a matching LabelMapID value
+            - the PageGroup number must match
+            - (Also, the image path of the historical element must match that of the current image -
+               This validation is already done in ValidateDisplayLabelMapID)
         '''
+        
+        sAttributeName = 'MergeLabelMapsFromRepNum'
 
         sMsg = ''
-        sErrorMsgInvalidInteger = "Invalid integer number assigned to attribute: 'MergeLabelMapsFromRepNum'. See Page #: "
-        sErrorMsgNoDisplayLabelMapIDAttribute = " Image with 'MergeLabelMapsFromRepNum' attribute must also have the 'DisplayLabelMapID' attribute. See Page #: "
+        sErrorMsgInvalidInteger = "Invalid integer number assigned to attribute: 'MergeLabelMapsFromRepNum'."
+        sErrorMsgMissingDisplayLabelMapIDAttribute = " Image with 'MergeLabelMapsFromRepNum' attribute must also have the 'DisplayLabelMapID' attribute."
+        sErrorMsgNoMatchingHistoricalLabelMapID = "There was no previous Image with a matching LabelMapID attribute."
+        sErrorMsgNoLoopOnHistoricalPage = "You requested a label map merge but the previous Image with matching LabelMapID was not on a Page with attribute Loop='Y'. No 'Merge' can be done."
+        sErrorMsgNoMatchingPageGroups = "You requested a label map merge but the PageGroup numbers do not match with this page and the previous page with the matching LabelMapID."
         
-        sMergeLabelMapsFromRepNum = self.oIOXml.GetValueOfNodeAttribute(xImage, 'MergeLabelMapsFromRepNum')
+        sMergeLabelMapsFromRepNum = self.oIOXml.GetValueOfNodeAttribute(xImage, sAttributeName)
         if sMergeLabelMapsFromRepNum != '':
                        
             try:
                 int(sMergeLabelMapsFromRepNum)
                 
                 # capture the DisplayLabelMapID attribute for this image
-                sDisplayLabelMapLink = self.oIOXml.GetValueOfNodeAttribute(xImage, 'DisplayLabelMapID')
-                if sDisplayLabelMapLink == '':
-                    sMsg = sErrorMsgNoDisplayLabelMapIDAttribute + str(iPageNum)
+                sLabelMapIDLink = self.oIOXml.GetValueOfNodeAttribute(xImage, 'DisplayLabelMapID')
+
+                if sLabelMapIDLink == '':
+                    # missing attribute
+                    raise Exception(sErrorMsgMissingDisplayLabelMapIDAttribute)
+
+                # look for historical LabelMapID match
+                xHistoricalImageElement, xHistoricalPageElement = self.oIOXml.GetXmlPageAndChildFromAttributeHistory(iPageNum-1, 'Image','LabelMapID',sLabelMapIDLink)
+                if xHistoricalImageElement == None:
+                    raise Exception(sErrorMsgNoMatchingHistoricalLabelMapID)
+                
+                # look for Loop=Y on historical page
+                if self.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'Loop') != "Y":
+                    raise Exception(sErrorMsgNoLoopOnHistoricalPage)
+
+                # look for matching PageGroup number (these might be empty strings)
+                sPageGroupNumToMatch = self.oIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup')
+                sHistoricalPageGroupNum = self.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'PageGroup')
+                
+                if sPageGroupNumToMatch != sHistoricalPageGroupNum:
+                    raise Exception(sErrorMsgNoMatchingPageGroups)
+                
+                
                 
             except ValueError:
                 # not a valid integer
-                sMsg = sErrorMsgInvalidInteger + str(iPageNum)
+                sMsg = sErrorMsgInvalidInteger + '\nSee Page #: ' + str(iPageNum) + ' for attribute: ' + sAttributeName + '\n'
+                
+            except Exception as error:
+                sMsg = str(error) + '\nSee Page #: ' + str(iPageNum) + ' for attribute: ' + sAttributeName + '\n'
+                
         
         
         return sMsg
@@ -1447,7 +1483,8 @@ class UtilsFilesIO:
                     # get image element from history that holds the same label map id; 
                     xHistoricalImageElement = None  # initialize
                     xHistoricalLabelMapMatch = None
-                    xHistoricalImageElement = oSession.GetXmlElementFromAttributeHistory('Image','LabelMapID',sLabelMapIDLink)
+                    # xHistoricalImageElement = oSession.GetXmlElementFromAttributeHistory('Image','LabelMapID',sLabelMapIDLink)
+                    xHistoricalImageElement, xHistoricalPageElement = oSession.oIOXml.GetXmlPageAndChildFromAttributeHistory(oSession.GetCurrentPageIndex(),'Image','LabelMapID',sLabelMapIDLink)
                     if xHistoricalImageElement != None:
                         xHistoricalLabelMapMatch = oSession.oIOXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')
                     

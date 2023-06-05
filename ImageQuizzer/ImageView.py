@@ -1123,8 +1123,8 @@ class DicomVolumeDetail(ViewNodeBase):
                 
                 # access the referenced volume series instance UID that the contours are associated with
                 if self.sImageType == 'RTStruct':
-                    dcmReferencedFrameOfRefenceSequence = dcmDataset.ReferencedFrameOfReferenceSequence[0]
-                    dcmRTReferencedStudySequence = dcmReferencedFrameOfRefenceSequence.RTReferencedStudySequence[0]
+                    dcmReferencedFrameOfReferenceSequence = dcmDataset.ReferencedFrameOfReferenceSequence[0]
+                    dcmRTReferencedStudySequence = dcmReferencedFrameOfReferenceSequence.RTReferencedStudySequence[0]
                     dcmRTReferencedSeriesSequence = dcmRTReferencedStudySequence.RTReferencedSeriesSequence[0]
                     
                     self.sVolumeReferenceSeriesUID = dcmRTReferencedSeriesSequence.SeriesInstanceUID
