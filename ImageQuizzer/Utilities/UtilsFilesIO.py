@@ -605,7 +605,7 @@ class UtilsFilesIO:
                     sMsg = sMsg + sValidationMsg
 
                     # check merging of label maps have a matching LabelMapID Image and Loop in Page
-                    sValidationMsg = self.ValidateMergeLabelMapsFromRepNum(xImage, xPage, iPageNum)
+                    sValidationMsg = self.ValidateMergeLabelMaps(xImage, xPage, iPageNum)
                     sMsg = sMsg + sValidationMsg
 
                     # >>>>>>>>>>>>>>> Elements
@@ -1119,8 +1119,8 @@ class UtilsFilesIO:
         return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateMergeLabelMapsFromRepNum(self, xImage, xPage, iPageNum):
-        ''' For the attribute MergeLabeMapsFromRepNum , this function makes sure of the following conditions:
+    def ValidateMergeLabelMaps(self, xImage, xPage, iPageNum):
+        ''' For the attribute MergeLabeMaps , this function makes sure of the following conditions:
             - there is also a DisplayLabelMapID attribute on that image
             - an historical xml image exists on a page with Loop=Y and with a matching LabelMapID value
             - the PageGroup number must match
@@ -1128,20 +1128,19 @@ class UtilsFilesIO:
                This validation is already done in ValidateDisplayLabelMapID)
         '''
         
-        sAttributeName = 'MergeLabelMapsFromRepNum'
+        sAttributeName = 'MergeLabelMaps'
 
         sMsg = ''
-        sErrorMsgInvalidInteger = "Invalid integer number assigned to attribute: 'MergeLabelMapsFromRepNum'."
-        sErrorMsgMissingDisplayLabelMapIDAttribute = " Image with 'MergeLabelMapsFromRepNum' attribute must also have the 'DisplayLabelMapID' attribute."
-        sErrorMsgNoMatchingHistoricalLabelMapID = "There was no previous Image with a matching LabelMapID attribute."
-        sErrorMsgNoLoopOnHistoricalPage = "You requested a label map merge but the previous Image with matching LabelMapID was not on a Page with attribute Loop='Y'. No 'Merge' can be done."
-        sErrorMsgNoMatchingPageGroups = "You requested a label map merge but the PageGroup numbers do not match with this page and the previous page with the matching LabelMapID."
+        sErrorMsgInvalidOption = "\nInvalid option - must be 'Y' or 'N'"
+        sErrorMsgMissingDisplayLabelMapIDAttribute = "\nImage with 'MergeLabelMaps' attribute must also have the 'DisplayLabelMapID' attribute."
+        sErrorMsgNoMatchingHistoricalLabelMapID = "\nThere was no previous Image with a LabelMapID attribute to match the ID in 'DisplayLabelMapID'."
+        sErrorMsgNoLoopOnHistoricalPage = "\nYou requested a label map merge but the previous Image with matching LabelMapID was not on a Page with attribute Loop='Y'. No merge can be done."
+        sErrorMsgNoMatchingPageGroups = "\nYou requested a label map merge but the PageGroup numbers of this page do not match with the previous page that has the matching LabelMapID."
         
-        sMergeLabelMapsFromRepNum = self.oIOXml.GetValueOfNodeAttribute(xImage, sAttributeName)
-        if sMergeLabelMapsFromRepNum != '':
-                       
+        sMergeLabelMaps = self.oIOXml.GetValueOfNodeAttribute(xImage, sAttributeName)
+
+        if sMergeLabelMaps == "Y":                       
             try:
-                int(sMergeLabelMapsFromRepNum)
                 
                 # capture the DisplayLabelMapID attribute for this image
                 sLabelMapIDLink = self.oIOXml.GetValueOfNodeAttribute(xImage, 'DisplayLabelMapID')
@@ -1151,7 +1150,8 @@ class UtilsFilesIO:
                     raise Exception(sErrorMsgMissingDisplayLabelMapIDAttribute)
 
                 # look for historical LabelMapID match
-                xHistoricalImageElement, xHistoricalPageElement = self.oIOXml.GetXmlPageAndChildFromAttributeHistory(iPageNum-1, 'Image','LabelMapID',sLabelMapIDLink)
+                iPageIndex = iPageNum - 2  # start on previous page (-1) plus use 0 based indexing (-1)
+                xHistoricalImageElement, xHistoricalPageElement = self.oIOXml.GetXmlPageAndChildFromAttributeHistory(iPageIndex, 'Image','LabelMapID',sLabelMapIDLink)
                 if xHistoricalImageElement == None:
                     raise Exception(sErrorMsgNoMatchingHistoricalLabelMapID)
                 
@@ -1167,15 +1167,14 @@ class UtilsFilesIO:
                     raise Exception(sErrorMsgNoMatchingPageGroups)
                 
                 
-                
-            except ValueError:
-                # not a valid integer
-                sMsg = sErrorMsgInvalidInteger + '\nSee Page #: ' + str(iPageNum) + ' for attribute: ' + sAttributeName + '\n'
-                
             except Exception as error:
                 sMsg = str(error) + '\nSee Page #: ' + str(iPageNum) + ' for attribute: ' + sAttributeName + '\n'
+         
+        else:       
+            if (sMergeLabelMaps == '' or sMergeLabelMaps == 'N') == False:
+                # not a valid option
+                sMsg = sErrorMsgInvalidOption + '\nSee Page #: ' + str(iPageNum) + ' for attribute: ' + sAttributeName + '\n'
                 
-        
         
         return sMsg
     

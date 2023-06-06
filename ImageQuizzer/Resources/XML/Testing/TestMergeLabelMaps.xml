@@ -78,7 +78,7 @@
 			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\ProstateDCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y" LabelMapID="ADC-contour" MergeLabelMapsFromRepNum='0' DisplayLabelMapID='ADC-contour'>
+		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y" LabelMapID="ADC-contour" MergeLabelMaps='Y' DisplayLabelMapID='ADC-contour'>
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
