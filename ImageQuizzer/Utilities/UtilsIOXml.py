@@ -420,6 +420,54 @@ class UtilsIOXml:
         return xHistoricalChildElement, xHistoricalPageElement
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetXmlPagesFromAttributeHistory(self, iCrrentPageIndex, sChildToSearch, dictPageAttrib, sIgnoreSubstring=''):
+        ''' Function to get a list of page elements that match the list of attributes 
+            ignoring the substring provided (which can be null).
+        '''
+        
+#         for attrib, value in dictAttrib.items():
+#             xNode.set(attrib, value)
+         
+#             dictAttribs = xNode.attrib
+#             sAttributeValue = dictAttribs[sAttributeName]
+
+#         lNames = list(xNode.attrib.keys())
+#         lValues = list(xNode.attrib.values())
+# 
+#         for index in range(len(xNode.attrib)):
+#             name = lNames[index]
+#             value = lValues[index]
+#             tupAttribute = name, value
+#             listOfAttributes.append(tupAttribute)
+
+
+        
+        lxHistoricalPages = []
+        
+        for iPageIndex in range(iCrrentPageIndex-1, -1, -1):
+            xPageNode = self.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
+            
+            # get values of attributes to get a match
+            for attrib, value in dictPageAttrib.items():
+                sPotentialPageValue = self.GetValueOfNodeAttribute(xPageNode, attrib)
+                if sPotentialPageValue == value:
+                    bPageMatch = True
+                else:
+                    bPageMatch = False
+
+            if bPageMatch:
+                lxHistoricalPages.append(xPageNode)
+        
+        
+        
+        return lxHistoricalPages
+        
+        
+        
+        
+        
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CopyElement(self, xElemToCopy):
         ''' Create a copy of the element that is not shared by reference to the original
         '''

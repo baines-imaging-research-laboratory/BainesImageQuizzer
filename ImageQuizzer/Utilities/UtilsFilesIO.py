@@ -1150,7 +1150,7 @@ class UtilsFilesIO:
                     raise Exception(sErrorMsgMissingDisplayLabelMapIDAttribute)
 
                 # look for historical LabelMapID match
-                iPageIndex = iPageNum - 2  # start on previous page (-1) plus use 0 based indexing (-1)
+                iPageIndex = iPageNum - 1  # zero indexing for current page
                 xHistoricalImageElement, xHistoricalPageElement = self.oIOXml.GetXmlPageAndChildFromAttributeHistory(iPageIndex, 'Image','LabelMapID',sLabelMapIDLink)
                 if xHistoricalImageElement == None:
                     raise Exception(sErrorMsgNoMatchingHistoricalLabelMapID)
@@ -1484,16 +1484,24 @@ class UtilsFilesIO:
                     xHistoricalLabelMapMatch = None
                     # xHistoricalImageElement = oSession.GetXmlElementFromAttributeHistory('Image','LabelMapID',sLabelMapIDLink)
                     xHistoricalImageElement, xHistoricalPageElement = oSession.oIOXml.GetXmlPageAndChildFromAttributeHistory(oSession.GetCurrentPageIndex(),'Image','LabelMapID',sLabelMapIDLink)
-                    if xHistoricalImageElement != None:
-                        xHistoricalLabelMapMatch = oSession.oIOXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')
-                    
-                    if xHistoricalLabelMapMatch != None:
-                        # found a label map for this image in history
-                        # copy to disk and store it in xml for the current image
-                        self.CopyAndStoreLabelMapFromHistory(oSession, xHistoricalLabelMapMatch, oImageNode)
 
-                        #    assign newly stored xml element to xLabelMapPathElement
-                        xLabelMapPathElement = oSession.oIOXml.GetLatestChildElement( oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                    if oImageNode.bMergeLabelMaps:
+                        # combine label maps and store on disk
+                        xLabelMapPathElement = self.MergeLabelMapsAndSave(oSession, oImageNode, xHistoricalImageElement, xHistoricalPageElement)
+                        
+                        
+                    else:
+                        # load single label map
+                        if xHistoricalImageElement != None:
+                            xHistoricalLabelMapMatch = oSession.oIOXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')
+                        
+                        if xHistoricalLabelMapMatch != None:
+                            # found a label map for this image in history
+                            # copy to disk and store it in xml for the current image
+                            self.CopyAndStoreLabelMapFromHistory(oSession, xHistoricalLabelMapMatch, oImageNode)
+    
+                            #    assign newly stored xml element to xLabelMapPathElement
+                            xLabelMapPathElement = oSession.oIOXml.GetLatestChildElement( oImageNode.GetXmlImageElement(), 'LabelMapPath')
                     
                 
                 # load labelmap file from stored path in XML                
@@ -1579,6 +1587,35 @@ class UtilsFilesIO:
         oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(), self.GetRelativeUserPath(sLabelMapPathForDest))
 
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def MergeLabelMapsAndSave(self, oSession, oImageNode, xHistoricalImageElement, xHistoricalPageElement):
+        ''' This function will search for all Pages with the same 'base' name as the historical page that
+            was found to have the matching LabelMapID for the DisplayLabelMapID.
+            The base name is the Page name without the '-Rep#'.
+            From these pages, collect the LabelMapPath values for the Images with the matching LabelMapID
+            and merge these.
+            The merged label map is then saved to disk and the current ImageElement is updated with a new LabelMapPath element. 
+        '''
+        
+        xLabelMapPathElement = None
+        
+        print('Merge and save label maps here')
+        
+        # search for all previous Pages with the base name (ID without -Rep along with Descriptor
+        liMatchingPageIndices = []
+        sPageIDToSearch = self.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'ID')
+        sPageDescriptorToSearch = self.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'Descriptor')
+        
+#         for xPageNode in len(iNumPages)
+        
+        
+        # collect label map paths
+        # combine labels
+        # save new labelmap to disk
+        
+        
+        return xLabelMapPathElement
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
     #-------------------------------------------

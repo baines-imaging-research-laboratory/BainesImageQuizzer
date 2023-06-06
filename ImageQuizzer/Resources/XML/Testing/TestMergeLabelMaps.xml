@@ -36,13 +36,6 @@
 				<Option>Intro QS1 Test 3</Option>
 			</Question>
 		</QuestionSet>
-		<QuestionSet ID="PI-RADS" Descriptor="Second QSet Test">
-			<Question Type="CheckBox" Descriptor="Testing">
-				<Option>Intro QS2 Test 1</Option>
-				<Option>Intro QS2 Test 2</Option>
-				<Option>Intro QS2 Test 3</Option>
-			</Question>
-		</QuestionSet>
 	</Page>
 	<Page ID="IGPC2026" Descriptor="Loop_1QS" LinkViews="Y" EnableSegmentEditor="Y" Loop="Y">
 		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" LabelMapID="DCE-contour">

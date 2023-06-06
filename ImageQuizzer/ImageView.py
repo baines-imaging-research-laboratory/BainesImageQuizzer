@@ -575,6 +575,8 @@ class ViewNodeBase:
         self.lsRoiList = []
         self.sRoiVisibilityCode = ''
         
+        self.bMergeLabelMaps = False
+        
         
         self.RunSetup()
         
@@ -664,6 +666,13 @@ class ViewNodeBase:
             self.fInitialSliceOffset = None
             
         self.sNodeName =  self.GetPageID() + '_' + sImageID
+        
+        
+        sMergeLabelMaps = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'MergeLabelMaps')
+        if sMergeLabelMaps == 'Y':
+            self.bMergeLabelMaps = True
+        else:
+            self.bMergeLabelMaps = False
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractXMLNodeElements(self, sParentDataDir):
