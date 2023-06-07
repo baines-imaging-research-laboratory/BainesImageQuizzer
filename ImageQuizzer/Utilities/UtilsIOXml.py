@@ -421,33 +421,16 @@ class UtilsIOXml:
         return xHistoricalChildElement, xHistoricalPageElement
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetXmlPagesFromAttributeHistory(self, xRootNode, iCrrentPageIndex, dictPageAttrib, reIgnoreSubstring=''):
-        ''' Function to get a list of page elements that match the list of attributes 
+    def GetMatchingXmlPagesFromAttributeHistory(self, iCurrentPageIndex, dictPageAttrib, reIgnoreSubstring=''):
+        ''' Function to get a list of previous page elements that match the list of attributes 
             ignoring the substring defined as a regular expression (which can be null).
         '''
-        
-#         for attrib, value in dictAttrib.items():
-#             xNode.set(attrib, value)
-         
-#             dictAttribs = xNode.attrib
-#             sAttributeValue = dictAttribs[sAttributeName]
-
-#         lNames = list(xNode.attrib.keys())
-#         lValues = list(xNode.attrib.values())
-# 
-#         for index in range(len(xNode.attrib)):
-#             name = lNames[index]
-#             value = lValues[index]
-#             tupAttribute = name, value
-#             listOfAttributes.append(tupAttribute)
-
-
         
         lxHistoricalPages = []
         bAttribMatch = True
         
-        for iPageIndex in range(iCrrentPageIndex-1, -1, -1):
-            xPageNode = self.GetNthChild(xRootNode, 'Page', iPageIndex)
+        for iPageIndex in range( iCurrentPageIndex -1, -1, -1):
+            xPageNode = self.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
             
             bAttribMatch = True # initialize for next page
 
@@ -459,7 +442,7 @@ class UtilsIOXml:
                     
                     # remove ignore string
                     sPotentialPageValue = re.sub(reIgnoreSubstring,'',sStoredPageValue)
-                    
+
                     if sPotentialPageValue == sValueToMatch:
                         bAttribMatch = True
                     else:
@@ -471,9 +454,6 @@ class UtilsIOXml:
         
         
         return lxHistoricalPages
-        
-        
-        
         
         
         

@@ -7,6 +7,7 @@ from Utilities.UtilsMsgs import *
 
 from shutil import copyfile
 import shutil
+import re    # for regex re.sub
 
 from datetime import datetime
 import DICOMLib
@@ -1121,6 +1122,7 @@ class UtilsFilesIO:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ValidateMergeLabelMaps(self, xImage, xPage, iPageNum):
         ''' For the attribute MergeLabeMaps , this function makes sure of the following conditions:
+            - EnableSegmentEditor attribute must be turned off (no contouring on a merge display page)
             - there is also a DisplayLabelMapID attribute on that image
             - an historical xml image exists on a page with Loop=Y and with a matching LabelMapID value
             - the PageGroup number must match
@@ -1131,6 +1133,9 @@ class UtilsFilesIO:
         sAttributeName = 'MergeLabelMaps'
 
         sMsg = ''
+        sErrorMsgSegmentEditorNotAllowed = "\n There can be no segmenting on a Page with the 'MergeLabelMaps' attribute"\
+                        +"\n Set page attribute EnableSegmentEditor='N' ."
+        sErrorMsgAttributeNotAllowed = "\n LabelMapID attribute cannot be used on an image with the MergeLabelMaps attribute."
         sErrorMsgInvalidOption = "\nInvalid option - must be 'Y' or 'N'"
         sErrorMsgMissingDisplayLabelMapIDAttribute = "\nImage with 'MergeLabelMaps' attribute must also have the 'DisplayLabelMapID' attribute."
         sErrorMsgNoMatchingHistoricalLabelMapID = "\nThere was no previous Image with a LabelMapID attribute to match the ID in 'DisplayLabelMapID'."
@@ -1148,6 +1153,15 @@ class UtilsFilesIO:
                 if sLabelMapIDLink == '':
                     # missing attribute
                     raise Exception(sErrorMsgMissingDisplayLabelMapIDAttribute)
+                
+                
+                sNewLabelMapID = self.oIOXml.GetValueOfNodeAttribute(xImage, 'LabelMapID')
+                if sNewLabelMapID != '':
+                    raise Exception(sErrorMsgAttributeNotAllowed)
+                
+                sEnableSegmentEditor = self.oIOXml.GetValueOfNodeAttribute(xPage, 'EnableSegmentEditor')
+                if sEnableSegmentEditor == 'Y':
+                    raise Exception(sErrorMsgSegmentEditorNotAllowed)
 
                 # look for historical LabelMapID match
                 iPageIndex = iPageNum - 1  # zero indexing for current page
@@ -1600,7 +1614,6 @@ class UtilsFilesIO:
         xLabelMapPathElement = None
         
         # Search for all previous Pages that match PageID_Descriptor (without the -Rep## substring)
-        liMatchingPageIndices = []
         sPageIDToSearch = oSession.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'ID')
                     # remove ignore string
         reIgnoreSubstring= '-Rep[0-9]+'  # remove -Rep with any number of digits following
@@ -1612,17 +1625,21 @@ class UtilsFilesIO:
         dictAttribToMatch['Descriptor'] = sPageDescriptorToSearch
         
         lMatchingPageNodes = []
-        lMatchingPageNodes = oSession.oIOXml.GetXmlPagesFromAttributeHistory(oSession.oIOXml.GetRootNode(), oSession.GetCurrentPageIndex(), dictAttribToMatch, reIgnoreSubstring)
         
+        lMatchingPageNodes = oSession.oIOXml.GetMatchingXmlPagesFromAttributeHistory(oSession.GetCurrentPageIndex(), dictAttribToMatch, reIgnoreSubstring)
         # collect label map paths
         for xPageNode in lMatchingPageNodes:
             
             lxImageElements = oSession.oIOXml.GetChildren(xPageNode, 'Image')
             for xImage in lxImageElements:
-                sLabelMapPath = oSession.oIOXml.GetDataInNode('LabelMapPath')
-                print(sLabelMapPath)
+                lxLabelMapPath = self.oIOXml.GetChildren(xImage, 'LabelMapPath')
+                for xPath in lxLabelMapPath:
+                    sLabelMapPath = oSession.oIOXml.GetDataInNode(xPath)
+                    print(sLabelMapPath)
         
         # combine labels
+        
+        
         # save new labelmap to disk
         
         
