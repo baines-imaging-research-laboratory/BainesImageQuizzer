@@ -4,6 +4,7 @@ import os, sys
 
 import xml.dom.minidom
 import shutil
+import re
 
 from datetime import datetime
 
@@ -420,9 +421,9 @@ class UtilsIOXml:
         return xHistoricalChildElement, xHistoricalPageElement
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetXmlPagesFromAttributeHistory(self, iCrrentPageIndex, sChildToSearch, dictPageAttrib, sIgnoreSubstring=''):
+    def GetXmlPagesFromAttributeHistory(self, xRootNode, iCrrentPageIndex, dictPageAttrib, reIgnoreSubstring=''):
         ''' Function to get a list of page elements that match the list of attributes 
-            ignoring the substring provided (which can be null).
+            ignoring the substring defined as a regular expression (which can be null).
         '''
         
 #         for attrib, value in dictAttrib.items():
@@ -443,19 +444,28 @@ class UtilsIOXml:
 
         
         lxHistoricalPages = []
+        bAttribMatch = True
         
         for iPageIndex in range(iCrrentPageIndex-1, -1, -1):
-            xPageNode = self.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
+            xPageNode = self.GetNthChild(xRootNode, 'Page', iPageIndex)
             
-            # get values of attributes to get a match
-            for attrib, value in dictPageAttrib.items():
-                sPotentialPageValue = self.GetValueOfNodeAttribute(xPageNode, attrib)
-                if sPotentialPageValue == value:
-                    bPageMatch = True
-                else:
-                    bPageMatch = False
+            bAttribMatch = True # initialize for next page
 
-            if bPageMatch:
+            # get values of attributes to get a match
+            for attrib, sValueToMatch in dictPageAttrib.items():
+                if bAttribMatch: # stop if any of the attributes don't match
+                    
+                    sStoredPageValue = self.GetValueOfNodeAttribute(xPageNode, attrib)
+                    
+                    # remove ignore string
+                    sPotentialPageValue = re.sub(reIgnoreSubstring,'',sStoredPageValue)
+                    
+                    if sPotentialPageValue == sValueToMatch:
+                        bAttribMatch = True
+                    else:
+                        bAttribMatch = False
+
+            if bAttribMatch:
                 lxHistoricalPages.append(xPageNode)
         
         

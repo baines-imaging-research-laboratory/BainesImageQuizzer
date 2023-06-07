@@ -1591,7 +1591,7 @@ class UtilsFilesIO:
     def MergeLabelMapsAndSave(self, oSession, oImageNode, xHistoricalImageElement, xHistoricalPageElement):
         ''' This function will search for all Pages with the same 'base' name as the historical page that
             was found to have the matching LabelMapID for the DisplayLabelMapID.
-            The base name is the Page name without the '-Rep#'.
+            The base name is the PageID_Descriptor without the '-Rep##'.
             From these pages, collect the LabelMapPath values for the Images with the matching LabelMapID
             and merge these.
             The merged label map is then saved to disk and the current ImageElement is updated with a new LabelMapPath element. 
@@ -1599,17 +1599,29 @@ class UtilsFilesIO:
         
         xLabelMapPathElement = None
         
-        print('Merge and save label maps here')
-        
-        # search for all previous Pages with the base name (ID without -Rep along with Descriptor
+        # Search for all previous Pages that match PageID_Descriptor (without the -Rep## substring)
         liMatchingPageIndices = []
-        sPageIDToSearch = self.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'ID')
-        sPageDescriptorToSearch = self.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'Descriptor')
+        sPageIDToSearch = oSession.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'ID')
+                    # remove ignore string
+        reIgnoreSubstring= '-Rep[0-9]+'  # remove -Rep with any number of digits following
+        sPageIDToSearchStripped = re.sub(reIgnoreSubstring,'',sPageIDToSearch)
+        sPageDescriptorToSearch = oSession.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'Descriptor')
+
+        dictAttribToMatch = {}
+        dictAttribToMatch['ID'] = sPageIDToSearchStripped
+        dictAttribToMatch['Descriptor'] = sPageDescriptorToSearch
         
-#         for xPageNode in len(iNumPages)
-        
+        lMatchingPageNodes = []
+        lMatchingPageNodes = oSession.oIOXml.GetXmlPagesFromAttributeHistory(oSession.oIOXml.GetRootNode(), oSession.GetCurrentPageIndex(), dictAttribToMatch, reIgnoreSubstring)
         
         # collect label map paths
+        for xPageNode in lMatchingPageNodes:
+            
+            lxImageElements = oSession.oIOXml.GetChildren(xPageNode, 'Image')
+            for xImage in lxImageElements:
+                sLabelMapPath = oSession.oIOXml.GetDataInNode('LabelMapPath')
+                print(sLabelMapPath)
+        
         # combine labels
         # save new labelmap to disk
         
