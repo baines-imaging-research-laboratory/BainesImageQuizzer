@@ -8,6 +8,8 @@ from Utilities.UtilsMsgs import *
 from shutil import copyfile
 import shutil
 import re    # for regex re.sub
+import SimpleITK as sitk
+
 
 from datetime import datetime
 import DICOMLib
@@ -1133,8 +1135,8 @@ class UtilsFilesIO:
         sAttributeName = 'MergeLabelMaps'
 
         sMsg = ''
-        sErrorMsgSegmentEditorNotAllowed = "\n There can be no segmenting on a Page with the 'MergeLabelMaps' attribute"\
-                        +"\n Set page attribute EnableSegmentEditor='N' ."
+        sErrorMsgSegmentingNotAllowed = "\n There can be no segmenting on a Page with the 'MergeLabelMaps' attribute"\
+                        +"\nThis includes EnableSegmentEditor, SegmentRequired and SegmentRequiredOnAnyImage."
         sErrorMsgAttributeNotAllowed = "\n LabelMapID attribute cannot be used on an image with the MergeLabelMaps attribute."
         sErrorMsgInvalidOption = "\nInvalid option - must be 'Y' or 'N'"
         sErrorMsgMissingDisplayLabelMapIDAttribute = "\nImage with 'MergeLabelMaps' attribute must also have the 'DisplayLabelMapID' attribute."
@@ -1159,9 +1161,11 @@ class UtilsFilesIO:
                 if sNewLabelMapID != '':
                     raise Exception(sErrorMsgAttributeNotAllowed)
                 
-                sEnableSegmentEditor = self.oIOXml.GetValueOfNodeAttribute(xPage, 'EnableSegmentEditor')
-                if sEnableSegmentEditor == 'Y':
-                    raise Exception(sErrorMsgSegmentEditorNotAllowed)
+                
+                if self.oIOXml.GetValueOfNodeAttribute(xPage, 'EnableSegmentEditor') == 'Y' or\
+                    self.oIOXml.GetValueOfNodeAttribute(xPage, 'SegmentRequiredOnAnyImage') == 'Y' or\
+                    self.oIOXml.GetValueOfNodeAttribute(xImage, 'SegmentRequired') == 'Y' :
+                    raise Exception(sErrorMsgSegmentingNotAllowed)
 
                 # look for historical LabelMapID match
                 iPageIndex = iPageNum - 1  # zero indexing for current page
@@ -1612,6 +1616,7 @@ class UtilsFilesIO:
         '''
         
         xLabelMapPathElement = None
+        lsLabelMapFullPaths = []
         
         # Search for all previous Pages that match PageID_Descriptor (without the -Rep## substring)
         sPageIDToSearch = oSession.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'ID')
@@ -1635,12 +1640,31 @@ class UtilsFilesIO:
                 lxLabelMapPath = self.oIOXml.GetChildren(xImage, 'LabelMapPath')
                 for xPath in lxLabelMapPath:
                     sLabelMapPath = oSession.oIOXml.GetDataInNode(xPath)
-                    print(sLabelMapPath)
+                    sLabelMapFullPath = os.path.join(oSession.oFilesIO.GetUserDir(), sLabelMapPath)
+                    lsLabelMapFullPaths.append(sLabelMapFullPath)
         
         # combine labels
         
+        litkAllLabelImages = []
+        for sPath in lsLabelMapFullPaths:
+            print(sPath)
+            itkLabelImage = sitk.ReadImage(sPath)
+            litkAllLabelImages.append(itkLabelImage)
+            
+        if len(litkAllLabelImages) > 0:
+            combined_labels = litkAllLabelImages[0] # initialize for size, spacing, orientation
+            
+            for i, label in enumerate(litkAllLabelImages, start=1):
+                combined_labels += label
+                
         
         # save new labelmap to disk
+        sDirName = self.GetFolderNameForPageResults(oSession)
+        sPageLabelMapDir = self.CreatePageDir(sDirName)
+        # sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
+        sLabelMapFilenameWithExt = 'Test-merged' + '.nrrd'
+        sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
+        sitk.WriteImage(combined_labels,sLabelMapPath)
         
         
         return xLabelMapPathElement

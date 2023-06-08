@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-
 <Session ROIColorFile="PiRadsStudy">
 	<Page ID="IGPC2026" Descriptor="NoLooping" LinkViews="Y" EnableSegmentEditor="Y">
 		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" LabelMapID="DCE-contour">
@@ -64,14 +62,14 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="IGPC2026" Descriptor="Loop_2QS" LinkViews="Y" EnableSegmentEditor="Y" Loop="Y">
+	<Page ID="IGPC2026" Descriptor="Loop_2QS" LinkViews="Y" Loop="Y">
 		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" LabelMapID="DCE-contour">
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\ProstateDCE\3D DCE AX FSPGR FS T1 POST 15FLIP - as a 60 frames MultiVolume by TriggerTime.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y" LabelMapID="ADC-contour" MergeLabelMaps='Y' DisplayLabelMapID='ADC-contour'>
+		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y" MergeLabelMaps='Y' DisplayLabelMapID='ADC-contour'>
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
