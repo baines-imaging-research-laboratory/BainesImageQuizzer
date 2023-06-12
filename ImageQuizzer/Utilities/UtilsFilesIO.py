@@ -1652,20 +1652,50 @@ class UtilsFilesIO:
             litkAllLabelImages.append(itkLabelImage)
             
         if len(litkAllLabelImages) > 0:
-            combined_labels = litkAllLabelImages[0] # initialize for size, spacing, orientation
+#             combined_labels = litkAllLabelImages[0] # initialize for size, spacing, orientation
+            imCombined_labels = sitk.Image(litkAllLabelImages[0].GetSize(),litkAllLabelImages[0].GetPixelID())
+            imCombined_labels.SetOrigin(litkAllLabelImages[0].GetOrigin())
+            imCombined_labels.SetDirection(litkAllLabelImages[0].GetDirection())
+            imCombined_labels.SetSpacing(litkAllLabelImages[0].GetSpacing())
             
-            for i, label in enumerate(litkAllLabelImages, start=1):
-                combined_labels += label
-                
+
+            
+#             for i, label in enumerate(litkAllLabelImages, start=1):
+#                 imCombined_labels += label
+# #                 if imCombined_labels < label:
+# #                     imCombined_labels = label
+
+
+ 
+            # this method is slower than just enumerating and adding up the labels
+            #    this allows us to store the higher numbered label if there is a clash
+            iImageSize = imCombined_labels.GetSize()
+            for image in litkAllLabelImages:
+                for z in range(iImageSize[2]):
+                    for y in range(iImageSize[1]):
+                        for x in range(iImageSize[0]):
+                            if image.GetPixel(x,y,z) > imCombined_labels.GetPixel(x,y,z):
+                                imCombined_labels.SetPixel(x,y,z, image.GetPixel(x,y,z))
+                            
         
         # save new labelmap to disk
         sDirName = self.GetFolderNameForPageResults(oSession)
         sPageLabelMapDir = self.CreatePageDir(sDirName)
         # sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
-        sLabelMapFilenameWithExt = 'Test-merged' + '.nrrd'
-        sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
-        sitk.WriteImage(combined_labels,sLabelMapPath)
+#         sLabelMapFilenameWithExt = 'Test-merged' + '.nrrd'
+
+        sLabelMapFilenameWithExt = oImageNode.sNodeName + '-bainesquizlabel.nrrd'
         
+        
+        sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
+        sitk.WriteImage(imCombined_labels,sLabelMapPath)
+
+
+        # update xml storing the path to the label map file with the image element
+        #    for display on the next page
+        oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(), self.GetRelativeUserPath(sLabelMapPath))
+        oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
+        xLabelMapPathElement = oSession.oIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
         
         return xLabelMapPathElement
         
