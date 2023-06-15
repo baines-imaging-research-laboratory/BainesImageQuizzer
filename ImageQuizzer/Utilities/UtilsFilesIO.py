@@ -9,7 +9,7 @@ from shutil import copyfile
 import shutil
 import re    # for regex re.sub
 import SimpleITK as sitk
-
+import numpy as np
 
 from datetime import datetime
 import DICOMLib
@@ -1137,7 +1137,6 @@ class UtilsFilesIO:
         sMsg = ''
         sErrorMsgSegmentingNotAllowed = "\n There can be no segmenting on a Page with the 'MergeLabelMaps' attribute"\
                         +"\nThis includes EnableSegmentEditor, SegmentRequired and SegmentRequiredOnAnyImage."
-        sErrorMsgAttributeNotAllowed = "\n LabelMapID attribute cannot be used on an image with the MergeLabelMaps attribute."
         sErrorMsgInvalidOption = "\nInvalid option - must be 'Y' or 'N'"
         sErrorMsgMissingDisplayLabelMapIDAttribute = "\nImage with 'MergeLabelMaps' attribute must also have the 'DisplayLabelMapID' attribute."
         sErrorMsgNoMatchingHistoricalLabelMapID = "\nThere was no previous Image with a LabelMapID attribute to match the ID in 'DisplayLabelMapID'."
@@ -1156,10 +1155,6 @@ class UtilsFilesIO:
                     # missing attribute
                     raise Exception(sErrorMsgMissingDisplayLabelMapIDAttribute)
                 
-                
-                sNewLabelMapID = self.oIOXml.GetValueOfNodeAttribute(xImage, 'LabelMapID')
-                if sNewLabelMapID != '':
-                    raise Exception(sErrorMsgAttributeNotAllowed)
                 
                 
                 if self.oIOXml.GetValueOfNodeAttribute(xPage, 'EnableSegmentEditor') == 'Y' or\
@@ -1494,7 +1489,8 @@ class UtilsFilesIO:
 
                 # if there were no label map paths stored with the image, and xml attribute has flag 
                 #    to use a previous label map, check previous pages for the first matching image
-                if xLabelMapPathElement == None and bUsePreviousLabelMap == True:
+                if (xLabelMapPathElement == None and bUsePreviousLabelMap == True)\
+                    or (bUsePreviousLabelMap == True and oImageNode.bMergeLabelMaps):
 #                     xHistoricalLabelMapMatch = oSession.GetXmlElementFromImagePathHistory( oImageNode.GetXmlImageElement(), 'LabelMapPath')
 
                     # get image element from history that holds the same label map id; 
@@ -1614,88 +1610,125 @@ class UtilsFilesIO:
             and merge these.
             The merged label map is then saved to disk and the current ImageElement is updated with a new LabelMapPath element. 
         '''
-        
-        xLabelMapPathElement = None
-        lsLabelMapFullPaths = []
-        
-        # Search for all previous Pages that match PageID_Descriptor (without the -Rep## substring)
-        sPageIDToSearch = oSession.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'ID')
-                    # remove ignore string
-        reIgnoreSubstring= '-Rep[0-9]+'  # remove -Rep with any number of digits following
-        sPageIDToSearchStripped = re.sub(reIgnoreSubstring,'',sPageIDToSearch)
-        sPageDescriptorToSearch = oSession.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'Descriptor')
 
-        dictAttribToMatch = {}
-        dictAttribToMatch['ID'] = sPageIDToSearchStripped
-        dictAttribToMatch['Descriptor'] = sPageDescriptorToSearch
-        
-        lMatchingPageNodes = []
-        
-        lMatchingPageNodes = oSession.oIOXml.GetMatchingXmlPagesFromAttributeHistory(oSession.GetCurrentPageIndex(), dictAttribToMatch, reIgnoreSubstring)
-        # collect label map paths
-        for xPageNode in lMatchingPageNodes:
+        try:        
+            xLabelMapPathElement = None
+            lsLabelMapFullPaths = []
             
-            lxImageElements = oSession.oIOXml.GetChildren(xPageNode, 'Image')
-            for xImage in lxImageElements:
-                lxLabelMapPath = self.oIOXml.GetChildren(xImage, 'LabelMapPath')
-                for xPath in lxLabelMapPath:
-                    sLabelMapPath = oSession.oIOXml.GetDataInNode(xPath)
-                    sLabelMapFullPath = os.path.join(oSession.oFilesIO.GetUserDir(), sLabelMapPath)
-                    lsLabelMapFullPaths.append(sLabelMapFullPath)
-        
-        # combine labels
-        
-        litkAllLabelImages = []
-        for sPath in lsLabelMapFullPaths:
-            print(sPath)
-            itkLabelImage = sitk.ReadImage(sPath)
-            litkAllLabelImages.append(itkLabelImage)
+            # Search for all previous Pages that match PageID_Descriptor (without the -Rep## substring)
+            sPageIDToSearch = oSession.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'ID')
+                        # remove ignore string
+            reIgnoreSubstring= '-Rep[0-9]+'  # remove -Rep with any number of digits following
+            sPageIDToSearchStripped = re.sub(reIgnoreSubstring,'',sPageIDToSearch)
+            sPageDescriptorToSearch = oSession.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'Descriptor')
+    
+            dictAttribToMatch = {}
+            dictAttribToMatch['ID'] = sPageIDToSearchStripped
+            dictAttribToMatch['Descriptor'] = sPageDescriptorToSearch
+    
+            sLabelMapIDToMatch = oSession.oIOXml.GetValueOfNodeAttribute(xHistoricalImageElement, 'LabelMapID')
             
-        if len(litkAllLabelImages) > 0:
-#             combined_labels = litkAllLabelImages[0] # initialize for size, spacing, orientation
-            imCombined_labels = sitk.Image(litkAllLabelImages[0].GetSize(),litkAllLabelImages[0].GetPixelID())
-            imCombined_labels.SetOrigin(litkAllLabelImages[0].GetOrigin())
-            imCombined_labels.SetDirection(litkAllLabelImages[0].GetDirection())
-            imCombined_labels.SetSpacing(litkAllLabelImages[0].GetSpacing())
             
-
+            # collect label map paths
+            lMatchingPageNodes = oSession.oIOXml.GetMatchingXmlPagesFromAttributeHistory(oSession.GetCurrentPageIndex(), dictAttribToMatch, reIgnoreSubstring)
+            for xPageNode in lMatchingPageNodes:
+                
+                lxImageElements = oSession.oIOXml.GetChildren(xPageNode, 'Image')
+    
+                for xImage in lxImageElements:
+                    sLabelMapID = oSession.oIOXml.GetValueOfNodeAttribute(xImage,'LabelMapID')
+    
+                    if sLabelMapID == sLabelMapIDToMatch:
+                        lxLabelMapPath = self.oIOXml.GetChildren(xImage, 'LabelMapPath')
+    
+                        for xPath in lxLabelMapPath:
+                            sLabelMapPath = oSession.oIOXml.GetDataInNode(xPath)
+                            sLabelMapFullPath = os.path.join(oSession.oFilesIO.GetUserDir(), sLabelMapPath)
+                            lsLabelMapFullPaths.append(sLabelMapFullPath)
             
-#             for i, label in enumerate(litkAllLabelImages, start=1):
-#                 imCombined_labels += label
-# #                 if imCombined_labels < label:
-# #                     imCombined_labels = label
+            
+            # use SimpleITK to collect all matching images
+            litkAllLabelImages = []
+            for sPath in lsLabelMapFullPaths:
+                print(sPath)
+                itkLabelImage = sitk.ReadImage(sPath)
+                litkAllLabelImages.append(itkLabelImage)
+                
+    
+            # merge label maps
+    
+            ''' Merging is using this methodology:
+                initialize combined map (C) with the first image (A)
+                For each labelmap (B), take the difference (Diff = B - C)
+                    -In Diff, Any existing LM pixels from C will be marked as the -ve value of its label
+                    - Any new LM pixels from B will be marked with its LM value
+                    - Any overlap, will now have an offset value 
+                        - example label 5 (from B) overlapped label 3 (in C) - offset = 2
+                        - Example, label 2 (from B) overlapped label 5  (in C) - offset=-3
+    
+                Create offset array --> Reset all -ve pixels to 0 (they won't be added into the combined LM array)
+                    - (-ve values from overlap means that it was a smaller label map value and is to be 'ignored', allowing the higher value (already in C) to take priority)
+                Update the combined array C)
+    
+            '''
+    
+            dictProperties = {'LabelMap' : True}
+            slLabelMapVolumeReference = slicer.util.loadLabelVolume(lsLabelMapFullPaths[0], dictProperties)
+            if len(lsLabelMapFullPaths) > 0:
+                # create temporary label map nodes
+                slLabelMapVolumeCombined = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode')
+                slLabelMapVolumeCombined.CopyOrientation(slLabelMapVolumeReference)
+                
+                # use numpy to combine label maps
+                np_combined = sitk.GetArrayFromImage(litkAllLabelImages[0])     # initialize
+                for image in litkAllLabelImages:
+                    np_img_arr = sitk.GetArrayFromImage(image)
+                    np_diff_arr = np_img_arr - np_combined
+                    np_diff_offset =  np.where(np_diff_arr <0, 0, np_diff_arr)
+                    np_combined = np_combined + np_diff_offset
+                    
+                slicer.util.updateVolumeFromArray(slLabelMapVolumeCombined, np_combined)
+            
+            
+            
+            # save new labelmap to disk
+            sDirName = self.GetFolderNameForPageResults(oSession)
+            sPageLabelMapDir = self.CreatePageDir(sDirName)
+    
+            sLabelMapFilenameWithExt = oImageNode.sNodeName + '-bainesquizlabel.nrrd'
+            
+            
+            sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
+            
+            
+            # if merge was already done and a label map already exists, delete it and save the new merge
+            #    this allows the user to make any corrections to contours using the previous button
+            
+            if os.path.exists(sLabelMapPath):
+                os.remove(sLabelMapPath)
+    
+            bDataVolumeSaved, sMsg = self.ExportResultsItemToFile('LabelMap', sLabelMapPath, slLabelMapVolumeCombined)
+            if bDataVolumeSaved == False:
+                raise Exception(sMsg)
+    
+            # update xml storing the path to the label map file with the image element
+            #    for display on the next page
+            oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(), self.GetRelativeUserPath(sLabelMapPath))
+            oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
+            xLabelMapPathElement = oSession.oIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
+    
+            # cleanup
+            slicer.mrmlScene.RemoveNode(slLabelMapVolumeReference)
+            slicer.mrmlScene.RemoveNode(slLabelMapVolumeCombined)
+            
+        except Exception as error:
+            tb = traceback.format_exc()
+            sMsg = "MergeLabelMapsAndSave: Error while merging label maps."  \
+                    + str(error) \
+                    + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
 
 
- 
-            # this method is slower than just enumerating and adding up the labels
-            #    this allows us to store the higher numbered label if there is a clash
-            iImageSize = imCombined_labels.GetSize()
-            for image in litkAllLabelImages:
-                for z in range(iImageSize[2]):
-                    for y in range(iImageSize[1]):
-                        for x in range(iImageSize[0]):
-                            if image.GetPixel(x,y,z) > imCombined_labels.GetPixel(x,y,z):
-                                imCombined_labels.SetPixel(x,y,z, image.GetPixel(x,y,z))
-                            
-        
-        # save new labelmap to disk
-        sDirName = self.GetFolderNameForPageResults(oSession)
-        sPageLabelMapDir = self.CreatePageDir(sDirName)
-        # sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
-#         sLabelMapFilenameWithExt = 'Test-merged' + '.nrrd'
-
-        sLabelMapFilenameWithExt = oImageNode.sNodeName + '-bainesquizlabel.nrrd'
-        
-        
-        sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
-        sitk.WriteImage(imCombined_labels,sLabelMapPath)
-
-
-        # update xml storing the path to the label map file with the image element
-        #    for display on the next page
-        oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(), self.GetRelativeUserPath(sLabelMapPath))
-        oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
-        xLabelMapPathElement = oSession.oIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
         
         return xLabelMapPathElement
         

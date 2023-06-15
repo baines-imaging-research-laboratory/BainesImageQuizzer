@@ -35,7 +35,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="IGPC2026" Descriptor="Loop_1QS" LinkViews="Y" EnableSegmentEditor="Y" Loop="Y">
+	<Page ID="IGPC2026" Descriptor="Loop_1QS" LinkViews="Y" EnableSegmentEditor="Y" Loop="Y" AllowMultipleResponse="Y">
 		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" LabelMapID="DCE-contour">
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
@@ -63,7 +63,7 @@
 		</QuestionSet>
 	</Page>
 	<Page ID="IGPC2026" Descriptor="Loop_2QS" LinkViews="Y" Loop="Y">
-		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" LabelMapID="DCE-contour">
+		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" MergeLabelMaps='Y' DisplayLabelMapID='DCE-contour'>
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
@@ -75,7 +75,7 @@
 			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\Slicer mpMRI\Prostate multiparametric MRI\Extracted\Data\adc.nrrd</Path>
 		</Image>
-		<Image ID="T2-N4" Type="Volume" RotateToAcquisition="Y" LabelMapID="T2-contour">
+		<Image ID="T2-N4" Type="Volume" RotateToAcquisition="Y" MergeLabelMaps='Y' DisplayLabelMapID='T2-contour'>
 			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
