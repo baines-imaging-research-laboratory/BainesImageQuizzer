@@ -1487,7 +1487,7 @@ class UtilsFilesIO:
                 xLabelMapPathElement = oSession.oIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
                 slLabelMapNode = None # initialize
 
-                # if there were no label map paths stored with the image, and xml attribute has flag 
+                # if there were no label map paths stored with the image, and xml attribute has DisplayLabelMapID 
                 #    to use a previous label map, check previous pages for the first matching image
                 if (xLabelMapPathElement == None and bUsePreviousLabelMap == True)\
                     or (bUsePreviousLabelMap == True and oImageNode.bMergeLabelMaps):
@@ -1605,7 +1605,7 @@ class UtilsFilesIO:
     def MergeLabelMapsAndSave(self, oSession, oImageNode, xHistoricalImageElement, xHistoricalPageElement):
         ''' This function will search for all Pages with the same 'base' name as the historical page that
             was found to have the matching LabelMapID for the DisplayLabelMapID.
-            The base name is the PageID_Descriptor without the '-Rep##'.
+            The base name is the PageID_Descriptor without the '-Rep##' which is added when using the Repeat button.
             From these pages, collect the LabelMapPath values for the Images with the matching LabelMapID
             and merge these.
             The merged label map is then saved to disk and the current ImageElement is updated with a new LabelMapPath element. 

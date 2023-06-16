@@ -425,7 +425,7 @@ class Session:
         self.sViewingMode = self.qComboNPlanesList.currentText
         
         if self.sViewingMode == "3 Planes":
-            self.llsNPlanesOrientDest = [["Axial","Red"],["Sagittal","Green"],["Coronal","Yellow"]]
+            self.llsNPlanesOrientDest = [["Axial","Red"],["Coronal","Green"],["Sagittal","Yellow"]]
         elif self.sViewingMode == "1 Plane Axial":
             self.llsNPlanesOrientDest = [["Axial","Red"]]
         elif self.sViewingMode == "1 Plane Sagittal":
@@ -1791,11 +1791,10 @@ class Session:
             self.lsLayoutWidgets.append('Red')
             self.lsLayoutWidgets.append('Yellow')
         else:
-            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
+            slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
             self.lsLayoutWidgets.append('Red')
             self.lsLayoutWidgets.append('Green')
             self.lsLayoutWidgets.append('Yellow')
-            self.lsLayoutWidgets.append('Slice4')
                     
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
