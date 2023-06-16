@@ -1650,14 +1650,13 @@ class UtilsFilesIO:
             # use SimpleITK to collect all matching images
             litkAllLabelImages = []
             for sPath in lsLabelMapFullPaths:
-                print(sPath)
                 itkLabelImage = sitk.ReadImage(sPath)
                 litkAllLabelImages.append(itkLabelImage)
                 
     
             # merge label maps
     
-            ''' Merging is using this methodology:
+            ''' Merging methodology:
                 initialize combined map (C) with the first image (A)
                 For each labelmap (B), take the difference (Diff = B - C)
                     -In Diff, Any existing LM pixels from C will be marked as the -ve value of its label
@@ -1673,8 +1672,10 @@ class UtilsFilesIO:
             '''
     
             dictProperties = {'LabelMap' : True}
-            slLabelMapVolumeReference = slicer.util.loadLabelVolume(lsLabelMapFullPaths[0], dictProperties)
             if len(lsLabelMapFullPaths) > 0:
+
+                slLabelMapVolumeReference = slicer.util.loadLabelVolume(lsLabelMapFullPaths[0], dictProperties)
+
                 # create temporary label map nodes
                 slLabelMapVolumeCombined = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLLabelMapVolumeNode')
                 slLabelMapVolumeCombined.CopyOrientation(slLabelMapVolumeReference)
@@ -1689,37 +1690,37 @@ class UtilsFilesIO:
                     
                 slicer.util.updateVolumeFromArray(slLabelMapVolumeCombined, np_combined)
             
-            
-            
-            # save new labelmap to disk
-            sDirName = self.GetFolderNameForPageResults(oSession)
-            sPageLabelMapDir = self.CreatePageDir(sDirName)
-    
-            sLabelMapFilenameWithExt = oImageNode.sNodeName + '-bainesquizlabel.nrrd'
-            
-            
-            sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
-            
-            
-            # if merge was already done and a label map already exists, delete it and save the new merge
-            #    this allows the user to make any corrections to contours using the previous button
-            
-            if os.path.exists(sLabelMapPath):
-                os.remove(sLabelMapPath)
-    
-            bDataVolumeSaved, sMsg = self.ExportResultsItemToFile('LabelMap', sLabelMapPath, slLabelMapVolumeCombined)
-            if bDataVolumeSaved == False:
-                raise Exception(sMsg)
-    
-            # update xml storing the path to the label map file with the image element
-            #    for display on the next page
-            oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(), self.GetRelativeUserPath(sLabelMapPath))
-            oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
-            xLabelMapPathElement = oSession.oIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
-    
-            # cleanup
-            slicer.mrmlScene.RemoveNode(slLabelMapVolumeReference)
-            slicer.mrmlScene.RemoveNode(slLabelMapVolumeCombined)
+                
+                
+                # save new labelmap to disk
+                sDirName = self.GetFolderNameForPageResults(oSession)
+                sPageLabelMapDir = self.CreatePageDir(sDirName)
+        
+                sLabelMapFilenameWithExt = oImageNode.sNodeName + '-bainesquizlabel.nrrd'
+                
+                
+                sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
+                
+                
+                # if merge was already done and a label map already exists, delete it and save the new merge
+                #    this allows the user to make any corrections to contours using the previous button
+                
+                if os.path.exists(sLabelMapPath):
+                    os.remove(sLabelMapPath)
+        
+                bDataVolumeSaved, sMsg = self.ExportResultsItemToFile('LabelMap', sLabelMapPath, slLabelMapVolumeCombined)
+                if bDataVolumeSaved == False:
+                    raise Exception(sMsg)
+        
+                # update xml storing the path to the label map file with the image element
+                #    for display on the next page
+                oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(), self.GetRelativeUserPath(sLabelMapPath))
+                oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
+                xLabelMapPathElement = oSession.oIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
+        
+                # cleanup
+                slicer.mrmlScene.RemoveNode(slLabelMapVolumeReference)
+                slicer.mrmlScene.RemoveNode(slLabelMapVolumeCombined)
             
         except Exception as error:
             tb = traceback.format_exc()

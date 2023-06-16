@@ -880,16 +880,19 @@ class Session:
             self._btnRepeat.enabled = False
             self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white}")
             # only enable Repeat button in looping if the page is not complete and the user is on the last question set
-            if self.GetPageCompleteAttribute(self.GetCurrentNavigationIndex()) != "Y":
-                if self.CheckForLastQuestionSetForPage() == True:
-                    self._btnRepeat.enabled = True
-                    self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
-            else:
-                # page is complete - enable if multiple responses are allowed
-                if self.GetMultipleResponseAllowed() == True:
-                    self._btnRepeat.enabled = True
-                    self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
+            # if self.GetPageCompleteAttribute(self.GetCurrentNavigationIndex()) != "Y":
+            #     if self.CheckForLastQuestionSetForPage() == True:
+            #         self._btnRepeat.enabled = True
+            #         self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
+            # else:
+            #     # page is complete - enable if multiple responses are allowed
+            #     if self.GetMultipleResponseAllowed() == True:
+            #         self._btnRepeat.enabled = True
+            #         self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
                     
+            if self.CheckForLastQuestionSetForPage() == True:
+                self._btnRepeat.enabled = True
+                self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
 
         else:
             self.SetPageLooping(False)
