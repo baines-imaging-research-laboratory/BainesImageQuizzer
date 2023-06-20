@@ -5,6 +5,8 @@ import os
 import vtk, qt, ctk, slicer
 import sys
 import warnings
+import traceback
+
 
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsIOXml import *
@@ -93,6 +95,9 @@ class QuestionSet():
                 elif (sQuestionType == 'InfoBox'):
                     oQuestion = InfoBox()
 
+                elif (sQuestionType == 'Button'):
+                    oQuestion = Button()
+                    
                 else:
                     sLabel = 'Warning : Contact Administrator - Invalid question    '
                     sWarningMsg = self.sClassName + ':' + sFnName + ':' + 'UnrecognizedQuestionType - Contact Administrator'
@@ -937,7 +942,7 @@ class InfoBox(Question):
     # There are no responses from the user to catch
     # Inputs :
     # Outputs: exitCode - boolean describing whether function exited successfully
-    #          qGrpBox  - group box widget holding text edit boxes
+    #          qGrpBox  - group box widget holding information box
     
     def __init__(self):
         self.sClassName = type(self).__name__
@@ -1013,6 +1018,111 @@ class InfoBox(Question):
         # there is nothing to populate for info box type questions
         pass
     
+#========================================================================================
+#                     Class Button
+#========================================================================================
+
+class Button(Question):
+    # Create a group box and add a button that will run an external script
+    # There are no responses from the user to catch
+    # Inputs :
+    # Outputs: exitCode - boolean describing whether function exited successfully
+    #          qGrpBox  - group box widget holding the button
+    
+    def __init__(self):
+        self.sClassName = type(self).__name__
+
+        self.oMsgUtil = UtilsMsgs()
+
+        
+    def _lsOptions_setter(self, lsInput):
+        self._lsOptions = lsInput
+        
+    def _lsOptions_getter(self):
+        return self._lsOptions
+        
+    def _sGrpBoxTitle_setter(self, sInput):
+        self._sGrpBoxTitle = sInput
+        
+    def _sGrpBoxTitle_getter(self):
+        return self._sGrpBoxTitle
+
+    def _sGrpBoxLayout_setter(self, sInput):
+        self._sGrpBoxLayout = sInput
+        
+    def _sGrpBoxLayout_getter(self):
+        return self._sGrpBoxLayout
+
+    #-----------------------------------------------
+
+    def BuildQuestion(self):
+        self.sFnName = sys._getframe().f_code.co_name
+
+        # add grid layout to group box
+        self.CreateGroupBox(self._sGrpBoxTitle_getter())
+        newLayout = qt.QGridLayout()
+        self.qGrpBoxLayout.addLayout(newLayout)
+       
+        lsStoredOptions = self._lsOptions_getter()
+        length = len(lsStoredOptions)
+        if length < 1 :
+            self.DisplayGroupBoxEmpty()
+            return False, self.qGrpBox
+
+        dictQButtons = {}
+        i = 0
+        while i < length:
+            element1 = lsStoredOptions[i]
+            qButton = qt.QPushButton(str(i))
+            newLayout.addWidget(qButton, i, 0)
+            dictQButtons[element1]=qButton
+            i = i + 1
+
+        for button in dictQButtons:
+            b=button
+            dictQButtons[button].connect('clicked(bool)',lambda _, b=button: self.onQButtonClicked(b))
+                                         
+        return True, self.qGrpBox
+
+    #-----------------------------------------------
+    def onQButtonClicked(self,  sScript):
+        
+        try:
+        
+            exec(open(sScript).read())
+
+        except:
+            tb = traceback.format_exc()
+            sMsg = "onButtonClicked: Error opening script " + sScript \
+                   + "\n\n" + tb 
+            self.oMsgUtil.DisplayError(sMsg)
+
+        
+    #-----------------------------------------------
+    
+    def CaptureResponse(self):
+        self.sFnName = sys._getframe().f_code.co_name
+
+        bSuccess = True
+        sMsg = ''
+ 
+        lsResponses = []
+        
+        # set response for each info box option to null quotes
+        #     each option needs a response for the check on whether 
+        #     the question set was answered completely or partially
+        lsStoredOptions = self._lsOptions_getter()
+        for x in range( len(lsStoredOptions) ):
+            lsResponses.append('')
+                
+        
+        return bSuccess, lsResponses, sMsg
+        
+    #-----------------------------------------------
+    
+    def PopulateQuestionWithResponses(self, lsValues):
+        # there is nothing to populate for info box type questions
+        pass
     
 
     
