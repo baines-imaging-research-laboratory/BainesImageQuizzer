@@ -400,6 +400,12 @@ class RadioQuestion(Question):
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
 
+    def _oFilesIO_setter(self, sInput):
+        self._oFilesIO = sInput
+        
+    def _oFilesIO_getter(self):
+        return self._oFilesIO
+
     #-----------------------------------------------
     
     def BuildQuestion(self):
@@ -499,6 +505,12 @@ class CheckBoxQuestion(Question):
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
 
+    def _oFilesIO_setter(self, sInput):
+        self._oFilesIO = sInput
+        
+    def _oFilesIO_getter(self):
+        return self._oFilesIO
+
     #-----------------------------------------------
        
     def BuildQuestion(self):
@@ -596,6 +608,12 @@ class TextQuestion(Question):
         
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
+
+    def _oFilesIO_setter(self, sInput):
+        self._oFilesIO = sInput
+        
+    def _oFilesIO_getter(self):
+        return self._oFilesIO
 
     #-----------------------------------------------
     
@@ -699,6 +717,12 @@ class IntegerValueQuestion(Question):
 
     def UpdateDictionaryModifiers(self, dictionaryInput):
         self.dictModifiers = dictionaryInput
+
+    def _oFilesIO_setter(self, sInput):
+        self._oFilesIO = sInput
+        
+    def _oFilesIO_getter(self):
+        return self._oFilesIO
         
     #-----------------------------------------------
         
@@ -845,6 +869,12 @@ class FloatValueQuestion(Question):
 
     def UpdateDictionaryModifiers(self, dictionaryInput):
         self.dictModifiers = dictionaryInput
+
+    def _oFilesIO_setter(self, sInput):
+        self._oFilesIO = sInput
+        
+    def _oFilesIO_getter(self):
+        return self._oFilesIO
         
     #-----------------------------------------------
 
@@ -989,6 +1019,12 @@ class InfoBox(Question):
         
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
+
+    def _oFilesIO_setter(self, sInput):
+        self._oFilesIO = sInput
+        
+    def _oFilesIO_getter(self):
+        return self._oFilesIO
 
     #-----------------------------------------------
 
