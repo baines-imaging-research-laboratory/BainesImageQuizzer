@@ -8,8 +8,8 @@
         </Image>
         <QuestionSet ID="Processing script" Descriptor="Python executable">
             <Question Type="Button" Descriptor="Run external scripts">
-                <Option>D:/Users/cjohnson/Work/Projects/SlicerEclipseProjects/ImageQuizzerData/Scripts/script1.py</Option>
-				<Option>D:/Users/cjohnson/Work/Projects/SlicerEclipseProjects/ImageQuizzerData/Scripts/script2.py</Option>
+                <Option>Scripts/script1.py</Option>
+				<Option>Scripts/script2.py</Option>
             </Question>
         </QuestionSet>
     </Page>

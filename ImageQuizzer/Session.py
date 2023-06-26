@@ -1634,7 +1634,7 @@ class Session:
 
             for idx in range(indQSet):
                 xNodeQuestionSet = self.GetNthQuestionSetForCurrentPage(idx)
-                oQuestionSet = QuestionSet()
+                oQuestionSet = QuestionSet(self.oFilesIO)
                 oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
                 self._loQuestionSets.append(oQuestionSet)
 
@@ -1644,7 +1644,7 @@ class Session:
         try:
             # extract page and question set indices from the current composite index
             xNodeQuestionSet = self.GetCurrentQuestionSetNode()
-            oQuestionSet = QuestionSet()
+            oQuestionSet = QuestionSet(self.oFilesIO)
             oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
             
     

@@ -21,7 +21,7 @@ class QuestionSet():
     """ Class to hold array of all questions that were built into group boxes on the form
     """
     
-    def __init__(self):
+    def __init__(self, oFilesIO):
         self.sClassName = type(self).__name__
         self.id = ''
         self.descriptor = ''
@@ -31,6 +31,7 @@ class QuestionSet():
         
         self.oIOXml = UtilsIOXml()
         self.oMsgUtil = UtilsMsgs()
+        self.oFilesIO = oFilesIO
         
     #----------
     def SetQuestionList(self, loQuestionsInput):
@@ -108,6 +109,7 @@ class QuestionSet():
                 if bQuestionTypeGood == True:
                     oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
                     oQuestion._sGrpBoxLayout_setter(sGroupBoxLayout)
+                    oQuestion._oFilesIO_setter(self.oFilesIO)
                     
                     lOptions = self.GetOptionsFromXML(xNodeQuestion)
                     oQuestion._lsOptions_setter(lOptions)
@@ -184,6 +186,7 @@ class Question(ABC):
         self._lsOptions = []
         self._sGrpBoxTitle = ''
         self._sGrpBoxLayout = ''
+        self._oFilesIO = None
 
     
     # abstract properties require level of indirection
@@ -240,14 +243,35 @@ class Question(ABC):
         self._sGrpBoxLayout_setter(x)
         
     @abstractmethod
-    def _sGrpBoxLayout_getter(self,x):
+    def _sGrpBoxLayout_setter(self,x):
         pass
     
     @abstractmethod
-    def _sGrpBoxTitle_getter(self):
-        return self._sGrpBoxTitle
+    def _sGrpBoxLayout_getter(self):
+        return self._sGrpBoxLayout
     #----------
     
+    
+    #----------
+    # _oFilesIO
+    #----------
+    @property
+    def oFilesIO(self):
+        return self._oFilesIO
+    
+    @oFilesIO.setter
+    def oFilesIO(self, x):
+        self._oFilesIO_setter(x)
+        
+    @abstractmethod
+    def _oFilesIO_setter(self,x):
+        pass
+    
+    @abstractmethod
+    def _oFilesIO_getter(self):
+        return self._oFilesIO
+    #----------
+
     
     #----------
     @abstractmethod        
@@ -1002,7 +1026,7 @@ class InfoBox(Question):
  
         lsResponses = []
         
-        # set response for each info box option to null quotes
+        # set response for each option to null quotes
         #     each option needs a response for the check on whether 
         #     the question set was answered completely or partially
         lsStoredOptions = self._lsOptions_getter()
@@ -1053,6 +1077,12 @@ class Button(Question):
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
 
+    def _oFilesIO_setter(self, sInput):
+        self._oFilesIO = sInput
+        
+    def _oFilesIO_getter(self):
+        return self._oFilesIO
+
     #-----------------------------------------------
 
     def BuildQuestion(self):
@@ -1069,17 +1099,18 @@ class Button(Question):
             self.DisplayGroupBoxEmpty()
             return False, self.qGrpBox
 
+        oFilesIO = self._oFilesIO_getter()
         dictQButtons = {}
         i = 0
         while i < length:
-            element1 = lsStoredOptions[i]
-            qButton = qt.QPushButton(str(i))
+            element1 = os.path.join(oFilesIO.GetDataParentDir(),lsStoredOptions[i])
+            head, tail = os.path.split(element1)
+            qButton = qt.QPushButton(str(i)+'-'+tail)
             newLayout.addWidget(qButton, i, 0)
             dictQButtons[element1]=qButton
             i = i + 1
 
         for button in dictQButtons:
-            b=button
             dictQButtons[button].connect('clicked(bool)',lambda _, b=button: self.onQButtonClicked(b))
                                          
         return True, self.qGrpBox
@@ -1108,7 +1139,7 @@ class Button(Question):
  
         lsResponses = []
         
-        # set response for each info box option to null quotes
+        # set response for each option to null quotes
         #     each option needs a response for the check on whether 
         #     the question set was answered completely or partially
         lsStoredOptions = self._lsOptions_getter()
