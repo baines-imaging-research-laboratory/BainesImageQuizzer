@@ -1,9 +1,21 @@
 <Session>
     <Page ID="Patient 1">
-        <Image ID="CT" Type="Volume">
+        <Image ID="CT" Type="Volume"  ZoomFactor="1.2">
                 <DefaultDestination>Red</DefaultDestination>
                 <Layer>Background</Layer>
                 <DefaultOrientation>Axial</DefaultOrientation>
+                <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
+        </Image>
+        <Image ID="CT" Type="Volume" ZoomFactor="1.5">
+                <DefaultDestination>Green</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Coronal</DefaultOrientation>
+                <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
+        </Image>
+        <Image ID="CT" Type="Volume" ZoomFactor=".5" >
+                <DefaultDestination>Yellow</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Sagittal</DefaultOrientation>
                 <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
         </Image>
         <QuestionSet ID="Processing script" Descriptor="Python executable">

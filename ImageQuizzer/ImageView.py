@@ -234,6 +234,9 @@ class ImageView:
                             slWindowLogic.SetSliceOffset(oViewNode.fInitialSliceOffset)
                         else:
                             slWidget.fitSliceToBackground()
+                        if oViewNode.fZoomFactorForFOV != 1:
+                            oViewNode.SetFieldOfView()
+                            
 
                     oViewNode.AssignColorTable()
     
@@ -570,6 +573,7 @@ class ViewNodeBase:
         self.bRotateToAcquisition = False
         self.fOpacity = 0.5
         self.fInitialSliceOffset = None
+        self.fZoomFactorForFOV = 1.0
         
         self.slQuizLabelMapNode = None
         self.lsRoiList = []
@@ -673,6 +677,13 @@ class ViewNodeBase:
             self.bMergeLabelMaps = True
         else:
             self.bMergeLabelMaps = False
+
+        sZoomFactor = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'ZoomFactor')
+        if sZoomFactor != '':
+            # convert for field of view factor
+            self.fZoomFactorForFOV = 1.0 / float(sZoomFactor)
+        else:
+            self.fZoomFactorForFOV = 1.0
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractXMLNodeElements(self, sParentDataDir):
@@ -882,6 +893,21 @@ class ViewNodeBase:
         slViewingNode.UnRegister(slicer.mrmlScene)
     
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetFieldOfView(self):
+        
+        slWidget = slicer.app.layoutManager().sliceWidget(self.sDestination)
+            
+        if slWidget != None:       
+            slSliceNode = slWidget.mrmlSliceNode()
+
+            fNewFOVx = slSliceNode.GetFieldOfView()[0] * self.fZoomFactorForFOV 
+            fNewFOVy = slSliceNode.GetFieldOfView()[1] * self.fZoomFactorForFOV
+            fNewFOVz = slSliceNode.GetFieldOfView()[2] * self.fZoomFactorForFOV
+            
+            slSliceNode.SetFieldOfView(fNewFOVx, fNewFOVy, fNewFOVz)
+            slSliceNode.UpdateMatrices()
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
