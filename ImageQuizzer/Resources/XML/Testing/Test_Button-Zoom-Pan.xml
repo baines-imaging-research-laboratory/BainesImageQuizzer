@@ -1,6 +1,6 @@
 <Session>
     <Page ID="Patient 1">
-        <Image ID="CT" Type="Volume"  ZoomFactor="1.2">
+        <Image ID="CT" Type="Volume"  ZoomFactor="1.2" PanOrigin="-92 27.5 -225.5">
                 <DefaultDestination>Red</DefaultDestination>
                 <Layer>Background</Layer>
                 <DefaultOrientation>Axial</DefaultOrientation>
@@ -12,7 +12,7 @@
                 <DefaultOrientation>Coronal</DefaultOrientation>
                 <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
         </Image>
-        <Image ID="CT" Type="Volume" ZoomFactor=".5" >
+        <Image ID="CT" Type="Volume" ZoomFactor=".5">
                 <DefaultDestination>Yellow</DefaultDestination>
                 <Layer>Background</Layer>
                 <DefaultOrientation>Sagittal</DefaultOrientation>

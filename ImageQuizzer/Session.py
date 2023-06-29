@@ -2187,7 +2187,7 @@ class Session:
             if not self.bNPlanesViewingMode:
                 oImageNode = loImageNodes[self.GetImageDisplayOrderIndices()[ind]]
                 
-                oImageNode.SetFieldOfView()
+                oImageNode.SetFieldOfViewAndOrigin()
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetStateElementsForMatchingImagePath(self, sCurrentImagePath):

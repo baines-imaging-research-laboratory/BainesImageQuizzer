@@ -18,6 +18,7 @@ from DICOMLib import DICOMUtils
 import logging
 import time
 import traceback
+from numpy.array_api._data_type_functions import astype
 
 
 

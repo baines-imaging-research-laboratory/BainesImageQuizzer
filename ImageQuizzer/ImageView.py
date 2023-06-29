@@ -235,7 +235,7 @@ class ImageView:
                         else:
                             slWidget.fitSliceToBackground()
                         if oViewNode.fZoomFactorForFOV != 1:
-                            oViewNode.SetFieldOfView()
+                            oViewNode.SetFieldOfViewAndOrigin()
                             
 
                     oViewNode.AssignColorTable()
@@ -574,6 +574,7 @@ class ViewNodeBase:
         self.fOpacity = 0.5
         self.fInitialSliceOffset = None
         self.fZoomFactorForFOV = 1.0
+        self.lfPanOrigin = []
         
         self.slQuizLabelMapNode = None
         self.lsRoiList = []
@@ -684,6 +685,13 @@ class ViewNodeBase:
             self.fZoomFactorForFOV = 1.0 / float(sZoomFactor)
         else:
             self.fZoomFactorForFOV = 1.0
+
+        sPanOrigin = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'PanOrigin')
+        self.lfPanOrigin = []
+        if sPanOrigin != '':
+            lsPanOrigin = sPanOrigin.split()
+            for ind in range(len(lsPanOrigin)):
+                self.lfPanOrigin.append(float(lsPanOrigin[ind]))
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractXMLNodeElements(self, sParentDataDir):
@@ -894,7 +902,7 @@ class ViewNodeBase:
     
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetFieldOfView(self):
+    def SetFieldOfViewAndOrigin(self):
         
         slWidget = slicer.app.layoutManager().sliceWidget(self.sDestination)
             
@@ -907,7 +915,9 @@ class ViewNodeBase:
             
             slSliceNode.SetFieldOfView(fNewFOVx, fNewFOVy, fNewFOVz)
             slSliceNode.UpdateMatrices()
-
+            
+            if len(self.lfPanOrigin) > 0:
+                slSliceNode.SetXYZOrigin(self.lfPanOrigin[0], self.lfPanOrigin[1], self.lfPanOrigin[2])
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

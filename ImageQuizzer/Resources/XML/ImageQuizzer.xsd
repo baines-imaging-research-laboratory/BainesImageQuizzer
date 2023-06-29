@@ -61,6 +61,8 @@
 		<xs:attribute name="MinMarkupLinesRequired" type="xs:positiveInteger"/>
 		<xs:attribute name="InitialSliceOffset" type="xs:float"/>
 		<xs:attribute name="MergeLabelMaps" type="xs:yesnoType" default="N" />
+		<xs:attribute name="ZoomFactor" type="xs:float"/>
+		<xs:attribute name="PanOrigin" type="xs:listType"/>
 	</xs:complexType>
 </xs:element>
 
@@ -207,5 +209,16 @@
     <xs:enumeration value="Outline"/>
   </xs:restriction>
 </xs:simpleType>
+
+<xs:simpleType name="listType">
+  <xs:restriction base="xs:floatListType">
+    <xs:length value="3"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="floatListType">
+  <xs:list itemType="xs:float"/>
+</xs:simpleType>
+
 
 </xs:schema>
