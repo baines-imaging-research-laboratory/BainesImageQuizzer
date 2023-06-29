@@ -12,7 +12,7 @@
                 <DefaultOrientation>Coronal</DefaultOrientation>
                 <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
         </Image>
-        <Image ID="CT" Type="Volume" ZoomFactor=".5">
+        <Image ID="CT" Type="Volume" ZoomFactor=".75">
                 <DefaultDestination>Yellow</DefaultDestination>
                 <Layer>Background</Layer>
                 <DefaultOrientation>Sagittal</DefaultOrientation>
@@ -26,60 +26,3 @@
         </QuestionSet>
     </Page>
 </Session>
-
-<!--
-script1.py
-
-import slicer, vtk
-
-file1 = open("D:/Users/cjohnson/Work/Projects/SlicerEclipseProjects/ImageQuizzerData/Scripts/test1.txt","w")
-
-file1.write("FOV before zoom\n")
-
-sV = slicer.app.applicationVersion + "\n"
-file1.write(sV)
-
-sliceNodeR = slicer.util.getNode('vtkMRMLSliceNodeRed')
-fov = sliceNodeR.GetFieldOfView()
-file1.write(str(fov[0]))
-file1.write(",")
-file1.write(str(fov[1]))
-file1.write(",")
-file1.write(str(fov[2]))
-file1.write("\n")
-
-
-file1.close()
-
--->
-
-<!--
-script2.py
-
-import slicer, vtk
-
-file2 = open("D:/Users/cjohnson/Work/Projects/SlicerEclipseProjects/ImageQuizzerData/Scripts/2-afterzoom.txt","w")
-
-file2.write("FOV after zoom\n")
-
-sV = slicer.app.applicationVersion + "\n"
-file2.write(sV)
-
-sliceNodeR = slicer.util.getNode('vtkMRMLSliceNodeRed')
-fov = sliceNodeR.GetFieldOfView()
-file2.write(str(fov[0]))
-file2.write(",")
-file2.write(str(fov[1]))
-file2.write(",")
-file2.write(str(fov[2]))
-file2.write("\n")
-
-
-file2.close()
-
--->
-
-
-
-
-

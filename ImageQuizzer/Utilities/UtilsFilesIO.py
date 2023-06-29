@@ -18,7 +18,6 @@ from DICOMLib import DICOMUtils
 import logging
 import time
 import traceback
-from numpy.array_api._data_type_functions import astype
 
 
 
@@ -626,6 +625,10 @@ class UtilsFilesIO:
                     if not (sImageType == 'Segmentation' or sImageType == 'RTStruct' or sImageType == 'LabelMap'):
                         sValidationMsg = self.ValidateElementOptions(xImage, 'DefaultOrientation', sPageReference, self.oIOXml.lValidOrientations)
                         sMsg = sMsg + sValidationMsg
+                        
+                    sPanOrigin = self.oIOXml.GetValueOfNodeAttribute(xImage, 'PanOrigin')
+                    if sPanOrigin != '':
+                        sValidationMsg = self.ValidateListOfNumbers(sPanOrigin, 'Float', 3, 'PanOrigin', sPageReference)
                     
                     # >>>>>>>>>>>>>>>
      
@@ -1192,6 +1195,36 @@ class UtilsFilesIO:
         
         return sMsg
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateListOfNumbers(self, sString, sType, iLength, sAttributeName, sPageReference):
+        # function to validate a string holds values of given type and length
+        
+        sMsg = ''
+        
+        lSplitString = sString.split()
+        
+        # check for required length
+        if len(lSplitString) != iLength:
+            sMsg = '\nList of numbers does not match required length of ' + str(iLength)\
+                     + 'for attribute ' + sAttributeName
+        else:
+            # check that each entry can be converted to the required type
+            try:
+                for ind in range(len(lSplitString)):
+                    if sType == 'Float':
+                        float(lSplitString[ind])
+                    elif sType == 'Int':
+                        int(lSplitString[ind])
+                    else:
+                        sMsg = '\nCannot validate this variable type :' + sType
+            except:
+                sMsg = '\nAttribute ' + sAttributeName + ' does not have valid entries. The required variable type is ' +  sType
+             
+        if sMsg != '':
+            sMsg = sMsg + '\n----------See Page: ' + sPageReference
+
+        return sMsg
+            
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ValidateImageToSegmentationMatch(self, xPageNode, sPageReference):
         '''
