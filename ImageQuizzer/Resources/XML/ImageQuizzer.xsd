@@ -60,9 +60,9 @@
 		<xs:attribute name="SegmentRequired" type="yesnoType" default="N"/>
 		<xs:attribute name="MinMarkupLinesRequired" type="xs:positiveInteger"/>
 		<xs:attribute name="InitialSliceOffset" type="xs:float"/>
-		<xs:attribute name="MergeLabelMaps" type="xs:yesnoType" default="N" />
+		<xs:attribute name="MergeLabelMaps" type="yesnoType" default="N" />
 		<xs:attribute name="ZoomFactor" type="xs:float"/>
-		<xs:attribute name="PanOrigin" type="xs:listType"/>
+		<xs:attribute name="PanOrigin" type="listType"/>
 	</xs:complexType>
 </xs:element>
 
@@ -211,7 +211,7 @@
 </xs:simpleType>
 
 <xs:simpleType name="listType">
-  <xs:restriction base="xs:floatListType">
+  <xs:restriction base="floatListType">
     <xs:length value="3"/>
   </xs:restriction>
 </xs:simpleType>

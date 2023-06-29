@@ -629,6 +629,7 @@ class UtilsFilesIO:
                     sPanOrigin = self.oIOXml.GetValueOfNodeAttribute(xImage, 'PanOrigin')
                     if sPanOrigin != '':
                         sValidationMsg = self.ValidateListOfNumbers(sPanOrigin, 'Float', 3, 'PanOrigin', sPageReference)
+                        sMsg = sMsg + sValidationMsg
                     
                     # >>>>>>>>>>>>>>>
      
@@ -1197,7 +1198,7 @@ class UtilsFilesIO:
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ValidateListOfNumbers(self, sString, sType, iLength, sAttributeName, sPageReference):
-        # function to validate a string holds values of given type and length
+        # function to validate a string holds a list of values of given type and length
         
         sMsg = ''
         
@@ -1206,7 +1207,7 @@ class UtilsFilesIO:
         # check for required length
         if len(lSplitString) != iLength:
             sMsg = '\nList of numbers does not match required length of ' + str(iLength)\
-                     + 'for attribute ' + sAttributeName
+                     + ' for attribute ' + sAttributeName
         else:
             # check that each entry can be converted to the required type
             try:
@@ -1218,7 +1219,9 @@ class UtilsFilesIO:
                     else:
                         sMsg = '\nCannot validate this variable type :' + sType
             except:
-                sMsg = '\nAttribute ' + sAttributeName + ' does not have valid entries. The required variable type is ' +  sType
+                sMsg = '\nAttribute ' + sAttributeName + ' does not have valid entries.'\
+                        + '\n The required variable type is a list of ' + str(iLength) \
+                        +  ' entries of type ' + sType + ' delimited by spaces.'
              
         if sMsg != '':
             sMsg = sMsg + '\n----------See Page: ' + sPageReference
