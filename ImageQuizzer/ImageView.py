@@ -230,12 +230,13 @@ class ImageView:
                         slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
                         slWidget.mrmlSliceNode().RotateToVolumePlane(slVolumeNode)
                         self.RotateSliceToImage(oViewNode.sDestination)
-                        if oViewNode.fInitialSliceOffset != None:
-                            slWindowLogic.SetSliceOffset(oViewNode.fInitialSliceOffset)
-                        else:
-                            slWidget.fitSliceToBackground()
-                        if oViewNode.fZoomFactorForFOV != 1:
-                            oViewNode.SetFieldOfViewAndOrigin()
+
+                    if oViewNode.fInitialSliceOffset != None:
+                        slWindowLogic.SetSliceOffset(oViewNode.fInitialSliceOffset)
+                    else:
+                        slWidget.fitSliceToBackground()
+
+                    oViewNode.SetFieldOfViewAndOrigin()
                             
 
                     oViewNode.AssignColorTable()
@@ -257,9 +258,11 @@ class ImageView:
                     slWidgetController.setForegroundOpacity(oViewNode.fOpacity)
                     if oViewNode.bRotateToAcquisition == True:
                         self.RotateSliceToImage(oViewNode.sDestination)
-                        if oViewNode.fInitialSliceOffset != None:
-                            slWindowLogic.SetSliceOffset(oViewNode.fInitialSliceOffset)
-    
+
+### Let background handle this
+#                     if oViewNode.fInitialSliceOffset != None:
+#                         slWindowLogic.SetSliceOffset(oViewNode.fInitialSliceOffset)
+
                     oViewNode.AssignColorTable()
     
                     # turn on label map volume if a label map was loaded for the background image                

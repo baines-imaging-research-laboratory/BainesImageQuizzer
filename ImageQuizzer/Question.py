@@ -1188,7 +1188,7 @@ class Button(Question):
     #-----------------------------------------------
     
     def PopulateQuestionWithResponses(self, lsValues):
-        # there is nothing to populate for info box type questions
+        # there is nothing to populate for button type questions
         pass
     
 
