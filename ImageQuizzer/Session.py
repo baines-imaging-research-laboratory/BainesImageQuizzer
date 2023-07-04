@@ -1201,6 +1201,9 @@ class Session:
         '''
         sMsg = ''
         
+        lsCurrentResponses = []
+        sCaptureSuccessLevel, lsCurrentResponses, sMsg = self.CaptureNewResponsesToSave()
+
         bSuccess, sMsg  = self.PerformSave('ResetView')
 
         if bSuccess:
@@ -1213,6 +1216,8 @@ class Session:
             self.DisplayImageLayout()
             
             self.ResetContourDisplayState(sFillOrOutline, iOpacitySliderValue, fOpacity)
+            # Populate quiz with current responses
+            self.DisplayCurrentResponses(lsCurrentResponses)
 
         else:
             if sMsg != '':
@@ -1797,6 +1802,21 @@ class Session:
             self.lsLayoutWidgets.append('Yellow')
                     
     
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def DisplayCurrentResponses(self, lsCurrentResponses):
+        xNodeQuestionSet = self.GetCurrentQuestionSetNode()
+        indQSet = self.GetCurrentQuestionSetIndex()
+ 
+        oQuestionSet = self._loQuestionSets[indQSet]
+        loQuestions = oQuestionSet.GetQuestionList()
+         
+        # for each question and each option, extract any existing responses from the XML
+         
+        lsAllResponsesForQuestions = []
+        for indQuestion in range(len(loQuestions)):
+            oQuestion = loQuestions[indQuestion]
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplaySavedResponse(self):
 
