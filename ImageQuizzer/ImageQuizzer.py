@@ -131,14 +131,14 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         #    'ViewsToolBar' for different view layouts
         #    'MouseModeToolBar' for default, window/level, markups tools
           
-        self.lsModulesToToggleVisibilty = ['ModuleToolBar', 'DialogToolBar', 'CaptureToolBar', 'MainToolBar', 'ModuleSelectorToolBar', 'MouseModeToolBar', 'ViewToolBar', 'ViewersToolBar']
+        self.lsModulesToToggleVisibilty = ['ModuleToolBar', 'DialogToolBar', 'CaptureToolBar', 'MainToolBar',\
+                                            'ModuleSelectorToolBar', 'MouseModeToolBar', 'ViewToolBar', 'ViewersToolBar']
   
         for qtToolBar in slicer.util.mainWindow().findChildren('QToolBar'):
             if qtToolBar.name in self.lsModulesToToggleVisibilty:
                 qtToolBar.setVisible(False)
   
   
-        slicer.util.setPythonConsoleVisible(False)
         slicer.util.setModuleHelpSectionVisible(False)
         slicer.modules.welcome.widgetRepresentation().setVisible(False)
         
@@ -481,4 +481,16 @@ class customEventFilter(qt.QObject):
                     
             self.oUtilsMsgs.DisplayInfo(sExitMsg)
             slicer.util.exit(status=EXIT_SUCCESS)
+            
+        # disable minimize for UserInteraction
+        elif self.oSession.GetUserInteractionRequest() == True and\
+                ((event.type() == qt.QEvent.WindowStateChange) and slicer.util.mainWindow().isMinimized()):
+            slicer.util.mainWindow().showMaximized()
+            
+#         # disable drag window for UserInteraction  (located in non-client area)
+        elif self.oSession.GetUserInteractionRequest() == True and\
+                (event.type() ==  qt.QEvent.NonClientAreaMouseButtonRelease):
+            slicer.util.mainWindow().move(self.oSession.oUserInteraction.GetMainWindowPosition())
+            
+
                     

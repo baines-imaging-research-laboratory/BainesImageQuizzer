@@ -1,0 +1,29 @@
+<Session UserInteractionLog="Y">
+    <Page ID="Patient 1" Loop="Y">
+        <Image ID="CT" Type="Volume"  ZoomFactor="1.2" PanOrigin="-92 27.5 -225.5" InitialSliceOffset="-245">
+                <DefaultDestination>Red</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Axial</DefaultOrientation>
+                <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
+        </Image>
+        <Image ID="CT" Type="Volume" ZoomFactor="1.5" PanOrigin="-43.96383459076361 63.246218183203815 0.0" InitialSliceOffset="-112">
+                <DefaultDestination>Green</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Coronal</DefaultOrientation>
+                <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
+        </Image>
+        <Image ID="CT" Type="Volume" ZoomFactor=".75" PanOrigin="118 39 0" InitialSliceOffset="91">
+                <DefaultDestination>Yellow</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Sagittal</DefaultOrientation>
+                <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
+        </Image>
+        <QuestionSet ID="Processing script" Descriptor="Python executable">
+            <Question Type="CheckBox" Descriptor="Testing user interaction log">
+                <Option>Layout locked ?</Option>
+				<Option>Log started ?</Option>
+				<Option>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx yyyyyyyyyyyyyyyyyyyyyyyyyyyyy zzzzzzzzzzzzzzzzzzzzz</Option>
+            </Question>
+        </QuestionSet>
+    </Page>
+</Session>

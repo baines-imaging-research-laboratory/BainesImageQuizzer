@@ -15,7 +15,7 @@ from Utilities.UtilsEmail import *
 from Question import *
 from ImageView import *
 from PageState import *
-#from ImageQuizzer import *
+from UserInteraction import *
 
 import EditorLib
 from EditorLib import EditUtil
@@ -64,12 +64,14 @@ class Session:
         self._sSessionContourOpacity = 1.0
         self._bEmailResults = False
         self._bRandomizeRequired = False
+        self._bUserInteraction = False
         
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
         self.oPageState = PageState()
         self.oUtilsEmail = UtilsEmail()
+        self.oUserInteraction = None
 
         self.oImageView = None
         
@@ -147,6 +149,15 @@ class Session:
     #----------
     def GetEmailResultsRequest(self):
         return self._bEmailResults
+    
+    #----------
+    def SetUserInteractionRequest(self, bInput):
+        self._bUserInteraction = bInput
+        
+    #----------
+    def GetUserInteractionRequest(self):
+        return self._bUserInteraction
+    
     #----------
     def SetPreviousResponses(self, lInputResponses):
         self._lsPreviousResponses = lInputResponses
@@ -1356,12 +1367,15 @@ class Session:
     
             else:
                 
+                # >>>>>>>>>> Email feature <<<<<<<<<<
                 bEmailRequest, sMsg = self.oUtilsEmail.SetupEmailResults(self.oFilesIO, \
                                 self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'EmailResultsTo'))
                 
                 self.SetEmailResultsRequest(bEmailRequest)
                 if sMsg != '':
                     raise
+                
+                # >>>>>>>>>>>>>>>>> Widgets <<<<<<<<<<<<<<<<<<<<
 
                 self.SetupWidgets(slicerMainLayout)
                 self.oQuizWidgets.qLeftWidget.activateWindow()
@@ -1383,7 +1397,20 @@ class Session:
                 self.oFilesIO.SetupLoopingInitialization(xRootNode)
                 self.oFilesIO.SetupPageGroupInitialization(xRootNode)
                 
-    
+                # >>>>>>>>>> User Interaction Log feature <<<<<<<<<<
+
+                sUserInteractionLog = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'UserInteractionLog')
+                if sUserInteractionLog == 'Y':
+                    self.SetUserInteractionRequest(True)
+                    self.oUserInteraction = UserInteraction()
+                    self.oUserInteraction.LockLayout()
+                    
+                else:
+                    self.SetUserInteractionRequest(False)
+
+
+                # >>>>>>>>>>>>>>>>>>>>>>> Navigation and Displays <<<<<<<<<<<<<<<<
+                    
                 # build the list of indices page/questionset as read in by the XML 
                 #    list is shuffled if randomizing is requested
                 self.BuildNavigationList()
