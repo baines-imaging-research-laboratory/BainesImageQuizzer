@@ -19,13 +19,43 @@ class UserInteraction:
         
         self.slMainWindowPos = qt.QPoint()
         
+        # valid viewing windows for all of Image Quizzer layouts
+        self.lViewingWindows = ['Red','Green','Yellow','Slice4']
+        
+        # setup observers to watch for changes in the volume slice nodes
+        self.AddObservers()
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #-------------------------------------------
+    #        Getters / Setters
+    #-------------------------------------------
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    #----------
     def SetMainWindowPosition(self, qPt):
         self.slMainWindowPos = qPt
         
+    #----------
     def GetMainWindowPosition(self):
         return self.slMainWindowPos
 
+    #----------
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #-------------------------------------------
+    #        Functions
+    #-------------------------------------------
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LockLayout(self):
         ''' This function locks the Slicer layout so that the user cannot perform any of the following:
             zoom, pan, adjust slider for size of viewing windows vs quiz panel.
@@ -70,7 +100,6 @@ class UserInteraction:
         slMainWindow.centralWidget().setFixedHeight(fDesktopHeight/5*4)
         
         # disable zoom and pan controls from mouse right and center buttons 
-        self.lViewingWindows = ['Red','Green','Yellow','Slice4']
         for sName in self.lViewingWindows:
             slSliceWidget = slicer.app.layoutManager().sliceWidget(sName)
             if slSliceWidget != None:
@@ -83,8 +112,42 @@ class UserInteraction:
         
         slMainWindow.showMaximized()
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def AddObservers(self):
+        ''' This is a function to add observers to watch for changes in the slice nodes.
+            This is watching for a change in the volume - when scrolling occurs or when the 
+            interactive crosshair mode causes a change in the volume slice being displayed.
+        '''
         
+                # add observers for each viewing window  
+        for sName in self.lViewingWindows:
+            slSliceWidget = slicer.app.layoutManager().sliceWidget(sName)
+            if slSliceWidget != None:
+                slWidgetLogic = slSliceWidget.sliceLogic()
+                slSliceNode = slWidgetLogic.GetSliceNode()
+                slSliceNode.AddObserver(vtk.vtkCommand.ModifiedEvent, self.onModifiedSlice)
+
         
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onModifiedSlice(self, caller, event):
+        self.logic.run(self.fh, self.fhTemplate, self.lViewingWindows)
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CreateUserInteractionLog(self, oFilesIO):
+        ''' Open the user interaction log
+        '''
+        
+        sUserInteractionLogPath = os.path.join(oFilesIO.GetUserQuizResultsDir(), 'UserInteraction.log')
+        self.fh = open(sUserInteractionLogPath,"wt")
+
+        # write header lines
+        self.fh.write('Time,Layout,ViewName,Location,X,Y,Height,Width,I (A-P),J (S-I),K (L-R),\
+        m(0-0),m(0-1),m(0-2),m(0-3),\
+        m(1-0),m(1-1),m(1-2),m(1-3),\
+        m(2-0),m(2-1),m(2-2),m(2-3),\
+        m(3-0),m(3-1),m(3-2),m(3-3)\n')
+
+        self.fh.close()
         
         

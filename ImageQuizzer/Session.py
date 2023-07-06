@@ -1404,6 +1404,7 @@ class Session:
                     self.SetUserInteractionRequest(True)
                     self.oUserInteraction = UserInteraction()
                     self.oUserInteraction.LockLayout()
+                    self.oUserInteraction.CreateUserInteractionLog(self.oFilesIO)
                     
                 else:
                     self.SetUserInteractionRequest(False)
