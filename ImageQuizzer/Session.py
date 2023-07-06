@@ -72,6 +72,7 @@ class Session:
         self.oPageState = PageState()
         self.oUtilsEmail = UtilsEmail()
         self.oUserInteraction = None
+        self._fhInteractionLog = None
 
         self.oImageView = None
         
@@ -157,6 +158,14 @@ class Session:
     #----------
     def GetUserInteractionRequest(self):
         return self._bUserInteraction
+    
+    #----------
+    def SetFileHandlerInteractionLog(self, fh):
+        self._fhInteractionLog
+        
+    #----------
+    def GetFileHandlerInteractionLog(self):
+        return self._fhInteractionLog
     
     #----------
     def SetPreviousResponses(self, lInputResponses):
@@ -975,6 +984,12 @@ class Session:
             bSuccess = True
             sMsg = ''
             
+            # close open file handler for interaction log
+            if self.GetUserInteractionRequest():
+                fh = self.GetFileHandlerInteractionLog()
+                if fh != None:
+                    fh.close()
+                
             self.DisableButtons()    
             if self.sViewingMode != 'Default':
                 self.onResetViewClicked()
@@ -1039,6 +1054,12 @@ class Session:
             bSuccess = True
             sMsg = ''
 
+            # close open file handler for interaction log
+            if self.GetUserInteractionRequest():
+                fh = self.GetFileHandlerInteractionLog()
+                if fh != None:
+                    fh.close()
+                
             self.DisableButtons()    
             if self.sViewingMode != 'Default':
                 self.onResetViewClicked()
@@ -1112,6 +1133,13 @@ class Session:
                 bSuccess, sMsg = self.PerformSave(sCaller)
                 if bSuccess:
                     
+                    # close open file handler for interaction log
+                    if self.GetUserInteractionRequest():
+                        fh = self.GetFileHandlerInteractionLog()
+                        if fh != None:
+                            fh.flush()
+                            fh.close()
+                        
                     self.QueryThenSendEmailResults()
                             
                     # update shutdown batch file to remove SlicerDICOMDatabase
@@ -1397,18 +1425,6 @@ class Session:
                 self.oFilesIO.SetupLoopingInitialization(xRootNode)
                 self.oFilesIO.SetupPageGroupInitialization(xRootNode)
                 
-                # >>>>>>>>>> User Interaction Log feature <<<<<<<<<<
-
-                sUserInteractionLog = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'UserInteractionLog')
-                if sUserInteractionLog == 'Y':
-                    self.SetUserInteractionRequest(True)
-                    self.oUserInteraction = UserInteraction()
-                    self.oUserInteraction.LockLayout()
-                    self.oUserInteraction.CreateUserInteractionLog(self.oFilesIO)
-                    
-                else:
-                    self.SetUserInteractionRequest(False)
-
 
                 # >>>>>>>>>>>>>>>>>>>>>>> Navigation and Displays <<<<<<<<<<<<<<<<
                     
@@ -1420,6 +1436,17 @@ class Session:
                 # check for partial or completed quiz
                 self.SetNavigationIndexIfResumeRequired()
                             
+                # >>>>>>>>>> User Interaction Log feature <<<<<<<<<<
+                #    after setting up Page index and before displaying the image layout (which initiates logging)
+                sUserInteractionLog = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'UserInteractionLog')
+                if sUserInteractionLog == 'Y':
+                    self.SetUserInteractionRequest(True)
+                    self.oUserInteraction = UserInteraction()
+                    self.oUserInteraction.LockLayout()
+                    
+                else:
+                    self.SetUserInteractionRequest(False)
+
 
                 self.progress.setMaximum(len(self.GetNavigationList()))
                 self.progress.setValue(self.GetCurrentNavigationIndex())
@@ -1439,6 +1466,9 @@ class Session:
                     self.AddUserNameAttribute()
                     
                 self.EnableButtons()
+
+
+
 
         except:
             if self.GetNavigationList() == []:
@@ -1786,6 +1816,9 @@ class Session:
     
             self.ApplySavedImageState()
         
+            if self.GetUserInteractionRequest() == True:
+                self.fhInteractionLog = self.oUserInteraction.CreateUserInteractionLog(self)
+
         except:
             iPage = self.GetCurrentPageIndex() + 1
             tb = traceback.format_exc()

@@ -134,20 +134,35 @@ class UserInteraction:
         self.logic.run(self.fh, self.fhTemplate, self.lViewingWindows)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CreateUserInteractionLog(self, oFilesIO):
+    def CreateUserInteractionLog(self, oSession):
         ''' Open the user interaction log
         '''
+        sDirName = oSession.oFilesIO.GetFolderNameForPageResults(oSession)
+        sPageUserInteractionDir = oSession.oFilesIO.CreatePageDir(sDirName)
         
-        sUserInteractionLogPath = os.path.join(oFilesIO.GetUserQuizResultsDir(), 'UserInteraction.log')
-        self.fh = open(sUserInteractionLogPath,"wt")
+        # sUserInteractionLogPath = os.path.join(oSession.oFilesIO.GetUserQuizResultsDir(), 'UserInteraction.log')
+        sUserInteractionLogPath = os.path.join(sPageUserInteractionDir, 'UserInteraction.log')
 
-        # write header lines
-        self.fh.write('Time,Layout,ViewName,Location,X,Y,Height,Width,I (A-P),J (S-I),K (L-R),\
-        m(0-0),m(0-1),m(0-2),m(0-3),\
-        m(1-0),m(1-1),m(1-2),m(1-3),\
-        m(2-0),m(2-1),m(2-2),m(2-3),\
-        m(3-0),m(3-1),m(3-2),m(3-3)\n')
 
-        self.fh.close()
+
+        bCreatingNewFile = True
+        if os.path.exists(sUserInteractionLogPath):
+            bCreatingNewFile = False
+            
+        self.fh = open(sUserInteractionLogPath,"a")
+
+        if bCreatingNewFile:
+            # write header lines
+            self.fh.write('Time,Layout,ViewName,Location,X,Y,Height,Width,I (A-P),J (S-I),K (L-R),\
+m(0-0),m(0-1),m(0-2),m(0-3),\
+m(1-0),m(1-1),m(1-2),m(1-3),\
+m(2-0),m(2-1),m(2-2),m(2-3),\
+m(3-0),m(3-1),m(3-2),m(3-3)\n')
+            self.fh.flush()
+        else:
+            self.fh.write('>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+            self.fh.flush()
+
+        return self.fh
         
         

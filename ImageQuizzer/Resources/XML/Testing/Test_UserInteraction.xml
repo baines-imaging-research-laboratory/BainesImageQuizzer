@@ -1,5 +1,5 @@
 <Session UserInteractionLog="Y">
-    <Page ID="Patient 1" Loop="Y">
+    <Page ID="Patient 1" Loop="Y" Descriptor="CT">
         <Image ID="CT" Type="Volume"  ZoomFactor="1.2" PanOrigin="-92 27.5 -225.5" InitialSliceOffset="-245">
                 <DefaultDestination>Red</DefaultDestination>
                 <Layer>Background</Layer>
