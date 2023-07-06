@@ -51,12 +51,12 @@ class UserInteraction:
         slMainWindow.statusBar().setEnabled(False)
         
         
-        # get monitor desktop width
+        # get monitor desktop geometry
         fDesktopWidth = slicer.app.desktop().screenGeometry().width()
         fDesktopHeight = slicer.app.desktop().screenGeometry().height()
         slMainWindow.setFixedSize(fDesktopWidth, fDesktopHeight)
         
-        # set slicer's dock panel to a fixed width - this holds the quiz
+        # set sizes for slicer's dock panel (quiz) and central widget (viewing windows) 
         slDockPanel = slMainWindow.findChildren('QDockWidget','PanelDockWidget')[0]
         
         # use 1/3 quiz to 2/3 central widget ratio
@@ -68,6 +68,18 @@ class UserInteraction:
 
         # use 1/5 slicer border to 4/5 central widget ratio
         slMainWindow.centralWidget().setFixedHeight(fDesktopHeight/5*4)
+        
+        # disable zoom and pan controls from mouse right and center buttons 
+        self.lViewingWindows = ['Red','Green','Yellow','Slice4']
+        for sName in self.lViewingWindows:
+            slSliceWidget = slicer.app.layoutManager().sliceWidget(sName)
+            if slSliceWidget != None:
+                interactorStyle = slicer.app.layoutManager().sliceWidget(sName).sliceView().sliceViewInteractorStyle()
+                interactorStyle.SetActionEnabled(interactorStyle.Zoom, False)
+                interactorStyle.SetActionEnabled(interactorStyle.Translate, False)
+                interactorStyle.SetActionEnabled(interactorStyle.SetCursorPosition, True)
+
+        
         
         slMainWindow.showMaximized()
         
