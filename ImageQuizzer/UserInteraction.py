@@ -6,6 +6,9 @@ import traceback
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
 
+from enum import Enum
+
+
 ##########################################################################
 #
 # class UserInteraction
@@ -16,6 +19,10 @@ class UserInteraction:
     
     def __init__(self):
         self.sClassName = type(self).__name__
+        
+        self.fh = None
+        self.fhTemplate = None
+        self.lViewingWindows = []
         
         self.slMainWindowPos = qt.QPoint()
         
@@ -69,7 +76,7 @@ class UserInteraction:
             - The customEventFilter class handles when a user tries to drag the window to a new position.
         '''
         
-        slicer.util.setPythonConsoleVisible(False)
+        # slicer.util.setPythonConsoleVisible(False)
 
         
         slMainWindow = slicer.util.mainWindow()
@@ -97,7 +104,7 @@ class UserInteraction:
 #         modulePanelScrollArea.setFixedWidth(fDesktopWidth/4)
 
         # use 1/5 slicer border to 4/5 central widget ratio
-        slMainWindow.centralWidget().setFixedHeight(fDesktopHeight/5*4)
+        slMainWindow.centralWidget().setFixedHeight(fDesktopHeight/5*4-20)
         
         # disable zoom and pan controls from mouse right and center buttons 
         for sName in self.lViewingWindows:
@@ -131,7 +138,8 @@ class UserInteraction:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onModifiedSlice(self, caller, event):
-        self.logic.run(self.fh, self.fhTemplate, self.lViewingWindows)
+        
+        self.CaptureCoordinates(self.fh, self.fhTemplate,  self.lViewingWindows)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CreateUserInteractionLog(self, oSession):
@@ -160,9 +168,197 @@ m(2-0),m(2-1),m(2-2),m(2-3),\
 m(3-0),m(3-1),m(3-2),m(3-3)\n')
             self.fh.flush()
         else:
-            self.fh.write('>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+            self.fh.write('>>>>>>>>>>>>>>>>>>>>>>>>>>>\n')
             self.fh.flush()
 
+        # template for rows - excludes formating of matrices
+        self.fhTemplate = '{}, {},\
+{}, {},\
+{:.4f}, {:.4f},\
+{:.0f}, {:.0f},\
+{:.5f}, {:.5f}, {:.5f}'
+
         return self.fh
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CaptureCoordinates(self, fh, fhTemplate, lViewingWindows):
+        """
+        Run the actual algorithm
+        """
+        if self.fh != None and self.fhTemplate != None:
+            lsCornerLocations = ['TopLeft', 'TopRight', 'BottomLeft', 'BottomRight']
+            self.lViewingWindows = lViewingWindows
+            
+            for sName in self.lViewingWindows:
+                    slSliceWidget = slicer.app.layoutManager().sliceWidget(sName)
+                    if slSliceWidget != None and slSliceWidget.visible:
+                    
+                        for sCorner in lsCornerLocations:
+                            oLogDetails = LogDetails( sName, slSliceWidget, sCorner)
+                            fh.write(fhTemplate.format(oLogDetails.sDateTime,oLogDetails.sLayoutName,  \
+                                        oLogDetails.sWidgetName, oLogDetails.oCornerCoordinates.sCornerLocation,\
+                                        oLogDetails.oCornerCoordinates.lScreenXY[0], oLogDetails.oCornerCoordinates.lScreenXY[1],\
+                                        oLogDetails.oCornerCoordinates.iWidgetHeight, oLogDetails.oCornerCoordinates.iWidgetWidth,\
+                                        oLogDetails.oCornerCoordinates.lIIJK[0],oLogDetails.oCornerCoordinates.lIIJK[1],oLogDetails.oCornerCoordinates.lIIJK[2] ))
+                            # append transformation matrix
+                            for iRow in range(4):
+                                for iCol in range(4):
+                                    fh.write(',{:.5f}'.format(oLogDetails.oCornerCoordinates.mTransformMatrix.GetElement(iRow,iCol)))
+                            # finish the line
+                            fh.write('\n')
+            
+
+
+                             
+        return
+    
+    
+        
+##########################################################################
+#
+# class LogDetails
+#
+##########################################################################
+
+
+class LogDetails():
+    
+    def __init__(self, sWidgetName, slSliceWidget, sCorner):
+        
+        self.sDateTime = ''
+        self.sLayoutName = ''
+        self.slSliceWidget = slSliceWidget
+        self.sWidgetName = sWidgetName
+        self.oCornerCoordinates = CornerCoordinates(self.slSliceWidget, sCorner)
+        
+
+        now = datetime.now()
+        self.sDateTime = str(now.strftime("%Y/%m/%d %H:%M:%S.%f"))
+        self.sLayoutName = SlicerLayoutDescription(slicer.app.layoutManager().layout).name
+        
+
+##########################################################################
+#
+# class CornerCoordinates
+#
+##########################################################################
+
+class CornerCoordinates():
+    
+    def __init__(self, slWidget, sCorner):
+        
+        self.sCornerLocation = sCorner
+        self.oScreenXY = qt.QPoint()
+        self.lIIJK = [0.0,0.0,0.0]
+        self.lScreenXY = [0.0,0.0]
+        self.oGeometry = qt.QRect()
+        self.slWidget = slWidget
+        self.sWidgetCornerXYZ = [0.0,0.0,0.0]
+        self.mTransformMatrix = None
+        self.iWidgetHeight = 0
+        self.iWidgetWidth = 0
+        
+        self.GetCornerCoordinates()
+        self.ConvertWidgetCornerXYZToIJK()
+        
+    def GetCornerCoordinates(self):
+        
+#         lCornerLogicCalls = (('TopLeft', self.slWidget.geometry.topLeft()),
+#                              ('TopRight', self.slWidget.geometry.topRight()),
+#                              ('BottomLeft', self.slWidget.geometry.bottomLeft()),
+#                              ('BottomRight',self.slWidget.geometry.bottomRight()))
+#         self.sCornerLocation = self.sCornerLocation
+
+            
+        slMainWindow = slicer.util.mainWindow()
+        slCentralWidget = slMainWindow.centralWidget()
+            
+       
+        self.lScreenXY[0] = slMainWindow.geometry.topLeft().x()\
+                            + slCentralWidget.pos.x()\
+                            + self.slWidget.geometry.left()
+       
+        
+        self.lScreenXY[1] = slMainWindow.geometry.topLeft().y()\
+                            + slCentralWidget.pos.y()\
+                            + self.slWidget.geometry.top()
+        
+            
+        # adjust for width and height
+        
+        if self.sCornerLocation == 'TopRight' or self.sCornerLocation == 'BottomRight':
+            self.lScreenXY[0] = self.lScreenXY[0] + self.slWidget.geometry.width()
+
+        
+        if self.sCornerLocation == 'BottomLeft' or self.sCornerLocation == 'BottomRight':
+            self.lScreenXY[1] = self.lScreenXY[1] + self.slWidget.geometry.height()
+
+
+        
+        # assign XYZ values for each corner - as if this getting cursor positions
+        #       " sliceNode = crosshairNode.GetCursorPositionXYZ(xyz) "
+        #    cursor positions in the widget start with (0,0) at the bottom left corner
+        # adjust by the height of the slice slider within the widget
+        slSliderWidget = self.slWidget.sliceController()
+        fSliderHeight = slSliderWidget.geometry.height()
+        
+        self.iWidgetHeight = self.slWidget.geometry.height() - int(fSliderHeight)
+        self.iWidgetWidth = self.slWidget.geometry.width()
+        
+
+        if self.sCornerLocation == 'TopRight':
+            self.sWidgetCornerXYZ = [self.slWidget.geometry.width(), self.slWidget.geometry.height()-fSliderHeight, 0.0]
+    
+        if self.sCornerLocation == 'TopLeft':
+            self.sWidgetCornerXYZ = [0.0, self.slWidget.geometry.height()-fSliderHeight, 0.0]
+
+        if self.sCornerLocation == 'BottomLeft':
+            self.sWidgetCornerXYZ = [0.0, 0.0, 0.0]
+
+        if self.sCornerLocation == 'BottomRight':
+            self.sWidgetCornerXYZ = [self.slWidget.geometry.width(), 0.0, 0.0]
+       
+        
+    def ConvertWidgetCornerXYZToIJK(self):
+        """ Using the crosshair node convert the XY screen coordinates into IJK values
+        """
+#         slCrosshairNode = slicer.util.getNode("Crosshair")
+        slAppLogic = slicer.app.applicationLogic()
         
         
+        try:
+            # from DataProbe
+#             slCrosshairNode.SetCursorPositionXYZ(lXYZ)
+#             slSliceNode = slCrosshairNode.GetCursorPositionXYZ(lXYZ)
+
+
+            slWidgetLogic = self.slWidget.sliceLogic()
+            slSliceNode = slWidgetLogic.GetSliceNode()
+            slSliceLogic = slAppLogic.GetSliceLogic(slSliceNode)
+            slLayerLogic = slSliceLogic.GetBackgroundLayer()
+            xyToIJK = slLayerLogic.GetXYToIJKTransform()
+            self.mTransformMatrix = xyToIJK.GetConcatenatedTransform(0).GetMatrix()
+            self.lIIJK = xyToIJK.TransformDoublePoint(self.sWidgetCornerXYZ)
+
+            
+        except:
+            print ('No XYZ')
+
+
+        
+##########################################################################
+#
+# class SlicerLayoutDescription
+#
+##########################################################################
+
+class SlicerLayoutDescription(Enum):
+    """ This list of viewing layouts is based on the SlicerLayout enums defined in Slicer's vtkMRMLLayoutNode.h
+        It is not a complete list - but connects the names used in the ImageQuizzer with the enums in Slicer.
+    """
+    
+    FourUpView = 3
+    OneUpRedSlice = 6
+    TwoOverTwoView = 27
+    SideBySideView = 29
+     

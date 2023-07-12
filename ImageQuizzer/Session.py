@@ -1817,7 +1817,8 @@ class Session:
             self.ApplySavedImageState()
         
             if self.GetUserInteractionRequest() == True:
-                self.fhInteractionLog = self.oUserInteraction.CreateUserInteractionLog(self)
+                self.SetFileHandlerInteractionLog(self.oUserInteraction.CreateUserInteractionLog(self))
+                
 
         except:
             iPage = self.GetCurrentPageIndex() + 1
