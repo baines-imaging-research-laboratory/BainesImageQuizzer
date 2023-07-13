@@ -402,13 +402,13 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                     self.oSession.RunSetup(self.oFilesIO, self.slicerMainLayout)
     
                     
-                    try:
-                        #provide as much room as possible for the quiz
-                        qDataProbeCollapsibleButton = slicer.util.mainWindow().findChild("QWidget","DataProbeCollapsibleWidget")
-                        qDataProbeCollapsibleButton.collapsed = True
-                        self.reloadCollapsibleButton.collapsed = True
-                    except:
-                        pass
+#                     try:
+#                         #provide as much room as possible for the quiz
+#                         qDataProbeCollapsibleButton = slicer.util.mainWindow().findChild("QWidget","DataProbeCollapsibleWidget")
+#                         qDataProbeCollapsibleButton.collapsed = True
+#                         self.reloadCollapsibleButton.collapsed = True
+#                     except:
+#                         pass
 
             else:
                 self.oUtilsMsgs.DisplayError(sMsg)

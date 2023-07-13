@@ -86,12 +86,14 @@ class UserInteraction:
         
         slicer.util.setMenuBarsVisible(False)
         slMainWindow.statusBar().setEnabled(False)
-        
-        
-        # get monitor desktop geometry
-        fDesktopWidth = slicer.app.desktop().screenGeometry().width()
-        fDesktopHeight = slicer.app.desktop().screenGeometry().height()
+
+
+        # set fixed geometry maximized        
+        slMainWindow.showMaximized()
+        fDesktopWidth = slMainWindow.geometry.width()
+        fDesktopHeight = slMainWindow.geometry.height()
         slMainWindow.setFixedSize(fDesktopWidth, fDesktopHeight)
+        
         
         # set sizes for slicer's dock panel (quiz) and central widget (viewing windows) 
         slDockPanel = slMainWindow.findChildren('QDockWidget','PanelDockWidget')[0]
@@ -104,7 +106,7 @@ class UserInteraction:
 #         modulePanelScrollArea.setFixedWidth(fDesktopWidth/4)
 
         # use 1/5 slicer border to 4/5 central widget ratio
-        slMainWindow.centralWidget().setFixedHeight(fDesktopHeight/5*4-20)
+        slMainWindow.centralWidget().setFixedHeight(fDesktopHeight/5*4)
         
         # disable zoom and pan controls from mouse right and center buttons 
         for sName in self.lViewingWindows:
@@ -115,10 +117,7 @@ class UserInteraction:
                 interactorStyle.SetActionEnabled(interactorStyle.Translate, False)
                 interactorStyle.SetActionEnabled(interactorStyle.SetCursorPosition, True)
 
-        
-        
-        slMainWindow.showMaximized()
-        
+                
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddObservers(self):
         ''' This is a function to add observers to watch for changes in the slice nodes.
@@ -126,7 +125,6 @@ class UserInteraction:
             interactive crosshair mode causes a change in the volume slice being displayed.
         '''
         
-                # add observers for each viewing window  
         for sName in self.lViewingWindows:
             slSliceWidget = slicer.app.layoutManager().sliceWidget(sName)
             if slSliceWidget != None:
@@ -134,6 +132,17 @@ class UserInteraction:
                 slSliceNode = slWidgetLogic.GetSliceNode()
                 slSliceNode.AddObserver(vtk.vtkCommand.ModifiedEvent, self.onModifiedSlice)
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def RemoveObservers(self):
+        ''' This is a function to remove observers on exit
+        '''
+        
+        for sName in self.lViewingWindows:
+            slSliceWidget = slicer.app.layoutManager().sliceWidget(sName)
+            if slSliceWidget != None:
+                slWidgetLogic = slSliceWidget.sliceLogic()
+                slSliceNode = slWidgetLogic.GetSliceNode()
+                slSliceNode.RemoveObserver(vtk.vtkCommand.ModifiedEvent)
         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -144,12 +153,13 @@ class UserInteraction:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CreateUserInteractionLog(self, oSession):
         ''' Open the user interaction log
+            Return the file handler for the current log.
         '''
         sDirName = oSession.oFilesIO.GetFolderNameForPageResults(oSession)
         sPageUserInteractionDir = oSession.oFilesIO.CreatePageDir(sDirName)
         
         # sUserInteractionLogPath = os.path.join(oSession.oFilesIO.GetUserQuizResultsDir(), 'UserInteraction.log')
-        sUserInteractionLogPath = os.path.join(sPageUserInteractionDir, 'UserInteraction.log')
+        sUserInteractionLogPath = os.path.join(sPageUserInteractionDir, 'UserInteractionlog.csv')
 
 
 
@@ -160,7 +170,7 @@ class UserInteraction:
         self.fh = open(sUserInteractionLogPath,"a")
 
         if bCreatingNewFile:
-            # write header lines
+            # write header lines (no indents for proper csv formatting)
             self.fh.write('Time,Layout,ViewName,Location,X,Y,Height,Width,I (A-P),J (S-I),K (L-R),\
 m(0-0),m(0-1),m(0-2),m(0-3),\
 m(1-0),m(1-1),m(1-2),m(1-3),\
@@ -168,7 +178,9 @@ m(2-0),m(2-1),m(2-2),m(2-3),\
 m(3-0),m(3-1),m(3-2),m(3-3)\n')
             self.fh.flush()
         else:
-            self.fh.write('>>>>>>>>>>>>>>>>>>>>>>>>>>>\n')
+            now = datetime.now()
+            sAppendBreak = str(now.strftime("%Y/%m/%d %H:%M:%S.%f")) + ',>>>>>>>>>>>>>>>>>>>>>>>>>>>\n'
+            self.fh.write(sAppendBreak)
             self.fh.flush()
 
         # template for rows - excludes formating of matrices
@@ -199,19 +211,26 @@ m(3-0),m(3-1),m(3-2),m(3-3)\n')
                                         oLogDetails.sWidgetName, oLogDetails.oCornerCoordinates.sCornerLocation,\
                                         oLogDetails.oCornerCoordinates.lScreenXY[0], oLogDetails.oCornerCoordinates.lScreenXY[1],\
                                         oLogDetails.oCornerCoordinates.iWidgetHeight, oLogDetails.oCornerCoordinates.iWidgetWidth,\
-                                        oLogDetails.oCornerCoordinates.lIIJK[0],oLogDetails.oCornerCoordinates.lIIJK[1],oLogDetails.oCornerCoordinates.lIIJK[2] ))
+                                        oLogDetails.oCornerCoordinates.liIJK[0],oLogDetails.oCornerCoordinates.liIJK[1],oLogDetails.oCornerCoordinates.liIJK[2] ))
                             # append transformation matrix
                             for iRow in range(4):
                                 for iCol in range(4):
                                     fh.write(',{:.5f}'.format(oLogDetails.oCornerCoordinates.mTransformMatrix.GetElement(iRow,iCol)))
                             # finish the line
                             fh.write('\n')
-            
-
-
+                            fh.flush()
                              
         return
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CloseInteractionLog(self, fh):
+        ''' Given the currently open file handler, flush the buffer and close the log
+        '''
+
+        if fh != None:
+            fh.flush()
+            fh.close()
+
     
         
 ##########################################################################
@@ -249,7 +268,7 @@ class CornerCoordinates():
         
         self.sCornerLocation = sCorner
         self.oScreenXY = qt.QPoint()
-        self.lIIJK = [0.0,0.0,0.0]
+        self.liIJK = [0.0,0.0,0.0]
         self.lScreenXY = [0.0,0.0]
         self.oGeometry = qt.QRect()
         self.slWidget = slWidget
@@ -258,9 +277,13 @@ class CornerCoordinates():
         self.iWidgetHeight = 0
         self.iWidgetWidth = 0
         
+        self.oUtilsMsgs = UtilsMsgs()
+
+        
         self.GetCornerCoordinates()
         self.ConvertWidgetCornerXYZToIJK()
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetCornerCoordinates(self):
         
 #         lCornerLogicCalls = (('TopLeft', self.slWidget.geometry.topLeft()),
@@ -295,7 +318,7 @@ class CornerCoordinates():
 
 
         
-        # assign XYZ values for each corner - as if this getting cursor positions
+        # assign XYZ values for each corner - as if getting cursor positions
         #       " sliceNode = crosshairNode.GetCursorPositionXYZ(xyz) "
         #    cursor positions in the widget start with (0,0) at the bottom left corner
         # adjust by the height of the slice slider within the widget
@@ -319,8 +342,9 @@ class CornerCoordinates():
             self.sWidgetCornerXYZ = [self.slWidget.geometry.width(), 0.0, 0.0]
        
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ConvertWidgetCornerXYZToIJK(self):
-        """ Using the crosshair node convert the XY screen coordinates into IJK values
+        """ Convert the XY screen coordinates into IJK values
         """
 #         slCrosshairNode = slicer.util.getNode("Crosshair")
         slAppLogic = slicer.app.applicationLogic()
@@ -338,12 +362,14 @@ class CornerCoordinates():
             slLayerLogic = slSliceLogic.GetBackgroundLayer()
             xyToIJK = slLayerLogic.GetXYToIJKTransform()
             self.mTransformMatrix = xyToIJK.GetConcatenatedTransform(0).GetMatrix()
-            self.lIIJK = xyToIJK.TransformDoublePoint(self.sWidgetCornerXYZ)
+            self.liIJK = xyToIJK.TransformDoublePoint(self.sWidgetCornerXYZ)
 
             
         except:
-            print ('No XYZ')
-
+            #TODO:  work out displaying appropriate error message - and exit?
+            sMsg = "Cannot convert widget corner XYZ to IJK"
+            self.oUtilsMsgs.DisplayWarning(sMsg)
+            
 
         
 ##########################################################################
