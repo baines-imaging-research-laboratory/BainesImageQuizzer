@@ -100,10 +100,20 @@ class UserInteraction:
         
         # use 1/3 quiz to 2/3 central widget ratio
         slDockPanel.setFixedWidth(fDesktopWidth/3)
-        slDockPanel.setSizePolicy(qt.QSizePolicy.Fixed, qt.QSizePolicy.Expanding)
-#         modulePanelScrollArea = slDockPanel.findChild('QWidget', 'dockWidgetContents')
-#         modulePanelScrollArea.setSizePolicy(qt.QSizePolicy.Fixed, qt.QSizePolicy.Expanding)
-#         modulePanelScrollArea.setFixedWidth(fDesktopWidth/4)
+        
+        ####################
+        ### trying to add scrolling and sizing policies to allow for a greater viewing area
+        # slDockPanel.setSizePolicy(qt.QSizePolicy.Expanding, qt.QSizePolicy.Preferred)
+        #
+        # modulePanelScrollArea = slDockPanel.findChild('QWidget', 'dockWidgetContents')
+        # modulePanelScrollArea.setSizePolicy(qt.QSizePolicy.Expanding, qt.QSizePolicy.Preferred)
+        # modulePanelScrollArea.setFixedWidth(fDesktopWidth/4)
+        #
+        # qSize = qt.QSizePolicy()
+        # qSize.setHorizontalPolicy(qt.QSizePolicy.Expanding)
+        # qSize.setVerticalPolicy(qt.QSizePolicy.Preferred)
+        # self.slDockPanel.setSizePolicy( qSize )
+        #########################
 
         # use 1/5 slicer border to 4/5 central widget ratio
         slMainWindow.centralWidget().setFixedHeight(fDesktopHeight/5*4)
@@ -171,7 +181,7 @@ class UserInteraction:
 
         if bCreatingNewFile:
             # write header lines (no indents for proper csv formatting)
-            self.fh.write('Time,Layout,ViewName,Location,X,Y,Height,Width,I (A-P),J (S-I),K (L-R),\
+            self.fh.write('Time,Layout,ViewName,Location,X,Y,Height,Width,I (L-R),J (A-P),K (S-I),\
 m(0-0),m(0-1),m(0-2),m(0-3),\
 m(1-0),m(1-1),m(1-2),m(1-3),\
 m(2-0),m(2-1),m(2-2),m(2-3),\
@@ -195,8 +205,10 @@ m(3-0),m(3-1),m(3-2),m(3-3)\n')
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureCoordinates(self, fh, fhTemplate, lViewingWindows):
         """
-        Run the actual algorithm
+        Create log details - which will run the algorithm to create the corner coordinates
+        Write log details to log.
         """
+        
         if self.fh != None and self.fhTemplate != None:
             lsCornerLocations = ['TopLeft', 'TopRight', 'BottomLeft', 'BottomRight']
             self.lViewingWindows = lViewingWindows
@@ -206,7 +218,9 @@ m(3-0),m(3-1),m(3-2),m(3-3)\n')
                     if slSliceWidget != None and slSliceWidget.visible:
                     
                         for sCorner in lsCornerLocations:
+                            
                             oLogDetails = LogDetails( sName, slSliceWidget, sCorner)
+                            
                             fh.write(fhTemplate.format(oLogDetails.sDateTime,oLogDetails.sLayoutName,  \
                                         oLogDetails.sWidgetName, oLogDetails.oCornerCoordinates.sCornerLocation,\
                                         oLogDetails.oCornerCoordinates.lScreenXY[0], oLogDetails.oCornerCoordinates.lScreenXY[1],\
@@ -286,12 +300,6 @@ class CornerCoordinates():
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetCornerCoordinates(self):
         
-#         lCornerLogicCalls = (('TopLeft', self.slWidget.geometry.topLeft()),
-#                              ('TopRight', self.slWidget.geometry.topRight()),
-#                              ('BottomLeft', self.slWidget.geometry.bottomLeft()),
-#                              ('BottomRight',self.slWidget.geometry.bottomRight()))
-#         self.sCornerLocation = self.sCornerLocation
-
             
         slMainWindow = slicer.util.mainWindow()
         slCentralWidget = slMainWindow.centralWidget()
@@ -346,15 +354,10 @@ class CornerCoordinates():
     def ConvertWidgetCornerXYZToIJK(self):
         """ Convert the XY screen coordinates into IJK values
         """
-#         slCrosshairNode = slicer.util.getNode("Crosshair")
+
         slAppLogic = slicer.app.applicationLogic()
         
-        
         try:
-            # from DataProbe
-#             slCrosshairNode.SetCursorPositionXYZ(lXYZ)
-#             slSliceNode = slCrosshairNode.GetCursorPositionXYZ(lXYZ)
-
 
             slWidgetLogic = self.slWidget.sliceLogic()
             slSliceNode = slWidgetLogic.GetSliceNode()
