@@ -462,15 +462,16 @@ class RadioQuestion(Question):
     
     def PopulateQuestionWithResponses(self, lsValues):
         
-        i = 0
-        for qBtn in self.qGrpBox.findChildren(qt.QRadioButton):
-            
-            if lsValues[i] == 'N':
-                qBtn.setChecked(False)
-            else:
-                if lsValues[i] == 'Y':
-                    qBtn.setChecked(True)
-            i = i + 1
+        if len(lsValues) > 0:
+            i = 0
+            for qBtn in self.qGrpBox.findChildren(qt.QRadioButton):
+                
+                if lsValues[i] == 'N':
+                    qBtn.setChecked(False)
+                else:
+                    if lsValues[i] == 'Y':
+                        qBtn.setChecked(True)
+                i = i + 1
             
 
 #========================================================================================
@@ -565,15 +566,16 @@ class CheckBoxQuestion(Question):
     
     def PopulateQuestionWithResponses(self, lsValues):
             
-        i = 0
-        for qBox in self.qGrpBox.findChildren(qt.QCheckBox):
-            
-            if lsValues[i] == 'N':
-                qBox.setChecked(False)
-            else:
-                if lsValues[i] == 'Y':
-                    qBox.setChecked(True)
-            i = i + 1
+        if len(lsValues) > 0:
+            i = 0
+            for qBox in self.qGrpBox.findChildren(qt.QCheckBox):
+                
+                if lsValues[i] == 'N':
+                    qBox.setChecked(False)
+                else:
+                    if lsValues[i] == 'Y':
+                        qBox.setChecked(True)
+                i = i + 1
         
         
 
@@ -673,11 +675,13 @@ class TextQuestion(Question):
     #-----------------------------------------------
     
     def PopulateQuestionWithResponses(self, lsValues):
-        i = 0
-        for qTxt in self.qGrpBox.findChildren(qt.QLineEdit):
-            
-            qTxt.setText(lsValues[i])
-            i = i + 1
+
+        if len(lsValues) > 0:
+            i = 0
+            for qTxt in self.qGrpBox.findChildren(qt.QLineEdit):
+                
+                qTxt.setText(lsValues[i])
+                i = i + 1
 
 #========================================================================================
 #                     Class IntegerValueQuestion
@@ -826,11 +830,12 @@ class IntegerValueQuestion(Question):
     
     def PopulateQuestionWithResponses(self, lsValues):
 
-        i = 0
-        for qTxt in self.qGrpBox.findChildren(qt.QLineEdit):
-            
-            qTxt.setText(lsValues[i])
-            i = i + 1
+        if len(lsValues) > 0:
+            i = 0
+            for qTxt in self.qGrpBox.findChildren(qt.QLineEdit):
+                
+                qTxt.setText(lsValues[i])
+                i = i + 1
 
 #========================================================================================
 #                     Class FloatValueQuestion
@@ -981,11 +986,12 @@ class FloatValueQuestion(Question):
     
     def PopulateQuestionWithResponses(self, lsValues):
 
-        i = 0
-        for qTxt in self.qGrpBox.findChildren(qt.QLineEdit):
-            
-            qTxt.setText(lsValues[i])
-            i = i + 1
+        if len(lsValues) > 0:
+            i = 0
+            for qTxt in self.qGrpBox.findChildren(qt.QLineEdit):
+                
+                qTxt.setText(lsValues[i])
+                i = i + 1
 
 #========================================================================================
 #                     Class InfoBox

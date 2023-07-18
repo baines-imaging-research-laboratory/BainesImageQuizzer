@@ -23,6 +23,14 @@
                 <Option>Scripts/script1.py</Option>
 				<Option>Scripts/script2.py</Option>
             </Question>
+            <Question Type="CheckBox" Descriptor="Test Checkboxes">
+                <Option>Check1</Option>
+				<Option>Check2</Option>
+            </Question>
+            <Question Type="Radio" Descriptor="Test Radio Buttons">
+                <Option>Radio1</Option>
+				<Option>Radio2</Option>
+            </Question>
         </QuestionSet>
     </Page>
 </Session>

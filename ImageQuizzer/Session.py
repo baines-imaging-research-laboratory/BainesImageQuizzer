@@ -1197,16 +1197,17 @@ class Session:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onResetViewClicked(self):
-        ''' return viewing nodes to original layout for this page in the xml
+        ''' Capture responses in the current state (may not be completed) before 
+            resetting the viewing nodes to original layout for this page.
+            Restore the current responses.
         '''
-        sMsg = ''
         
         lsCurrentResponses = []
-        sCaptureSuccessLevel, lsCurrentResponses, sMsg = self.CaptureNewResponsesToSave()
 
-        bSuccess, sMsg  = self.PerformSave('ResetView')
-
-        if bSuccess:
+        try:
+            sCaptureSuccessLevel, lsCurrentResponses, sMsg = self.CaptureNewResponsesToSave()
+            self.CaptureAndSaveImageState()
+            
             sFillOrOutline, iOpacitySliderValue, fOpacity = self.GetContourDisplayState()
             self.AdjustToCurrentQuestionSet()
             self.bNPlanesViewingMode = False
@@ -1216,33 +1217,43 @@ class Session:
             self.DisplayImageLayout()
             
             self.ResetContourDisplayState(sFillOrOutline, iOpacitySliderValue, fOpacity)
+            
             # Populate quiz with current responses
             self.DisplayCurrentResponses(lsCurrentResponses)
+            self.ApplySavedImageState()
 
-        else:
-            if sMsg != '':
-                self.oUtilsMsgs.DisplayError(sMsg)
+        except:
+            tb = traceback.format_exc()
+            sMsg = "onResetViewClicked: Error resetting the view after NPlanes (closeup) request.  \n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
+            
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onNPlanesViewClicked(self):
         ''' display the requested image in the requested viewing mode
         '''
-        if self.GetNPlanesComboBoxCount() > 0:
-            self.CaptureAndSaveImageState()
+        try:
+            if self.GetNPlanesComboBoxCount() > 0:
+                self.CaptureAndSaveImageState()
+                
+                self.SetNPlanesView()
+                oImageNodeOverride, iXmlImageIndex = self.GetNPlanesImageComboBoxSelection()
+                self.liImageDisplayOrder = self.ReorderImageIndexToEnd(iXmlImageIndex)
+                self.oImageView.AssignNPlanes(oImageNodeOverride, self.llsNPlanesOrientDest)
+                self.bNPlanesViewingMode = True
+        
+                #    the current image node being displayed in an alternate view may have been 
+                #    repeated in different orientations in the xml
+                self.loCurrentXMLImageViewNodes = self.GetMatchingXMLImageNodes(oImageNodeOverride.sImagePath)
+                self.ApplySavedImageState()
+            else:
+                sMsg = 'No images have been loaded to display in an alternate viewing mode.'
+                self.oUtilsMsgs.DisplayWarning(sMsg)
+        except:
+            tb = traceback.format_exc()
+            sMsg = "onNPlanesViewClicked: Error setting the NPlanes view (closeup) request.  \n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
             
-            self.SetNPlanesView()
-            oImageNodeOverride, iXmlImageIndex = self.GetNPlanesImageComboBoxSelection()
-            self.liImageDisplayOrder = self.ReorderImageIndexToEnd(iXmlImageIndex)
-            self.oImageView.AssignNPlanes(oImageNodeOverride, self.llsNPlanesOrientDest)
-            self.bNPlanesViewingMode = True
-    
-            #    the current image node being displayed in an alternate view may have been 
-            #    repeated in different orientations in the xml
-            self.loCurrentXMLImageViewNodes = self.GetMatchingXMLImageNodes(oImageNodeOverride.sImagePath)
-            self.ApplySavedImageState()
-        else:
-            sMsg = 'No images have been loaded to display in an alternate viewing mode.'
-            self.oUtilsMsgs.DisplayWarning(sMsg)
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onWindowLevelOnClicked(self):
@@ -1805,17 +1816,15 @@ class Session:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplayCurrentResponses(self, lsCurrentResponses):
-        xNodeQuestionSet = self.GetCurrentQuestionSetNode()
+
         indQSet = self.GetCurrentQuestionSetIndex()
  
         oQuestionSet = self._loQuestionSets[indQSet]
         loQuestions = oQuestionSet.GetQuestionList()
          
-        # for each question and each option, extract any existing responses from the XML
-         
-        lsAllResponsesForQuestions = []
         for indQuestion in range(len(loQuestions)):
             oQuestion = loQuestions[indQuestion]
+            oQuestion.PopulateQuestionWithResponses(lsCurrentResponses[indQuestion])
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplaySavedResponse(self):
