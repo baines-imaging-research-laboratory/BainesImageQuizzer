@@ -283,6 +283,17 @@ class UtilsIOXml:
         return sData
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetDataFromLastChild(self, xParentNode, sChildTagName):
+        
+        sData = ''
+        
+        xChildNode = self.GetLastChild(xParentNode, sChildTagName)
+        if xChildNode != None:
+            sData = self.GetDataInNode(xChildNode)
+        
+        return sData
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CreateParentNode(self, sTagName, dictAttrib):
         
         xNode = etree.Element(sTagName)
