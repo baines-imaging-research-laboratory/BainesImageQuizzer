@@ -1232,13 +1232,17 @@ class Session:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onResetViewClicked(self):
-        ''' return viewing nodes to original layout for this page in the xml
+        ''' Capture responses in the current state (may not be completed) before 
+            resetting the viewing nodes to original layout for this page.
+            Restore the current responses.
         '''
-        sMsg = ''
         
-        bSuccess, sMsg  = self.PerformSave('ResetView')
+        lsCurrentResponses = []
 
-        if bSuccess:
+        try:
+            sCaptureSuccessLevel, lsCurrentResponses, sMsg = self.CaptureNewResponses()
+            self.CaptureAndSaveImageState()
+            
             sFillOrOutline, iOpacitySliderValue, fOpacity = self.GetContourDisplayState()
             self.AdjustToCurrentQuestionSet()
             self.bNPlanesViewingMode = False
@@ -1248,31 +1252,43 @@ class Session:
             self.DisplayImageLayout()
             
             self.ResetContourDisplayState(sFillOrOutline, iOpacitySliderValue, fOpacity)
+            
+            # Populate quiz with current responses
+            self.DisplayCurrentResponses(lsCurrentResponses)
+            self.ApplySavedImageState()
 
-        else:
-            if sMsg != '':
-                self.oUtilsMsgs.DisplayError(sMsg)
+        except:
+            tb = traceback.format_exc()
+            sMsg = "onResetViewClicked: Error resetting the view after NPlanes (closeup) request.  \n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
+            
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onNPlanesViewClicked(self):
         ''' display the requested image in the requested viewing mode
         '''
-        if self.GetNPlanesComboBoxCount() > 0:
-            self.CaptureAndSaveImageState()
+        try:
+            if self.GetNPlanesComboBoxCount() > 0:
+                self.CaptureAndSaveImageState()
+                
+                self.SetNPlanesView()
+                oImageNodeOverride, iXmlImageIndex = self.GetNPlanesImageComboBoxSelection()
+                self.liImageDisplayOrder = self.ReorderImageIndexToEnd(iXmlImageIndex)
+                self.oImageView.AssignNPlanes(oImageNodeOverride, self.llsNPlanesOrientDest)
+                self.bNPlanesViewingMode = True
+        
+                #    the current image node being displayed in an alternate view may have been 
+                #    repeated in different orientations in the xml
+                self.loCurrentXMLImageViewNodes = self.GetMatchingXMLImageNodes(oImageNodeOverride.sImagePath)
+                self.ApplySavedImageState()
+            else:
+                sMsg = 'No images have been loaded to display in an alternate viewing mode.'
+                self.oUtilsMsgs.DisplayWarning(sMsg)
+        except:
+            tb = traceback.format_exc()
+            sMsg = "onNPlanesViewClicked: Error setting the NPlanes view (closeup) request.  \n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
             
-            self.SetNPlanesView()
-            oImageNodeOverride, iXmlImageIndex = self.GetNPlanesImageComboBoxSelection()
-            self.liImageDisplayOrder = self.ReorderImageIndexToEnd(iXmlImageIndex)
-            self.oImageView.AssignNPlanes(oImageNodeOverride, self.llsNPlanesOrientDest)
-            self.bNPlanesViewingMode = True
-    
-            #    the current image node being displayed in an alternate view may have been 
-            #    repeated in different orientations in the xml
-            self.loCurrentXMLImageViewNodes = self.GetMatchingXMLImageNodes(oImageNodeOverride.sImagePath)
-            self.ApplySavedImageState()
-        else:
-            sMsg = 'No images have been loaded to display in an alternate viewing mode.'
-            self.oUtilsMsgs.DisplayWarning(sMsg)
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onWindowLevelOnClicked(self):
@@ -1857,6 +1873,19 @@ class Session:
             self.lsLayoutWidgets.append('Yellow')
                     
     
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def DisplayCurrentResponses(self, lsCurrentResponses):
+
+        indQSet = self.GetCurrentQuestionSetIndex()
+ 
+        oQuestionSet = self._loQuestionSets[indQSet]
+        loQuestions = oQuestionSet.GetQuestionList()
+         
+        for indQuestion in range(len(loQuestions)):
+            oQuestion = loQuestions[indQuestion]
+            oQuestion.PopulateQuestionWithResponses(lsCurrentResponses[indQuestion])
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def DisplaySavedResponse(self):
 
@@ -1935,7 +1964,7 @@ class Session:
                 bSuccess = bSuccessLabelMaps * bSuccessMarkupLines
     
                 if bSuccess:
-                    sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponsesToSave()
+                    sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponses()
                     
                     if sCaller == 'NextBtn' or sCaller == 'Finish':
                         # only write to xml if all responses were captured
@@ -1992,7 +2021,7 @@ class Session:
             slicer.modules.quizzereditor.widgetRepresentation().self().helper.setMasterVolume(None)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CaptureNewResponsesToSave(self):
+    def CaptureNewResponses(self):
         ''' When moving to another display of Images and QuestionSet (from pressing Next or Previous)
             the new responses that were entered must be captured ready to do the save to XML.
             A check for any missing responses to the questions is done and passed back to the calling function.
@@ -2160,14 +2189,18 @@ class Session:
                     lsRequiredOrientations = [oImageNode.sOrientation]
                     
                 bLatestWindowLevelFound = False
-                lxAllStateElements, liPageIndexForStateElements = self.GetStateElementsForMatchingImagePath(self.oFilesIO.GetRelativeDataPath(oImageNode.sImagePath))
+                ldictAllImageStateItems =\
+                    self.GetStateElementsForMatchingImagePath(self.oFilesIO.GetRelativeDataPath(oImageNode.sImagePath))
     
                 for sRequiredOrientation in lsRequiredOrientations:
                     bFoundOrientation = False
                     
-                    for idxImageStateElement in reversed(range(len(lxAllStateElements))):
-                        xState = lxAllStateElements[idxImageStateElement]
-                        dictImageState = self.oIOXml.GetAttributes(xState)
+                    for idxImageStateElement in reversed(range(len(ldictAllImageStateItems))):
+#                         xState = lxAllStateElements[idxImageStateElement]
+#                         dictImageState = self.oIOXml.GetAttributes(xState)
+                        
+                        dictImageStateItems = ldictAllImageStateItems[idxImageStateElement]
+                        dictImageState = self.oIOXml.GetAttributes(ldictAllImageStateItems[idxImageStateElement]['StateElement'])
 
                         # get first instance in the reversed search for the window/level
                         # then continue search for matching orientation to get the slice offset
@@ -2176,9 +2209,9 @@ class Session:
                             sWindow = dictImageState['Window']
                             bLatestWindowLevelFound = True
 
-        # for debug
-        #                print('Required:', sRequiredOrientation, ',    ',dictImageState["ResponseTime"], ',  ',dictImageState["ViewingMode"], ',  ',dictImageState["Orientation"], ',  ',dictImageState["SliceOffset"])
-                        if dictImageState["Orientation"] == sRequiredOrientation:
+
+                        if dictImageState["Orientation"] == sRequiredOrientation and\
+                                dictImageStateItems["DefaultOrientation"] == dictImageState["Orientation"]:
                             bFoundOrientation = True
                             break
                     
@@ -2195,8 +2228,8 @@ class Session:
                         sDestination = dictNPlanesOrientDest[sRequiredOrientation]
                         
                     if dictImageState != {} :
-                        # a previous image state was found (regardless of correct orientation)
-                        if oImageNode.sViewLayer == 'Background' and idxCurrentPage != liPageIndexForStateElements[idxImageStateElement]:
+
+                        if oImageNode.sViewLayer == 'Background' and idxCurrentPage != int(dictImageStateItems['Page']):
                             # image state element was from a previous page
                             #    update slice offset with current page initial offset if defined
                             if oImageNode.fInitialSliceOffset != None:
@@ -2204,10 +2237,11 @@ class Session:
                             else:
                                 dictBackgroundWidgetsToResetWithOffsets[sDestination] = float(dictImageState['SliceOffset'])
                         else:
-                            if oImageNode.sViewLayer == 'Background' and idxCurrentPage == liPageIndexForStateElements[idxImageStateElement]:
+                            if oImageNode.sViewLayer == 'Background' and idxCurrentPage == int(dictImageStateItems['Page']):
                                 # image state element was from current page
                                 #    update slice offset with saved offset
                                 dictBackgroundWidgetsToResetWithOffsets[sDestination] = float(dictImageState['SliceOffset'])
+
                             
                             
                     if bFoundOrientation:
@@ -2220,7 +2254,6 @@ class Session:
                             oImageNode.SetImageState(dictImageState)
                         else:
                             # for NPlanes viewing mode, adjust with the destination override
-                            xImage = oImageNode.GetXmlImageElement()
                             sDestinationOverride = dictNPlanesOrientDest[sRequiredOrientation]
                             oImageNode.SetImageState(dictImageState, sDestinationOverride)
                     
@@ -2235,6 +2268,7 @@ class Session:
             for key in dictBackgroundWidgetsToResetWithOffsets:
                 slWidget = slicer.app.layoutManager().sliceWidget(key)
                 slWidget.fitSliceToBackground() # default
+
             # re-adjust with captured offset
             for key in dictBackgroundWidgetsToResetWithOffsets:
                 slWidget = slicer.app.layoutManager().sliceWidget(key)
@@ -2252,8 +2286,7 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetStateElementsForMatchingImagePath(self, sCurrentImagePath):
         
-        lxAllStateElements = []
-        liPageIndexForStateElements = []
+        ldictAllImageStateItems = []
         
         lxPages = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
         
@@ -2268,20 +2301,23 @@ class Session:
                     sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
                     if sImageType == 'Volume' or sImageType == 'VolumeSequence':
                         
-                        xPath = self.oIOXml.GetLastChild(xImage, 'Path')
-                        if xPath != None:
-                            sPath = self.oIOXml.GetDataInNode(xPath)
+
+                        sPath = self.oIOXml.GetDataFromLastChild(xImage, 'Path')
                         if sPath == sCurrentImagePath:
+                            
+                            
+                            sImageDefaultOrientation = self.oIOXml.GetDataFromLastChild(xImage, 'DefaultOrientation')
+                                
                             if self.oIOXml.GetNumChildrenByName(xImage, 'State') > 0:
                                 lStateElements = self.oIOXml.GetChildren(xImage, 'State')
                                 for xState in lStateElements:
-                                    lxAllStateElements.append(xState)
-                                    liPageIndexForStateElements.append(iPageIdx)
+                                    
+                                    dictImageStateItems = {'DefaultOrientation':sImageDefaultOrientation, 'Page':str(iPageIdx),'StateElement':xState}
+                                    ldictAllImageStateItems.append(dictImageStateItems)
+
                         
-        return lxAllStateElements, liPageIndexForStateElements
+        return ldictAllImageStateItems
                 
-        
-        
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetXmlElementFromAttributeHistory(self, sPageChildrenToSearch, sImageAttributeToMatch, sAttributeValue):
