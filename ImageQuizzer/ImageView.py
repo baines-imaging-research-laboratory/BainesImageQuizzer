@@ -905,9 +905,18 @@ class ViewNodeBase:
     
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetFieldOfViewAndOrigin(self):
+    def SetFieldOfViewAndOrigin(self, sDestinationOverride = None):
+        ''' if zoom or pan was requested, set the field of view and origin
+            If in NPlanes mode, the default destination of the image node is overridden
+            with the 'Red' viewing window.
+        '''
         
-        slWidget = slicer.app.layoutManager().sliceWidget(self.sDestination)
+        if sDestinationOverride != None:
+            sDestination = sDestinationOverride
+        else:
+            sDestination = self.sDestination
+            
+        slWidget = slicer.app.layoutManager().sliceWidget(sDestination)
             
         if slWidget != None:       
             slSliceNode = slWidget.mrmlSliceNode()

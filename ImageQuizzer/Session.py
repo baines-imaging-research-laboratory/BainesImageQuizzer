@@ -2276,12 +2276,14 @@ class Session:
                 if dictBackgroundWidgetsToResetWithOffsets[key] != None :
                     slWindowLogic.SetSliceOffset(dictBackgroundWidgetsToResetWithOffsets[key])
 
-        # reset field of view if zoom was requested (not applicable for NPlanes mode
+        # reset field of view and origin if zoom/pan was requested
         for ind in range(len(loImageNodes)):
             if not self.bNPlanesViewingMode:
                 oImageNode = loImageNodes[self.GetImageDisplayOrderIndices()[ind]]
-                
                 oImageNode.SetFieldOfViewAndOrigin()
+            else:
+                oImageNode = loImageNodes[0]
+                oImageNode.SetFieldOfViewAndOrigin('Red')
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetStateElementsForMatchingImagePath(self, sCurrentImagePath):

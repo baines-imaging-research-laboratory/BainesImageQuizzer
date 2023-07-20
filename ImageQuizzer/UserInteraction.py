@@ -76,7 +76,7 @@ class UserInteraction:
             - The customEventFilter class handles when a user tries to drag the window to a new position.
         '''
         
-        # slicer.util.setPythonConsoleVisible(False)
+        slicer.util.setPythonConsoleVisible(False)
 
         
         slMainWindow = slicer.util.mainWindow()
@@ -126,6 +126,9 @@ class UserInteraction:
                 interactorStyle.SetActionEnabled(interactorStyle.Zoom, False)
                 interactorStyle.SetActionEnabled(interactorStyle.Translate, False)
                 interactorStyle.SetActionEnabled(interactorStyle.SetCursorPosition, True)
+                # reset window/level to enabled (side effect of previous actions)
+                interactorStyle.GetScalarBarDisplayableManager().SetAdjustBackgroundWindowLevelEnabled(True)
+                interactorStyle.GetScalarBarDisplayableManager().SetAdjustForegroundWindowLevelEnabled(True)
 
                 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -299,6 +302,9 @@ class CornerCoordinates():
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetCornerCoordinates(self):
+        ''' Record the X,Y positions (screen coordinates) for each corner of the 
+            viewing window widget as well as the widget's height and width.
+        '''
         
             
         slMainWindow = slicer.util.mainWindow()
@@ -352,7 +358,7 @@ class CornerCoordinates():
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ConvertWidgetCornerXYZToIJK(self):
-        """ Convert the XY screen coordinates into IJK values
+        """ Convert the XY screen coordinates into IJK values.
         """
 
         slAppLogic = slicer.app.applicationLogic()
@@ -369,7 +375,6 @@ class CornerCoordinates():
 
             
         except:
-            #TODO:  work out displaying appropriate error message - and exit?
             sMsg = "Cannot convert widget corner XYZ to IJK"
             self.oUtilsMsgs.DisplayWarning(sMsg)
             
