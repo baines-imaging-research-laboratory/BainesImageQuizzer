@@ -76,7 +76,8 @@ class UserInteraction:
             - The customEventFilter class handles when a user tries to drag the window to a new position.
         '''
         
-        slicer.util.setPythonConsoleVisible(False)
+        # slicer.util.setPythonConsoleVisible(False)
+        slicer.util.setPythonConsoleVisible(True)
 
         
         slMainWindow = slicer.util.mainWindow()
@@ -184,11 +185,18 @@ class UserInteraction:
 
         if bCreatingNewFile:
             # write header lines (no indents for proper csv formatting)
-            self.fh.write('Time,Layout,ViewName,Location,X,Y,Height,Width,I (L-R),J (A-P),K (S-I),\
-m(0-0),m(0-1),m(0-2),m(0-3),\
-m(1-0),m(1-1),m(1-2),m(1-3),\
-m(2-0),m(2-1),m(2-2),m(2-3),\
-m(3-0),m(3-1),m(3-2),m(3-3)\n')
+            self.fh.write('Time,Layout,ViewName,Location,\
+X,Y,Height,Width,\
+Image_bg,I_bg,J_bg,K_bg,\
+Image_fg,I_fg,J_fg,K_fg,\
+m_bg(0-0),m_bg(0-1),m_bg(0-2),m_bg(0-3),\
+m_bg(1-0),m_bg(1-1),m_bg(1-2),m_bg(1-3),\
+m_bg(2-0),m_bg(2-1),m_bg(2-2),m_bg(2-3),\
+m_bg(3-0),m_bg(3-1),m_bg(3-2),m_bg(3-3),\
+m_fg(0-0),m_fg(0-1),m_fg(0-2),m_fg(0-3),\
+m_fg(1-0),m_fg(1-1),m_fg(1-2),m_fg(1-3),\
+m_fg(2-0),m_fg(2-1),m_fg(2-2),m_fg(2-3),\
+m_fg(3-0),m_fg(3-1),m_fg(3-2),m_fg(3-3)\n')
             self.fh.flush()
         else:
             now = datetime.now()
@@ -197,11 +205,10 @@ m(3-0),m(3-1),m(3-2),m(3-3)\n')
             self.fh.flush()
 
         # template for rows - excludes formating of matrices
-        self.fhTemplate = '{}, {},\
-{}, {},\
-{:.4f}, {:.4f},\
-{:.0f}, {:.0f},\
-{:.5f}, {:.5f}, {:.5f}'
+        self.fhTemplate = '{}, {}, {}, {},\
+{:.4f}, {:.4f}, {:.0f}, {:.0f},\
+{}, {:.5f}, {:.5f}, {:.5f},\
+{}, {:.5f}, {:.5f}, {:.5f}'
 
         return self.fh
     
@@ -225,14 +232,18 @@ m(3-0),m(3-1),m(3-2),m(3-3)\n')
                             oLogDetails = LogDetails( sName, slSliceWidget, sCorner)
                             
                             fh.write(fhTemplate.format(oLogDetails.sDateTime,oLogDetails.sLayoutName,  \
-                                        oLogDetails.sWidgetName, oLogDetails.oCornerCoordinates.sCornerLocation,\
+                                        oLogDetails.sWidgetName, oLogDetails.oCornerCoordinates.sCornerLocation, \
                                         oLogDetails.oCornerCoordinates.lScreenXY[0], oLogDetails.oCornerCoordinates.lScreenXY[1],\
                                         oLogDetails.oCornerCoordinates.iWidgetHeight, oLogDetails.oCornerCoordinates.iWidgetWidth,\
-                                        oLogDetails.oCornerCoordinates.liIJK[0],oLogDetails.oCornerCoordinates.liIJK[1],oLogDetails.oCornerCoordinates.liIJK[2] ))
+                                        oLogDetails.sImageNodeName_bg, oLogDetails.oCornerCoordinates.liIJK_bg[0],oLogDetails.oCornerCoordinates.liIJK_bg[1],oLogDetails.oCornerCoordinates.liIJK_bg[2] ,\
+                                        oLogDetails.sImageNodeName_fg, oLogDetails.oCornerCoordinates.liIJK_fg[0],oLogDetails.oCornerCoordinates.liIJK_fg[1],oLogDetails.oCornerCoordinates.liIJK_fg[2] ))
                             # append transformation matrix
                             for iRow in range(4):
                                 for iCol in range(4):
-                                    fh.write(',{:.5f}'.format(oLogDetails.oCornerCoordinates.mTransformMatrix.GetElement(iRow,iCol)))
+                                    fh.write(',{:.5f}'.format(oLogDetails.oCornerCoordinates.mTransformMatrix_bg.GetElement(iRow,iCol)))
+                            for iRow in range(4):
+                                for iCol in range(4):
+                                    fh.write(',{:.5f}'.format(oLogDetails.oCornerCoordinates.mTransformMatrix_fg.GetElement(iRow,iCol)))
                             # finish the line
                             fh.write('\n')
                             fh.flush()
@@ -265,13 +276,37 @@ class LogDetails():
         self.sLayoutName = ''
         self.slSliceWidget = slSliceWidget
         self.sWidgetName = sWidgetName
+        self.sImageNodeName_bg = ''
+        self.sImageNodeName_fg = ''
         self.oCornerCoordinates = CornerCoordinates(self.slSliceWidget, sCorner)
         
 
         now = datetime.now()
         self.sDateTime = str(now.strftime("%Y/%m/%d %H:%M:%S.%f"))
         self.sLayoutName = SlicerLayoutDescription(slicer.app.layoutManager().layout).name
+        self.GetImageNodeName()
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetImageNodeName(self):
+        ''' Get image node names from the viewing window.
+        '''
+        
+        slLayoutManager = slicer.app.layoutManager() 
+        slSliceView = slLayoutManager.sliceWidget(self.sWidgetName).sliceView() 
+
+        slSliceNode = slSliceView.mrmlSliceNode()
+        slSliceLogic = slicer.app.applicationLogic().GetSliceLogic(slSliceNode) 
+        slCompositeNode = slSliceLogic.GetSliceCompositeNode() 
+
+        sID_bg = slCompositeNode.GetBackgroundVolumeID()
+        slImageNode_bg = slicer.mrmlScene.GetNodeByID(sID_bg)
+        self.sImageNodeName_bg = slImageNode_bg.GetName()
+
+        sID_fg = slCompositeNode.GetForegroundVolumeID() 
+        slImageNode_fg = slicer.mrmlScene.GetNodeByID(sID_fg)
+        if slImageNode_fg != None:       
+            self.sImageNodeName_fg = slImageNode_fg.GetName()
+
 
 ##########################################################################
 #
@@ -285,12 +320,14 @@ class CornerCoordinates():
         
         self.sCornerLocation = sCorner
         self.oScreenXY = qt.QPoint()
-        self.liIJK = [0.0,0.0,0.0]
+        self.liIJK_bg = [0.0,0.0,0.0]
+        self.liIJK_fg = [0.0,0.0,0.0]
         self.lScreenXY = [0.0,0.0]
         self.oGeometry = qt.QRect()
         self.slWidget = slWidget
         self.sWidgetCornerXYZ = [0.0,0.0,0.0]
-        self.mTransformMatrix = None
+        self.mTransformMatrix_bg = None
+        self.mTransformMatrix_fg = None
         self.iWidgetHeight = 0
         self.iWidgetWidth = 0
         
@@ -358,7 +395,7 @@ class CornerCoordinates():
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ConvertWidgetCornerXYZToIJK(self):
-        """ Convert the XY screen coordinates into IJK values.
+        """ Convert the XY screen coordinates into IJK values of the volumes loaded.
         """
 
         slAppLogic = slicer.app.applicationLogic()
@@ -368,15 +405,21 @@ class CornerCoordinates():
             slWidgetLogic = self.slWidget.sliceLogic()
             slSliceNode = slWidgetLogic.GetSliceNode()
             slSliceLogic = slAppLogic.GetSliceLogic(slSliceNode)
-            slLayerLogic = slSliceLogic.GetBackgroundLayer()
-            xyToIJK = slLayerLogic.GetXYToIJKTransform()
-            self.mTransformMatrix = xyToIJK.GetConcatenatedTransform(0).GetMatrix()
-            self.liIJK = xyToIJK.TransformDoublePoint(self.sWidgetCornerXYZ)
+            
+            slLayerLogic_bg = slSliceLogic.GetBackgroundLayer()
+            xyToIJK_bg = slLayerLogic_bg.GetXYToIJKTransform()
+            self.mTransformMatrix_bg = xyToIJK_bg.GetConcatenatedTransform(0).GetMatrix()
+            self.liIJK_bg = xyToIJK_bg.TransformDoublePoint(self.sWidgetCornerXYZ)
 
+
+            slLayerLogic_fg = slSliceLogic.GetForegroundLayer()
+            xyToIJK_fg = slLayerLogic_fg.GetXYToIJKTransform()
+            self.mTransformMatrix_fg = xyToIJK_fg.GetConcatenatedTransform(0).GetMatrix()
+            self.liIJK_fg = xyToIJK_fg.TransformDoublePoint(self.sWidgetCornerXYZ)
             
         except:
             sMsg = "Cannot convert widget corner XYZ to IJK"
-            self.oUtilsMsgs.DisplayWarning(sMsg)
+            self.oUtilsMsgs.DisplayError(sMsg)
             
 
         
