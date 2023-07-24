@@ -173,7 +173,7 @@ class UserInteraction:
         sPageUserInteractionDir = oSession.oFilesIO.CreatePageDir(sDirName)
         
         # sUserInteractionLogPath = os.path.join(oSession.oFilesIO.GetUserQuizResultsDir(), 'UserInteraction.log')
-        sUserInteractionLogPath = os.path.join(sPageUserInteractionDir, 'UserInteractionlog.csv')
+        sUserInteractionLogPath = os.path.join(sPageUserInteractionDir, 'UserInteractionLog.csv')
 
 
 

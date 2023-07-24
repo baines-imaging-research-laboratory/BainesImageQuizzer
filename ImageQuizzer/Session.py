@@ -1031,7 +1031,7 @@ class Session:
                         self.SetupPageState(self.GetCurrentPageIndex())
                     self.DisplayQuizLayout()
                     self.DisplayImageLayout()
-                            
+                             
                 else:
                     if sMsg != '':
                         self.oUtilsMsgs.DisplayWarning( sMsg )
@@ -1832,6 +1832,7 @@ class Session:
         
             if self.GetUserInteractionRequest() == True:
                 self.SetFileHandlerInteractionLog(self.oUserInteraction.CreateUserInteractionLog(self))
+                slicer.mrmlScene.InvokeEvent(vtk.vtkCommand.ModifiedEvent, self.oUserInteraction.onModifiedSlice('SessionSetup','CurrentSlice'))
                 
 
         except:
@@ -1943,7 +1944,6 @@ class Session:
         """
         
         sMsg = ''
-        bSuccess = True
         
         if not self.GetQuizComplete():
         
@@ -1951,61 +1951,58 @@ class Session:
                 self.oQuizWidgets.qTabWidget.setCurrentIndex(0)
             self.SetSegmentationTabDefaults()
                 
-            # bSuccess, sMsg = self.ResetDisplay()
             idxQuestionSet = self.GetCurrentQuestionSetIndex()
-#             idxPage = self.GetCurrentPageIndex()
             iNumQSets = len(self.GetAllQuestionSetNodesForCurrentPage())
             
+            
+            bSuccessLabelMaps, sMsgLabelMaps = self.oFilesIO.SaveLabelMaps(self, sCaller)
+            bSuccessMarkupLines, sMsgMarkupLines = self.oFilesIO.SaveMarkupLines(self)
+            sMsg = sMsg + sMsgLabelMaps + sMsgMarkupLines
+            bSuccess = bSuccessLabelMaps * bSuccessMarkupLines
+
             if bSuccess:
+                sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponses()
                 
-                bSuccessLabelMaps, sMsgLabelMaps = self.oFilesIO.SaveLabelMaps(self, sCaller)
-                bSuccessMarkupLines, sMsgMarkupLines = self.oFilesIO.SaveMarkupLines(self)
-                sMsg = sMsg + sMsgLabelMaps + sMsgMarkupLines
-                bSuccess = bSuccessLabelMaps * bSuccessMarkupLines
-    
+                if sCaller == 'NextBtn' or sCaller == 'Finish':
+                    # only write to xml if all responses were captured
+                    if sCaptureSuccessLevel == 'AllResponses':
+                        bSuccess, sMsg = self.WriteResponsesToXml()
+                    else:
+                        sMsg = sMsg + '\n All questions must be answered to proceed'
+                        bSuccess = False
+                        
+                else:  
+                    # Caller must have been the Previous or Exit buttons or a close was 
+                    #     requested (which triggers the event filter)
+                    # Only write if there were responses captured
+                    if sCaptureSuccessLevel == 'AllResponses' or sCaptureSuccessLevel == 'PartialResponses':
+                        bSuccess, sMsg = self.WriteResponsesToXml()
+                    else:
+                        # if no responses were captured 
+                        if sCaptureSuccessLevel == 'NoResponses':
+                            # this isn't the Next button so it is allowed
+                            bSuccess = True
+                        
                 if bSuccess:
-                    sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponses()
+                    #after writing responses, update page states and record the image state
+                    self.oPageState.UpdateCompletionLists(self.GetCurrentPageNode())
+                    self.CaptureAndSaveImageState()
                     
                     if sCaller == 'NextBtn' or sCaller == 'Finish':
-                        # only write to xml if all responses were captured
-                        if sCaptureSuccessLevel == 'AllResponses':
-                            bSuccess, sMsg = self.WriteResponsesToXml()
-                        else:
-                            sMsg = sMsg + '\n All questions must be answered to proceed'
-                            bSuccess = False
+                        # if this was the last question set for the page, check for completion
+                        if idxQuestionSet == iNumQSets - 1:
                             
-                    else:  
-                        # Caller must have been the Previous or Exit buttons or a close was 
-                        #     requested (which triggers the event filter)
-                        # Only write if there were responses captured
-                        if sCaptureSuccessLevel == 'AllResponses' or sCaptureSuccessLevel == 'PartialResponses':
-                            bSuccess, sMsg = self.WriteResponsesToXml()
-                        else:
-                            # if no responses were captured 
-                            if sCaptureSuccessLevel == 'NoResponses':
-                                # this isn't the Next button so it is allowed
+                            sCompletionFlagMsg = self.oPageState.UpdateCompletedFlags(self.GetCurrentPageNode())
+                            sMsg = sMsg + sCompletionFlagMsg
+                            
+                            if self.oPageState.GetPageCompletedTF():
                                 bSuccess = True
-                            
-                    if bSuccess:
-                        #after writing responses, update page states and record the image state
-                        self.oPageState.UpdateCompletionLists(self.GetCurrentPageNode())
-                        self.CaptureAndSaveImageState()
-                        
-                        if sCaller == 'NextBtn' or sCaller == 'Finish':
-                            # if this was the last question set for the page, check for completion
-                            if idxQuestionSet == iNumQSets - 1:
-                                
-                                sCompletionFlagMsg = self.oPageState.UpdateCompletedFlags(self.GetCurrentPageNode())
-                                sMsg = sMsg + sCompletionFlagMsg
-                                
-                                if self.oPageState.GetPageCompletedTF():
-                                    bSuccess = True
-                                    self.AddPageCompleteAttribute(self.GetCurrentPageIndex())
-                                    if sCaller == 'Finish':
-                                        self.AddQuizCompleteAttribute()
-                                        self.SetQuizComplete(True)
-                                else:
-                                    bSuccess = False
+                                self.AddPageCompleteAttribute(self.GetCurrentPageIndex())
+                                if sCaller == 'Finish':
+                                    self.AddQuizCompleteAttribute()
+                                    self.SetQuizComplete(True)
+                            else:
+                                bSuccess = False
                                 
                     
 
