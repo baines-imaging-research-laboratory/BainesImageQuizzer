@@ -278,13 +278,13 @@ class LogDetails():
         self.sWidgetName = sWidgetName
         self.sImageNodeName_bg = ''
         self.sImageNodeName_fg = ''
-        self.oCornerCoordinates = CornerCoordinates(self.slSliceWidget, sCorner)
         
 
         now = datetime.now()
         self.sDateTime = str(now.strftime("%Y/%m/%d %H:%M:%S.%f"))
         self.sLayoutName = SlicerLayoutDescription(slicer.app.layoutManager().layout).name
         self.GetImageNodeName()
+        self.oCornerCoordinates = CornerCoordinates(self.slSliceWidget, sCorner, self.sImageNodeName_bg, self.sImageNodeName_fg)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetImageNodeName(self):
@@ -300,7 +300,8 @@ class LogDetails():
 
         sID_bg = slCompositeNode.GetBackgroundVolumeID()
         slImageNode_bg = slicer.mrmlScene.GetNodeByID(sID_bg)
-        self.sImageNodeName_bg = slImageNode_bg.GetName()
+        if slImageNode_bg != None:       
+            self.sImageNodeName_bg = slImageNode_bg.GetName()
 
         sID_fg = slCompositeNode.GetForegroundVolumeID() 
         slImageNode_fg = slicer.mrmlScene.GetNodeByID(sID_fg)
@@ -316,7 +317,7 @@ class LogDetails():
 
 class CornerCoordinates():
     
-    def __init__(self, slWidget, sCorner):
+    def __init__(self, slWidget, sCorner, sImageNodeName_bg, sImageNodeName_fg):
         
         self.sCornerLocation = sCorner
         self.oScreenXY = qt.QPoint()
@@ -326,8 +327,8 @@ class CornerCoordinates():
         self.oGeometry = qt.QRect()
         self.slWidget = slWidget
         self.sWidgetCornerXYZ = [0.0,0.0,0.0]
-        self.mTransformMatrix_bg = None
-        self.mTransformMatrix_fg = None
+        self.mTransformMatrix_bg = vtk.vtkMatrix4x4()
+        self.mTransformMatrix_fg = vtk.vtkMatrix4x4()
         self.iWidgetHeight = 0
         self.iWidgetWidth = 0
         
@@ -335,7 +336,7 @@ class CornerCoordinates():
 
         
         self.GetCornerCoordinates()
-        self.ConvertWidgetCornerXYZToIJK()
+        self.ConvertWidgetCornerXYZToIJK(sImageNodeName_bg, sImageNodeName_fg)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetCornerCoordinates(self):
@@ -394,7 +395,7 @@ class CornerCoordinates():
        
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ConvertWidgetCornerXYZToIJK(self):
+    def ConvertWidgetCornerXYZToIJK(self, sImageNodeName_bg, sImageNodeName_fg):
         """ Convert the XY screen coordinates into IJK values of the volumes loaded.
         """
 
@@ -406,16 +407,18 @@ class CornerCoordinates():
             slSliceNode = slWidgetLogic.GetSliceNode()
             slSliceLogic = slAppLogic.GetSliceLogic(slSliceNode)
             
-            slLayerLogic_bg = slSliceLogic.GetBackgroundLayer()
-            xyToIJK_bg = slLayerLogic_bg.GetXYToIJKTransform()
-            self.mTransformMatrix_bg = xyToIJK_bg.GetConcatenatedTransform(0).GetMatrix()
-            self.liIJK_bg = xyToIJK_bg.TransformDoublePoint(self.sWidgetCornerXYZ)
+            if sImageNodeName_bg != '':
+                slLayerLogic_bg = slSliceLogic.GetBackgroundLayer()
+                xyToIJK_bg = slLayerLogic_bg.GetXYToIJKTransform()
+                self.mTransformMatrix_bg = xyToIJK_bg.GetConcatenatedTransform(0).GetMatrix()
+                self.liIJK_bg = xyToIJK_bg.TransformDoublePoint(self.sWidgetCornerXYZ)
 
 
-            slLayerLogic_fg = slSliceLogic.GetForegroundLayer()
-            xyToIJK_fg = slLayerLogic_fg.GetXYToIJKTransform()
-            self.mTransformMatrix_fg = xyToIJK_fg.GetConcatenatedTransform(0).GetMatrix()
-            self.liIJK_fg = xyToIJK_fg.TransformDoublePoint(self.sWidgetCornerXYZ)
+            if sImageNodeName_fg != '':
+                slLayerLogic_fg = slSliceLogic.GetForegroundLayer()
+                xyToIJK_fg = slLayerLogic_fg.GetXYToIJKTransform()
+                self.mTransformMatrix_fg = xyToIJK_fg.GetConcatenatedTransform(0).GetMatrix()
+                self.liIJK_fg = xyToIJK_fg.TransformDoublePoint(self.sWidgetCornerXYZ)
             
         except:
             sMsg = "Cannot convert widget corner XYZ to IJK"
