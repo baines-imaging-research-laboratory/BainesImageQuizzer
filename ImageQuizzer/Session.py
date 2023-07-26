@@ -987,6 +987,7 @@ class Session:
             # close open file handler for interaction log
             if self.GetUserInteractionRequest():
                 self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog())
+                self.oUserInteraction.RemoveObservers()
                 
             self.DisableButtons()    
             if self.sViewingMode != 'Default':
@@ -1055,6 +1056,7 @@ class Session:
             # close open file handler for interaction log
             if self.GetUserInteractionRequest():
                 self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog())
+                self.oUserInteraction.RemoveObservers()
                 
             self.DisableButtons()    
             if self.sViewingMode != 'Default':
@@ -1132,12 +1134,10 @@ class Session:
                     # close open file handler for interaction log
                     if self.GetUserInteractionRequest():
                         self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog())
+                        self.oUserInteraction.RemoveObservers()
                         
                     self.QueryThenSendEmailResults()
                     
-                    if self.GetUserInteractionRequest():
-                        self.oUserInteraction.RemoveObservers()
-                            
                     # update shutdown batch file to remove SlicerDICOMDatabase
                     self.oFilesIO.CreateShutdownBatchFile()
             
@@ -1478,10 +1478,6 @@ class Session:
                     self.AddUserNameAttribute()
                     
                 self.EnableButtons()
-
-                if self.GetUserInteractionRequest():
-                    slicer.mrmlScene.InvokeEvent(vtk.vtkCommand.ModifiedEvent, self.oUserInteraction.onModifiedSlice('SessionSetup','CurrentSlice'))
-
 
 
         except:
@@ -1832,6 +1828,7 @@ class Session:
         
             if self.GetUserInteractionRequest() == True:
                 self.SetFileHandlerInteractionLog(self.oUserInteraction.CreateUserInteractionLog(self))
+                self.oUserInteraction.AddObservers()
                 slicer.mrmlScene.InvokeEvent(vtk.vtkCommand.ModifiedEvent, self.oUserInteraction.onModifiedSlice('SessionSetup','CurrentSlice'))
                 
 
@@ -1944,6 +1941,7 @@ class Session:
         """
         
         sMsg = ''
+        bSuccess = True
         
         if not self.GetQuizComplete():
         

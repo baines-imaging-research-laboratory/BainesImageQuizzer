@@ -28,9 +28,10 @@ class UserInteraction:
         
         # valid viewing windows for all of Image Quizzer layouts
         self.lViewingWindows = ['Red','Green','Yellow','Slice4']
+        self.ldictObserverIDs = {}
         
-        # setup observers to watch for changes in the volume slice nodes
-        self.AddObservers()
+#         # setup observers to watch for changes in the volume slice nodes
+#         self.AddObservers()
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -138,13 +139,15 @@ class UserInteraction:
             This is watching for a change in the volume - when scrolling occurs or when the 
             interactive crosshair mode causes a change in the volume slice being displayed.
         '''
+        self.ldictObserverIDs = {}
         
         for sName in self.lViewingWindows:
             slSliceWidget = slicer.app.layoutManager().sliceWidget(sName)
             if slSliceWidget != None:
                 slWidgetLogic = slSliceWidget.sliceLogic()
                 slSliceNode = slWidgetLogic.GetSliceNode()
-                slSliceNode.AddObserver(vtk.vtkCommand.ModifiedEvent, self.onModifiedSlice)
+                slObserverID = slSliceNode.AddObserver(vtk.vtkCommand.ModifiedEvent, self.onModifiedSlice)
+                self.ldictObserverIDs.update({sName:slObserverID})
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def RemoveObservers(self):
@@ -156,8 +159,7 @@ class UserInteraction:
             if slSliceWidget != None:
                 slWidgetLogic = slSliceWidget.sliceLogic()
                 slSliceNode = slWidgetLogic.GetSliceNode()
-                slSliceNode.RemoveObserver(vtk.vtkCommand.ModifiedEvent)
-        
+                slSliceNode.RemoveObserver(self.ldictObserverIDs[sName])
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onModifiedSlice(self, caller, event):
@@ -185,7 +187,7 @@ class UserInteraction:
 
         if bCreatingNewFile:
             # write header lines (no indents for proper csv formatting)
-            self.fh.write('Time,Layout,ViewName,Location,\
+            self.fh.write('CPU Uptime,Time,Layout,ViewName,Location,\
 X,Y,Height,Width,\
 Image_bg,I_bg,J_bg,K_bg,\
 Image_fg,I_fg,J_fg,K_fg,\
@@ -205,7 +207,7 @@ m_fg(3-0),m_fg(3-1),m_fg(3-2),m_fg(3-3)\n')
             self.fh.flush()
 
         # template for rows - excludes formating of matrices
-        self.fhTemplate = '{}, {}, {}, {},\
+        self.fhTemplate = '{:.0f}, {}, {}, {}, {},\
 {:.4f}, {:.4f}, {:.0f}, {:.0f},\
 {}, {:.5f}, {:.5f}, {:.5f},\
 {}, {:.5f}, {:.5f}, {:.5f}'
@@ -231,7 +233,7 @@ m_fg(3-0),m_fg(3-1),m_fg(3-2),m_fg(3-3)\n')
                             
                             oLogDetails = LogDetails( sName, slSliceWidget, sCorner)
                             
-                            fh.write(fhTemplate.format(oLogDetails.sDateTime,oLogDetails.sLayoutName,  \
+                            fh.write(fhTemplate.format(oLogDetails.iCPUUptime, oLogDetails.sDateTime,oLogDetails.sLayoutName,  \
                                         oLogDetails.sWidgetName, oLogDetails.oCornerCoordinates.sCornerLocation, \
                                         oLogDetails.oCornerCoordinates.lScreenXY[0], oLogDetails.oCornerCoordinates.lScreenXY[1],\
                                         oLogDetails.oCornerCoordinates.iWidgetHeight, oLogDetails.oCornerCoordinates.iWidgetWidth,\
@@ -272,6 +274,7 @@ class LogDetails():
     
     def __init__(self, sWidgetName, slSliceWidget, sCorner):
         
+        self.iCPUUptime = 0
         self.sDateTime = ''
         self.sLayoutName = ''
         self.slSliceWidget = slSliceWidget
@@ -279,7 +282,14 @@ class LogDetails():
         self.sImageNodeName_bg = ''
         self.sImageNodeName_fg = ''
         
+        self.oUtilsMsgs = UtilsMsgs()
 
+        try:
+            import cv2
+            self.iCPUUptime = cv2.getTickCount()
+        except:
+            pass    #OpenCV not imported - uptime unavailable
+        
         now = datetime.now()
         self.sDateTime = str(now.strftime("%Y/%m/%d %H:%M:%S.%f"))
         self.sLayoutName = SlicerLayoutDescription(slicer.app.layoutManager().layout).name
@@ -290,24 +300,32 @@ class LogDetails():
     def GetImageNodeName(self):
         ''' Get image node names from the viewing window.
         '''
-        
-        slLayoutManager = slicer.app.layoutManager() 
-        slSliceView = slLayoutManager.sliceWidget(self.sWidgetName).sliceView() 
+        try:
+            slLayoutManager = slicer.app.layoutManager() 
+            slSliceView = slLayoutManager.sliceWidget(self.sWidgetName).sliceView() 
+    
+            slSliceNode = slSliceView.mrmlSliceNode()
+            slSliceLogic = slicer.app.applicationLogic().GetSliceLogic(slSliceNode) 
+            slCompositeNode = slSliceLogic.GetSliceCompositeNode() 
+    
+            sID_bg = slCompositeNode.GetBackgroundVolumeID()
+            if sID_bg != None:
+                slImageNode_bg = slicer.mrmlScene.GetNodeByID(sID_bg)
+                if slImageNode_bg != None:       
+                    self.sImageNodeName_bg = slImageNode_bg.GetName()
+    
+            sID_fg = slCompositeNode.GetForegroundVolumeID() 
+            if sID_fg != None:
+                slImageNode_fg = slicer.mrmlScene.GetNodeByID(sID_fg)
+                if slImageNode_fg != None:
+                    self.sImageNodeName_fg = slImageNode_fg.GetName()
 
-        slSliceNode = slSliceView.mrmlSliceNode()
-        slSliceLogic = slicer.app.applicationLogic().GetSliceLogic(slSliceNode) 
-        slCompositeNode = slSliceLogic.GetSliceCompositeNode() 
-
-        sID_bg = slCompositeNode.GetBackgroundVolumeID()
-        slImageNode_bg = slicer.mrmlScene.GetNodeByID(sID_bg)
-        if slImageNode_bg != None:       
-            self.sImageNodeName_bg = slImageNode_bg.GetName()
-
-        sID_fg = slCompositeNode.GetForegroundVolumeID() 
-        slImageNode_fg = slicer.mrmlScene.GetNodeByID(sID_fg)
-        if slImageNode_fg != None:       
-            self.sImageNodeName_fg = slImageNode_fg.GetName()
-
+        except Exception:
+            tb = traceback.format_exc()
+            sMsg = 'GetImageNodeName: Failed to get image node from viewing window. \n\n' + tb
+            self.oUtilsMsgs.DisplayError(sMsg)
+            
+                    
 
 ##########################################################################
 #
