@@ -1408,7 +1408,6 @@ class UtilsFilesIO:
         """
             
         bLabelMapsSaved = True # initialize
-        sMsg = ''
         
         bLabelMapFound = False  # to detect if label map was created by user
  
@@ -1432,7 +1431,6 @@ class UtilsFilesIO:
                     if oImageNode.sNodeName + '-bainesquizlabel' == sLabelMapFilename:
                         
                         bLabelMapFound = True  # -bainesquizlabel suffix is associated with an image on the page
-                        bDataVolumeSaved = False
                         
                         sDirName = self.GetFolderNameForPageResults(oSession)
                         sPageLabelMapDir = self.CreatePageDir(sDirName)
@@ -1441,29 +1439,21 @@ class UtilsFilesIO:
                         
                         if not oImageNode.sNodeName in lsLabelMapsStoredForImages:
                             # save the label map file to the user's page directory
-                            bDataVolumeSaved, sMsg = self.ExportResultsItemToFile('LabelMap', sLabelMapPath, slNodeLabelMap) 
+                            self.ExportResultsItemToFile('LabelMap', sLabelMapPath, slNodeLabelMap) 
                          
                             # update list of names of images that have the label maps stored
                             lsLabelMapsStoredForImages.append(oImageNode.sNodeName)
-                        else:
-                            bDataVolumeSaved = True # already saved
 
 
-                        # if label maps were saved as a data volume
                         #    add the label map path element to the image element in the xml
                         #    only one label map path element is to be recorded
-                        if bDataVolumeSaved:
-                            xLabelMapPathElement = self.oIOXml.GetLastChild(oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                        xLabelMapPathElement = self.oIOXml.GetLastChild(oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                        
+                        if xLabelMapPathElement == None:
+                            # update xml storing the path to the label map file with the image element
+                            oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(),\
+                                                 self.GetRelativeUserPath(sLabelMapPath))
                             
-                            if xLabelMapPathElement == None:
-                                # update xml storing the path to the label map file with the image element
-                                oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(),\
-                                                     self.GetRelativeUserPath(sLabelMapPath))
-                            
-                                bLabelMapsSaved = True  # at least one label map was saved
-                        else:
-                            bLabelMapsSaved = False
-                            oSession.oUtilsMsgs.DisplayError(sMsg)
                             
 
         if sCaller != 'ResetView':   # warning not required on a reset
@@ -1496,7 +1486,7 @@ class UtilsFilesIO:
         if bLabelMapsSaved == True:
             oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
 
-        return bLabelMapsSaved, sMsg
+        return
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadSavedLabelMaps(self, oSession):

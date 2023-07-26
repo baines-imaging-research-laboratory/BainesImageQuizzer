@@ -1892,64 +1892,63 @@ class Session:
                     self.oQuizWidgets.qTabWidget.setCurrentIndex(0)
                 self.SetSegmentationTabDefaults()
                     
-                # bSuccess, sMsg = self.ResetDisplay()
                 idxQuestionSet = self.GetCurrentQuestionSetIndex()
-    #             idxPage = self.GetCurrentPageIndex()
                 iNumQSets = len(self.GetAllQuestionSetNodesForCurrentPage())
+
                 
-                if bSuccess:
-                    
-                    bSuccessLabelMaps, sMsgLabelMaps = self.oFilesIO.SaveLabelMaps(self, sCaller)
-                    self.oFilesIO.SaveMarkupLines(self)
-                    sMsg = sMsg + sMsgLabelMaps
-                    bSuccess = bSuccessLabelMaps
-        
-                    if bSuccess:
-                        sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponses()
+                self.oFilesIO.SaveLabelMaps(self, sCaller)
+                self.oFilesIO.SaveMarkupLines(self)
+   
+                sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponses()
+                
+                if sCaller == 'NextBtn' or sCaller == 'Finish':
+                    # only write to xml if all responses were captured
+                    if sCaptureSuccessLevel == 'AllResponses':
+                        self.WriteResponsesToXml()
+                    else:
+                        sMsg = sMsg + '\n All questions must be answered to proceed'
+                        bSuccess = False
                         
-                        if sCaller == 'NextBtn' or sCaller == 'Finish':
-                            # only write to xml if all responses were captured
-                            if sCaptureSuccessLevel == 'AllResponses':
-                                bSuccess, sMsg = self.WriteResponsesToXml()
-                            else:
-                                sMsg = sMsg + '\n All questions must be answered to proceed'
-                                bSuccess = False
-                                
-                        else:  
-                            # Caller must have been the Previous or Exit buttons or a close was 
-                            #     requested (which triggers the event filter)
-                            # Only write if there were responses captured
-                            if sCaptureSuccessLevel == 'AllResponses' or sCaptureSuccessLevel == 'PartialResponses':
-                                bSuccess, sMsg = self.WriteResponsesToXml()
-                            else:
-                                # if no responses were captured 
-                                if sCaptureSuccessLevel == 'NoResponses':
-                                    # this isn't the Next button so it is allowed
-                                    bSuccess = True
-                                
-                        if bSuccess:
-                            #after writing responses, update page states and record the image state
-                            self.oPageState.UpdateCompletionLists(self.GetCurrentPageNode())
-                            self.CaptureAndSaveImageState()
+                else:  
+                    # Caller must have been the Previous or Exit buttons or a close was 
+                    #     requested (which triggers the event filter)
+                    # Only write if there were responses captured
+                    if sCaptureSuccessLevel == 'AllResponses' or sCaptureSuccessLevel == 'PartialResponses':
+                        self.WriteResponsesToXml()
+                    else:
+                        # if no responses were captured 
+                        if sCaptureSuccessLevel == 'NoResponses':
+                            # this isn't the Next button so it is allowed
+                            bSuccess = True
+                        
+                ################################################
+                ##########  Updating completion flags ##########        
+                ################################################
+
+                if bSuccess:
+                    #after writing responses, update page states and record the image state
+                    self.oPageState.UpdateCompletionLists(self.GetCurrentPageNode())
+                    self.CaptureAndSaveImageState()
+                    
+                    if sCaller == 'NextBtn' or sCaller == 'Finish':
+                        # if this was the last question set for the page, check for completion
+                        if idxQuestionSet == iNumQSets - 1:
                             
-                            if sCaller == 'NextBtn' or sCaller == 'Finish':
-                                # if this was the last question set for the page, check for completion
-                                if idxQuestionSet == iNumQSets - 1:
-                                    
-                                    sCompletionFlagMsg = self.oPageState.UpdateCompletedFlags(self.GetCurrentPageNode())
-                                    sMsg = sMsg + sCompletionFlagMsg
-                                    
-                                    if self.oPageState.GetPageCompletedTF():
-                                        bSuccess = True
-                                        self.AddPageCompleteAttribute(self.GetCurrentPageIndex())
-                                        if sCaller == 'Finish':
-                                            self.AddQuizCompleteAttribute()
-                                            self.SetQuizComplete(True)
-                                    else:
-                                        bSuccess = False
+                            sCompletionFlagMsg = self.oPageState.UpdateCompletedFlags(self.GetCurrentPageNode())
+                            sMsg = sMsg + sCompletionFlagMsg
+                            
+                            if self.oPageState.GetPageCompletedTF():
+                                bSuccess = True
+                                self.AddPageCompleteAttribute(self.GetCurrentPageIndex())
+                                if sCaller == 'Finish':
+                                    self.AddQuizCompleteAttribute()
+                                    self.SetQuizComplete(True)
+                            else:
+                                bSuccess = False
                                     
         except Exception:
-            sMsg = sMsg + '\nPerformSave error'
+            tb = traceback.format_exc()
+            sMsg = sMsg + '\nPerformSave error \n\n' + tb
             raise Exception(sMsg)                
     
         # let calling program handle display of message if not successful            
@@ -2306,11 +2305,7 @@ class Session:
             After responses are added, record the image state in the xml file.
         """
         
-        bSuccess = True
-        sMsg = ''
-        
         try:
-            
             # only allow for writing of responses under certain conditions
             #    - allow if the question set is marked for multiple responses allowed
             #    - OR allow if the number of questions with responses already 
@@ -2337,13 +2332,15 @@ class Session:
                     self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
                     
         
-        except:
-            bSuccess = False
-            sMsg = 'Error writing responses to Xml' + '\n Does this file exist? : \n' + self.oFilesIO.GetUserQuizResultsPath()
+        except Exception:
+            tb = traceback.format_exc()
+            sMsg = 'Error writing responses to Xml' + '\n Does this file exist? : \n' \
+                + self.oFilesIO.GetUserQuizResultsPath()\
+                + '\n\n' + tb
             # critical error - exit
             self.oUtilsMsgs.DisplayError( sMsg )
             
-        return bSuccess, sMsg
+        return 
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CreateRepeatedPageNode(self, sXmlFilePath = None):
