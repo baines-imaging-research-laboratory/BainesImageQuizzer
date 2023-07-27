@@ -14,7 +14,6 @@
 		<xs:attribute name="RandomizePageGroups" type="yesnoType" default="N" />
 		<xs:attribute name="ContourVisibility" type="contourVisibilityType" default="Fill"/>
 		<xs:attribute name="EmailResultsTo" type="xs:string" />
-		<xs:attribute name="UserInteractionLog" type="xs:string" />
 	</xs:complexType>
 </xs:element>
 
@@ -37,6 +36,7 @@
 		<xs:attribute name="SegmentRequiredOnAnyImage" type="yesnoType" default="N"/>
 		<xs:attribute name="MinMarkupLinesRequiredOnAnyImage" type="xs:positiveInteger"/>
 		<xs:attribute name="Loop" type="yesnoType" default="N" />
+		<xs:attribute name="UserInteractionLog" type="yesnoType" default="N"/>
 	</xs:complexType>
 </xs:element>
 

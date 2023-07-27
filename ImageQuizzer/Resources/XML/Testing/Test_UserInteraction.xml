@@ -1,5 +1,34 @@
-<Session UserInteractionLog="Y">
+<Session >
     <Page ID="Patient 1" Descriptor="CT">
+        <Image ID="CT" Type="Volume"  >
+                <DefaultDestination>Red</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Axial</DefaultOrientation>
+                <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
+        </Image>
+        <Image ID="CT" Type="Volume">
+                <DefaultDestination>Green</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Coronal</DefaultOrientation>
+                <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
+        </Image>
+        <Image ID="CT" Type="Volume">
+                <DefaultDestination>Yellow</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Sagittal</DefaultOrientation>
+                <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
+        </Image>
+        <QuestionSet ID="Steps" Descriptor="User interaction log feature">
+            <Question Type="CheckBox" Descriptor="Testing user interaction log">
+				<Option>Check for log started </Option>
+            </Question>
+            <Question Type="Radio" Descriptor="Testing locked layout">
+                <Option>Layout locked</Option>
+				<Option>Layout not locked</Option>
+            </Question>
+        </QuestionSet>
+    </Page>
+    <Page ID="Patient 2" Descriptor="CT" UserInteractionLog="Y">
         <Image ID="CT" Type="Volume"  ZoomFactor="1.2" PanOrigin="-92 27.5 -225.5" InitialSliceOffset="-245">
                 <DefaultDestination>Red</DefaultDestination>
                 <Layer>Background</Layer>
@@ -20,12 +49,15 @@
         </Image>
         <QuestionSet ID="Steps" Descriptor="User interaction log feature">
             <Question Type="CheckBox" Descriptor="Testing user interaction log">
+				<Option>Check for log started </Option>
+            </Question>
+            <Question Type="Radio" Descriptor="Testing locked layout">
                 <Option>Layout locked</Option>
-				<Option>Log started</Option>
+				<Option>Layout not locked</Option>
             </Question>
         </QuestionSet>
     </Page>
-    <Page ID="Patient2" Descriptor="PET PSMA" Layout="TwoOverTwo">
+    <Page ID="Patient 3" Descriptor="PET PSMA" Layout="TwoOverTwo" UserInteractionLog="Y">
         <Image DicomRead="Y" Type="Volume" ID="CT">
             <DefaultDestination>Red</DefaultDestination>
             <Layer>Background</Layer>
@@ -70,9 +102,46 @@
         </Image>
         <QuestionSet ID="Steps" Descriptor="User interaction log feature">
             <Question Type="CheckBox" Descriptor="Testing user interaction log">
+				<Option>Check for log started </Option>
+            </Question>
+            <Question Type="Radio" Descriptor="Testing locked layout">
                 <Option>Layout locked</Option>
-				<Option>Log started</Option>
+				<Option>Layout not locked</Option>
             </Question>
         </QuestionSet>
+	</Page>
+	<Page Descriptor="Brain CT-MR" ID="Patient 4" EnableSegmentEditor="Y" LinkViews="Y">
+		<Image ID="MR T1" Type="Volume">
+			<Layer>Background</Layer>
+			<DefaultDestination>Yellow</DefaultDestination>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\CT-MR Brain\MRBrainT1.nrrd</Path>
+		</Image>
+		<Image ID="MR T2" Type="Volume">
+			<Layer>Background</Layer>
+			<DefaultDestination>Green</DefaultDestination>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\CT-MR Brain\MRBrainT2.nrrd</Path>
+		</Image>
+		<Image ID="CT" Type="Volume">
+			<Layer>Background</Layer>
+			<DefaultDestination>Red</DefaultDestination>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\CT-MR Brain\CTBrain.nrrd</Path>
+		</Image>
+		<QuestionSet ID="Create contours" Descriptor="">
+			<Question Type="InfoBox" Descriptor="Attributes">
+				<Option>LinkViews="Y"</Option>
+				<Option>RotateToAcquisition="N" (attribute is absent)</Option>
+			</Question>
+			<Question Type="InfoBox" Descriptor="Contouring Instructions">
+				<Option>In Segment Editor tab, select volume to create contours.</Option>
+				<Option>   In Edit label map dropdown, use available tools to contour region of interest.</Option>
+			</Question>
+			<Question Type="CheckBox" Descriptor="Functionality">
+				<Option>Images should scroll together</Option>
+				<Option>Images should 'snap' to acquired axis for segmenting</Option>
+			</Question>
+		</QuestionSet>
 	</Page>
 </Session>

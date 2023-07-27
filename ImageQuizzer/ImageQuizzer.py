@@ -483,12 +483,12 @@ class customEventFilter(qt.QObject):
             slicer.util.exit(status=EXIT_SUCCESS)
             
         # disable minimize for UserInteraction
-        elif self.oSession.GetUserInteractionRequest() == True and\
+        elif self.oSession.GetUserInteractionLogRequest() == True and\
                 ((event.type() == qt.QEvent.WindowStateChange) and slicer.util.mainWindow().isMinimized()):
             slicer.util.mainWindow().showMaximized()
             
 #         # disable drag window for UserInteraction  (located in non-client area)
-        elif self.oSession.GetUserInteractionRequest() == True and\
+        elif self.oSession.GetUserInteractionLogRequest() == True and\
                 (event.type() ==  qt.QEvent.NonClientAreaMouseButtonRelease):
             slicer.util.mainWindow().move(self.oSession.oUserInteraction.GetMainWindowPosition())
             

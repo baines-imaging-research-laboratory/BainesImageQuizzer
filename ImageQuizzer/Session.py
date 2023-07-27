@@ -64,15 +64,15 @@ class Session:
         self._sSessionContourOpacity = 1.0
         self._bEmailResults = False
         self._bRandomizeRequired = False
-        self._bUserInteraction = False
-        
+        self._bUserInteractionLog = False
+        self._fhInteractionLog = None
+       
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
         self.oPageState = PageState()
         self.oUtilsEmail = UtilsEmail()
         self.oUserInteraction = None
-        self._fhInteractionLog = None
 
         self.oImageView = None
         
@@ -152,12 +152,20 @@ class Session:
         return self._bEmailResults
     
     #----------
-    def SetUserInteractionRequest(self, bInput):
-        self._bUserInteraction = bInput
+    def SetUserInteractionLogRequest(self, xPageNode):
+        sUserInteractionLog = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'UserInteractionLog')
+        if sUserInteractionLog == 'Y':
+            self._bUserInteractionLog = True
+            if self.oUserInteraction == None:
+                self.oUserInteraction = UserInteraction()
+            self.oUserInteraction.LockLayout()
+            
+        else:
+            self._bUserInteractionLog = False
         
     #----------
-    def GetUserInteractionRequest(self):
-        return self._bUserInteraction
+    def GetUserInteractionLogRequest(self):
+        return self._bUserInteractionLog
     
     #----------
     def SetFileHandlerInteractionLog(self, fh):
@@ -985,7 +993,7 @@ class Session:
             sMsg = ''
             
             # close open file handler for interaction log
-            if self.GetUserInteractionRequest():
+            if self.GetUserInteractionLogRequest():
                 self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog())
                 self.oUserInteraction.RemoveObservers()
                 
@@ -1054,7 +1062,7 @@ class Session:
             sMsg = ''
 
             # close open file handler for interaction log
-            if self.GetUserInteractionRequest():
+            if self.GetUserInteractionLogRequest():
                 self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog())
                 self.oUserInteraction.RemoveObservers()
                 
@@ -1132,7 +1140,7 @@ class Session:
                 if bSuccess:
                     
                     # close open file handler for interaction log
-                    if self.GetUserInteractionRequest():
+                    if self.GetUserInteractionLogRequest():
                         self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog())
                         self.oUserInteraction.RemoveObservers()
                         
@@ -1448,16 +1456,17 @@ class Session:
                 # check for partial or completed quiz
                 self.SetNavigationIndexIfResumeRequired()
                             
-                # >>>>>>>>>> User Interaction Log feature <<<<<<<<<<
-                #    after setting up Page index and before displaying the image layout (which initiates logging)
-                sUserInteractionLog = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'UserInteractionLog')
-                if sUserInteractionLog == 'Y':
-                    self.SetUserInteractionRequest(True)
-                    self.oUserInteraction = UserInteraction()
-                    self.oUserInteraction.LockLayout()
+                # # >>>>>>>>>> User Interaction Log feature <<<<<<<<<<
+                # #    after setting up Page index and before displaying the image layout (which initiates logging)
+                # sUserInteractionLog = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'UserInteractionLog')
+                # if sUserInteractionLog == 'Y':
+                #     self.SetUserInteractionRequest(True)
+                #     self.oUserInteraction = UserInteraction()
+                #     self.oUserInteraction.LockLayout()
+                #
+                # else:
+                #     self.SetUserInteractionRequest(False)
                     
-                else:
-                    self.SetUserInteractionRequest(False)
 
 
                 self.progress.setMaximum(len(self.GetNavigationList()))
@@ -1749,6 +1758,9 @@ class Session:
                 self.SetPageLooping(True)
             else:
                 self.SetPageLooping(False)
+                
+            self.SetUserInteractionLogRequest(xPageNode)
+
     
             if self.GetQuizComplete():
                 self.SetMultipleResponseAllowed('N') #read only
@@ -1826,7 +1838,7 @@ class Session:
     
             self.ApplySavedImageState()
         
-            if self.GetUserInteractionRequest() == True:
+            if self.GetUserInteractionLogRequest() == True:
                 self.SetFileHandlerInteractionLog(self.oUserInteraction.CreateUserInteractionLog(self))
                 self.oUserInteraction.AddObservers()
                 slicer.mrmlScene.InvokeEvent(vtk.vtkCommand.ModifiedEvent, self.oUserInteraction.onModifiedSlice('SessionSetup','CurrentSlice'))

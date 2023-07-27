@@ -30,8 +30,7 @@ class UserInteraction:
         self.lViewingWindows = ['Red','Green','Yellow','Slice4']
         self.ldictObserverIDs = {}
         
-#         # setup observers to watch for changes in the volume slice nodes
-#         self.AddObservers()
+        self.oUtilsMsgs = UtilsMsgs()
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -77,8 +76,7 @@ class UserInteraction:
             - The customEventFilter class handles when a user tries to drag the window to a new position.
         '''
         
-        # slicer.util.setPythonConsoleVisible(False)
-        slicer.util.setPythonConsoleVisible(True)
+        slicer.util.setPythonConsoleVisible(False)
 
         
         slMainWindow = slicer.util.mainWindow()
@@ -182,8 +180,12 @@ class UserInteraction:
         bCreatingNewFile = True
         if os.path.exists(sUserInteractionLogPath):
             bCreatingNewFile = False
-            
-        self.fh = open(sUserInteractionLogPath,"a")
+        while True:
+            try:    
+                self.fh = open(sUserInteractionLogPath,"a")
+                break
+            except IOError:
+                self.oUtilsMsgs.DisplayWarning("UserInteractionLog.csv file is open. Please close Excel to continue.")
 
         if bCreatingNewFile:
             # write header lines (no indents for proper csv formatting)
