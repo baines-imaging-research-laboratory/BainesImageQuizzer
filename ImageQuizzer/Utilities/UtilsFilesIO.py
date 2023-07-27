@@ -562,6 +562,10 @@ class UtilsFilesIO:
                 if not (os.path.exists(sSmtpConfigFile)) :
                     sMsg = sMsg + '\nMissing smtp configuration file for request to email quiz results : ' + sSmtpConfigFile
             
+            
+            sValidationMsg = self.CheckForFileExistence(xRootNode)
+            sMsg = sMsg + sValidationMsg
+            
             # check matches of LabelMapID with DisplayLabelMapID
             sValidationMsg = self.ValidateDisplayLabelMapID()
             sMsg = sMsg + sValidationMsg
@@ -822,6 +826,39 @@ class UtilsFilesIO:
             
         return sMsg
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CheckForFileExistence(self, xRootNode):
+        ''' collect all file paths and ensure the file exists in the given database location
+        '''
+        lsUniqueImagePaths = []
+        sMissingFiles = ''
+        sMissingFilesPrefix = 'Do you indicate the wrong Database directory? Check file path. \n\n'
+        
+        lxPageNodes = self.oIOXml.GetChildren(xRootNode,'Page')
+        iPageNum = 0
+        for xPageNode in lxPageNodes:
+            iPageNum = iPageNum + 1
+            
+            lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
+            for xImageNode in lxImageNodes:
+                
+                lxPathNodes = self.oIOXml.GetChildren(xImageNode, 'Path')
+                for xPathNode in lxPathNodes:
+                    sPath = self.oIOXml.GetDataInNode(xPathNode)
+                    
+                    if sPath in lsUniqueImagePaths:
+                        pass
+                    else:
+                        lsUniqueImagePaths.append(sPath)
+                        sFullPath = os.path.join(self.GetDataParentDir(), sPath)
+                        if not os.path.exists(sFullPath):
+                            if sMissingFiles == '':
+                                sMissingFiles = sMissingFiles + sMissingFilesPrefix
+                            sMissingFiles = sMissingFiles + 'Missing File... Page: ' + str(iPageNum) + '  File: ' + sFullPath + '\n'
+                
+
+        return sMissingFiles
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ValidatePageGroupNumbers(self, xRootNode):
         ''' If the Session requires randomization of page groups, each page must have a PageGroup attribute
