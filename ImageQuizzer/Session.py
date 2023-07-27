@@ -961,7 +961,7 @@ class Session:
                 return
         
         try:        
-            bSuccess = True
+            bSaveComplete = True
             sMsg = ''
             
             self.DisableButtons()    
@@ -981,9 +981,9 @@ class Session:
                 bNewPage = True
                 if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() + 1):
                     bNewPage = False
-                bSuccess, sMsg = self.PerformSave('NextBtn')
+                bSaveComplete, sMsg = self.PerformSave('NextBtn')
                 
-                if bSuccess:
+                if bSaveComplete:
         
         
                     ########################################    
@@ -1025,7 +1025,7 @@ class Session:
     def onPreviousButtonClicked(self):
         
         try:
-            bSuccess = True
+            bSaveComplete = True
             sMsg = ''
 
             self.DisableButtons()    
@@ -1037,9 +1037,9 @@ class Session:
                 if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() - 1):
                     bNewPage = False
     
-            bSuccess, sMsg = self.PerformSave('PreviousBtn')
+            bSaveComplete, sMsg = self.PerformSave('PreviousBtn')
             
-            if bSuccess:
+            if bSaveComplete:
     
                 ########################################    
                 # set up for previous page
@@ -1098,8 +1098,8 @@ class Session:
     
             qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
             if qtAns == qt.QMessageBox.Ok:
-                bSuccess, sMsg = self.PerformSave(sCaller)
-                if bSuccess:
+                bSaveComplete, sMsg = self.PerformSave(sCaller)
+                if bSaveComplete:
                     
                     self.QueryThenSendEmailResults()
                             
@@ -1274,12 +1274,12 @@ class Session:
                             "\nIf No, click 'Cancel' and press 'Next' to continue.")
         if qtAns == qt.QMessageBox.Ok:
             try:        
-                bSuccess = True
+                bSaveComplete = True
                 sMsg = ''
 
                 self.DisableButtons()    
-                bSuccess, sMsg = self.PerformSave('NextBtn')
-                if bSuccess:
+                bSaveComplete, sMsg = self.PerformSave('NextBtn')
+                if bSaveComplete:
                     
                     self.CreateRepeatedPageNode()
 
@@ -1857,7 +1857,6 @@ class Session:
                     sLatestResponse = self.oIOXml.GetDataInNode(xLatestResponseNode)
     
                 # search for 'latest' response completed - update the list
-#                 print('************Data...%s***END***' % sLatestResponse)
                 lsResponseValues.append(sLatestResponse)
                 
             oQuestion.PopulateQuestionWithResponses(lsResponseValues)
@@ -1883,7 +1882,7 @@ class Session:
         """
         
         sMsg = ''
-        bSuccess = True
+        bSaveComplete = True
         try:
             
             if not self.GetQuizComplete():
@@ -1907,7 +1906,7 @@ class Session:
                         self.WriteResponsesToXml()
                     else:
                         sMsg = sMsg + '\n All questions must be answered to proceed'
-                        bSuccess = False
+                        bSaveComplete = False
                         
                 else:  
                     # Caller must have been the Previous or Exit buttons or a close was 
@@ -1919,13 +1918,13 @@ class Session:
                         # if no responses were captured 
                         if sCaptureSuccessLevel == 'NoResponses':
                             # this isn't the Next button so it is allowed
-                            bSuccess = True
+                            bSaveComplete = True
                         
                 ################################################
                 ##########  Updating completion flags ##########        
                 ################################################
 
-                if bSuccess:
+                if bSaveComplete:
                     #after writing responses, update page states and record the image state
                     self.oPageState.UpdateCompletionLists(self.GetCurrentPageNode())
                     self.CaptureAndSaveImageState()
@@ -1938,21 +1937,20 @@ class Session:
                             sMsg = sMsg + sCompletionFlagMsg
                             
                             if self.oPageState.GetPageCompletedTF():
-                                bSuccess = True
+                                bSaveComplete = True
                                 self.AddPageCompleteAttribute(self.GetCurrentPageIndex())
                                 if sCaller == 'Finish':
                                     self.AddQuizCompleteAttribute()
                                     self.SetQuizComplete(True)
                             else:
-                                bSuccess = False
+                                bSaveComplete = False
                                     
         except Exception:
             tb = traceback.format_exc()
             sMsg = sMsg + '\nPerformSave error \n\n' + tb
             raise Exception(sMsg)                
     
-        # let calling program handle display of message if not successful            
-        return bSuccess, sMsg
+        return bSaveComplete, sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSegmentationTabDefaults(self):
