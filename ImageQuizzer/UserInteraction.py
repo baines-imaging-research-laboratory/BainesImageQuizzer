@@ -157,7 +157,11 @@ class UserInteraction:
             if slSliceWidget != None:
                 slWidgetLogic = slSliceWidget.sliceLogic()
                 slSliceNode = slWidgetLogic.GetSliceNode()
-                slSliceNode.RemoveObserver(self.ldictObserverIDs[sName])
+                if len(self.ldictObserverIDs) > 0:
+                    try:
+                        slSliceNode.RemoveObserver(self.ldictObserverIDs[sName])
+                    except:
+                        pass # there may not be an observer for the viewing window if changing layouts
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onModifiedSlice(self, caller, event):
