@@ -168,6 +168,31 @@ class Session:
         return self._bUserInteractionLog
     
     #----------
+    def SetInteractionLogOnOff(self, sState):
+        ''' Turn interaction log on:
+                create new log if one doesn't exist for the page or open for append
+                start the observers to watch for slice changes
+                trigger event to get the initial slice position recorded
+            Turn interaction log off:
+                close currently open file
+                turn off observers to prevent logging of slice changes during transitions 
+        '''
+                
+        
+        if sState=='On':
+
+            if self.GetUserInteractionLogRequest():
+                self.SetFileHandlerInteractionLog(self.oUserInteraction.CreateUserInteractionLog(self))
+                self.oUserInteraction.AddObservers()
+                slicer.mrmlScene.InvokeEvent(vtk.vtkCommand.ModifiedEvent, self.oUserInteraction.onModifiedSlice('SessionSetup','CurrentSlice'))
+            
+        else: 
+            if self.GetUserInteractionLogRequest():
+                self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog())
+                self.oUserInteraction.RemoveObservers()
+        
+    
+    #----------
     def SetFileHandlerInteractionLog(self, fh):
         self._fhInteractionLog
         
@@ -992,14 +1017,11 @@ class Session:
             bSaveComplete = True
             sMsg = ''
             
-            # close open file handler for interaction log
-            if self.GetUserInteractionLogRequest():
-                self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog())
-                self.oUserInteraction.RemoveObservers()
+            self.SetInteractionLogOnOff('Off')
                 
             self.DisableButtons()    
             if self.sViewingMode != 'Default':
-                self.onResetViewClicked()
+                self.onResetViewClicked('NPlanes')
     
             if self.GetCurrentNavigationIndex() + 1 == len(self.GetNavigationList()):
     
@@ -1042,12 +1064,7 @@ class Session:
                     self.DisplayImageLayout()
 
 
-                    if self.GetUserInteractionLogRequest() == True:
-                        self.SetFileHandlerInteractionLog(self.oUserInteraction.CreateUserInteractionLog(self))
-                        self.oUserInteraction.AddObservers()
-                        slicer.mrmlScene.InvokeEvent(vtk.vtkCommand.ModifiedEvent, self.oUserInteraction.onModifiedSlice('SessionSetup','CurrentSlice'))
-                        
-
+                    self.SetInteractionLogOnOff('On')
                              
                 else:
                     if sMsg != '':
@@ -1069,14 +1086,11 @@ class Session:
             bSaveComplete = True
             sMsg = ''
 
-            # close open file handler for interaction log
-            if self.GetUserInteractionLogRequest():
-                self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog())
-                self.oUserInteraction.RemoveObservers()
+            self.SetInteractionLogOnOff('Off')
                 
             self.DisableButtons()    
             if self.sViewingMode != 'Default':
-                self.onResetViewClicked()
+                self.onResetViewClicked('NPlanes')
                 
             bNewPage = True
             if self.GetCurrentNavigationIndex() > 0:
@@ -1108,12 +1122,7 @@ class Session:
                 self.DisplayImageLayout()
                    
 
-                if self.GetUserInteractionLogRequest() == True:
-                    self.SetFileHandlerInteractionLog(self.oUserInteraction.CreateUserInteractionLog(self))
-                    self.oUserInteraction.AddObservers()
-                    slicer.mrmlScene.InvokeEvent(vtk.vtkCommand.ModifiedEvent, self.oUserInteraction.onModifiedSlice('SessionSetup','CurrentSlice'))
-                    
-
+                self.SetInteractionLogOnOff('On')
 
             
             else:
@@ -1155,10 +1164,7 @@ class Session:
                 bSaveComplete, sMsg = self.PerformSave(sCaller)
                 if bSaveComplete:
                     
-                    # close open file handler for interaction log
-                    if self.GetUserInteractionLogRequest():
-                        self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog())
-                        self.oUserInteraction.RemoveObservers()
+                    self.SetInteractionLogOnOff('Off')
                         
                     self.QueryThenSendEmailResults()
                     
@@ -1255,7 +1261,7 @@ class Session:
 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onResetViewClicked(self):
+    def onResetViewClicked(self, sCaller=None):
         ''' Capture responses in the current state (may not be completed) before 
             resetting the viewing nodes to original layout for this page.
             Restore the current responses.
@@ -1265,11 +1271,7 @@ class Session:
 
         try:
             
-            # close open file handler for interaction log
-            if self.GetUserInteractionLogRequest():
-                self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog())
-                self.oUserInteraction.RemoveObservers()
-                
+            self.SetInteractionLogOnOff('Off')
             
             sCaptureSuccessLevel, lsCurrentResponses, sMsg = self.CaptureNewResponses()
             self.CaptureAndSaveImageState()
@@ -1288,11 +1290,9 @@ class Session:
             self.DisplayCurrentResponses(lsCurrentResponses)
             self.ApplySavedImageState()
             
-            
-            if self.GetUserInteractionLogRequest() == True:
-                self.SetFileHandlerInteractionLog(self.oUserInteraction.CreateUserInteractionLog(self))
-                self.oUserInteraction.AddObservers()
-                slicer.mrmlScene.InvokeEvent(vtk.vtkCommand.ModifiedEvent, self.oUserInteraction.onModifiedSlice('SessionSetup','CurrentSlice'))
+
+            if sCaller != 'NPlanes':            
+                self.SetInteractionLogOnOff('On')
                 
             
 
@@ -1311,13 +1311,11 @@ class Session:
             
             
             if self.GetNPlanesComboBoxCount() > 0:
+                
+                self.SetInteractionLogOnOff('Off')
+
                 self.CaptureAndSaveImageState()
 
-                # close open file handler for interaction log
-                if self.GetUserInteractionLogRequest():
-                    self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog())
-                    self.oUserInteraction.RemoveObservers()
-                
                 
                 self.SetNPlanesView()
                 oImageNodeOverride, iXmlImageIndex = self.GetNPlanesImageComboBoxSelection()
@@ -1331,11 +1329,7 @@ class Session:
                 self.ApplySavedImageState()
 
                 
-                if self.GetUserInteractionLogRequest() == True:
-                    self.SetFileHandlerInteractionLog(self.oUserInteraction.CreateUserInteractionLog(self))
-                    self.oUserInteraction.AddObservers()
-                    slicer.mrmlScene.InvokeEvent(vtk.vtkCommand.ModifiedEvent, self.oUserInteraction.onModifiedSlice('SessionSetup','CurrentSlice'))
-                
+                self.SetInteractionLogOnOff('On')
                 
                 
             else:
@@ -1369,11 +1363,7 @@ class Session:
                 bSaveComplete = True
                 sMsg = ''
 
-                # close open file handler for interaction log
-                if self.GetUserInteractionLogRequest():
-                    self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog())
-                    self.oUserInteraction.RemoveObservers()
-                    
+                self.SetInteractionLogOnOff('Off')
 
 
                 self.DisableButtons()    
@@ -1394,11 +1384,6 @@ class Session:
                     self.DisplayQuizLayout()
                     self.DisplayImageLayout()
 
-                if self.GetUserInteractionLogRequest() == True:
-                    self.SetFileHandlerInteractionLog(self.oUserInteraction.CreateUserInteractionLog(self))
-                    self.oUserInteraction.AddObservers()
-                    slicer.mrmlScene.InvokeEvent(vtk.vtkCommand.ModifiedEvent, self.oUserInteraction.onModifiedSlice('SessionSetup','CurrentSlice'))
-                
 
                     
                 else:
@@ -1406,6 +1391,9 @@ class Session:
                         self.oUtilsMsgs.DisplayWarning( sMsg )
     
                 self.EnableButtons()
+
+                self.SetInteractionLogOnOff('On')
+                
                 
             except:
                 iPage = self.GetCurrentPageIndex() + 1
@@ -1478,6 +1466,8 @@ class Session:
     
             else:
                 
+                self.SetInteractionLogOnOff('Off')
+
                 # >>>>>>>>>> Email feature <<<<<<<<<<
                 bEmailRequest, sMsg = self.oUtilsEmail.SetupEmailResults(self.oFilesIO, \
                                 self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'EmailResultsTo'))
@@ -1519,22 +1509,6 @@ class Session:
                 # check for partial or completed quiz
                 self.SetNavigationIndexIfResumeRequired()
                             
-                # # >>>>>>>>>> User Interaction Log feature <<<<<<<<<<
-                # #    after setting up Page index and before displaying the image layout (which initiates logging)
-                # sUserInteractionLog = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'UserInteractionLog')
-                # if sUserInteractionLog == 'Y':
-                #     self.SetUserInteractionRequest(True)
-                #     self.oUserInteraction = UserInteraction()
-                #     self.oUserInteraction.LockLayout()
-                #
-                # else:
-                #     self.SetUserInteractionRequest(False)
-                    
-                # close open file handler for interaction log
-                if self.GetUserInteractionLogRequest():
-                    self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog())
-                    self.oUserInteraction.RemoveObservers()
-
 
                 self.progress.setMaximum(len(self.GetNavigationList()))
                 self.progress.setValue(self.GetCurrentNavigationIndex())
@@ -1554,13 +1528,9 @@ class Session:
                     self.AddUserNameAttribute()
                     
                     
-                if self.GetUserInteractionLogRequest() == True:
-                    self.SetFileHandlerInteractionLog(self.oUserInteraction.CreateUserInteractionLog(self))
-                    self.oUserInteraction.AddObservers()
-                    slicer.mrmlScene.InvokeEvent(vtk.vtkCommand.ModifiedEvent, self.oUserInteraction.onModifiedSlice('SessionSetup','CurrentSlice'))
-
-                    
                 self.EnableButtons()
+
+                self.SetInteractionLogOnOff('On')
 
 
         except:
