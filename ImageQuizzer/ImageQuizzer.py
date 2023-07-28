@@ -195,25 +195,28 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         
         ################################
-        # Define User folder
+        # Define User name
         ################################
  
         # Add vertical spacer
         qUserLoginLayout.addSpacing(10)
         
-#         self.qUserGrpBox = qt.QGroupBox()
-#         self.qUserGrpBox.setTitle('User name')
-#         self.qUserGrpBoxLayout = qt.QVBoxLayout()
-#         self.qUserGrpBox.setLayout(self.qUserGrpBoxLayout)
-# 
-#         self.comboGetUserName = qt.QComboBox()
-#         self.comboGetUserName.addItem(os.getlogin())
-#         self.qUserGrpBoxLayout.addWidget(self.comboGetUserName)
-#         self.qUserGrpBox.setEnabled(True)
-#         
-#         
-#         qUserLoginLayout.addWidget(self.qUserGrpBox)
 
+        self.qUserGrpBox = qt.QGroupBox()
+        self.qUserGrpBox.setTitle('User name')
+        self.qUserGrpBoxLayout = qt.QVBoxLayout()
+        self.qUserGrpBox.setLayout(self.qUserGrpBoxLayout)
+
+        self.comboGetUserName = qt.QComboBox()
+        self.comboGetUserName.addItem(os.getlogin())
+        self.comboGetUserName.currentTextChanged.connect(self.onUserComboboxChanged)
+        self.comboGetUserName.setEditable(True)
+
+        self.qUserGrpBoxLayout.addWidget(self.comboGetUserName)
+        self.qUserGrpBox.setEnabled(True)
+
+        qUserLoginLayout.addWidget(self.qUserGrpBox)
+        
         
         ################################
         # Get Database location
@@ -241,23 +244,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         qDBGrpBoxLayout.addWidget(self.qLblDataLocation)
 
 
-        qDBGrpBoxLayout.addSpacing(10)
-        self.qUserGrpBox = qt.QGroupBox()
-        self.qUserGrpBox.setTitle('User name')
-        self.qUserGrpBoxLayout = qt.QVBoxLayout()
-        self.qUserGrpBox.setLayout(self.qUserGrpBoxLayout)
-
-        self.comboGetUserName = qt.QComboBox()
-        self.comboGetUserName.addItem(os.getlogin())
-        self.qUserGrpBoxLayout.addWidget(self.comboGetUserName)
-        self.qUserGrpBox.setEnabled(True)
-        
-        
-        qDBGrpBoxLayout.addWidget(self.qUserGrpBox)
-
-        
         # Add vertical spacer
-        qUserLoginLayout.addSpacing(10)
+        qUserLoginLayout.addSpacing(20)
         
         
         ################################
@@ -306,6 +294,12 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.qLaunchGrpBoxLayout.addWidget(self.btnLaunchStudy)
          
          
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onUserComboboxChanged(self):
+        
+        # capture selected user name
+        self.oFilesIO.SetQuizUsername(self.comboGetUserName.currentText)
+     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def onApplyQuizzerDataLocation(self):

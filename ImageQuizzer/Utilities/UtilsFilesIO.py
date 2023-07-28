@@ -562,6 +562,10 @@ class UtilsFilesIO:
                 if not (os.path.exists(sSmtpConfigFile)) :
                     sMsg = sMsg + '\nMissing smtp configuration file for request to email quiz results : ' + sSmtpConfigFile
             
+            
+            sValidationMsg = self.CheckForFileExistence(xRootNode)
+            sMsg = sMsg + sValidationMsg
+            
             # check matches of LabelMapID with DisplayLabelMapID
             sValidationMsg = self.ValidateDisplayLabelMapID()
             sMsg = sMsg + sValidationMsg
@@ -822,6 +826,39 @@ class UtilsFilesIO:
             
         return sMsg
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CheckForFileExistence(self, xRootNode):
+        ''' collect all file paths and ensure the file exists in the given database location
+        '''
+        lsUniqueImagePaths = []
+        sMissingFiles = ''
+        sMissingFilesPrefix = 'Do you indicate the wrong Database directory? Check file path. \n\n'
+        
+        lxPageNodes = self.oIOXml.GetChildren(xRootNode,'Page')
+        iPageNum = 0
+        for xPageNode in lxPageNodes:
+            iPageNum = iPageNum + 1
+            
+            lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
+            for xImageNode in lxImageNodes:
+                
+                lxPathNodes = self.oIOXml.GetChildren(xImageNode, 'Path')
+                for xPathNode in lxPathNodes:
+                    sPath = self.oIOXml.GetDataInNode(xPathNode)
+                    
+                    if sPath in lsUniqueImagePaths:
+                        pass
+                    else:
+                        lsUniqueImagePaths.append(sPath)
+                        sFullPath = os.path.join(self.GetDataParentDir(), sPath)
+                        if not os.path.exists(sFullPath):
+                            if sMissingFiles == '':
+                                sMissingFiles = sMissingFiles + sMissingFilesPrefix
+                            sMissingFiles = sMissingFiles + 'Missing File... Page: ' + str(iPageNum) + '  File: ' + sFullPath + '\n'
+                
+
+        return sMissingFiles
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ValidatePageGroupNumbers(self, xRootNode):
         ''' If the Session requires randomization of page groups, each page must have a PageGroup attribute
@@ -1354,9 +1391,12 @@ class UtilsFilesIO:
             slStorageNode.WriteData(slNode)
             slStorageNode.UnRegister(slicer.mrmlScene) # for memory leaks
             
-        except:
-            bSuccess = False
-            sMsg = 'Failed to store ' + sItemName + ' as file: \n' + sPath
+        except Exception as error:
+            tb = traceback.format_exc()
+            sMsg = '\nExportResultsItemToFile: Failed to store ' + sItemName + ' as file: \n' + sPath \
+                    + str(error) \
+                    + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
     
         return bSuccess, sMsg
     
@@ -1405,7 +1445,6 @@ class UtilsFilesIO:
         """
             
         bLabelMapsSaved = True # initialize
-        sMsg = ''
         
         bLabelMapFound = False  # to detect if label map was created by user
  
@@ -1429,7 +1468,6 @@ class UtilsFilesIO:
                     if oImageNode.sNodeName + '-bainesquizlabel' == sLabelMapFilename:
                         
                         bLabelMapFound = True  # -bainesquizlabel suffix is associated with an image on the page
-                        bDataVolumeSaved = False
                         
                         sDirName = self.GetFolderNameForPageResults(oSession)
                         sPageLabelMapDir = self.CreatePageDir(sDirName)
@@ -1438,29 +1476,21 @@ class UtilsFilesIO:
                         
                         if not oImageNode.sNodeName in lsLabelMapsStoredForImages:
                             # save the label map file to the user's page directory
-                            bDataVolumeSaved, sMsg = self.ExportResultsItemToFile('LabelMap', sLabelMapPath, slNodeLabelMap) 
+                            self.ExportResultsItemToFile('LabelMap', sLabelMapPath, slNodeLabelMap) 
                          
                             # update list of names of images that have the label maps stored
                             lsLabelMapsStoredForImages.append(oImageNode.sNodeName)
-                        else:
-                            bDataVolumeSaved = True # already saved
 
 
-                        # if label maps were saved as a data volume
                         #    add the label map path element to the image element in the xml
                         #    only one label map path element is to be recorded
-                        if bDataVolumeSaved:
-                            xLabelMapPathElement = self.oIOXml.GetLastChild(oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                        xLabelMapPathElement = self.oIOXml.GetLastChild(oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                        
+                        if xLabelMapPathElement == None:
+                            # update xml storing the path to the label map file with the image element
+                            oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(),\
+                                                 self.GetRelativeUserPath(sLabelMapPath))
                             
-                            if xLabelMapPathElement == None:
-                                # update xml storing the path to the label map file with the image element
-                                oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(),\
-                                                     self.GetRelativeUserPath(sLabelMapPath))
-                            
-                                bLabelMapsSaved = True  # at least one label map was saved
-                        else:
-                            bLabelMapsSaved = False
-                            oSession.oUtilsMsgs.DisplayError(sMsg)
                             
 
         if sCaller != 'ResetView':   # warning not required on a reset
@@ -1493,7 +1523,7 @@ class UtilsFilesIO:
         if bLabelMapsSaved == True:
             oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
 
-        return bLabelMapsSaved, sMsg
+        return
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadSavedLabelMaps(self, oSession):
@@ -1745,9 +1775,7 @@ class UtilsFilesIO:
                 if os.path.exists(sLabelMapPath):
                     os.remove(sLabelMapPath)
         
-                bDataVolumeSaved, sMsg = self.ExportResultsItemToFile('LabelMap', sLabelMapPath, slLabelMapVolumeCombined)
-                if bDataVolumeSaved == False:
-                    raise Exception(sMsg)
+                self.ExportResultsItemToFile('LabelMap', sLabelMapPath, slLabelMapVolumeCombined)
         
                 # update xml storing the path to the label map file with the image element
                 #    for display on the next page
@@ -1782,50 +1810,46 @@ class UtilsFilesIO:
             reference node and save them in the json format.
         '''
         
-        sMsg = ''
-        bMarkupLinesSaved = True
+        try:
+            lsMarkupLineNodes = slicer.util.getNodesByClass('vtkMRMLMarkupsLineNode')
+    
+            for slMarkupLine in lsMarkupLineNodes:
+                iNumPoints = slMarkupLine.GetNumberOfControlPoints()
+                
+                # only work with nodes that have 2 points
+                #    -    just adding the line tool can create a null markup line node (0 control points)
+                if iNumPoints == 2:
+                    sAssociatedReferenceNodeID = slMarkupLine.GetNthControlPointAssociatedNodeID(0)
+                    sAssociatedReferenceNodeName = slicer.mrmlScene.GetNodeByID(sAssociatedReferenceNodeID).GetName()
+                    # update markup line name with associated node only if not already done
+                    if slMarkupLine.GetName().find(sAssociatedReferenceNodeName) == -1: 
+                        
+                        # check the scene if the name already exists
+                        #    - if not all lines are created yet and user moves between Next and Previous, a 
+                        #    newly created markup line node may be created with the same base name ('MarkupsLine'),
+                        #    so a suffix needs to be added to the new line name
+                        sLineName = self.CreateUniqueLineName(lsMarkupLineNodes, slMarkupLine.GetName(), sAssociatedReferenceNodeName)
+                        slMarkupLine.SetName(sLineName)
+                
+                    # save the markup line in the directory
+                    sDirName = self.GetFolderNameForPageResults(oSession)
+                    sPageMarkupsLineDir = self.CreatePageDir(sDirName)
         
-        lsMarkupLineNodes = []
-        lsMarkupLineNodes = slicer.util.getNodesByClass('vtkMRMLMarkupsLineNode')
+                    sMarkupsLineFilenameWithExt = slMarkupLine.GetName() + '.mrk.json'
+                                 
+                    # save the markup line file to the user's page directory
+                    sMarkupsLinePath = os.path.join(sPageMarkupsLineDir, sMarkupsLineFilenameWithExt)
+        
+                     
+                
+                    for oImageNode in oSession.oImageView.GetImageViewList():
+                        
+                        # match the markup line to the image to save the path to the correct xml Image node
+                        if slicer.mrmlScene.GetNodeByID(sAssociatedReferenceNodeID).GetName() == oImageNode.sNodeName:
+                            self.ExportResultsItemToFile('MarkupsLine', sMarkupsLinePath, slMarkupLine)
 
-        for slMarkupLine in lsMarkupLineNodes:
-            iNumPoints = slMarkupLine.GetNumberOfControlPoints()
-            
-            # only work with nodes that have 2 points
-            #    -    just adding the line tool can create a null markup line node (0 control points)
-            #    -    bMarkupLinesSaved flag is still true if no valid lines are available to save
-            if iNumPoints == 2:
-                sAssociatedReferenceNodeID = slMarkupLine.GetNthControlPointAssociatedNodeID(0)
-                sAssociatedReferenceNodeName = slicer.mrmlScene.GetNodeByID(sAssociatedReferenceNodeID).GetName()
-                # update markup line name with associated node only if not already done
-                if slMarkupLine.GetName().find(sAssociatedReferenceNodeName) == -1: 
-                    
-                    # check the scene if the name already exists
-                    #    - if not all lines are created yet and user moves between Next and Previous, a 
-                    #    newly created markup line node may be created with the same base name ('MarkupsLine'),
-                    #    so a suffix needs to be added to the new line name
-                    sLineName = self.CreateUniqueLineName(lsMarkupLineNodes, slMarkupLine.GetName(), sAssociatedReferenceNodeName)
-                    slMarkupLine.SetName(sLineName)
-            
-                # save the markup line in the directory
-                sDirName = self.GetFolderNameForPageResults(oSession)
-                sPageMarkupsLineDir = self.CreatePageDir(sDirName)
-    
-                sMarkupsLineFilenameWithExt = slMarkupLine.GetName() + '.mrk.json'
-                             
-                # save the markup line file to the user's page directory
-                sMarkupsLinePath = os.path.join(sPageMarkupsLineDir, sMarkupsLineFilenameWithExt)
-    
-                 
-            
-                for oImageNode in oSession.oImageView.GetImageViewList():
-                    
-                    # match the markup line to the image to save the path to the correct xml Image node
-                    if slicer.mrmlScene.GetNodeByID(sAssociatedReferenceNodeID).GetName() == oImageNode.sNodeName:
-                        bLineSaved, sMsg = self.ExportResultsItemToFile('MarkupsLine', sMarkupsLinePath, slMarkupLine)
-                        # store the path name in the xml file
-                        if bLineSaved:
-                            
+                            # store the path name in the xml file
+                                
                             sRelativePathToStoreInXml = self.GetRelativeUserPath(sMarkupsLinePath)
                             lxLinePathElements = self.oIOXml.GetChildren(oImageNode.GetXmlImageElement(), 'MarkupLinePath')
                             bPathAlreadyInXml = False
@@ -1833,22 +1857,24 @@ class UtilsFilesIO:
                                 sStoredRelativePath = self.oIOXml.GetDataInNode(xPathElement)
                                 if sStoredRelativePath == sRelativePathToStoreInXml:
                                     bPathAlreadyInXml = True
-                                    bMarkupLinesSaved = True
                                     break
                                 
                             if bPathAlreadyInXml == False:   
                                 # update xml storing the path to the markup line file with the image element
                                 oSession.AddPathElement('MarkupLinePath', oImageNode.GetXmlImageElement(),
                                                         sRelativePathToStoreInXml)
-                                bMarkupLinesSaved = True    # at least one markup line was saved
-                        else:
-                            bMarkupLinesSaved = False
-                            oSession.oUtilsMsgs.DisplayError(sMsg)
-        
-        if bMarkupLinesSaved == True:  
-            oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
             
-        return bMarkupLinesSaved, sMsg
+                oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
+            
+            
+        except Exception as error:
+            tb = traceback.format_exc()
+            sMsg = "\nSaveMarkupLines: Error saving markup lines to disk. "  \
+                    + str(error) \
+                    + "\n\n" + tb 
+            raise Exception(sMsg)
+            
+        return
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CreateUniqueLineName(self, lAllNodeNamesInScene, sSystemGeneratedName, sAssociatedReferenceNodeName):

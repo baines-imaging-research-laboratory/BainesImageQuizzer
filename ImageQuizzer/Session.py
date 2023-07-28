@@ -989,7 +989,7 @@ class Session:
                 return
         
         try:        
-            bSuccess = True
+            bSaveComplete = True
             sMsg = ''
             
             # close open file handler for interaction log
@@ -1014,9 +1014,9 @@ class Session:
                 bNewPage = True
                 if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() + 1):
                     bNewPage = False
-                bSuccess, sMsg = self.PerformSave('NextBtn')
+                bSaveComplete, sMsg = self.PerformSave('NextBtn')
                 
-                if bSuccess:
+                if bSaveComplete:
         
         
                     ########################################    
@@ -1058,7 +1058,7 @@ class Session:
     def onPreviousButtonClicked(self):
         
         try:
-            bSuccess = True
+            bSaveComplete = True
             sMsg = ''
 
             # close open file handler for interaction log
@@ -1075,9 +1075,9 @@ class Session:
                 if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() - 1):
                     bNewPage = False
     
-            bSuccess, sMsg = self.PerformSave('PreviousBtn')
+            bSaveComplete, sMsg = self.PerformSave('PreviousBtn')
             
-            if bSuccess:
+            if bSaveComplete:
     
                 ########################################    
                 # set up for previous page
@@ -1136,8 +1136,8 @@ class Session:
     
             qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
             if qtAns == qt.QMessageBox.Ok:
-                bSuccess, sMsg = self.PerformSave(sCaller)
-                if bSuccess:
+                bSaveComplete, sMsg = self.PerformSave(sCaller)
+                if bSaveComplete:
                     
                     # close open file handler for interaction log
                     if self.GetUserInteractionLogRequest():
@@ -1317,12 +1317,12 @@ class Session:
                             "\nIf No, click 'Cancel' and press 'Next' to continue.")
         if qtAns == qt.QMessageBox.Ok:
             try:        
-                bSuccess = True
+                bSaveComplete = True
                 sMsg = ''
 
                 self.DisableButtons()    
-                bSuccess, sMsg = self.PerformSave('NextBtn')
-                if bSuccess:
+                bSaveComplete, sMsg = self.PerformSave('NextBtn')
+                if bSaveComplete:
                     
                     self.CreateRepeatedPageNode()
 
@@ -1927,7 +1927,6 @@ class Session:
                     sLatestResponse = self.oIOXml.GetDataInNode(xLatestResponseNode)
     
                 # search for 'latest' response completed - update the list
-#                 print('************Data...%s***END***' % sLatestResponse)
                 lsResponseValues.append(sLatestResponse)
                 
             oQuestion.PopulateQuestionWithResponses(lsResponseValues)
@@ -1953,47 +1952,49 @@ class Session:
         """
         
         sMsg = ''
-        bSuccess = True
-        
-        if not self.GetQuizComplete():
-        
-            if sCaller != 'ResetView':
-                self.oQuizWidgets.qTabWidget.setCurrentIndex(0)
-            self.SetSegmentationTabDefaults()
-                
-            idxQuestionSet = self.GetCurrentQuestionSetIndex()
-            iNumQSets = len(self.GetAllQuestionSetNodesForCurrentPage())
+        bSaveComplete = True
+        try:
             
+            if not self.GetQuizComplete():
             
-            bSuccessLabelMaps, sMsgLabelMaps = self.oFilesIO.SaveLabelMaps(self, sCaller)
-            bSuccessMarkupLines, sMsgMarkupLines = self.oFilesIO.SaveMarkupLines(self)
-            sMsg = sMsg + sMsgLabelMaps + sMsgMarkupLines
-            bSuccess = bSuccessLabelMaps * bSuccessMarkupLines
+                if sCaller != 'ResetView':
+                    self.oQuizWidgets.qTabWidget.setCurrentIndex(0)
+                self.SetSegmentationTabDefaults()
+                    
+                idxQuestionSet = self.GetCurrentQuestionSetIndex()
+                iNumQSets = len(self.GetAllQuestionSetNodesForCurrentPage())
 
-            if bSuccess:
+                
+                self.oFilesIO.SaveLabelMaps(self, sCaller)
+                self.oFilesIO.SaveMarkupLines(self)
+   
                 sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponses()
                 
                 if sCaller == 'NextBtn' or sCaller == 'Finish':
                     # only write to xml if all responses were captured
                     if sCaptureSuccessLevel == 'AllResponses':
-                        bSuccess, sMsg = self.WriteResponsesToXml()
+                        self.WriteResponsesToXml()
                     else:
                         sMsg = sMsg + '\n All questions must be answered to proceed'
-                        bSuccess = False
+                        bSaveComplete = False
                         
                 else:  
                     # Caller must have been the Previous or Exit buttons or a close was 
                     #     requested (which triggers the event filter)
                     # Only write if there were responses captured
                     if sCaptureSuccessLevel == 'AllResponses' or sCaptureSuccessLevel == 'PartialResponses':
-                        bSuccess, sMsg = self.WriteResponsesToXml()
+                        self.WriteResponsesToXml()
                     else:
                         # if no responses were captured 
                         if sCaptureSuccessLevel == 'NoResponses':
                             # this isn't the Next button so it is allowed
-                            bSuccess = True
+                            bSaveComplete = True
                         
-                if bSuccess:
+                ################################################
+                ##########  Updating completion flags ##########        
+                ################################################
+
+                if bSaveComplete:
                     #after writing responses, update page states and record the image state
                     self.oPageState.UpdateCompletionLists(self.GetCurrentPageNode())
                     self.CaptureAndSaveImageState()
@@ -2006,18 +2007,21 @@ class Session:
                             sMsg = sMsg + sCompletionFlagMsg
                             
                             if self.oPageState.GetPageCompletedTF():
-                                bSuccess = True
+                                bSaveComplete = True
                                 self.AddPageCompleteAttribute(self.GetCurrentPageIndex())
                                 if sCaller == 'Finish':
                                     self.AddQuizCompleteAttribute()
                                     self.SetQuizComplete(True)
                             else:
-                                bSuccess = False
-                                
-                    
 
-        # let calling program handle display of message if not successful            
-        return bSuccess, sMsg
+                                bSaveComplete = False
+                                    
+        except Exception:
+            tb = traceback.format_exc()
+            sMsg = sMsg + '\nPerformSave error \n\n' + tb
+            raise Exception(sMsg)                
+    
+        return bSaveComplete, sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSegmentationTabDefaults(self):
@@ -2372,11 +2376,7 @@ class Session:
             After responses are added, record the image state in the xml file.
         """
         
-        bSuccess = True
-        sMsg = ''
-        
         try:
-            
             # only allow for writing of responses under certain conditions
             #    - allow if the question set is marked for multiple responses allowed
             #    - OR allow if the number of questions with responses already 
@@ -2403,13 +2403,15 @@ class Session:
                     self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
                     
         
-        except:
-            bSuccess = False
-            sMsg = 'Error writing responses to Xml' + '\n Does this file exist? : \n' + self.oFilesIO.GetUserQuizResultsPath()
+        except Exception:
+            tb = traceback.format_exc()
+            sMsg = 'Error writing responses to Xml' + '\n Does this file exist? : \n' \
+                + self.oFilesIO.GetUserQuizResultsPath()\
+                + '\n\n' + tb
             # critical error - exit
             self.oUtilsMsgs.DisplayError( sMsg )
             
-        return bSuccess, sMsg
+        return 
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CreateRepeatedPageNode(self, sXmlFilePath = None):
