@@ -1,47 +1,88 @@
-<Session RandomizePageGroups="Y">
-	<Page ID="Patient1" Descriptor="PlanningCT" PageGroup="1a" EnableSegmentEditor="N">
-		<Image Type="Volume" ID="Fixed Volume" LabelMapID="Brain-fixed-contour">
-			<DefaultDestination>Red</DefaultDestination>
+<Session>
+    <Page ID="Patient 3" Descriptor="PET PSMA" Layout="TwoOverTwo" Loop="Y" PageGroup="1">
+        <Image DicomRead="Y" Type="Volume" ID="CT">
+            <DefaultDestination>Red</DefaultDestination>
+            <Layer>Background</Layer>
+            <DefaultOrientation>Axial</DefaultOrientation>
+            <Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\CT1\26556672</Path>
+        </Image>
+        <Image DicomRead="Y" Type="Volume" ID="CT">
+            <DefaultDestination>Green</DefaultDestination>
+            <Layer>Background</Layer>
+            <DefaultOrientation>Sagittal</DefaultOrientation>
+            <Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\CT1\26556672</Path>
+        </Image>
+        <Image DicomRead="Y" Type="Volume" ID="CT">
+            <DefaultDestination>Yellow</DefaultDestination>
+            <Layer>Background</Layer>
+            <DefaultOrientation>Coronal</DefaultOrientation>
+            <Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\CT1\26556672</Path>
+        </Image>
+        <Image DicomRead="Y" Type="Volume" ID="PET" ColorTable='PET-Heat' >
+            <DefaultDestination>Red</DefaultDestination>
+            <Layer>Foreground</Layer>
+            <DefaultOrientation>Axial</DefaultOrientation>
+            <Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\PET1\26558596</Path>
+        </Image>
+        <Image DicomRead="Y" Type="Volume" ID="PET" ColorTable='PET-Heat' >
+            <DefaultDestination>Green</DefaultDestination>
+            <Layer>Foreground</Layer>
+            <DefaultOrientation>Sagittal</DefaultOrientation>
+            <Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\PET1\26558596</Path>
+        </Image>
+        <Image DicomRead="Y" Type="Volume" ID="PET" ColorTable='PET-Heat' >
+            <DefaultDestination>Yellow</DefaultDestination>
+            <Layer>Foreground</Layer>
+            <DefaultOrientation>Coronal</DefaultOrientation>
+            <Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\PET1\26558596</Path>
+        </Image>
+        <Image Type="Volume" ID="PET" ColorTable='PET-Heat' >
+            <DefaultDestination>Slice4</DefaultDestination>
+            <Layer>Background</Layer>
+            <DefaultOrientation>Coronal</DefaultOrientation>
+            <Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\PET1\26558596</Path>
+        </Image>
+        <QuestionSet ID="Steps" Descriptor="User interaction log feature">
+            <Question Type="CheckBox" Descriptor="Testing user interaction log">
+				<Option>Check for log started </Option>
+            </Question>
+            <Question Type="Radio" Descriptor="Testing locked layout">
+                <Option>Layout locked</Option>
+				<Option>Layout not locked</Option>
+            </Question>
+        </QuestionSet>
+	</Page>
+	<Page Descriptor="Brain CT-MR" ID="Patient 4" EnableSegmentEditor="Y" LinkViews="Y" PageGroup="2">
+		<Image ID="MR T1" Type="Volume">
 			<Layer>Background</Layer>
-			<DefaultOrientation>Axial</DefaultOrientation>
-			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
-		</Image>
-		<Image ID="Unregistered" Type="Volume" Opacity="15">
-			<DefaultDestination>Red</DefaultDestination>
-			<Layer>Foreground</Layer>
-			<DefaultOrientation>Axial</DefaultOrientation>
-			<Path>ImageVolumes\Brain\BrainCT_moving.nii</Path>
-		</Image>
-		<Image Type="Volume" ID="Fixed Volume">
 			<DefaultDestination>Yellow</DefaultDestination>
-			<Layer>Background</Layer>
-			<DefaultOrientation>Sagittal</DefaultOrientation>
-			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\CT-MR Brain\MRBrainT1.nrrd</Path>
 		</Image>
-		<Image Type="Volume" ID="Fixed Volume">
+		<Image ID="MR T2" Type="Volume">
+			<Layer>Background</Layer>
 			<DefaultDestination>Green</DefaultDestination>
-			<Layer>Background</Layer>
-			<DefaultOrientation>Coronal</DefaultOrientation>
-			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\CT-MR Brain\MRBrainT2.nrrd</Path>
 		</Image>
-		<QuestionSet ID="QS-Intro" Descriptor="Introduction to Quiz">
-			<Question Type="CheckBox" Descriptor="Test Items:">
-				<Option>Segment Editor off, Don't allow multiple Response</Option> 
-				<Option>NRRD and NIFTI, background and foreground on Red</Option>
+		<Image ID="CT" Type="Volume">
+			<Layer>Background</Layer>
+			<DefaultDestination>Red</DefaultDestination>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Path>ImageVolumes\CT-MR Brain\CTBrain.nrrd</Path>
+		</Image>
+		<QuestionSet ID="Create contours" Descriptor="">
+			<Question Type="InfoBox" Descriptor="Attributes">
+				<Option>LinkViews="Y"</Option>
+				<Option>RotateToAcquisition="N" (attribute is absent)</Option>
 			</Question>
-			<Question Type="InfoBox" Descriptor="Introduction">
-				<Option>Lots of text describing something</Option>
+			<Question Type="InfoBox" Descriptor="Contouring Instructions">
+				<Option>In Segment Editor tab, select volume to create contours.</Option>
+				<Option>   In Edit label map dropdown, use available tools to contour region of interest.</Option>
 			</Question>
-		</QuestionSet>
-		<QuestionSet ID="QS-Intro #2" Descriptor="How to - Instructions">
-			<Question Type="CheckBox" Descriptor="Test Items:">
-				<Option>Second question set</Option> 
-			</Question>
-			<Question Type="InfoBox" Descriptor="Instructions">
-				<Option>This is how to run the quiz : .....</Option>
-			</Question>
-			<Question Type="IntegerValue" Descriptor="Integer input test" Max="5">
-				<Option>Integer value with maximum defined:</Option>
+			<Question Type="CheckBox" Descriptor="Functionality">
+				<Option>Images should scroll together</Option>
+				<Option>Images should 'snap' to acquired axis for segmenting</Option>
 			</Question>
 		</QuestionSet>
 	</Page>

@@ -1367,6 +1367,11 @@ class Session:
 
 
                 self.DisableButtons()    
+
+                if self.sViewingMode != 'Default':
+                    self.onResetViewClicked('NPlanes')
+                
+                
                 bSaveComplete, sMsg = self.PerformSave('NextBtn')
                 if bSaveComplete:
                     
@@ -2159,7 +2164,8 @@ class Session:
                     for oImageNode in self.loCurrentXMLImageViewNodes:
                         
                         for i in range(len(self.llsNPlanesOrientDest)):
-                            llsNodeProperties.append([self.llsNPlanesOrientDest[i][1], self.llsNPlanesOrientDest[i][0], oImageNode])
+                            if self.llsNPlanesOrientDest[i][0] == oImageNode.sOrientation:
+                                llsNodeProperties.append([self.llsNPlanesOrientDest[i][1], self.llsNPlanesOrientDest[i][0], oImageNode])
                 
                 
                 # for each image, capture the slice, window and level settings of the current mode being displayed 
