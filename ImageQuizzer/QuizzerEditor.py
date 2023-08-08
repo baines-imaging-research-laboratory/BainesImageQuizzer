@@ -17,14 +17,12 @@
 import os
 import slicer
 import qt, ctk, vtk
-import EditorLib
-from EditorLib.EditUtil import EditUtil
+import QuizzerEditorLib
+from QuizzerEditorLib.EditUtil import EditUtil
 import slicer
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 
-# special format to import a 'module class'
-from QuizzerHelperBox import QuizzerHelperBox
 
 #
 # Editor
@@ -55,7 +53,7 @@ This work is partially supported by PAR-07-249: R01CA131718 NA-MIC Virtual Colon
       slicer.mrmlScene.RegisterNodeClass(node)
       node.Delete()
 
-    parent.icon = qt.QIcon("%s/ToolbarEditorToolbox.png" % EditorLib.ICON_DIR)
+    parent.icon = qt.QIcon("%s/ToolbarEditorToolbox.png" % QuizzerEditorLib.ICON_DIR)
 
 
 #
@@ -286,8 +284,7 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     ########## Customize for Image Quizzer ##########
     ###
-#       self.helper = EditorLib.HelperBox(self.volumes)
-      self.helper = QuizzerHelperBox(self.volumes)
+      self.helper = QuizzerEditorLib.HelperBox(self.volumes)
     ###
     #################################################
       
@@ -325,7 +322,7 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.createEditBox()
 
     # create and add EditColor directly to "edit label map" section
-    self.toolsColor = EditorLib.EditColor(self.editLabelMapsFrame)
+    self.toolsColor = QuizzerEditorLib.EditColor(self.editLabelMapsFrame)
 
     # put the tool options below the color selector
     self.editLabelMapsFrame.layout().addWidget(self.effectOptionsFrame)
@@ -362,7 +359,7 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.editBoxFrame.objectName = 'EditBoxFrame'
     self.editBoxFrame.setLayout(qt.QVBoxLayout())
     self.effectsToolsFrame.layout().addWidget(self.editBoxFrame)
-    self.toolsBox = EditorLib.EditBox(self.editBoxFrame, optionsFrame=self.effectOptionsFrame)
+    self.toolsBox = QuizzerEditorLib.EditBox(self.editBoxFrame, optionsFrame=self.effectOptionsFrame)
 
   def updateLabelFrame(self, mergeVolume):
     self.editLabelMapsFrame.collapsed = not mergeVolume
@@ -415,3 +412,4 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   
 ###
 #################################################
+
