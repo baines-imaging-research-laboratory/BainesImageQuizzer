@@ -20,6 +20,40 @@ import time
 
 ##########################################################################
 #
+#   Class WidgetItems
+#
+##########################################################################
+
+class WidgetItem:
+
+    def __init__(self, sDestination):
+        
+        self.sDestination = sDestination
+        
+        self.slWidget = None
+        self.slLogic = None
+        self.slController = None
+        self.slCompositeNode = None
+        self.slSliceNode = None
+        
+        
+        self.GetWidgetProperties()
+        
+    def GetWidgetProperties(self):
+        
+        self.slWidget = slicer.app.layoutManager().sliceWidget(self.sDestination)
+        
+        if self.slWidget != None:
+            self.slLogic = self.slWidget.sliceLogic()
+            self.slController = self.slWidget.sliceController()
+            self.slCompositeNode = self.slLogic.GetSliceCompositeNode()
+            self.slSliceNode = slWidget.mrmlSliceNode()
+       
+        
+        
+        
+##########################################################################
+#
 #   Class ImageView
 #
 ##########################################################################
@@ -71,6 +105,7 @@ class ImageView:
     #----------
     def SetContourOpacity(self, fInput):
         self.fContourOpacity = fInput
+        
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def RunSetup(self, xPageNode, sParentDataDir):
@@ -204,15 +239,15 @@ class ImageView:
                 
                 # get slicer control objects for the widget
                 slWidget = slicer.app.layoutManager().sliceWidget(oViewNode.sDestination)
-                slWindowLogic = slWidget.sliceLogic()
-                slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
+                slWidgetLogic = slWidget.sliceLogic()
+                slWidgetCompositeNode = slWidgetLogic.GetSliceCompositeNode()
                 slWidgetController = slWidget.sliceController()
                 
                 # assign widget contour visibility to handle labelmaps
                 slWidgetController.showLabelOutline(self.GetLabelMapContourVisibility())
             
                 # turn off link control until all images have been assigned to their destinations
-                slWindowCompositeNode.LinkedControlOff()
+                slWidgetCompositeNode.LinkedControlOff()
     
                 #setup for color tables if defined in the xml attributes for foreground and background images
                 if oViewNode.sColorTableName == '':
@@ -220,19 +255,19 @@ class ImageView:
                 
                 
                 if oViewNode.sViewLayer == 'Background':
-                    slWindowCompositeNode.SetBackgroundVolumeID(slicer.mrmlScene.GetFirstNodeByName(oViewNode.sNodeName).GetID())
+                    slWidgetCompositeNode.SetBackgroundVolumeID(slicer.mrmlScene.GetFirstNodeByName(oViewNode.sNodeName).GetID())
     
                     # after defining the inital desired orientation, 
                     #    if the rotatetoacquisition attribute was set,
                     #    rotate the image to the volume plane
                     slWidget.setSliceOrientation(oViewNode.sOrientation)
                     if oViewNode.bRotateToAcquisition == True:
-                        slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
+                        slVolumeNode = slWidgetLogic.GetBackgroundLayer().GetVolumeNode()
                         slWidget.mrmlSliceNode().RotateToVolumePlane(slVolumeNode)
                         self.RotateSliceToImage(oViewNode.sDestination)
 
                     if oViewNode.fInitialSliceOffset != None:
-                        slWindowLogic.SetSliceOffset(oViewNode.fInitialSliceOffset)
+                        slWidgetLogic.SetSliceOffset(oViewNode.fInitialSliceOffset)
                     else:
                         slWidget.fitSliceToBackground()
 
@@ -243,17 +278,17 @@ class ImageView:
     
                     # turn on label map volume if a label map was loaded for the background image                
                     if oViewNode.slQuizLabelMapNode != None:
-                        slWindowCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
+                        slWidgetCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
                     else:
                         # there is no quiz label map node associated with the background,
                         #    but there may have been one in the foreground;
                         #    if so, leave it turned on
-                        if slWindowCompositeNode.GetLabelVolumeID ()== None:
-                            slWindowCompositeNode.SetLabelVolumeID('None')
+                        if slWidgetCompositeNode.GetLabelVolumeID ()== None:
+                            slWidgetCompositeNode.SetLabelVolumeID('None')
     
         
                 elif oViewNode.sViewLayer == 'Foreground':
-                    slWindowCompositeNode.SetForegroundVolumeID(slicer.mrmlScene.GetFirstNodeByName(oViewNode.sNodeName).GetID())
+                    slWidgetCompositeNode.SetForegroundVolumeID(slicer.mrmlScene.GetFirstNodeByName(oViewNode.sNodeName).GetID())
                     slWidget.setSliceOrientation(oViewNode.sOrientation)
                     slWidgetController.setForegroundOpacity(oViewNode.fOpacity)
                     if oViewNode.bRotateToAcquisition == True:
@@ -261,24 +296,24 @@ class ImageView:
 
 ### Let background handle this
 #                     if oViewNode.fInitialSliceOffset != None:
-#                         slWindowLogic.SetSliceOffset(oViewNode.fInitialSliceOffset)
+#                         slWidgetLogic.SetSliceOffset(oViewNode.fInitialSliceOffset)
 
                     oViewNode.AssignColorTable()
     
                     # turn on label map volume if a label map was loaded for the background image                
                     if oViewNode.slQuizLabelMapNode != None:
-                        slWindowCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
+                        slWidgetCompositeNode.SetLabelVolumeID(oViewNode.slQuizLabelMapNode.GetID())
                     else:
                         # there is no quiz label map node associated with the foreground,
                         #    but there may have been one in the background;
                         #    if so, leave it turned on
-                        if slWindowCompositeNode.GetLabelVolumeID ()== None:
-                            slWindowCompositeNode.SetLabelVolumeID('None')
+                        if slWidgetCompositeNode.GetLabelVolumeID ()== None:
+                            slWidgetCompositeNode.SetLabelVolumeID('None')
     
         
                 elif oViewNode.sViewLayer == 'Label':
-                    if slWindowCompositeNode.GetLabelVolumeID() == 'None':
-                        slWindowCompositeNode.SetLabelVolumeID(slicer.mrmlScene.GetFirstNodeByName(oViewNode.sNodeName).GetID())
+                    if slWidgetCompositeNode.GetLabelVolumeID() == 'None':
+                        slWidgetCompositeNode.SetLabelVolumeID(slicer.mrmlScene.GetFirstNodeByName(oViewNode.sNodeName).GetID())
         
     
                 elif oViewNode.sViewLayer == 'Segmentation':
@@ -301,9 +336,9 @@ class ImageView:
     
                 # adjust the link control for each window
                 if self.bLinkViews == True:
-                    slWindowCompositeNode.LinkedControlOn()
+                    slWidgetCompositeNode.LinkedControlOn()
                 else:
-                    slWindowCompositeNode.LinkedControlOff()
+                    slWidgetCompositeNode.LinkedControlOff()
 
         except:
             tb = traceback.format_exc()
@@ -318,13 +353,10 @@ class ImageView:
         
         for sDestination in lsLayoutWidgets:
             # get slicer control objects for the widget
-            slWidget = slicer.app.layoutManager().sliceWidget(sDestination)
-            slWindowLogic = slWidget.sliceLogic()
-            slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
-            slWidgetController = slWidget.sliceController()
+            oSlicerWidget = WidgetItem(sDestination)
             
-            slWidgetController.showLabelOutline(self.GetLabelMapContourVisibility())
-            slWidgetController.setLabelMapOpacity(self.GetContourOpacity())
+            oSlicerWidget.slController.showLabelOutline(self.GetLabelMapContourVisibility())
+            oSlicerWidget.slController.setLabelMapOpacity(self.GetContourOpacity())
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSegmentationOutlineOrFill(self, oViewNode, slSegDisplayNode):
@@ -339,13 +371,12 @@ class ImageView:
     def ClearWidgets(self):
         # make sure the widget exists in case the default layout changes
         for sWidgetName in self.oIOXml.lValidSliceWidgets:
-            slWidget = slicer.app.layoutManager().sliceWidget(sWidgetName)
-            if slWidget != None:
-                slWindowLogic = slWidget.sliceLogic()
-                slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
-                slWindowCompositeNode.SetBackgroundVolumeID('None')
-                slWindowCompositeNode.SetForegroundVolumeID('None')
-                slWindowCompositeNode.SetLabelVolumeID('None')
+            
+            oSlicerWidget = WidgetItem(sWidgetName)
+            if oSlicerWidget.slWidget != None:
+                oSlicerWidget.slCompositeNode.SetBackgroundVolumeID('None')
+                oSlicerWidget.slCompositeNode.SetForegroundVolumeID('None')
+                oSlicerWidget.slCompositeNode.SetLabelVolumeID('None')
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def RotateSliceToImage(self, sViewDestination):
@@ -354,14 +385,14 @@ class ImageView:
         #     from EditorLib/LabelEffect.py
               
         slWidget = slicer.app.layoutManager().sliceWidget(sViewDestination)
-        slWindowLogic = slWidget.sliceLogic()
+        slWidgetLogic = slWidget.sliceLogic()
           
         slSliceNode = slWidget.mrmlSliceNode()
-        slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
+        slVolumeNode = slWidgetLogic.GetBackgroundLayer().GetVolumeNode()
         slSliceNode.RotateToVolumePlane(slVolumeNode)
         # make sure the slice plane does not lie on an index boundary
         # - (to avoid rounding issues)
-        slWindowLogic.SnapSliceOffsetToIJK()
+        slWidgetLogic.SnapSliceOffsetToIJK()
         slSliceNode.UpdateMatrices()
 
     
@@ -379,19 +410,19 @@ class ImageView:
         
         for idx in range(len(llsDestOrient)):
             slWidget = slicer.app.layoutManager().sliceWidget(llsDestOrient[idx][1])
-            slWindowLogic = slWidget.sliceLogic()
-            slWindowCompositeNode = slWindowLogic.GetSliceCompositeNode()
+            slWidgetLogic = slWidget.sliceLogic()
+            slWidgetCompositeNode = slWidgetLogic.GetSliceCompositeNode()
             
             # turn off link control 
-            slWindowCompositeNode.LinkedControlOff()
-            slWindowCompositeNode.SetBackgroundVolumeID(slicer.mrmlScene.GetFirstNodeByName(oImageForNPlanesNode.sNodeName).GetID())
+            slWidgetCompositeNode.LinkedControlOff()
+            slWidgetCompositeNode.SetBackgroundVolumeID(slicer.mrmlScene.GetFirstNodeByName(oImageForNPlanesNode.sNodeName).GetID())
     
             # after defining the initial desired orientation, 
             #    if the rotatetoacquisition attribute was set,
             #    rotate the image to the volume plane
             slWidget.setSliceOrientation(llsDestOrient[idx][0])
             if oImageForNPlanesNode.bRotateToAcquisition == True:
-                slVolumeNode = slWindowLogic.GetBackgroundLayer().GetVolumeNode()
+                slVolumeNode = slWidgetLogic.GetBackgroundLayer().GetVolumeNode()
                 slWidget.mrmlSliceNode().RotateToVolumePlane(slVolumeNode)
                 self.RotateSliceToImage(llsDestOrient[idx][1])
     
@@ -399,7 +430,7 @@ class ImageView:
             oImageForNPlanesNode.AssignColorTable()
             
             # display any associated label maps
-            slWindowCompositeNode.LinkedControlOff()
+            slWidgetCompositeNode.LinkedControlOff()
             lLabelMapNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLLabelMapVolumeNode')
             bLabelMapMatchFound = False
 
@@ -410,7 +441,7 @@ class ImageView:
             for slLabelMapNode in lLabelMapNodes:
                 if slLabelMapNode.GetName() == oImageForNPlanesNode.sNodeName + '-bainesquizlabel':
                     bLabelMapMatchFound = True
-                    slWindowCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
+                    slWidgetCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
                     break
             
             # a user created label map was not found - continue the search within
@@ -425,7 +456,7 @@ class ImageView:
                             #    that of the image input as a parameter to this function
                             if oImage.sDestination == oImageForNPlanesNode.sDestination:
                                 bLabelMapMatchFound = True
-                                slWindowCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
+                                slWidgetCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
                                 break
                     if bLabelMapMatchFound:
                         break
@@ -522,6 +553,33 @@ class ImageView:
         #    getting a node by ID (slSegDisplayNode) doesn't seem to cause a memory leak
         #    getting nodes by class does create a memory leak so you have to unregister it!
         lLabelMapNodes.UnRegister(slicer.mrmlScene)
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetNewLabelMapsVisible(self):
+        ''' Segmenting may have been done in the NPlanes mode and not saved to XML yet.
+            Turn on the Label Map visibility for the widget if labelmap exists.
+        '''
+        
+        # get list of label maps
+        lSlicerLabelMapNodes = slicer.util.getNodesByClass('vtkMRMLLabelMapVolumeNode')
+         
+        if len(lSlicerLabelMapNodes) > 0:
+            
+            for oImageNode in self.GetImageViewList():
+                  
+                for slNodeLabelMap in lSlicerLabelMapNodes:
+
+                    # match label map file with xml image
+                    sLabelMapFilename = slNodeLabelMap.GetName()
+                    if oImageNode.sNodeName + '-bainesquizlabel' == sLabelMapFilename:
+                        
+                        slLabelMapNodeID = slNodeLabelMap.GetID()
+                        
+                        oSlicerWidget = WidgetItem(oImageNode.sDestination)
+                        oSlicerWidget.slCompositeNode.SetLabelVolumeID(slLabelMapNodeID)
+                        break
+                        
+                        
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetViewState(self, slNode, sWidgetName):
@@ -539,9 +597,9 @@ class ImageView:
     
             # get the slice offset position for the current widget in the layout manager
             slWidget = slicer.app.layoutManager().sliceWidget(sWidgetName)
-            slWindowLogic = slWidget.sliceLogic()
+            slWidgetLogic = slWidget.sliceLogic()
             
-            fSliceOffset = slWindowLogic.GetSliceOffset()
+            fSliceOffset = slWidgetLogic.GetSliceOffset()
             
             dictAttrib = { 'Window': str(fWindow), 'Level':  str(fLevel),\
                           'SliceOffset': str(fSliceOffset)}
@@ -801,11 +859,11 @@ class ViewNodeBase:
                 else:
                     sWidgetName = self.sDestination
                 slWidget = slicer.app.layoutManager().sliceWidget(sWidgetName)
-                slWindowLogic = slWidget.sliceLogic()
+                slWidgetLogic = slWidget.sliceLogic()
                 
                 fSliceOffset = float(dictImageState['SliceOffset'])
                 
-                slWindowLogic.SetSliceOffset(fSliceOffset)
+                slWidgetLogic.SetSliceOffset(fSliceOffset)
                 
             if 'Frame' in dictImageState.keys():
                 # get the sequence browser node for this volume sequence image

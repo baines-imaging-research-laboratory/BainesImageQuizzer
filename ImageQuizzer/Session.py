@@ -1214,7 +1214,7 @@ class Session:
             self.sViewingMode = "Default"
             self.loCurrentXMLImageViewNodes = []
             self.DisplayQuizLayout()
-            self.DisplayImageLayout()
+            self.DisplayImageLayout('ResetView')
             
             self.ResetContourDisplayState(sFillOrOutline, iOpacitySliderValue, fOpacity)
             
@@ -1752,7 +1752,7 @@ class Session:
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def DisplayImageLayout(self):
+    def DisplayImageLayout(self, sCaller=None):
 
         try:
             xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
@@ -1769,6 +1769,9 @@ class Session:
     
             # assign each image node and its label map (if applicable) to the viewing widget
             self.oImageView.AssignNodesToView()
+            
+            if sCaller == 'ResetView':
+                self.oImageView.SetNewLabelMapsVisible()
             
             self.SetNPlanesComboBoxImageNames()
     
