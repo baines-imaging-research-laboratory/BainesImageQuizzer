@@ -345,7 +345,7 @@ class UtilsFilesIO:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupROIColorFile(self, sCustomInputROIColorFile):
         """ If quiz has a custom color table for segmenting ROI's, move this 
-            into the color table file that is read in by the QuizzerHelperBox
+            into the color table file that is read in by the QuizzerEditor HelperBox
         """
         if sCustomInputROIColorFile == '':
             sROIColorFilePath = self.GetDefaultROIColorFilePath()

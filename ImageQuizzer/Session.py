@@ -17,8 +17,8 @@ from ImageView import *
 from PageState import *
 #from ImageQuizzer import *
 
-import EditorLib
-from EditorLib import EditUtil
+import QuizzerEditorLib
+from QuizzerEditorLib import EditUtil
 
 from PythonQt import QtCore, QtGui
 
