@@ -1282,7 +1282,7 @@ class Session:
             self.sViewingMode = "Default"
             self.loCurrentXMLImageViewNodes = []
             self.DisplayQuizLayout()
-            self.DisplayImageLayout()
+            self.DisplayImageLayout('ResetView')
             
             self.ResetContourDisplayState(sFillOrOutline, iOpacitySliderValue, fOpacity)
             
@@ -1865,7 +1865,7 @@ class Session:
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def DisplayImageLayout(self):
+    def DisplayImageLayout(self, sCaller=None):
 
         try:
             
@@ -1883,6 +1883,9 @@ class Session:
     
             # assign each image node and its label map (if applicable) to the viewing widget
             self.oImageView.AssignNodesToView()
+            
+            if sCaller == 'ResetView':
+                self.oImageView.SetNewLabelMapsVisible()
             
             self.SetNPlanesComboBoxImageNames()
     
@@ -2267,10 +2270,13 @@ class Session:
                             bLatestWindowLevelFound = True
 
 
-                        if dictImageState["Orientation"] == sRequiredOrientation and\
-                                dictImageStateItems["DefaultOrientation"] == dictImageState["Orientation"]:
+#                         if dictImageState["Orientation"] == sRequiredOrientation and\
+#                                 dictImageStateItems["DefaultOrientation"] == dictImageState["Orientation"]:
+                        if dictImageState["Orientation"] == sRequiredOrientation :
                             bFoundOrientation = True
                             break
+                    
+                    
                     
                     # capture the destination and offset if this was a background layer for later reset to center the field of view
                     #    - this is necessary because a foreground layer for a widget may be processed
