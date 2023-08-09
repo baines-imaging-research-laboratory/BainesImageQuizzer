@@ -2153,10 +2153,13 @@ class Session:
                             bLatestWindowLevelFound = True
 
 
-                        if dictImageState["Orientation"] == sRequiredOrientation and\
-                                dictImageStateItems["DefaultOrientation"] == dictImageState["Orientation"]:
+#                         if dictImageState["Orientation"] == sRequiredOrientation and\
+#                                 dictImageStateItems["DefaultOrientation"] == dictImageState["Orientation"]:
+                        if dictImageState["Orientation"] == sRequiredOrientation :
                             bFoundOrientation = True
                             break
+                    
+                    
                     
                     # capture the destination and offset if this was a background layer for later reset to center the field of view
                     #    - this is necessary because a foreground layer for a widget may be processed
