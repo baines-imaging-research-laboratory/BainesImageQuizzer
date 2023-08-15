@@ -2,6 +2,7 @@ import os
 import vtk, qt, ctk, slicer
 import sys
 import traceback
+import cv2
 
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
@@ -207,10 +208,12 @@ m_fg(2-0),m_fg(2-1),m_fg(2-2),m_fg(2-3),\
 m_fg(3-0),m_fg(3-1),m_fg(3-2),m_fg(3-3)\n')
             self.fh.flush()
         else:
-            now = datetime.now()
-            sAppendBreak = str(now.strftime("%Y/%m/%d %H:%M:%S.%f")) + ',>>>>>>>>>>>>>>>>>>>>>>>>>>>\n'
-            self.fh.write(sAppendBreak)
-            self.fh.flush()
+            
+            self.InsertTransitionRow(self.fh, 'Re-entering Page')
+#             now = datetime.now()
+#             sAppendBreak = str(cv2.getTickCount()) + ',' + str(now.strftime("%Y/%m/%d %H:%M:%S.%f")) + ',>>>>>>>>>>>>>>>>>>>>>>>>>>>\n'
+#             self.fh.write(sAppendBreak)
+#             self.fh.flush()
 
         # template for rows - excludes formating of matrices
         self.fhTemplate = '{:.0f}, {}, {}, {}, {},\
@@ -259,9 +262,28 @@ m_fg(3-0),m_fg(3-1),m_fg(3-2),m_fg(3-3)\n')
         return
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def InsertTransitionRow(self, fh, sDescription=None):
+        
+        if sDescription == None:
+            sDescription = ''
+        
+        now = datetime.now()
+        sAppendBreak = str(cv2.getTickCount()) + ',' \
+            + str(now.strftime("%Y/%m/%d %H:%M:%S.%f")) \
+            + ',>>>>>>>>>>>>>>>>>>>>>>>>>>>' \
+            + sDescription + '\n'
+            
+        self.fh.write(sAppendBreak)
+        self.fh.flush()
+        
+        
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CloseInteractionLog(self, fh):
         ''' Given the currently open file handler, flush the buffer and close the log
         '''
+        
+        self.InsertTransitionRow(fh, 'Leaving Page')
 
         if fh != None:
             fh.flush()
@@ -291,7 +313,6 @@ class LogDetails():
         self.oUtilsMsgs = UtilsMsgs()
 
         try:
-            import cv2
             self.iCPUUptime = cv2.getTickCount()
         except:
             pass    #OpenCV not imported - uptime unavailable
