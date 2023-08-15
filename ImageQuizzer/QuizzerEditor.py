@@ -8,7 +8,7 @@
 #
 # Modifications:
 #    - turn off the information display to connect the user to the more sophisticated SegmentationEditor module
-#    - it now calls the customized HelperBox (QuizzerHelperBox)
+#    - it now calls the customized HelperBox (HelperBox)
 #    - included a getter for the helper box
 #
 #####################################################

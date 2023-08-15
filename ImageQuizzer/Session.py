@@ -927,31 +927,34 @@ class Session:
     def EnableButtons(self):
         
         xPageNode = self.GetCurrentPageNode()
-        if self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Loop') == "Y":
+        
+        # for Repeat button
+        if self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Loop') == "Y" :
+
             self.SetPageLooping(True)
             self._btnRepeat.visible = True
-            self._btnRepeat.enabled = False
-            self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white}")
+            
+            
             # only enable Repeat button in looping if the page is not complete and the user is on the last question set
-            # if self.GetPageCompleteAttribute(self.GetCurrentNavigationIndex()) != "Y":
-            #     if self.CheckForLastQuestionSetForPage() == True:
-            #         self._btnRepeat.enabled = True
-            #         self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
-            # else:
-            #     # page is complete - enable if multiple responses are allowed
-            #     if self.GetMultipleResponseAllowed() == True:
-            #         self._btnRepeat.enabled = True
-            #         self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
+            
+            if self.GetPageCompleteAttribute(self.GetCurrentNavigationIndex()) != "Y":
+                if self.CheckForLastQuestionSetForPage() == True:
+                    self._btnRepeat.enabled = True
+                    self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
+                else:
+                    self._btnRepeat.enabled = False
+                    self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white}")
+            else:
+                self._btnRepeat.enabled = False
+                self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white}")
                     
-            if self.CheckForLastQuestionSetForPage() == True:
-                self._btnRepeat.enabled = True
-                self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
 
         else:
             self.SetPageLooping(False)
             self._btnRepeat.visible = False
             self._btnRepeat.enabled = False
             self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white}")
+
             
             
         # assign button description           
@@ -1014,14 +1017,13 @@ class Session:
                 return
         
         try:        
-            bSaveComplete = True
             sMsg = ''
             
             self.SetInteractionLogOnOff('Off')
                 
             self.DisableButtons()    
             if self.sViewingMode != 'Default':
-                self.onResetViewClicked('NPlanes')
+                self.onResetViewClicked()
     
             if self.GetCurrentNavigationIndex() + 1 == len(self.GetNavigationList()):
     
@@ -1033,14 +1035,15 @@ class Session:
     
             else:
                 # this is not the last question set, do a save and display the next page
-                bNewPage = True
+                bChangePageIndex = True
                 if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() + 1):
-                    bNewPage = False
-                bSaveComplete, sMsg = self.PerformSave('NextBtn')
+                    bChangePageIndex = False
                 
-                if bSaveComplete:
-        
-        
+
+                if self.PerformSave('NextBtn') and self.UpdateCompletionFlags('NextBtn'):
+                        
+                    self.CaptureAndSaveImageState()
+                    
                     ########################################    
                     # set up for next page
                     ########################################    
@@ -1058,17 +1061,13 @@ class Session:
                     self.progress.setValue(self.GetCurrentNavigationIndex())
                     self.InitializeImageDisplayOrderIndices()
                     
-                    if bNewPage:
+                    if bChangePageIndex:
                         self.SetupPageState(self.GetCurrentPageIndex())
+                        
                     self.DisplayQuizLayout()
                     self.DisplayImageLayout()
 
-
                     self.SetInteractionLogOnOff('On')
-                             
-                else:
-                    if sMsg != '':
-                        self.oUtilsMsgs.DisplayWarning( sMsg )
 
             self.EnableButtons()
                 
@@ -1083,24 +1082,24 @@ class Session:
     def onPreviousButtonClicked(self):
         
         try:
-            bSaveComplete = True
             sMsg = ''
 
             self.SetInteractionLogOnOff('Off')
                 
             self.DisableButtons()    
             if self.sViewingMode != 'Default':
-                self.onResetViewClicked('NPlanes')
-                
-            bNewPage = True
+                self.onResetViewClicked()
+
+            bChangePageIndex = True
+
             if self.GetCurrentNavigationIndex() > 0:
                 if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() - 1):
-                    bNewPage = False
-    
-            bSaveComplete, sMsg = self.PerformSave('PreviousBtn')
+                    bChangePageIndex = False  
             
-            if bSaveComplete:
-    
+            if self.PerformSave('PreviousBtn'):
+                    
+                self.CaptureAndSaveImageState()
+
                 ########################################    
                 # set up for previous page
                 ########################################    
@@ -1116,19 +1115,15 @@ class Session:
                 
                 self.AdjustToCurrentQuestionSet()
                 
-                if bNewPage:
+                if bChangePageIndex:
                     self.SetupPageState(self.GetCurrentPageIndex())
+
                 self.DisplayQuizLayout()
                 self.DisplayImageLayout()
-                   
 
                 self.SetInteractionLogOnOff('On')
 
-            
-            else:
-                if sMsg != '':
-                    self.oUtilsMsgs.DisplayWarning( sMsg )
-
+                   
             self.EnableButtons()
 
 
@@ -1141,6 +1136,8 @@ class Session:
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onExitButtonClicked(self,sCaller):
+        ''' this Exit function can be triggered by pressing 'Exit' button or by pressing 'Finish'
+        '''
 
         try:
             self.progress.setValue(self.GetCurrentNavigationIndex() + 1)
@@ -1161,21 +1158,19 @@ class Session:
     
             qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
             if qtAns == qt.QMessageBox.Ok:
-                bSaveComplete, sMsg = self.PerformSave(sCaller)
-                if bSaveComplete:
-                    
-                    self.SetInteractionLogOnOff('Off')
-                        
+
+                self.SetInteractionLogOnOff('Off')
+
+                if self.PerformSave(sCaller) and self.UpdateCompletionFlags(sCaller):
                     self.QueryThenSendEmailResults()
                     
                     # update shutdown batch file to remove SlicerDICOMDatabase
                     self.oFilesIO.CreateShutdownBatchFile()
             
                     slicer.util.exit(status=EXIT_SUCCESS)
-                else:
-                    if sMsg != '':
-                        self.oUtilsMsgs.DisplayWarning( sMsg )
-                    self.EnableButtons()
+
+
+            self.EnableButtons()  # either Exit is canceled or Page is not complete
     
             # if code reaches here, either the exit was cancelled or there was 
             # an error in the save
@@ -1191,6 +1186,70 @@ class Session:
             self.oUtilsMsgs.DisplayError(sMsg)
             
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onRepeatButtonClicked(self):
+        ''' Function to manage repeating a page node when user requests a repeat (looping).
+            This is generally used for multiple lesions.
+        '''
+        
+        qtAns = self.oUtilsMsgs.DisplayOkCancel(\
+                            "Are you sure you want to repeat this set of images and questions?" +\
+                            "\nIf No, click 'Cancel' and press 'Next' to continue.")
+        if qtAns == qt.QMessageBox.Ok:
+            try:        
+                sMsg = ''
+
+                self.DisableButtons()    
+
+                if self.PerformSave('NextBtn') and self.UpdateCompletionFlags('NextBtn'):
+
+                    self.CaptureAndSaveImageState()
+                    
+                    self.CreateRepeatedPageNode()
+
+                    # cleanup
+                    self._loQuestionSets = []
+                    slicer.mrmlScene.Clear()
+            
+                    
+                    self.progress.setMaximum(len(self.GetNavigationList()))
+                    self.progress.setValue(self.GetCurrentNavigationIndex())
+                    
+                    self.SetupPageState(self.GetCurrentPageIndex())
+                    self.DisplayQuizLayout()
+                    self.DisplayImageLayout()
+                    
+    
+                self.EnableButtons()
+                
+            except:
+                iPage = self.GetCurrentPageIndex() + 1
+                tb = traceback.format_exc()
+                sMsg = "onRepeatButtonClicked: Error repeating this page. Current page: " + str(iPage) \
+                       + "\n\n" + tb 
+                self.oUtilsMsgs.DisplayError(sMsg)
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def FindNewRepeatedPosition(self, iSearchPageNum, iSearchRepNum):
+        ''' this function scans the navigation composite indices to match 
+            the Page and Rep numbers of the new repeated page that was inserted
+            into the xml file. If there is more than one question set, 
+            the navigation index of the first question set is returned.
+        '''
+
+        indFound = -1
+        
+        for iNavInd in range(len(self.GetNavigationList())):
+            iPgNum = self.GetNavigationPage(iNavInd)
+            iRepNum = self.GetNavigationRepNum(iNavInd)
+            
+            if iPgNum == iSearchPageNum and iRepNum == iSearchRepNum :
+                indFound = iNavInd
+                break
+
+                
+        return indFound
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onAddLinesButtonClicked(self):
         ''' Add a new markup line - using the PlaceMode functionality
@@ -1261,6 +1320,34 @@ class Session:
 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    def onNPlanesViewClicked(self):
+        ''' display the requested image in the requested viewing mode
+        '''
+        try:
+            if self.GetNPlanesComboBoxCount() > 0:
+                self.CaptureAndSaveImageState()
+                
+                self.SetNPlanesView()
+                oImageNodeOverride, iXmlImageIndex = self.GetNPlanesImageComboBoxSelection()
+                self.liImageDisplayOrder = self.ReorderImageIndexToEnd(iXmlImageIndex)
+                self.oImageView.AssignNPlanes(oImageNodeOverride, self.llsNPlanesOrientDest)
+                self.bNPlanesViewingMode = True
+        
+                #    the current image node being displayed in an alternate view may have been 
+                #    repeated in different orientations in the xml
+                self.loCurrentXMLImageViewNodes = self.GetMatchingXMLImageNodes(oImageNodeOverride.sImagePath)
+                self.ApplySavedImageState()
+            else:
+                sMsg = 'No images have been loaded to display in an alternate viewing mode.'
+                self.oUtilsMsgs.DisplayWarning(sMsg)
+        except:
+            tb = traceback.format_exc()
+            sMsg = "onNPlanesViewClicked: Error setting the NPlanes view (closeup) request.  \n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
+            
+            
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onResetViewClicked(self, sCaller=None):
         ''' Capture responses in the current state (may not be completed) before 
             resetting the viewing nodes to original layout for this page.
@@ -1303,45 +1390,6 @@ class Session:
             
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onNPlanesViewClicked(self):
-        ''' display the requested image in the requested viewing mode
-        '''
-        try:
-            
-            
-            
-            if self.GetNPlanesComboBoxCount() > 0:
-                
-                self.SetInteractionLogOnOff('Off')
-
-                self.CaptureAndSaveImageState()
-
-                
-                self.SetNPlanesView()
-                oImageNodeOverride, iXmlImageIndex = self.GetNPlanesImageComboBoxSelection()
-                self.liImageDisplayOrder = self.ReorderImageIndexToEnd(iXmlImageIndex)
-                self.oImageView.AssignNPlanes(oImageNodeOverride, self.llsNPlanesOrientDest)
-                self.bNPlanesViewingMode = True
-        
-                #    the current image node being displayed in an alternate view may have been 
-                #    repeated in different orientations in the xml
-                self.loCurrentXMLImageViewNodes = self.GetMatchingXMLImageNodes(oImageNodeOverride.sImagePath)
-                self.ApplySavedImageState()
-
-                
-                self.SetInteractionLogOnOff('On')
-                
-                
-            else:
-                sMsg = 'No images have been loaded to display in an alternate viewing mode.'
-                self.oUtilsMsgs.DisplayWarning(sMsg)
-        except:
-            tb = traceback.format_exc()
-            sMsg = "onNPlanesViewClicked: Error setting the NPlanes view (closeup) request.  \n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
-            
-            
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onWindowLevelOnClicked(self):
         slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.AdjustWindowLevel)
         
@@ -1350,64 +1398,6 @@ class Session:
         slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.ViewTransform)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onRepeatButtonClicked(self):
-        ''' Function to manage repeating a page node when user requests a repeat (looping).
-            This is generally used for multiple lesions.
-        '''
-        
-        qtAns = self.oUtilsMsgs.DisplayOkCancel(\
-                            "Are you sure you want to repeat this set of images and questions?" +\
-                            "\nIf No, click 'Cancel' and press 'Next' to continue.")
-        if qtAns == qt.QMessageBox.Ok:
-            try:        
-                bSaveComplete = True
-                sMsg = ''
-
-                self.SetInteractionLogOnOff('Off')
-
-
-                self.DisableButtons()    
-
-                if self.sViewingMode != 'Default':
-                    self.onResetViewClicked('NPlanes')
-                
-                
-                bSaveComplete, sMsg = self.PerformSave('NextBtn')
-                if bSaveComplete:
-                    
-                    self.CreateRepeatedPageNode()
-
-                    # cleanup
-                    self._loQuestionSets = []
-                    slicer.mrmlScene.Clear()
-            
-                    
-                    self.progress.setMaximum(len(self.GetNavigationList()))
-                    self.progress.setValue(self.GetCurrentNavigationIndex())
-                    
-                    self.SetupPageState(self.GetCurrentPageIndex())
-                    self.DisplayQuizLayout()
-                    self.DisplayImageLayout()
-
-
-                    
-                else:
-                    if sMsg != '':
-                        self.oUtilsMsgs.DisplayWarning( sMsg )
-    
-                self.EnableButtons()
-
-                self.SetInteractionLogOnOff('On')
-                
-                
-            except:
-                iPage = self.GetCurrentPageIndex() + 1
-                tb = traceback.format_exc()
-                sMsg = "onRepeatButtonClicked: Error repeating this page. Current page: " + str(iPage) \
-                       + "\n\n" + tb 
-                self.oUtilsMsgs.DisplayError(sMsg)
-    
-    #----------
     def onContourDisplayStateChanged(self):
         # when user changes a contour visibility widget setting in the extra tools tab,
         #    adjust the image view property and turn on fill/outline for label maps and segmentations
@@ -1427,27 +1417,6 @@ class Session:
                     slSegDisplayNode, slSegDataNode = oViewNode.GetSegmentationNodes(xPageNode)
                     self.oImageView.SetSegmentationOutlineOrFill(oViewNode, slSegDisplayNode)
                 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def FindNewRepeatedPosition(self, iSearchPageNum, iSearchRepNum):
-        ''' this function scans the navigation composite indices to match 
-            the Page and Rep numbers of the new repeated page that was inserted
-            into the xml file. If there is more than one question set, 
-            the navigation index of the first question set is returned.
-        '''
-
-        indFound = -1
-        
-        for iNavInd in range(len(self.GetNavigationList())):
-            iPgNum = self.GetNavigationPage(iNavInd)
-            iRepNum = self.GetNavigationRepNum(iNavInd)
-            
-            if iPgNum == iSearchPageNum and iRepNum == iSearchRepNum :
-                indFound = iNavInd
-                break
-
-                
-        return indFound
-    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #-------------------------------------------
@@ -1802,6 +1771,7 @@ class Session:
             xPageNode = self.GetCurrentPageNode()
             self.SetMultipleResponseAllowed(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'AllowMultipleResponse'))
             self.SetRequestToEnableSegmentEditorTF(self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor'))
+            sPageComplete = self.GetPageCompleteAttribute(self.GetCurrentNavigationIndex())
             
             if self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Loop') == "Y":
                 self.SetPageLooping(True)
@@ -1818,28 +1788,19 @@ class Session:
             else:
                 
                 #enable tabs
-                if self.GetMultipleResponseAllowed() or self.GetQuizResuming():
+                if self.GetMultipleResponseAllowed() or self.GetQuizResuming() or sPageComplete != 'Y':
                     qWidgetQuestionSetForm.setEnabled(True)
                     self.SegmentationTabEnabler(self.GetRequestToEnableSegmentEditorTF())
                     self.EnableMarkupLinesTF(True)
+                    
+                    
                 else:
                     # Multiple Responses are not allowed AND this is not a Quiz Resuming state
                     sSavedResponseCompletionLevel = self.oPageState.GetSavedResponseCompletionLevel(self.GetCurrentQuestionSetNode())
-                    sPageComplete = self.GetPageCompleteAttribute(self.GetCurrentNavigationIndex())
                     if sPageComplete == 'Y':
                         qWidgetQuestionSetForm.setEnabled(False)
                         self.SegmentationTabEnabler(False)
                         self.EnableMarkupLinesTF(False)
-                    else:
-                        # page not complete - check for question and segmentation completion
-                        qWidgetQuestionSetForm.setEnabled(True)
-                        self.SegmentationTabEnabler(self.GetRequestToEnableSegmentEditorTF())
-                        self.EnableMarkupLinesTF(True)  # no maximum number of lines
-    
-                        if sSavedResponseCompletionLevel == 'AllResponses':
-                            qWidgetQuestionSetForm.setEnabled(False)
-                        if self.oPageState.GetSegmentationsCompletedState():
-                            self.SegmentationTabEnabler(False)
                         
                 if self.GetSegmentationTabIndex() > 0:
                     # clear Master and Merge selector boxes
@@ -1858,7 +1819,7 @@ class Session:
         except:
             iPage = self.GetCurrentPageIndex() + 1
             tb = traceback.format_exc()
-            sMsg = "DisplayQuizLayout: Error trying to display questions. Page: " + str(iPage) \
+            sMsg = "Session:DisplayQuizLayout: Error trying to display questions. Page: " + str(iPage) \
                    + "\n\n" + tb 
             self.oUtilsMsgs.DisplayError(sMsg)
             
@@ -1895,7 +1856,7 @@ class Session:
         except:
             iPage = self.GetCurrentPageIndex() + 1
             tb = traceback.format_exc()
-            sMsg = "DisplayImageLayout: Error trying to display images. Page: " + str(iPage) \
+            sMsg = "Session:DisplayImageLayout: Error trying to display images. Page: " + str(iPage) \
                    + "\n\n" + tb 
             self.oUtilsMsgs.DisplayError(sMsg)
     
@@ -2000,77 +1961,93 @@ class Session:
         """
         
         sMsg = ''
-        bSaveComplete = True
+        bSaveComplete = False
+        
         try:
             
-            if not self.GetQuizComplete():
+            if self.GetQuizComplete():
+                bSaveComplete = True   
             
+            else:
                 if sCaller != 'ResetView':
-                    self.oQuizWidgets.qTabWidget.setCurrentIndex(0)
+                    self.oQuizWidgets.qTabWidget.setCurrentIndex(0) # move to Quiz tab
                 self.SetSegmentationTabDefaults()
                     
-                idxQuestionSet = self.GetCurrentQuestionSetIndex()
-                iNumQSets = len(self.GetAllQuestionSetNodesForCurrentPage())
-
                 
-                self.oFilesIO.SaveLabelMaps(self, sCaller)
-                self.oFilesIO.SaveMarkupLines(self)
-   
-                sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponses()
-                
-                if sCaller == 'NextBtn' or sCaller == 'Finish':
-                    # only write to xml if all responses were captured
-                    if sCaptureSuccessLevel == 'AllResponses':
-                        self.WriteResponsesToXml()
-                    else:
-                        sMsg = sMsg + '\n All questions must be answered to proceed'
-                        bSaveComplete = False
-                        
-                else:  
-                    # Caller must have been the Previous or Exit buttons or a close was 
-                    #     requested (which triggers the event filter)
-                    # Only write if there were responses captured
-                    if sCaptureSuccessLevel == 'AllResponses' or sCaptureSuccessLevel == 'PartialResponses':
-                        self.WriteResponsesToXml()
-                    else:
-                        # if no responses were captured 
-                        if sCaptureSuccessLevel == 'NoResponses':
-                            # this isn't the Next button so it is allowed
-                            bSaveComplete = True
-                        
-                ################################################
-                ##########  Updating completion flags ##########        
-                ################################################
-
-                if bSaveComplete:
-                    #after writing responses, update page states and record the image state
-                    self.oPageState.UpdateCompletionLists(self.GetCurrentPageNode())
-                    self.CaptureAndSaveImageState()
+                if self.oFilesIO.SaveLabelMaps(self, sCaller):
+                    self.oFilesIO.SaveMarkupLines(self)
+       
+                    sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponses()
                     
                     if sCaller == 'NextBtn' or sCaller == 'Finish':
-                        # if this was the last question set for the page, check for completion
-                        if idxQuestionSet == iNumQSets - 1:
+                        # only write to xml if all responses were captured
+                        if sCaptureSuccessLevel == 'AllResponses':
+                            self.WriteResponsesToXml()
+                            bSaveComplete = True
+                        else:
+                            sMsg = sMsg + '\n\nAll questions must be answered to proceed'
+                            self.oUtilsMsgs.DisplayWarning( sMsg )
+                            bSaveComplete = False
                             
-                            sCompletionFlagMsg = self.oPageState.UpdateCompletedFlags(self.GetCurrentPageNode())
-                            sMsg = sMsg + sCompletionFlagMsg
-                            
-                            if self.oPageState.GetPageCompletedTF():
+                    else:  
+                        # Caller must have been the Previous or Exit buttons or a close was 
+                        #     requested (which triggers the event filter)
+                        # Only write if there were responses captured
+                        if sCaptureSuccessLevel == 'AllResponses' or sCaptureSuccessLevel == 'PartialResponses':
+                            self.WriteResponsesToXml()
+                            bSaveComplete = True
+                        else:
+                            # if no responses were captured 
+                            if sCaptureSuccessLevel == 'NoResponses':
+                                # this isn't the Next button so it is allowed
                                 bSaveComplete = True
-                                self.AddPageCompleteAttribute(self.GetCurrentPageIndex())
-                                if sCaller == 'Finish':
-                                    self.AddQuizCompleteAttribute()
-                                    self.SetQuizComplete(True)
-                            else:
-
-                                bSaveComplete = False
-                                    
         except Exception:
             tb = traceback.format_exc()
-            sMsg = sMsg + '\nPerformSave error \n\n' + tb
+            sMsg = sMsg + '\nSession:PerformSave error \n\n' + tb
             raise Exception(sMsg)                
     
-        return bSaveComplete, sMsg
+        return bSaveComplete
+                        
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def UpdateCompletionFlags(self, sCaller):
+        ''' 
+        '''
+        ################################################
+        ##########  Updating completion flags ##########        
+        ################################################
+
+        sMsg = ''
+        bPageComplete = True
+        idxQuestionSet = self.GetCurrentQuestionSetIndex()
+        iNumQSets = len(self.GetAllQuestionSetNodesForCurrentPage())
+
         
+        #after writing responses, update page states and record the image state
+        self.oPageState.UpdateCompletionLists(self.GetCurrentPageNode())
+        
+        
+        # if this was the last question set for the page, check for completion
+        if idxQuestionSet == iNumQSets - 1:
+            
+            sCompletionFlagMsg = self.oPageState.UpdateCompletedFlags(self.GetCurrentPageNode())
+            sMsg = sCompletionFlagMsg
+            
+            if self.oPageState.GetPageCompletedTF():
+                bPageComplete = True
+                self.AddPageCompleteAttribute(self.GetCurrentPageIndex())
+                if sCaller == 'Finish':
+                    self.AddQuizCompleteAttribute()
+                    self.SetQuizComplete(True)
+            else:
+                if sCaller == 'ExitBtn':
+                    bPageComplete = True    # allow for exit with unfinished requirements
+                else:
+                    bPageComplete = False
+                    self.oUtilsMsgs.DisplayWarning( sMsg )
+                                    
+        return bPageComplete
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetSegmentationTabDefaults(self):
         
@@ -2167,7 +2144,6 @@ class Session:
                     for oImageNode in self.loCurrentXMLImageViewNodes:
                         
                         for i in range(len(self.llsNPlanesOrientDest)):
-                            if self.llsNPlanesOrientDest[i][0] == oImageNode.sOrientation:
                                 llsNodeProperties.append([self.llsNPlanesOrientDest[i][1], self.llsNPlanesOrientDest[i][0], oImageNode])
                 
                 
