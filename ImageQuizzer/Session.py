@@ -85,6 +85,7 @@ class Session:
         self.liImageDisplayOrder = []
 
         self.setupTestEnvironment()
+        
 
     #----------
     def __del__(self):
@@ -158,7 +159,7 @@ class Session:
             self._bUserInteractionLog = True
             if self.oUserInteraction == None:
                 self.oUserInteraction = UserInteraction()
-            self.oUserInteraction.LockLayout()
+            self.oUserInteraction.LockLayout(self.oMaximizedWindowSize)
             
         else:
             self._bUserInteractionLog = False
@@ -1067,7 +1068,7 @@ class Session:
                     self.DisplayQuizLayout()
                     self.DisplayImageLayout()
 
-                    self.SetInteractionLogOnOff('On')
+            self.SetInteractionLogOnOff('On')
 
             self.EnableButtons()
                 
@@ -1121,7 +1122,7 @@ class Session:
                 self.DisplayQuizLayout()
                 self.DisplayImageLayout()
 
-                self.SetInteractionLogOnOff('On')
+            self.SetInteractionLogOnOff('On')
 
                    
             self.EnableButtons()
@@ -1170,10 +1171,14 @@ class Session:
                     slicer.util.exit(status=EXIT_SUCCESS)
 
 
-            self.EnableButtons()  # either Exit is canceled or Page is not complete
-    
+            
             # if code reaches here, either the exit was cancelled or there was 
             # an error in the save
+            
+            self.SetInteractionLogOnOff('On')
+
+            self.EnableButtons() 
+    
             self.progress.setValue(self.GetCurrentNavigationIndex())
             iProgressPercent = int(self.GetCurrentNavigationIndex() / len(self.GetNavigationList()) * 100)
             self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
@@ -1199,6 +1204,8 @@ class Session:
             try:        
                 sMsg = ''
 
+                self.SetInteractionLogOnOff('Off')
+                
                 self.DisableButtons()    
 
                 if self.PerformSave('NextBtn') and self.UpdateCompletionFlags('NextBtn'):
@@ -1221,6 +1228,7 @@ class Session:
                     
     
                 self.EnableButtons()
+                self.SetInteractionLogOnOff('On')
                 
             except:
                 iPage = self.GetCurrentPageIndex() + 1
@@ -1505,6 +1513,9 @@ class Session:
                 self.EnableButtons()
 
                 self.SetInteractionLogOnOff('On')
+
+                self.oMaximizedWindowSize = SlicerWindowSize()
+
 
 
         except:
@@ -2909,3 +2920,24 @@ class QuizWidgets:
         # add to left layout
         self.qLeftLayout.addWidget(self.qTabWidget)
 
+##########################################################################
+#
+# class SlicerWindowSize
+#
+##########################################################################
+
+class SlicerWindowSize:
+    
+    def __init__(self, parent=None):
+        self.slMainWindowPos = None
+        self.slMainWindowWidth = 0
+        self.slMainWindowHeight = 0
+        
+        self.CaptureWindowSize()
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CaptureWindowSize(self):
+        slMainWindow = slicer.util.mainWindow()
+        self.slMainWindowPos = slMainWindow.pos
+        self.slMainWindowWidth = slMainWindow.geometry.width()
+        self.slMainWindowHeight = slMainWindow.geometry.height()

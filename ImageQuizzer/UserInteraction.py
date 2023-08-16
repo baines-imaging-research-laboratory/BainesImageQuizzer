@@ -32,7 +32,8 @@ class UserInteraction:
         self.ldictObserverIDs = {}
         
         self.oUtilsMsgs = UtilsMsgs()
-        
+
+        self.slMaximizedWindowPos = None   
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -63,8 +64,7 @@ class UserInteraction:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def LockLayout(self):
+    def LockLayout(self, oMaximizedWindowSize):
         ''' This function locks the Slicer layout so that the user cannot perform any of the following:
             zoom, pan, adjust slider for size of viewing windows vs quiz panel.
             
@@ -81,7 +81,8 @@ class UserInteraction:
 
         
         slMainWindow = slicer.util.mainWindow()
-        self.SetMainWindowPosition(slMainWindow.pos)
+        slMainWindow.showMaximized()
+        self.SetMainWindowPosition(oMaximizedWindowSize.slMainWindowPos)
         
         
         
@@ -90,9 +91,8 @@ class UserInteraction:
 
 
         # set fixed geometry maximized        
-        slMainWindow.showMaximized()
-        fDesktopWidth = slMainWindow.geometry.width()
-        fDesktopHeight = slMainWindow.geometry.height()
+        fDesktopWidth = oMaximizedWindowSize.slMainWindowWidth
+        fDesktopHeight = oMaximizedWindowSize.slMainWindowHeight
         slMainWindow.setFixedSize(fDesktopWidth, fDesktopHeight)
         
         

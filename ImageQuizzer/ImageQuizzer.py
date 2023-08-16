@@ -155,7 +155,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.BuildUserLoginWidget()
         self.qUserLoginWidget.show()
         
-        slicer.util.mainWindow().showMaximized()
 
 
         
