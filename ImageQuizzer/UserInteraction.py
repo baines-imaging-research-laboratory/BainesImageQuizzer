@@ -210,10 +210,6 @@ m_fg(3-0),m_fg(3-1),m_fg(3-2),m_fg(3-3)\n')
         else:
             
             self.InsertTransitionRow(self.fh, 'Re-entering Page')
-#             now = datetime.now()
-#             sAppendBreak = str(cv2.getTickCount()) + ',' + str(now.strftime("%Y/%m/%d %H:%M:%S.%f")) + ',>>>>>>>>>>>>>>>>>>>>>>>>>>>\n'
-#             self.fh.write(sAppendBreak)
-#             self.fh.flush()
 
         # template for rows - excludes formating of matrices
         self.fhTemplate = '{:.0f}, {}, {}, {}, {},\

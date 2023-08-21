@@ -1141,6 +1141,8 @@ class Session:
         '''
 
         try:
+            bExit = False
+            
             self.progress.setValue(self.GetCurrentNavigationIndex() + 1)
             if len(self.GetNavigationList()) >0:
                 iProgressPercent = int((self.GetCurrentNavigationIndex() + 1) / len(self.GetNavigationList()) * 100)
@@ -1169,19 +1171,22 @@ class Session:
                     self.oFilesIO.CreateShutdownBatchFile()
             
                     slicer.util.exit(status=EXIT_SUCCESS)
+                    bExit = True    # added for delay in slicer closing down - prevent remaining code from executing
 
 
+            
             
             # if code reaches here, either the exit was cancelled or there was 
             # an error in the save
             
-            self.SetInteractionLogOnOff('On')
-
-            self.EnableButtons() 
+            if not(bExit):
+                self.SetInteractionLogOnOff('On')
+                self.EnableButtons() 
+        
+                self.progress.setValue(self.GetCurrentNavigationIndex())
+                iProgressPercent = int(self.GetCurrentNavigationIndex() / len(self.GetNavigationList()) * 100)
+                self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
     
-            self.progress.setValue(self.GetCurrentNavigationIndex())
-            iProgressPercent = int(self.GetCurrentNavigationIndex() / len(self.GetNavigationList()) * 100)
-            self.progress.setFormat(self.sPageID + '  ' + self.sPageDescriptor + '    ' + str(iProgressPercent) + '%')
     
         except:
             iPage = self.GetCurrentPageIndex() + 1
@@ -1449,6 +1454,7 @@ class Session:
             else:
                 
                 self.SetInteractionLogOnOff('Off')
+                self.oMaximizedWindowSize = SlicerWindowSize()
 
                 # >>>>>>>>>> Email feature <<<<<<<<<<
                 bEmailRequest, sMsg = self.oUtilsEmail.SetupEmailResults(self.oFilesIO, \
@@ -1514,7 +1520,6 @@ class Session:
 
                 self.SetInteractionLogOnOff('On')
 
-                self.oMaximizedWindowSize = SlicerWindowSize()
 
 
 
