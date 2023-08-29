@@ -1184,6 +1184,7 @@ class UtilsFilesIO:
         sErrorMsgNoMatchingHistoricalLabelMapID = "\nThere was no previous Image with a LabelMapID attribute to match the ID in 'DisplayLabelMapID'."
         sErrorMsgNoLoopOnHistoricalPage = "\nYou requested a label map merge but the previous Image with matching LabelMapID was not on a Page with attribute Loop='Y'. No merge can be done."
         sErrorMsgNoMatchingPageGroups = "\nYou requested a label map merge but the PageGroup numbers of this page do not match with the previous page that has the matching LabelMapID."
+        sErrorMsgEmptyPageGroups = "\nYou requested a label map merge but the PageGroup numbers of this page are either empty or don't exist. Page Group numbers must match with the previous page that has the matching LabelMapID to be merged."
         
         sMergeLabelMaps = self.oIOXml.GetValueOfNodeAttribute(xImage, sAttributeName)
 
@@ -1214,10 +1215,13 @@ class UtilsFilesIO:
                 if self.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'Loop') != "Y":
                     raise Exception(sErrorMsgNoLoopOnHistoricalPage)
 
+
                 # look for matching PageGroup number (these might be empty strings)
                 sPageGroupNumToMatch = self.oIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup')
                 sHistoricalPageGroupNum = self.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'PageGroup')
                 
+                if sPageGroupNumToMatch == sHistoricalPageGroupNum and sPageGroupNumToMatch ==  '':
+                    raise Exception(sErrorMsgEmptyPageGroups)
                 if sPageGroupNumToMatch != sHistoricalPageGroupNum:
                     raise Exception(sErrorMsgNoMatchingPageGroups)
                 
@@ -1558,7 +1562,6 @@ class UtilsFilesIO:
                 #    to use a previous label map, check previous pages for the first matching image
                 if (xLabelMapPathElement == None and bUsePreviousLabelMap == True)\
                     or (bUsePreviousLabelMap == True and oImageNode.bMergeLabelMaps):
-#                     xHistoricalLabelMapMatch = oSession.GetXmlElementFromImagePathHistory( oImageNode.GetXmlImageElement(), 'LabelMapPath')
 
                     # get image element from history that holds the same label map id; 
                     xHistoricalImageElement = None  # initialize

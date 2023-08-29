@@ -35,7 +35,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="IGPC2026" Descriptor="Loop_1QS" LinkViews="Y" EnableSegmentEditor="Y" Loop="Y" AllowMultipleResponse="Y">
+	<Page ID="IGPC2026" Descriptor="Loop_1QS" LinkViews="Y" EnableSegmentEditor="Y" Loop="Y" AllowMultipleResponse="Y" PageGroup="2">
 		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" LabelMapID="DCE-contour">
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
@@ -62,7 +62,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="IGPC2026" Descriptor="Loop_2QS" LinkViews="Y" Loop="Y">
+	<Page ID="IGPC2026" Descriptor="Loop_2QS" LinkViews="Y" Loop="Y" PageGroup="2">
 		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" MergeLabelMaps='Y' DisplayLabelMapID='DCE-contour'>
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
@@ -105,7 +105,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="IGPC2026" Descriptor="Loop_LastPage_1QS" LinkViews="Y" EnableSegmentEditor="Y" Loop="Y">
+	<Page ID="IGPC2026" Descriptor="Loop_LastPage_1QS" LinkViews="Y" EnableSegmentEditor="Y" Loop="Y" PageGroup="2">
 		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" DisplayLabelMapID='DCE-contour'>
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>

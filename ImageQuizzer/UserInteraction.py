@@ -308,10 +308,7 @@ class LogDetails():
         
         self.oUtilsMsgs = UtilsMsgs()
 
-        try:
-            self.iCPUUptime = cv2.getTickCount()
-        except:
-            pass    #OpenCV not imported - uptime unavailable
+        self.iCPUUptime = cv2.getTickCount()
         
         now = datetime.now()
         self.sDateTime = str(now.strftime("%Y/%m/%d %H:%M:%S.%f"))
