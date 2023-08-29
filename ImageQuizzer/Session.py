@@ -477,19 +477,24 @@ class Session:
     def SetNPlanesView(self):
         
         self.sViewingMode = self.qComboNPlanesList.currentText
+
+       
+        self.lsLayoutWidgets = []  # widgets for contour visibility list
+        self.lsLayoutWidgets.append('Red')
+
         
-        if self.sViewingMode == "3 Planes":
-            self.llsNPlanesOrientDest = [["Axial","Red"],["Coronal","Green"],["Sagittal","Yellow"]]
-        elif self.sViewingMode == "1 Plane Axial":
+        if self.sViewingMode == "1 Plane Axial":
             self.llsNPlanesOrientDest = [["Axial","Red"]]
         elif self.sViewingMode == "1 Plane Sagittal":
             self.llsNPlanesOrientDest = [["Sagittal","Red"]]
         elif self.sViewingMode == "1 Plane Coronal":
             self.llsNPlanesOrientDest = [["Coronal","Red"]]
+        elif self.sViewingMode == "3 Planes":
+            self.llsNPlanesOrientDest = [["Axial","Red"],["Coronal","Green"],["Sagittal","Yellow"]]
+            self.lsLayoutWidgets.append('Green')
+            self.lsLayoutWidgets.append('Yellow')
             
-        # add widget to contour visibility list
-        self.lsLayoutWidgets = []
-        self.lsLayoutWidgets.append('Red')
+
         
     #----------
     def GetNPlanesView(self):
