@@ -36,6 +36,7 @@
 		<xs:attribute name="SegmentRequiredOnAnyImage" type="yesnoType" default="N"/>
 		<xs:attribute name="MinMarkupLinesRequiredOnAnyImage" type="xs:positiveInteger"/>
 		<xs:attribute name="Loop" type="yesnoType" default="N" />
+		<xs:attribute name="UserInteractionLog" type="yesnoType" default="N"/>
 	</xs:complexType>
 </xs:element>
 
@@ -60,6 +61,9 @@
 		<xs:attribute name="SegmentRequired" type="yesnoType" default="N"/>
 		<xs:attribute name="MinMarkupLinesRequired" type="xs:positiveInteger"/>
 		<xs:attribute name="InitialSliceOffset" type="xs:float"/>
+		<xs:attribute name="MergeLabelMaps" type="yesnoType" default="N" />
+		<xs:attribute name="ZoomFactor" type="xs:float"/>
+		<xs:attribute name="PanOrigin" type="listType"/>
 	</xs:complexType>
 </xs:element>
 
@@ -120,6 +124,7 @@
     <xs:enumeration value="Text"/>
     <xs:enumeration value="IntegerValue"/>
     <xs:enumeration value="FloatValue"/>
+    <xs:enumeration value="Button"/>
   </xs:restriction>
 </xs:simpleType>
 
@@ -205,5 +210,16 @@
     <xs:enumeration value="Outline"/>
   </xs:restriction>
 </xs:simpleType>
+
+<xs:simpleType name="listType">
+  <xs:restriction base="floatListType">
+    <xs:length value="3"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="floatListType">
+  <xs:list itemType="xs:float"/>
+</xs:simpleType>
+
 
 </xs:schema>

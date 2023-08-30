@@ -4,6 +4,7 @@ import os, sys
 
 import xml.dom.minidom
 import shutil
+import re
 
 from datetime import datetime
 
@@ -282,6 +283,17 @@ class UtilsIOXml:
         return sData
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetDataFromLastChild(self, xParentNode, sChildTagName):
+        
+        sData = ''
+        
+        xChildNode = self.GetLastChild(xParentNode, sChildTagName)
+        if xChildNode != None:
+            sData = self.GetDataInNode(xChildNode)
+        
+        return sData
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CreateParentNode(self, sTagName, dictAttrib):
         
         xNode = etree.Element(sTagName)
@@ -380,6 +392,82 @@ class UtilsIOXml:
                 
         return iNextInd
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetXmlPageAndChildFromAttributeHistory(self, iCrrentPageIndex, sChildToSearch, sImageAttributeToMatch, sAttributeValue):
+        ''' Function will return the historical elements (page and child)  that contains the attribute requested for the search.
+            This attribute is associated with a child of the 'Page' element.
+            The search goes through the pages in reverse. 
+                For each page, the requested children are searched (forward) for the requested attribute.
+            When found, the xml child element that contains the attribute is returned as well as the parent Page element.
+        '''
+        
+        xHistoricalChildElement = None
+        xHistoricalPageElement = None
+        
+        # start searching pages in reverse order - to get most recent setting
+        # first match will end the search
+        bHistoricalElementFound = False
+        for iPageIndex in range(iCrrentPageIndex-1, -1, -1):
+            xPageNode = self.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
+        
+            if bHistoricalElementFound == False:
+                
+                if xPageNode != None:
+                    #get all requested children
+                    lxChildElementsToSearch = self.GetChildren(xPageNode, sChildToSearch)
+                    if len(lxChildElementsToSearch) > 0:
+        
+                        for xImageNode in lxChildElementsToSearch:
+                            
+                            # get image attribute
+                            sPotentialAttributeValue = self.GetValueOfNodeAttribute(xImageNode, sImageAttributeToMatch)
+                            if sPotentialAttributeValue == sAttributeValue:
+                                xHistoricalChildElement = xImageNode
+                                bHistoricalElementFound = True
+                                xHistoricalPageElement = xPageNode
+                                break
+            else:
+                break
+        
+        return xHistoricalChildElement, xHistoricalPageElement
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetMatchingXmlPagesFromAttributeHistory(self, iCurrentPageIndex, dictPageAttrib, reIgnoreSubstring=''):
+        ''' Function to get a list of previous page elements that match the list of attributes 
+            ignoring the substring defined as a regular expression (which can be null).
+        '''
+        
+        lxHistoricalPages = []
+        bAttribMatch = True
+        
+        for iPageIndex in range( iCurrentPageIndex -1, -1, -1):
+            xPageNode = self.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
+            
+            bAttribMatch = True # initialize for next page
+
+            # get values of attributes to get a match
+            for attrib, sValueToMatch in dictPageAttrib.items():
+                if bAttribMatch: # stop if any of the attributes don't match
+                    
+                    sStoredPageValue = self.GetValueOfNodeAttribute(xPageNode, attrib)
+                    
+                    # remove ignore string
+                    sPotentialPageValue = re.sub(reIgnoreSubstring,'',sStoredPageValue)
+
+                    if sPotentialPageValue == sValueToMatch:
+                        bAttribMatch = True
+                    else:
+                        bAttribMatch = False
+
+            if bAttribMatch:
+                lxHistoricalPages.append(xPageNode)
+        
+        
+        
+        return lxHistoricalPages
+        
+        
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CopyElement(self, xElemToCopy):
         ''' Create a copy of the element that is not shared by reference to the original

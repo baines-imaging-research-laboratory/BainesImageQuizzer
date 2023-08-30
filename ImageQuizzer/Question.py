@@ -5,6 +5,8 @@ import os
 import vtk, qt, ctk, slicer
 import sys
 import warnings
+import traceback
+
 
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsIOXml import *
@@ -19,7 +21,7 @@ class QuestionSet():
     """ Class to hold array of all questions that were built into group boxes on the form
     """
     
-    def __init__(self):
+    def __init__(self, oFilesIO):
         self.sClassName = type(self).__name__
         self.id = ''
         self.descriptor = ''
@@ -29,6 +31,7 @@ class QuestionSet():
         
         self.oIOXml = UtilsIOXml()
         self.oMsgUtil = UtilsMsgs()
+        self.oFilesIO = oFilesIO
         
     #----------
     def SetQuestionList(self, loQuestionsInput):
@@ -93,6 +96,9 @@ class QuestionSet():
                 elif (sQuestionType == 'InfoBox'):
                     oQuestion = InfoBox()
 
+                elif (sQuestionType == 'Button'):
+                    oQuestion = Button()
+                    
                 else:
                     sLabel = 'Warning : Contact Administrator - Invalid question    '
                     sWarningMsg = self.sClassName + ':' + sFnName + ':' + 'UnrecognizedQuestionType - Contact Administrator'
@@ -103,6 +109,7 @@ class QuestionSet():
                 if bQuestionTypeGood == True:
                     oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
                     oQuestion._sGrpBoxLayout_setter(sGroupBoxLayout)
+                    oQuestion._oFilesIO_setter(self.oFilesIO)
                     
                     lOptions = self.GetOptionsFromXML(xNodeQuestion)
                     oQuestion._lsOptions_setter(lOptions)
@@ -179,6 +186,7 @@ class Question(ABC):
         self._lsOptions = []
         self._sGrpBoxTitle = ''
         self._sGrpBoxLayout = ''
+        self._oFilesIO = None
 
     
     # abstract properties require level of indirection
@@ -235,14 +243,35 @@ class Question(ABC):
         self._sGrpBoxLayout_setter(x)
         
     @abstractmethod
-    def _sGrpBoxLayout_getter(self,x):
+    def _sGrpBoxLayout_setter(self,x):
         pass
     
     @abstractmethod
-    def _sGrpBoxTitle_getter(self):
-        return self._sGrpBoxTitle
+    def _sGrpBoxLayout_getter(self):
+        return self._sGrpBoxLayout
     #----------
     
+    
+    #----------
+    # _oFilesIO
+    #----------
+    @property
+    def oFilesIO(self):
+        return self._oFilesIO
+    
+    @oFilesIO.setter
+    def oFilesIO(self, x):
+        self._oFilesIO_setter(x)
+        
+    @abstractmethod
+    def _oFilesIO_setter(self,x):
+        pass
+    
+    @abstractmethod
+    def _oFilesIO_getter(self):
+        return self._oFilesIO
+    #----------
+
     
     #----------
     @abstractmethod        
@@ -371,6 +400,12 @@ class RadioQuestion(Question):
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
 
+    def _oFilesIO_setter(self, sInput):
+        self._oFilesIO = sInput
+        
+    def _oFilesIO_getter(self):
+        return self._oFilesIO
+
     #-----------------------------------------------
     
     def BuildQuestion(self):
@@ -427,15 +462,16 @@ class RadioQuestion(Question):
     
     def PopulateQuestionWithResponses(self, lsValues):
         
-        i = 0
-        for qBtn in self.qGrpBox.findChildren(qt.QRadioButton):
-            
-            if lsValues[i] == 'N':
-                qBtn.setChecked(False)
-            else:
-                if lsValues[i] == 'Y':
-                    qBtn.setChecked(True)
-            i = i + 1
+        if len(lsValues) > 0:
+            i = 0
+            for qBtn in self.qGrpBox.findChildren(qt.QRadioButton):
+                
+                if lsValues[i] == 'N':
+                    qBtn.setChecked(False)
+                else:
+                    if lsValues[i] == 'Y':
+                        qBtn.setChecked(True)
+                i = i + 1
             
 
 #========================================================================================
@@ -469,6 +505,12 @@ class CheckBoxQuestion(Question):
         
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
+
+    def _oFilesIO_setter(self, sInput):
+        self._oFilesIO = sInput
+        
+    def _oFilesIO_getter(self):
+        return self._oFilesIO
 
     #-----------------------------------------------
        
@@ -524,15 +566,16 @@ class CheckBoxQuestion(Question):
     
     def PopulateQuestionWithResponses(self, lsValues):
             
-        i = 0
-        for qBox in self.qGrpBox.findChildren(qt.QCheckBox):
-            
-            if lsValues[i] == 'N':
-                qBox.setChecked(False)
-            else:
-                if lsValues[i] == 'Y':
-                    qBox.setChecked(True)
-            i = i + 1
+        if len(lsValues) > 0:
+            i = 0
+            for qBox in self.qGrpBox.findChildren(qt.QCheckBox):
+                
+                if lsValues[i] == 'N':
+                    qBox.setChecked(False)
+                else:
+                    if lsValues[i] == 'Y':
+                        qBox.setChecked(True)
+                i = i + 1
         
         
 
@@ -567,6 +610,12 @@ class TextQuestion(Question):
         
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
+
+    def _oFilesIO_setter(self, sInput):
+        self._oFilesIO = sInput
+        
+    def _oFilesIO_getter(self):
+        return self._oFilesIO
 
     #-----------------------------------------------
     
@@ -626,11 +675,13 @@ class TextQuestion(Question):
     #-----------------------------------------------
     
     def PopulateQuestionWithResponses(self, lsValues):
-        i = 0
-        for qTxt in self.qGrpBox.findChildren(qt.QLineEdit):
-            
-            qTxt.setText(lsValues[i])
-            i = i + 1
+
+        if len(lsValues) > 0:
+            i = 0
+            for qTxt in self.qGrpBox.findChildren(qt.QLineEdit):
+                
+                qTxt.setText(lsValues[i])
+                i = i + 1
 
 #========================================================================================
 #                     Class IntegerValueQuestion
@@ -670,6 +721,12 @@ class IntegerValueQuestion(Question):
 
     def UpdateDictionaryModifiers(self, dictionaryInput):
         self.dictModifiers = dictionaryInput
+
+    def _oFilesIO_setter(self, sInput):
+        self._oFilesIO = sInput
+        
+    def _oFilesIO_getter(self):
+        return self._oFilesIO
         
     #-----------------------------------------------
         
@@ -773,11 +830,12 @@ class IntegerValueQuestion(Question):
     
     def PopulateQuestionWithResponses(self, lsValues):
 
-        i = 0
-        for qTxt in self.qGrpBox.findChildren(qt.QLineEdit):
-            
-            qTxt.setText(lsValues[i])
-            i = i + 1
+        if len(lsValues) > 0:
+            i = 0
+            for qTxt in self.qGrpBox.findChildren(qt.QLineEdit):
+                
+                qTxt.setText(lsValues[i])
+                i = i + 1
 
 #========================================================================================
 #                     Class FloatValueQuestion
@@ -816,6 +874,12 @@ class FloatValueQuestion(Question):
 
     def UpdateDictionaryModifiers(self, dictionaryInput):
         self.dictModifiers = dictionaryInput
+
+    def _oFilesIO_setter(self, sInput):
+        self._oFilesIO = sInput
+        
+    def _oFilesIO_getter(self):
+        return self._oFilesIO
         
     #-----------------------------------------------
 
@@ -922,11 +986,12 @@ class FloatValueQuestion(Question):
     
     def PopulateQuestionWithResponses(self, lsValues):
 
-        i = 0
-        for qTxt in self.qGrpBox.findChildren(qt.QLineEdit):
-            
-            qTxt.setText(lsValues[i])
-            i = i + 1
+        if len(lsValues) > 0:
+            i = 0
+            for qTxt in self.qGrpBox.findChildren(qt.QLineEdit):
+                
+                qTxt.setText(lsValues[i])
+                i = i + 1
 
 #========================================================================================
 #                     Class InfoBox
@@ -937,7 +1002,7 @@ class InfoBox(Question):
     # There are no responses from the user to catch
     # Inputs :
     # Outputs: exitCode - boolean describing whether function exited successfully
-    #          qGrpBox  - group box widget holding text edit boxes
+    #          qGrpBox  - group box widget holding information box
     
     def __init__(self):
         self.sClassName = type(self).__name__
@@ -960,6 +1025,12 @@ class InfoBox(Question):
         
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
+
+    def _oFilesIO_setter(self, sInput):
+        self._oFilesIO = sInput
+        
+    def _oFilesIO_getter(self):
+        return self._oFilesIO
 
     #-----------------------------------------------
 
@@ -997,7 +1068,7 @@ class InfoBox(Question):
  
         lsResponses = []
         
-        # set response for each info box option to null quotes
+        # set response for each option to null quotes
         #     each option needs a response for the check on whether 
         #     the question set was answered completely or partially
         lsStoredOptions = self._lsOptions_getter()
@@ -1013,6 +1084,118 @@ class InfoBox(Question):
         # there is nothing to populate for info box type questions
         pass
     
+#========================================================================================
+#                     Class Button
+#========================================================================================
+
+class Button(Question):
+    # Create a group box and add a button that will run an external script
+    # There are no responses from the user to catch
+    # Inputs :
+    # Outputs: exitCode - boolean describing whether function exited successfully
+    #          qGrpBox  - group box widget holding the button
+    
+    def __init__(self):
+        self.sClassName = type(self).__name__
+
+        self.oMsgUtil = UtilsMsgs()
+
+        
+    def _lsOptions_setter(self, lsInput):
+        self._lsOptions = lsInput
+        
+    def _lsOptions_getter(self):
+        return self._lsOptions
+        
+    def _sGrpBoxTitle_setter(self, sInput):
+        self._sGrpBoxTitle = sInput
+        
+    def _sGrpBoxTitle_getter(self):
+        return self._sGrpBoxTitle
+
+    def _sGrpBoxLayout_setter(self, sInput):
+        self._sGrpBoxLayout = sInput
+        
+    def _sGrpBoxLayout_getter(self):
+        return self._sGrpBoxLayout
+
+    def _oFilesIO_setter(self, sInput):
+        self._oFilesIO = sInput
+        
+    def _oFilesIO_getter(self):
+        return self._oFilesIO
+
+    #-----------------------------------------------
+
+    def BuildQuestion(self):
+        self.sFnName = sys._getframe().f_code.co_name
+
+        # add grid layout to group box
+        self.CreateGroupBox(self._sGrpBoxTitle_getter())
+        newLayout = qt.QGridLayout()
+        self.qGrpBoxLayout.addLayout(newLayout)
+       
+        lsStoredOptions = self._lsOptions_getter()
+        length = len(lsStoredOptions)
+        if length < 1 :
+            self.DisplayGroupBoxEmpty()
+            return False, self.qGrpBox
+
+        oFilesIO = self._oFilesIO_getter()
+        dictQButtons = {}
+        i = 0
+        while i < length:
+            element1 = os.path.join(oFilesIO.GetDataParentDir(),lsStoredOptions[i])
+            head, tail = os.path.split(element1)
+            qButton = qt.QPushButton(str(i+1)+'-'+tail)
+            newLayout.addWidget(qButton, i, 0)
+            dictQButtons[element1]=qButton
+            i = i + 1
+
+        for button in dictQButtons:
+            dictQButtons[button].connect('clicked(bool)',lambda _, b=button: self.onQButtonClicked(b))
+                                         
+        return True, self.qGrpBox
+
+    #-----------------------------------------------
+    def onQButtonClicked(self,  sScript):
+        
+        try:
+        
+            exec(open(sScript).read())
+
+        except:
+            tb = traceback.format_exc()
+            sMsg = "onButtonClicked: Error opening script " + sScript \
+                   + "\n\n" + tb 
+            self.oMsgUtil.DisplayError(sMsg)
+
+        
+    #-----------------------------------------------
+    
+    def CaptureResponse(self):
+        self.sFnName = sys._getframe().f_code.co_name
+
+        bSuccess = True
+        sMsg = ''
+ 
+        lsResponses = []
+        
+        # set response for each option to null quotes
+        #     each option needs a response for the check on whether 
+        #     the question set was answered completely or partially
+        lsStoredOptions = self._lsOptions_getter()
+        for x in range( len(lsStoredOptions) ):
+            lsResponses.append('')
+                
+        
+        return bSuccess, lsResponses, sMsg
+        
+    #-----------------------------------------------
+    
+    def PopulateQuestionWithResponses(self, lsValues):
+        # there is nothing to populate for button type questions
+        pass
     
 
     

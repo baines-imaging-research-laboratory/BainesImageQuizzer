@@ -28,13 +28,13 @@ import slicer
 
 from slicer.util import VTKObservationMixin
 
-import EditorLib
-from EditorLib.EditUtil import EditUtil
-from EditorLib.LabelCreateDialog import LabelCreateDialog
-from EditorLib.LabelStructureListWidget import LabelStructureListWidget
+import QuizzerEditorLib
+from QuizzerEditorLib.EditUtil import EditUtil
+from QuizzerEditorLib.LabelCreateDialog import LabelCreateDialog
+from QuizzerEditorLib.LabelStructureListWidget import LabelStructureListWidget
 
 
-__all__ = ['QuizzerHelperBox']
+__all__ = ['HelperBox']
 
 def _map_property(objfunc, name):
   """Creates a Python :class:`property` associated with an object
@@ -51,7 +51,7 @@ def _map_property(objfunc, name):
 #
 comment = """
 
-  QuizzerHelperBox is a wrapper around a set of Qt widgets and other
+  HelperBox is a wrapper around a set of Qt widgets and other
   structures to manage the slicer3 segmentation helper box.
 
 # TODO :
@@ -59,7 +59,7 @@ comment = """
 #
 #########################################################
 
-class QuizzerHelperBox(VTKObservationMixin):
+class HelperBox(VTKObservationMixin):
 
 ############### REMOVE PER STRUCTURE REFERENCES ############
 #   mergeValidCommand = _map_property(lambda self: self.structureListWidget, "mergeValidCommand")
@@ -450,11 +450,11 @@ class QuizzerHelperBox(VTKObservationMixin):
     # - this tool requires the slice widget as a parameter
       
     slWidget = EditUtil.getSliceWidget('Red')
-    EditorLib.LabelEffectTool(slWidget)
+    QuizzerEditorLib.LabelEffectTool(slWidget)
     slWidget = EditUtil.getSliceWidget('Green')
-    EditorLib.LabelEffectTool(slWidget)
+    QuizzerEditorLib.LabelEffectTool(slWidget)
     slWidget = EditUtil.getSliceWidget('Yellow')
-    EditorLib.LabelEffectTool(slWidget)
+    QuizzerEditorLib.LabelEffectTool(slWidget)
    
 ############################################################
 

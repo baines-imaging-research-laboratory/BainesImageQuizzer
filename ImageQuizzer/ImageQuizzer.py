@@ -66,7 +66,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         # Note: Version 1.0 should be used with Slicer v4.11.20200930
         # self.sVersion = "Image Quizzer   v1.0 "  #  Release Date: May 10, 2022
         # Note: Version 2.0 should be used with Slicer v4.11.2021022
-        self.sVersion = "Image Quizzer v2.2.1" 
+        self.sVersion = "Image Quizzer v2.3.0" 
 
         sSlicerVersion = slicer.app.applicationVersion
         if sSlicerVersion != '4.11.20210226':
@@ -131,14 +131,14 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         #    'ViewsToolBar' for different view layouts
         #    'MouseModeToolBar' for default, window/level, markups tools
           
-        self.lsModulesToToggleVisibilty = ['ModuleToolBar', 'DialogToolBar', 'CaptureToolBar', 'MainToolBar', 'ModuleSelectorToolBar', 'MouseModeToolBar', 'ViewToolBar', 'ViewersToolBar']
+        self.lsModulesToToggleVisibilty = ['ModuleToolBar', 'DialogToolBar', 'CaptureToolBar', 'MainToolBar',\
+                                            'ModuleSelectorToolBar', 'MouseModeToolBar', 'ViewToolBar', 'ViewersToolBar']
   
         for qtToolBar in slicer.util.mainWindow().findChildren('QToolBar'):
             if qtToolBar.name in self.lsModulesToToggleVisibilty:
                 qtToolBar.setVisible(False)
   
   
-        slicer.util.setPythonConsoleVisible(False)
         slicer.util.setModuleHelpSectionVisible(False)
         slicer.modules.welcome.widgetRepresentation().setVisible(False)
         
@@ -155,7 +155,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.BuildUserLoginWidget()
         self.qUserLoginWidget.show()
         
-        slicer.util.mainWindow().showMaximized()
 
 
         
@@ -195,25 +194,28 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         
         ################################
-        # Define User folder
+        # Define User name
         ################################
  
         # Add vertical spacer
         qUserLoginLayout.addSpacing(10)
         
-#         self.qUserGrpBox = qt.QGroupBox()
-#         self.qUserGrpBox.setTitle('User name')
-#         self.qUserGrpBoxLayout = qt.QVBoxLayout()
-#         self.qUserGrpBox.setLayout(self.qUserGrpBoxLayout)
-# 
-#         self.comboGetUserName = qt.QComboBox()
-#         self.comboGetUserName.addItem(os.getlogin())
-#         self.qUserGrpBoxLayout.addWidget(self.comboGetUserName)
-#         self.qUserGrpBox.setEnabled(True)
-#         
-#         
-#         qUserLoginLayout.addWidget(self.qUserGrpBox)
 
+        self.qUserGrpBox = qt.QGroupBox()
+        self.qUserGrpBox.setTitle('User name')
+        self.qUserGrpBoxLayout = qt.QVBoxLayout()
+        self.qUserGrpBox.setLayout(self.qUserGrpBoxLayout)
+
+        self.comboGetUserName = qt.QComboBox()
+        self.comboGetUserName.addItem(os.getlogin())
+        self.comboGetUserName.currentTextChanged.connect(self.onUserComboboxChanged)
+        self.comboGetUserName.setEditable(True)
+
+        self.qUserGrpBoxLayout.addWidget(self.comboGetUserName)
+        self.qUserGrpBox.setEnabled(True)
+
+        qUserLoginLayout.addWidget(self.qUserGrpBox)
+        
         
         ################################
         # Get Database location
@@ -241,23 +243,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         qDBGrpBoxLayout.addWidget(self.qLblDataLocation)
 
 
-        qDBGrpBoxLayout.addSpacing(10)
-        self.qUserGrpBox = qt.QGroupBox()
-        self.qUserGrpBox.setTitle('User name')
-        self.qUserGrpBoxLayout = qt.QVBoxLayout()
-        self.qUserGrpBox.setLayout(self.qUserGrpBoxLayout)
-
-        self.comboGetUserName = qt.QComboBox()
-        self.comboGetUserName.addItem(os.getlogin())
-        self.qUserGrpBoxLayout.addWidget(self.comboGetUserName)
-        self.qUserGrpBox.setEnabled(True)
-        
-        
-        qDBGrpBoxLayout.addWidget(self.qUserGrpBox)
-
-        
         # Add vertical spacer
-        qUserLoginLayout.addSpacing(10)
+        qUserLoginLayout.addSpacing(20)
         
         
         ################################
@@ -306,6 +293,12 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.qLaunchGrpBoxLayout.addWidget(self.btnLaunchStudy)
          
          
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onUserComboboxChanged(self):
+        
+        # capture selected user name
+        self.oFilesIO.SetQuizUsername(self.comboGetUserName.currentText)
+     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def onApplyQuizzerDataLocation(self):
@@ -402,13 +395,13 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                     self.oSession.RunSetup(self.oFilesIO, self.slicerMainLayout)
     
                     
-                    try:
-                        #provide as much room as possible for the quiz
-                        qDataProbeCollapsibleButton = slicer.util.mainWindow().findChild("QWidget","DataProbeCollapsibleWidget")
-                        qDataProbeCollapsibleButton.collapsed = True
-                        self.reloadCollapsibleButton.collapsed = True
-                    except:
-                        pass
+#                     try:
+#                         #provide as much room as possible for the quiz
+#                         qDataProbeCollapsibleButton = slicer.util.mainWindow().findChild("QWidget","DataProbeCollapsibleWidget")
+#                         qDataProbeCollapsibleButton.collapsed = True
+#                         self.reloadCollapsibleButton.collapsed = True
+#                     except:
+#                         pass
 
             else:
                 self.oUtilsMsgs.DisplayError(sMsg)
@@ -481,4 +474,16 @@ class customEventFilter(qt.QObject):
                     
             self.oUtilsMsgs.DisplayInfo(sExitMsg)
             slicer.util.exit(status=EXIT_SUCCESS)
+            
+        # disable minimize for UserInteraction
+        elif self.oSession.GetUserInteractionLogRequest() == True and\
+                ((event.type() == qt.QEvent.WindowStateChange) and slicer.util.mainWindow().isMinimized()):
+            slicer.util.mainWindow().showMaximized()
+            
+#         # disable drag window for UserInteraction  (located in non-client area)
+        elif self.oSession.GetUserInteractionLogRequest() == True and\
+                (event.type() ==  qt.QEvent.NonClientAreaMouseButtonRelease):
+            slicer.util.mainWindow().move(self.oSession.oUserInteraction.GetMainWindowPosition())
+            
+
                     
