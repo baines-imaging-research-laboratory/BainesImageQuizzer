@@ -30,3 +30,4 @@ ImageQuizzer/Resources/ColorFiles/QuizzerROIColorTable.txt
 
 ImageQuizzer/Resources/Config/smtp_config.txt
 ImageQuizzer/ImageQuizzerData/
+*.bak

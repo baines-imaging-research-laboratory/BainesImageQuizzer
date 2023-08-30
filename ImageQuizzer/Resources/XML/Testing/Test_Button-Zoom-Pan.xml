@@ -1,0 +1,36 @@
+<Session>
+    <Page ID="Patient 1">
+        <Image ID="CT" Type="Volume"  ZoomFactor="1.2" PanOrigin="-92 27.5 -225.5" InitialSliceOffset="-245">
+                <DefaultDestination>Red</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Axial</DefaultOrientation>
+                <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
+        </Image>
+        <Image ID="CT" Type="Volume" ZoomFactor="1.5" PanOrigin="-43.96383459076361 63.246218183203815 0.0" InitialSliceOffset="-112">
+                <DefaultDestination>Green</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Coronal</DefaultOrientation>
+                <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
+        </Image>
+        <Image ID="CT" Type="Volume" ZoomFactor=".75" PanOrigin="118 39 0" InitialSliceOffset="91">
+                <DefaultDestination>Yellow</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Sagittal</DefaultOrientation>
+                <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
+        </Image>
+        <QuestionSet ID="Processing script" Descriptor="Python executable">
+            <Question Type="Button" Descriptor="Run external scripts">
+                <Option>Scripts/script1.py</Option>
+				<Option>Scripts/script2.py</Option>
+            </Question>
+            <Question Type="CheckBox" Descriptor="Test Checkboxes">
+                <Option>Check1</Option>
+				<Option>Check2</Option>
+            </Question>
+            <Question Type="Radio" Descriptor="Test Radio Buttons">
+                <Option>Radio1</Option>
+				<Option>Radio2</Option>
+            </Question>
+        </QuestionSet>
+    </Page>
+</Session>

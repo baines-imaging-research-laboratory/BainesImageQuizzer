@@ -4,44 +4,44 @@
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
-			<Path>ImageVolumes\PETCTFusion\CT1.nrrd</Path>
+			<Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\CT1.nrrd</Path>
 
 		</Image>
 		<Image Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Sagittal</DefaultOrientation>
-			<Path>ImageVolumes\PETCTFusion\CT1.nrrd</Path>
+			<Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\CT1.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Coronal</DefaultOrientation>
-			<Path>ImageVolumes\PETCTFusion\CT1.nrrd</Path>
+			<Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\CT1.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Foreground</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
-			<Path>ImageVolumes\PETCTFusion\PET1.nrrd</Path>
+			<Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\PET1.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Foreground</Layer>
 			<DefaultOrientation>Sagittal</DefaultOrientation>
-			<Path>ImageVolumes\PETCTFusion\PET1.nrrd</Path>
+			<Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\PET1.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Foreground</Layer>
 			<DefaultOrientation>Coronal</DefaultOrientation>
-			<Path>ImageVolumes\PETCTFusion\PET1.nrrd</Path>
+			<Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\PET1.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<DefaultDestination>Slice4</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Coronal</DefaultOrientation>
-			<Path>ImageVolumes\PETCTFusion\PET1.nrrd</Path>
+			<Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\PET1.nrrd</Path>
 		</Image>
 		<QuestionSet ID="PET PSMA Study" Descriptor="">
 			<Question Type="Radio" Descriptor="PET Reading">
@@ -55,43 +55,43 @@
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
-			<Path>ImageVolumes\PETCTFusion\CT2.nrrd</Path>
+			<Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\CT2.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Sagittal</DefaultOrientation>
-			<Path>ImageVolumes\PETCTFusion\CT2.nrrd</Path>
+			<Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\CT2.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="CT" RotateToAcquisition="Y">
 			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Coronal</DefaultOrientation>
-			<Path>ImageVolumes\PETCTFusion\CT2.nrrd</Path>
+			<Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\CT2.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<DefaultDestination>Red</DefaultDestination>
 			<Layer>Foreground</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
-			<Path>ImageVolumes\PETCTFusion\PET2.nrrd</Path>
+			<Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\PET2.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Foreground</Layer>
 			<DefaultOrientation>Sagittal</DefaultOrientation>
-			<Path>ImageVolumes\PETCTFusion\PET2.nrrd</Path>
+			<Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\PET2.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Foreground</Layer>
 			<DefaultOrientation>Coronal</DefaultOrientation>
-			<Path>ImageVolumes\PETCTFusion\PET2.nrrd</Path>
+			<Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\PET2.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="PET" RotateToAcquisition="Y" ColorTable='PET-Heat' >
 			<DefaultDestination>Slice4</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Coronal</DefaultOrientation>
-			<Path>ImageVolumes\PETCTFusion\PET2.nrrd</Path>
+			<Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\PET2.nrrd</Path>
 		</Image>
 		<QuestionSet ID="PET PSMA Study" Descriptor="">
 			<Question Type="Radio" Descriptor="PET Reading">
