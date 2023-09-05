@@ -304,8 +304,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         # File Picker
         self.qDBLocationFileDialog = qt.QFileDialog()
-        sDefaultWorkingDir = os.path.expanduser('~\Documents')
-        sDataLocation = self.qDBLocationFileDialog.getExistingDirectory(None, "SELECT DIRECTORY FOR IMAGE DATABASE", sDefaultWorkingDir, qt.QFileDialog.ShowDirsOnly )
+        sDefaultDataDir = os.path.join(self.oFilesIO.GetScriptedModulesPath(), 'Resources')
+        sDataLocation = self.qDBLocationFileDialog.getExistingDirectory(None, "SELECT DIRECTORY FOR IMAGE DATABASE", sDefaultDataDir,  qt.QFileDialog.ShowDirsOnly )
         
         if sDataLocation != '':
             self.oFilesIO.SetupUserAndDataDirs(sDataLocation)
