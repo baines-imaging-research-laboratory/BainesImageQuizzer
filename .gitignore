@@ -18,9 +18,9 @@ ImageQuizzer/Testing/Python/__pycache__/
 
 ImageQuizzer/Users/
 
-ImageQuizzer/ImageQuizzerData/Users/
+ImageQuizzer/Resources/ImageQuizzerData/Users/
 
-ImageQuizzer/ImageQuizzerData/SlicerDICOMDatabase/
+ImageQuizzer/Resources/ImageQuizzerData/SlicerDICOMDatabase/
 *.cproject
 ImageQuizzer/.vs/
 ImageQuizzer/out/
