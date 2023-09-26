@@ -562,6 +562,11 @@ class UtilsFilesIO:
                 if not (os.path.exists(sSmtpConfigFile)) :
                     sMsg = sMsg + '\nMissing smtp configuration file for request to email quiz results : ' + sSmtpConfigFile
             
+            sROIColorFile = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
+            if sROIColorFile != '':
+                sROIColorFilePath = os.path.join(self.GetXmlQuizDir(), sROIColorFile + '.txt')
+                sValidationMsg = self.ValidateROIColorFile(sROIColorFilePath)
+                sMsg = sMsg + sValidationMsg
             
             sValidationMsg = self.CheckForFileExistence(xRootNode)
             sMsg = sMsg + sValidationMsg
@@ -1314,6 +1319,30 @@ class UtilsFilesIO:
         if sMsg != '':
             sMsg = sMsg + '\n----------See Page: ' + sPageReference
 
+        return sMsg
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateROIColorFile(self, sFilePath):
+        
+        # color files cannot use an ID = 0 
+        # using ID=0 will cause images to disappear when segment editor is started
+        # syntax: id descriptor r g b a
+        # lines beginning with '#' are comments
+        sMsg = ''
+        
+        fh = open(sFilePath, "r")
+        lLines = fh.readlines()
+        
+        for sLine in lLines:
+            if sLine[:1] == "#":
+                pass
+            elif sLine[:1] == "0":
+                sMsg = "ROI Color File cannot have an entry with ID = '0'" \
+                        + "\n See file " + sFilePath
+                break
+            else:
+                pass
+            
         return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
