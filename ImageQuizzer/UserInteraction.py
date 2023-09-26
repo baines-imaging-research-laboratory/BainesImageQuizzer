@@ -116,8 +116,12 @@ class UserInteraction:
         # self.slDockPanel.setSizePolicy( qSize )
         #########################
 
-        # use 1/5 slicer border to 4/5 central widget ratio
-        slMainWindow.centralWidget().setFixedHeight(fDesktopHeight/5*4)
+        # set height = desktop height - statusbar height - menubar height - nonclient area height
+        fStatusBarHeight = slMainWindow.statusBar().geometry.height()
+        fNonClientAreaHeight = slMainWindow.geometry.y()       # initial y of main window is just below 'non-client' area
+        fMenuBarHeight = slMainWindow.moduleSelector().geometry.height()  # module selector is one tool  on the tool bar; use this for height
+        slMainWindow.centralWidget().setFixedHeight(fDesktopHeight - fStatusBarHeight - fNonClientAreaHeight - fMenuBarHeight)
+
         
         # disable zoom and pan controls from mouse right and center buttons 
         for sName in self.lViewingWindows:
