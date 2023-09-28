@@ -24,14 +24,7 @@ ImageQuizzerShutdown.bat
 
 ImageQuizzer/Code/Resources/ColorFiles/QuizzerROIColorTable.txt
 
-ImageQuizzer/Inputs/Config
-ImageQuizzer/Inputs/Scripts
-ImageQuizzer/Inputs/Images
-ImageQuizzer/Inputs/MasterQuiz
-
-ImageQuizzer/Outputs
-
-# do not ignore
-!ImageQuizzer.xsd
-!smtp_config_template.txt
+ImageQuizzer/Outputs/SlicerDicomDatabase
+smtp_config.txt
+ImageQuizzer/Inputs/Scripts/*.py
 
