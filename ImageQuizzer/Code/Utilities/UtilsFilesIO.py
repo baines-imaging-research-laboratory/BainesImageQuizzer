@@ -132,7 +132,7 @@ class UtilsFilesIO:
     
     #----------
     def GetScriptsDir(self):
-        return os.path.join(self.GetScriptedModulesPath(),'Inputs','Scripts')
+        return os.path.join(self.GetScriptedModulesPath(),'..','Inputs','Scripts')
     
     #----------
     def GetDirFromPath(self, sFullPath):
@@ -267,7 +267,7 @@ class UtilsFilesIO:
 
     #----------
     def GetConfigDir(self):
-        return os.path.join(self.GetScriptedModulesPath(),'Inputs','Config')
+        return os.path.join(self.GetScriptedModulesPath(),'..','Inputs','Config')
 
 
     #----------
@@ -350,13 +350,15 @@ class UtilsFilesIO:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetModuleDirs(self, sModuleName):
         self.SetScriptedModulesPath(sModuleName)
-        self._sXmlQuizDir = os.path.join(self._sScriptedModulesPath, 'Inputs','MasterQuiz')
+        self._sXmlQuizDir = os.path.join(self.GetScriptedModulesPath(),'..', 'Inputs','MasterQuiz')
         self.SetResourcesROIColorFilesDir()
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetScriptedModulesPath(self,sModuleName):
+        # from Slicer's Application settings> modules
         self._sScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
         self._sScriptedModulesPath = os.path.dirname(self._sScriptedModulesPath)
+        print('Path:',self._sScriptedModulesPath)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupROIColorFile(self, sCustomInputROIColorFile):
@@ -396,7 +398,7 @@ class UtilsFilesIO:
         #        to coordinate import/load of images
         
         
-        sParentOutputsDir = os.path.join(self.GetScriptedModulesPath(), 'Outputs')
+        sParentOutputsDir = os.path.join(self.GetScriptedModulesPath(),'..', 'Outputs')
         
         # if users directory does not exist yet, it will be created
         self.SetUsersParentDir(os.path.join(sParentOutputsDir, 'UsersResults'))
@@ -500,7 +502,7 @@ class UtilsFilesIO:
         """
         
         # get parent directory of the Image Quizzer module
-        sShutdownDir = os.path.abspath(os.path.join(self.GetScriptedModulesPath(), os.pardir))
+        sShutdownDir = os.path.abspath(os.path.join(self.GetScriptedModulesPath(),'..','..', os.pardir))
         sShutdownPath = os.path.join(sShutdownDir,'ImageQuizzerShutdown.bat')
 
         sCommand = 'RMDIR /S /Q ' + '"' + self.GetDICOMDatabaseDir() +'"'
