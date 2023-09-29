@@ -28,3 +28,4 @@ ImageQuizzer/Outputs/SlicerDicomDatabase
 smtp_config.txt
 ImageQuizzer/Inputs/Scripts/*.py
 
+ImageQuizzer/Outputs/UsersResults/
