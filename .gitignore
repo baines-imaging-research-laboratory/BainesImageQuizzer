@@ -4,30 +4,28 @@
 \.pydevproject
 
 *.pyc
+*.bak
+*.cproject
 
 ImageQuizzer/__pycache__/
 
 ImageQuizzer/ImageQuizzer\.templateOrig
-
-QuizProgress\.JPG
 
 \.idea/
 /.metadata/
 
 ImageQuizzer/Testing/Python/__pycache__/
 
-ImageQuizzer/Users/
-
-ImageQuizzer/Resources/ImageQuizzerData/Users/
-
-ImageQuizzer/Resources/ImageQuizzerData/SlicerDICOMDatabase/
-*.cproject
 ImageQuizzer/.vs/
 ImageQuizzer/out/
 ImageQuizzer/Testing/Python/out/
-ImageQuizzerShutdown.bat
-ImageQuizzer/Resources/ColorFiles/QuizzerROIColorTable.txt
 
-ImageQuizzer/Resources/Config/smtp_config.txt
-ImageQuizzer/ImageQuizzerData/
-*.bak
+ImageQuizzerShutdown.bat
+
+ImageQuizzer/Code/Resources/ColorFiles/QuizzerROIColorTable.txt
+
+ImageQuizzer/Outputs/SlicerDicomDatabase
+smtp_config.txt
+ImageQuizzer/Inputs/Scripts/*.py
+
+ImageQuizzer/Outputs/UsersResults/

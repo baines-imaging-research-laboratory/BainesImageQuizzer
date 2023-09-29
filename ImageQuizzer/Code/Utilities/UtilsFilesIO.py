@@ -42,7 +42,7 @@ class UtilsFilesIO:
         self._sXmlQuizPath = ''       # full path (dir/file) of quiz to copy to user
         self._sXmlQuizFilename = ''            # quiz filename only (no dir)
 
-        self._sDataParentDir = ''           # parent folder to images, DICOM database and users folders
+        self._sDataParentDir = ''           # parent folder to images
         
         self._sUsersParentDir = ''          # folder - parent dir to all user folders
         self._sUsername = ''                # name of user taking the quiz
@@ -99,6 +99,14 @@ class UtilsFilesIO:
         self._sDataParentDir = sDataDirInput
         
     #----------
+    def SetUsersParentDir(self, sDirInput):
+        self._sUsersParentDir = sDirInput
+        
+    #----------
+    def SetQuizUsername(self, sInput):
+        self._sUsername = sInput
+        
+    #----------
     def SetXmlQuizPathAndFilename(self, sSelectedQuizPath):
 
         self._sXmlQuizPath = os.path.join(self._sXmlQuizDir, sSelectedQuizPath)
@@ -109,7 +117,10 @@ class UtilsFilesIO:
         self._sUsername = sSelectedUser
         self._sUserDir = os.path.join(self.GetUsersParentDir(), self._sUsername)
         
-
+    #----------
+    def SetDICOMDatabaseDir(self, sInputDir):
+        self._sDICOMDatabaseDir = sInputDir
+    
     #----------
     #----------
     def GetDataParentDir(self):
@@ -118,6 +129,10 @@ class UtilsFilesIO:
     #----------
     def GetDICOMDatabaseDir(self):
         return self._sDICOMDatabaseDir
+    
+    #----------
+    def GetScriptsDir(self):
+        return os.path.join(self.GetScriptedModulesPath(),'..','Inputs','Scripts')
     
     #----------
     def GetDirFromPath(self, sFullPath):
@@ -251,8 +266,9 @@ class UtilsFilesIO:
         return os.path.join(self.GetResourcesROIColorFilesDir(), self.GetDefaultROIColorTableName() + '.txt')
 
     #----------
-    def GetResourcesConfigDir(self):
-        return os.path.join(self.GetScriptedModulesPath(),'Resources','Config')
+    def GetConfigDir(self):
+        return os.path.join(self.GetScriptedModulesPath(),'..','Inputs','Config')
+
 
     #----------
     #----------Page Groups
@@ -322,8 +338,8 @@ class UtilsFilesIO:
         print('DICOM DB dir:         ', self.GetDICOMDatabaseDir())
         print('User parent dir:      ', self.GetUsersParentDir())
         print('User dir:             ', self.GetUserDir())
-        print('User Quiz Results Dir:', self.GetUserQuizResultsDir())
-        print('User Quiz Reults path:', self.GetUserQuizResultsPath())
+        print('User Quiz Results dir:', self.GetUserQuizResultsDir())
+        print('User Quiz Results XML path:', self.GetUserQuizResultsPath())
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -332,15 +348,17 @@ class UtilsFilesIO:
     #-------------------------------------------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetModuleDirs(self, sModuleName, sSourceDirForQuiz):
+    def SetModuleDirs(self, sModuleName):
         self.SetScriptedModulesPath(sModuleName)
-        self._sXmlQuizDir = os.path.join(self._sScriptedModulesPath, sSourceDirForQuiz)
+        self._sXmlQuizDir = os.path.join(self.GetScriptedModulesPath(),'..', 'Inputs','MasterQuiz')
         self.SetResourcesROIColorFilesDir()
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetScriptedModulesPath(self,sModuleName):
+        # from Slicer's Application settings> modules
         self._sScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
         self._sScriptedModulesPath = os.path.dirname(self._sScriptedModulesPath)
+        print('Path:',self._sScriptedModulesPath)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupROIColorFile(self, sCustomInputROIColorFile):
@@ -360,49 +378,43 @@ class UtilsFilesIO:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupForUserQuizResults(self):
         
-
         sQuizFileRoot, sExt = os.path.splitext(self.GetQuizFilename())
-        
+         
         self._sUserQuizResultsDir = os.path.join(self.GetUserDir(), sQuizFileRoot)
         self._sUserQuizResultsPath = os.path.join(self.GetUserQuizResultsDir(), self.GetQuizFilename())
-
+ 
         # check that the user folder exists - if not, create it
         if not os.path.exists(self._sUserQuizResultsDir):
             os.makedirs(self._sUserQuizResultsDir)
-        
-    
+         
+     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetupUserAndDataDirs(self, sParentDirInput):
+    def SetupOutputDirs(self):
         
-        # user selected data directory - the parent
-        #    ImageVolumes subfolder will contain image volumes ready for import 
-        #    Quiz results in XML format are stored in the Users subfolders
-        #        as well as any saved label volumes
-        #    Slicer updates the dicom database in the SlicerDICOMDatabase subfolder
+        # the parent of the Outputs directory is  path/to/ImageQuizzermodule/Outputs
+        #    Quiz results in XML format are stored in the UsersResults subfolders
+        #        as well as any saved label volumes (contours, annotations)
+        #    Slicer updates the DICOM database in the SlicerDICOMDatabase subfolder
         #        to coordinate import/load of images
         
         
-        self._sDataParentDir = sParentDirInput
+        sParentOutputsDir = os.path.join(self.GetScriptedModulesPath(),'..', 'Outputs')
         
-        # all paths for images in the XML quiz files are relative to the data parent directory
-        
-#         #  importing will use this directory as the root
-#         self._sImageVolumeDataDir = os.path.join(sParentDirInput, 'ImageVolumes')
-
         # if users directory does not exist yet, it will be created
-        self._sUsersParentDir = os.path.join(sParentDirInput, 'Users')
+        self.SetUsersParentDir(os.path.join(sParentOutputsDir, 'UsersResults'))
         if not os.path.exists(self._sUsersParentDir):
             os.makedirs(self._sUsersParentDir)
-            
+                    
+        
         # create the DICOM database if it is not there ready for importing
-        self._sDICOMDatabaseDir = os.path.join(sParentDirInput, 'SlicerDICOMDatabase')
-        if not os.path.exists(self._sDICOMDatabaseDir):
-            os.makedirs(self._sDICOMDatabaseDir)
+        self.SetDICOMDatabaseDir( os.path.join(sParentOutputsDir, 'SlicerDICOMDatabase') )
+        if not os.path.exists(self.GetDICOMDatabaseDir()):
+            os.makedirs(self.GetDICOMDatabaseDir())
         
         # assign the database directory to the browser widget
         slDicomBrowser = slicer.modules.dicom.widgetRepresentation().self() 
         slDicomBrowserWidget = slDicomBrowser.browserWidget
-        slDicomBrowserWidget.dicomBrowser.setDatabaseDirectory(self._sDICOMDatabaseDir)
+        slDicomBrowserWidget.dicomBrowser.setDatabaseDirectory(self.GetDICOMDatabaseDir())
         
         # update the database through the dicom browser 
         # this clears out path entries that can no longer be resolved
@@ -410,19 +422,21 @@ class UtilsFilesIO:
         slDicomBrowserWidget.dicomBrowser.updateDatabase()
         
         # test opening the database
-        bSuccess, sMsg = self.OpenSelectedDatabase()
-        if not bSuccess:
-            self.oUtilsMsgs.DisplayWarning(sMsg)
+        if DICOMUtils.openDatabase(self.GetDICOMDatabaseDir()):
+            pass
+        else:
+            sMsg = 'Trouble opening SlicerDICOMDatabase in : '\
+                 + self.GetDICOMDatabaseDir()
+            self.oUtilsMsgs.DisplayError(sMsg)
+
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def PopulateUserQuizFolder(self):
             
-        # check if quiz file already exists in the user folder - if not, copy from Resources
-
-        # check if there is an existing file in the results directory (partially completed quiz)
+        # check if there is an existing file in the output users results directory (partially completed quiz)
+        #    if not - copy from the master quiz file in inputs to outputs directory
         if not os.path.isfile(self.GetUserQuizResultsPath()):
-            # file not found, copy file from Resources to User folder
-            #     first make sure selected quiz file exists in the source directory
+
             if not os.path.isfile(self.GetXmlQuizPath()):
                 sErrorMsg = 'Selected Quiz file does not exist'
                 self.oUtilsMsgs.DisplayWarning(sErrorMsg)
@@ -464,18 +478,6 @@ class UtilsFilesIO:
         return sPageDir
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def OpenSelectedDatabase(self):
-        
-        sMsg = ''
-        if DICOMUtils.openDatabase(self._sDICOMDatabaseDir):
-            return True, sMsg
-        else:
-            sMsg = 'Trouble opening SlicerDICOMDatabase in : '\
-                 + self._sDataParentDir\
-                 + '\n Reselect Image Quizzer data directory or contact administrator.'
-            return False, sMsg
-            
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetUniqueNumbers(self, liNumbers):
         ''' Utility to return the unique numbers from a given list of numbers.
         '''
@@ -500,7 +502,7 @@ class UtilsFilesIO:
         """
         
         # get parent directory of the Image Quizzer module
-        sShutdownDir = os.path.abspath(os.path.join(self.GetScriptedModulesPath(), os.pardir))
+        sShutdownDir = os.path.abspath(os.path.join(self.GetScriptedModulesPath(),'..','..', os.pardir))
         sShutdownPath = os.path.join(sShutdownDir,'ImageQuizzerShutdown.bat')
 
         sCommand = 'RMDIR /S /Q ' + '"' + self.GetDICOMDatabaseDir() +'"'
@@ -558,13 +560,16 @@ class UtilsFilesIO:
             sEmailResultsTo = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'EmailResultsTo')
             if sEmailResultsTo != '':
                 # ensure that the smtp config file exists
-                sSmtpConfigFile = os.path.join(self.GetResourcesConfigDir(), 'smtp_config.txt')
+                sSmtpConfigFile = os.path.join(self.GetConfigDir(), 'smtp_config.txt')
                 if not (os.path.exists(sSmtpConfigFile)) :
                     sMsg = sMsg + '\nMissing smtp configuration file for request to email quiz results : ' + sSmtpConfigFile
             
+            sROIColorFile = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
+            if sROIColorFile != '':
+                sROIColorFilePath = os.path.join(self.GetXmlQuizDir(), sROIColorFile + '.txt')
+                sValidationMsg = self.ValidateROIColorFile(sROIColorFilePath)
+                sMsg = sMsg + sValidationMsg
             
-            sValidationMsg = self.CheckForFileExistence(xRootNode)
-            sMsg = sMsg + sValidationMsg
             
             # check matches of LabelMapID with DisplayLabelMapID
             sValidationMsg = self.ValidateDisplayLabelMapID()
@@ -827,35 +832,41 @@ class UtilsFilesIO:
         return sMsg
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CheckForFileExistence(self, xRootNode):
+    def ValidateDatabaseLocation(self):
         ''' collect all file paths and ensure the file exists in the given database location
         '''
-        lsUniqueImagePaths = []
-        sMissingFiles = ''
-        sMissingFilesPrefix = 'Do you indicate the wrong Database directory? Check file path. \n\n'
         
-        lxPageNodes = self.oIOXml.GetChildren(xRootNode,'Page')
-        iPageNum = 0
-        for xPageNode in lxPageNodes:
-            iPageNum = iPageNum + 1
+        # open requested quiz xml 
+        bSuccess, xRootNode = self.oIOXml.OpenXml(self.GetXmlQuizPath(),'Session')
+        
+        if bSuccess:
             
-            lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
-            for xImageNode in lxImageNodes:
+            lsUniqueImagePaths = []
+            sMissingFiles = ''
+            sMissingFilesPrefix = 'Do you indicate the wrong Database directory? Check file path. \n\n'
+            
+            lxPageNodes = self.oIOXml.GetChildren(xRootNode,'Page')
+            iPageNum = 0
+            for xPageNode in lxPageNodes:
+                iPageNum = iPageNum + 1
                 
-                lxPathNodes = self.oIOXml.GetChildren(xImageNode, 'Path')
-                for xPathNode in lxPathNodes:
-                    sPath = self.oIOXml.GetDataInNode(xPathNode)
+                lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
+                for xImageNode in lxImageNodes:
                     
-                    if sPath in lsUniqueImagePaths:
-                        pass
-                    else:
-                        lsUniqueImagePaths.append(sPath)
-                        sFullPath = os.path.join(self.GetDataParentDir(), sPath)
-                        if not os.path.exists(sFullPath):
-                            if sMissingFiles == '':
-                                sMissingFiles = sMissingFiles + sMissingFilesPrefix
-                            sMissingFiles = sMissingFiles + 'Missing File... Page: ' + str(iPageNum) + '  File: ' + sFullPath + '\n'
-                
+                    lxPathNodes = self.oIOXml.GetChildren(xImageNode, 'Path')
+                    for xPathNode in lxPathNodes:
+                        sPath = self.oIOXml.GetDataInNode(xPathNode)
+                        
+                        if sPath in lsUniqueImagePaths:
+                            pass
+                        else:
+                            lsUniqueImagePaths.append(sPath)
+                            sFullPath = os.path.join(self.GetDataParentDir(), sPath)
+                            if not os.path.exists(sFullPath):
+                                if sMissingFiles == '':
+                                    sMissingFiles = sMissingFiles + sMissingFilesPrefix
+                                sMissingFiles = sMissingFiles + 'Missing File... Page: ' + str(iPageNum) + '  File: ' + sFullPath + '\n'
+                    
 
         return sMissingFiles
     
@@ -1314,6 +1325,30 @@ class UtilsFilesIO:
         if sMsg != '':
             sMsg = sMsg + '\n----------See Page: ' + sPageReference
 
+        return sMsg
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateROIColorFile(self, sFilePath):
+        
+        # color files cannot use an ID = 0 
+        # using ID=0 will cause images to disappear when segment editor is started
+        # syntax: id descriptor r g b a
+        # lines beginning with '#' are comments
+        sMsg = ''
+        
+        fh = open(sFilePath, "r")
+        lLines = fh.readlines()
+        
+        for sLine in lLines:
+            if sLine[:1] == "#":
+                pass
+            elif sLine[:1] == "0":
+                sMsg = "ROI Color File cannot have an entry with ID = '0'" \
+                        + "\n See file " + sFilePath
+                break
+            else:
+                pass
+            
         return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

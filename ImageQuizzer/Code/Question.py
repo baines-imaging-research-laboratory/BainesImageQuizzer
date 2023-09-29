@@ -1145,7 +1145,7 @@ class Button(Question):
         dictQButtons = {}
         i = 0
         while i < length:
-            element1 = os.path.join(oFilesIO.GetDataParentDir(),lsStoredOptions[i])
+            element1 = os.path.join(oFilesIO.GetScriptsDir(),lsStoredOptions[i])
             head, tail = os.path.split(element1)
             qButton = qt.QPushButton(str(i+1)+'-'+tail)
             newLayout.addWidget(qButton, i, 0)

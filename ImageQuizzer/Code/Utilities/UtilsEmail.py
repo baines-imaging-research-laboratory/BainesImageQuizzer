@@ -46,7 +46,7 @@ class UtilsEmail:
             
             if sEmailResultsTo != '':
                 bEmailRequest = True
-                sSmtpConfigFile = os.path.join(oFilesIO.GetResourcesConfigDir(), 'smtp_config.txt')
+                sSmtpConfigFile = os.path.join(oFilesIO.GetConfigDir(), 'smtp_config.txt')
                 
                 if sSmtpConfigFile != '':
                     self.sHostServer = self.ParseConfigFile(sSmtpConfigFile, 'smtp', 'host')

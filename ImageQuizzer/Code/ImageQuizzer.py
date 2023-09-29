@@ -55,18 +55,16 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         ScriptedLoadableModuleWidget.__init__(self,parent)
         
         sModuleName = 'ImageQuizzer'
-        sSourceDirForQuiz = 'Resources/XML'
-        
 
         self.oUtilsMsgs = UtilsMsgs()
         self.oFilesIO = UtilsFilesIO()
-        self.oFilesIO.SetModuleDirs(sModuleName, sSourceDirForQuiz)
+        self.oFilesIO.SetModuleDirs(sModuleName)
         
         # previous and current release dates
         # Note: Version 1.0 should be used with Slicer v4.11.20200930
         # self.sVersion = "Image Quizzer   v1.0 "  #  Release Date: May 10, 2022
         # Note: Version 2.0 should be used with Slicer v4.11.2021022
-        self.sVersion = "Image Quizzer v2.3.0" 
+        self.sVersion = "Image Quizzer v3.0" 
 
         sSlicerVersion = slicer.app.applicationVersion
         if sSlicerVersion != '4.11.20210226':
@@ -304,22 +302,31 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         # File Picker
         self.qDBLocationFileDialog = qt.QFileDialog()
-        sDefaultDataDir = os.path.join(self.oFilesIO.GetScriptedModulesPath(), 'Resources')
+        sDefaultDataDir = os.path.join(self.oFilesIO.GetScriptedModulesPath(), '..','Inputs','Images')
         sDataLocation = self.qDBLocationFileDialog.getExistingDirectory(None, "SELECT DIRECTORY FOR IMAGE DATABASE", sDefaultDataDir,  qt.QFileDialog.ShowDirsOnly )
         
         if sDataLocation != '':
-            self.oFilesIO.SetupUserAndDataDirs(sDataLocation)
-            
+            self.oFilesIO.SetDataParentDir(sDataLocation)
+       
             self.qLblDataLocation.setText(self.oFilesIO.GetDataParentDir())
             self.qQuizSelectionGrpBox.setEnabled(True)
             self.qUserGrpBox.setEnabled(True)
             
+            self.oFilesIO.SetupOutputDirs()  # dirs in UserResults folder will populate User names
+            
             # populate user name list in combo box
             sUsersParentDir = self.oFilesIO.GetUsersParentDir()
             lSubFolders = [f.name for f in os.scandir(sUsersParentDir) if f.is_dir()]
+            
             if os.getlogin() in lSubFolders:
                 lSubFolders.remove(os.getlogin())
-            self.comboGetUserName.addItems(lSubFolders)
+                
+            lCurrentItems = []
+            for i in range(self.comboGetUserName.count):
+                lCurrentItems.append(self.comboGetUserName.itemText(i))
+            for sSubFolder in lSubFolders:
+                if sSubFolder not in lCurrentItems:
+                    self.comboGetUserName.addItem(sSubFolder)
             
         else:
             sMsg = 'No location was selected for image database'
@@ -360,27 +367,33 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         sMsg = ''
         bSuccess = True
-        # open the database - if not successful, allow user to reselect
-        bDBSetupSuccess, sMsg = self.oFilesIO.OpenSelectedDatabase()
 
-        if not bDBSetupSuccess:
-            self.oUtilsMsgs.DisplayError(sMsg)
-            self.qUserLoginWidget.raise_()
-
-        else:
             
-            self.oFilesIO.SetUsernameAndDir(self.comboGetUserName.currentText)
+        self.oFilesIO.SetUsernameAndDir(self.comboGetUserName.currentText)
 
-            # check for errors in quiz xml layout before populating the user response folder
-            bSuccess, sMsg = self.oFilesIO.ValidateQuiz()
 
-            if bSuccess:
-                # create user and results folders if it doesn't exist
-                self.oFilesIO.SetupForUserQuizResults()
+            
+        # check for errors in quiz xml layout before populating the user response folder
+        bQuizValidated, sMsg = self.oFilesIO.ValidateQuiz()
     
-                ##### for debug... #####
-    #             self.oFilesIO.PrintDirLocations()
-                ########################
+
+        if bQuizValidated:
+            # create user and results folders if it doesn't exist
+            self.oFilesIO.SetupForUserQuizResults()
+
+            ##### for debug... #####
+            #self.oFilesIO.PrintDirLocations()
+            ########################
+            
+            
+            sMissingFiles = self.oFilesIO.ValidateDatabaseLocation()
+            if sMissingFiles != '':
+                sMsgMissigFiles = 'Database images are missing. ' + sMissingFiles \
+                                + '\nReselect the proper database location or contact your administrator.'
+                self.oUtilsMsgs.DisplayWarning(sMsgMissigFiles)
+                self.qUserLoginWidget.raise_()
+    
+            else:
     
     
                 # copy file from Resource into user folder
@@ -394,18 +407,9 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                     # start the session
                     self.oSession.RunSetup(self.oFilesIO, self.slicerMainLayout)
     
-                    
-#                     try:
-#                         #provide as much room as possible for the quiz
-#                         qDataProbeCollapsibleButton = slicer.util.mainWindow().findChild("QWidget","DataProbeCollapsibleWidget")
-#                         qDataProbeCollapsibleButton.collapsed = True
-#                         self.reloadCollapsibleButton.collapsed = True
-#                     except:
-#                         pass
+        else:
+            self.oUtilsMsgs.DisplayError(sMsg)
 
-            else:
-                self.oUtilsMsgs.DisplayError(sMsg)
-    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
