@@ -502,7 +502,7 @@ class UtilsFilesIO:
         """
         
         # get parent directory of the Image Quizzer module
-        sShutdownDir = os.path.abspath(os.path.join(self.GetScriptedModulesPath(),'..','..', os.pardir))
+        sShutdownDir = os.path.abspath(os.path.join(self.GetScriptedModulesPath(),'..', os.pardir))
         sShutdownPath = os.path.join(sShutdownDir,'ImageQuizzerShutdown.bat')
 
         sCommand = 'RMDIR /S /Q ' + '"' + self.GetDICOMDatabaseDir() +'"'

@@ -63,8 +63,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         # previous and current release dates
         # Note: Version 1.0 should be used with Slicer v4.11.20200930
         # self.sVersion = "Image Quizzer   v1.0 "  #  Release Date: May 10, 2022
-        # Note: Version 2.0 should be used with Slicer v4.11.2021022
-        self.sVersion = "Image Quizzer v3.0" 
+        # Note: Version 2.0 should be used with Slicer v4.11.20210226
+        self.sVersion = "Image Quizzer v3.1.0" 
 
         sSlicerVersion = slicer.app.applicationVersion
         if sSlicerVersion != '4.11.20210226':
@@ -139,7 +139,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
   
         slicer.util.setModuleHelpSectionVisible(False)
         slicer.modules.welcome.widgetRepresentation().setVisible(False)
-        
+        slicer.util.setPythonConsoleVisible(False)
+               
         slicer.util.mainWindow().showMaximized()
 ###########
         
