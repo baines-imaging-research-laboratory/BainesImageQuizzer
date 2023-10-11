@@ -757,58 +757,48 @@ class Session:
         # >>>>>>>>>>>>>>>>>>>>
         # Window/Level interactive mode
         self.qDisplayMgrGrpBox = qt.QGroupBox()
-        self.qDisplayMgrGrpBox.setTitle("Interactive Mode")
+        self.qDisplayMgrGrpBox.setTitle("Interactive Modes")
         self.qDisplayMgrGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
-        self.qDisplayMgrGrpBoxLayout = qt.QHBoxLayout()
+        self.qDisplayMgrGrpBoxLayout = qt.QGridLayout()
+        self.qDisplayMgrGrpBoxLayout.addLayout(0,0,1,3)
         self.qDisplayMgrGrpBox.setLayout(self.qDisplayMgrGrpBoxLayout)
         
-        qWindowLevelLabel = qt.QLabel("Window/Level: ")
-        self.qDisplayMgrGrpBoxLayout.addWidget(qWindowLevelLabel)
-        
-        self.btnWindowLevelOn = qt.QPushButton('On')
-        self.btnWindowLevelOn.enabled = True
-        self.btnWindowLevelOn.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
-        self.btnWindowLevelOn.connect('clicked(bool)',self.onWindowLevelOnClicked)
-        self.qDisplayMgrGrpBoxLayout.addWidget(self.btnWindowLevelOn)
-
-
-        self.btnWindowLevelOff = qt.QPushButton('Default Cursor')
-        self.btnWindowLevelOff.enabled = True
-        self.btnWindowLevelOff.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
-        self.btnWindowLevelOff.connect('clicked(bool)',self.onWindowLevelOffClicked)
-        self.qDisplayMgrGrpBoxLayout.addWidget(self.btnWindowLevelOff)
-        
         self.tabExtraToolsLayout.addWidget(self.qDisplayMgrGrpBox)
+
+        btnHidden = qt.QPushButton('')
+        btnHidden.enabled = False
+        btnHidden.setStyleSheet("QPushButton{ border:none }")
+        self.qDisplayMgrGrpBoxLayout.addWidget(btnHidden,0,0)
         
+        
+        self.btnWindowLevel = qt.QPushButton('Window / Level')
+        self.btnWindowLevel.enabled = True
+        self.btnWindowLevel.setCheckable(True)
+        self.btnWindowLevel.setStyleSheet("QPushButton{ background-color: rgb(173,220,237); color: black }")
+        self.btnWindowLevel.connect('clicked(bool)',self.onWindowLevelClicked)
+        self.qDisplayMgrGrpBoxLayout.addWidget(self.btnWindowLevel,0,1)
+
+        btnHidden = qt.QPushButton('')
+        btnHidden.enabled = False
+        btnHidden.setStyleSheet("QPushButton{ border:none }")
+        self.qDisplayMgrGrpBoxLayout.addWidget(btnHidden,0,2)
+
+
         # >>>>>>>>>>>>>>>>>>>>
         # Crosshairs
-        self.qCrossHairsGrpBox = qt.QGroupBox()
-        self.qCrossHairsGrpBox.setTitle('Crosshairs')
-        self.qCrossHairsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
-        self.qCrossHairsGrpBoxLayout = qt.QHBoxLayout()
-        self.qCrossHairsGrpBox.setLayout(self.qCrossHairsGrpBoxLayout)
         
-        qCrosshairsLabel = qt.QLabel("Use Shift key to display: ")
-        self.qCrossHairsGrpBoxLayout.addWidget(qCrosshairsLabel)
-        
-        self.btnCrosshairsOn = qt.QPushButton('On')
-        self.btnCrosshairsOn.enabled = True
-        self.btnCrosshairsOn.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
-        self.btnCrosshairsOn.connect('clicked(bool)',self.onCrosshairsOnClicked)
-        self.qCrossHairsGrpBoxLayout.addWidget(self.btnCrosshairsOn)
+        self.btnCrosshairs = qt.QPushButton('Crosshairs - use Shift key')
+        self.btnCrosshairs.enabled = True
+        self.btnCrosshairs.setCheckable(True)
+        self.btnCrosshairs.setStyleSheet("QPushButton{ background-color: rgb(173,220,237); color: black }")
+        self.btnCrosshairs.connect('clicked(bool)',self.onCrosshairsClicked)
+        self.qDisplayMgrGrpBoxLayout.addWidget(self.btnCrosshairs,0,3)
 
 
-        self.btnCrosshairsOff = qt.QPushButton('Off')
-        self.btnCrosshairsOff.enabled = True
-        self.btnCrosshairsOff.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
-        self.btnCrosshairsOff.connect('clicked(bool)',self.onCrosshairsOffClicked)
-        self.qCrossHairsGrpBoxLayout.addWidget(self.btnCrosshairsOff)
-
-        self.chkSliceIntersections = qt.QCheckBox('Slice Intersections')
-        self.chkSliceIntersections.stateChanged.connect(self.SliceIntersectionsStateChange)
-        self.qCrossHairsGrpBoxLayout.addWidget(self.chkSliceIntersections)
-
-        self.tabExtraToolsLayout.addWidget(self.qCrossHairsGrpBox)
+        btnHidden = qt.QPushButton('')
+        btnHidden.enabled = False
+        btnHidden.setStyleSheet("QPushButton{ border:none }")
+        self.qDisplayMgrGrpBoxLayout.addWidget(btnHidden,0,4)
 
         
         # >>>>>>>>>>>>>>>>>>>>
@@ -1306,36 +1296,31 @@ class Session:
             self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onCrosshairsOnClicked(self):
-        ''' activate the crosshairs tool
-        '''
-        slCrosshairNode = slicer.mrmlScene.GetNodeByID('vtkMRMLCrosshairNodedefault')
-        slCrosshairNode.SetCrosshairBehavior(1) # offset jump slice
-        slCrosshairNode.SetCrosshairMode(2)     # basic intersection
-    
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onCrosshairsOffClicked(self):
-        ''' activate the crosshairs tool
-        '''
-        slCrosshairNode = slicer.mrmlScene.GetNodeByID('vtkMRMLCrosshairNodedefault')
-        slCrosshairNode.SetCrosshairBehavior(1) # offset jump slice
-        slCrosshairNode.SetCrosshairMode(0)     # basic intersection
-    
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SliceIntersectionsStateChange(self, int):
-        viewNodeRed = slicer.mrmlScene.GetNodeByID('vtkMRMLSliceCompositeNodeRed')
-        viewNodeGreen = slicer.mrmlScene.GetNodeByID('vtkMRMLSliceCompositeNodeGreen')
-        viewNodeYellow = slicer.mrmlScene.GetNodeByID('vtkMRMLSliceCompositeNodeYellow')
+    def onWindowLevelClicked(self):
         
-        if self.chkSliceIntersections.isChecked():
-            viewNodeRed.SetSliceIntersectionVisibility(1)
-            viewNodeGreen.SetSliceIntersectionVisibility(1)
-            viewNodeYellow.SetSliceIntersectionVisibility(1)
+        if self.btnWindowLevel.isChecked():
+            self.btnWindowLevel.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+            slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.AdjustWindowLevel)
         else:
-            viewNodeRed.SetSliceIntersectionVisibility(0)
-            viewNodeGreen.SetSliceIntersectionVisibility(0)
-            viewNodeYellow.SetSliceIntersectionVisibility(0)
-
+            self.btnWindowLevel.setStyleSheet("QPushButton{ background-color: rgb(173,220,237); color: black }")
+            slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.ViewTransform)
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onCrosshairsClicked(self):
+        ''' activate the crosshairs tool
+        '''
+        if self.btnCrosshairs.isChecked():
+            
+            self.btnCrosshairs.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+            slCrosshairNode = slicer.mrmlScene.GetNodeByID('vtkMRMLCrosshairNodedefault')
+            slCrosshairNode.SetCrosshairBehavior(1) # offset jump slice
+            slCrosshairNode.SetCrosshairMode(2)     # basic intersection
+        else:
+            self.btnCrosshairs.setStyleSheet("QPushButton{ background-color: rgb(173,220,237); color: black }")
+            slCrosshairNode = slicer.mrmlScene.GetNodeByID('vtkMRMLCrosshairNodedefault')
+            slCrosshairNode.SetCrosshairBehavior(1) # offset jump slice
+            slCrosshairNode.SetCrosshairMode(0)     # basic intersection
+    
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1406,14 +1391,6 @@ class Session:
             sMsg = "onResetViewClicked: Error resetting the view after NPlanes (closeup) request.  \n\n" + tb 
             self.oUtilsMsgs.DisplayError(sMsg)
             
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onWindowLevelOnClicked(self):
-        slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.AdjustWindowLevel)
-        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onWindowLevelOffClicked(self):
-        slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.ViewTransform)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onContourDisplayStateChanged(self):
