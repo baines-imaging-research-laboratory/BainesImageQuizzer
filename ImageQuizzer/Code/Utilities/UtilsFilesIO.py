@@ -358,7 +358,7 @@ class UtilsFilesIO:
         # from Slicer's Application settings> modules
         self._sScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
         self._sScriptedModulesPath = os.path.dirname(self._sScriptedModulesPath)
-        print('Path:',self._sScriptedModulesPath)
+#         print('Path:',self._sScriptedModulesPath)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupROIColorFile(self, sCustomInputROIColorFile):
