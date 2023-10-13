@@ -1164,15 +1164,19 @@ class Button(Question):
         
         try:
             qBtn = self.dictQButtons[sScript]
+            # globals() runs the executable in the global namespace
+            #    passes global dictionary of the main context to exec()
+            exec(open(sScript).read(),globals())
+
             qBtn.setText(qBtn.text+'-Done')
             qBtn.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
-            exec(open(sScript).read())
 
         except:
             tb = traceback.format_exc()
-            sMsg = "onButtonClicked: Error opening script " + sScript \
+            qBtn.setStyleSheet("QPushButton{ background-color: rgb(245,159,159); color: black }")
+            sMsg = "onButtonClicked: Error running script. \nContact administrator\n" + sScript \
                    + "\n\n" + tb 
-            self.oMsgUtil.DisplayError(sMsg)
+            self.oMsgUtil.DisplayWarning(sMsg)
 
         
     #-----------------------------------------------
