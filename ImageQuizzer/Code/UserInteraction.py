@@ -78,6 +78,7 @@ class UserInteraction:
         '''
         
         slicer.util.setPythonConsoleVisible(False)
+#         slicer.util.setPythonConsoleVisible(True)    # for debug
 
         
         slMainWindow = slicer.util.mainWindow()
@@ -172,9 +173,10 @@ class UserInteraction:
     def onModifiedSlice(self, caller, event):
         
         self.CaptureCoordinates(self.fh, self.fhTemplate,  self.lViewingWindows)
+#         print('...Captured')
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CreateUserInteractionLog(self, oSession):
+    def CreateUserInteractionLog(self, oSession, sCaller=''):
         ''' Open the user interaction log
             Return the file handler for the current log.
         '''
@@ -213,7 +215,7 @@ m_fg(3-0),m_fg(3-1),m_fg(3-2),m_fg(3-3)\n')
             self.fh.flush()
         else:
             
-            self.InsertTransitionRow(self.fh, 'Re-entering Page')
+            self.InsertTransitionRow(self.fh, 'Re-entering Page-- ' + sCaller)
 
         # template for rows - excludes formating of matrices
         self.fhTemplate = '{:.0f}, {}, {}, {}, {},\
@@ -275,15 +277,15 @@ m_fg(3-0),m_fg(3-1),m_fg(3-2),m_fg(3-3)\n')
             
         self.fh.write(sAppendBreak)
         self.fh.flush()
-        
+       
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CloseInteractionLog(self, fh):
+    def CloseInteractionLog(self, fh, sCaller=''):
         ''' Given the currently open file handler, flush the buffer and close the log
         '''
         
-        self.InsertTransitionRow(fh, 'Leaving Page')
+        self.InsertTransitionRow(fh, 'Leaving Page --' + sCaller)
 
         if fh != None:
             fh.flush()

@@ -169,7 +169,7 @@ class Session:
         return self._bUserInteractionLog
     
     #----------
-    def SetInteractionLogOnOff(self, sState):
+    def SetInteractionLogOnOff(self, sState, sCaller=''):
         ''' Turn interaction log on:
                 create new log if one doesn't exist for the page or open for append
                 start the observers to watch for slice changes
@@ -179,17 +179,16 @@ class Session:
                 turn off observers to prevent logging of slice changes during transitions 
         '''
                 
-        
         if sState=='On':
-
+#             print('Log On *********')
             if self.GetUserInteractionLogRequest():
-                self.SetFileHandlerInteractionLog(self.oUserInteraction.CreateUserInteractionLog(self))
+                self.SetFileHandlerInteractionLog(self.oUserInteraction.CreateUserInteractionLog(self, sCaller))
                 self.oUserInteraction.AddObservers()
                 slicer.mrmlScene.InvokeEvent(vtk.vtkCommand.ModifiedEvent, self.oUserInteraction.onModifiedSlice('SessionSetup','CurrentSlice'))
             
         else: 
             if self.GetUserInteractionLogRequest():
-                self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog())
+                self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog(),sCaller)
                 self.oUserInteraction.RemoveObservers()
         
     
@@ -836,7 +835,7 @@ class Session:
         self.btnResetView = qt.QPushButton('Reset to default')
         self.btnResetView.enabled = True
         self.btnResetView.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
-        self.btnResetView.connect('clicked(bool)', self.onResetViewClicked)
+        self.btnResetView.connect('clicked(bool)', lambda: self.onResetViewClicked('NPlanes'))
         self.qDisplayOptionsGrpBoxLayout.addWidget(self.btnResetView,1,2)
 
         self.tabExtraToolsLayout.addWidget(self.qDisplayOptionsGrpBox)
@@ -1015,11 +1014,11 @@ class Session:
         try:        
             sMsg = ''
             
-            self.SetInteractionLogOnOff('Off')
+            self.SetInteractionLogOnOff('Off','Next')
                 
             self.DisableButtons()    
             if self.sViewingMode != 'Default':
-                self.onResetViewClicked()
+                self.onResetViewClicked('Next')
     
             if self.GetCurrentNavigationIndex() + 1 == len(self.GetNavigationList()):
     
@@ -1063,7 +1062,7 @@ class Session:
                     self.DisplayQuizLayout()
                     self.DisplayImageLayout()
 
-            self.SetInteractionLogOnOff('On')
+            self.SetInteractionLogOnOff('On','Next')
 
             self.EnableButtons()
                 
@@ -1080,11 +1079,11 @@ class Session:
         try:
             sMsg = ''
 
-            self.SetInteractionLogOnOff('Off')
+            self.SetInteractionLogOnOff('Off','Previous')
                 
             self.DisableButtons()    
             if self.sViewingMode != 'Default':
-                self.onResetViewClicked()
+                self.onResetViewClicked('Previous')
 
             bChangePageIndex = True
 
@@ -1117,7 +1116,7 @@ class Session:
                 self.DisplayQuizLayout()
                 self.DisplayImageLayout()
 
-            self.SetInteractionLogOnOff('On')
+            self.SetInteractionLogOnOff('On','Previous')
 
                    
             self.EnableButtons()
@@ -1157,7 +1156,7 @@ class Session:
             qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
             if qtAns == qt.QMessageBox.Ok:
 
-                self.SetInteractionLogOnOff('Off')
+                self.SetInteractionLogOnOff('Off','Exit')
 
                 if self.PerformSave(sCaller) and self.UpdateCompletionFlags(sCaller):
                     self.QueryThenSendEmailResults()
@@ -1175,7 +1174,7 @@ class Session:
             # an error in the save
             
             if not(bExit):
-                self.SetInteractionLogOnOff('On')
+                self.SetInteractionLogOnOff('On','Exit')
                 self.EnableButtons() 
         
                 self.progress.setValue(self.GetCurrentNavigationIndex())
@@ -1204,9 +1203,11 @@ class Session:
             try:        
                 sMsg = ''
 
-                self.SetInteractionLogOnOff('Off')
+                self.SetInteractionLogOnOff('Off','Repeat')
                 
                 self.DisableButtons()    
+                if self.sViewingMode != 'Default':
+                    self.onResetViewClicked('Repeat')
 
                 if self.PerformSave('NextBtn') and self.UpdateCompletionFlags('NextBtn'):
 
@@ -1228,7 +1229,7 @@ class Session:
                     
     
                 self.EnableButtons()
-                self.SetInteractionLogOnOff('On')
+                self.SetInteractionLogOnOff('On','Repeat')
                 
             except:
                 iPage = self.GetCurrentPageIndex() + 1
@@ -1328,6 +1329,8 @@ class Session:
         ''' display the requested image in the requested viewing mode
         '''
         try:
+            self.SetInteractionLogOnOff('Off','Changing View - Display View Button - NPlanes')
+
             if self.GetNPlanesComboBoxCount() > 0:
                 self.CaptureAndSaveImageState()
                 
@@ -1344,6 +1347,10 @@ class Session:
             else:
                 sMsg = 'No images have been loaded to display in an alternate viewing mode.'
                 self.oUtilsMsgs.DisplayWarning(sMsg)
+                
+            self.oUtilsMsgs.DisplayTimedMessage('***','Waiting',100) #force Slicer to refresh display before logging resumes
+            self.SetInteractionLogOnOff('On','Changing View - Display View Button - ' + self.qComboNPlanesList.currentText)
+
         except:
             tb = traceback.format_exc()
             sMsg = "onNPlanesViewClicked: Error setting the NPlanes view (closeup) request.  \n\n" + tb 
@@ -1361,7 +1368,7 @@ class Session:
 
         try:
             
-            self.SetInteractionLogOnOff('Off')
+            self.SetInteractionLogOnOff('Off','Changing View - Reset Button')
             
             sCaptureSuccessLevel, lsCurrentResponses, sMsg = self.CaptureNewResponses()
             self.CaptureAndSaveImageState()
@@ -1381,11 +1388,10 @@ class Session:
             self.ApplySavedImageState()
             
 
-            if sCaller != 'NPlanes':            
-                self.SetInteractionLogOnOff('On')
+            if sCaller == 'NPlanes':
+                self.oUtilsMsgs.DisplayTimedMessage('***','Waiting',100) #force Slicer to refresh display before logging resumes
+                self.SetInteractionLogOnOff('On','Changing View - Reset Button - caller: ' + sCaller)
                 
-            
-
         except:
             tb = traceback.format_exc()
             sMsg = "onResetViewClicked: Error resetting the view after NPlanes (closeup) request.  \n\n" + tb 
@@ -1435,7 +1441,7 @@ class Session:
     
             else:
                 
-                self.SetInteractionLogOnOff('Off')
+                self.SetInteractionLogOnOff('Off','Login')
                 self.oMaximizedWindowSize = SlicerWindowSize()
 
                 # >>>>>>>>>> Email feature <<<<<<<<<<
@@ -1500,7 +1506,7 @@ class Session:
                     
                 self.EnableButtons()
 
-                self.SetInteractionLogOnOff('On')
+                self.SetInteractionLogOnOff('On','Login')
 
 
 
