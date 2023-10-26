@@ -575,6 +575,10 @@ class UtilsFilesIO:
             sValidationMsg = self.ValidateDisplayLabelMapID()
             sMsg = sMsg + sValidationMsg
             
+            # check matches of BookmarkID with request 'GoToBookmark' attribute
+            sValidationMsg = self.ValidateGoToBookmarkRequest()
+            sMsg = sMsg + sValidationMsg
+            
             # >>>>>>>>>>>>>>>
             lxPageElements = self.oIOXml.GetChildren(xRootNode, 'Page')
             
@@ -1106,6 +1110,74 @@ class UtilsFilesIO:
         return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateGoToBookmarkRequest(self):
+        ''' For all instances of 'GoToBookmark', ensure that there is a corresponding
+            BookmarkID. This can help trap spelling mistakes. 
+            (This is not checked
+            for a 'previous instance' of BookmarkID if RandomizePageGroups attribute
+            is set to 'Y'.)
+        '''
+        sMsg = ''
+        l3tupGoToBookmarkIDs = []
+        l3tupBookmarkIDs = []
+        sRandomizeSetting = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'RandomizePageGroups')
+        if sRandomizeSetting == 'Y':
+            bTestForPrevious = False
+        else:
+            bTestForPrevious = True
+        
+        lxPageNodes = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
+        
+        # collect all instances of BookmarkID and GoToBookmarkID and which page they are set
+        for idxPage in range(len(lxPageNodes)):
+            xPageNode = lxPageNodes[idxPage]
+        
+            sBookmarkID = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'BookmarkID')
+            sGoToBookmarkID = ''
+            sGoToBookmarkRequest = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'GoToBookmark')
+            if sGoToBookmarkRequest != '':
+                sGoToBookmarkID = sGoToBookmarkRequest.split()[0]
+
+            if sBookmarkID != '':
+                l3tupBookmarkIDs.append([sBookmarkID, idxPage])
+            if sGoToBookmarkID != '':
+                l3tupGoToBookmarkIDs.append([sGoToBookmarkID, idxPage])
+                
+            
+        # for every instance of GoToBookmarkID, confirm there is a BookmarkID
+         
+        for idxGoToBookmarkID in range(len(l3tupGoToBookmarkIDs)):
+            tupGoToBookmarkIDItem = l3tupGoToBookmarkIDs[idxGoToBookmarkID]
+            sGoToBookmarkIDToSearch = tupGoToBookmarkIDItem[0]
+            iGoToBookmarkIDPage = tupGoToBookmarkIDItem[1]
+
+            bFoundMatch = False
+        
+            for idxBookmarkID in range(len(l3tupBookmarkIDs)):
+                
+                if not bFoundMatch:
+                    tupBookmarkIDItem = l3tupBookmarkIDs[idxBookmarkID]
+                    sBookmarkIDToCompare = tupBookmarkIDItem[0]
+                    iBookmarkIDPage = tupBookmarkIDItem[1]
+        
+                    if sBookmarkIDToCompare == sGoToBookmarkIDToSearch:
+                        if bTestForPrevious:
+                            if (iBookmarkIDPage < iGoToBookmarkIDPage):
+                                bFoundMatch = True
+                                break
+                        else:   # randomize is set , ignore page test
+                            bFoundMatch = True
+       
+        
+            if not bFoundMatch:
+                sMsg = sMsg + "\nMissing historical 'BookmarkID' setting to match 'GoToBookmark': " + sGoToBookmarkIDToSearch \
+                            + '\nSee Page #: '\
+                            + str(iGoToBookmarkIDPage + 1)
+        
+        return sMsg
+        
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ValidateDisplayLabelMapID(self):
         ''' For all instances of DisplayLabelMapID, ensure that there is a corresponding
             LabelMapID. This can help trap spelling mistakes. 
@@ -1153,10 +1225,10 @@ class UtilsFilesIO:
             for idxLabelMapID in range(len(l3tupLabelMapIDs)):
                 
                 if not bFoundMatch:
-                    tupLableMapIDItem = l3tupLabelMapIDs[idxLabelMapID]
-                    sLabelMapIDToCompare = tupLableMapIDItem[0]
-                    iLabelMapIDPage = tupLableMapIDItem[1]
-                    sLabelMapIDPath = tupLableMapIDItem[2]
+                    tupLabelMapIDItem = l3tupLabelMapIDs[idxLabelMapID]
+                    sLabelMapIDToCompare = tupLabelMapIDItem[0]
+                    iLabelMapIDPage = tupLabelMapIDItem[1]
+                    sLabelMapIDPath = tupLabelMapIDItem[2]
                     
                     if sLabelMapIDToCompare == sDisplayLabelMapIDToSearch:
                         if bTestForPrevious:
@@ -1196,6 +1268,7 @@ class UtilsFilesIO:
         sErrorMsgNoLoopOnHistoricalPage = "\nYou requested a label map merge but the previous Image with matching LabelMapID was not on a Page with attribute Loop='Y'. No merge can be done."
         sErrorMsgNoMatchingPageGroups = "\nYou requested a label map merge but the PageGroup numbers of this page do not match with the previous page that has the matching LabelMapID."
         sErrorMsgEmptyPageGroups = "\nYou requested a label map merge but the PageGroup numbers of this page are either empty or don't exist. Page Group numbers must match with the previous page that has the matching LabelMapID to be merged."
+        sErrorMsgLoopingNotAllowed = "\nThere can not be Looping on a Page with the 'MergeLabelMaps' attribute"
         
         sMergeLabelMaps = self.oIOXml.GetValueOfNodeAttribute(xImage, sAttributeName)
 
@@ -1225,6 +1298,9 @@ class UtilsFilesIO:
                 # look for Loop=Y on historical page
                 if self.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'Loop') != "Y":
                     raise Exception(sErrorMsgNoLoopOnHistoricalPage)
+
+                if self.oIOXml.GetValueOfNodeAttribute(xPage, 'Loop') == 'Y':
+                    raise Exception(sErrorMsgLoopingNotAllowed)
 
 
                 # look for matching PageGroup number (these might be empty strings)

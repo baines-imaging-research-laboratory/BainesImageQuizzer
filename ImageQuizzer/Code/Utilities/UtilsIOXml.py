@@ -393,6 +393,38 @@ class UtilsIOXml:
         return iNextInd
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetFirstXmlNodeWithMatchingAttributes(self, lxNodesToSearch, dictAttrib):
+        ''' Search the list of nodes.
+            Return first node and index that match the given  attributes.
+        '''
+        bAttribMatch = True
+
+        for idx, xNode in enumerate(lxNodesToSearch):
+
+            bAttribMatch = True # reinitialize for each page
+            
+            # get values of attributes to get a match
+            for attrib, sValueToMatch in dictAttrib.items():
+                
+                
+                if bAttribMatch:    #continue through all attributes 
+                    sStoredValue = self.GetValueOfNodeAttribute(xNode, attrib)
+                    
+                    if sStoredValue == sValueToMatch:
+                        bAttribMatch = True
+                    else:
+                        bAttribMatch = False
+                    
+            if bAttribMatch == False:
+                idx = -1
+                xNode = None
+            else:
+                # all attributes matched - exit loop
+                break
+                
+        return idx, xNode 
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetXmlPageAndChildFromAttributeHistory(self, iCrrentPageIndex, sChildToSearch, sImageAttributeToMatch, sAttributeValue):
         ''' Function will return the historical elements (page and child)  that contains the attribute requested for the search.
             This attribute is associated with a child of the 'Page' element.

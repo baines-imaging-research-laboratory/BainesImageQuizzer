@@ -178,18 +178,19 @@ class Session:
                 close currently open file
                 turn off observers to prevent logging of slice changes during transitions 
         '''
+
+        if self.GetQuizComplete() == False:   
+            if sState=='On':
+    #             print('Log On *********')
+                if self.GetUserInteractionLogRequest():
+                    self.SetFileHandlerInteractionLog(self.oUserInteraction.CreateUserInteractionLog(self, sCaller))
+                    self.oUserInteraction.AddObservers()
+                    slicer.mrmlScene.InvokeEvent(vtk.vtkCommand.ModifiedEvent, self.oUserInteraction.onModifiedSlice('SessionSetup','CurrentSlice'))
                 
-        if sState=='On':
-#             print('Log On *********')
-            if self.GetUserInteractionLogRequest():
-                self.SetFileHandlerInteractionLog(self.oUserInteraction.CreateUserInteractionLog(self, sCaller))
-                self.oUserInteraction.AddObservers()
-                slicer.mrmlScene.InvokeEvent(vtk.vtkCommand.ModifiedEvent, self.oUserInteraction.onModifiedSlice('SessionSetup','CurrentSlice'))
-            
-        else: 
-            if self.GetUserInteractionLogRequest():
-                self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog(),sCaller)
-                self.oUserInteraction.RemoveObservers()
+            else: 
+                if self.GetUserInteractionLogRequest():
+                    self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog(),sCaller)
+                    self.oUserInteraction.RemoveObservers()
         
     
     #----------
@@ -200,6 +201,26 @@ class Session:
     def GetFileHandlerInteractionLog(self):
         return self._fhInteractionLog
     
+    #----------
+    def SetGoToBookmarkRequestButton(self, xPageNode):
+
+        sGoToBookmarkRequest = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'GoToBookmark')
+        lsBookmarkRequest = []
+        if sGoToBookmarkRequest != '':
+
+            lsBookmarkRequest = sGoToBookmarkRequest.split()
+
+            if len(lsBookmarkRequest) > 1:
+                self._btnGoToBookmark.text = lsBookmarkRequest[1]
+            else:
+                self._btnGoToBookmark.text = "Return"
+
+            self._btnGoToBookmark.visible = True
+            self._btnGoToBookmark.enabled = True
+        else:
+            self._btnGoToBookmark.visible = False
+            self._btnGoToBookmark.enabled = False
+            
     #----------
     def SetPreviousResponses(self, lInputResponses):
         self._lsPreviousResponses = lInputResponses
@@ -246,7 +267,20 @@ class Session:
     #----------
     def GetNavigationIndicesAtIndex(self, iNavInd):
         return self._l4iNavigationIndices[iNavInd]
-    
+    #----------
+    def GetNavigationIndexForPage(self,iPageIndex):
+        ''' Returns first navigation index that matches the Page index given.
+            (Question sets are not taken into account.)
+        '''
+        iNavigationIndex = -1
+        for idx in range(len(self.GetNavigationList())):
+            if self.GetNavigationPage(idx) == iPageIndex:
+                iNavigationIndex = idx
+                break
+            
+        return iNavigationIndex
+        
+        
     #----------
     def NavigationListAppend(self, lNavIndices):
         self._l4iNavigationIndices.append(lNavIndices)
@@ -735,6 +769,15 @@ class Session:
         self._btnRepeat.visible = False
         self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
         self._btnRepeat.connect('clicked(bool)', self.onRepeatButtonClicked)
+
+
+        # Bookmark button
+        self._btnGoToBookmark = qt.QPushButton("Return")
+        self._btnGoToBookmark.toolTip = "Returns to pre-defined page"
+        self._btnGoToBookmark.enabled = True
+        self._btnGoToBookmark.visible = True
+        self._btnGoToBookmark.setStyleSheet("QPushButton{ background-color: rgb(136, 82, 191); color: white; font-weight: bold}")
+        self._btnGoToBookmark.connect('clicked(bool)', self.onGoToBookmarkButtonClicked)
         
 
         self.qButtonGrpBoxLayout.addWidget(self._btnExit)
@@ -743,6 +786,7 @@ class Session:
         self.qButtonGrpBoxLayout.addWidget(self._btnPrevious)
         self.qButtonGrpBoxLayout.addWidget(self._btnNext)
         self.qButtonGrpBoxLayout.addWidget(self._btnRepeat)
+        self.qButtonGrpBoxLayout.addWidget(self._btnGoToBookmark)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupExtraToolsButtons(self):
@@ -1076,52 +1120,14 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onPreviousButtonClicked(self):
         
-        try:
-            sMsg = ''
-
-            self.SetInteractionLogOnOff('Off','Previous')
-                
-            self.DisableButtons()    
-            if self.sViewingMode != 'Default':
-                self.onResetViewClicked('Previous')
-
-            bChangePageIndex = True
-
-            if self.GetCurrentNavigationIndex() > 0:
-                if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() - 1):
-                    bChangePageIndex = False  
             
-            if self.PerformSave('PreviousBtn'):
-                    
-                self.CaptureAndSaveImageState()
-
-                ########################################    
-                # set up for previous page
-                ########################################    
-    
-                slicer.mrmlScene.Clear()
-                self.SetCurrentNavigationIndex(self.GetCurrentNavigationIndex() - 1)
-                self.progress.setValue(self.GetCurrentNavigationIndex())
-                self.InitializeImageDisplayOrderIndices()
-        
-                if self.GetCurrentNavigationIndex() < 0:
-                    # reset to beginning
-                    self.SetCurrentNavigationIndex( 0 )
-                
-                self.AdjustToCurrentQuestionSet()
-                
-                if bChangePageIndex:
-                    self.SetupPageState(self.GetCurrentPageIndex())
-
-                self.DisplayQuizLayout()
-                self.DisplayImageLayout()
-
-            self.SetInteractionLogOnOff('On','Previous')
-
-                   
-            self.EnableButtons()
-
-
+        sMsg = ''
+        try:
+ 
+            self.SaveAndGoToPreviousPageDisplay('Previous', self.GetNavigationPage(self.GetCurrentNavigationIndex() - 1), self.GetCurrentNavigationIndex() - 1)
+             
+ 
+ 
         except:
             iPage = self.GetCurrentPageIndex() + 1
             tb = traceback.format_exc()
@@ -1418,6 +1424,121 @@ class Session:
                     slSegDisplayNode, slSegDataNode = oViewNode.GetSegmentationNodes(xPageNode)
                     self.oImageView.SetSegmentationOutlineOrFill(oViewNode, slSegDisplayNode)
                 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onGoToBookmarkButtonClicked(self):
+        ''' Function to change to previous bookmarked page
+        '''
+        # find previous page with the BookmarkID match
+        xPageNode = self.GetCurrentPageNode()
+
+        sGoToBookmarkID = ''
+        sGoToBookmarkRequest = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'GoToBookmark')
+        if sGoToBookmarkRequest != '':
+            sGoToBookmarkID = sGoToBookmarkRequest.split()[0]
+
+        # set up dictionary with value to match in historical pages
+        dictAttribToMatchInHistory = {}
+        dictAttribToMatchInHistory['BookmarkID'] = sGoToBookmarkID
+        
+        # all page nodes that match - ordered with most recent first
+        lxPageNodes = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(self.GetCurrentPageIndex(), dictAttribToMatchInHistory)
+
+        reRepSubstring= '-Rep[0-9]+'
+        dAttribForBookmark={}
+
+        for idx, xPageNode in enumerate(lxPageNodes):
+
+            xBookmarkedPageNode = lxPageNodes[idx]
+            
+            # strip the substring = "-Rep#' in case Repeat button was used - we need first page in that group
+            dAttribForBookmark['ID'] = re.sub(reRepSubstring,'',self.oIOXml.GetValueOfNodeAttribute(xBookmarkedPageNode,'ID') )
+            dAttribForBookmark['Descriptor'] = self.oIOXml.GetValueOfNodeAttribute(xBookmarkedPageNode,'Descriptor')
+
+            
+            
+        # get page and navigation indices
+        lxAllPageNodes = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
+        iBookmarkedPageIndex, xMatchingPageNode = self.oIOXml.GetFirstXmlNodeWithMatchingAttributes(lxAllPageNodes,dAttribForBookmark)
+        iBookmarkedNavigationIndex = self.GetNavigationIndexForPage(iBookmarkedPageIndex)
+        
+        
+        
+        
+#            
+#         sMsg = 'Leaving current screen - return to Bookmark page'\
+#                 + '\nCurrentNavigationIndex: ' + str(self.GetCurrentNavigationIndex()) \
+#                 + '\nCurrentPage (0-based): ' + str( self.GetCurrentPageIndex()) \
+#                 + '\nReturnToPage: '+ dAttribForBookmark['ID'] + '_' + dAttribForBookmark['Descriptor']\
+#                 + '\nPageIndex: ' + str(iBookmarkedPageIndex)\
+#                 + '\nNavigationIndex: ' + str(iBookmarkedNavigationIndex)
+#                 
+#         self.oUtilsMsgs.DisplayWarning(sMsg)
+        
+
+
+        try:
+            sMsg = ''
+
+            self.SaveAndGoToPreviousPageDisplay('GoToBookmark', iBookmarkedPageIndex, iBookmarkedNavigationIndex)
+
+        except:
+            iPage = self.GetCurrentPageIndex() + 1
+            tb = traceback.format_exc()
+            sMsg = "onGoToBookmarkButtonClicked: Error moving to bookmarked page. Current page: " + str(iPage) \
+                   + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
+        
+        
+        
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SaveAndGoToPreviousPageDisplay(self, sCaller, iNewPageIndex, iNewNavigationIndex):
+        
+        self.SetInteractionLogOnOff('Off',sCaller)
+            
+        self.DisableButtons()    
+        if self.sViewingMode != 'Default':
+            self.onResetViewClicked(sCaller)
+
+        bChangePageIndex = True
+
+        if self.GetCurrentNavigationIndex() > 0:
+            if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == iNewPageIndex:
+                bChangePageIndex = False  
+        
+        if self.PerformSave(sCaller):
+                
+            self.CaptureAndSaveImageState()
+
+            ########################################    
+            # set up for new display page
+            ########################################    
+
+            slicer.mrmlScene.Clear()
+            self.SetCurrentNavigationIndex(iNewNavigationIndex)
+            self.progress.setValue(self.GetCurrentNavigationIndex())
+            self.InitializeImageDisplayOrderIndices()
+    
+            if self.GetCurrentNavigationIndex() < 0:
+                # reset to beginning
+                self.SetCurrentNavigationIndex( 0 )
+            
+            self.AdjustToCurrentQuestionSet()
+            
+            if bChangePageIndex:
+                self.SetupPageState(self.GetCurrentPageIndex())
+
+            self.DisplayQuizLayout()
+            self.DisplayImageLayout()
+
+        self.SetInteractionLogOnOff('On', sCaller)
+
+               
+        self.EnableButtons()
+
+        
+        
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #-------------------------------------------
@@ -1783,6 +1904,7 @@ class Session:
                 self.SetPageLooping(False)
                 
             self.SetUserInteractionLogRequest(xPageNode)
+            self.SetGoToBookmarkRequestButton(xPageNode)
 
     
             if self.GetQuizComplete():
@@ -2409,10 +2531,15 @@ class Session:
         """
         
         try:
-            # only allow for writing of responses under certain conditions
-            #    - allow if the question set is marked for multiple responses allowed
-            #    - OR allow if the number of questions with responses already 
-            #      recorded is 'NoResponses' or 'PartialResponses' (not 'AllResponses')
+            '''
+                only allow for writing of responses under certain conditions
+                    - allow if the question set is marked for multiple responses allowed
+                    - OR allow if the number of questions with responses already 
+                      recorded is 'NoResponses' or 'PartialResponses' (not 'AllResponses')
+                    - OR allow if the current Page has not been marked as complete 
+                      indicating that there are multiple question sets and Prev or Next was
+                      used to move between them
+            '''
             
             # get from xml, the category of saved recorded responses to 
             #    determine whether the newly captured responses are to be written
@@ -2420,7 +2547,8 @@ class Session:
             
 
             if ( self.GetMultipleResponseAllowed() == True)  or \
-                ((self.GetMultipleResponseAllowed() == False) and (sQuestionsWithRecordedResponses != 'AllResponses') ):
+                ((self.GetMultipleResponseAllowed() == False) and (sQuestionsWithRecordedResponses != 'AllResponses') ) or \
+                ((self.GetMultipleResponseAllowed() == False) and (self.GetPageCompleteAttribute(self.GetCurrentNavigationIndex()) != 'Y') ):
 
                 # check to see if the responses for the question set match 
                 #    what was previously captured
