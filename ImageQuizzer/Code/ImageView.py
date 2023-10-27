@@ -150,19 +150,6 @@ class ImageView:
         
         bLoadSuccess = False
         
-        # progress bar set up for long image loads 
-        # initialize to 1% to get the bar to display, then reset to the proper maximum
-        progressBar = slicer.util.createProgressDialog( windowTitle="Working", autoClose=True)
-        progressBar.labelText = 'Loading images'
-        progressBar.setMaximum(100)
-        progressBar.setValue(1) 
-        slicer.app.processEvents() # force display
-        if len(self.lxImageNodes) == 0:
-            progressBar.close()
-            
-        else:
-            progressBar.setMaximum(len(self.lxImageNodes)) # reset for this build
-        
         # for each image
         for indImage in range(len(self.lxImageNodes)):
             
@@ -189,11 +176,8 @@ class ImageView:
                         + "\nExit 3D Slicer and restart the Image Quizzer with the correct database directory."
                 self.oUtilsMsgs.DisplayError(sMsg)
                  
-            progressBar.setValue(indImage + 1)
             slicer.app.processEvents()
         
-        # all images loaded
-        progressBar.close()
          
     #-----------------------------------------------
     #         Manage Views

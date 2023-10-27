@@ -1073,7 +1073,7 @@ class Session:
                 # bypass remainder of the 'next' button code
     
             else:
-                # this is not the last question set, do a save and display the next page
+                # this is not end of quiz, do a save and display the next page
                 bChangePageIndex = True
                 if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() + 1):
                     bChangePageIndex = False
@@ -1093,8 +1093,8 @@ class Session:
                         slicer.mrmlScene.Clear()
                     else:
                         # clear quiz widgets only
-                        for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
-                            self.oQuizWidgets.qQuizLayout.itemAt(i).widget().setParent(None)
+                        self.oQuizWidgets.ClearLayout(self.oQuizWidgets.qQuizLayout)
+
                 
                     self.SetCurrentNavigationIndex(self.GetCurrentNavigationIndex() + 1 )
                     self.progress.setValue(self.GetCurrentNavigationIndex())
@@ -1869,8 +1869,7 @@ class Session:
             
     
             # first clear any previous widgets (except push buttons)
-            for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
-                self.oQuizWidgets.qQuizLayout.itemAt(i).widget().setParent(None)
+            self.oQuizWidgets.ClearLayout(self.oQuizWidgets.qQuizLayout)
     
             
             bBuildSuccess, qWidgetQuestionSetForm = oQuestionSet.BuildQuestionSetForm()
@@ -2979,6 +2978,14 @@ class QuizWidgets:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ClearLayout(self, layout):
+        # remove widgets from layout - ready for new widgets
+        for i in reversed(range(layout.count())):
+            widget = layout.takeAt(i).widget()
+            if widget != None:
+                widget.deleteLater()
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CreateLeftLayoutAndWidget(self):
