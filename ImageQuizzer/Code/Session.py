@@ -895,7 +895,6 @@ class Session:
 
         qLineToolLabel = qt.QLabel('Ruler:')
         self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabel)
-        self.qLineToolsGrpBoxLayout.addSpacing(10)
         
         self.btnAddMarkupsLine = qt.QPushButton("Add new line")
         self.btnAddMarkupsLine.enabled = True
@@ -904,6 +903,13 @@ class Session:
         self.qLineToolsGrpBoxLayout.addWidget(self.btnAddMarkupsLine)
         self.qLineToolsGrpBoxLayout.addSpacing(10)
         
+        # Markup measurement visibility
+        self.qChkBoxMeasurementVisibility = qt.QCheckBox('Show length')
+        self.qChkBoxMeasurementVisibility.setChecked(True)
+        self.qChkBoxMeasurementVisibility.stateChanged.connect(self.onMeasurementVisibilityStateChanged)
+        self.qLineToolsGrpBoxLayout.addWidget(self.qChkBoxMeasurementVisibility)
+        self.qLineToolsGrpBoxLayout.addSpacing(10)
+
         # remove the last point of markup line created
         qLineToolLabelTrashPt = qt.QLabel('Remove last point:')
         self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabelTrashPt)
@@ -1424,6 +1430,21 @@ class Session:
                     slSegDisplayNode, slSegDataNode = oViewNode.GetSegmentationNodes(xPageNode)
                     self.oImageView.SetSegmentationOutlineOrFill(oViewNode, slSegDisplayNode)
                 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onMeasurementVisibilityStateChanged(self):
+        # display line measurements on/off
+        slMarkupNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsLineNode')
+        
+        for slNode in slMarkupNodes:
+            slDisplayNode = slNode.GetDisplayNode()
+            if self.qChkBoxMeasurementVisibility.isChecked():
+                slDisplayNode.PropertiesLabelVisibilityOn()
+            else:
+                slDisplayNode.PropertiesLabelVisibilityOff()
+
+        slMarkupNodes.UnRegister(slicer.mrmlScene)    #cleanup memory
+
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onGoToBookmarkButtonClicked(self):
         ''' Function to change to previous bookmarked page
