@@ -66,6 +66,7 @@ class Session:
         self._bRandomizeRequired = False
         self._bUserInteractionLog = False
         self._fhInteractionLog = None
+        self._fContourToolRadius = 0
        
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
@@ -681,6 +682,21 @@ class Session:
         self.SetSliderToolFromContourOpacity(self.GetSessionContourOpacityDefault())    # tool widget Opacity
         self.SetContourOpacityFromSliderValue(self.qVisibilityOpacity.value)            # image view property
 
+    #----------
+    def SetContourToolRadius(self, xPageNode):
+        
+        sContourRadius = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ContourToolRadius')
+        
+        if sContourRadius != '':
+            self._fContourToolRadius = float(sContourRadius)
+        else:
+            self._fContourToolRadius = 0.0
+        
+        slicer.modules.quizzereditor.widgetRepresentation().self().SetContourToolRadius(self._fContourToolRadius)        
+    #----------
+    def GetCountourToolRadius(self):
+        return self._fContourToolRadius
+    
     #----------
     def SetRandomizeRequired(self, sYN=None):
         # set randomize required to input value (from unit tests) or from the stored xml attribute
@@ -1925,6 +1941,7 @@ class Session:
                 
             self.SetUserInteractionLogRequest(xPageNode)
             self.SetGoToBookmarkRequestButton(xPageNode)
+            self.SetContourToolRadius(xPageNode)
 
     
             if self.GetQuizComplete():

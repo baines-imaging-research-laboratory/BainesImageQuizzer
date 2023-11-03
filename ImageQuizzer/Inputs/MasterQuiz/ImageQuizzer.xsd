@@ -39,6 +39,7 @@
 		<xs:attribute name="UserInteractionLog" type="yesnoType" default="N"/>
 		<xs:attribute name="GoToBookmark" type="listTypeStrings"/>
 		<xs:attribute name="BookmarkID" type="xs:string"/>
+		<xs:attribute name="ContourToolRadius" type="xs:float" />
 	</xs:complexType>
 </xs:element>
 

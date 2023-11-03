@@ -410,6 +410,15 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   def GetHelperBox(self):
       return self.helper
   
+  # get/set to transfer Image Quizzer request for a specific contour tool radius
+      
+  def SetContourToolRadius(self, fValue):
+      self.fContourRadius = fValue
+  
+  def GetContourToolRadius(self):
+      
+      return self.fContourRadius
+  
 ###
 #################################################
 
