@@ -353,6 +353,7 @@ class Session:
             self._bSegmentationModule = True
             self._iSegmentationTabIndex = self.oQuizWidgets.qTabWidget.count - 1
             self.oQuizWidgets.qTabWidget.setTabEnabled(self._iSegmentationTabIndex, True)
+            self.InitializeTabSettings()
             
         else:
             self._bSegmentationModule = False
@@ -1059,9 +1060,25 @@ class Session:
     def onTabChanged(self):
         ''' When changing tabs reset segment editor interface
             to force user to reset the volume to be contoured.
+            Ensure window/level tool is turned off.
         '''
-        self.SetSegmentationTabDefaults()
+
+        self.btnWindowLevel.setChecked(False)
+        self.onWindowLevelClicked()
     
+    
+        # when moving off the Segment Editor tab
+        if self.iPreviousTabIndex == 2:
+            self.CaptureEditorSettings()
+            self.InitializeNullEditorSettings()
+            
+        # when returning to the Segment Editor tab
+        if self.oQuizWidgets.qTabWidget.currentIndex == 2:
+            self.ResetEditorSettings()
+
+        self.iPreviousTabIndex = self.oQuizWidgets.qTabWidget.currentIndex
+    
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onNextButtonClicked(self):
 
@@ -1096,9 +1113,9 @@ class Session:
     
             else:
                 # this is not end of quiz, do a save and display the next page
-                bChangePageIndex = True
+                bChangeXmlPageIndex = True
                 if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() + 1):
-                    bChangePageIndex = False
+                    bChangeXmlPageIndex = False
                 
 
                 if self.PerformSave('NextBtn') and self.UpdateCompletionFlags('NextBtn'):
@@ -1122,7 +1139,7 @@ class Session:
                     self.progress.setValue(self.GetCurrentNavigationIndex())
                     self.InitializeImageDisplayOrderIndices()
                     
-                    if bChangePageIndex:
+                    if bChangeXmlPageIndex:
                         self.SetupPageState(self.GetCurrentPageIndex())
                         
                     self.DisplayQuizLayout()
@@ -1537,11 +1554,11 @@ class Session:
         if self.sViewingMode != 'Default':
             self.onResetViewClicked(sCaller)
 
-        bChangePageIndex = True
+        bChangeXmlPageIndex = True
 
         if self.GetCurrentNavigationIndex() > 0:
             if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == iNewPageIndex:
-                bChangePageIndex = False  
+                bChangeXmlPageIndex = False  
         
         if self.PerformSave(sCaller):
                 
@@ -1551,7 +1568,6 @@ class Session:
             # set up for new display page
             ########################################    
 
-            slicer.mrmlScene.Clear()
             self.SetCurrentNavigationIndex(iNewNavigationIndex)
             self.progress.setValue(self.GetCurrentNavigationIndex())
             self.InitializeImageDisplayOrderIndices()
@@ -1562,7 +1578,8 @@ class Session:
             
             self.AdjustToCurrentQuestionSet()
             
-            if bChangePageIndex:
+            if bChangeXmlPageIndex:
+                slicer.mrmlScene.Clear()
                 self.SetupPageState(self.GetCurrentPageIndex())
 
             self.DisplayQuizLayout()
@@ -1965,10 +1982,6 @@ class Session:
                         self.SegmentationTabEnabler(False)
                         self.EnableMarkupLinesTF(False)
                         
-                if self.GetSegmentationTabIndex() > 0:
-                    # clear Master and Merge selector boxes
-                    oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
-                    oQuizzerEditorHelperBox.setMasterVolume(None)
 
             ################################################
                 
@@ -2134,7 +2147,8 @@ class Session:
             else:
                 if sCaller != 'ResetView':
                     self.oQuizWidgets.qTabWidget.setCurrentIndex(0) # move to Quiz tab
-                self.SetSegmentationTabDefaults()
+
+                self.InitializeTabSettings()
                     
                 
                 if self.oFilesIO.SaveLabelMaps(self, sCaller):
@@ -2212,13 +2226,43 @@ class Session:
         return bPageComplete
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetSegmentationTabDefaults(self):
+    def InitializeNullEditorSettings(self):
         
-        if self.GetSegmentationTabIndex() > 0:
-            slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
-            slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
-            slicer.modules.quizzereditor.widgetRepresentation().self().helper.setMasterVolume(None)
+        slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
+        slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
+        slicer.modules.quizzereditor.widgetRepresentation().self().helper.setMasterVolume(None)
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def InitializeTabSettings(self):
+        self.slEditorMasterVolume = None
+        self.slEditorCurrentTool = 'DefaultTool'
+        self.iPreviousTabIndex = 0
+        
+        self.btnWindowLevel.setChecked(False)
+        self.onWindowLevelClicked()
+        self.btnCrosshairs.setChecked(False)
+        self.onCrosshairsClicked()
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CaptureEditorSettings(self):
+        
+        self.slEditorCurrentTool = EditUtil.getCurrentEffect()
+        self.slEditorMasterVolume = slicer.modules.quizzereditor.widgetRepresentation().self().helper.masterSelector.currentNode()
+        self.fCurrentContourRadius = EditUtil.getParameterNode().GetParameter("PaintEffect,radius")
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ResetEditorSettings(self):
+        
+        if self.slEditorMasterVolume != None:
+            # note : this order is important
+            slicer.modules.quizzereditor.widgetRepresentation().self().helper.setMasterVolume(self.slEditorMasterVolume)
+            slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(True)
+            EditUtil.setCurrentEffect(self.slEditorCurrentTool)
+            EditUtil.getParameterNode().SetParameter("PaintEffect,radius", self.fCurrentContourRadius)
+            
+        else:
+            self.InitializeNullEditorSettings()
+            
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureNewResponses(self):
         ''' When moving to another display of Images and QuestionSet (from pressing Next or Previous)

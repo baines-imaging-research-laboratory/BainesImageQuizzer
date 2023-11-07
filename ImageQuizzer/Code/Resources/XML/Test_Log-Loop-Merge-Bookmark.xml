@@ -44,7 +44,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="IGPC2026" Descriptor="Loop_1QS" LinkViews="Y" EnableSegmentEditor="Y" Loop="Y" BookmarkID="Loop1QS" UserInteractionLog="Y">
+	<Page ID="IGPC2026" Descriptor="Loop_1QS" LinkViews="Y" EnableSegmentEditor="Y" Loop="Y" BookmarkID="Loop1QS" UserInteractionLog="Y" ContourToolRadius="6">
 		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" LabelMapID="DCE-contour">
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
@@ -71,7 +71,7 @@
 			</Question>
 		</QuestionSet>
 	</Page>
-	<Page ID="IGPC2026" Descriptor="Loop_2QS" LinkViews="Y" EnableSegmentEditor="Y" Loop="Y" GoToBookmark="Recalibrate ABORT" PageGroup="3" UserInteractionLog="Y">
+	<Page ID="IGPC2026" Descriptor="Loop_2QS" LinkViews="Y" EnableSegmentEditor="Y" Loop="Y" GoToBookmark="Recalibrate ABORT" PageGroup="3" UserInteractionLog="Y"  ContourToolRadius="3">
 		<Image Type="VolumeSequence" ID="DCE" RotateToAcquisition="Y" LabelMapID="DCE-contour">
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>

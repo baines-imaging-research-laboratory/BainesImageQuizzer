@@ -403,20 +403,12 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   #->> TODO: check to make sure editor module smoothly handles interactive changes to the master and merge nodes
 
 
-############### SETUP FOR IMAGE QUIZZER - Customize ############
-###
-#     getter for helper box to access methods
-#
-  def GetHelperBox(self):
-      return self.helper
+############### SETUP FOR IMAGE QUIZZER - Customize CJ ############
   
   # get/set to transfer Image Quizzer request for a specific contour tool radius
-      
   def SetContourToolRadius(self, fValue):
       self.fContourRadius = fValue
-  
   def GetContourToolRadius(self):
-      
       return self.fContourRadius
   
 ###
