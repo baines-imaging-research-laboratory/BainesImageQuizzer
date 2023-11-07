@@ -58,7 +58,6 @@ class Session:
         self._bAllowMultipleResponse = False
         self._bRequestToEnableSegmentEditor = False
         self._bSegmentationModule = False
-        self._iSegmentationTabIndex = -1   # default
         self._bPageLooping = False
         self._sSessionContourVisibility = 'Outline'
         self._sSessionContourOpacity = 1.0
@@ -67,6 +66,8 @@ class Session:
         self._bUserInteractionLog = False
         self._fhInteractionLog = None
         self._fContourToolRadius = 0
+        self._dictTabIndices = {'Quiz':0, 'ExtraTools':-1, 'SegmentEditor':-1}  #defaults
+        self._iPreviousTabIndex = 0
        
         self.oFilesIO = None
         self.oIOXml = UtilsIOXml()
@@ -92,7 +93,7 @@ class Session:
     def __del__(self):
 
         # clean up of editor observers and nodes that may cause memory leaks (color table?)
-        if self.GetSegmentationTabIndex() > 0:
+        if self.GetTabIndex('SegmentEditor') > 0:
             slicer.modules.quizzereditor.widgetRepresentation().self().exit()
 
     #----------
@@ -145,6 +146,22 @@ class Session:
     def LoginTime(self):
         return self._sLoginTime
     
+    #----------
+    def SetTabIndex(self, sTabName, iTabIndex):
+        self._dictTabIndices[sTabName] = iTabIndex
+        
+    #----------
+    def GetTabIndex(self, sTabName):
+        return self._dictTabIndices[sTabName]
+        
+    #----------
+    def SetPreviousTabIndex(self, iTabIndex):
+        self._iPreviousTabIndex = iTabIndex
+        
+    #----------
+    def GetPreviousTabIndex(self):
+        return self._iPreviousTabIndex
+
     #----------
     def SetEmailResultsRequest(self, bInput):
         self._bEmailResults = bInput
@@ -337,12 +354,11 @@ class Session:
         # add extra tools tab to quiz widget
         self.tabExtraTools = qt.QWidget()
         self.oQuizWidgets.qTabWidget.addTab(self.tabExtraTools,"Extra Tools")
-        self._iExtraToolsTabIndex = self.oQuizWidgets.qTabWidget.count - 1
-        self.oQuizWidgets.qTabWidget.setTabEnabled(self._iExtraToolsTabIndex, True)
+        self.SetTabIndex('ExtraTools',self.oQuizWidgets.qTabWidget.count - 1)
+        self.oQuizWidgets.qTabWidget.setTabEnabled(self.GetTabIndex('ExtraTools'), True)
         
         widget = self.SetupExtraToolsButtons()
         self.tabExtraTools.setLayout(widget)
-
 
     #----------
     def AddSegmentationModule(self, bTF):
@@ -351,8 +367,8 @@ class Session:
             # add segment editor tab to quiz widget
             self.oQuizWidgets.qTabWidget.addTab(slicer.modules.quizzereditor.widgetRepresentation(),"Segment Editor")
             self._bSegmentationModule = True
-            self._iSegmentationTabIndex = self.oQuizWidgets.qTabWidget.count - 1
-            self.oQuizWidgets.qTabWidget.setTabEnabled(self._iSegmentationTabIndex, True)
+            self.SetTabIndex('SegmentEditor', self.oQuizWidgets.qTabWidget.count - 1)
+            self.oQuizWidgets.qTabWidget.setTabEnabled(self.GetTabIndex('SegmentEditor'), True)
             self.InitializeTabSettings()
             
         else:
@@ -361,15 +377,11 @@ class Session:
     #----------
     def SegmentationTabEnabler(self, bTF):
 
-        self.oQuizWidgets.qTabWidget.setTabEnabled(self.GetSegmentationTabIndex(), bTF)
-        
-    #----------
-    def GetSegmentationTabIndex(self):
-        return self._iSegmentationTabIndex
+        self.oQuizWidgets.qTabWidget.setTabEnabled(self.GetTabIndex('SegmentEditor') , bTF)
         
     #----------
     def GetSegmentationTabEnabled(self):
-        bTF = self.oQuizWidgets.qTabWidget.isTabEnabled(self.GetSegmentationTabIndex())
+        bTF = self.oQuizWidgets.qTabWidget.isTabEnabled(self.GetTabIndex('SegmentEditor') )
         return bTF
     
     #----------
@@ -1068,15 +1080,15 @@ class Session:
     
     
         # when moving off the Segment Editor tab
-        if self.iPreviousTabIndex == 2:
+        if self.GetPreviousTabIndex() == self.GetTabIndex('SegmentEditor'):
             self.CaptureEditorSettings()
             self.InitializeNullEditorSettings()
             
         # when returning to the Segment Editor tab
-        if self.oQuizWidgets.qTabWidget.currentIndex == 2:
+        if self.oQuizWidgets.qTabWidget.currentIndex == self.GetTabIndex('SegmentEditor'):
             self.ResetEditorSettings()
 
-        self.iPreviousTabIndex = self.oQuizWidgets.qTabWidget.currentIndex
+        self.SetPreviousTabIndex(self.oQuizWidgets.qTabWidget.currentIndex)
     
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1113,15 +1125,11 @@ class Session:
     
             else:
                 # this is not end of quiz, do a save and display the next page
-                bChangeXmlPageIndex = True
-                if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() + 1):
-                    bChangeXmlPageIndex = False
                 
-
                 if self.PerformSave('NextBtn') and self.UpdateCompletionFlags('NextBtn'):
                         
                     self.CaptureAndSaveImageState()
-                    
+
                     ########################################    
                     # set up for next page
                     ########################################    
@@ -1130,11 +1138,13 @@ class Session:
                     if self.CheckForLastQuestionSetForPage() == True:
                         self._loQuestionSets = []
                         slicer.mrmlScene.Clear()
+                        bChangeXmlPageIndex = True
                     else:
                         # clear quiz widgets only
                         self.oQuizWidgets.ClearLayout(self.oQuizWidgets.qQuizLayout)
+                        bChangeXmlPageIndex = False
 
-                
+
                     self.SetCurrentNavigationIndex(self.GetCurrentNavigationIndex() + 1 )
                     self.progress.setValue(self.GetCurrentNavigationIndex())
                     self.InitializeImageDisplayOrderIndices()
@@ -1142,6 +1152,7 @@ class Session:
                     if bChangeXmlPageIndex:
                         self.SetupPageState(self.GetCurrentPageIndex())
                         
+                    self.InitializeTabSettings()
                     self.DisplayQuizLayout()
                     self.DisplayImageLayout()
 
@@ -1269,6 +1280,7 @@ class Session:
                     self.progress.setValue(self.GetCurrentNavigationIndex())
                     
                     self.SetupPageState(self.GetCurrentPageIndex())
+                    self.InitializeTabSettings()
                     self.DisplayQuizLayout()
                     self.DisplayImageLayout()
                     
@@ -1582,6 +1594,7 @@ class Session:
                 slicer.mrmlScene.Clear()
                 self.SetupPageState(self.GetCurrentPageIndex())
 
+            self.InitializeTabSettings()
             self.DisplayQuizLayout()
             self.DisplayImageLayout()
 
@@ -2148,8 +2161,6 @@ class Session:
                 if sCaller != 'ResetView':
                     self.oQuizWidgets.qTabWidget.setCurrentIndex(0) # move to Quiz tab
 
-                self.InitializeTabSettings()
-                    
                 
                 if self.oFilesIO.SaveLabelMaps(self, sCaller):
                     self.oFilesIO.SaveMarkupLines(self)
@@ -2236,7 +2247,7 @@ class Session:
     def InitializeTabSettings(self):
         self.slEditorMasterVolume = None
         self.slEditorCurrentTool = 'DefaultTool'
-        self.iPreviousTabIndex = 0
+        self.SetPreviousTabIndex(0)
         
         self.btnWindowLevel.setChecked(False)
         self.onWindowLevelClicked()
