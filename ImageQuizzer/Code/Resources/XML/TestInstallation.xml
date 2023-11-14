@@ -68,6 +68,9 @@
 				<Option>If you exit your responses will be saved.</Option>
 				<Option>Restarting the quiz will resume where you left off.</Option>
 			</Question>
+			<Question Type="CheckBox" Descriptor="Resume Test">
+				<Option>Check when resumed.</Option>
+			</Question>
 		</QuestionSet>
 	</Page>
 	<Page ID="Pt Dicom" Descriptor="DicomSeries"  AllowMultipleResponse="Y">
@@ -99,7 +102,7 @@
 				<Option>No</Option>
 			</Question>
 			<Question Type="CheckBox"  Descriptor="Using the Extra Tools change the viewing window configuration:">
-				<Option>Select a single viewing window (eg. Red only)</Option>
+				<Option>Select a single viewing window (eg. Axial only)</Option>
 				<Option>Return to default view</Option>
 			</Question>
 		</QuestionSet>
@@ -126,9 +129,7 @@
 		<QuestionSet ID="QS-Checkup" Descriptor="Test more 3D Slicer features">
 			<Question Type="CheckBox"  Descriptor="Try the following:">
 				<Option>Adjust window-level</Option>
-				<Option>Return to default mouse pointer</Option>
 				<Option>Crosshairs (use Shift key)</Option>
-				<Option>Slice Intersections on/off</Option>
 				<Option>Explore Data Probe</Option>
 			</Question>
 		</QuestionSet>
@@ -165,7 +166,7 @@
 				<Option>Move to the Segment Editor tab to begin creating segments.</Option>
 				<Option>   1. Select the Master Volume to edit.</Option>
 				<Option>   2. Open the editor tools collapsible button.</Option>
-				<Option>   3. Select the tool for editing (some are not available).</Option>
+				<Option>   3. Select the tool for editing.</Option>
 			</Question>
 			<Question Type="CheckBox"  Descriptor="Try the following:">
 				<Option>Paint tool</Option>
@@ -185,6 +186,8 @@
 				<Option>d        ...Draw tool</Option>
 				<Option>c        ...Show colour box</Option>
 				<Option>Rt click ...Apply (in Draw mode)</Option>
+				<Option>+        ...Increase brush radius</Option>
+				<Option>-        ...Decrease brush radius</Option>
 			</Question>
 		</QuestionSet>
 	</Page>

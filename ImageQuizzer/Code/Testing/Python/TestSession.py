@@ -44,7 +44,7 @@ class TestSession(ScriptedLoadableModule):
 
 ##########################################################################
 #
-# TestQuestionSet_ModuleWidget
+# TestSession_ModuleWidget
 #
 ##########################################################################
 
@@ -137,10 +137,6 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_ShuffleNavigationList())
         tupResults.append(self.test_ShuffleNavigationList_WithZero())
 
-        tupResults.append(self.test_ValidatePageGroupNumbers_MissingPageGroup())
-        tupResults.append(self.test_ValidatePageGroupNumbers_InvalidNumber())
-        tupResults.append(self.test_ValidatePageGroupNumbers_NotEnoughPageGroups())
-
         tupResults.append(self.test_RandomizePageGroups_WithZero())
         tupResults.append(self.test_RandomizePageGroups_WithoutZero())
         tupResults.append(self.test_RandomizePageGroups_NoSeed())
@@ -148,7 +144,6 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_GetStoredRandomizedIndices())
         tupResults.append(self.test_AddRandomizedIndicesToXML())
         
-        tupResults.append(self.test_ValidateImageOpacity())
         tupResults.append(self.test_AdjustXMLForRepeatedPage())
         tupResults.append(self.test_TestMultipleRepeats())
         tupResults.append(self.test_LoopingWithRandomizedPages())
@@ -384,112 +379,6 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         return tupResult
 
     #-------------------------------------------
-    def test_ValidatePageGroupNumbers_MissingPageGroup(self):
-        '''Test if randomization is requested that the PageGroup attribute exists 
-            for all pages.
-        '''
-        
-        self.fnName = sys._getframe().f_code.co_name
-        sMsg = ''
-        bTestResult = True
-
-        # build XML
-        xRoot = etree.Element("Session", RandomizePageGroups="Y")
-        etree.SubElement(xRoot,"Page", PageGroup="1")
-        etree.SubElement(xRoot,"Page")
-        etree.SubElement(xRoot,"Page", PageGroup="1")
-        
-        
-        # tree = etree.ElementTree(xRoot)
-        # sPath = "C:\\Users\\alibi\\Documents\\Work-Baines\\Projects\\ImageQuizzer\\ImageQuizzerProject\\ImageQuizzer\\Testing\\TestData\\Test_UtilsIOXml\\filename.xml"
-        # tree.write(sPath)
-        try:
-            with self.assertRaises(Exception) as context:
-                self._oFilesIO.ValidatePageGroupNumbers(xRoot)
-                
-            sMsg = context.exception.args[0]
-            if sMsg.find('Missing PageGroup attribute')>=0:
-                bTestResult = True
-               
-        except:
-            bTestResult = False
-        
-        
-        
-
-        tupResult = self.fnName, bTestResult
-        return tupResult
-
-    #-------------------------------------------
-    def test_ValidatePageGroupNumbers_InvalidNumber(self):
-        
-        self.fnName = sys._getframe().f_code.co_name
-        sMsg = ''
-        bTestResult = True
-
-        # build XML
-        xRoot = etree.Element("Session", RandomizePageGroups="Y")
-        etree.SubElement(xRoot,"Page", PageGroup="1")
-        etree.SubElement(xRoot,"Page", PageGroup="a")
-        etree.SubElement(xRoot,"Page", PageGroup="1")
-            
-            
-        try:
-            with self.assertRaises(ValueError) as context:
-                self._oFilesIO.ValidatePageGroupNumbers(xRoot)
-
-            sMsg = context.exception.args[0]
-            if sMsg.find('Invalid PageGroup value')>=0:
-                bTestResult = True
-
-            
-        except:
-            bTestResult = False
-        
-        
-        
-
-        tupResult = self.fnName, bTestResult
-        return tupResult
-
-  
-    #-------------------------------------------
-    def test_ValidatePageGroupNumbers_NotEnoughPageGroups(self):
-        ''' Test that only one PageGroup number was assigned for entire XML.
-            Zeros are ignored because they will always appear at the beginning of a list.
-        '''
-        
-        self.fnName = sys._getframe().f_code.co_name
-        sMsg = ''
-        bTestResult = True
-
-        # build XML
-        xRoot = etree.Element("Session", RandomizePageGroups="Y")
-        etree.SubElement(xRoot,"Page", PageGroup="0")   # this will be ignored
-        etree.SubElement(xRoot,"Page", PageGroup="1")
-        etree.SubElement(xRoot,"Page", PageGroup="1")
-        etree.SubElement(xRoot,"Page", PageGroup="1")
-            
-            
-        try:
-            with self.assertRaises(Exception) as context:
-                self._oFilesIO.ValidatePageGroupNumbers(xRoot)
-            
-            # the validation was supposed to catch an error 
-            # check that the correct error was raised
-            sMsg = context.exception.args[0]
-            if sMsg.find('Validating PageGroups Error')>=0:
-                bTestResult = True
-
-            
-        except:
-            # validation did not catch the error
-            bTestResult = False
-        
-        tupResult = self.fnName, bTestResult
-        return tupResult
-
-    #-------------------------------------------
     def test_RandomizePageGroups_WithZero(self):
 
         
@@ -659,115 +548,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         tupResult = self.fnName, bTestResult
         return tupResult
         
-    #------------------------------------------- 
-    def test_ValidateImageOpacity(self):
-        ''' test that the opacity attribute is properly validated
-            1: valid number
-            2: if value is negative
-            3: if value is > 1
-            4: if value is not a number
-            5: missing opacity attribute (allowed)
-        '''
-        self.fnName = sys._getframe().f_code.co_name
-        bTestResult = True
-        bCaseTestResult = True
-        iPageNum = 1
 
-        xRoot = etree.Element("Session", RandomizePageGroups="Y")
-        xPage = etree.SubElement(xRoot,"Page", ID="Patient1", PageGroup="0")
-
-        # >>>>>>>>>>>>>>>>>>>>>>     Value is valid
-        sMsg = ''
-        xImage = etree.SubElement(xPage,"Image", ID="TestImage", Type="Volume", Opacity="0.7")
-        xImageChild = etree.SubElement(xImage,"Path")
-        xImageChild.text = "C:\TestFolder"
-        self.oIOXml.SetRootNode(xRoot)
-
-        sMsg = self._oFilesIO.ValidateOpacity(xImage, iPageNum)
-        if sMsg == '':
-            bCaseTestResult = True
-        else:
-            bCaseTestResult = False
-                                  
-            
-        bTestResult = bTestResult * bCaseTestResult
-
-        # >>>>>>>>>>>>>>>>>>>>>>     Value is negative
-        sMsg = ''
-        xImage = etree.SubElement(xPage,"Image", ID="TestImage", Type="Volume", Opacity="-0.9")
-        xImageChild = etree.SubElement(xImage,"Path")
-        xImageChild.text = "C:\TestFolder"
-        
-        self.oIOXml.SetRootNode(xRoot)
-        
-        try:
-            with self.assertRaises(Exception) as context:
-                self._oFilesIO.ValidateOpacity(xImage, iPageNum)
-            sMsg = context.exception.args[0]
-            if sMsg.find('Invalid Opacity value') >= 0:
-                bCaseTestResult = True
-        except:
-            # validation did not catch the error
-            bCaseTestResult = False
-        
-        bTestResult = bTestResult * bCaseTestResult
-        
-
-        
-        
-        # >>>>>>>>>>>>>>>>>>>>>>     Value >1
-        xImage = etree.SubElement(xPage,"Image", ID="TestImage", Type="Volume", Opacity="15")
-        xImageChild = etree.SubElement(xImage,"Path")
-        xImageChild.text = "C:\TestFolder"
-        self.oIOXml.SetRootNode(xRoot)
-        
-        try:
-            with self.assertRaises(Exception) as context:
-                self._oFilesIO.ValidateOpacity(xImage, iPageNum)
-            sMsg = context.exception.args[0]
-            if sMsg.find('Invalid Opacity value') >= 0:
-                bCaseTestResult = True
-        except:
-            bCaseTestResult = False
-            
-        bTestResult = bTestResult * bCaseTestResult
-
-
-        # >>>>>>>>>>>>>>>>>>>>>>     Invalid Value
-        xImage = etree.SubElement(xPage,"Image", ID="TestImage", Type="Volume", Opacity="a")
-        xImageChild = etree.SubElement(xImage,"Path")
-        xImageChild.text = "C:\TestFolder"
-        self.oIOXml.SetRootNode(xRoot)
-        
-        try:
-            with self.assertRaises(Exception) as context:
-                self._oFilesIO.ValidateOpacity(xImage, iPageNum)
-            sMsg = context.exception.args[0]
-            if sMsg.find('Invalid Opacity value') >= 0:
-                bCaseTestResult = True
-        except:
-            bCaseTestResult = False
-            
-        bTestResult = bTestResult * bCaseTestResult
-
-        # >>>>>>>>>>>>>>>>>>>>>>     Missing attribute
-        xImage = etree.SubElement(xPage,"Image", ID="TestImage", Type="Volume")
-        xImageChild = etree.SubElement(xImage,"Path")
-        xImageChild.text = "C:\TestFolder"
-        self.oIOXml.SetRootNode(xRoot)
-        
-        
-        sMsg = self._oFilesIO.ValidateOpacity(xImage, iPageNum)
-        if sMsg == '':
-            bCaseTestResult = True
-        else:
-            bCaseTestResult = False
-            
-        bTestResult = bTestResult * bCaseTestResult
-        
-        tupResult = self.fnName, bTestResult
-        return tupResult
-        
     #-------------------------------------------
     def test_AdjustXMLForRepeatedPage(self):
 

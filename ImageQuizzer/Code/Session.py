@@ -11,6 +11,7 @@ from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
 from Utilities.UtilsEmail import *
+from Utilities.UtilsValidate import *
 
 from Question import *
 from ImageView import *
@@ -70,6 +71,7 @@ class Session:
         self._iPreviousTabIndex = 0
        
         self.oFilesIO = None
+        self.oValidation = None
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
         self.oPageState = PageState()
@@ -118,6 +120,10 @@ class Session:
     def SetFilesIO(self, oFilesIO):
         self.oFilesIO = oFilesIO
 
+    #----------
+    def SetValidation(self, oValidation):
+        self.oValidation = oValidation
+        
     #----------
     def SetIOXml(self, oIOXml):
         self.oIOXml = oIOXml
@@ -1530,16 +1536,16 @@ class Session:
         
         
         
-#            
+            
 #         sMsg = 'Leaving current screen - return to Bookmark page'\
 #                 + '\nCurrentNavigationIndex: ' + str(self.GetCurrentNavigationIndex()) \
 #                 + '\nCurrentPage (0-based): ' + str( self.GetCurrentPageIndex()) \
 #                 + '\nReturnToPage: '+ dAttribForBookmark['ID'] + '_' + dAttribForBookmark['Descriptor']\
 #                 + '\nPageIndex: ' + str(iBookmarkedPageIndex)\
 #                 + '\nNavigationIndex: ' + str(iBookmarkedNavigationIndex)
-#                 
+#                  
 #         self.oUtilsMsgs.DisplayWarning(sMsg)
-        
+#         
 
 
         try:
@@ -1614,12 +1620,13 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def RunSetup(self, oFilesIO, slicerMainLayout):
+    def RunSetup(self, oFilesIO, oValidation, slicerMainLayout):
         
+        sMsg = ''
         try:
             self.SetFilesIO(oFilesIO)
+            self.SetValidation(oValidation)
     
-            sMsg = ''
             # open xml and check for root node
             bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizResultsPath(),'Session')
     
@@ -1779,7 +1786,7 @@ class Session:
             if liRandIndices == []:
                 # get the unique list  of all Page Group numbers to randomize
                 #    this was set during xml validation during the initial read
-                liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
+                liIndicesToRandomize = self.oValidation.GetListUniquePageGroups()
                 liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
                 self.AddRandomizedIndicesToXML(liRandIndices)
              

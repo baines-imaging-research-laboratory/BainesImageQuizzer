@@ -1195,7 +1195,7 @@ class Button(Question):
                 bResponseFound = True
                 lsResponses.append(qBtn.text)
             else:
-                bResponseFound
+                bResponseFound = False
                 break
                 
 
