@@ -112,14 +112,14 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         sModuleName = 'ImageQuizzer'
 
         self._oFilesIO = UtilsFilesIO()
-        self.oIOXml = UtilsIOXml()
-        self.oUtilsValidate = UtilsValidate(self._oFilesIO)
+        self.oValidation = UtilsValidate(self._oFilesIO)
+        self.oIOXml = self.oValidation.oIOXml
         
         # create/set environment variable to be checked in UtilsIOXml class
         #    to prevent displaying error messages during testing
         os.environ["testing"] = "1"
         self._oFilesIO.setupTestEnvironment()
-        self.oUtilsValidate.setupTestEnvironment()
+        self.oValidation.setupTestEnvironment()
 
         self.sTempDir = os.path.join(tempfile.gettempdir(),'ImageQuizzer')
         if not os.path.exists(self.sTempDir):
@@ -138,8 +138,9 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_ValidatePageGroupNumbers_MissingPageGroup())
         tupResults.append(self.test_ValidatePageGroupNumbers_InvalidNumber())
         tupResults.append(self.test_ValidatePageGroupNumbers_NotEnoughPageGroups())
-
         tupResults.append(self.test_ValidateImageOpacity())
+        tupResults.append(self.test_ValidateGoToBookmarkRequest_ValidBookmarkID())
+        tupResults.append(self.test_ValidateGoToBookmarkRequest_InvalidBookmarkID())
 
 
 
@@ -180,7 +181,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         # tree.write(sPath)
         try:
             with self.assertRaises(Exception) as context:
-                self.oUtilsValidate.ValidatePageGroupNumbers(xRoot)
+                self.oValidation.ValidatePageGroupNumbers(xRoot)
                 
             sMsg = context.exception.args[0]
             if sMsg.find('Missing PageGroup attribute')>=0:
@@ -213,7 +214,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
             
         try:
             with self.assertRaises(ValueError) as context:
-                self.oUtilsValidate.ValidatePageGroupNumbers(xRoot)
+                self.oValidation.ValidatePageGroupNumbers(xRoot)
 
             sMsg = context.exception.args[0]
             if sMsg.find('Invalid PageGroup value')>=0:
@@ -252,7 +253,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
             
         try:
             with self.assertRaises(Exception) as context:
-                self.oUtilsValidate.ValidatePageGroupNumbers(xRoot)
+                self.oValidation.ValidatePageGroupNumbers(xRoot)
             
             # the validation was supposed to catch an error 
             # check that the correct error was raised
@@ -293,7 +294,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xImageChild.text = "C:\TestFolder"
         self.oIOXml.SetRootNode(xRoot)
 
-        sMsg = self.oUtilsValidate.ValidateOpacity(xImage, iPageNum)
+        sMsg = self.oValidation.ValidateOpacity(xImage, iPageNum)
         if sMsg == '':
             bCaseTestResult = True
         else:
@@ -312,7 +313,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oUtilsValidate.ValidateOpacity(xImage, iPageNum)
+                self.oValidation.ValidateOpacity(xImage, iPageNum)
             sMsg = context.exception.args[0]
             if sMsg.find('Invalid Opacity value') >= 0:
                 bCaseTestResult = True
@@ -336,7 +337,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oUtilsValidate.ValidateOpacity(xImage, iPageNum)
+                self.oValidation.ValidateOpacity(xImage, iPageNum)
             sMsg = context.exception.args[0]
             if sMsg.find('Invalid Opacity value') >= 0:
                 bCaseTestResult = True
@@ -357,7 +358,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oUtilsValidate.ValidateOpacity(xImage, iPageNum)
+                self.oValidation.ValidateOpacity(xImage, iPageNum)
             sMsg = context.exception.args[0]
             if sMsg.find('Invalid Opacity value') >= 0:
                 bCaseTestResult = True
@@ -376,7 +377,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         self.oIOXml.SetRootNode(xRoot)
         
         
-        sMsg = self.oUtilsValidate.ValidateOpacity(xImage, iPageNum)
+        sMsg = self.oValidation.ValidateOpacity(xImage, iPageNum)
         if sMsg == '':
             bCaseTestResult = True
         else:
@@ -388,7 +389,85 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         return tupResult
         
 
+    #------------------------------------------- 
+    def test_ValidateGoToBookmarkRequest_ValidBookmarkID(self):
+        ''' BookmarkID must appear before GoToBookmarkID attribute
+            (This does not take into account if randomizing is turned on.)
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
 
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("BookmarkID","ReturnHere")
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("GoToBookmark","ReturnHere ABORT")
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateGoToBookmarkRequest()
+            sMsg = context.exception.args[0]
+            if sMsg.find('Missing historical BookmarkID') >= 0:
+                bTestResult = False
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = True
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+    
+    #------------------------------------------- 
+    def test_ValidateGoToBookmarkRequest_InvalidBookmarkID(self):
+        ''' Test when BookmarkID is on a Page that follows the GoToBookmark attribute.
+            (This does not take into account if randomizing is turned on.)
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        
+        xRoot = self.CreateXMLBaseForTests()
+        self.oIOXml.SetRootNode(xRoot)
+
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
+
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("BookmarkID","ReturnHere")
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("GoToBookmark","ReturnHere ABORT")
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateGoToBookmarkRequest()
+            sMsg = context.exception.args[0]
+            if sMsg.find('Missing historical BookmarkID') >= 0:
+                bTestResult = True
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = False
+
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
 
             
     #-------------------------------------------
@@ -398,8 +477,19 @@ class TestValidateTest(ScriptedLoadableModuleTest):
     #
     #-------------------------------------------
     #-------------------------------------------
-            
-            
+    def CreateXMLBaseForTests(self):
+    
+        xRoot = etree.Element("Session")
+        xPage0 = etree.SubElement(xRoot,"Page", {"ID":"Pt1"})
+        xPage1 = etree.SubElement(xRoot,"Page", {"ID":"Pt2"})
+        xPage2 = etree.SubElement(xRoot,"Page", {"ID":"Pt3"})
+        xPage3 = etree.SubElement(xRoot,"Page", {"ID":"Pt4"})
+        xPage4 = etree.SubElement(xRoot,"Page", {"ID":"Pt5"})
+        xPage5 = etree.SubElement(xRoot,"Page", {"ID":"Pt6"})
+
+    
+        return xRoot
+     
             
             
     #-------------------------------------------

@@ -124,7 +124,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         sModuleName = 'ImageQuizzer'
         self.sUsername = 'Tests'
         self.oFilesIO = UtilsFilesIO()
-        self.oIOXml = UtilsIOXml()
+        self.oIOXml = self.oFilesIO.oIOXml
         self.sTestXmlFilePath = ''
 
         # create/set environment variable to be checked in UtilsIOXml class
@@ -166,7 +166,14 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_InsertElementBeforeIndex())
         tupResults.append(self.test_CopyElement())
         tupResults.append(self.test_GetXmlPageAndChildFromAttributeHistory())
+#         tupResults.append(self.test_GetXmlPageAndChildFromAttributeHistory_Randomizing())
+        tupResults.append(self.test_GetFirstXmlNodeWithMatchingAttributes())
+        tupResults.append(self.test_RemoveAttributeInElement())
+        tupResults.append(self.test_GetMatchingXmlPagesFromAttributeHistory())
+        tupResults.append(self.test_GetMatchingXmlPagesFromAttributeHistory_Randomizing())
         
+        
+             
         logic.sessionTestStatus.DisplayTestResults(tupResults)
 
         # reset to allow for non-testing logic
@@ -826,6 +833,357 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         return tupResult
 
     #-------------------------------------------
+    def test_GetFirstXmlNodeWithMatchingAttributes(self):
+        ''' given a list of attributes, find the first page in the given list of nodes
+            that match all the attributes
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        
+        dictAttrib  = {"Descriptor":"MarkedPage", "ID":"Pt3"}
+        
+        xRoot = self.CreateXMLBaseForTests1()
+        
+        # add attributes to specific pages
+        xPageNode0 = self.oIOXml.GetNthChild(xRoot, 'Page', 0)
+        xPageNode1 = self.oIOXml.GetNthChild(xRoot, 'Page', 1)
+        xPageNode2 = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode2.set("Descriptor","MarkedPage")
+        xPageNode3 = self.oIOXml.GetNthChild(xRoot, 'Page', 3)
+        xPageNode3.set("Descriptor","MarkedPage")
+        xPageNode4 = self.oIOXml.GetNthChild(xRoot, 'Page', 4)
+        xPageNode5 = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        #>>>>>>>>>>>>>>>
+        # navigate without randomizing
+        lxPageNodes = []
+        lNavIndices = [0,1,2,3,4,5]
+        for iNavInd in lNavIndices:
+            lxPageNodes.append(self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iNavInd))
+            
+        
+        iNavidx, xPageNode = self.oIOXml.GetFirstXmlNodeWithMatchingAttributes(lxPageNodes, dictAttrib)
+        
+        if iNavidx == 2 and xPageNode == xPageNode2:
+            bCaseTestResult = True
+        else:
+            bCaseTestResult = False
+
+        bTestResult = bTestResult * bCaseTestResult
+
+        #>>>>>>>>>>>>>>>
+        # navigate with randomized data
+        lxPageNodes = []
+        lNavIndices = [3, 0, 1, 2, 5, 4]
+        for iNavInd in lNavIndices:
+            lxPageNodes.append(self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iNavInd))
+            
+        iNavidx, xPageNode = self.oIOXml.GetFirstXmlNodeWithMatchingAttributes(lxPageNodes, dictAttrib)
+        
+        if iNavidx == 3 and xPageNode == xPageNode2:
+            bCaseTestResult = True
+        else:
+            bCaseTestResult = False
+
+        bTestResult = bTestResult * bCaseTestResult
+
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+        
+    #-------------------------------------------
+    def test_RemoveAttributeInElement(self):
+
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        
+        
+        
+        # test removing an item that doesn't exist - there should be no error
+        
+        xRoot = self.CreateXMLBaseForTests1()
+        
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("Descriptor","MarkedPage")
+        xPageNode.set("BookmarkID","ReturnHere")
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        
+        xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 2)
+        self.oIOXml.RemoveAttributeInElement(xPageNode,'NonExistentKey')
+        dictExpectedValues = {"ID":"Pt3","Descriptor":"MarkedPage", "BookmarkID":"ReturnHere"}
+        dictUpdatedValues = self.oIOXml.GetAttributes(xPageNode)
+        
+        if dictExpectedValues == dictUpdatedValues:
+            bCaseTestResult = True
+        else:
+            bCaseTestResult = False
+
+        bTestResult = bTestResult * bCaseTestResult
+        
+        
+        # test removing an item that does exist - compare to expected
+        
+        xRoot = self.CreateXMLBaseForTests1()
+        
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("Descriptor","MarkedPage")
+        xPageNode.set("BookmarkID","ReturnHere")
+
+        self.oIOXml.SetRootNode(xRoot)
+
+        xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 2)
+        self.oIOXml.RemoveAttributeInElement(xPageNode,'BookmarkID')
+        dictExpectedValues = {"ID":"Pt3","Descriptor":"MarkedPage"}
+        dictUpdatedValues = self.oIOXml.GetAttributes(xPageNode)
+        
+        if dictExpectedValues == dictUpdatedValues:
+            bCaseTestResult = True
+        else:
+            bCaseTestResult = False
+
+        bTestResult = bTestResult * bCaseTestResult
+        
+    
+        tupResult = self.fnName, bTestResult
+        return tupResult
+        
+    #-------------------------------------------
+    def test_GetMatchingXmlPagesFromAttributeHistory(self):
+        ''' test getting the list of page nodes and their navigation indices 
+            that are historical - ignoring pages beyond the current index
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        
+        
+        xRoot = etree.Element("Session")
+        xPage0 = etree.SubElement(xRoot,"Page", {"ID":"Pt1", "PageGroup":"1", "Tag":"Label1"})
+        xPage1 = etree.SubElement(xRoot,"Page", {"ID":"Pt1-Rep1", "PageGroup":"1",  "Tag":"Label1"})
+        xPage2 = etree.SubElement(xRoot,"Page", {"ID":"Pt2",  "PageGroup":"2", "Tag":"Label2"})
+        xPage3 = etree.SubElement(xRoot,"Page", {"ID":"Pt2-Rep2", "PageGroup":"2",  "Tag":"Label2"})
+        xPage4 = etree.SubElement(xRoot,"Page", {"ID":"Pt3", "PageGroup":"3",  "Tag":"Label1"})
+        xPage5 = etree.SubElement(xRoot,"Page", {"ID":"Pt4", "PageGroup":"4",  "Tag":"Label2"})
+        xPage6 = etree.SubElement(xRoot,"Page", {"ID":"Pt5", "PageGroup":"5",  "Tag":"Label3"})
+        xPage7 = etree.SubElement(xRoot,"Page", {"ID":"Pt6", "PageGroup":"6",  "Tag":"Label1"})
+        self.oIOXml.SetRootNode(xRoot)
+
+        # [pg, qs, pgGp, rep]
+        # Pages 0,1 are part of group 1 (they have a 'Rep')
+        # Pages 2,3 are part of group 2 (they have a 'Rep')
+        # Pages 0, 1, 5 have 2 question sets
+        
+        l4iNavigationIndices = [ 
+                                [0, 0, 1, 0], \
+                                        [0, 1, 1, 0], \
+                                [1, 0, 1, 1], \
+                                        [1, 1, 1, 1], \
+                                [2, 0, 2, 0], \
+                                [3, 0, 2, 1], \
+                                [4, 0, 3, 0], \
+                                [5, 0, 4, 0], \
+                                        [5, 1, 4, 0], \
+                                [6, 0, 5, 0], \
+                                [7, 0, 6, 0] \
+                               ]
+        ''' navInd, pgInd, qs, grp, rep,  id,       label
+              0      0     0    1   0     Pt1,      Label1
+              1      0     1    1   0     Pt1,      Label1
+              2      1     0    1   1     Pt1-Rep1, Label1
+              3      1     1    1   1     Pt1-Rep1, Label1
+              4      2     0    2   0     Pt2,      Label2
+              5      3     0    3   0     Pt2-Rep1, Label2
+              6      4     0    3   0     Pt3       Label1
+              7      5     0    4   0     Pt4       Label2
+              8      5     1    4   0     Pt4       Label2
+              9      6     0    5   0     Pt5       Label3
+              10     7     0    6   0     Pt6       Label1
+        '''
+        xNode0 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 0)
+        xNode1 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 1)
+        xNode2 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 2)
+        xNode3 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 3)
+        xNode4 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 4)
+        xNode5 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 5)
+        xNode6 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 6)
+        xNode7 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 7)
+
+        #>>>>>>>>>>>>        
+        # test nothing matches
+        dictAttribsToMatch = {"ID":"Pt2","Tag":"Label1"}
+        dictExpectedResult = {}
+        dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch)
+        
+        if dictExpectedResult == dictPgNodeAndPgIndex:
+            bCaseTestResult = True
+        else:
+            bCaseTestResult = False
+        bTestResult = bTestResult * bCaseTestResult
+
+
+        #>>>>>>>>>>>>        
+        # test match to one attribute
+        dictAttribsToMatch = {"Tag":"Label1"}
+        dictExpectedResult = {xNode4:4, xNode1:1, xNode0:0}
+        dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch)
+        
+        if dictExpectedResult == dictPgNodeAndPgIndex:
+            bCaseTestResult = True
+        else:
+            bCaseTestResult = False
+        bTestResult = bTestResult * bCaseTestResult
+        
+
+        #>>>>>>>>>>>>        
+        # test match to two attributes
+        dictAttribsToMatch = {"ID":"Pt2","Tag":"Label2"}
+        dictExpectedResult = {xNode2:2}
+        dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch)
+        
+        if dictExpectedResult == dictPgNodeAndPgIndex:
+            bCaseTestResult = True
+        else:
+            bCaseTestResult = False
+        bTestResult = bTestResult * bCaseTestResult
+        
+        #>>>>>>>>>>>>        
+        # test match to two attributes with an ignore string
+        reIgnoreSubstring= '-Rep[0-9]+'  # remove -Rep with any number of digits following
+        dictAttribsToMatch = {"ID":"Pt2","Tag":"Label2"}
+        dictExpectedResult = {xNode3:3, xNode2:2}
+        dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch, reIgnoreSubstring)
+        
+        if dictExpectedResult == dictPgNodeAndPgIndex:
+            bCaseTestResult = True
+        else:
+            bCaseTestResult = False
+        bTestResult = bTestResult * bCaseTestResult
+        
+    
+        tupResult = self.fnName, bTestResult
+        return tupResult
+    
+    
+    
+    #-------------------------------------------
+    def test_GetMatchingXmlPagesFromAttributeHistory_Randomizing(self):
+        ''' test getting the list of page nodes and their navigation indices 
+            that are historical - ignoring pages beyond the current index
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        
+        
+        
+        xRoot = etree.Element("Session")
+        xPage0 = etree.SubElement(xRoot,"Page", {"ID":"Pt1", "PageGroup":"1", "Tag":"Label1"})
+        xPage1 = etree.SubElement(xRoot,"Page", {"ID":"Pt1-Rep1", "PageGroup":"1",  "Tag":"Label1"})
+        xPage2 = etree.SubElement(xRoot,"Page", {"ID":"Pt2",  "PageGroup":"2", "Tag":"Label2"})
+        xPage3 = etree.SubElement(xRoot,"Page", {"ID":"Pt2-Rep2", "PageGroup":"2",  "Tag":"Label2"})
+        xPage4 = etree.SubElement(xRoot,"Page", {"ID":"Pt3", "PageGroup":"3",  "Tag":"Label1"})
+        xPage5 = etree.SubElement(xRoot,"Page", {"ID":"Pt4", "PageGroup":"4",  "Tag":"Label2"})
+        xPage6 = etree.SubElement(xRoot,"Page", {"ID":"Pt5", "PageGroup":"5",  "Tag":"Label3"})
+        xPage7 = etree.SubElement(xRoot,"Page", {"ID":"Pt6", "PageGroup":"6",  "Tag":"Label1"})
+
+
+        self.oIOXml.SetRootNode(xRoot)
+
+
+        # [pg, qs, pgGp, rep]
+        # Pages 0,1 are part of group 1 (they have a 'Rep')
+        # Pages 2,3 are part of group 2 (they have a 'Rep')
+        # Pages 0, 1, 5 have 2 question sets
+        
+        # randomize Page Groups  2,4,1,6,5,3
+        l4iNavigationIndices = [ 
+                                [2, 0, 2, 0], \
+                                [3, 0, 2, 1], \
+                                [5, 0, 4, 0], \
+                                        [5, 1, 4, 0], \
+                                [0, 0, 1, 0], \
+                                        [0, 1, 1, 0], \
+                                [1, 0, 1, 1], \
+                                        [1, 1, 1, 1], \
+                                [7, 0, 6, 0], \
+                                [6, 0, 5, 0], \
+                                [4, 0, 3, 0] \
+                               ]
+
+        ''' navInd, pgInd, qs, grp, rep,  id,       label
+              0      2     0    2   0     Pt2,      Label2
+              1      3     0    2   0     Pt2-Rep1, Label2
+              2      5     0    4   0     Pt4       Label2
+              3      5     1    4   0     Pt4       Label2
+              4      0     0    1   0     Pt1,      Label1
+              5      0     1    1   0     Pt1,      Label1
+              6      1     0    1   1     Pt1-Rep1, Label1
+              7      1     1    1   1     Pt1-Rep1, Label1
+              8      7     0    6   0     Pt6       Label1
+              9      6     0    5   0     Pt5       Label3
+             10      4     0    3   0     Pt3       Label1
+        '''
+        
+
+
+        xNode0 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 0)
+        xNode1 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 1)
+        xNode2 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 2)
+        xNode3 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 3)
+        xNode4 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 4)
+        xNode5 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 5)
+        xNode6 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 6)
+        xNode7 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 7)
+
+
+        #>>>>>>>>>>>>        
+        # test nothing matches
+        dictAttribsToMatch = {"ID":"Pt2","Tag":"Label1"}
+        dictExpectedResult = {}
+        dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(8, l4iNavigationIndices, dictAttribsToMatch)
+        
+        if dictExpectedResult == dictPgNodeAndPgIndex:
+            bCaseTestResult = True
+        else:
+            bCaseTestResult = False
+        bTestResult = bTestResult * bCaseTestResult
+
+
+        #>>>>>>>>>>>>        
+        # test match to one attribute
+        dictAttribsToMatch = {"Tag":"Label1"}
+        dictExpectedResult = {xNode1:1, xNode0:0}
+        dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(8, l4iNavigationIndices, dictAttribsToMatch)
+        
+        if dictExpectedResult == dictPgNodeAndPgIndex:
+            bCaseTestResult = True
+        else:
+            bCaseTestResult = False
+        bTestResult = bTestResult * bCaseTestResult
+
+        # test match to one attribute
+        dictAttribsToMatch = {"Tag":"Label2"}
+        dictExpectedResult = {xNode5:5, xNode3:3, xNode2:2 }
+        dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(8, l4iNavigationIndices, dictAttribsToMatch)
+        
+        if dictExpectedResult == dictPgNodeAndPgIndex:
+            bCaseTestResult = True
+        else:
+            bCaseTestResult = False
+        bTestResult = bTestResult * bCaseTestResult
+
+    
+        tupResult = self.fnName, bTestResult
+        return tupResult
+    
+    #-------------------------------------------
+    #-------------------------------------------
+    #-------------------------------------------
     
     ### NOTE : FOR NEXT TEST - Watch for what root is being used.
     ###        test_GetXmlPageAndChildFromAttributeHistory did a 
@@ -878,6 +1236,20 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         xSubChild.text = 'item2xyz'
 
         return xRoot
+    #-------------------------------------------
+    def CreateXMLBaseForTests1(self):
+    
+        xRoot = etree.Element("Session")
+        xPage0 = etree.SubElement(xRoot,"Page", {"ID":"Pt1"})
+        xPage1 = etree.SubElement(xRoot,"Page", {"ID":"Pt2"})
+        xPage2 = etree.SubElement(xRoot,"Page", {"ID":"Pt3"})
+        xPage3 = etree.SubElement(xRoot,"Page", {"ID":"Pt4"})
+        xPage4 = etree.SubElement(xRoot,"Page", {"ID":"Pt5"})
+        xPage5 = etree.SubElement(xRoot,"Page", {"ID":"Pt6"})
+
+    
+        return xRoot
+     
     #-------------------------------------------
     #-------------------------------------------
      

@@ -1513,53 +1513,37 @@ class Session:
         dictAttribToMatchInHistory['BookmarkID'] = sGoToBookmarkID
         
         # all page nodes that match - ordered with most recent first
-        lxPageNodes = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(self.GetCurrentPageIndex(), dictAttribToMatchInHistory)
-
-        reRepSubstring= '-Rep[0-9]+'
-        dAttribForBookmark={}
-
-        for idx, xPageNode in enumerate(lxPageNodes):
-
-            xBookmarkedPageNode = lxPageNodes[idx]
-            
-            # strip the substring = "-Rep#' in case Repeat button was used - we need first page in that group
-            dAttribForBookmark['ID'] = re.sub(reRepSubstring,'',self.oIOXml.GetValueOfNodeAttribute(xBookmarkedPageNode,'ID') )
-            dAttribForBookmark['Descriptor'] = self.oIOXml.GetValueOfNodeAttribute(xBookmarkedPageNode,'Descriptor')
-
+#         dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(self.GetCurrentPageIndex(), dictAttribToMatchInHistory)
+        dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(self.GetCurrentNavigationIndex(), self.GetNavigationList(), dictAttribToMatchInHistory)
+        lPageIndices = list(dictPgNodeAndPgIndex.values())
+        if len(lPageIndices) > 0:
+            iBookmarkedPageIndex = lPageIndices[0]
+            iBookmarkedNavigationIndex = self.GetNavigationIndexForPage(iBookmarkedPageIndex)
             
             
-        # get page and navigation indices
-        lxAllPageNodes = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
-        iBookmarkedPageIndex, xMatchingPageNode = self.oIOXml.GetFirstXmlNodeWithMatchingAttributes(lxAllPageNodes,dAttribForBookmark)
-        iBookmarkedNavigationIndex = self.GetNavigationIndexForPage(iBookmarkedPageIndex)
-        
-        
-        
-        
+                
+    #         sMsg = 'Leaving current screen - return to Bookmark page'\
+    #                 + '\nCurrentNavigationIndex: ' + str(self.GetCurrentNavigationIndex()) \
+    #                 + '\nCurrentPage (0-based): ' + str( self.GetCurrentPageIndex()) \
+    #                 + '\nPageIndex: ' + str(iBookmarkedPageIndex)\
+    #                 + '\nNavigationIndex: ' + str(iBookmarkedNavigationIndex)
+    #                   
+    #         self.oUtilsMsgs.DisplayWarning(sMsg)
+             
+    
+    
+            try:
+                sMsg = ''
+    
+                self.SaveAndGoToPreviousPageDisplay('GoToBookmark', iBookmarkedPageIndex, iBookmarkedNavigationIndex)
+    
+            except:
+                iPage = self.GetCurrentPageIndex() + 1
+                tb = traceback.format_exc()
+                sMsg = "onGoToBookmarkButtonClicked: Error moving to bookmarked page. Current page: " + str(iPage) \
+                       + "\n\n" + tb 
+                self.oUtilsMsgs.DisplayError(sMsg)
             
-#         sMsg = 'Leaving current screen - return to Bookmark page'\
-#                 + '\nCurrentNavigationIndex: ' + str(self.GetCurrentNavigationIndex()) \
-#                 + '\nCurrentPage (0-based): ' + str( self.GetCurrentPageIndex()) \
-#                 + '\nReturnToPage: '+ dAttribForBookmark['ID'] + '_' + dAttribForBookmark['Descriptor']\
-#                 + '\nPageIndex: ' + str(iBookmarkedPageIndex)\
-#                 + '\nNavigationIndex: ' + str(iBookmarkedNavigationIndex)
-#                  
-#         self.oUtilsMsgs.DisplayWarning(sMsg)
-#         
-
-
-        try:
-            sMsg = ''
-
-            self.SaveAndGoToPreviousPageDisplay('GoToBookmark', iBookmarkedPageIndex, iBookmarkedNavigationIndex)
-
-        except:
-            iPage = self.GetCurrentPageIndex() + 1
-            tb = traceback.format_exc()
-            sMsg = "onGoToBookmarkButtonClicked: Error moving to bookmarked page. Current page: " + str(iPage) \
-                   + "\n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
-        
         
         
         
@@ -2715,7 +2699,9 @@ class Session:
         ''' Function to update the newly repeated Page node.
             The Page ID attribute will have '-Rep#' appended.
             Any previously stored label map and markup line paths are removed.
-            Ay previously stored responses to questions will be removed.
+            Any previously stored responses to questions will be removed.
+            Remove any BookmarkID attributes - 
+                (a GoToBookmark attribute will have the user return to the first Page in a group of repetitions) 
         '''
         
         sMsg = ''
@@ -2733,6 +2719,7 @@ class Session:
             iPreviousRepNum = int(sPreviousRepNum)
             sNewRepNum = str(iPreviousRepNum + 1)
             self.oIOXml.UpdateAttributesInElement(xNewRepeatPage, {"Rep":sNewRepNum})
+            self.oIOXml.RemoveAttributeInElement(xNewRepeatPage, "BookmarkID")
             
             iSubIndex = sPreviousPageID.find('-Rep')
             if iSubIndex >=0:

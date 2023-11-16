@@ -336,13 +336,6 @@ class UtilsIOXml:
             xParentNode.remove(xElem)
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def UpdateAttributesInElement(self, xElement, dictAttrib):
-        
-        # for each key, value in the dictionary, update the element attributes
-        for sKey, sValue in dictAttrib.items():
-            xElement.attrib[sKey] = sValue
-        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetAttributes(self, xParentNode):
         
         dictAttrib = {}
@@ -351,6 +344,25 @@ class UtilsIOXml:
             
         return dictAttrib
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def UpdateAttributesInElement(self, xElement, dictAttrib):
+        
+        # for each key, value in the dictionary, update the element attributes
+        for sKey, sValue in dictAttrib.items():
+            xElement.attrib[sKey] = sValue
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def RemoveAttributeInElement(self, xElement, key ):
+        # remove a key/value pair from an element if it exists
+        
+        dictAttrib = self.GetAttributes(xElement)
+        
+        if key in dictAttrib:
+            del dictAttrib[key]
+            
+        # reset element with updated key/value pairs
+        self.UpdateAttributesInElement(xElement, dictAttrib)
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForRequiredFunctionalityInAttribute(self, sTreeLevel, sAttribute, sSetting):
         
@@ -395,11 +407,11 @@ class UtilsIOXml:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetFirstXmlNodeWithMatchingAttributes(self, lxNodesToSearch, dictAttrib):
         ''' Search the list of nodes.
-            Return first node and index that match the given  attributes.
+            Return first node and navigation index that match the given  attributes.
         '''
         bAttribMatch = True
 
-        for idx, xNode in enumerate(lxNodesToSearch):
+        for iNavIdx, xNode in enumerate(lxNodesToSearch):
 
             bAttribMatch = True # reinitialize for each page
             
@@ -416,13 +428,13 @@ class UtilsIOXml:
                         bAttribMatch = False
                     
             if bAttribMatch == False:
-                idx = -1
+                iNavIdx = -1
                 xNode = None
             else:
                 # all attributes matched - exit loop
                 break
                 
-        return idx, xNode 
+        return iNavIdx, xNode 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetXmlPageAndChildFromAttributeHistory(self, iCrrentPageIndex, sChildToSearch, sImageAttributeToMatch, sAttributeValue):
@@ -464,40 +476,44 @@ class UtilsIOXml:
         return xHistoricalChildElement, xHistoricalPageElement
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetMatchingXmlPagesFromAttributeHistory(self, iCurrentPageIndex, dictPageAttrib, reIgnoreSubstring=''):
-        ''' Function to get a list of previous page elements that match the list of attributes 
+    def GetMatchingXmlPagesFromAttributeHistory(self, iCurrentNavigationIndex, l4iNavigationIndices, dictPageAttrib, reIgnoreSubstring=''):
+        ''' Function to get a list of previous page elements and the navigation index that match the list of attributes 
             ignoring the substring defined as a regular expression (which can be null).
+            Randomized data is handled by stepping through the navigation indices which reflect the random order.
+            (Multiple question sets in the navigation list do not affect the resulting dictionary.
+            Only the page node and the page index are stored.)
         '''
         
-        lxHistoricalPages = []
+        dictPgNodeAndPgIndex = {}
         bAttribMatch = True
         
-        for iPageIndex in range( iCurrentPageIndex -1, -1, -1):
+        for iNavIndex in range( iCurrentNavigationIndex -1, -1, -1):
+            iPageIndex = l4iNavigationIndices[iNavIndex][0]
+            
             xPageNode = self.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
             
             bAttribMatch = True # initialize for next page
-
+            
             # get values of attributes to get a match
             for attrib, sValueToMatch in dictPageAttrib.items():
-                if bAttribMatch: # stop if any of the attributes don't match
                     
+                if bAttribMatch: # stop if any of the attributes don't match
                     sStoredPageValue = self.GetValueOfNodeAttribute(xPageNode, attrib)
                     
                     # remove ignore string
                     sPotentialPageValue = re.sub(reIgnoreSubstring,'',sStoredPageValue)
-
+    
                     if sPotentialPageValue == sValueToMatch:
                         bAttribMatch = True
                     else:
                         bAttribMatch = False
-
-            if bAttribMatch:
-                lxHistoricalPages.append(xPageNode)
+                
+            if bAttribMatch:        
+                dictPgNodeAndPgIndex.update({xPageNode:iPageIndex})
         
         
         
-        return lxHistoricalPages
-        
+        return dictPgNodeAndPgIndex
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

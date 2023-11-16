@@ -26,8 +26,8 @@ class UtilsValidate:
 
 
         self.oUtilsMsgs = UtilsMsgs()
-        self.oIOXml = UtilsIOXml()
         self.oFilesIO = oFilesIO
+        self.oIOXml = self.oFilesIO.oIOXml
 
         self._liPageGroups = []
         self._liUniquePageGroups = []
@@ -287,6 +287,11 @@ class UtilsValidate:
                             
                 # Slice4 assignments and TwoOverTwo layout
                 sValidationMsg = self.ValidateSlice4Layout(xPage, sPageReference)
+                sMsg = sMsg + sValidationMsg
+                
+                # >>>>>>>>>>>>>>>
+                # validate scripts exists for button type questions
+                sValidationMsg = self.ValidateButtonTypeScripts(xPage, sPageReference)
                 sMsg = sMsg + sValidationMsg
                   
             # >>>>>>>>>>>>>>>
@@ -750,6 +755,9 @@ class UtilsValidate:
                 sMsg = sMsg + "\nMissing historical 'BookmarkID' setting to match 'GoToBookmark': " + sGoToBookmarkIDToSearch \
                             + '\nSee Page #: '\
                             + str(iGoToBookmarkIDPage + 1)
+                if self.sTestMode == "1":
+                    raise ValueError('Missing historical BookmarkID: %s' % sMsg)
+                
         
         return sMsg
         
@@ -1068,4 +1076,38 @@ class UtilsValidate:
 
        
         
+        return sMsg
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateButtonTypeScripts(self, xPage, sPageReference):
+        ''' Check that each script defined in the options of a Button type of question
+            exists in the Inputs/Scripts directory.
+        '''
+        
+        sMsg = ''
+        
+        lxQuestionSetElements = self.oIOXml.GetChildren(xPage, 'QuestionSet')
+        for xQuestionSet in lxQuestionSetElements:
+            
+            lxQuestionElements = self.oIOXml.GetChildren(xQuestionSet, 'Question')
+            for xQuestion in lxQuestionElements:
+                
+                sQuestionType = self.oIOXml.GetValueOfNodeAttribute(xQuestion, 'Type')
+                if sQuestionType == 'Button':
+                    
+                    lxOptionElements = self.oIOXml.GetChildren(xQuestion, 'Option')
+                         
+                    for xOption in lxOptionElements:
+                        
+                        sScriptName = self.oIOXml.GetDataInNode(xOption)
+                        sScriptFullPath = os.path.join(self.oFilesIO.GetScriptsDir(),sScriptName)
+                        
+                        if os.path.exists(sScriptFullPath) == False:
+                            sMsg = '\nYou have a Button type of question but the script name defined in the Option does not exist' \
+                                    + '\nSee Page: ' + str(sPageReference)\
+                                    + ' for Script: ' + sScriptName\
+                                    + ' in path: ' + sScriptFullPath
+                
+        
+
         return sMsg
