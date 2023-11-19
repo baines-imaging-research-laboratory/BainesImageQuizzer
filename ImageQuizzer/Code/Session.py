@@ -291,18 +291,18 @@ class Session:
     #----------
     def GetNavigationIndicesAtIndex(self, iNavInd):
         return self._l4iNavigationIndices[iNavInd]
-    #----------
-    def GetNavigationIndexForPage(self,iPageIndex):
-        ''' Returns first navigation index that matches the Page index given.
-            (Question sets are not taken into account.)
-        '''
-        iNavigationIndex = -1
-        for idx in range(len(self.GetNavigationList())):
-            if self.GetNavigationPage(idx) == iPageIndex:
-                iNavigationIndex = idx
-                break
-            
-        return iNavigationIndex
+#     #----------
+#     def GetNavigationIndexForPage(self,iPageIndex):
+#         ''' Returns first navigation index that matches the Page index given.
+#             (Question sets are not taken into account.)
+#         '''
+#         iNavigationIndex = -1
+#         for idx in range(len(self.GetNavigationList())):
+#             if self.GetNavigationPage(idx) == iPageIndex:
+#                 iNavigationIndex = idx
+#                 break
+#             
+#         return iNavigationIndex
         
         
     #----------
@@ -347,11 +347,11 @@ class Session:
         return sPageComplete
         
     #----------
-    def SetupPageState(self, iPgIndex):
+    def SetupPageState(self, iPageIndex):
         ''' Initialize a new page state object for the page.
             XML specifics for the input page index are used for initializing.
         '''
-        xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPgIndex)
+        xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
         self.oPageState.InitializeStates(self, xPageNode)
     
     #----------
@@ -1518,7 +1518,7 @@ class Session:
         lPageIndices = list(dictPgNodeAndPgIndex.values())
         if len(lPageIndices) > 0:
             iBookmarkedPageIndex = lPageIndices[0]
-            iBookmarkedNavigationIndex = self.GetNavigationIndexForPage(iBookmarkedPageIndex)
+            iBookmarkedNavigationIndex = self.oIOXml.GetNavigationIndexForPage(self.GetNavigationList(), iBookmarkedPageIndex)
             
             
                 
@@ -1719,50 +1719,9 @@ class Session:
         # given the root of the xml document build composite navigation list 
         #     of indices for each page, question sets, page group and rep number
         
-        self.ClearNavigationList()
-        # get Page nodes
-        xPages = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
-
-        iPageNum = 0
-        for iPageIndex in range(len(xPages)):
-            iPageNum = iPageNum + 1
-            # for each page - get number of question sets
-            xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
-            xQuestionSets = self.oIOXml.GetChildren(xPageNode,'QuestionSet')
-
-            sPageGroup = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
-            # if there is no request to randomize the page groups, there may not be a page group number
-            try:
-                iPageGroup = int(sPageGroup)
-            except:
-                # assign a unique page number if no group number exists
-                iPageGroup = iPageNum
-                
-            sRepNum = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Rep')
-            try:
-                iRepNum = int(sRepNum)
-            except:
-                iRepNum = 0
-            
-            # if there are no question sets for the page, insert a blank shell
-            #    - this allows images to load
-            if len(xQuestionSets) == 0:
-                self.oIOXml.AddElement(xPageNode,'QuestionSet', 'Blank Quiz',{})
-                xQuestionSets = self.oIOXml.GetChildren(xPageNode, 'QuestionSet')
-            
-            # append to composite indices list
-            #    - if there are 2 pages and the 1st page has 2 question sets, 2nd page has 1 question set,
-            #        and each page is in a different page group
-            #        the indices will look like this:
-            #        Page    QS    PageGroup  Rep
-            #        0        0        1       0
-            #        0        1        1       0
-            #        1        0        2       0
-            #    - there can be numerous questions in each question set
-            for iQuestionSetIndex in range(len(xQuestionSets)):
-                self.NavigationListAppend([iPageIndex,iQuestionSetIndex, iPageGroup, iRepNum])
-                
-                
+        
+        self.SetNavigationList(self.oIOXml.GetNavigationListBase(self.oIOXml.GetRootNode()))
+        
         # if randomization is requested - shuffle the page/questionset list
         if self.GetRandomizeRequired():
             # check if xml already holds a set of randomized indices otherwise, call randomizing function
@@ -2569,43 +2528,6 @@ class Session:
         return ldictAllImageStateItems
                 
         
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetXmlElementFromAttributeHistory(self, sPageChildrenToSearch, sImageAttributeToMatch, sAttributeValue):
-        ''' Function will return the historical element that contains the attribute requested for the search.
-            This attribute is associated with a child of the 'Page' element.
-            The search goes through the pages in reverse. 
-                For each page, the requested children are searched (forward) for the requested attribute.
-            When found, the xml element that contains the attribute is returned.
-        '''
-        
-        xHistoricalChildElement = None
-        
-        # start searching pages in reverse order - to get most recent setting
-        # first match will end the search
-        bHistoricalElementFound = False
-        for iPageIndex in range(self.GetCurrentPageIndex()-1, -1, -1):
-            xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
-        
-            if bHistoricalElementFound == False:
-                
-                #get all requested children
-                lxChildElementsToSearch = self.oIOXml.GetChildren(xPageNode, sPageChildrenToSearch)
-                if len(lxChildElementsToSearch) > 0:
-    
-                    for xImageNode in lxChildElementsToSearch:
-                        
-                        # get image attribute
-                        sPotentialAttributeValue = self.oIOXml.GetValueOfNodeAttribute(xImageNode, sImageAttributeToMatch)
-                        if sPotentialAttributeValue == sAttributeValue:
-                            xHistoricalChildElement = xImageNode
-                            bHistoricalElementFound = True
-                            break
-            else:
-                break
-        
-        return xHistoricalChildElement
-    
-
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def WriteResponsesToXml(self):
         """ Write captured responses to xml. If this is the first write to the xml

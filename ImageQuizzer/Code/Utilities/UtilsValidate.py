@@ -122,6 +122,7 @@ class UtilsValidate:
         try:
             # open requested quiz xml 
             bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetXmlQuizPath(),'Session')
+            self.l4iNavList = self.oIOXml.GetNavigationListBase(xRootNode)
 
             # >>>>>>>>>>>>>>>
             # check options for ContourVisibility at the Session level
@@ -876,7 +877,8 @@ class UtilsValidate:
 
                 # look for historical LabelMapID match
                 iPageIndex = iPageNum - 1  # zero indexing for current page
-                xHistoricalImageElement, xHistoricalPageElement = self.oIOXml.GetXmlPageAndChildFromAttributeHistory(iPageIndex, 'Image','LabelMapID',sLabelMapIDLink)
+                iNavIdx = self.oIOXml.GetNavigationIndexForPage(self.l4iNavList, iPageIndex)  # zero indexing for current page
+                xHistoricalImageElement, xHistoricalPageElement = self.oIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIdx, self.l4iNavList, 'Image','LabelMapID',sLabelMapIDLink)
                 if xHistoricalImageElement == None:
                     raise Exception(sErrorMsgNoMatchingHistoricalLabelMapID)
                 
@@ -1111,3 +1113,5 @@ class UtilsValidate:
         
 
         return sMsg
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

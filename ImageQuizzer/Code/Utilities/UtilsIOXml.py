@@ -382,6 +382,71 @@ class UtilsIOXml:
         return bRequired
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetNavigationListBase(self, xRootNode):
+        
+        l4iNavList = []
+        
+        # get Page nodes
+        xPages = self.GetChildren(xRootNode, 'Page')
+
+        iPageNum = 0
+        for iPageIndex in range(len(xPages)):
+            iPageNum = iPageNum + 1
+            # for each page - get number of question sets
+            xPageNode = self.GetNthChild(xRootNode, 'Page', iPageIndex)
+            xQuestionSets = self.GetChildren(xPageNode,'QuestionSet')
+
+            sPageGroup = self.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
+            # if there is no request to randomize the page groups, there may not be a page group number
+            try:
+                iPageGroup = int(sPageGroup)
+            except:
+                # assign a unique page number if no group number exists
+                iPageGroup = iPageNum
+                
+            sRepNum = self.GetValueOfNodeAttribute(xPageNode, 'Rep')
+            try:
+                iRepNum = int(sRepNum)
+            except:
+                iRepNum = 0
+            
+            # if there are no question sets for the page, insert a blank shell
+            #    - this allows images to load
+            if len(xQuestionSets) == 0:
+                self.AddElement(xPageNode,'QuestionSet', 'Blank Quiz',{})
+                xQuestionSets = self.GetChildren(xPageNode, 'QuestionSet')
+            
+            # append to composite indices list
+            #    - if there are 2 pages and the 1st page has 2 question sets, 2nd page has 1 question set,
+            #        and each page is in a different page group
+            #        the indices will look like this:
+            #        Page    QS    PageGroup  Rep
+            #        0        0        1       0
+            #        0        1        1       0
+            #        1        0        2       0
+            #    - there can be numerous questions in each question set
+            for iQuestionSetIndex in range(len(xQuestionSets)):
+                l4iNavList.append([iPageIndex,iQuestionSetIndex, iPageGroup, iRepNum])
+        
+        
+        
+        
+        return l4iNavList
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetNavigationIndexForPage(self, l4iNavList, iPageIndex):
+        ''' Returns first navigation index that matches the Page index given.
+            (Question sets are not taken into account.)
+        '''
+        iNavigationIndex = -1
+        for idx in range(len(l4iNavList)):
+            if l4iNavList[idx][0] == iPageIndex:
+                iNavigationIndex = idx
+                break
+            
+        return iNavigationIndex
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetIndexOfNextChildWithAttributeValue(self, xParentNode, sChildTagName, indFrom, sAttrib, sAttribValue):
         ''' given an index to search from, search the attributes in the child that matches the input
             attribute value
@@ -437,7 +502,8 @@ class UtilsIOXml:
         return iNavIdx, xNode 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetXmlPageAndChildFromAttributeHistory(self, iCrrentPageIndex, sChildToSearch, sImageAttributeToMatch, sAttributeValue):
+#     def GetXmlPageAndChildFromAttributeHistory(self, iCrrentPageIndex, sChildToSearch, sImageAttributeToMatch, sAttributeValue):
+    def GetXmlPageAndChildFromAttributeHistory(self, iCurrentNavigationIndex, l4iNavigationIndices, sChildToSearch, sImageAttributeToMatch, sAttributeValue):
         ''' Function will return the historical elements (page and child)  that contains the attribute requested for the search.
             This attribute is associated with a child of the 'Page' element.
             The search goes through the pages in reverse. 
@@ -448,10 +514,12 @@ class UtilsIOXml:
         xHistoricalChildElement = None
         xHistoricalPageElement = None
         
-        # start searching pages in reverse order - to get most recent setting
+        # start searching pages in reverse order through the navigation indices - to get most recent setting
         # first match will end the search
         bHistoricalElementFound = False
-        for iPageIndex in range(iCrrentPageIndex-1, -1, -1):
+        for iNavIndex in range( iCurrentNavigationIndex -1, -1, -1):
+            iPageIndex = l4iNavigationIndices[iNavIndex][0]
+
             xPageNode = self.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
         
             if bHistoricalElementFound == False:
@@ -475,6 +543,45 @@ class UtilsIOXml:
         
         return xHistoricalChildElement, xHistoricalPageElement
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetXmlElementFromAttributeHistory(self, iCurrentNavigationIndex, l4iNavigationIndices, sPageChildrenToSearch, sImageAttributeToMatch, sAttributeValue):
+        ''' Function will return the historical element that contains the attribute requested for the search.
+            This attribute is associated with a child of the 'Page' element.
+            The search goes through the navigation indices in reverse. 
+                For each page, the requested children are searched (forward) for the requested attribute.
+            When found, the xml element that contains the attribute is returned.
+        '''
+        
+        xHistoricalChildElement = None
+        
+        # start searching pages in reverse order through the navigation indices - to get most recent setting
+        # first match will end the search
+        bHistoricalElementFound = False
+        for iNavIndex in range( iCurrentNavigationIndex -1, -1, -1):
+            iPageIndex = l4iNavigationIndices[iNavIndex][0]
+            
+            xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
+        
+            if bHistoricalElementFound == False:
+                
+                #get all requested children
+                lxChildElementsToSearch = self.oIOXml.GetChildren(xPageNode, sPageChildrenToSearch)
+                if len(lxChildElementsToSearch) > 0:
+    
+                    for xImageNode in lxChildElementsToSearch:
+                        
+                        # get image attribute
+                        sPotentialAttributeValue = self.oIOXml.GetValueOfNodeAttribute(xImageNode, sImageAttributeToMatch)
+                        if sPotentialAttributeValue == sAttributeValue:
+                            xHistoricalChildElement = xImageNode
+                            bHistoricalElementFound = True
+                            break
+            else:
+                break
+        
+        return xHistoricalChildElement
+    
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetMatchingXmlPagesFromAttributeHistory(self, iCurrentNavigationIndex, l4iNavigationIndices, dictPageAttrib, reIgnoreSubstring=''):
         ''' Function to get a list of previous page elements and the navigation index that match the list of attributes 

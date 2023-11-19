@@ -677,8 +677,13 @@ class UtilsFilesIO:
                     # get image element from history that holds the same label map id; 
                     xHistoricalImageElement = None  # initialize
                     xHistoricalLabelMapMatch = None
-                    # xHistoricalImageElement = oSession.GetXmlElementFromAttributeHistory('Image','LabelMapID',sLabelMapIDLink)
-                    xHistoricalImageElement, xHistoricalPageElement = oSession.oIOXml.GetXmlPageAndChildFromAttributeHistory(oSession.GetCurrentPageIndex(),'Image','LabelMapID',sLabelMapIDLink)
+#                     xHistoricalImageElement, xHistoricalPageElement = oSession.oIOXml.GetXmlPageAndChildFromAttributeHistory(oSession.GetCurrentPageIndex(),'Image','LabelMapID',sLabelMapIDLink)
+                    xHistoricalImageElement, xHistoricalPageElement = oSession.oIOXml.GetXmlPageAndChildFromAttributeHistory(\
+                                                                                    oSession.GetCurrentNavigationIndex(), \
+                                                                                    oSession.GetNavigationList(),\
+                                                                                    'Image',\
+                                                                                    'LabelMapID',\
+                                                                                    sLabelMapIDLink)
 
                     if oImageNode.bMergeLabelMaps:
                         # combine label maps and store on disk
@@ -811,8 +816,14 @@ class UtilsFilesIO:
             
             
             # collect label map paths
-            dictNodeIndex = oSession.oIOXml.GetMatchingXmlPagesFromAttributeHistory(oSession.GetCurrentPageIndex(), dictAttribToMatch, reIgnoreSubstring)
-            lMatchingPageNodes = list(dictNodeIndex.keys())
+#             dictPgNodeAndPgIndex = oSession.oIOXml.GetMatchingXmlPagesFromAttributeHistory(oSession.GetCurrentPageIndex(), dictAttribToMatch, reIgnoreSubstring)
+            dictPgNodeAndPgIndex = oSession.oIOXml.GetMatchingXmlPagesFromAttributeHistory(\
+                                                    oSession.GetCurrentNavigationIndex(),\
+                                                    oSession.GetNavigationList() , \
+                                                    dictAttribToMatch, \
+                                                    reIgnoreSubstring)
+            
+            lMatchingPageNodes = list(dictPgNodeAndPgIndex.keys())
             for xPageNode in lMatchingPageNodes:
                 
                 lxImageElements = oSession.oIOXml.GetChildren(xPageNode, 'Image')
