@@ -139,8 +139,33 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_ValidatePageGroupNumbers_InvalidNumber())
         tupResults.append(self.test_ValidatePageGroupNumbers_NotEnoughPageGroups())
         tupResults.append(self.test_ValidateImageOpacity())
-        tupResults.append(self.test_ValidateGoToBookmarkRequest_ValidBookmarkID())
-        tupResults.append(self.test_ValidateGoToBookmarkRequest_InvalidBookmarkID())
+
+        tupResults.append(self.test_ValidateGoToBookmarkRequest_Valid_NoRandomize())
+        tupResults.append(self.test_ValidateGoToBookmarkRequest_Valid_Randomize())
+        tupResults.append(self.test_ValidateGoToBookmarkRequest_Valid_BothPageGroups0s())
+        tupResults.append(self.test_ValidateGoToBookmarkRequest_Valid_PageGroup0_OnSetID())
+        tupResults.append(self.test_ValidateGoToBookmarkRequest_Valid_PageGroup0_Reversed())
+        tupResults.append(self.test_ValidateGoToBookmarkRequest_Invalid_OrderWithPageGroup0OnDisplayID())
+        tupResults.append(self.test_ValidateGoToBookmarkRequest_Invalid_PageGroup())
+        tupResults.append(self.test_ValidateGoToBookmarkRequest_Invalid_NoRandomize())
+        tupResults.append(self.test_ValidateGoToBookmarkRequest_Invalid_Order_SamePageGroups())
+        tupResults.append(self.test_ValidateGoToBookmarkRequest_Invalid_PageGroup_Reversed())
+        tupResults.append(self.test_ValidateGoToBookmarkRequest_Invalid_OrderWithBothPageGroup0s())
+        tupResults.append(self.test_ValidateGoToBookmarkRequest_Invalid_OrderWithPageGroup0_OnDisplayID_Reversed())
+        
+        tupResults.append(self.test_ValidateDisplayLabelMapID_InvalidPath())
+        tupResults.append(self.test_ValidateDisplayLabelMapID_Valid_NoRandomize())
+        tupResults.append(self.test_ValidateDisplayLabelMapID_Valid_Randomize())
+        tupResults.append(self.test_ValidateDisplayLabelMapID_Valid_BothPageGroup0s())
+        tupResults.append(self.test_ValidateDisplayLabelMapID_Valid_PageGroup0_OnSetID())
+        tupResults.append(self.test_ValidateDisplayLabelMapID_Valid_PageGroup0_Reversed())
+        tupResults.append(self.test_ValidateDisplayLabelMapID_Invalid_Order_PageGroup0OnDisplayID())
+        tupResults.append(self.test_ValidateDisplayLabelMapID_Invalid_PageGroup())
+        tupResults.append(self.test_ValidateDisplayLabelMapID_Invalid_NoRandomize())
+        tupResults.append(self.test_ValidateDisplayLabelMapID_Invalid_Order_SamePageGroups())
+        tupResults.append(self.test_ValidateDisplayLabelMapID_Invalid_PageGroup_Reversed())
+        tupResults.append(self.test_ValidateDisplayLabelMapID_Invalid_Order_BothPageGroups0s())
+        tupResults.append(self.test_ValidateDisplayLabelMapID_Invalid_Order_PageGroup0_OnDisplayID_Reversed())
 
 
 
@@ -390,9 +415,16 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         
 
     #------------------------------------------- 
-    def test_ValidateGoToBookmarkRequest_ValidBookmarkID(self):
+    #------------------------------------------- 
+    #------------------------------------------- 
+    #------------BookmarkID tests--------------- 
+    #------------------------------------------- 
+    #------------------------------------------- 
+
+    #------------------------------------------- 
+    def test_ValidateGoToBookmarkRequest_Valid_NoRandomize(self):
         ''' BookmarkID must appear before GoToBookmarkID attribute
-            (This does not take into account if randomizing is turned on.)
+            Test with the same PageGroup number.
         '''
         
         self.fnName = sys._getframe().f_code.co_name
@@ -404,9 +436,54 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         # add attributes to specific pages
         xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("BookmarkID","ReturnHere")
+        xPageNode.set("PageGroup","2")
 
         xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("GoToBookmark","ReturnHere ABORT")
+        xPageNode.set("PageGroup","3")
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateGoToBookmarkRequest()
+            sMsg = context.exception.args[0]
+            if sMsg.find('Missing historical BookmarkID') >= 0:
+                bTestResult = False
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = True
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+    
+    
+    
+    #------------------------------------------- 
+    def test_ValidateGoToBookmarkRequest_Valid_Randomize(self):
+        ''' BookmarkID must appear before GoToBookmarkID attribute
+            Test with the same PageGroup number.
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
+        
+        xRoot.set("RandomizePageGroups","Y")
+
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("BookmarkID","ReturnHere")
+        xPageNode.set("PageGroup","2")
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("GoToBookmark","ReturnHere ABORT")
+        xPageNode.set("PageGroup","2")
 
         self.oIOXml.SetRootNode(xRoot)
         
@@ -427,29 +504,150 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         return tupResult
     
     #------------------------------------------- 
-    def test_ValidateGoToBookmarkRequest_InvalidBookmarkID(self):
+    def test_ValidateGoToBookmarkRequest_Valid_BothPageGroups0s(self):
+        ''' BookmarkID must appear before GoToBookmarkID attribute
+            Even if randomizing is turned on, a BookmarkID can be on a page with PageGroup=0
+            since those pages don't get randomized.
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
+        xRoot.set("RandomizePageGroups","Y")
+
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("BookmarkID","ReturnHere")
+        xPageNode.set("PageGroup","0")
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("GoToBookmark","ReturnHere ABORT")
+        xPageNode.set("PageGroup","0")
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateGoToBookmarkRequest()
+            sMsg = context.exception.args[0]
+            if sMsg.find('Missing historical BookmarkID') >= 0:
+                bTestResult = False
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = True
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+    
+    #------------------------------------------- 
+    def test_ValidateGoToBookmarkRequest_Valid_PageGroup0_OnSetID(self):
+        ''' BookmarkID must appear before GoToBookmarkID attribute
+            Even if randomizing is turned on, a BookmarkID can be on a page with PageGroup=0
+            since those pages don't get randomized.
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
+        xRoot.set("RandomizePageGroups","Y")
+
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("BookmarkID","ReturnHere")
+        xPageNode.set("PageGroup","0")
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("GoToBookmark","ReturnHere ABORT")
+        xPageNode.set("PageGroup","2")
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateGoToBookmarkRequest()
+            sMsg = context.exception.args[0]
+            if sMsg.find('Missing historical BookmarkID') >= 0:
+                bTestResult = False
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = True
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+    
+    #------------------------------------------- 
+    def test_ValidateGoToBookmarkRequest_Valid_PageGroup0_Reversed(self):
+        ''' BookmarkID must appear before GoToBookmarkID attribute
+            Even if randomizing is turned on, a BookmarkID can be on a page with PageGroup=0
+            since those pages don't get randomized.
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
+        xRoot.set("RandomizePageGroups","Y")
+
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("BookmarkID","ReturnHere")
+        xPageNode.set("PageGroup","0")
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("GoToBookmark","ReturnHere ABORT")
+        xPageNode.set("PageGroup","2")
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateGoToBookmarkRequest()
+            sMsg = context.exception.args[0]
+            if sMsg.find('Missing historical BookmarkID') >= 0:
+                bTestResult = False
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = True
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+    
+    #------------------------------------------- 
+    def test_ValidateGoToBookmarkRequest_Invalid_OrderWithPageGroup0OnDisplayID(self):
         ''' Test when BookmarkID is on a Page that follows the GoToBookmark attribute.
-            (This does not take into account if randomizing is turned on.)
+            Randomizing is on and page groups match at 0
         '''
         
         self.fnName = sys._getframe().f_code.co_name
         bTestResult = True
         
         xRoot = self.CreateXMLBaseForTests()
-        self.oIOXml.SetRootNode(xRoot)
 
-        self.fnName = sys._getframe().f_code.co_name
-        bTestResult = True
-        sMsg = ''
-        
-        xRoot = self.CreateXMLBaseForTests()
+        xRoot.set("RandomizePageGroups","Y")
+
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
-        xPageNode.set("BookmarkID","ReturnHere")
-
         xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("BookmarkID","ReturnHere")
+        xPageNode.set("PageGroup","2")
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("GoToBookmark","ReturnHere ABORT")
+        xPageNode.set("PageGroup","0")
 
         self.oIOXml.SetRootNode(xRoot)
         
@@ -465,6 +663,795 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         except:
             bTestResult = False
 
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #------------------------------------------- 
+    def test_ValidateGoToBookmarkRequest_Invalid_PageGroup(self):
+        ''' BookmarkID must appear before GoToBookmarkID attribute
+            Test with invalid PageGroup numbers
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
+
+        xRoot.set("RandomizePageGroups","Y")
+        
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("BookmarkID","ReturnHere")
+        xPageNode.set("PageGroup","2")
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("GoToBookmark","ReturnHere ABORT")
+        xPageNode.set("PageGroup","3")
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateGoToBookmarkRequest()
+            sMsg = context.exception.args[0]
+            if sMsg.find('do not match') >= 0:
+                bTestResult = True
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = False
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #------------------------------------------- 
+    def test_ValidateGoToBookmarkRequest_Invalid_NoRandomize(self):
+        ''' Test when BookmarkID is on a Page that follows the GoToBookmark attribute.
+            
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        
+        xRoot = self.CreateXMLBaseForTests()
+        self.oIOXml.SetRootNode(xRoot)
+
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("BookmarkID","ReturnHere")
+        xPageNode.set("PageGroup","2")
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("GoToBookmark","ReturnHere ABORT")
+        xPageNode.set("PageGroup","3")
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateGoToBookmarkRequest()
+            sMsg = context.exception.args[0]
+            if sMsg.find('Missing historical BookmarkID') >= 0:
+                bTestResult = True
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = False
+
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #------------------------------------------- 
+    def test_ValidateGoToBookmarkRequest_Invalid_Order_SamePageGroups(self):
+        ''' Test when BookmarkID is on a Page that follows the GoToBookmark attribute.
+            
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        
+        xRoot = self.CreateXMLBaseForTests()
+        
+        xRoot.set("RandomizePageGroups","Y")
+        self.oIOXml.SetRootNode(xRoot)
+
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("BookmarkID","ReturnHere")
+        xPageNode.set("PageGroup","2")
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("GoToBookmark","ReturnHere ABORT")
+        xPageNode.set("PageGroup","2")
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateGoToBookmarkRequest()
+            sMsg = context.exception.args[0]
+            if sMsg.find('Missing historical BookmarkID') >= 0:
+                bTestResult = True
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = False
+
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #------------------------------------------- 
+    def test_ValidateGoToBookmarkRequest_Invalid_PageGroup_Reversed(self):
+        ''' BookmarkID must appear before GoToBookmarkID attribute
+            Test with invalid PageGroup numbers
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
+
+        xRoot.set("RandomizePageGroups","Y")
+        
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("BookmarkID","ReturnHere")
+        xPageNode.set("PageGroup","3")
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("GoToBookmark","ReturnHere ABORT")
+        xPageNode.set("PageGroup","2")
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateGoToBookmarkRequest()
+            sMsg = context.exception.args[0]
+            if sMsg.find('do not match') >= 0:
+                bTestResult = True
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = False
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+
+    #------------------------------------------- 
+    def test_ValidateGoToBookmarkRequest_Invalid_OrderWithBothPageGroup0s(self):
+        ''' Test when BookmarkID is on a Page that follows the GoToBookmark attribute.
+            Randomizing is on and page groups match at 0
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        
+        xRoot = self.CreateXMLBaseForTests()
+
+        xRoot.set("RandomizePageGroups","Y")
+
+
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("BookmarkID","ReturnHere")
+        xPageNode.set("PageGroup","0")
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("GoToBookmark","ReturnHere ABORT")
+        xPageNode.set("PageGroup","0")
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateGoToBookmarkRequest()
+            sMsg = context.exception.args[0]
+            if sMsg.find('Missing historical BookmarkID') >= 0:
+                bTestResult = True
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = False
+
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #------------------------------------------- 
+    def test_ValidateGoToBookmarkRequest_Invalid_OrderWithPageGroup0_OnDisplayID_Reversed(self):
+        ''' Test when BookmarkID is on a Page that follows the GoToBookmark attribute.
+            Randomizing is on and page groups match at 0
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        
+        xRoot = self.CreateXMLBaseForTests()
+
+        xRoot.set("RandomizePageGroups","Y")
+
+
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("BookmarkID","ReturnHere")
+        xPageNode.set("PageGroup","2")
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("GoToBookmark","ReturnHere ABORT")
+        xPageNode.set("PageGroup","0")
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateGoToBookmarkRequest()
+            sMsg = context.exception.args[0]
+            if sMsg.find('Missing historical BookmarkID') >= 0:
+                bTestResult = True
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = False
+
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #------------------------------------------- 
+    #------------------------------------------- 
+    #------------------------------------------- 
+    #------------LabelMapID tests--------------- 
+    #------------------------------------------- 
+    #------------------------------------------- 
+
+    
+    #------------------------------------------- 
+    def test_ValidateDisplayLabelMapID_InvalidPath(self):
+        ''' BookmarkID must appear before GoToBookmarkID attribute
+            Test with invalid labelmap path
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
+
+        xRoot.set("RandomizePageGroups","Y")
+        
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("PageGroup","3")
+        xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
+        xPath0 = etree.SubElement(xImage0,"Path")
+        xPath0.text = "C:\\Documents"
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("PageGroup","3")
+        xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
+        xPath1 = etree.SubElement(xImage1,"Path")
+        xPath1.text = "C:\\Documents\\NewFolder"
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateDisplayLabelMapID()
+            sMsg = context.exception.args[0]
+            if sMsg.find('do not match') >= 0:
+                bTestResult = True
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = False
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #------------------------------------------- 
+    def test_ValidateDisplayLabelMapID_Valid_NoRandomize(self):
+        ''' LabelMapID must appear before DisplayLabelMapID attribute
+            Test with the same PageGroup number.
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
+
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("PageGroup","2")
+        xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
+        
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("PageGroup","3")
+        xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateDisplayLabelMapID()
+            sMsg = context.exception.args[0]
+            if sMsg.find('Missing historical LabelMapID') >= 0:
+                bTestResult = False
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = True
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+    
+    #------------------------------------------- 
+    def test_ValidateDisplayLabelMapID_Valid_Randomize(self):
+        ''' LabelMapID must appear before DisplayLabelMapID attribute
+            Test with the same PageGroup number.
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
+        xRoot.set("RandomizePageGroups","Y")
+
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("PageGroup","2")
+        xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
+        
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("PageGroup","2")
+        xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateDisplayLabelMapID()
+            sMsg = context.exception.args[0]
+            if sMsg.find('Missing historical LabelMapID') >= 0:
+                bTestResult = False
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = True
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+    
+    #------------------------------------------- 
+    def test_ValidateDisplayLabelMapID_Valid_BothPageGroup0s(self):
+        ''' LabelMapID must appear before DisplayLabelMapID attribute
+            Test with the same PageGroup number.
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
+        xRoot.set("RandomizePageGroups","Y")
+
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("PageGroup","0")
+        xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
+        
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("PageGroup","0")
+        xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateDisplayLabelMapID()
+            sMsg = context.exception.args[0]
+            if sMsg.find('Missing historical LabelMapID') >= 0:
+                bTestResult = False
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = True
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+    
+    #------------------------------------------- 
+    def test_ValidateDisplayLabelMapID_Valid_PageGroup0_OnSetID(self):
+        ''' LabelMapID must appear before DisplayLabelMapID attribute
+            Test with Randomizing and finding the historical on PageGroup = 0.
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
+        
+        xRoot.set("RandomizePageGroups","Y")
+
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("PageGroup","0")
+        xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
+        
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("PageGroup","2")
+        xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateDisplayLabelMapID()
+            sMsg = context.exception.args[0]
+            if sMsg.find('Missing historical LabelMapID') >= 0:
+                bTestResult = False
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = True
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+    
+    #------------------------------------------- 
+    def test_ValidateDisplayLabelMapID_Valid_PageGroup0_Reversed(self):
+        ''' LabelMapID must appear before DisplayLabelMapID attribute
+            Test with PageGroup=0 when display is on a Page before label map id with randomizing on.
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
+        
+        xRoot.set("RandomizePageGroups","Y")
+
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("PageGroup","0")
+        xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
+        
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("PageGroup","2")
+        xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateDisplayLabelMapID()
+            sMsg = context.exception.args[0]
+            if sMsg.find('Missing historical LabelMapID') >= 0:
+                bTestResult = False
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = True
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+    
+    #------------------------------------------- 
+    def test_ValidateDisplayLabelMapID_Invalid_Order_PageGroup0OnDisplayID(self):
+        ''' LabelMapID must appear before DisplayLabelMapID attribute
+            Test with invalid order
+        '''
+         
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+         
+        xRoot = self.CreateXMLBaseForTests()
+         
+        xRoot.set("RandomizePageGroups","Y")
+ 
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("PageGroup","2")
+        xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
+ 
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("PageGroup","0")
+        xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
+ 
+        self.oIOXml.SetRootNode(xRoot)
+         
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateDisplayLabelMapID()
+            sMsg = context.exception.args[0]
+            if sMsg.find('do not match') >= 0:
+                bTestResult = True
+            else:
+                raise   # another error
+ 
+        except:
+            bTestResult = False
+         
+         
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #------------------------------------------- 
+    def test_ValidateDisplayLabelMapID_Invalid_PageGroup(self):
+        ''' BookmarkID must appear before GoToBookmarkID attribute
+            Test with invalid PageGroup numbers
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
+
+        xRoot.set("RandomizePageGroups","Y")
+        
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("PageGroup","2")
+        xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("PageGroup","3")
+        xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateDisplayLabelMapID()
+            sMsg = context.exception.args[0]
+            if sMsg.find('do not match') >= 0:
+                bTestResult = True
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = False
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #------------------------------------------- 
+    def test_ValidateDisplayLabelMapID_Invalid_NoRandomize(self):
+        ''' LabelMapID must appear before DisplayLabelMapID attribute
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
+        
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("PageGroup","2")
+        xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("PageGroup","3")
+        xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateDisplayLabelMapID()
+            sMsg = context.exception.args[0]
+            if sMsg.find('do not match') >= 0:
+                bTestResult = True
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = False
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #------------------------------------------- 
+    def test_ValidateDisplayLabelMapID_Invalid_Order_SamePageGroups(self):
+        ''' LabelMapID must appear before DisplayLabelMapID attribute
+            Test with invalid order
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
+        
+        xRoot.set("RandomizePageGroups","Y")
+
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("PageGroup","2")
+        xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("PageGroup","2")
+        xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateDisplayLabelMapID()
+            sMsg = context.exception.args[0]
+            if sMsg.find('do not match') >= 0:
+                bTestResult = True
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = False
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #------------------------------------------- 
+    def test_ValidateDisplayLabelMapID_Invalid_PageGroup_Reversed(self):
+        ''' LabelMapID must appear before DisplayLabelMapID attribute
+            Test with invalid order
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
+        
+        xRoot.set("RandomizePageGroups","Y")
+
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("PageGroup","3")
+        xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("PageGroup","2")
+        xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateDisplayLabelMapID()
+            sMsg = context.exception.args[0]
+            if sMsg.find('do not match') >= 0:
+                bTestResult = True
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = False
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+    #------------------------------------------- 
+    def test_ValidateDisplayLabelMapID_Invalid_Order_BothPageGroups0s(self):
+        ''' LabelMapID must appear before DisplayLabelMapID attribute
+            Test with invalid order
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
+        
+        xRoot.set("RandomizePageGroups","Y")
+
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("PageGroup","0")
+        xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("PageGroup","0")
+        xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateDisplayLabelMapID()
+            sMsg = context.exception.args[0]
+            if sMsg.find('do not match') >= 0:
+                bTestResult = True
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = False
+        
+        
+        tupResult = self.fnName, bTestResult
+        return tupResult
+
+
+    #------------------------------------------- 
+    def test_ValidateDisplayLabelMapID_Invalid_Order_PageGroup0_OnDisplayID_Reversed(self):
+        ''' LabelMapID must appear before DisplayLabelMapID attribute
+            Test with invalid order
+        '''
+        
+        self.fnName = sys._getframe().f_code.co_name
+        bTestResult = True
+        sMsg = ''
+        
+        xRoot = self.CreateXMLBaseForTests()
+        
+        xRoot.set("RandomizePageGroups","Y")
+
+        # add attributes to specific pages
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode.set("PageGroup","2")
+        xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
+
+        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode.set("PageGroup","0")
+        xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
+
+        self.oIOXml.SetRootNode(xRoot)
+        
+        try:
+            with self.assertRaises(Exception) as context:
+                self.oValidation.ValidateDisplayLabelMapID()
+            sMsg = context.exception.args[0]
+            if sMsg.find('do not match') >= 0:
+                bTestResult = True
+            else:
+                raise   # another error
+
+        except:
+            bTestResult = False
+        
         
         tupResult = self.fnName, bTestResult
         return tupResult

@@ -701,13 +701,13 @@ class UtilsValidate:
             is set to 'Y'.)
         '''
         sMsg = ''
-        l3tupGoToBookmarkIDs = []
-        l3tupBookmarkIDs = []
+        ltupGoToBookmarkIDs = []
+        ltupBookmarkIDs = []
         sRandomizeSetting = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'RandomizePageGroups')
         if sRandomizeSetting == 'Y':
-            bTestForPrevious = False
+            bRandomizing = True
         else:
-            bTestForPrevious = True
+            bRandomizing = False
         
         lxPageNodes = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
         
@@ -721,41 +721,60 @@ class UtilsValidate:
             if sGoToBookmarkRequest != '':
                 sGoToBookmarkID = sGoToBookmarkRequest.split()[0]
 
+            sPageGroup = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
+            if sPageGroup != '':
+                iPageGroup = int(sPageGroup)
+            else:
+                iPageGroup = 0
+
+
             if sBookmarkID != '':
-                l3tupBookmarkIDs.append([sBookmarkID, idxPage])
+                ltupBookmarkIDs.append([sBookmarkID, idxPage, iPageGroup])
             if sGoToBookmarkID != '':
-                l3tupGoToBookmarkIDs.append([sGoToBookmarkID, idxPage])
+                ltupGoToBookmarkIDs.append([sGoToBookmarkID, idxPage, iPageGroup])
                 
             
         # for every instance of GoToBookmarkID, confirm there is a BookmarkID
          
-        for idxGoToBookmarkID in range(len(l3tupGoToBookmarkIDs)):
-            tupGoToBookmarkIDItem = l3tupGoToBookmarkIDs[idxGoToBookmarkID]
+        for idxGoToBookmarkID in range(len(ltupGoToBookmarkIDs)):
+            tupGoToBookmarkIDItem = ltupGoToBookmarkIDs[idxGoToBookmarkID]
             sGoToBookmarkIDToSearch = tupGoToBookmarkIDItem[0]
             iGoToBookmarkIDPage = tupGoToBookmarkIDItem[1]
+            iGoToBookmarkIDPageGroup = tupGoToBookmarkIDItem[2]
 
             bFoundMatch = False
         
-            for idxBookmarkID in range(len(l3tupBookmarkIDs)):
+            for idxBookmarkID in range(len(ltupBookmarkIDs)):
                 
                 if not bFoundMatch:
-                    tupBookmarkIDItem = l3tupBookmarkIDs[idxBookmarkID]
+                    tupBookmarkIDItem = ltupBookmarkIDs[idxBookmarkID]
                     sBookmarkIDToCompare = tupBookmarkIDItem[0]
                     iBookmarkIDPage = tupBookmarkIDItem[1]
+                    iBookmarkIDPageGroup = tupBookmarkIDItem[2]
         
                     if sBookmarkIDToCompare == sGoToBookmarkIDToSearch:
-                        if bTestForPrevious:
+                        if not bRandomizing:
                             if (iBookmarkIDPage < iGoToBookmarkIDPage):
                                 bFoundMatch = True
                                 break
                         else:   # randomize is set , ignore page test
-                            bFoundMatch = True
+                            if iBookmarkIDPageGroup == iGoToBookmarkIDPageGroup:
+                                if iBookmarkIDPage < iGoToBookmarkIDPage:
+                                    bFoundMatch = True
+                                    break
+                            else: # page groups don't match - only allow if ID is in group 0
+                                if iBookmarkIDPageGroup == 0:
+                                    bFoundMatch = True
+                                    break
        
         
             if not bFoundMatch:
-                sMsg = sMsg + "\nMissing historical 'BookmarkID' setting to match 'GoToBookmark': " + sGoToBookmarkIDToSearch \
+                sMsg = sMsg + "\nFor attribute 'GoToBookmarkID' : "  + sGoToBookmarkIDToSearch \
+                            + "\nMissing historical 'BookmarkID' setting to match 'GoToBookmark' "\
+                            + "\n...OR... The attribute 'PageGroup' for both attributes 'GoToBookmark' and 'BookmarkID' do not match"\
                             + '\nSee Page #: '\
                             + str(iGoToBookmarkIDPage + 1)
+                            
                 if self.sTestMode == "1":
                     raise ValueError('Missing historical BookmarkID: %s' % sMsg)
                 
@@ -767,18 +786,24 @@ class UtilsValidate:
     def ValidateDisplayLabelMapID(self):
         ''' For all instances of DisplayLabelMapID, ensure that there is a corresponding
             LabelMapID. This can help trap spelling mistakes. 
-            (This is not checked
-            for a 'previous instance' of LabelMapID if RandomizePageGroups attribute
-            is set to 'Y'.)
+            If Randomizing is set to "Y", an extra check is done to make sure the two pages with 
+            these attributes have the same PageGroup number.
         '''
+        
+# For future update - to isolate the actual problem
+#         sErrorInvalidPageGroup = "\nRandomizing is set to Y. PageGroup attribute on pages with LabelMapID and DisplayLabelMapID must match : "
+#         sErrorInvalidImagePath = "\nThe historical image Path for LabelMapID does not match the image Path where DisplayLabelMapID is requested : "
+#         sErrorInvalidOrder = "\nThe attribute for LabelMapID must appear on a page before that of the page with the attribute DisplayLableMapID : "
+        
+        
         sMsg = ''
-        l3tupDisplayLabelMapIDs = []
-        l3tupLabelMapIDs = []
+        ltupDisplayLabelMapIDs = []
+        ltupLabelMapIDs = []
         sRandomizeSetting = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'RandomizePageGroups')
         if sRandomizeSetting == 'Y':
-            bTestForPrevious = False
+            bRandomizing = True
         else:
-            bTestForPrevious = True
+            bRandomizing = False
         
         lxPageNodes = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
         
@@ -786,6 +811,11 @@ class UtilsValidate:
         for idxPage in range(len(lxPageNodes)):
             xPageNode = lxPageNodes[idxPage]
             lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
+            sPageGroup = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
+            if sPageGroup != '':
+                iPageGroup = int(sPageGroup)
+            else:
+                iPageGroup = 0
     
             for idxImage in range(len(lxImageNodes)):
                 xImageNode = lxImageNodes[idxImage]
@@ -795,41 +825,61 @@ class UtilsValidate:
                 sImagePath = self.oIOXml.GetDataInNode(xImagePath)
 
                 if sLabelMapID != '':
-                    l3tupLabelMapIDs.append([sLabelMapID, idxPage, sImagePath])
+                    ltupLabelMapIDs.append([sLabelMapID, idxPage, sImagePath, iPageGroup])
                 if sDisplayLabelMapID != '':
-                    l3tupDisplayLabelMapIDs.append([sDisplayLabelMapID, idxPage, sImagePath])
+                    ltupDisplayLabelMapIDs.append([sDisplayLabelMapID, idxPage, sImagePath, iPageGroup])
         
         # for every DisplayLabelMapID confirm there is a LabelMapID
         
-        for idxDisplayLabelMapID in range(len(l3tupDisplayLabelMapIDs)):
-            tupDisplayLabelMapIDItem = l3tupDisplayLabelMapIDs[idxDisplayLabelMapID]
+        for idxDisplayLabelMapID in range(len(ltupDisplayLabelMapIDs)):
+            tupDisplayLabelMapIDItem = ltupDisplayLabelMapIDs[idxDisplayLabelMapID]
             sDisplayLabelMapIDToSearch = tupDisplayLabelMapIDItem[0]
             iDisplayLabelMapIDPage = tupDisplayLabelMapIDItem[1]
             sDisplayLabelMapIDPath = tupDisplayLabelMapIDItem[2]
+            iDisplayLabelMapPageGroup = tupDisplayLabelMapIDItem[3]
 
             bFoundMatch = False
-            for idxLabelMapID in range(len(l3tupLabelMapIDs)):
+            for idxLabelMapID in range(len(ltupLabelMapIDs)):
                 
                 if not bFoundMatch:
-                    tupLabelMapIDItem = l3tupLabelMapIDs[idxLabelMapID]
+                    tupLabelMapIDItem = ltupLabelMapIDs[idxLabelMapID]
                     sLabelMapIDToCompare = tupLabelMapIDItem[0]
                     iLabelMapIDPage = tupLabelMapIDItem[1]
                     sLabelMapIDPath = tupLabelMapIDItem[2]
+                    iLabelMapIDPageGroup = tupLabelMapIDItem[3]
                     
+
+
                     if sLabelMapIDToCompare == sDisplayLabelMapIDToSearch:
-                        if bTestForPrevious:
-                            if (iLabelMapIDPage < iDisplayLabelMapIDPage) and (sLabelMapIDPath == sDisplayLabelMapIDPath):
+                        if not bRandomizing:
+                            if (sLabelMapIDPath == sDisplayLabelMapIDPath) and\
+                                  (iLabelMapIDPage < iDisplayLabelMapIDPage):
                                 bFoundMatch = True
                                 break
-                        else:   # randomize is set , ignore page test
-                            bFoundMatch = True
-            
+                        else:
+                            if sLabelMapIDPath == sDisplayLabelMapIDPath :
+                                if iLabelMapIDPageGroup == iDisplayLabelMapPageGroup:
+                                    if iLabelMapIDPage < iDisplayLabelMapIDPage:
+                                        bFoundMatch = True
+                                        break
+                                else: # page groups don't match - only allow if ID is in group 0
+                                    if iLabelMapIDPageGroup == 0:
+                                        bFoundMatch = True
+                                        break
+
+
+    
             if not bFoundMatch:
-                sMsg = sMsg + "\nMissing historical 'LabelMapID' setting to match 'DisplayLabelMapID': " + sDisplayLabelMapIDToSearch \
-                            + " ...OR... the historical image Path for LabelMapID does not match the image Path where DisplayLabelMapID is requested."\
-                            + '\nSee Page #: '\
-                            + str(iDisplayLabelMapIDPage + 1)
-        
+                sMsg = sMsg + "\n\nFor 'DisplayLabelMapID' : " + sDisplayLabelMapIDToSearch\
+                            + "\nMissing historical 'LabelMapID' setting to match."\
+                            + "\n...OR... the historical image Path for LabelMapID does not match the image Path where DisplayLabelMapID is requested."\
+                            + "\n...OR... if RandomizePageGroups is set to 'Y', the PageGroup numbers do not match for page with attribute 'LabelMapID' and 'DisplayLabelMapID'."\
+                            + "\nSeePage #: " + str(iDisplayLabelMapIDPage + 1)
+                            
+                if self.sTestMode == "1":
+                    raise ValueError('Missing historical LabelMapID: %s' % sMsg)
+                
+    
         return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
