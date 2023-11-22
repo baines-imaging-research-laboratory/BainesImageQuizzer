@@ -379,7 +379,6 @@ class PageState:
                     # get image element from history that holds the same label map id; 
                     xHistoricalImageElement = None  # initialize
                     xHistoricalLabelMapMatch = None
-#                     xHistoricalImageElement, xHistoricalPageElement = self.oIOXml.GetXmlPageAndChildFromAttributeHistory(self.oSession.GetCurrentPageIndex(),'Image','LabelMapID',sLabelMapToRedisplay)
                     xHistoricalImageElement, xHistoricalPageElement = \
                                                 self.oIOXml.GetXmlPageAndChildFromAttributeHistory(\
                                                                              self.oSession.GetCurrentNavigationIndex(),\

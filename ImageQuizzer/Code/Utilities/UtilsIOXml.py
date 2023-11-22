@@ -502,7 +502,6 @@ class UtilsIOXml:
         return iNavIdx, xNode 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def GetXmlPageAndChildFromAttributeHistory(self, iCrrentPageIndex, sChildToSearch, sImageAttributeToMatch, sAttributeValue):
     def GetXmlPageAndChildFromAttributeHistory(self, iCurrentNavigationIndex, l4iNavigationIndices, sChildToSearch, sImageAttributeToMatch, sAttributeValue):
         ''' Function will return the historical elements (page and child)  that contains the attribute requested for the search.
             This attribute is associated with a child of the 'Page' element.

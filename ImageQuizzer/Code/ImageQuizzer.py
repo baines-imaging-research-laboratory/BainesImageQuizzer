@@ -75,13 +75,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             self.oUtilsMsgs.DisplayError(sMsg)
 
 
-#         # capture Slicer's default database location
-#         self.oFilesIO.SetDefaultDatabaseDir(slicer.dicomDatabase.databaseDirectory)
-
-
-#         self.oCustomEventFilter = customEventFilter()
-#         slicer.util.mainWindow().installEventFilter(self.oCustomEventFilter)        
-         
         
         self.slicerMainLayout = self.layout
         

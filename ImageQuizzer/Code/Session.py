@@ -291,19 +291,6 @@ class Session:
     #----------
     def GetNavigationIndicesAtIndex(self, iNavInd):
         return self._l4iNavigationIndices[iNavInd]
-#     #----------
-#     def GetNavigationIndexForPage(self,iPageIndex):
-#         ''' Returns first navigation index that matches the Page index given.
-#             (Question sets are not taken into account.)
-#         '''
-#         iNavigationIndex = -1
-#         for idx in range(len(self.GetNavigationList())):
-#             if self.GetNavigationPage(idx) == iPageIndex:
-#                 iNavigationIndex = idx
-#                 break
-#             
-#         return iNavigationIndex
-        
         
     #----------
     def NavigationListAppend(self, lNavIndices):
@@ -1513,7 +1500,6 @@ class Session:
         dictAttribToMatchInHistory['BookmarkID'] = sGoToBookmarkID
         
         # all page nodes that match - ordered with most recent first
-#         dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(self.GetCurrentPageIndex(), dictAttribToMatchInHistory)
         dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(self.GetCurrentNavigationIndex(), self.GetNavigationList(), dictAttribToMatchInHistory)
         lPageIndices = list(dictPgNodeAndPgIndex.values())
         if len(lPageIndices) > 0:

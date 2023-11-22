@@ -816,7 +816,6 @@ class UtilsFilesIO:
             
             
             # collect label map paths
-#             dictPgNodeAndPgIndex = oSession.oIOXml.GetMatchingXmlPagesFromAttributeHistory(oSession.GetCurrentPageIndex(), dictAttribToMatch, reIgnoreSubstring)
             dictPgNodeAndPgIndex = oSession.oIOXml.GetMatchingXmlPagesFromAttributeHistory(\
                                                     oSession.GetCurrentNavigationIndex(),\
                                                     oSession.GetNavigationList() , \
