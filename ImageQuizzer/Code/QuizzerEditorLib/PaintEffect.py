@@ -152,8 +152,15 @@ class PaintEffectOptions(LabelEffectOptions):
 
     # set the node parameters that are dependent on the input data
     # self.parameterNode.SetParameter( "PaintEffect,radius", str(self.minimumRadius * 10) )
-    self.parameterNode.SetParameter( "PaintEffect,radius", str(int(self.minimumRadius /3 * 100)) )
 
+#### CJ - adjusted the default radius displayed in the GUI
+    
+    fRadius = slicer.modules.quizzereditor.widgetRepresentation().self().GetContourToolRadius()
+    if fRadius > 0:
+        self.parameterNode.SetParameter( "PaintEffect,radius", str(fRadius) )
+    else:
+        self.parameterNode.SetParameter( "PaintEffect,radius", str(self.minimumRadius * 15) )
+        
   def destroy(self):
     super(PaintEffectOptions,self).destroy()
 

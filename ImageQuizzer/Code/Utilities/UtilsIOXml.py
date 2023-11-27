@@ -336,13 +336,6 @@ class UtilsIOXml:
             xParentNode.remove(xElem)
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def UpdateAttributesInElement(self, xElement, dictAttrib):
-        
-        # for each key, value in the dictionary, update the element attributes
-        for sKey, sValue in dictAttrib.items():
-            xElement.attrib[sKey] = sValue
-        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetAttributes(self, xParentNode):
         
         dictAttrib = {}
@@ -351,6 +344,25 @@ class UtilsIOXml:
             
         return dictAttrib
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def UpdateAttributesInElement(self, xElement, dictAttrib):
+        
+        # for each key, value in the dictionary, update the element attributes
+        for sKey, sValue in dictAttrib.items():
+            xElement.attrib[sKey] = sValue
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def RemoveAttributeInElement(self, xElement, key ):
+        # remove a key/value pair from an element if it exists
+        
+        dictAttrib = self.GetAttributes(xElement)
+        
+        if key in dictAttrib:
+            del dictAttrib[key]
+            
+        # reset element with updated key/value pairs
+        self.UpdateAttributesInElement(xElement, dictAttrib)
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForRequiredFunctionalityInAttribute(self, sTreeLevel, sAttribute, sSetting):
         
@@ -369,6 +381,71 @@ class UtilsIOXml:
         
         return bRequired
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetNavigationListBase(self, xRootNode):
+        
+        l4iNavList = []
+        
+        # get Page nodes
+        xPages = self.GetChildren(xRootNode, 'Page')
+
+        iPageNum = 0
+        for iPageIndex in range(len(xPages)):
+            iPageNum = iPageNum + 1
+            # for each page - get number of question sets
+            xPageNode = self.GetNthChild(xRootNode, 'Page', iPageIndex)
+            xQuestionSets = self.GetChildren(xPageNode,'QuestionSet')
+
+            sPageGroup = self.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
+            # if there is no request to randomize the page groups, there may not be a page group number
+            try:
+                iPageGroup = int(sPageGroup)
+            except:
+                # assign a unique page number if no group number exists
+                iPageGroup = iPageNum
+                
+            sRepNum = self.GetValueOfNodeAttribute(xPageNode, 'Rep')
+            try:
+                iRepNum = int(sRepNum)
+            except:
+                iRepNum = 0
+            
+            # if there are no question sets for the page, insert a blank shell
+            #    - this allows images to load
+            if len(xQuestionSets) == 0:
+                self.AddElement(xPageNode,'QuestionSet', 'Blank Quiz',{})
+                xQuestionSets = self.GetChildren(xPageNode, 'QuestionSet')
+            
+            # append to composite indices list
+            #    - if there are 2 pages and the 1st page has 2 question sets, 2nd page has 1 question set,
+            #        and each page is in a different page group
+            #        the indices will look like this:
+            #        Page    QS    PageGroup  Rep
+            #        0        0        1       0
+            #        0        1        1       0
+            #        1        0        2       0
+            #    - there can be numerous questions in each question set
+            for iQuestionSetIndex in range(len(xQuestionSets)):
+                l4iNavList.append([iPageIndex,iQuestionSetIndex, iPageGroup, iRepNum])
+        
+        
+        
+        
+        return l4iNavList
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetNavigationIndexForPage(self, l4iNavList, iPageIndex):
+        ''' Returns first navigation index that matches the Page index given.
+            (Question sets are not taken into account.)
+        '''
+        iNavigationIndex = -1
+        for idx in range(len(l4iNavList)):
+            if l4iNavList[idx][0] == iPageIndex:
+                iNavigationIndex = idx
+                break
+            
+        return iNavigationIndex
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetIndexOfNextChildWithAttributeValue(self, xParentNode, sChildTagName, indFrom, sAttrib, sAttribValue):
         ''' given an index to search from, search the attributes in the child that matches the input
@@ -393,7 +470,39 @@ class UtilsIOXml:
         return iNextInd
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetXmlPageAndChildFromAttributeHistory(self, iCrrentPageIndex, sChildToSearch, sImageAttributeToMatch, sAttributeValue):
+    def GetFirstXmlNodeWithMatchingAttributes(self, lxNodesToSearch, dictAttrib):
+        ''' Search the list of nodes.
+            Return first node and navigation index that match the given  attributes.
+        '''
+        bAttribMatch = True
+
+        for iNavIdx, xNode in enumerate(lxNodesToSearch):
+
+            bAttribMatch = True # reinitialize for each page
+            
+            # get values of attributes to get a match
+            for attrib, sValueToMatch in dictAttrib.items():
+                
+                
+                if bAttribMatch:    #continue through all attributes 
+                    sStoredValue = self.GetValueOfNodeAttribute(xNode, attrib)
+                    
+                    if sStoredValue == sValueToMatch:
+                        bAttribMatch = True
+                    else:
+                        bAttribMatch = False
+                    
+            if bAttribMatch == False:
+                iNavIdx = -1
+                xNode = None
+            else:
+                # all attributes matched - exit loop
+                break
+                
+        return iNavIdx, xNode 
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetXmlPageAndChildFromAttributeHistory(self, iCurrentNavigationIndex, l4iNavigationIndices, sChildToSearch, sImageAttributeToMatch, sAttributeValue):
         ''' Function will return the historical elements (page and child)  that contains the attribute requested for the search.
             This attribute is associated with a child of the 'Page' element.
             The search goes through the pages in reverse. 
@@ -404,10 +513,12 @@ class UtilsIOXml:
         xHistoricalChildElement = None
         xHistoricalPageElement = None
         
-        # start searching pages in reverse order - to get most recent setting
+        # start searching pages in reverse order through the navigation indices - to get most recent setting
         # first match will end the search
         bHistoricalElementFound = False
-        for iPageIndex in range(iCrrentPageIndex-1, -1, -1):
+        for iNavIndex in range( iCurrentNavigationIndex -1, -1, -1):
+            iPageIndex = l4iNavigationIndices[iNavIndex][0]
+
             xPageNode = self.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
         
             if bHistoricalElementFound == False:
@@ -432,40 +543,83 @@ class UtilsIOXml:
         return xHistoricalChildElement, xHistoricalPageElement
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetMatchingXmlPagesFromAttributeHistory(self, iCurrentPageIndex, dictPageAttrib, reIgnoreSubstring=''):
-        ''' Function to get a list of previous page elements that match the list of attributes 
-            ignoring the substring defined as a regular expression (which can be null).
+    def GetXmlElementFromAttributeHistory(self, iCurrentNavigationIndex, l4iNavigationIndices, sPageChildrenToSearch, sImageAttributeToMatch, sAttributeValue):
+        ''' Function will return the historical element that contains the attribute requested for the search.
+            This attribute is associated with a child of the 'Page' element.
+            The search goes through the navigation indices in reverse. 
+                For each page, the requested children are searched (forward) for the requested attribute.
+            When found, the xml element that contains the attribute is returned.
         '''
         
-        lxHistoricalPages = []
+        xHistoricalChildElement = None
+        
+        # start searching pages in reverse order through the navigation indices - to get most recent setting
+        # first match will end the search
+        bHistoricalElementFound = False
+        for iNavIndex in range( iCurrentNavigationIndex -1, -1, -1):
+            iPageIndex = l4iNavigationIndices[iNavIndex][0]
+            
+            xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
+        
+            if bHistoricalElementFound == False:
+                
+                #get all requested children
+                lxChildElementsToSearch = self.oIOXml.GetChildren(xPageNode, sPageChildrenToSearch)
+                if len(lxChildElementsToSearch) > 0:
+    
+                    for xImageNode in lxChildElementsToSearch:
+                        
+                        # get image attribute
+                        sPotentialAttributeValue = self.oIOXml.GetValueOfNodeAttribute(xImageNode, sImageAttributeToMatch)
+                        if sPotentialAttributeValue == sAttributeValue:
+                            xHistoricalChildElement = xImageNode
+                            bHistoricalElementFound = True
+                            break
+            else:
+                break
+        
+        return xHistoricalChildElement
+    
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def GetMatchingXmlPagesFromAttributeHistory(self, iCurrentNavigationIndex, l4iNavigationIndices, dictPageAttrib, reIgnoreSubstring=''):
+        ''' Function to get a list of previous page elements and the navigation index that match the list of attributes 
+            ignoring the substring defined as a regular expression (which can be null).
+            Randomized data is handled by stepping through the navigation indices which reflect the random order.
+            (Multiple question sets in the navigation list do not affect the resulting dictionary.
+            Only the page node and the page index are stored.)
+        '''
+        
+        dictPgNodeAndPgIndex = {}
         bAttribMatch = True
         
-        for iPageIndex in range( iCurrentPageIndex -1, -1, -1):
+        for iNavIndex in range( iCurrentNavigationIndex -1, -1, -1):
+            iPageIndex = l4iNavigationIndices[iNavIndex][0]
+            
             xPageNode = self.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
             
             bAttribMatch = True # initialize for next page
-
+            
             # get values of attributes to get a match
             for attrib, sValueToMatch in dictPageAttrib.items():
-                if bAttribMatch: # stop if any of the attributes don't match
                     
+                if bAttribMatch: # stop if any of the attributes don't match
                     sStoredPageValue = self.GetValueOfNodeAttribute(xPageNode, attrib)
                     
                     # remove ignore string
                     sPotentialPageValue = re.sub(reIgnoreSubstring,'',sStoredPageValue)
-
+    
                     if sPotentialPageValue == sValueToMatch:
                         bAttribMatch = True
                     else:
                         bAttribMatch = False
-
-            if bAttribMatch:
-                lxHistoricalPages.append(xPageNode)
+                
+            if bAttribMatch:        
+                dictPgNodeAndPgIndex.update({xPageNode:iPageIndex})
         
         
         
-        return lxHistoricalPages
-        
+        return dictPgNodeAndPgIndex
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

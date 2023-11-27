@@ -37,6 +37,9 @@
 		<xs:attribute name="MinMarkupLinesRequiredOnAnyImage" type="xs:positiveInteger"/>
 		<xs:attribute name="Loop" type="yesnoType" default="N" />
 		<xs:attribute name="UserInteractionLog" type="yesnoType" default="N"/>
+		<xs:attribute name="GoToBookmark" type="listTypeStrings"/>
+		<xs:attribute name="BookmarkID" type="xs:string"/>
+		<xs:attribute name="ContourToolRadius" type="xs:float" />
 	</xs:complexType>
 </xs:element>
 
@@ -63,7 +66,7 @@
 		<xs:attribute name="InitialSliceOffset" type="xs:float"/>
 		<xs:attribute name="MergeLabelMaps" type="yesnoType" default="N" />
 		<xs:attribute name="ZoomFactor" type="xs:float"/>
-		<xs:attribute name="PanOrigin" type="listType"/>
+		<xs:attribute name="PanOrigin" type="listTypeFloats"/>
 	</xs:complexType>
 </xs:element>
 
@@ -211,7 +214,7 @@
   </xs:restriction>
 </xs:simpleType>
 
-<xs:simpleType name="listType">
+<xs:simpleType name="listTypeFloats">
   <xs:restriction base="floatListType">
     <xs:length value="3"/>
   </xs:restriction>
@@ -221,5 +224,14 @@
   <xs:list itemType="xs:float"/>
 </xs:simpleType>
 
+
+<xs:simpleType name="listTypeStrings">
+  <xs:restriction base="stringListType">
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="stringListType">
+  <xs:list itemType="xs:string"/>
+</xs:simpleType>
 
 </xs:schema>

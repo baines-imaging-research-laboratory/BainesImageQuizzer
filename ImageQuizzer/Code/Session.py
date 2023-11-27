@@ -11,6 +11,7 @@ from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
 from Utilities.UtilsEmail import *
+from Utilities.UtilsValidate import *
 
 from Question import *
 from ImageView import *
@@ -58,7 +59,6 @@ class Session:
         self._bAllowMultipleResponse = False
         self._bRequestToEnableSegmentEditor = False
         self._bSegmentationModule = False
-        self._iSegmentationTabIndex = -1   # default
         self._bPageLooping = False
         self._sSessionContourVisibility = 'Outline'
         self._sSessionContourOpacity = 1.0
@@ -66,8 +66,12 @@ class Session:
         self._bRandomizeRequired = False
         self._bUserInteractionLog = False
         self._fhInteractionLog = None
+        self._fContourToolRadius = 0
+        self._dictTabIndices = {'Quiz':0, 'ExtraTools':-1, 'SegmentEditor':-1}  #defaults
+        self._iPreviousTabIndex = 0
        
         self.oFilesIO = None
+        self.oValidation = None
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
         self.oPageState = PageState()
@@ -91,7 +95,7 @@ class Session:
     def __del__(self):
 
         # clean up of editor observers and nodes that may cause memory leaks (color table?)
-        if self.GetSegmentationTabIndex() > 0:
+        if self.GetTabIndex('SegmentEditor') > 0:
             slicer.modules.quizzereditor.widgetRepresentation().self().exit()
 
     #----------
@@ -116,6 +120,10 @@ class Session:
     def SetFilesIO(self, oFilesIO):
         self.oFilesIO = oFilesIO
 
+    #----------
+    def SetValidation(self, oValidation):
+        self.oValidation = oValidation
+        
     #----------
     def SetIOXml(self, oIOXml):
         self.oIOXml = oIOXml
@@ -145,6 +153,22 @@ class Session:
         return self._sLoginTime
     
     #----------
+    def SetTabIndex(self, sTabName, iTabIndex):
+        self._dictTabIndices[sTabName] = iTabIndex
+        
+    #----------
+    def GetTabIndex(self, sTabName):
+        return self._dictTabIndices[sTabName]
+        
+    #----------
+    def SetPreviousTabIndex(self, iTabIndex):
+        self._iPreviousTabIndex = iTabIndex
+        
+    #----------
+    def GetPreviousTabIndex(self):
+        return self._iPreviousTabIndex
+
+    #----------
     def SetEmailResultsRequest(self, bInput):
         self._bEmailResults = bInput
         
@@ -169,7 +193,7 @@ class Session:
         return self._bUserInteractionLog
     
     #----------
-    def SetInteractionLogOnOff(self, sState):
+    def SetInteractionLogOnOff(self, sState, sCaller=''):
         ''' Turn interaction log on:
                 create new log if one doesn't exist for the page or open for append
                 start the observers to watch for slice changes
@@ -178,19 +202,19 @@ class Session:
                 close currently open file
                 turn off observers to prevent logging of slice changes during transitions 
         '''
-                
-        
-        if sState=='On':
 
-            if self.GetUserInteractionLogRequest():
-                self.SetFileHandlerInteractionLog(self.oUserInteraction.CreateUserInteractionLog(self))
-                self.oUserInteraction.AddObservers()
-                slicer.mrmlScene.InvokeEvent(vtk.vtkCommand.ModifiedEvent, self.oUserInteraction.onModifiedSlice('SessionSetup','CurrentSlice'))
-            
-        else: 
-            if self.GetUserInteractionLogRequest():
-                self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog())
-                self.oUserInteraction.RemoveObservers()
+        if self.GetQuizComplete() == False:   
+            if sState=='On':
+    #             print('Log On *********')
+                if self.GetUserInteractionLogRequest():
+                    self.SetFileHandlerInteractionLog(self.oUserInteraction.CreateUserInteractionLog(self, sCaller))
+                    self.oUserInteraction.AddObservers()
+                    slicer.mrmlScene.InvokeEvent(vtk.vtkCommand.ModifiedEvent, self.oUserInteraction.onModifiedSlice('SessionSetup','CurrentSlice'))
+                
+            else: 
+                if self.GetUserInteractionLogRequest():
+                    self.oUserInteraction.CloseInteractionLog(self.GetFileHandlerInteractionLog(),sCaller)
+                    self.oUserInteraction.RemoveObservers()
         
     
     #----------
@@ -201,6 +225,26 @@ class Session:
     def GetFileHandlerInteractionLog(self):
         return self._fhInteractionLog
     
+    #----------
+    def SetGoToBookmarkRequestButton(self, xPageNode):
+
+        sGoToBookmarkRequest = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'GoToBookmark')
+        lsBookmarkRequest = []
+        if sGoToBookmarkRequest != '':
+
+            lsBookmarkRequest = sGoToBookmarkRequest.split()
+
+            if len(lsBookmarkRequest) > 1:
+                self._btnGoToBookmark.text = lsBookmarkRequest[1]
+            else:
+                self._btnGoToBookmark.text = "Return"
+
+            self._btnGoToBookmark.visible = True
+            self._btnGoToBookmark.enabled = True
+        else:
+            self._btnGoToBookmark.visible = False
+            self._btnGoToBookmark.enabled = False
+            
     #----------
     def SetPreviousResponses(self, lInputResponses):
         self._lsPreviousResponses = lInputResponses
@@ -247,7 +291,7 @@ class Session:
     #----------
     def GetNavigationIndicesAtIndex(self, iNavInd):
         return self._l4iNavigationIndices[iNavInd]
-    
+        
     #----------
     def NavigationListAppend(self, lNavIndices):
         self._l4iNavigationIndices.append(lNavIndices)
@@ -290,11 +334,11 @@ class Session:
         return sPageComplete
         
     #----------
-    def SetupPageState(self, iPgIndex):
+    def SetupPageState(self, iPageIndex):
         ''' Initialize a new page state object for the page.
             XML specifics for the input page index are used for initializing.
         '''
-        xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPgIndex)
+        xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
         self.oPageState.InitializeStates(self, xPageNode)
     
     #----------
@@ -303,12 +347,11 @@ class Session:
         # add extra tools tab to quiz widget
         self.tabExtraTools = qt.QWidget()
         self.oQuizWidgets.qTabWidget.addTab(self.tabExtraTools,"Extra Tools")
-        self._iExtraToolsTabIndex = self.oQuizWidgets.qTabWidget.count - 1
-        self.oQuizWidgets.qTabWidget.setTabEnabled(self._iExtraToolsTabIndex, True)
+        self.SetTabIndex('ExtraTools',self.oQuizWidgets.qTabWidget.count - 1)
+        self.oQuizWidgets.qTabWidget.setTabEnabled(self.GetTabIndex('ExtraTools'), True)
         
         widget = self.SetupExtraToolsButtons()
         self.tabExtraTools.setLayout(widget)
-
 
     #----------
     def AddSegmentationModule(self, bTF):
@@ -317,8 +360,9 @@ class Session:
             # add segment editor tab to quiz widget
             self.oQuizWidgets.qTabWidget.addTab(slicer.modules.quizzereditor.widgetRepresentation(),"Segment Editor")
             self._bSegmentationModule = True
-            self._iSegmentationTabIndex = self.oQuizWidgets.qTabWidget.count - 1
-            self.oQuizWidgets.qTabWidget.setTabEnabled(self._iSegmentationTabIndex, True)
+            self.SetTabIndex('SegmentEditor', self.oQuizWidgets.qTabWidget.count - 1)
+            self.oQuizWidgets.qTabWidget.setTabEnabled(self.GetTabIndex('SegmentEditor'), True)
+            self.InitializeTabSettings()
             
         else:
             self._bSegmentationModule = False
@@ -326,15 +370,11 @@ class Session:
     #----------
     def SegmentationTabEnabler(self, bTF):
 
-        self.oQuizWidgets.qTabWidget.setTabEnabled(self.GetSegmentationTabIndex(), bTF)
-        
-    #----------
-    def GetSegmentationTabIndex(self):
-        return self._iSegmentationTabIndex
+        self.oQuizWidgets.qTabWidget.setTabEnabled(self.GetTabIndex('SegmentEditor') , bTF)
         
     #----------
     def GetSegmentationTabEnabled(self):
-        bTF = self.oQuizWidgets.qTabWidget.isTabEnabled(self.GetSegmentationTabIndex())
+        bTF = self.oQuizWidgets.qTabWidget.isTabEnabled(self.GetTabIndex('SegmentEditor') )
         return bTF
     
     #----------
@@ -649,6 +689,21 @@ class Session:
         self.SetContourOpacityFromSliderValue(self.qVisibilityOpacity.value)            # image view property
 
     #----------
+    def SetContourToolRadius(self, xPageNode):
+        
+        sContourRadius = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ContourToolRadius')
+        
+        if sContourRadius != '':
+            self._fContourToolRadius = float(sContourRadius)
+        else:
+            self._fContourToolRadius = 0.0
+        
+        slicer.modules.quizzereditor.widgetRepresentation().self().SetContourToolRadius(self._fContourToolRadius)        
+    #----------
+    def GetCountourToolRadius(self):
+        return self._fContourToolRadius
+    
+    #----------
     def SetRandomizeRequired(self, sYN=None):
         # set randomize required to input value (from unit tests) or from the stored xml attribute
         if sYN == None:
@@ -736,6 +791,15 @@ class Session:
         self._btnRepeat.visible = False
         self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
         self._btnRepeat.connect('clicked(bool)', self.onRepeatButtonClicked)
+
+
+        # Bookmark button
+        self._btnGoToBookmark = qt.QPushButton("Return")
+        self._btnGoToBookmark.toolTip = "Returns to pre-defined page"
+        self._btnGoToBookmark.enabled = True
+        self._btnGoToBookmark.visible = True
+        self._btnGoToBookmark.setStyleSheet("QPushButton{ background-color: rgb(136, 82, 191); color: white; font-weight: bold}")
+        self._btnGoToBookmark.connect('clicked(bool)', self.onGoToBookmarkButtonClicked)
         
 
         self.qButtonGrpBoxLayout.addWidget(self._btnExit)
@@ -744,6 +808,7 @@ class Session:
         self.qButtonGrpBoxLayout.addWidget(self._btnPrevious)
         self.qButtonGrpBoxLayout.addWidget(self._btnNext)
         self.qButtonGrpBoxLayout.addWidget(self._btnRepeat)
+        self.qButtonGrpBoxLayout.addWidget(self._btnGoToBookmark)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupExtraToolsButtons(self):
@@ -757,58 +822,48 @@ class Session:
         # >>>>>>>>>>>>>>>>>>>>
         # Window/Level interactive mode
         self.qDisplayMgrGrpBox = qt.QGroupBox()
-        self.qDisplayMgrGrpBox.setTitle("Interactive Mode")
+        self.qDisplayMgrGrpBox.setTitle("Interactive Modes")
         self.qDisplayMgrGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
-        self.qDisplayMgrGrpBoxLayout = qt.QHBoxLayout()
+        self.qDisplayMgrGrpBoxLayout = qt.QGridLayout()
+        self.qDisplayMgrGrpBoxLayout.addLayout(0,0,1,3)
         self.qDisplayMgrGrpBox.setLayout(self.qDisplayMgrGrpBoxLayout)
         
-        qWindowLevelLabel = qt.QLabel("Window/Level: ")
-        self.qDisplayMgrGrpBoxLayout.addWidget(qWindowLevelLabel)
-        
-        self.btnWindowLevelOn = qt.QPushButton('On')
-        self.btnWindowLevelOn.enabled = True
-        self.btnWindowLevelOn.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
-        self.btnWindowLevelOn.connect('clicked(bool)',self.onWindowLevelOnClicked)
-        self.qDisplayMgrGrpBoxLayout.addWidget(self.btnWindowLevelOn)
-
-
-        self.btnWindowLevelOff = qt.QPushButton('Default Cursor')
-        self.btnWindowLevelOff.enabled = True
-        self.btnWindowLevelOff.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
-        self.btnWindowLevelOff.connect('clicked(bool)',self.onWindowLevelOffClicked)
-        self.qDisplayMgrGrpBoxLayout.addWidget(self.btnWindowLevelOff)
-        
         self.tabExtraToolsLayout.addWidget(self.qDisplayMgrGrpBox)
+
+        btnHidden = qt.QPushButton('')
+        btnHidden.enabled = False
+        btnHidden.setStyleSheet("QPushButton{ border:none }")
+        self.qDisplayMgrGrpBoxLayout.addWidget(btnHidden,0,0)
         
+        
+        self.btnWindowLevel = qt.QPushButton('Window / Level')
+        self.btnWindowLevel.enabled = True
+        self.btnWindowLevel.setCheckable(True)
+        self.btnWindowLevel.setStyleSheet("QPushButton{ background-color: rgb(173,220,237); color: black }")
+        self.btnWindowLevel.connect('clicked(bool)',self.onWindowLevelClicked)
+        self.qDisplayMgrGrpBoxLayout.addWidget(self.btnWindowLevel,0,1)
+
+        btnHidden = qt.QPushButton('')
+        btnHidden.enabled = False
+        btnHidden.setStyleSheet("QPushButton{ border:none }")
+        self.qDisplayMgrGrpBoxLayout.addWidget(btnHidden,0,2)
+
+
         # >>>>>>>>>>>>>>>>>>>>
         # Crosshairs
-        self.qCrossHairsGrpBox = qt.QGroupBox()
-        self.qCrossHairsGrpBox.setTitle('Crosshairs')
-        self.qCrossHairsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
-        self.qCrossHairsGrpBoxLayout = qt.QHBoxLayout()
-        self.qCrossHairsGrpBox.setLayout(self.qCrossHairsGrpBoxLayout)
         
-        qCrosshairsLabel = qt.QLabel("Use Shift key to display: ")
-        self.qCrossHairsGrpBoxLayout.addWidget(qCrosshairsLabel)
-        
-        self.btnCrosshairsOn = qt.QPushButton('On')
-        self.btnCrosshairsOn.enabled = True
-        self.btnCrosshairsOn.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
-        self.btnCrosshairsOn.connect('clicked(bool)',self.onCrosshairsOnClicked)
-        self.qCrossHairsGrpBoxLayout.addWidget(self.btnCrosshairsOn)
+        self.btnCrosshairs = qt.QPushButton('Crosshairs - use Shift key')
+        self.btnCrosshairs.enabled = True
+        self.btnCrosshairs.setCheckable(True)
+        self.btnCrosshairs.setStyleSheet("QPushButton{ background-color: rgb(173,220,237); color: black }")
+        self.btnCrosshairs.connect('clicked(bool)',self.onCrosshairsClicked)
+        self.qDisplayMgrGrpBoxLayout.addWidget(self.btnCrosshairs,0,3)
 
 
-        self.btnCrosshairsOff = qt.QPushButton('Off')
-        self.btnCrosshairsOff.enabled = True
-        self.btnCrosshairsOff.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
-        self.btnCrosshairsOff.connect('clicked(bool)',self.onCrosshairsOffClicked)
-        self.qCrossHairsGrpBoxLayout.addWidget(self.btnCrosshairsOff)
-
-        self.chkSliceIntersections = qt.QCheckBox('Slice Intersections')
-        self.chkSliceIntersections.stateChanged.connect(self.SliceIntersectionsStateChange)
-        self.qCrossHairsGrpBoxLayout.addWidget(self.chkSliceIntersections)
-
-        self.tabExtraToolsLayout.addWidget(self.qCrossHairsGrpBox)
+        btnHidden = qt.QPushButton('')
+        btnHidden.enabled = False
+        btnHidden.setStyleSheet("QPushButton{ border:none }")
+        self.qDisplayMgrGrpBoxLayout.addWidget(btnHidden,0,4)
 
         
         # >>>>>>>>>>>>>>>>>>>>
@@ -846,7 +901,7 @@ class Session:
         self.btnResetView = qt.QPushButton('Reset to default')
         self.btnResetView.enabled = True
         self.btnResetView.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
-        self.btnResetView.connect('clicked(bool)', self.onResetViewClicked)
+        self.btnResetView.connect('clicked(bool)', lambda: self.onResetViewClicked('NPlanes'))
         self.qDisplayOptionsGrpBoxLayout.addWidget(self.btnResetView,1,2)
 
         self.tabExtraToolsLayout.addWidget(self.qDisplayOptionsGrpBox)
@@ -862,7 +917,6 @@ class Session:
 
         qLineToolLabel = qt.QLabel('Ruler:')
         self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabel)
-        self.qLineToolsGrpBoxLayout.addSpacing(10)
         
         self.btnAddMarkupsLine = qt.QPushButton("Add new line")
         self.btnAddMarkupsLine.enabled = True
@@ -871,6 +925,13 @@ class Session:
         self.qLineToolsGrpBoxLayout.addWidget(self.btnAddMarkupsLine)
         self.qLineToolsGrpBoxLayout.addSpacing(10)
         
+        # Markup measurement visibility
+        self.qChkBoxMeasurementVisibility = qt.QCheckBox('Show length')
+        self.qChkBoxMeasurementVisibility.setChecked(True)
+        self.qChkBoxMeasurementVisibility.stateChanged.connect(self.onMeasurementVisibilityStateChanged)
+        self.qLineToolsGrpBoxLayout.addWidget(self.qChkBoxMeasurementVisibility)
+        self.qLineToolsGrpBoxLayout.addSpacing(10)
+
         # remove the last point of markup line created
         qLineToolLabelTrashPt = qt.QLabel('Remove last point:')
         self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabelTrashPt)
@@ -1004,9 +1065,25 @@ class Session:
     def onTabChanged(self):
         ''' When changing tabs reset segment editor interface
             to force user to reset the volume to be contoured.
+            Ensure window/level tool is turned off.
         '''
-        self.SetSegmentationTabDefaults()
+
+        self.btnWindowLevel.setChecked(False)
+        self.onWindowLevelClicked()
     
+    
+        # when moving off the Segment Editor tab
+        if self.GetPreviousTabIndex() == self.GetTabIndex('SegmentEditor'):
+            self.CaptureEditorSettings()
+            self.InitializeNullEditorSettings()
+            
+        # when returning to the Segment Editor tab
+        if self.oQuizWidgets.qTabWidget.currentIndex == self.GetTabIndex('SegmentEditor'):
+            self.ResetEditorSettings()
+
+        self.SetPreviousTabIndex(self.oQuizWidgets.qTabWidget.currentIndex)
+    
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onNextButtonClicked(self):
 
@@ -1025,11 +1102,11 @@ class Session:
         try:        
             sMsg = ''
             
-            self.SetInteractionLogOnOff('Off')
+            self.SetInteractionLogOnOff('Off','Next')
                 
             self.DisableButtons()    
             if self.sViewingMode != 'Default':
-                self.onResetViewClicked()
+                self.onResetViewClicked('Next')
     
             if self.GetCurrentNavigationIndex() + 1 == len(self.GetNavigationList()):
     
@@ -1040,16 +1117,12 @@ class Session:
                 # bypass remainder of the 'next' button code
     
             else:
-                # this is not the last question set, do a save and display the next page
-                bChangePageIndex = True
-                if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() + 1):
-                    bChangePageIndex = False
+                # this is not end of quiz, do a save and display the next page
                 
-
                 if self.PerformSave('NextBtn') and self.UpdateCompletionFlags('NextBtn'):
                         
                     self.CaptureAndSaveImageState()
-                    
+
                     ########################################    
                     # set up for next page
                     ########################################    
@@ -1058,22 +1131,25 @@ class Session:
                     if self.CheckForLastQuestionSetForPage() == True:
                         self._loQuestionSets = []
                         slicer.mrmlScene.Clear()
+                        bChangeXmlPageIndex = True
                     else:
                         # clear quiz widgets only
-                        for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
-                            self.oQuizWidgets.qQuizLayout.itemAt(i).widget().setParent(None)
-                
+                        self.oQuizWidgets.ClearLayout(self.oQuizWidgets.qQuizLayout)
+                        bChangeXmlPageIndex = False
+
+
                     self.SetCurrentNavigationIndex(self.GetCurrentNavigationIndex() + 1 )
                     self.progress.setValue(self.GetCurrentNavigationIndex())
                     self.InitializeImageDisplayOrderIndices()
                     
-                    if bChangePageIndex:
+                    if bChangeXmlPageIndex:
                         self.SetupPageState(self.GetCurrentPageIndex())
                         
+                    self.InitializeTabSettings()
                     self.DisplayQuizLayout()
                     self.DisplayImageLayout()
 
-            self.SetInteractionLogOnOff('On')
+            self.SetInteractionLogOnOff('On','Next')
 
             self.EnableButtons()
                 
@@ -1087,52 +1163,14 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onPreviousButtonClicked(self):
         
-        try:
-            sMsg = ''
-
-            self.SetInteractionLogOnOff('Off')
-                
-            self.DisableButtons()    
-            if self.sViewingMode != 'Default':
-                self.onResetViewClicked()
-
-            bChangePageIndex = True
-
-            if self.GetCurrentNavigationIndex() > 0:
-                if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == self.GetNavigationPage(self.GetCurrentNavigationIndex() - 1):
-                    bChangePageIndex = False  
             
-            if self.PerformSave('PreviousBtn'):
-                    
-                self.CaptureAndSaveImageState()
-
-                ########################################    
-                # set up for previous page
-                ########################################    
-    
-                slicer.mrmlScene.Clear()
-                self.SetCurrentNavigationIndex(self.GetCurrentNavigationIndex() - 1)
-                self.progress.setValue(self.GetCurrentNavigationIndex())
-                self.InitializeImageDisplayOrderIndices()
-        
-                if self.GetCurrentNavigationIndex() < 0:
-                    # reset to beginning
-                    self.SetCurrentNavigationIndex( 0 )
-                
-                self.AdjustToCurrentQuestionSet()
-                
-                if bChangePageIndex:
-                    self.SetupPageState(self.GetCurrentPageIndex())
-
-                self.DisplayQuizLayout()
-                self.DisplayImageLayout()
-
-            self.SetInteractionLogOnOff('On')
-
-                   
-            self.EnableButtons()
-
-
+        sMsg = ''
+        try:
+ 
+            self.SaveAndGoToPreviousPageDisplay('Previous', self.GetNavigationPage(self.GetCurrentNavigationIndex() - 1), self.GetCurrentNavigationIndex() - 1)
+             
+ 
+ 
         except:
             iPage = self.GetCurrentPageIndex() + 1
             tb = traceback.format_exc()
@@ -1167,7 +1205,7 @@ class Session:
             qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
             if qtAns == qt.QMessageBox.Ok:
 
-                self.SetInteractionLogOnOff('Off')
+                self.SetInteractionLogOnOff('Off','Exit')
 
                 if self.PerformSave(sCaller) and self.UpdateCompletionFlags(sCaller):
                     self.QueryThenSendEmailResults()
@@ -1185,7 +1223,7 @@ class Session:
             # an error in the save
             
             if not(bExit):
-                self.SetInteractionLogOnOff('On')
+                self.SetInteractionLogOnOff('On','Exit')
                 self.EnableButtons() 
         
                 self.progress.setValue(self.GetCurrentNavigationIndex())
@@ -1214,9 +1252,11 @@ class Session:
             try:        
                 sMsg = ''
 
-                self.SetInteractionLogOnOff('Off')
+                self.SetInteractionLogOnOff('Off','Repeat')
                 
                 self.DisableButtons()    
+                if self.sViewingMode != 'Default':
+                    self.onResetViewClicked('Repeat')
 
                 if self.PerformSave('NextBtn') and self.UpdateCompletionFlags('NextBtn'):
 
@@ -1233,12 +1273,13 @@ class Session:
                     self.progress.setValue(self.GetCurrentNavigationIndex())
                     
                     self.SetupPageState(self.GetCurrentPageIndex())
+                    self.InitializeTabSettings()
                     self.DisplayQuizLayout()
                     self.DisplayImageLayout()
                     
     
                 self.EnableButtons()
-                self.SetInteractionLogOnOff('On')
+                self.SetInteractionLogOnOff('On','Repeat')
                 
             except:
                 iPage = self.GetCurrentPageIndex() + 1
@@ -1306,36 +1347,31 @@ class Session:
             self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onCrosshairsOnClicked(self):
-        ''' activate the crosshairs tool
-        '''
-        slCrosshairNode = slicer.mrmlScene.GetNodeByID('vtkMRMLCrosshairNodedefault')
-        slCrosshairNode.SetCrosshairBehavior(1) # offset jump slice
-        slCrosshairNode.SetCrosshairMode(2)     # basic intersection
-    
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onCrosshairsOffClicked(self):
-        ''' activate the crosshairs tool
-        '''
-        slCrosshairNode = slicer.mrmlScene.GetNodeByID('vtkMRMLCrosshairNodedefault')
-        slCrosshairNode.SetCrosshairBehavior(1) # offset jump slice
-        slCrosshairNode.SetCrosshairMode(0)     # basic intersection
-    
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SliceIntersectionsStateChange(self, int):
-        viewNodeRed = slicer.mrmlScene.GetNodeByID('vtkMRMLSliceCompositeNodeRed')
-        viewNodeGreen = slicer.mrmlScene.GetNodeByID('vtkMRMLSliceCompositeNodeGreen')
-        viewNodeYellow = slicer.mrmlScene.GetNodeByID('vtkMRMLSliceCompositeNodeYellow')
+    def onWindowLevelClicked(self):
         
-        if self.chkSliceIntersections.isChecked():
-            viewNodeRed.SetSliceIntersectionVisibility(1)
-            viewNodeGreen.SetSliceIntersectionVisibility(1)
-            viewNodeYellow.SetSliceIntersectionVisibility(1)
+        if self.btnWindowLevel.isChecked():
+            self.btnWindowLevel.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+            slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.AdjustWindowLevel)
         else:
-            viewNodeRed.SetSliceIntersectionVisibility(0)
-            viewNodeGreen.SetSliceIntersectionVisibility(0)
-            viewNodeYellow.SetSliceIntersectionVisibility(0)
-
+            self.btnWindowLevel.setStyleSheet("QPushButton{ background-color: rgb(173,220,237); color: black }")
+            slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.ViewTransform)
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onCrosshairsClicked(self):
+        ''' activate the crosshairs tool
+        '''
+        if self.btnCrosshairs.isChecked():
+            
+            self.btnCrosshairs.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+            slCrosshairNode = slicer.mrmlScene.GetNodeByID('vtkMRMLCrosshairNodedefault')
+            slCrosshairNode.SetCrosshairBehavior(1) # offset jump slice
+            slCrosshairNode.SetCrosshairMode(2)     # basic intersection
+        else:
+            self.btnCrosshairs.setStyleSheet("QPushButton{ background-color: rgb(173,220,237); color: black }")
+            slCrosshairNode = slicer.mrmlScene.GetNodeByID('vtkMRMLCrosshairNodedefault')
+            slCrosshairNode.SetCrosshairBehavior(1) # offset jump slice
+            slCrosshairNode.SetCrosshairMode(0)     # basic intersection
+    
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1343,6 +1379,8 @@ class Session:
         ''' display the requested image in the requested viewing mode
         '''
         try:
+            self.SetInteractionLogOnOff('Off','Changing View - Display View Button - NPlanes')
+
             if self.GetNPlanesComboBoxCount() > 0:
                 self.CaptureAndSaveImageState()
                 
@@ -1359,6 +1397,10 @@ class Session:
             else:
                 sMsg = 'No images have been loaded to display in an alternate viewing mode.'
                 self.oUtilsMsgs.DisplayWarning(sMsg)
+                
+            self.oUtilsMsgs.DisplayTimedMessage('***','Waiting',100) #force Slicer to refresh display before logging resumes
+            self.SetInteractionLogOnOff('On','Changing View - Display View Button - ' + self.qComboNPlanesList.currentText)
+
         except:
             tb = traceback.format_exc()
             sMsg = "onNPlanesViewClicked: Error setting the NPlanes view (closeup) request.  \n\n" + tb 
@@ -1376,7 +1418,7 @@ class Session:
 
         try:
             
-            self.SetInteractionLogOnOff('Off')
+            self.SetInteractionLogOnOff('Off','Changing View - Reset Button')
             
             sCaptureSuccessLevel, lsCurrentResponses, sMsg = self.CaptureNewResponses()
             self.CaptureAndSaveImageState()
@@ -1396,24 +1438,15 @@ class Session:
             self.ApplySavedImageState()
             
 
-            if sCaller != 'NPlanes':            
-                self.SetInteractionLogOnOff('On')
+            if sCaller == 'NPlanes':
+                self.oUtilsMsgs.DisplayTimedMessage('***','Waiting',100) #force Slicer to refresh display before logging resumes
+                self.SetInteractionLogOnOff('On','Changing View - Reset Button - caller: ' + sCaller)
                 
-            
-
         except:
             tb = traceback.format_exc()
             sMsg = "onResetViewClicked: Error resetting the view after NPlanes (closeup) request.  \n\n" + tb 
             self.oUtilsMsgs.DisplayError(sMsg)
             
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onWindowLevelOnClicked(self):
-        slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.AdjustWindowLevel)
-        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onWindowLevelOffClicked(self):
-        slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.ViewTransform)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onContourDisplayStateChanged(self):
@@ -1436,6 +1469,120 @@ class Session:
                     self.oImageView.SetSegmentationOutlineOrFill(oViewNode, slSegDisplayNode)
                 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onMeasurementVisibilityStateChanged(self):
+        # display line measurements on/off
+        slMarkupNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsLineNode')
+        
+        for slNode in slMarkupNodes:
+            slDisplayNode = slNode.GetDisplayNode()
+            if self.qChkBoxMeasurementVisibility.isChecked():
+                slDisplayNode.PropertiesLabelVisibilityOn()
+            else:
+                slDisplayNode.PropertiesLabelVisibilityOff()
+
+        slMarkupNodes.UnRegister(slicer.mrmlScene)    #cleanup memory
+
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onGoToBookmarkButtonClicked(self):
+        ''' Function to change to previous bookmarked page
+        '''
+        # find previous page with the BookmarkID match
+        xPageNode = self.GetCurrentPageNode()
+
+        sGoToBookmarkID = ''
+        sGoToBookmarkRequest = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'GoToBookmark')
+        if sGoToBookmarkRequest != '':
+            sGoToBookmarkID = sGoToBookmarkRequest.split()[0]
+
+        # set up dictionary with value to match in historical pages
+        dictAttribToMatchInHistory = {}
+        dictAttribToMatchInHistory['BookmarkID'] = sGoToBookmarkID
+        
+        # all page nodes that match - ordered with most recent first
+        dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(self.GetCurrentNavigationIndex(), self.GetNavigationList(), dictAttribToMatchInHistory)
+        lPageIndices = list(dictPgNodeAndPgIndex.values())
+        if len(lPageIndices) > 0:
+            iBookmarkedPageIndex = lPageIndices[0]
+            iBookmarkedNavigationIndex = self.oIOXml.GetNavigationIndexForPage(self.GetNavigationList(), iBookmarkedPageIndex)
+            
+            
+                
+    #         sMsg = 'Leaving current screen - return to Bookmark page'\
+    #                 + '\nCurrentNavigationIndex: ' + str(self.GetCurrentNavigationIndex()) \
+    #                 + '\nCurrentPage (0-based): ' + str( self.GetCurrentPageIndex()) \
+    #                 + '\nPageIndex: ' + str(iBookmarkedPageIndex)\
+    #                 + '\nNavigationIndex: ' + str(iBookmarkedNavigationIndex)
+    #                   
+    #         self.oUtilsMsgs.DisplayWarning(sMsg)
+             
+    
+    
+            try:
+                sMsg = ''
+    
+                self.SaveAndGoToPreviousPageDisplay('GoToBookmark', iBookmarkedPageIndex, iBookmarkedNavigationIndex)
+    
+            except:
+                iPage = self.GetCurrentPageIndex() + 1
+                tb = traceback.format_exc()
+                sMsg = "onGoToBookmarkButtonClicked: Error moving to bookmarked page. Current page: " + str(iPage) \
+                       + "\n\n" + tb 
+                self.oUtilsMsgs.DisplayError(sMsg)
+            
+        
+        
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SaveAndGoToPreviousPageDisplay(self, sCaller, iNewPageIndex, iNewNavigationIndex):
+        
+        self.SetInteractionLogOnOff('Off',sCaller)
+            
+        self.DisableButtons()    
+        if self.sViewingMode != 'Default':
+            self.onResetViewClicked(sCaller)
+
+        bChangeXmlPageIndex = True
+
+        if self.GetCurrentNavigationIndex() > 0:
+            if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == iNewPageIndex:
+                bChangeXmlPageIndex = False  
+        
+        if self.PerformSave(sCaller):
+                
+            self.CaptureAndSaveImageState()
+
+            ########################################    
+            # set up for new display page
+            ########################################    
+
+            self.SetCurrentNavigationIndex(iNewNavigationIndex)
+            self.progress.setValue(self.GetCurrentNavigationIndex())
+            self.InitializeImageDisplayOrderIndices()
+    
+            if self.GetCurrentNavigationIndex() < 0:
+                # reset to beginning
+                self.SetCurrentNavigationIndex( 0 )
+            
+            self.AdjustToCurrentQuestionSet()
+            
+            if bChangeXmlPageIndex:
+                slicer.mrmlScene.Clear()
+                self.SetupPageState(self.GetCurrentPageIndex())
+
+            self.InitializeTabSettings()
+            self.DisplayQuizLayout()
+            self.DisplayImageLayout()
+
+        self.SetInteractionLogOnOff('On', sCaller)
+
+               
+        self.EnableButtons()
+
+        
+        
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #-------------------------------------------
     #        Session Setup
@@ -1443,12 +1590,13 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def RunSetup(self, oFilesIO, slicerMainLayout):
+    def RunSetup(self, oFilesIO, oValidation, slicerMainLayout):
         
+        sMsg = ''
         try:
             self.SetFilesIO(oFilesIO)
+            self.SetValidation(oValidation)
     
-            sMsg = ''
             # open xml and check for root node
             bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizResultsPath(),'Session')
     
@@ -1458,7 +1606,7 @@ class Session:
     
             else:
                 
-                self.SetInteractionLogOnOff('Off')
+                self.SetInteractionLogOnOff('Off','Login')
                 self.oMaximizedWindowSize = SlicerWindowSize()
 
                 # >>>>>>>>>> Email feature <<<<<<<<<<
@@ -1523,7 +1671,7 @@ class Session:
                     
                 self.EnableButtons()
 
-                self.SetInteractionLogOnOff('On')
+                self.SetInteractionLogOnOff('On','Login')
 
 
 
@@ -1557,50 +1705,9 @@ class Session:
         # given the root of the xml document build composite navigation list 
         #     of indices for each page, question sets, page group and rep number
         
-        self.ClearNavigationList()
-        # get Page nodes
-        xPages = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
-
-        iPageNum = 0
-        for iPageIndex in range(len(xPages)):
-            iPageNum = iPageNum + 1
-            # for each page - get number of question sets
-            xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
-            xQuestionSets = self.oIOXml.GetChildren(xPageNode,'QuestionSet')
-
-            sPageGroup = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
-            # if there is no request to randomize the page groups, there may not be a page group number
-            try:
-                iPageGroup = int(sPageGroup)
-            except:
-                # assign a unique page number if no group number exists
-                iPageGroup = iPageNum
-                
-            sRepNum = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Rep')
-            try:
-                iRepNum = int(sRepNum)
-            except:
-                iRepNum = 0
-            
-            # if there are no question sets for the page, insert a blank shell
-            #    - this allows images to load
-            if len(xQuestionSets) == 0:
-                self.oIOXml.AddElement(xPageNode,'QuestionSet', 'Blank Quiz',{})
-                xQuestionSets = self.oIOXml.GetChildren(xPageNode, 'QuestionSet')
-            
-            # append to composite indices list
-            #    - if there are 2 pages and the 1st page has 2 question sets, 2nd page has 1 question set,
-            #        and each page is in a different page group
-            #        the indices will look like this:
-            #        Page    QS    PageGroup  Rep
-            #        0        0        1       0
-            #        0        1        1       0
-            #        1        0        2       0
-            #    - there can be numerous questions in each question set
-            for iQuestionSetIndex in range(len(xQuestionSets)):
-                self.NavigationListAppend([iPageIndex,iQuestionSetIndex, iPageGroup, iRepNum])
-                
-                
+        
+        self.SetNavigationList(self.oIOXml.GetNavigationListBase(self.oIOXml.GetRootNode()))
+        
         # if randomization is requested - shuffle the page/questionset list
         if self.GetRandomizeRequired():
             # check if xml already holds a set of randomized indices otherwise, call randomizing function
@@ -1608,7 +1715,7 @@ class Session:
             if liRandIndices == []:
                 # get the unique list  of all Page Group numbers to randomize
                 #    this was set during xml validation during the initial read
-                liIndicesToRandomize = self.oFilesIO.GetListUniquePageGroups()
+                liIndicesToRandomize = self.oValidation.GetListUniquePageGroups()
                 liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
                 self.AddRandomizedIndicesToXML(liRandIndices)
              
@@ -1765,8 +1872,7 @@ class Session:
             
     
             # first clear any previous widgets (except push buttons)
-            for i in reversed(range(self.oQuizWidgets.qQuizLayout.count())):
-                self.oQuizWidgets.qQuizLayout.itemAt(i).widget().setParent(None)
+            self.oQuizWidgets.ClearLayout(self.oQuizWidgets.qQuizLayout)
     
             
             bBuildSuccess, qWidgetQuestionSetForm = oQuestionSet.BuildQuestionSetForm()
@@ -1800,6 +1906,8 @@ class Session:
                 self.SetPageLooping(False)
                 
             self.SetUserInteractionLogRequest(xPageNode)
+            self.SetGoToBookmarkRequestButton(xPageNode)
+            self.SetContourToolRadius(xPageNode)
 
     
             if self.GetQuizComplete():
@@ -1823,10 +1931,6 @@ class Session:
                         self.SegmentationTabEnabler(False)
                         self.EnableMarkupLinesTF(False)
                         
-                if self.GetSegmentationTabIndex() > 0:
-                    # clear Master and Merge selector boxes
-                    oQuizzerEditorHelperBox = slicer.modules.quizzereditor.widgetRepresentation().self().GetHelperBox()
-                    oQuizzerEditorHelperBox.setMasterVolume(None)
 
             ################################################
                 
@@ -1992,8 +2096,7 @@ class Session:
             else:
                 if sCaller != 'ResetView':
                     self.oQuizWidgets.qTabWidget.setCurrentIndex(0) # move to Quiz tab
-                self.SetSegmentationTabDefaults()
-                    
+
                 
                 if self.oFilesIO.SaveLabelMaps(self, sCaller):
                     self.oFilesIO.SaveMarkupLines(self)
@@ -2070,13 +2173,43 @@ class Session:
         return bPageComplete
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetSegmentationTabDefaults(self):
+    def InitializeNullEditorSettings(self):
         
-        if self.GetSegmentationTabIndex() > 0:
-            slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
-            slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
-            slicer.modules.quizzereditor.widgetRepresentation().self().helper.setMasterVolume(None)
+        slicer.modules.quizzereditor.widgetRepresentation().self().toolsBox.selectEffect('DefaultTool')
+        slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(None)
+        slicer.modules.quizzereditor.widgetRepresentation().self().helper.setMasterVolume(None)
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def InitializeTabSettings(self):
+        self.slEditorMasterVolume = None
+        self.slEditorCurrentTool = 'DefaultTool'
+        self.SetPreviousTabIndex(0)
+        
+        self.btnWindowLevel.setChecked(False)
+        self.onWindowLevelClicked()
+        self.btnCrosshairs.setChecked(False)
+        self.onCrosshairsClicked()
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CaptureEditorSettings(self):
+        
+        self.slEditorCurrentTool = EditUtil.getCurrentEffect()
+        self.slEditorMasterVolume = slicer.modules.quizzereditor.widgetRepresentation().self().helper.masterSelector.currentNode()
+        self.fCurrentContourRadius = EditUtil.getParameterNode().GetParameter("PaintEffect,radius")
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ResetEditorSettings(self):
+        
+        if self.slEditorMasterVolume != None:
+            # note : this order is important
+            slicer.modules.quizzereditor.widgetRepresentation().self().helper.setMasterVolume(self.slEditorMasterVolume)
+            slicer.modules.quizzereditor.widgetRepresentation().self().updateLabelFrame(True)
+            EditUtil.setCurrentEffect(self.slEditorCurrentTool)
+            EditUtil.getParameterNode().SetParameter("PaintEffect,radius", self.fCurrentContourRadius)
+            
+        else:
+            self.InitializeNullEditorSettings()
+            
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CaptureNewResponses(self):
         ''' When moving to another display of Images and QuestionSet (from pressing Next or Previous)
@@ -2382,43 +2515,6 @@ class Session:
                 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetXmlElementFromAttributeHistory(self, sPageChildrenToSearch, sImageAttributeToMatch, sAttributeValue):
-        ''' Function will return the historical element that contains the attribute requested for the search.
-            This attribute is associated with a child of the 'Page' element.
-            The search goes through the pages in reverse. 
-                For each page, the requested children are searched (forward) for the requested attribute.
-            When found, the xml element that contains the attribute is returned.
-        '''
-        
-        xHistoricalChildElement = None
-        
-        # start searching pages in reverse order - to get most recent setting
-        # first match will end the search
-        bHistoricalElementFound = False
-        for iPageIndex in range(self.GetCurrentPageIndex()-1, -1, -1):
-            xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
-        
-            if bHistoricalElementFound == False:
-                
-                #get all requested children
-                lxChildElementsToSearch = self.oIOXml.GetChildren(xPageNode, sPageChildrenToSearch)
-                if len(lxChildElementsToSearch) > 0:
-    
-                    for xImageNode in lxChildElementsToSearch:
-                        
-                        # get image attribute
-                        sPotentialAttributeValue = self.oIOXml.GetValueOfNodeAttribute(xImageNode, sImageAttributeToMatch)
-                        if sPotentialAttributeValue == sAttributeValue:
-                            xHistoricalChildElement = xImageNode
-                            bHistoricalElementFound = True
-                            break
-            else:
-                break
-        
-        return xHistoricalChildElement
-    
-
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def WriteResponsesToXml(self):
         """ Write captured responses to xml. If this is the first write to the xml
             with responses, the login timestamp is also added.
@@ -2426,10 +2522,15 @@ class Session:
         """
         
         try:
-            # only allow for writing of responses under certain conditions
-            #    - allow if the question set is marked for multiple responses allowed
-            #    - OR allow if the number of questions with responses already 
-            #      recorded is 'NoResponses' or 'PartialResponses' (not 'AllResponses')
+            '''
+                only allow for writing of responses under certain conditions
+                    - allow if the question set is marked for multiple responses allowed
+                    - OR allow if the number of questions with responses already 
+                      recorded is 'NoResponses' or 'PartialResponses' (not 'AllResponses')
+                    - OR allow if the current Page has not been marked as complete 
+                      indicating that there are multiple question sets and Prev or Next was
+                      used to move between them
+            '''
             
             # get from xml, the category of saved recorded responses to 
             #    determine whether the newly captured responses are to be written
@@ -2437,7 +2538,8 @@ class Session:
             
 
             if ( self.GetMultipleResponseAllowed() == True)  or \
-                ((self.GetMultipleResponseAllowed() == False) and (sQuestionsWithRecordedResponses != 'AllResponses') ):
+                ((self.GetMultipleResponseAllowed() == False) and (sQuestionsWithRecordedResponses != 'AllResponses') ) or \
+                ((self.GetMultipleResponseAllowed() == False) and (self.GetPageCompleteAttribute(self.GetCurrentNavigationIndex()) != 'Y') ):
 
                 # check to see if the responses for the question set match 
                 #    what was previously captured
@@ -2505,7 +2607,9 @@ class Session:
         ''' Function to update the newly repeated Page node.
             The Page ID attribute will have '-Rep#' appended.
             Any previously stored label map and markup line paths are removed.
-            Ay previously stored responses to questions will be removed.
+            Any previously stored responses to questions will be removed.
+            Remove any BookmarkID attributes - 
+                (a GoToBookmark attribute will have the user return to the first Page in a group of repetitions) 
         '''
         
         sMsg = ''
@@ -2523,6 +2627,7 @@ class Session:
             iPreviousRepNum = int(sPreviousRepNum)
             sNewRepNum = str(iPreviousRepNum + 1)
             self.oIOXml.UpdateAttributesInElement(xNewRepeatPage, {"Rep":sNewRepNum})
+            self.oIOXml.RemoveAttributeInElement(xNewRepeatPage, "BookmarkID")
             
             iSubIndex = sPreviousPageID.find('-Rep')
             if iSubIndex >=0:
@@ -2868,6 +2973,14 @@ class QuizWidgets:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ClearLayout(self, layout):
+        # remove widgets from layout - ready for new widgets
+        for i in reversed(range(layout.count())):
+            widget = layout.takeAt(i).widget()
+            if widget != None:
+                widget.deleteLater()
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CreateLeftLayoutAndWidget(self):

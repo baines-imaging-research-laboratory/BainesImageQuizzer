@@ -1,5 +1,40 @@
 <Session >
-    <Page ID="Patient 1" Descriptor="CT">
+    <Page ID="Patient 2" Descriptor="CT" UserInteractionLog="Y" Layout="TwoOverTwo" Loop="Y">
+        <Image ID="CT" Type="Volume"  ZoomFactor="1.2" PanOrigin="-92 27.5 -225.5" InitialSliceOffset="-245">
+                <DefaultDestination>Red</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Axial</DefaultOrientation>
+                <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
+        </Image>
+        <Image ID="CT" Type="Volume" ZoomFactor="1.5" PanOrigin="-43.96383459076361 63.246218183203815 0.0" InitialSliceOffset="-112">
+                <DefaultDestination>Green</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Coronal</DefaultOrientation>
+                <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
+        </Image>
+        <Image ID="CT" Type="Volume" ZoomFactor=".75">
+                <DefaultDestination>Yellow</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Axial</DefaultOrientation>
+                <Path>ImageVolumes\MRHead\MRHead.nrrd</Path>
+        </Image>
+        <Image ID="CT" Type="Volume" ZoomFactor=".75" PanOrigin="118 39 0" InitialSliceOffset="91">
+                <DefaultDestination>Slice4</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Coronal</DefaultOrientation>
+                <Path>ImageVolumes\MRHead\MRHead.nrrd</Path>
+        </Image>
+        <QuestionSet ID="Steps" Descriptor="User interaction log feature">
+            <Question Type="CheckBox" Descriptor="Testing user interaction log">
+				<Option>Check for log started </Option>
+            </Question>
+            <Question Type="Radio" Descriptor="Testing locked layout">
+                <Option>Layout locked</Option>
+				<Option>Layout not locked</Option>
+            </Question>
+        </QuestionSet>
+    </Page>
+    <Page ID="Patient 1" Descriptor="CT" UserInteractionLog="Y" Layout="OneUpRedSlice">
         <Image ID="CT" Type="Volume"  >
                 <DefaultDestination>Red</DefaultDestination>
                 <Layer>Background</Layer>
@@ -20,7 +55,7 @@
         </Image>
         <QuestionSet ID="Steps" Descriptor="User interaction log feature">
             <Question Type="CheckBox" Descriptor="Testing user interaction log">
-				<Option>Check for log started </Option>
+				<Option>Log on Red Only </Option>
             </Question>
             <Question Type="Radio" Descriptor="Testing locked layout">
                 <Option>Layout locked</Option>
@@ -28,7 +63,7 @@
             </Question>
         </QuestionSet>
     </Page>
-    <Page ID="Patient 2" Descriptor="CT" UserInteractionLog="Y">
+    <Page ID="Patient 2a" Descriptor="CT" UserInteractionLog="Y" Layout="FourUp">
         <Image ID="CT" Type="Volume"  ZoomFactor="1.2" PanOrigin="-92 27.5 -225.5" InitialSliceOffset="-245">
                 <DefaultDestination>Red</DefaultDestination>
                 <Layer>Background</Layer>
@@ -44,8 +79,31 @@
         <Image ID="CT" Type="Volume" ZoomFactor=".75" PanOrigin="118 39 0" InitialSliceOffset="91">
                 <DefaultDestination>Yellow</DefaultDestination>
                 <Layer>Background</Layer>
-                <DefaultOrientation>Sagittal</DefaultOrientation>
+                <DefaultOrientation>Axial</DefaultOrientation>
+                <Path>ImageVolumes\MRHead\MRHead.nrrd</Path>
+        </Image>
+        <QuestionSet ID="Steps" Descriptor="User interaction log feature">
+            <Question Type="CheckBox" Descriptor="Testing user interaction log">
+				<Option>Check for log started </Option>
+            </Question>
+            <Question Type="Radio" Descriptor="Testing locked layout">
+                <Option>Layout locked</Option>
+				<Option>Layout not locked</Option>
+            </Question>
+        </QuestionSet>
+    </Page>
+    <Page ID="Patient 2b" Descriptor="CT" UserInteractionLog="Y" Layout="SideBySideRedYellow">
+        <Image ID="CT" Type="Volume"  ZoomFactor="1.2" PanOrigin="-92 27.5 -225.5" InitialSliceOffset="-245">
+                <DefaultDestination>Red</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Axial</DefaultOrientation>
                 <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
+        </Image>
+        <Image ID="CT" Type="Volume" ZoomFactor=".75" PanOrigin="118 39 0" InitialSliceOffset="91">
+                <DefaultDestination>Yellow</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Axial</DefaultOrientation>
+                <Path>ImageVolumes\MRHead\MRHead.nrrd</Path>
         </Image>
         <QuestionSet ID="Steps" Descriptor="User interaction log feature">
             <Question Type="CheckBox" Descriptor="Testing user interaction log">

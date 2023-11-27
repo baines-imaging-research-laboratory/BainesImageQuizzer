@@ -1,6 +1,6 @@
 <Session>
 	<Page ID="Mixed" Descriptor="BG-FG Testing" LinkViews="N" EnableSegmentEditor="Y" Layout="TwoOverTwo">
-		<Image ID="Y-BG-1_T2-N4" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID='T2-contour'>
+		<Image ID="Y-BG-1_T2-N4" Type="Volume" RotateToAcquisition="Y" LabelMapID='T2-contour'>
 			<DefaultDestination>Yellow</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
@@ -39,13 +39,13 @@
 			<DefaultDestination>Slice4</DefaultDestination>
 			<Layer>Foreground</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
-			<Path>ImageVolumes\PETCTFusion\PET1.nrrd</Path>
+			<Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\PET1.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="4-BG-2_CT" RotateToAcquisition="Y">
 			<DefaultDestination>Slice4</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
-			<Path>ImageVolumes\PETCTFusion\CT1.nrrd</Path>
+			<Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\CT1.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="RG-BG-1_Fixed Volume" LabelMapID="Brain-fixed-contour" SegmentRequired="Y" InitialSliceOffset="-51.01">
 			<DefaultDestination>Green</DefaultDestination>
@@ -106,13 +106,13 @@
 			<DefaultDestination>Slice4</DefaultDestination>
 			<Layer>Foreground</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
-			<Path>ImageVolumes\PETCTFusion\PET1.nrrd</Path>
+			<Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\PET1.nrrd</Path>
 		</Image>
 		<Image Type="Volume" ID="4-BG-2_CT" RotateToAcquisition="Y">
 			<DefaultDestination>Slice4</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
-			<Path>ImageVolumes\PETCTFusion\CT1.nrrd</Path>
+			<Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\CT1.nrrd</Path>
 		</Image>
 		<Image DicomRead="Y" Type="Volume" ID="G-FG-1_RTDose" ColorTable="Dose_Color_Table" Opacity=".3">
 			<DefaultDestination>Green</DefaultDestination>

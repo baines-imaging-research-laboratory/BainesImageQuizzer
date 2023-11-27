@@ -379,7 +379,13 @@ class PageState:
                     # get image element from history that holds the same label map id; 
                     xHistoricalImageElement = None  # initialize
                     xHistoricalLabelMapMatch = None
-                    xHistoricalImageElement, xHistoricalPageElement = self.oIOXml.GetXmlPageAndChildFromAttributeHistory(self.oSession.GetCurrentPageIndex(),'Image','LabelMapID',sLabelMapToRedisplay)
+                    xHistoricalImageElement, xHistoricalPageElement = \
+                                                self.oIOXml.GetXmlPageAndChildFromAttributeHistory(\
+                                                                             self.oSession.GetCurrentNavigationIndex(),\
+                                                                             self.oSession.GetNavigationList(),\
+                                                                             'Image','LabelMapID',\
+                                                                             sLabelMapToRedisplay)
+                                                
                     if xHistoricalImageElement != None:
                         xHistoricalLabelMapMatch = self.oSession.oIOXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')
                     
@@ -391,6 +397,9 @@ class PageState:
                         else:
                             # there was no labelmap in history so this must be a 'new' contour - reset flag
                             bRedisplayed = False
+                    else:
+                        # there was no labelmap in history (Randomizing is on?) so this must be a 'new' contour - reset flag
+                        bRedisplayed = False
 
 
             # set segmentation completion state for the image based on the image segmentation required level

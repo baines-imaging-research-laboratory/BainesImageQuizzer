@@ -1,5 +1,5 @@
 <Session>
-    <Page ID="Patient 1" EnableSegmentEditor="Y">
+    <Page ID="Patient 1" EnableSegmentEditor="Y" AllowMultipleResponse="Y">
         <Image ID="CT" Type="Volume"  ZoomFactor="1.2" PanOrigin="-92 27.5 -225.5" InitialSliceOffset="-245">
                 <DefaultDestination>Red</DefaultDestination>
                 <Layer>Background</Layer>
@@ -30,6 +30,20 @@
             <Question Type="Radio" Descriptor="Test Radio Buttons">
                 <Option>Radio1</Option>
 				<Option>Radio2</Option>
+            </Question>
+        </QuestionSet>
+    </Page>
+	<Page ID="Patient 1">
+        <Image ID="CT" Type="Volume">
+                <DefaultDestination>Red</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Axial</DefaultOrientation>
+                <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
+        </Image>
+        <QuestionSet>
+            <Question Type="CheckBox">
+                <Option>Learning Tool</Option>
+                <Option>Observer Study</Option>
             </Question>
         </QuestionSet>
     </Page>

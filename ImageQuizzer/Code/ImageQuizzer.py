@@ -7,6 +7,7 @@ from slicer.util import findChild
 
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
+from Utilities.UtilsValidate import *
 
 import importlib.util
 
@@ -59,12 +60,13 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         self.oUtilsMsgs = UtilsMsgs()
         self.oFilesIO = UtilsFilesIO()
         self.oFilesIO.SetModuleDirs(sModuleName)
+        self.oValidation = UtilsValidate(self.oFilesIO)
         
         # previous and current release dates
         # Note: Version 1.0 should be used with Slicer v4.11.20200930
         # self.sVersion = "Image Quizzer   v1.0 "  #  Release Date: May 10, 2022
-        # Note: Version 2.0 should be used with Slicer v4.11.2021022
-        self.sVersion = "Image Quizzer v3.0" 
+        # Note: Version 2.0 should be used with Slicer v4.11.20210226
+        self.sVersion = "Image Quizzer v3.2.0" 
 
         sSlicerVersion = slicer.app.applicationVersion
         if sSlicerVersion != '4.11.20210226':
@@ -73,13 +75,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             self.oUtilsMsgs.DisplayError(sMsg)
 
 
-#         # capture Slicer's default database location
-#         self.oFilesIO.SetDefaultDatabaseDir(slicer.dicomDatabase.databaseDirectory)
-
-
-#         self.oCustomEventFilter = customEventFilter()
-#         slicer.util.mainWindow().installEventFilter(self.oCustomEventFilter)        
-         
         
         self.slicerMainLayout = self.layout
         
@@ -139,7 +134,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
   
         slicer.util.setModuleHelpSectionVisible(False)
         slicer.modules.welcome.widgetRepresentation().setVisible(False)
-        
+        slicer.util.setPythonConsoleVisible(False)
+               
         slicer.util.mainWindow().showMaximized()
 ###########
         
@@ -374,7 +370,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
             
         # check for errors in quiz xml layout before populating the user response folder
-        bQuizValidated, sMsg = self.oFilesIO.ValidateQuiz()
+        bQuizValidated, sMsg = self.oValidation.ValidateQuiz()
     
 
         if bQuizValidated:
@@ -386,7 +382,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             ########################
             
             
-            sMissingFiles = self.oFilesIO.ValidateDatabaseLocation()
+            sMissingFiles = self.oValidation.ValidateDatabaseLocation()
             if sMissingFiles != '':
                 sMsgMissigFiles = 'Database images are missing. ' + sMissingFiles \
                                 + '\nReselect the proper database location or contact your administrator.'
@@ -405,7 +401,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                     self.qUserLoginWidget.show()
                     
                     # start the session
-                    self.oSession.RunSetup(self.oFilesIO, self.slicerMainLayout)
+                    self.oSession.RunSetup(self.oFilesIO, self.oValidation, self.slicerMainLayout)
     
         else:
             self.oUtilsMsgs.DisplayError(sMsg)

@@ -1142,51 +1142,72 @@ class Button(Question):
             return False, self.qGrpBox
 
         oFilesIO = self._oFilesIO_getter()
-        dictQButtons = {}
+        self.dictQButtons = {}
         i = 0
         while i < length:
             element1 = os.path.join(oFilesIO.GetScriptsDir(),lsStoredOptions[i])
             head, tail = os.path.split(element1)
             qButton = qt.QPushButton(str(i+1)+'-'+tail)
+            qButton.setStyleSheet("QPushButton{ background-color: rgb(173,220,237); color: black }")
             newLayout.addWidget(qButton, i, 0)
-            dictQButtons[element1]=qButton
+            self.dictQButtons[element1]=qButton
             i = i + 1
 
-        for button in dictQButtons:
-            dictQButtons[button].connect('clicked(bool)',lambda _, b=button: self.onQButtonClicked(b))
+        for button in self.dictQButtons:
+            self.dictQButtons[button].connect('clicked(bool)',lambda _, b=button: self.onQButtonClicked(b))
                                          
         return True, self.qGrpBox
 
     #-----------------------------------------------
+
     def onQButtonClicked(self,  sScript):
         
         try:
-        
-            exec(open(sScript).read())
+            qBtn = self.dictQButtons[sScript]
+            # globals() runs the executable in the global namespace
+            #    passes global dictionary of the main context to exec()
+            exec(open(sScript).read(),globals())
+
+            qBtn.setText(qBtn.text+'-Done')
+            qBtn.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
 
         except:
             tb = traceback.format_exc()
-            sMsg = "onButtonClicked: Error opening script " + sScript \
+            qBtn.setStyleSheet("QPushButton{ background-color: rgb(245,159,159); color: black }")
+            sMsg = "onButtonClicked: Error running script. \nContact administrator\n" + sScript \
                    + "\n\n" + tb 
-            self.oMsgUtil.DisplayError(sMsg)
+            self.oMsgUtil.DisplayWarning(sMsg)
 
         
     #-----------------------------------------------
     
     def CaptureResponse(self):
+
         self.sFnName = sys._getframe().f_code.co_name
 
-        bSuccess = True
-        sMsg = ''
- 
         lsResponses = []
+        bSuccess = False
+        bResponseFound = False
+        sMsg = ''
         
-        # set response for each option to null quotes
-        #     each option needs a response for the check on whether 
-        #     the question set was answered completely or partially
-        lsStoredOptions = self._lsOptions_getter()
-        for x in range( len(lsStoredOptions) ):
-            lsResponses.append('')
+        for qBtn in self.qGrpBox.findChildren(qt.QPushButton):
+            if 'Done' in qBtn.text:
+                bResponseFound = True
+                lsResponses.append(qBtn.text)
+            else:
+                bResponseFound = False
+                break
+                
+
+        if bResponseFound:
+            bSuccess = True
+        else:
+            sMsg = 'Script run incomplete for: ' + self._sGrpBoxTitle_getter()
+            #  reset the response list to empty (to accomodate partial responses)
+            lsResponses = []
+            
+        return bSuccess, lsResponses, sMsg
+            
                 
         
         return bSuccess, lsResponses, sMsg
