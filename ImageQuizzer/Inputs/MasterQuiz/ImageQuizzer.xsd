@@ -67,6 +67,7 @@
 		<xs:attribute name="MergeLabelMaps" type="yesnoType" default="N" />
 		<xs:attribute name="ZoomFactor" type="xs:float"/>
 		<xs:attribute name="PanOrigin" type="listTypeFloats"/>
+		<xs:attribute name="WindowLevel" type="listTypeInts"/>
 	</xs:complexType>
 </xs:element>
 
@@ -232,6 +233,16 @@
 
 <xs:simpleType name="stringListType">
   <xs:list itemType="xs:string"/>
+</xs:simpleType>
+
+<xs:simpleType name="listTypeInts">
+  <xs:restriction base="intListType">
+    <xs:length value="2"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="intListType">
+  <xs:list itemType="xs:int"/>
 </xs:simpleType>
 
 </xs:schema>
