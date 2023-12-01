@@ -174,6 +174,8 @@ class UtilsValidate:
                 sValidationMsg = self.ValidateImageToSegmentationMatch(xPage, sPageReference)
                 sMsg = sMsg + sValidationMsg
 
+                sValidationMsg = self.ValidateNoSpecialCharacters(xPage, str(iPageNum))
+                sMsg = sMsg + sValidationMsg
                 
                 # Image element validations
                 lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
@@ -701,7 +703,7 @@ class UtilsValidate:
             is set to 'Y'.)
         '''
         sMsg = ''
-        ltupGoToBookmarkIDs = []
+        ltupGoToBookmarks = []
         ltupBookmarkIDs = []
         sRandomizeSetting = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'RandomizePageGroups')
         if sRandomizeSetting == 'Y':
@@ -711,15 +713,15 @@ class UtilsValidate:
         
         lxPageNodes = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
         
-        # collect all instances of BookmarkID and GoToBookmarkID and which page they are set
+        # collect all instances of BookmarkID and GoToBookmark and which page they are set
         for idxPage in range(len(lxPageNodes)):
             xPageNode = lxPageNodes[idxPage]
         
             sBookmarkID = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'BookmarkID')
-            sGoToBookmarkID = ''
+            sGoToBookmark = ''
             sGoToBookmarkRequest = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'GoToBookmark')
             if sGoToBookmarkRequest != '':
-                sGoToBookmarkID = sGoToBookmarkRequest.split()[0]
+                sGoToBookmark = sGoToBookmarkRequest.split()[0]
 
             sPageGroup = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
             if sPageGroup != '':
@@ -730,17 +732,17 @@ class UtilsValidate:
 
             if sBookmarkID != '':
                 ltupBookmarkIDs.append([sBookmarkID, idxPage, iPageGroup])
-            if sGoToBookmarkID != '':
-                ltupGoToBookmarkIDs.append([sGoToBookmarkID, idxPage, iPageGroup])
+            if sGoToBookmark != '':
+                ltupGoToBookmarks.append([sGoToBookmark, idxPage, iPageGroup])
                 
             
-        # for every instance of GoToBookmarkID, confirm there is a BookmarkID
+        # for every instance of GoToBookmark, confirm there is a BookmarkID
          
-        for idxGoToBookmarkID in range(len(ltupGoToBookmarkIDs)):
-            tupGoToBookmarkIDItem = ltupGoToBookmarkIDs[idxGoToBookmarkID]
-            sGoToBookmarkIDToSearch = tupGoToBookmarkIDItem[0]
-            iGoToBookmarkIDPage = tupGoToBookmarkIDItem[1]
-            iGoToBookmarkIDPageGroup = tupGoToBookmarkIDItem[2]
+        for idxGoToBookmark in range(len(ltupGoToBookmarks)):
+            tupGoToBookmarkItem = ltupGoToBookmarks[idxGoToBookmark]
+            sGoToBookmarkToSearch = tupGoToBookmarkItem[0]
+            iGoToBookmarkPage = tupGoToBookmarkItem[1]
+            iGoToBookmarkPageGroup = tupGoToBookmarkItem[2]
 
             bFoundMatch = False
         
@@ -752,14 +754,14 @@ class UtilsValidate:
                     iBookmarkIDPage = tupBookmarkIDItem[1]
                     iBookmarkIDPageGroup = tupBookmarkIDItem[2]
         
-                    if sBookmarkIDToCompare == sGoToBookmarkIDToSearch:
+                    if sBookmarkIDToCompare == sGoToBookmarkToSearch:
                         if not bRandomizing:
-                            if (iBookmarkIDPage < iGoToBookmarkIDPage):
+                            if (iBookmarkIDPage < iGoToBookmarkPage):
                                 bFoundMatch = True
                                 break
                         else:   # randomize is set , ignore page test
-                            if iBookmarkIDPageGroup == iGoToBookmarkIDPageGroup:
-                                if iBookmarkIDPage < iGoToBookmarkIDPage:
+                            if iBookmarkIDPageGroup == iGoToBookmarkPageGroup:
+                                if iBookmarkIDPage < iGoToBookmarkPage:
                                     bFoundMatch = True
                                     break
                             else: # page groups don't match - only allow if ID is in group 0
@@ -769,11 +771,11 @@ class UtilsValidate:
        
         
             if not bFoundMatch:
-                sMsg = sMsg + "\nFor attribute 'GoToBookmarkID' : "  + sGoToBookmarkIDToSearch \
+                sMsg = sMsg + "\nFor attribute 'GoToBookmark' : "  + sGoToBookmarkToSearch \
                             + "\nMissing historical 'BookmarkID' setting to match 'GoToBookmark' "\
                             + "\n...OR... The attribute 'PageGroup' for both attributes 'GoToBookmark' and 'BookmarkID' do not match"\
                             + '\nSee Page #: '\
-                            + str(iGoToBookmarkIDPage + 1)
+                            + str(iGoToBookmarkPage + 1)
                             
                 if self.sTestMode == "1":
                     raise ValueError('Missing historical BookmarkID: %s' % sMsg)
@@ -992,7 +994,28 @@ class UtilsValidate:
             sMsg = sMsg + '\n----------See Page: ' + sPageReference
 
         return sMsg
-            
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateNoSpecialCharacters(self, xPageNode, sPageReference):
+        ''' Page ID and Page Descriptor are used to build a results folder name and
+            are therefore not allowed certain characters.
+        '''
+        sMsg = ''
+        special_characters = '"\'#&{}\\<>*?/$!:@+`~%^()+=,`|'
+        sID = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
+        sDescriptor  = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
+
+        if any(c in special_characters for c in sID):
+            sMsg = sMsg + '\n Special characters are not allowed in the page attribute ID.'
+        if any(c in special_characters for c in sDescriptor):
+            sMsg = sMsg + '\n Special characters are not allowed in the page attribute Descriptor'
+
+        if sMsg != '':
+            sMsg = sMsg + '\n----------See Page: ' + sPageReference
+
+        
+        return sMsg
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ValidateImageToSegmentationMatch(self, xPageNode, sPageReference):
         '''

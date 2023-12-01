@@ -423,7 +423,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
 
     #------------------------------------------- 
     def test_ValidateGoToBookmarkRequest_Valid_NoRandomize(self):
-        ''' BookmarkID must appear before GoToBookmarkID attribute
+        ''' BookmarkID must appear before GoToBookmark attribute
             Test with the same PageGroup number.
         '''
         
@@ -464,7 +464,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
     
     #------------------------------------------- 
     def test_ValidateGoToBookmarkRequest_Valid_Randomize(self):
-        ''' BookmarkID must appear before GoToBookmarkID attribute
+        ''' BookmarkID must appear before GoToBookmark attribute
             Test with the same PageGroup number.
         '''
         
@@ -505,7 +505,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
     
     #------------------------------------------- 
     def test_ValidateGoToBookmarkRequest_Valid_BothPageGroups0s(self):
-        ''' BookmarkID must appear before GoToBookmarkID attribute
+        ''' BookmarkID must appear before GoToBookmark attribute
             Even if randomizing is turned on, a BookmarkID can be on a page with PageGroup=0
             since those pages don't get randomized.
         '''
@@ -546,7 +546,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
     
     #------------------------------------------- 
     def test_ValidateGoToBookmarkRequest_Valid_PageGroup0_OnSetID(self):
-        ''' BookmarkID must appear before GoToBookmarkID attribute
+        ''' BookmarkID must appear before GoToBookmark attribute
             Even if randomizing is turned on, a BookmarkID can be on a page with PageGroup=0
             since those pages don't get randomized.
         '''
@@ -587,7 +587,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
     
     #------------------------------------------- 
     def test_ValidateGoToBookmarkRequest_Valid_PageGroup0_Reversed(self):
-        ''' BookmarkID must appear before GoToBookmarkID attribute
+        ''' BookmarkID must appear before GoToBookmark attribute
             Even if randomizing is turned on, a BookmarkID can be on a page with PageGroup=0
             since those pages don't get randomized.
         '''
@@ -669,7 +669,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
 
     #------------------------------------------- 
     def test_ValidateGoToBookmarkRequest_Invalid_PageGroup(self):
-        ''' BookmarkID must appear before GoToBookmarkID attribute
+        ''' BookmarkID must appear before GoToBookmark attribute
             Test with invalid PageGroup numbers
         '''
         
@@ -790,7 +790,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
 
     #------------------------------------------- 
     def test_ValidateGoToBookmarkRequest_Invalid_PageGroup_Reversed(self):
-        ''' BookmarkID must appear before GoToBookmarkID attribute
+        ''' BookmarkID must appear before GoToBookmark attribute
             Test with invalid PageGroup numbers
         '''
         
@@ -922,7 +922,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
     
     #------------------------------------------- 
     def test_ValidateDisplayLabelMapID_InvalidPath(self):
-        ''' BookmarkID must appear before GoToBookmarkID attribute
+        ''' BookmarkID must appear before GoToBookmark attribute
             Test with invalid labelmap path
         '''
         
@@ -1214,7 +1214,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
 
     #------------------------------------------- 
     def test_ValidateDisplayLabelMapID_Invalid_PageGroup(self):
-        ''' BookmarkID must appear before GoToBookmarkID attribute
+        ''' BookmarkID must appear before GoToBookmark attribute
             Test with invalid PageGroup numbers
         '''
         

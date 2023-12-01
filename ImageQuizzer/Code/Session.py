@@ -912,36 +912,23 @@ class Session:
         self.qLineToolsGrpBox = qt.QGroupBox()
         self.qLineToolsGrpBox.setTitle('Line Measurement')
         self.qLineToolsGrpBox.setStyleSheet("QGroupBox{ font-size: 11px; font-weight: bold}")
-        self.qLineToolsGrpBoxLayout = qt.QHBoxLayout()
+        self.qLineToolsGrpBoxLayout = qt.QGridLayout()
         self.qLineToolsGrpBox.setLayout(self.qLineToolsGrpBoxLayout)
 
-        qLineToolLabel = qt.QLabel('Ruler:')
-        self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabel)
+        qLineToolLabel = qt.QLabel('Ruler')
+        self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabel,0,0)
         
-        self.btnAddMarkupsLine = qt.QPushButton("Add new line")
-        self.btnAddMarkupsLine.enabled = True
-        self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
-        self.btnAddMarkupsLine.connect('clicked(bool)', self.onAddLinesButtonClicked)
-        self.qLineToolsGrpBoxLayout.addWidget(self.btnAddMarkupsLine)
-        self.qLineToolsGrpBoxLayout.addSpacing(10)
-        
-        # Markup measurement visibility
-        self.qChkBoxMeasurementVisibility = qt.QCheckBox('Show length')
-        self.qChkBoxMeasurementVisibility.setChecked(True)
-        self.qChkBoxMeasurementVisibility.stateChanged.connect(self.onMeasurementVisibilityStateChanged)
-        self.qLineToolsGrpBoxLayout.addWidget(self.qChkBoxMeasurementVisibility)
-        self.qLineToolsGrpBoxLayout.addSpacing(10)
 
         # remove the last point of markup line created
         qLineToolLabelTrashPt = qt.QLabel('Remove last point:')
-        self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabelTrashPt)
+        qLineToolLabelTrashPt.setAlignment(QtCore.Qt.AlignRight)
+        self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabelTrashPt,1,0)
  
         self.slMarkupsLineWidget = slicer.qSlicerMarkupsPlaceWidget()
         # Hide all buttons and only show delete button
         self.slMarkupsLineWidget.buttonsVisible=False
         self.slMarkupsLineWidget.deleteButton().show()
-        self.qLineToolsGrpBoxLayout.addWidget(self.slMarkupsLineWidget)
-        self.qLineToolsGrpBoxLayout.addSpacing(10)
+        self.qLineToolsGrpBoxLayout.addWidget(self.slMarkupsLineWidget,1,1)
         
         # Clear all markup lines
         self.btnClearLines = qt.QPushButton("Clear all")
@@ -949,8 +936,22 @@ class Session:
         self.btnClearLines.enabled = True
         self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
         self.btnClearLines.connect('clicked(bool)',self.onClearLinesButtonClicked)
-        self.qLineToolsGrpBoxLayout.addWidget(self.btnClearLines)
+        self.qLineToolsGrpBoxLayout.addWidget(self.btnClearLines,1,2)
 
+        # Markup measurement visibility
+        self.qChkBoxMeasurementVisibility = qt.QCheckBox('Show length')
+        self.qChkBoxMeasurementVisibility.setChecked(True)
+        self.qChkBoxMeasurementVisibility.stateChanged.connect(self.onMeasurementVisibilityStateChanged)
+        self.qLineToolsGrpBoxLayout.addWidget(self.qChkBoxMeasurementVisibility,0,1)
+ 
+        self.btnAddMarkupsLine = qt.QPushButton("Add new line")
+        self.btnAddMarkupsLine.enabled = True
+        self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+        self.btnAddMarkupsLine.connect('clicked(bool)', self.onAddLinesButtonClicked)
+        self.qLineToolsGrpBoxLayout.addWidget(self.btnAddMarkupsLine,0,2)
+        
+        
+        
         self.tabExtraToolsLayout.addWidget(self.qLineToolsGrpBox)
 
         # >>>>>>>>>>>>>>>>>>>>
@@ -961,11 +962,11 @@ class Session:
         self.qContourVisibilityGrpBoxLayout = qt.QHBoxLayout()
         self.qContourVisibilityGrpBox.setLayout(self.qContourVisibilityGrpBoxLayout)
 
-        self.qChkBoxFillOrOutline = qt.QCheckBox('Fill')
-        self.qChkBoxFillOrOutline.stateChanged.connect(self.onContourDisplayStateChanged)
-        self.qContourVisibilityGrpBoxLayout.addWidget(self.qChkBoxFillOrOutline)
-        self.qContourVisibilityGrpBoxLayout.addSpacing(30)
-
+        qLabelOpacity = qt.QLabel(' Opacity')
+        qLabelOpacity.setMinimumWidth(200)
+        qLabelOpacity.setAlignment(QtCore.Qt.AlignRight)
+        self.qContourVisibilityGrpBoxLayout.addWidget(qLabelOpacity)
+        
         self.qVisibilityOpacity = qt.QSlider(QtCore.Qt.Horizontal)
         self.qVisibilityOpacity.setMinimum(0)
         self.qVisibilityOpacity.setMaximum(100)
@@ -975,10 +976,11 @@ class Session:
         self.qContourVisibilityGrpBoxLayout.addWidget(self.qVisibilityOpacity)
         self.qContourVisibilityGrpBoxLayout.addSpacing(30)
 
-        qLabelOpacity = qt.QLabel('Opacity')
-        qLabelOpacity.setMinimumWidth(200)
-        self.qContourVisibilityGrpBoxLayout.addWidget(qLabelOpacity)
-        
+        self.qChkBoxFillOrOutline = qt.QCheckBox('Fill')
+        self.qChkBoxFillOrOutline.stateChanged.connect(self.onContourDisplayStateChanged)
+        self.qContourVisibilityGrpBoxLayout.addWidget(self.qChkBoxFillOrOutline)
+        self.qContourVisibilityGrpBoxLayout.addSpacing(30)
+
 
         self.tabExtraToolsLayout.addWidget(self.qContourVisibilityGrpBox)
         
@@ -1325,14 +1327,15 @@ class Session:
         sMsg = ''
         xPageNode = self.GetCurrentPageNode()
         sPageComplete = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageComplete')
-        if sPageComplete == "Y":
+
+        if sPageComplete == "Y" and not self.GetMultipleResponseAllowed():
             sMsg = '\nThis page has already been completed. You cannot remove the markup lines.'
             self.oUtilsMsgs.DisplayWarning(sMsg)
         else:            
             slLineNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsLineNode')
             for node in slLineNodes:
                 slicer.mrmlScene.RemoveNode(node)
-                
+            
             # remove all markup line elements stored in xml for this page node
             # and delete the markup line file stored in folder
             lxImages = self.oIOXml.GetChildren(xPageNode, 'Image')
@@ -1490,14 +1493,14 @@ class Session:
         # find previous page with the BookmarkID match
         xPageNode = self.GetCurrentPageNode()
 
-        sGoToBookmarkID = ''
+        sGoToBookmark = ''
         sGoToBookmarkRequest = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'GoToBookmark')
         if sGoToBookmarkRequest != '':
-            sGoToBookmarkID = sGoToBookmarkRequest.split()[0]
+            sGoToBookmark = sGoToBookmarkRequest.split()[0]
 
         # set up dictionary with value to match in historical pages
         dictAttribToMatchInHistory = {}
-        dictAttribToMatchInHistory['BookmarkID'] = sGoToBookmarkID
+        dictAttribToMatchInHistory['BookmarkID'] = sGoToBookmark
         
         # all page nodes that match - ordered with most recent first
         dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(self.GetCurrentNavigationIndex(), self.GetNavigationList(), dictAttribToMatchInHistory)
@@ -1914,6 +1917,7 @@ class Session:
                 self.SetMultipleResponseAllowed('N') #read only
                 qWidgetQuestionSetForm.setEnabled(False)
                 self.SegmentationTabEnabler(False)
+                self.EnableMarkupLinesTF(False)
             else:
                 
                 #enable tabs
@@ -2159,13 +2163,18 @@ class Session:
             
             if self.oPageState.GetPageCompletedTF():
                 bPageComplete = True
-                self.AddPageCompleteAttribute(self.GetCurrentPageIndex())
+
+                if sCaller != 'ExitBtn': #allow resume at this point
+                    self.AddPageCompleteAttribute(self.GetCurrentPageIndex())
+                
                 if sCaller == 'Finish':
                     self.AddQuizCompleteAttribute()
                     self.SetQuizComplete(True)
+
             else:
                 if sCaller == 'ExitBtn':
                     bPageComplete = True    # allow for exit with unfinished requirements
+
                 else:
                     bPageComplete = False
                     self.oUtilsMsgs.DisplayWarning( sMsg )
@@ -2817,13 +2826,14 @@ class Session:
             # loop through composite navigation index to search for the first page without a "PageComplete='Y'"
             for indNav in range(len(self.GetNavigationList())):
                 if not self.GetQuizResuming():
+                    iResumeNavigationIndex = indNav
                     iPageIndex = self.GetNavigationPage(indNav)
                     xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
                     self.SetupPageState(iPageIndex)
                     
                     sPageComplete = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'PageComplete')
                     if sPageComplete != 'Y':    # found first page that was not complete
-                        iResumeNavigationIndex = indNav
+#                         iResumeNavigationIndex = indNav
                         self.SetQuizResuming(True)
             
             self.oPageState.UpdateCompletionLists(xPageNode)
