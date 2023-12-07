@@ -915,20 +915,18 @@ class Session:
         self.qLineToolsGrpBoxLayout = qt.QGridLayout()
         self.qLineToolsGrpBox.setLayout(self.qLineToolsGrpBoxLayout)
 
-        qLineToolLabel = qt.QLabel('Ruler')
-        self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabel,0,0)
-        
 
-        # remove the last point of markup line created
-        qLineToolLabelTrashPt = qt.QLabel('Remove last point:')
-        qLineToolLabelTrashPt.setAlignment(QtCore.Qt.AlignRight)
-        self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabelTrashPt,1,0)
  
         self.slMarkupsLineWidget = slicer.qSlicerMarkupsPlaceWidget()
         # Hide all buttons and only show delete button
         self.slMarkupsLineWidget.buttonsVisible=False
         self.slMarkupsLineWidget.deleteButton().show()
-        self.qLineToolsGrpBoxLayout.addWidget(self.slMarkupsLineWidget,1,1)
+        self.qLineToolsGrpBoxLayout.addWidget(self.slMarkupsLineWidget,0,0)
+
+        # remove the last point of markup line created
+        qLineToolLabelTrashPt = qt.QLabel('Remove last point')
+        qLineToolLabelTrashPt.setAlignment(QtCore.Qt.AlignCenter)
+        self.qLineToolsGrpBoxLayout.addWidget(qLineToolLabelTrashPt,1,0)
         
         # Clear all markup lines
         self.btnClearLines = qt.QPushButton("Clear all")
@@ -936,20 +934,28 @@ class Session:
         self.btnClearLines.enabled = True
         self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
         self.btnClearLines.connect('clicked(bool)',self.onClearLinesButtonClicked)
-        self.qLineToolsGrpBoxLayout.addWidget(self.btnClearLines,1,2)
+        self.qLineToolsGrpBoxLayout.addWidget(self.btnClearLines,0,1)
 
-        # Markup measurement visibility
-        self.qChkBoxMeasurementVisibility = qt.QCheckBox('Show length')
-        self.qChkBoxMeasurementVisibility.setChecked(True)
-        self.qChkBoxMeasurementVisibility.stateChanged.connect(self.onMeasurementVisibilityStateChanged)
-        self.qLineToolsGrpBoxLayout.addWidget(self.qChkBoxMeasurementVisibility,0,1)
- 
         self.btnAddMarkupsLine = qt.QPushButton("Add new line")
         self.btnAddMarkupsLine.enabled = True
         self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
         self.btnAddMarkupsLine.connect('clicked(bool)', self.onAddLinesButtonClicked)
         self.qLineToolsGrpBoxLayout.addWidget(self.btnAddMarkupsLine,0,2)
         
+        # Markup display view visibility
+        self.qChkBoxViewOnAllDisplays = qt.QCheckBox('Display in all views')
+        self.qChkBoxViewOnAllDisplays.setChecked(True)
+        self.qChkBoxViewOnAllDisplays.setStyleSheet("margin-left:75%")
+        self.qChkBoxViewOnAllDisplays.stateChanged.connect(self.onViewOnAllDisplaysStateChanged)
+        self.qLineToolsGrpBoxLayout.addWidget(self.qChkBoxViewOnAllDisplays,1,2)
+        
+        # Markup measurement visibility
+        self.qChkBoxMeasurementVisibility = qt.QCheckBox('Show length')
+        self.qChkBoxMeasurementVisibility.setChecked(True)
+        self.qChkBoxMeasurementVisibility.setStyleSheet("margin-left:75%")
+        self.qChkBoxMeasurementVisibility.stateChanged.connect(self.onMeasurementVisibilityStateChanged)
+        self.qLineToolsGrpBoxLayout.addWidget(self.qChkBoxMeasurementVisibility,2,2)
+ 
         
         
         self.tabExtraToolsLayout.addWidget(self.qLineToolsGrpBox)
@@ -1474,6 +1480,37 @@ class Session:
                     slSegDisplayNode, slSegDataNode = oViewNode.GetSegmentationNodes(xPageNode)
                     self.oImageView.SetSegmentationOutlineOrFill(oViewNode, slSegDisplayNode)
                 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onViewOnAllDisplaysStateChanged(self):
+        ''' function to turn on/off display of markup lines in all viewing windows
+            or on just the window where it was created
+        '''
+        
+        dictViewNodes = {"Red":"vtkMRMLSliceNodeRed", "Green":"vtkMRMLSliceNodeGreen", "Yellow":"vtkMRMLSliceNodeYellow", "Slice4":"vtkMRMLSliceNodeSlice4"}
+
+
+
+        slMarkupNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsLineNode')
+        
+        for slMarkupNode in slMarkupNodes:
+            slMarkupDisplayNode = slMarkupNode.GetDisplayNode()
+            
+            if self.qChkBoxViewOnAllDisplays.isChecked():
+                slMarkupDisplayNode.SetViewNodeIDs(list(dictViewNodes.values()))
+                
+            else:
+                slAssociatedNodeID = slMarkupNode.GetNthMarkupAssociatedNodeID(0)
+                
+                
+                for oViewNode in self.oImageView.GetImageViewList():
+
+                    if oViewNode.slNode.GetID() == slAssociatedNodeID:                
+                        slViewNode = oViewNode.sDestination
+                        slMarkupDisplayNode.SetViewNodeIDs([dictViewNodes[slViewNode]])
+
+        
+        
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onMeasurementVisibilityStateChanged(self):
         # display line measurements on/off
