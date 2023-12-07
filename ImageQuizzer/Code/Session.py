@@ -1209,7 +1209,10 @@ class Session:
 
                 self.SetInteractionLogOnOff('Off','Exit')
 
-                if self.PerformSave(sCaller) and self.UpdateCompletionFlags(sCaller):
+                # order here matters - completion state settings must be last
+                if self.PerformSave(sCaller) and self.CaptureAndSaveImageState() and self.UpdateCompletionFlags(sCaller):
+                    
+                    
                     self.QueryThenSendEmailResults()
                     
                     # update shutdown batch file to remove SlicerDICOMDatabase
@@ -2347,6 +2350,8 @@ class Session:
             sMsg = "CaptureAndSaveImageState: Error saving the image state. Current page: " + str(iPage) \
                    + "\n\n" + tb 
             self.oUtilsMsgs.DisplayError(sMsg)
+            
+        return bSuccess
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ApplySavedImageState(self):
