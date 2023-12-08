@@ -1483,17 +1483,18 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onViewOnAllDisplaysStateChanged(self):
         ''' function to turn on/off display of markup lines in all viewing windows
-            or on just the window where it was created
+            or on just the windows displaying the image linked with the viewing window
+            where it was created
         '''
         
         dictViewNodes = {"Red":"vtkMRMLSliceNodeRed", "Green":"vtkMRMLSliceNodeGreen", "Yellow":"vtkMRMLSliceNodeYellow", "Slice4":"vtkMRMLSliceNodeSlice4"}
-
 
 
         slMarkupNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsLineNode')
         
         for slMarkupNode in slMarkupNodes:
             slMarkupDisplayNode = slMarkupNode.GetDisplayNode()
+            lViewNodes = []
             
             if self.qChkBoxViewOnAllDisplays.isChecked():
                 slMarkupDisplayNode.SetViewNodeIDs(list(dictViewNodes.values()))
@@ -1506,10 +1507,8 @@ class Session:
 
                     if oViewNode.slNode.GetID() == slAssociatedNodeID:                
                         slViewNode = oViewNode.sDestination
-                        slMarkupDisplayNode.SetViewNodeIDs([dictViewNodes[slViewNode]])
-
-        
-        
+                        lViewNodes.append(dictViewNodes[slViewNode])
+                        slMarkupDisplayNode.SetViewNodeIDs(lViewNodes)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onMeasurementVisibilityStateChanged(self):
