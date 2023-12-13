@@ -1,5 +1,5 @@
 '''
-    Pre-processing utility to convert a DICOM series into a nifti volume file.
+    Pre-processing utility to convert a DICOM series into a NIfTI volume file.
     If using a batch file for inputs, a log file is output in the same directory as the batch csv file. 
     This does not work for 4D images.
 
@@ -68,7 +68,7 @@ class ConvertDicomToNiiVolume():
         
         # create handler and formatter for output
         fh = logging.FileHandler(sLogFilename)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
         
         # add formatter to handler
         ch.setFormatter(formatter)
@@ -118,7 +118,9 @@ class ConvertDicomToNiiVolume():
                    
                 sLogMessage =   ',' + \
                                 ',' + \
-                                ',' + '*** ERROR *** There can only be 1 dicom series in this directory' +\
+                                ',' + \
+                                ',' + \
+                                ',' + '*** ERROR *** There can only be 1 dicom series in this directory. (One of the series may have been converted.)' +\
                                 ',' +  sInputDir 
                 if self.logger != None:                  
                     self.logger.error(sLogMessage)
@@ -130,7 +132,9 @@ class ConvertDicomToNiiVolume():
         except:
             sLogMessage =   ',' + \
                             ',' + \
-                            ',' + '*** WARNING *** There is a non-dicom file in this directory. If dicoms exist- conversion may be OK' +\
+                            ',' + \
+                            ',' + \
+                            ',' + '*** ERROR *** There is a non-dicom file or sub-folder in this directory. (One of the series may have been converted.)' +\
                             ',' +  sInputDir                            
             self.LogMessage(sLogMessage)
         
@@ -162,7 +166,9 @@ class ConvertDicomToNiiVolume():
                 
                     sFirstFile = os.listdir(sInputDir)[0]
                     sFilePath = os.path.join(sInputDir, sFirstFile)
-                    sLogMessage =   ',' + str(self.GetDicomData(sFilePath, 'SeriesNumber')) + \
+                    sLogMessage =   ',' +\
+                                    ',' +\
+                                    ',' + str(self.GetDicomData(sFilePath, 'SeriesNumber')) + \
                                     ',' + self.GetDicomData(sFilePath, 'SeriesDescription') +\
                                     ',' + ',' +  sInputDir                            
                     self.LogMessage(sLogMessage)
@@ -174,6 +180,8 @@ class ConvertDicomToNiiVolume():
             except ValueError as error:
                 sLogMessage =   ',' + \
                                 ',' + \
+                                ',' + \
+                                ',' + \
                                 ',' + error.args[0] +\
                                 ',' + sInputDir +\
                                 ',' + sOutputDir
@@ -182,6 +190,8 @@ class ConvertDicomToNiiVolume():
             except:
                 sMsg = "***ERROR*** failed to convert to .nii"
                 sLogMessage =   ',' + \
+                                ',' + \
+                                ',' + \
                                 ',' + \
                                 ',' + sMsg +\
                                 ',' +  sInputDir
@@ -197,10 +207,7 @@ class ConvertDicomToNiiVolume():
         ''' Function to read in the csv file holding input and output folders for all images.
         
             Format:
-                Columns: database folder, input folder, output folder
-                
-                line1: column descriptor strings
-                Lines 2 - end: image locations
+                Each line: database folder, input folder, output folder
                 
                 
             The database folder string is joined to each of the input and output folder strings 
@@ -219,13 +226,10 @@ class ConvertDicomToNiiVolume():
             
             for row in csv_reader:
             
-                if line_count == 0:
-                    line_count += 1
-                
-                else:
+                if row[0][:1] != "#":
                     sInputDir = os.path.join(row[0], row[1])
                     sOutputDir = os.path.join(row[0], row[2])
-
+    
                     self.ConversionLogicSingle(sInputDir, sOutputDir)
                     line_count += 1
 
@@ -247,7 +251,7 @@ def main(argv):
                             default="-", help="Folder of input DICOM files (can contain sub-folders)")
         parser.add_argument("-o", "--output-folder", dest="output_folder", metavar="PATH",
                             default=".", help="Folder to save converted datasets")
-        parser.add_argument("-b", "--batch-csv", dest="batch_csv", metavar="CsvFilePATH",
+        parser.add_argument("-b", "--batch-csv", dest="batch_csv", metavar="CsvFilePath",
                             default='-', help="Full path to csv file for batch processing")
         args = parser.parse_args(argv)
         
