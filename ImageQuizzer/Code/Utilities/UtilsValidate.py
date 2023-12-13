@@ -125,7 +125,7 @@ class UtilsValidate:
             self.l4iNavList = self.oIOXml.GetNavigationListBase(xRootNode)
 
             # >>>>>>>>>>>>>>>
-            # check options for ContourVisibility at the Session level
+            # check options at the Session level
             sContourVisibility = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ContourVisibility')
             if not (sContourVisibility == 'Fill' or sContourVisibility == 'Outline' or sContourVisibility == ''):
                 sValidationMsg = "\nContourVisibility value must be 'Fill' or 'Outline'. See attribute in Session"
@@ -138,14 +138,9 @@ class UtilsValidate:
                 if not (os.path.exists(sSmtpConfigFile)) :
                     sMsg = sMsg + '\nMissing smtp configuration file for request to email quiz results : ' + sSmtpConfigFile
             
-            sROIColorFile = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
-            if sROIColorFile != '':
-                sROIColorFilePath = os.path.join(self.oFilesIO.GetXmlQuizDir(), sROIColorFile + '.txt')
-                if not (os.path.exists(sROIColorFilePath)) :
-                    sMsg = sMsg + '\nMissing ROIColorFile. Check that file exists: ' + sROIColorFilePath
-                else:
-                    sValidationMsg = self.ValidateROIColorFile(sROIColorFilePath)
-                    sMsg = sMsg + sValidationMsg
+            
+            sValidationMsg = self.ValidateROIColorFile()
+            sMsg = sMsg + sValidationMsg
             
             
             # check matches of LabelMapID with DisplayLabelMapID
@@ -1064,26 +1059,48 @@ class UtilsValidate:
         return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateROIColorFile(self, sFilePath):
-        
-        # color files cannot use an ID = 0 
-        # using ID=0 will cause images to disappear when segment editor is started
-        # syntax: id descriptor r g b a
-        # lines beginning with '#' are comments
+    def ValidateROIColorFile(self):
+        ''' Function to validate:
+            - the ROIColorFile exists in the Master quiz directory
+            - each line has 6 entries    id descriptor r g b a
+            - the id cannot be a 0 (reserved for 'erase' color in Slicer)
+        '''
+
         sMsg = ''
+        sErrorMsgMissingFile = "\nMissing ROIColorFile. Check that file exists.\n"
+        sErrorMsgIdZero = "\nROI Color File cannot have an entry with ID = '0'\n"
+        sErrorMsgInvalidLength = "\nROI Color File has an invalid number of entries in a line. Syntax: id descriptor r g b a\n"
+        sErrorMsgInvalidEntry = "\nROI Color File has invalid entry. Syntax: id descriptor r g b a . Integer values required for id, r, g, b and a values. \n"
+
         
-        fh = open(sFilePath, "r")
-        lLines = fh.readlines()
+        sROIColorFile = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'ROIColorFile')
+        if sROIColorFile != '':
+                sROIColorFilePath = os.path.join(self.oFilesIO.GetXmlQuizDir(), sROIColorFile + '.txt')
+
+                if not (os.path.exists(sROIColorFilePath)) :
+                    sMsg = sMsg + sErrorMsgMissingFile + sROIColorFilePath
         
-        for sLine in lLines:
-            if sLine[:1] == "#":
-                pass
-            elif sLine[:1] == "0":
-                sMsg = "ROI Color File cannot have an entry with ID = '0'" \
-                        + "\n See file " + sFilePath
-                break
-            else:
-                pass
+                else:
+        
+                    fh = open(sROIColorFilePath, "r")
+                    lLines = fh.readlines()
+                    
+                    for sLine in lLines:
+                        if sLine[:1] == "#":    # comment
+                            pass
+                        else:
+                            lEntries = sLine.split()
+                            
+                            if len(lEntries) != 6:
+                                sMsg = sMsg + sErrorMsgInvalidLength + sROIColorFilePath
+                            else:
+                                try:
+                                    liVal =  [int(lEntries[0]), int(lEntries[2]), int(lEntries[3]), int(lEntries[4]), int(lEntries[5])]
+                                    if liVal[0] == 0:
+                                        sMsg = sMsg + sErrorMsgIdZero + sROIColorFilePath
+                                    
+                                except:
+                                    sMsg = sMsg + sErrorMsgInvalidEntry + sROIColorFilePath
             
         return sMsg
         
