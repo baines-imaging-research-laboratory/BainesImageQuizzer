@@ -251,7 +251,7 @@ def main(argv):
                             default="-", help="Folder of input DICOM files (can contain sub-folders)")
         parser.add_argument("-o", "--output-folder", dest="output_folder", metavar="PATH",
                             default=".", help="Folder to save converted datasets")
-        parser.add_argument("-b", "--batch-csv", dest="batch_csv", metavar="CsvFilePath",
+        parser.add_argument("-b", "--batch-csv", dest="batch_csv", metavar="CSVFILEPATH",
                             default='-', help="Full path to csv file for batch processing")
         args = parser.parse_args(argv)
         
