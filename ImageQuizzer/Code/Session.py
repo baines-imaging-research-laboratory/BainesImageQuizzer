@@ -390,6 +390,16 @@ class Session:
             self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white }")
 
     #----------
+    def SetMeasurementVisibility(self, bTF):
+        self.qChkBoxMeasurementVisibility.setChecked(bTF)
+        self.onMeasurementVisibilityStateChanged()
+        
+    #----------
+    def SetViewLinesOnAllDisplays(self, bTF):
+        self.qChkBoxViewOnAllDisplays.setChecked(bTF)
+        self.onViewLinesOnAllDisplaysStateChanged()
+        
+    #----------
     def GetAllQuestionSetsForNthPage(self, iPageIndex):
         self._xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
         xNodesAllQuestionSets = self.oIOXml.GetChildren(self._xPageNode, 'QuestionSet')
@@ -718,7 +728,11 @@ class Session:
         return self._bRandomizeRequired
 
     #----------
-    #----------
+    def ResetExtraToolsDefaults(self):
+        self.ResetContourVisibilityToSessionDefault()
+        self.SetViewLinesOnAllDisplays(False)
+        self.SetMeasurementVisibility(True)
+        
     #----------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -944,9 +958,9 @@ class Session:
         
         # Markup display view visibility
         self.qChkBoxViewOnAllDisplays = qt.QCheckBox('Display in all views')
-        self.qChkBoxViewOnAllDisplays.setChecked(True)
+        self.qChkBoxViewOnAllDisplays.setChecked(False)
         self.qChkBoxViewOnAllDisplays.setStyleSheet("margin-left:75%")
-        self.qChkBoxViewOnAllDisplays.stateChanged.connect(self.onViewOnAllDisplaysStateChanged)
+        self.qChkBoxViewOnAllDisplays.stateChanged.connect(self.onViewLinesOnAllDisplaysStateChanged)
         self.qLineToolsGrpBoxLayout.addWidget(self.qChkBoxViewOnAllDisplays,1,2)
         
         # Markup measurement visibility
@@ -1328,7 +1342,9 @@ class Session:
         markupsNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsLineNode")
         self.slMarkupsLineWidget.setCurrentNode(slicer.mrmlScene.GetNodeByID(markupsNode.GetID()))
         self.slMarkupsLineWidget.setPlaceModeEnabled(True)
-        
+
+        markupsNode.AddObserver(slicer.vtkMRMLMarkupsLineNode.PointModifiedEvent, self.onMarkupInteraction)
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onClearLinesButtonClicked(self):
         ''' A function to clear all markup line nodes from the scene.
@@ -1357,7 +1373,18 @@ class Session:
             
                 self.oIOXml.RemoveAllElements(xImage, 'MarkupLinePath')
             self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+            
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onMarkupInteraction(self, caller, event):
+        ''' adjust display once the full markups line is completed
+        '''
+        markupsNode = caller
+        markupIndex = markupsNode.GetDisplayNode().GetActiveControlPoint()
 
+        if markupIndex == 1:        
+            self.SetViewLinesOnAllDisplays(self.qChkBoxViewOnAllDisplays.isChecked())
+            self.SetMeasurementVisibility(self.qChkBoxMeasurementVisibility.isChecked())
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onWindowLevelClicked(self):
         
@@ -1481,7 +1508,7 @@ class Session:
                     self.oImageView.SetSegmentationOutlineOrFill(oViewNode, slSegDisplayNode)
                 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def onViewOnAllDisplaysStateChanged(self):
+    def onViewLinesOnAllDisplaysStateChanged(self):
         ''' function to turn on/off display of markup lines in all viewing windows
             or on just the windows displaying the image linked with the viewing window
             where it was created
@@ -1509,7 +1536,9 @@ class Session:
                         slViewNode = oViewNode.sDestination
                         lViewNodes.append(dictViewNodes[slViewNode])
                         slMarkupDisplayNode.SetViewNodeIDs(lViewNodes)
-        
+
+        slMarkupNodes.UnRegister(slicer.mrmlScene)    #cleanup memory
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onMeasurementVisibilityStateChanged(self):
         # display line measurements on/off
@@ -2004,11 +2033,13 @@ class Session:
             # set up the images on the page
             self.oImageView = ImageView()
             self.oImageView.RunSetup(self.GetCurrentPageNode(), self.oFilesIO.GetDataParentDir())
-            self.ResetContourVisibilityToSessionDefault()
+            
     
             # load label maps and markup lines if a path has been stored in the xml for the images on this page
             self.oFilesIO.LoadSavedLabelMaps(self)
             self.oFilesIO.LoadSavedMarkupLines(self)
+
+            self.ResetExtraToolsDefaults()
     
             # assign each image node and its label map (if applicable) to the viewing widget
             self.oImageView.AssignNodesToView()
