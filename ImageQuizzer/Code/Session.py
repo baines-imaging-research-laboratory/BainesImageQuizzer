@@ -1356,23 +1356,30 @@ class Session:
         if sPageComplete == "Y" and not self.GetMultipleResponseAllowed():
             sMsg = '\nThis page has already been completed. You cannot remove the markup lines.'
             self.oUtilsMsgs.DisplayWarning(sMsg)
-        else:            
-            slLineNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsLineNode')
-            for node in slLineNodes:
-                slicer.mrmlScene.RemoveNode(node)
+        else:
+            try:           
+                slLineNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsLineNode')
+                for node in slLineNodes:
+                    slicer.mrmlScene.RemoveNode(node)
+                
+                # remove all markup line elements stored in xml for this page node
+                # and delete the markup line file stored in folder
+                lxImages = self.oIOXml.GetChildren(xPageNode, 'Image')
+                for xImage in lxImages:
+                    lxMarkupLines = self.oIOXml.GetChildren(xImage, 'MarkupLinePath')
+                    for xMarkupLine in lxMarkupLines:
+                        sPath = self.oIOXml.GetDataInNode(xMarkupLine)
+                        sAbsolutePath = self.oFilesIO.GetAbsoluteUserPath(sPath)
+                        if os.path.exists(sAbsolutePath):    # same path may exist in multiple xml Image elements
+                            os.remove(sAbsolutePath)
+                
+                    self.oIOXml.RemoveAllElements(xImage, 'MarkupLinePath')
+                self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
             
-            # remove all markup line elements stored in xml for this page node
-            # and delete the markup line file stored in folder
-            lxImages = self.oIOXml.GetChildren(xPageNode, 'Image')
-            for xImage in lxImages:
-                lxMarkupLines = self.oIOXml.GetChildren(xImage, 'MarkupLinePath')
-                for xMarkupLine in lxMarkupLines:
-                    sPath = self.oIOXml.GetDataInNode(xMarkupLine)
-                    sAbsolutePath = self.oFilesIO.GetAbsoluteUserPath(sPath)
-                    os.remove(sAbsolutePath)
-            
-                self.oIOXml.RemoveAllElements(xImage, 'MarkupLinePath')
-            self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+            except:
+                tb = traceback.format_exc()
+                sMsg = "onClearLinesButtonClicked: Error clearing all markup lines.  \n\n" + tb 
+                self.oUtilsMsgs.DisplayError(sMsg)
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onMarkupInteraction(self, caller, event):
