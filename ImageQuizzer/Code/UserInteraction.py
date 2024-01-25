@@ -23,7 +23,6 @@ class UserInteraction:
         
         self.fh = None
         self.fhTemplate = None
-        self.lViewingWindows = []
         
         self.slMainWindowPos = qt.QPoint()
         
@@ -64,79 +63,97 @@ class UserInteraction:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def LockLayout(self, oMaximizedWindowSize):
-        ''' This function locks the Slicer layout so that the user cannot perform any of the following:
-            zoom, pan, adjust slider for size of viewing windows vs quiz panel.
-            
-            By locking down the display, the coordinates of the viewing windows relative to the
-            user's monitor, can be recorded.
-            
-            Other lockdown steps:
-            - The setup function in the ImageQuizzerWidget class sets the mainWindow to maximized and
-                toggles off visibility of the various toolbars 
-            - The customEventFilter class handles when a user tries to drag the window to a new position.
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def Lock_Unlock_Layout(self, oMaximizedWindowSize, bLocked):
+        ''' This function locks or unlocks the Slicer layout.
+        
+            In the locked state, the user cannot:
+                zoom, pan, adjust slider for size of viewing windows vs quiz panel.
+                By locking down the display, the coordinates of the viewing windows relative to the
+                user's monitor, can be recorded.
+                
+                Other lockdown steps:
+                - The setup function in the ImageQuizzerWidget class sets the mainWindow to maximized and
+                    toggles off visibility of the various toolbars 
+                - The customEventFilter class handles when a user tries to drag the window to a new position.
+        
+            The unlocked state allows for main window resizing, slicer widget resizing and zoom and pan functionality
+                
+                
+            The widgets that are controlled include:
+                Dock panel (for quiz)
+                Central widget (for image viewing windows)
+                Main widget (Slicer main window)
+                Python console (turned off regardless of lock state)
+                Menu bar (top of Slicer platform)
+                Status bar (bottom of Slicer platform)
+                
+                
+                
         '''
         
+        # >>>>> initializing
+        slMainWindow = slicer.util.mainWindow()
+        slDockPanel = slMainWindow.findChildren('QDockWidget','PanelDockWidget')[0]
         slicer.util.setPythonConsoleVisible(False)
 #         slicer.util.setPythonConsoleVisible(True)    # for debug
 
-        
-        slMainWindow = slicer.util.mainWindow()
-        slMainWindow.showMaximized()
-        self.SetMainWindowPosition(oMaximizedWindowSize.slMainWindowPos)
-        
-        
-        
-        slicer.util.setMenuBarsVisible(False)
-        slMainWindow.statusBar().setEnabled(False)
-
-
-        # set fixed geometry maximized        
         fDesktopWidth = oMaximizedWindowSize.slMainWindowWidth
         fDesktopHeight = oMaximizedWindowSize.slMainWindowHeight
-        slMainWindow.setFixedSize(fDesktopWidth, fDesktopHeight)
-        
-        
-        # set sizes for slicer's dock panel (quiz) and central widget (viewing windows) 
-        slDockPanel = slMainWindow.findChildren('QDockWidget','PanelDockWidget')[0]
-        
-        # use 1/3 quiz to 2/3 central widget ratio
-        slDockPanel.setFixedWidth(fDesktopWidth/3)
-        
-        ####################
-        ### trying to add scrolling and sizing policies to allow for a greater viewing area
-        # slDockPanel.setSizePolicy(qt.QSizePolicy.Expanding, qt.QSizePolicy.Preferred)
-        #
-        # modulePanelScrollArea = slDockPanel.findChild('QWidget', 'dockWidgetContents')
-        # modulePanelScrollArea.setSizePolicy(qt.QSizePolicy.Expanding, qt.QSizePolicy.Preferred)
-        # modulePanelScrollArea.setFixedWidth(fDesktopWidth/4)
-        #
-        # qSize = qt.QSizePolicy()
-        # qSize.setHorizontalPolicy(qt.QSizePolicy.Expanding)
-        # qSize.setVerticalPolicy(qt.QSizePolicy.Preferred)
-        # self.slDockPanel.setSizePolicy( qSize )
-        #########################
-
-        # set height = desktop height - statusbar height - menubar height - nonclient area height
         fStatusBarHeight = slMainWindow.statusBar().geometry.height()
-        fNonClientAreaHeight = slMainWindow.geometry.y()       # initial y of main window is just below 'non-client' area
+        fNonClientAreaHeight = slMainWindow.geometry.y()       # top bar window controls for minimize, full screen and exit
         fMenuBarHeight = slMainWindow.moduleSelector().geometry.height()  # module selector is one tool  on the tool bar; use this for height
-        slMainWindow.centralWidget().setFixedHeight(fDesktopHeight - fStatusBarHeight - fNonClientAreaHeight - fMenuBarHeight)
 
+        if bLocked :
+            bOpenSetting = False
+        else:
+            bOpenSetting = True
+            
         
-        # disable zoom and pan controls from mouse right and center buttons 
+        # >>>>> enable / disable
+        
+        slicer.util.setMenuBarsVisible(bOpenSetting)
+        slMainWindow.statusBar().setEnabled(bOpenSetting)
+        
+        # zoom and pan controls from mouse right and center buttons 
         for sName in self.lViewingWindows:
             slSliceWidget = slicer.app.layoutManager().sliceWidget(sName)
             if slSliceWidget != None:
                 interactorStyle = slicer.app.layoutManager().sliceWidget(sName).sliceView().sliceViewInteractorStyle()
-                interactorStyle.SetActionEnabled(interactorStyle.Zoom, False)
-                interactorStyle.SetActionEnabled(interactorStyle.Translate, False)
+                interactorStyle.SetActionEnabled(interactorStyle.Zoom, bOpenSetting)
+                interactorStyle.SetActionEnabled(interactorStyle.Translate, bOpenSetting)
                 interactorStyle.SetActionEnabled(interactorStyle.SetCursorPosition, True)
                 # reset window/level to enabled (side effect of previous actions)
                 interactorStyle.GetScalarBarDisplayableManager().SetAdjustBackgroundWindowLevelEnabled(True)
                 interactorStyle.GetScalarBarDisplayableManager().SetAdjustForegroundWindowLevelEnabled(True)
+        
+        #  window resizing (unlocked) or fix window size (locked)
+        if bOpenSetting:
+            slMainWindow.setMaximumSize(fDesktopWidth, fDesktopHeight)
+            slMainWindow.setMinimumSize(0,0)
+            
+            slDockPanel.setMaximumWidth(fDesktopWidth)
+            slDockPanel.setMinimumWidth(0)
+
+            slMainWindow.centralWidget().setMaximumHeight(fDesktopHeight)
+            slMainWindow.centralWidget().setMinimumHeight(0)
+            
+        else:
+            slMainWindow.showMaximized()
+            self.SetMainWindowPosition(oMaximizedWindowSize.slMainWindowPos)
+            slMainWindow.setFixedSize(fDesktopWidth, fDesktopHeight)
+        
+            # use 1/3 quiz to 2/3 central widget ratio
+            slDockPanel.setFixedWidth(fDesktopWidth/3)
+
+            # set height = desktop height - statusbar height - menubar height - nonclient area height
+            #         initial y of main window is just below 'non-client' area
+            slMainWindow.centralWidget().setFixedHeight(fDesktopHeight - fStatusBarHeight - fNonClientAreaHeight - fMenuBarHeight)
+
+
 
                 
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddObservers(self):
         ''' This is a function to add observers to watch for changes in the slice nodes.

@@ -178,15 +178,25 @@ class Session:
     
     #----------
     def SetUserInteractionLogRequest(self, xPageNode):
+        ''' Function to define whether a page is to be set for user interaction logging.
+            If logging is on - the Slicer layout is locked down otherwise, 
+                window and widget resizing is enabled.
+        '''
+
         sUserInteractionLog = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'UserInteractionLog')
+
         if sUserInteractionLog == 'Y':
             self._bUserInteractionLog = True
-            if self.oUserInteraction == None:
-                self.oUserInteraction = UserInteraction()
-            self.oUserInteraction.LockLayout(self.oMaximizedWindowSize)
             
         else:
             self._bUserInteractionLog = False
+
+
+        if self.oUserInteraction == None:
+            self.oUserInteraction = UserInteraction()
+            
+        self.oUserInteraction.Lock_Unlock_Layout(self.oMaximizedWindowSize, self.GetUserInteractionLogRequest())
+            
         
     #----------
     def GetUserInteractionLogRequest(self):
