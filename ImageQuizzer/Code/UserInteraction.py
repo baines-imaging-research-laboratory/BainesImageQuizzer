@@ -2,7 +2,10 @@ import os
 import vtk, qt, ctk, slicer
 import sys
 import traceback
-import cv2
+try:
+    import cv2
+except:
+    print("OpenCV not imported. CPU time will not be recorded in User Interaction logs.")
 
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
@@ -286,8 +289,14 @@ m_fg(3-0),m_fg(3-1),m_fg(3-2),m_fg(3-3)\n')
         if sDescription == None:
             sDescription = ''
         
+        try:
+            self.iCPUUptime = cv2.getTickCount()
+        except:
+            self.iCPUUptime = 0
+
+        
         now = datetime.now()
-        sAppendBreak = str(cv2.getTickCount()) + ',' \
+        sAppendBreak = str(self.iCPUUptime) + ',' \
             + str(now.strftime("%Y/%m/%d %H:%M:%S.%f")) \
             + ',>>>>>>>>>>>>>>>>>>>>>>>>>>>' \
             + sDescription + '\n'
@@ -330,8 +339,11 @@ class LogDetails():
         self.sImageNodeName_fg = ''
         
         self.oUtilsMsgs = UtilsMsgs()
-
-        self.iCPUUptime = cv2.getTickCount()
+        
+        try:
+            self.iCPUUptime = cv2.getTickCount()
+        except:
+            self.iCPUUptime = 0
         
         now = datetime.now()
         self.sDateTime = str(now.strftime("%Y/%m/%d %H:%M:%S.%f"))
