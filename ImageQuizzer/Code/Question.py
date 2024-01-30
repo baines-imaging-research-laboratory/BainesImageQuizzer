@@ -99,6 +99,9 @@ class QuestionSet():
                 elif (sQuestionType == 'Button'):
                     oQuestion = Button()
                     
+                elif (sQuestionType == 'Picture'):
+                    oQuestion = Picture()
+                    
                 else:
                     sLabel = 'Warning : Contact Administrator - Invalid question    '
                     sWarningMsg = self.sClassName + ':' + sFnName + ':' + 'UnrecognizedQuestionType - Contact Administrator'
@@ -1216,6 +1219,99 @@ class Button(Question):
     
     def PopulateQuestionWithResponses(self, lsValues):
         # there is nothing to populate for button type questions
+        pass
+    
+#========================================================================================
+#                     Class Picture
+#========================================================================================
+
+class Picture(Question):
+    # Create a group box and add a picture
+    # There are no responses from the user to catch
+    # Inputs :
+    # Outputs: exitCode - boolean describing whether function exited successfully
+    #          qGrpBox  - group box widget holding information box
+    
+    def __init__(self):
+        self.sClassName = type(self).__name__
+
+        
+    def _lsOptions_setter(self, lsInput):
+        self._lsOptions = lsInput
+        
+    def _lsOptions_getter(self):
+        return self._lsOptions
+        
+    def _sGrpBoxTitle_setter(self, sInput):
+        self._sGrpBoxTitle = sInput
+        
+    def _sGrpBoxTitle_getter(self):
+        return self._sGrpBoxTitle
+
+    def _sGrpBoxLayout_setter(self, sInput):
+        self._sGrpBoxLayout = sInput
+        
+    def _sGrpBoxLayout_getter(self):
+        return self._sGrpBoxLayout
+
+    def _oFilesIO_setter(self, sInput):
+        self._oFilesIO = sInput
+        
+    def _oFilesIO_getter(self):
+        return self._oFilesIO
+
+    #-----------------------------------------------
+
+    def BuildQuestion(self):
+        self.sFnName = sys._getframe().f_code.co_name
+
+        self.CreateGroupBox(self._sGrpBoxTitle_getter(), self._sGrpBoxLayout_getter())
+        
+        lsStoredOptions = self._lsOptions_getter()
+        length = len(lsStoredOptions)
+        if length < 1 :
+            self.DisplayGroupBoxEmpty()
+            return False, self.qGrpBox
+
+
+        oFilesIO = self._oFilesIO_getter()
+        i = 0
+        while i < length:
+            qLabel = qt.QLabel(self)
+
+            element1 = os.path.join(oFilesIO.GetXmlQuizDir(),lsStoredOptions[i])
+
+            qPixmap = qt.QPixmap(element1)
+            qLabel.setPixmap(qPixmap)
+            self.qGrpBoxLayout.addWidget(qLabel)
+            i = i + 1
+
+        return True, self.qGrpBox
+
+    #-----------------------------------------------
+    
+    def CaptureResponse(self):
+        self.sFnName = sys._getframe().f_code.co_name
+
+        bSuccess = True
+        sMsg = ''
+ 
+        lsResponses = []
+        
+        # set response for each option to null quotes
+        #     each option needs a response for the check on whether 
+        #     the question set was answered completely or partially
+        lsStoredOptions = self._lsOptions_getter()
+        for x in range( len(lsStoredOptions) ):
+            lsResponses.append('')
+                
+        
+        return bSuccess, lsResponses, sMsg
+        
+    #-----------------------------------------------
+    
+    def PopulateQuestionWithResponses(self, lsValues):
+        # there is nothing to populate for info box type questions
         pass
     
 

@@ -129,6 +129,7 @@
     <xs:enumeration value="IntegerValue"/>
     <xs:enumeration value="FloatValue"/>
     <xs:enumeration value="Button"/>
+    <xs:enumeration value="Picture"/>
   </xs:restriction>
 </xs:simpleType>
 

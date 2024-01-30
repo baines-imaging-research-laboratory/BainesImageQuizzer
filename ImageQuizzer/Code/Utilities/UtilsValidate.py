@@ -1195,7 +1195,7 @@ class UtilsValidate:
                         sScriptFullPath = os.path.join(self.oFilesIO.GetScriptsDir(),sScriptName)
                         
                         if os.path.exists(sScriptFullPath) == False:
-                            sMsg = '\nYou have a Button type of question but the script name defined in the Option does not exist' \
+                            sMsg = sMsg + '\nYou have a Button type of question but the script name defined in the Option does not exist' \
                                     + '\nSee Page: ' + str(sPageReference)\
                                     + ' for Script: ' + sScriptName\
                                     + ' in path: ' + sScriptFullPath
