@@ -156,7 +156,7 @@ class UtilsValidate:
             
             iPageNum = 0
             for xPage in lxPageElements:
-                lPathAndNodeNames= []
+                self.lPathAndNodeNames= []
                 iPageNum= iPageNum + 1
 
                 sValidationMsg = self.ValidateRequiredAttribute(xPage, 'ID', str(iPageNum))
@@ -191,13 +191,6 @@ class UtilsValidate:
                     sValidationMsg = self.ValidateAttributeOptions(xImage, 'Type', sPageReference, self.oIOXml.lValidImageTypes)
                     sMsg = sMsg + sValidationMsg
                     
-                    sValidationMsg = self.ValidateOpacity(xImage, iPageNum)
-                    sMsg = sMsg + sValidationMsg
-
-                    # check merging of label maps have a matching LabelMapID Image and Loop in Page
-                    sValidationMsg = self.ValidateMergeLabelMaps(xImage, xPage, iPageNum)
-                    sMsg = sMsg + sValidationMsg
-
                     # >>>>>>>>>>>>>>> Elements
                     sValidationMsg = self.ValidateRequiredElement(xImage, 'Path', sPageReference)
                     sMsg = sMsg + sValidationMsg
@@ -219,58 +212,27 @@ class UtilsValidate:
                         sMsg = sMsg + sValidationMsg
                     
                     # >>>>>>>>>>>>>>>
-     
+                    sValidationMsg = self.ValidateOpacity(xImage, iPageNum)
+                    sMsg = sMsg + sValidationMsg
 
-                    # For any page, test that a path always has only one associated PageID_ImageID (aka node name)
-                    #    (Otherwise, the quizzer will reload the same image with a different node name)
-                    lxImagePath = self.oIOXml.GetChildren(xImage, 'Path')
-                    if len(lxImagePath) == 1:
-                        sImagePath = self.oIOXml.GetDataInNode(lxImagePath[0])
-                         
-                        # create tuple of path, sNodeName
-                        tupPathAndID = (sImagePath, sNodeNameID)
-                         
-                        # search list of path/nodeNames for existing match
-                        bFoundMatchingPath = False
-                        ind = 0
-                        for lElement in lPathAndNodeNames:
-                            ind = ind + 1
-                            msg = (str(ind) + ':' )
-                            if bFoundMatchingPath == False:
-                                # check if path exists in the list elements
-                                if sImagePath in lElement:
-                                    bFoundMatchingPath = True
-                                    # check that sNodeName exists in that list element
-                                    if sNodeNameID not in lElement:
-                                        sMsg = sMsg + "\nIn any Page Element, the 'PageID_ImageID' attributes when combined with an Image Path, must be distinct." +\
-                                                "\nEither there are different paths sharing the same 'PageID_ImageID' on this Page" +\
-                                                "\nOR there are identical image paths with different combined 'PageID_ImageID' attributes" +\
-                                                "\n   .....Check all paths for Page: " + str(iPageNum) + ' '+ sNodeNameID
-                                     
-                        if not bFoundMatchingPath:
-                            # new path found; add to list
-                            lPathAndNodeNames.append(tupPathAndID)
-                            
-                            
-                    # If the image type is an RTStruct or Segmentation, validate the ROIs element
-                    sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
-                    if sImageType == 'RTStruct' or sImageType == 'Segmentation':
-                        sValidationMsg = self.ValidateRequiredElement(xImage, 'ROIs', sPageReference)
-                        sMsg = sMsg + sValidationMsg
-                        
-                        lxROIs = self.oIOXml.GetChildren(xImage, 'ROIs')
-                        if len(lxROIs) >0:
-                            sValidationMsg = self.ValidateRequiredAttribute(lxROIs[0], 'ROIVisibilityCode', sPageReference)
-                            sMsg = sMsg + sValidationMsg
-                            sValidationMsg = self.ValidateAttributeOptions(lxROIs[0], 'ROIVisibilityCode', sPageReference, self.oIOXml.lValidRoiVisibilityCodes)
-                            sMsg = sMsg + sValidationMsg
-                            
-                            # if the visibility code is Select or Ignore, there must be an ROI element(s) with the name(s) present
-                            sVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(lxROIs[0], 'ROIVisibilityCode')
-                            if sVisibilityCode == 'Select' or sVisibilityCode == 'Ignore':
-                                sValidationMsg = self.ValidateRequiredElement(lxROIs[0], 'ROI', sPageReference, True)  # True for multiple elements allowed
-                                sMsg = sMsg + sValidationMsg
+                    # >>>>>>>>>>>>>>>
+                    # check merging of label maps have a matching LabelMapID Image and Loop in Page
+                    sValidationMsg = self.ValidateMergeLabelMaps(xImage, xPage, iPageNum)
+                    sMsg = sMsg + sValidationMsg
 
+
+                    # >>>>>>>>>>>>>>>
+                    # Test associations between path and PageID_ImageID
+                    sValidationMsg = self.ValidatePathWithNodeNameID(xImage, iPageNum, sNodeNameID )
+                    sMsg = sMsg + sValidationMsg
+
+                            
+                    # >>>>>>>>>>>>>>>
+                    # Validate ROI elements if the image is RTStruct or Segmentation
+                    sValidationMsg = self.ValidateROIsElements(xImage, sPageReference)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    # >>>>>>>>>>>>>>>
                     
 
                 # >>>>>>>>>>>>>>>
@@ -283,6 +245,7 @@ class UtilsValidate:
                 sValidationMsg = self.ValidateMarkupLinesRequiredSettings(xPage, sPageReference)
                 sMsg = sMsg + sValidationMsg
                             
+                # >>>>>>>>>>>>>>>
                 # Slice4 assignments and TwoOverTwo layout
                 sValidationMsg = self.ValidateSlice4Layout(xPage, sPageReference)
                 sMsg = sMsg + sValidationMsg
@@ -291,6 +254,12 @@ class UtilsValidate:
                 # validate scripts exists for button type questions
                 sValidationMsg = self.ValidateButtonTypeScripts(xPage, sPageReference)
                 sMsg = sMsg + sValidationMsg
+
+                # >>>>>>>>>>>>>>>
+                sValidationMsg = self.ValidateImageOnRed( xPage, sPageID, iPageNum)
+                sMsg = sMsg + sValidationMsg
+
+
                   
             # >>>>>>>>>>>>>>>
             # validate that each page has a PageGroup attribute if the session requires page group randomization
@@ -1204,4 +1173,100 @@ class UtilsValidate:
 
         return sMsg
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateImageOnRed(self, xPage, sPageID, iPageNum):
+        ''' Check that at least one image on the page is set to the Red window
+            so that Slicer's segmenting tools are available.
+        '''
+        
+        sMsg = ''
+        bImageOnRed = False
+        
+        lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
+        if len(lxImageElements) == 0:
+            bImageOnRed = True
+        else:
+            for xImage in lxImageElements:
+                
+                lxWindowDestination = self.oIOXml.GetChildren(xImage, 'DefaultDestination')
+                for xWindowDestination in lxWindowDestination:
+                    
+                    sDestination = self.oIOXml.GetDataInNode(xWindowDestination)
+                    if sDestination == 'Red':
+                        bImageOnRed = True
+        
+        
+        if bImageOnRed == False:
+            sMsg = sMsg + '\nWhen you have Images on a Page, one of them must be assigned to the "Red" viewing window in "DefaultDestination".' \
+                    + '\nSee Page: ' + str(iPageNum) + ' ' + sPageID
+                    
+        return sMsg
+        
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateROIsElements(self, xImage, sPageReference):
+        
+    
+        sMsg = ''
+        
+        # If the image type is an RTStruct or Segmentation, validate the ROIs element
+        sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
+        if sImageType == 'RTStruct' or sImageType == 'Segmentation':
+            sValidationMsg = self.ValidateRequiredElement(xImage, 'ROIs', sPageReference)
+            sMsg = sMsg + sValidationMsg
+            
+            lxROIs = self.oIOXml.GetChildren(xImage, 'ROIs')
+            if len(lxROIs) >0:
+                sValidationMsg = self.ValidateRequiredAttribute(lxROIs[0], 'ROIVisibilityCode', sPageReference)
+                sMsg = sMsg + sValidationMsg
+                sValidationMsg = self.ValidateAttributeOptions(lxROIs[0], 'ROIVisibilityCode', sPageReference, self.oIOXml.lValidRoiVisibilityCodes)
+                sMsg = sMsg + sValidationMsg
+                
+                # if the visibility code is Select or Ignore, there must be an ROI element(s) with the name(s) present
+                sVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(lxROIs[0], 'ROIVisibilityCode')
+                if sVisibilityCode == 'Select' or sVisibilityCode == 'Ignore':
+                    sValidationMsg = self.ValidateRequiredElement(lxROIs[0], 'ROI', sPageReference, True)  # True for multiple elements allowed
+                    sMsg = sMsg + sValidationMsg
+
+        
+        return sMsg
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidatePathWithNodeNameID(self, xImage, iPageNum, sNodeNameID ):
+        ''' For any page, test that a path always has only one associated PageID_ImageID (aka node name)
+          (Otherwise, the Image Quizzer will reload the same image with a different node name - causing clashes.)
+        '''
+
+        sMsg = ''
+        
+        lxImagePath = self.oIOXml.GetChildren(xImage, 'Path')
+        if len(lxImagePath) == 1:
+            sImagePath = self.oIOXml.GetDataInNode(lxImagePath[0])
+             
+            # create tuple of path, sNodeName
+            tupPathAndID = (sImagePath, sNodeNameID)
+             
+            # search list of path/nodeNames for existing match
+            bFoundMatchingPath = False
+            ind = 0
+            for lElement in self.lPathAndNodeNames:
+                ind = ind + 1
+                msg = (str(ind) + ':' )
+                if bFoundMatchingPath == False:
+                    # check if path exists in the list elements
+                    if sImagePath in lElement:
+                        bFoundMatchingPath = True
+                        # check that sNodeName exists in that list element
+                        if sNodeNameID not in lElement:
+                            sMsg = sMsg + "\nIn any Page Element, the 'PageID_ImageID' attributes when combined with an Image Path, must be distinct." +\
+                                    "\nEither there are different paths sharing the same 'PageID_ImageID' on this Page" +\
+                                    "\nOR there are identical image paths with different combined 'PageID_ImageID' attributes" +\
+                                    "\n   .....Check all paths for Page: " + str(iPageNum) + ' '+ sNodeNameID + '\n'
+                         
+            if not bFoundMatchingPath:
+                # new path found; add to list
+                self.lPathAndNodeNames.append(tupPathAndID)
+
+        return sMsg
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
