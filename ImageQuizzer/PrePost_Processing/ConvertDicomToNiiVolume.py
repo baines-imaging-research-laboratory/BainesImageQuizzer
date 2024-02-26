@@ -8,7 +8,22 @@
     Author: Carol Johnson (Baines Imaging Research Laboratories - LRCP London, ON)
     Date:   December 5, 2023
      
-    Usage: ConvertDicomToNiiVolume -i [path to .dcm file as input] -o [path to output file] -b [path to batch csv file]
+    Usage for single volume conversion:
+         ConvertDicomToNiiVolume -i [dir for .dcm file as input] -o [dir for output file] -b [path to batch csv file]
+    
+        >> Open cmd.exe
+        >> py ConvertDicomToNiiVolume -i D:/path/to/dcmfiles -o D:/path/for/output
+        
+        
+    Usage for multiple volume batch run:
+        CSV file format:
+            Each line: database folder, input folder, output folder
+                
+            The database folder string is joined to each of the input and output folder strings 
+            to create the full folder paths.
+
+        >> Open cmd.exe
+        >> py ConvertDicomToNiiVolume -b D:/path/to/batchFile.csv
     
     
 '''
