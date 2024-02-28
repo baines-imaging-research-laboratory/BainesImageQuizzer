@@ -14,6 +14,7 @@ import numpy as np
 from datetime import datetime
 import DICOMLib
 from DICOMLib import DICOMUtils
+from pathlib import Path
 
 import logging
 import time
@@ -129,7 +130,8 @@ class UtilsFilesIO:
     
     #----------
     def GetScriptsDir(self):
-        return os.path.join(self.GetScriptedModulesPath(),'..','Inputs','Scripts')
+        sImageQuizzerDir = str(Path(self.GetScriptedModulesPath()).parents[0])
+        return os.path.join(sImageQuizzerDir,'Inputs','Scripts')
     
     #----------
     def GetDirFromPath(self, sFullPath):
@@ -264,7 +266,8 @@ class UtilsFilesIO:
 
     #----------
     def GetConfigDir(self):
-        return os.path.join(self.GetScriptedModulesPath(),'..','Inputs','Config')
+        sImageQuizzerDir = str(Path(self.GetScriptedModulesPath()).parents[0])
+        return os.path.join(sImageQuizzerDir,'Inputs','Config')
 
 
     

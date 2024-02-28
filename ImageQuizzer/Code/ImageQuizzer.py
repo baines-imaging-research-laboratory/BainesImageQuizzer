@@ -66,7 +66,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         # Note: Version 1.0 should be used with Slicer v4.11.20200930
         # self.sVersion = "Image Quizzer   v1.0 "  #  Release Date: May 10, 2022
         # Note: Version 2.0 should be used with Slicer v4.11.20210226
-        self.sVersion = "Image Quizzer v3.2.0" 
+        self.sVersion = "Image Quizzer v3.3.4" 
 
         sSlicerVersion = slicer.app.applicationVersion
         if sSlicerVersion != '4.11.20210226':
@@ -480,7 +480,7 @@ class customEventFilter(qt.QObject):
                 ((event.type() == qt.QEvent.WindowStateChange) and slicer.util.mainWindow().isMinimized()):
             slicer.util.mainWindow().showMaximized()
             
-#         # disable drag window for UserInteraction  (located in non-client area)
+        # disable drag window for UserInteraction  (located in non-client area)
         elif self.oSession.GetUserInteractionLogRequest() == True and\
                 (event.type() ==  qt.QEvent.NonClientAreaMouseButtonRelease):
             slicer.util.mainWindow().move(self.oSession.oUserInteraction.GetMainWindowPosition())

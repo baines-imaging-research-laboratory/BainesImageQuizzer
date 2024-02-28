@@ -75,7 +75,6 @@ class ImageView:
         self.sContourVisibility = 'Outline'
         self.fContourOpacity = 1.0
         
-        
     #----------
     def GetImageViewList(self):
         return self._loImageViews
@@ -106,7 +105,6 @@ class ImageView:
     def SetContourOpacity(self, fInput):
         self.fContourOpacity = fInput
         
-
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def RunSetup(self, xPageNode, sParentDataDir):
 
@@ -252,6 +250,7 @@ class ImageView:
                         oSlicerWidget.slWidget.fitSliceToBackground()
 
                     oViewNode.SetFieldOfViewAndOrigin()
+                    oViewNode.SetRequestedWindowLevel()
                             
 
                     oViewNode.AssignColorTable()
@@ -279,6 +278,7 @@ class ImageView:
 #                         slWidgetLogic.SetSliceOffset(oViewNode.fInitialSliceOffset)
 
                     oViewNode.AssignColorTable()
+                    oViewNode.SetRequestedWindowLevel()
     
                     # turn on label map volume if a label map was loaded for the background image                
                     if oViewNode.slQuizLabelMapNode != None:
@@ -610,6 +610,7 @@ class ViewNodeBase:
         self.fInitialSliceOffset = None
         self.fZoomFactorForFOV = 1.0
         self.lfPanOrigin = []
+        self.dictWindowLevel = {}     
         
         self.slQuizLabelMapNode = None
         self.lsRoiList = []
@@ -664,6 +665,18 @@ class ViewNodeBase:
     def AppendToROIList(self, sRoiName):
         self.lsRoiList.append(sRoiName)
         
+    #----------
+    def SetInitialWindowLevel(self, sInput):
+        self.dictWindowLevel= {}
+        if sInput != '':
+            lsWindowLevel = sInput.split()
+            self.dictWindowLevel = {'Window':int(lsWindowLevel[0]), 'Level':int(lsWindowLevel[1])}
+        
+    #----------
+    def GetInitialWindowLevel(self):
+        return self.dictWindowLevel
+
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def RunSetup(self):
         self.sClassName = type(self).__name__
@@ -727,6 +740,9 @@ class ViewNodeBase:
             lsPanOrigin = sPanOrigin.split()
             for ind in range(len(lsPanOrigin)):
                 self.lfPanOrigin.append(float(lsPanOrigin[ind]))
+                
+        sWindowLevel = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'WindowLevel')
+        self.SetInitialWindowLevel(sWindowLevel)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ExtractXMLNodeElements(self, sParentDataDir):
@@ -959,6 +975,16 @@ class ViewNodeBase:
                 oSlicerWidget.slSliceNode.SetXYZOrigin(self.lfPanOrigin[0], self.lfPanOrigin[1], self.lfPanOrigin[2])
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetRequestedWindowLevel(self):
+        '''
+        '''
+        
+        slDisplayNode = self.slNode.GetDisplayNode()
+        if slDisplayNode != None:
+            slDisplayNode.SetAutoWindowLevel(False)
+            dictWindowLevel = self.GetInitialWindowLevel()
+            if len(dictWindowLevel) == 2: 
+                slDisplayNode.SetWindowLevel(dictWindowLevel['Window'], dictWindowLevel['Level'])
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

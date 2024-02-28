@@ -125,7 +125,7 @@ class UtilsValidate:
             self.l4iNavList = self.oIOXml.GetNavigationListBase(xRootNode)
 
             # >>>>>>>>>>>>>>>
-            # check options for ContourVisibility at the Session level
+            # check options at the Session level
             sContourVisibility = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ContourVisibility')
             if not (sContourVisibility == 'Fill' or sContourVisibility == 'Outline' or sContourVisibility == ''):
                 sValidationMsg = "\nContourVisibility value must be 'Fill' or 'Outline'. See attribute in Session"
@@ -138,14 +138,9 @@ class UtilsValidate:
                 if not (os.path.exists(sSmtpConfigFile)) :
                     sMsg = sMsg + '\nMissing smtp configuration file for request to email quiz results : ' + sSmtpConfigFile
             
-            sROIColorFile = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ROIColorFile')
-            if sROIColorFile != '':
-                sROIColorFilePath = os.path.join(self.oFilesIO.GetXmlQuizDir(), sROIColorFile + '.txt')
-                if not (os.path.exists(sROIColorFilePath)) :
-                    sMsg = sMsg + '\nMissing ROIColorFile. Check that file exists: ' + sROIColorFilePath
-                else:
-                    sValidationMsg = self.ValidateROIColorFile(sROIColorFilePath)
-                    sMsg = sMsg + sValidationMsg
+            
+            sValidationMsg = self.ValidateROIColorFile()
+            sMsg = sMsg + sValidationMsg
             
             
             # check matches of LabelMapID with DisplayLabelMapID
@@ -161,7 +156,7 @@ class UtilsValidate:
             
             iPageNum = 0
             for xPage in lxPageElements:
-                lPathAndNodeNames= []
+                self.lPathAndNodeNames= []
                 iPageNum= iPageNum + 1
 
                 sValidationMsg = self.ValidateRequiredAttribute(xPage, 'ID', str(iPageNum))
@@ -174,6 +169,8 @@ class UtilsValidate:
                 sValidationMsg = self.ValidateImageToSegmentationMatch(xPage, sPageReference)
                 sMsg = sMsg + sValidationMsg
 
+                sValidationMsg = self.ValidateNoSpecialCharacters(xPage, str(iPageNum))
+                sMsg = sMsg + sValidationMsg
                 
                 # Image element validations
                 lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
@@ -194,13 +191,6 @@ class UtilsValidate:
                     sValidationMsg = self.ValidateAttributeOptions(xImage, 'Type', sPageReference, self.oIOXml.lValidImageTypes)
                     sMsg = sMsg + sValidationMsg
                     
-                    sValidationMsg = self.ValidateOpacity(xImage, iPageNum)
-                    sMsg = sMsg + sValidationMsg
-
-                    # check merging of label maps have a matching LabelMapID Image and Loop in Page
-                    sValidationMsg = self.ValidateMergeLabelMaps(xImage, xPage, iPageNum)
-                    sMsg = sMsg + sValidationMsg
-
                     # >>>>>>>>>>>>>>> Elements
                     sValidationMsg = self.ValidateRequiredElement(xImage, 'Path', sPageReference)
                     sMsg = sMsg + sValidationMsg
@@ -222,58 +212,27 @@ class UtilsValidate:
                         sMsg = sMsg + sValidationMsg
                     
                     # >>>>>>>>>>>>>>>
-     
+                    sValidationMsg = self.ValidateOpacity(xImage, iPageNum)
+                    sMsg = sMsg + sValidationMsg
 
-                    # For any page, test that a path always has only one associated PageID_ImageID (aka node name)
-                    #    (Otherwise, the quizzer will reload the same image with a different node name)
-                    lxImagePath = self.oIOXml.GetChildren(xImage, 'Path')
-                    if len(lxImagePath) == 1:
-                        sImagePath = self.oIOXml.GetDataInNode(lxImagePath[0])
-                         
-                        # create tuple of path, sNodeName
-                        tupPathAndID = (sImagePath, sNodeNameID)
-                         
-                        # search list of path/nodeNames for existing match
-                        bFoundMatchingPath = False
-                        ind = 0
-                        for lElement in lPathAndNodeNames:
-                            ind = ind + 1
-                            msg = (str(ind) + ':' )
-                            if bFoundMatchingPath == False:
-                                # check if path exists in the list elements
-                                if sImagePath in lElement:
-                                    bFoundMatchingPath = True
-                                    # check that sNodeName exists in that list element
-                                    if sNodeNameID not in lElement:
-                                        sMsg = sMsg + "\nIn any Page Element, the 'PageID_ImageID' attributes when combined with an Image Path, must be distinct." +\
-                                                "\nEither there are different paths sharing the same 'PageID_ImageID' on this Page" +\
-                                                "\nOR there are identical image paths with different combined 'PageID_ImageID' attributes" +\
-                                                "\n   .....Check all paths for Page: " + str(iPageNum) + ' '+ sNodeNameID
-                                     
-                        if not bFoundMatchingPath:
-                            # new path found; add to list
-                            lPathAndNodeNames.append(tupPathAndID)
-                            
-                            
-                    # If the image type is an RTStruct or Segmentation, validate the ROIs element
-                    sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
-                    if sImageType == 'RTStruct' or sImageType == 'Segmentation':
-                        sValidationMsg = self.ValidateRequiredElement(xImage, 'ROIs', sPageReference)
-                        sMsg = sMsg + sValidationMsg
-                        
-                        lxROIs = self.oIOXml.GetChildren(xImage, 'ROIs')
-                        if len(lxROIs) >0:
-                            sValidationMsg = self.ValidateRequiredAttribute(lxROIs[0], 'ROIVisibilityCode', sPageReference)
-                            sMsg = sMsg + sValidationMsg
-                            sValidationMsg = self.ValidateAttributeOptions(lxROIs[0], 'ROIVisibilityCode', sPageReference, self.oIOXml.lValidRoiVisibilityCodes)
-                            sMsg = sMsg + sValidationMsg
-                            
-                            # if the visibility code is Select or Ignore, there must be an ROI element(s) with the name(s) present
-                            sVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(lxROIs[0], 'ROIVisibilityCode')
-                            if sVisibilityCode == 'Select' or sVisibilityCode == 'Ignore':
-                                sValidationMsg = self.ValidateRequiredElement(lxROIs[0], 'ROI', sPageReference, True)  # True for multiple elements allowed
-                                sMsg = sMsg + sValidationMsg
+                    # >>>>>>>>>>>>>>>
+                    # check merging of label maps have a matching LabelMapID Image and Loop in Page
+                    sValidationMsg = self.ValidateMergeLabelMaps(xImage, xPage, iPageNum)
+                    sMsg = sMsg + sValidationMsg
 
+
+                    # >>>>>>>>>>>>>>>
+                    # Test associations between path and PageID_ImageID
+                    sValidationMsg = self.ValidatePathWithNodeNameID(xImage, iPageNum, sNodeNameID )
+                    sMsg = sMsg + sValidationMsg
+
+                            
+                    # >>>>>>>>>>>>>>>
+                    # Validate ROI elements if the image is RTStruct or Segmentation
+                    sValidationMsg = self.ValidateROIsElements(xImage, sPageReference)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    # >>>>>>>>>>>>>>>
                     
 
                 # >>>>>>>>>>>>>>>
@@ -286,6 +245,7 @@ class UtilsValidate:
                 sValidationMsg = self.ValidateMarkupLinesRequiredSettings(xPage, sPageReference)
                 sMsg = sMsg + sValidationMsg
                             
+                # >>>>>>>>>>>>>>>
                 # Slice4 assignments and TwoOverTwo layout
                 sValidationMsg = self.ValidateSlice4Layout(xPage, sPageReference)
                 sMsg = sMsg + sValidationMsg
@@ -294,6 +254,12 @@ class UtilsValidate:
                 # validate scripts exists for button type questions
                 sValidationMsg = self.ValidateButtonTypeScripts(xPage, sPageReference)
                 sMsg = sMsg + sValidationMsg
+
+                # >>>>>>>>>>>>>>>
+                sValidationMsg = self.ValidateImageOnRed( xPage, sPageID, iPageNum)
+                sMsg = sMsg + sValidationMsg
+
+
                   
             # >>>>>>>>>>>>>>>
             # validate that each page has a PageGroup attribute if the session requires page group randomization
@@ -701,7 +667,7 @@ class UtilsValidate:
             is set to 'Y'.)
         '''
         sMsg = ''
-        ltupGoToBookmarkIDs = []
+        ltupGoToBookmarks = []
         ltupBookmarkIDs = []
         sRandomizeSetting = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'RandomizePageGroups')
         if sRandomizeSetting == 'Y':
@@ -711,15 +677,15 @@ class UtilsValidate:
         
         lxPageNodes = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
         
-        # collect all instances of BookmarkID and GoToBookmarkID and which page they are set
+        # collect all instances of BookmarkID and GoToBookmark and which page they are set
         for idxPage in range(len(lxPageNodes)):
             xPageNode = lxPageNodes[idxPage]
         
             sBookmarkID = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'BookmarkID')
-            sGoToBookmarkID = ''
+            sGoToBookmark = ''
             sGoToBookmarkRequest = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'GoToBookmark')
             if sGoToBookmarkRequest != '':
-                sGoToBookmarkID = sGoToBookmarkRequest.split()[0]
+                sGoToBookmark = sGoToBookmarkRequest.split()[0]
 
             sPageGroup = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
             if sPageGroup != '':
@@ -730,17 +696,17 @@ class UtilsValidate:
 
             if sBookmarkID != '':
                 ltupBookmarkIDs.append([sBookmarkID, idxPage, iPageGroup])
-            if sGoToBookmarkID != '':
-                ltupGoToBookmarkIDs.append([sGoToBookmarkID, idxPage, iPageGroup])
+            if sGoToBookmark != '':
+                ltupGoToBookmarks.append([sGoToBookmark, idxPage, iPageGroup])
                 
             
-        # for every instance of GoToBookmarkID, confirm there is a BookmarkID
+        # for every instance of GoToBookmark, confirm there is a BookmarkID
          
-        for idxGoToBookmarkID in range(len(ltupGoToBookmarkIDs)):
-            tupGoToBookmarkIDItem = ltupGoToBookmarkIDs[idxGoToBookmarkID]
-            sGoToBookmarkIDToSearch = tupGoToBookmarkIDItem[0]
-            iGoToBookmarkIDPage = tupGoToBookmarkIDItem[1]
-            iGoToBookmarkIDPageGroup = tupGoToBookmarkIDItem[2]
+        for idxGoToBookmark in range(len(ltupGoToBookmarks)):
+            tupGoToBookmarkItem = ltupGoToBookmarks[idxGoToBookmark]
+            sGoToBookmarkToSearch = tupGoToBookmarkItem[0]
+            iGoToBookmarkPage = tupGoToBookmarkItem[1]
+            iGoToBookmarkPageGroup = tupGoToBookmarkItem[2]
 
             bFoundMatch = False
         
@@ -752,14 +718,14 @@ class UtilsValidate:
                     iBookmarkIDPage = tupBookmarkIDItem[1]
                     iBookmarkIDPageGroup = tupBookmarkIDItem[2]
         
-                    if sBookmarkIDToCompare == sGoToBookmarkIDToSearch:
+                    if sBookmarkIDToCompare == sGoToBookmarkToSearch:
                         if not bRandomizing:
-                            if (iBookmarkIDPage < iGoToBookmarkIDPage):
+                            if (iBookmarkIDPage < iGoToBookmarkPage):
                                 bFoundMatch = True
                                 break
                         else:   # randomize is set , ignore page test
-                            if iBookmarkIDPageGroup == iGoToBookmarkIDPageGroup:
-                                if iBookmarkIDPage < iGoToBookmarkIDPage:
+                            if iBookmarkIDPageGroup == iGoToBookmarkPageGroup:
+                                if iBookmarkIDPage < iGoToBookmarkPage:
                                     bFoundMatch = True
                                     break
                             else: # page groups don't match - only allow if ID is in group 0
@@ -769,11 +735,11 @@ class UtilsValidate:
        
         
             if not bFoundMatch:
-                sMsg = sMsg + "\nFor attribute 'GoToBookmarkID' : "  + sGoToBookmarkIDToSearch \
+                sMsg = sMsg + "\nFor attribute 'GoToBookmark' : "  + sGoToBookmarkToSearch \
                             + "\nMissing historical 'BookmarkID' setting to match 'GoToBookmark' "\
                             + "\n...OR... The attribute 'PageGroup' for both attributes 'GoToBookmark' and 'BookmarkID' do not match"\
                             + '\nSee Page #: '\
-                            + str(iGoToBookmarkIDPage + 1)
+                            + str(iGoToBookmarkPage + 1)
                             
                 if self.sTestMode == "1":
                     raise ValueError('Missing historical BookmarkID: %s' % sMsg)
@@ -992,7 +958,28 @@ class UtilsValidate:
             sMsg = sMsg + '\n----------See Page: ' + sPageReference
 
         return sMsg
-            
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateNoSpecialCharacters(self, xPageNode, sPageReference):
+        ''' Page ID and Page Descriptor are used to build a results folder name and
+            are therefore not allowed certain characters.
+        '''
+        sMsg = ''
+        special_characters = '"\'#&{}\\<>*?/$!:@+`~%^()+=,`|'
+        sID = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
+        sDescriptor  = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
+
+        if any(c in special_characters for c in sID):
+            sMsg = sMsg + '\n Special characters are not allowed in the page attribute ID.'
+        if any(c in special_characters for c in sDescriptor):
+            sMsg = sMsg + '\n Special characters are not allowed in the page attribute Descriptor'
+
+        if sMsg != '':
+            sMsg = sMsg + '\n----------See Page: ' + sPageReference
+
+        
+        return sMsg
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ValidateImageToSegmentationMatch(self, xPageNode, sPageReference):
         '''
@@ -1041,26 +1028,48 @@ class UtilsValidate:
         return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateROIColorFile(self, sFilePath):
-        
-        # color files cannot use an ID = 0 
-        # using ID=0 will cause images to disappear when segment editor is started
-        # syntax: id descriptor r g b a
-        # lines beginning with '#' are comments
+    def ValidateROIColorFile(self):
+        ''' Function to validate:
+            - the ROIColorFile exists in the Master quiz directory
+            - each line has 6 entries    id descriptor r g b a
+            - the id cannot be a 0 (reserved for 'erase' color in Slicer)
+        '''
+
         sMsg = ''
+        sErrorMsgMissingFile = "\nMissing ROIColorFile. Check that file exists.\n"
+        sErrorMsgIdZero = "\nROI Color File cannot have an entry with ID = '0'\n"
+        sErrorMsgInvalidLength = "\nROI Color File has an invalid number of entries in a line. Syntax: id descriptor r g b a\n"
+        sErrorMsgInvalidEntry = "\nROI Color File has invalid entry. Syntax: id descriptor r g b a . Integer values required for id, r, g, b and a values. \n"
+
         
-        fh = open(sFilePath, "r")
-        lLines = fh.readlines()
+        sROIColorFile = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'ROIColorFile')
+        if sROIColorFile != '':
+                sROIColorFilePath = os.path.join(self.oFilesIO.GetXmlQuizDir(), sROIColorFile + '.txt')
+
+                if not (os.path.exists(sROIColorFilePath)) :
+                    sMsg = sMsg + sErrorMsgMissingFile + sROIColorFilePath
         
-        for sLine in lLines:
-            if sLine[:1] == "#":
-                pass
-            elif sLine[:1] == "0":
-                sMsg = "ROI Color File cannot have an entry with ID = '0'" \
-                        + "\n See file " + sFilePath
-                break
-            else:
-                pass
+                else:
+        
+                    fh = open(sROIColorFilePath, "r")
+                    lLines = fh.readlines()
+                    
+                    for sLine in lLines:
+                        if sLine[:1] == "#":    # comment
+                            pass
+                        else:
+                            lEntries = sLine.split()
+                            
+                            if len(lEntries) != 6:
+                                sMsg = sMsg + sErrorMsgInvalidLength + sROIColorFilePath
+                            else:
+                                try:
+                                    liVal =  [int(lEntries[0]), int(lEntries[2]), int(lEntries[3]), int(lEntries[4]), int(lEntries[5])]
+                                    if liVal[0] == 0:
+                                        sMsg = sMsg + sErrorMsgIdZero + sROIColorFilePath
+                                    
+                                except:
+                                    sMsg = sMsg + sErrorMsgInvalidEntry + sROIColorFilePath
             
         return sMsg
         
@@ -1155,7 +1164,7 @@ class UtilsValidate:
                         sScriptFullPath = os.path.join(self.oFilesIO.GetScriptsDir(),sScriptName)
                         
                         if os.path.exists(sScriptFullPath) == False:
-                            sMsg = '\nYou have a Button type of question but the script name defined in the Option does not exist' \
+                            sMsg = sMsg + '\nYou have a Button type of question but the script name defined in the Option does not exist' \
                                     + '\nSee Page: ' + str(sPageReference)\
                                     + ' for Script: ' + sScriptName\
                                     + ' in path: ' + sScriptFullPath
@@ -1164,4 +1173,100 @@ class UtilsValidate:
 
         return sMsg
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateImageOnRed(self, xPage, sPageID, iPageNum):
+        ''' Check that at least one image on the page is set to the Red window
+            so that Slicer's segmenting tools are available.
+        '''
+        
+        sMsg = ''
+        bImageOnRed = False
+        
+        lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
+        if len(lxImageElements) == 0:
+            bImageOnRed = True
+        else:
+            for xImage in lxImageElements:
+                
+                lxWindowDestination = self.oIOXml.GetChildren(xImage, 'DefaultDestination')
+                for xWindowDestination in lxWindowDestination:
+                    
+                    sDestination = self.oIOXml.GetDataInNode(xWindowDestination)
+                    if sDestination == 'Red':
+                        bImageOnRed = True
+        
+        
+        if bImageOnRed == False:
+            sMsg = sMsg + '\nWhen you have Images on a Page, one of them must be assigned to the "Red" viewing window in "DefaultDestination".' \
+                    + '\nSee Page: ' + str(iPageNum) + ' ' + sPageID
+                    
+        return sMsg
+        
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateROIsElements(self, xImage, sPageReference):
+        
+    
+        sMsg = ''
+        
+        # If the image type is an RTStruct or Segmentation, validate the ROIs element
+        sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
+        if sImageType == 'RTStruct' or sImageType == 'Segmentation':
+            sValidationMsg = self.ValidateRequiredElement(xImage, 'ROIs', sPageReference)
+            sMsg = sMsg + sValidationMsg
+            
+            lxROIs = self.oIOXml.GetChildren(xImage, 'ROIs')
+            if len(lxROIs) >0:
+                sValidationMsg = self.ValidateRequiredAttribute(lxROIs[0], 'ROIVisibilityCode', sPageReference)
+                sMsg = sMsg + sValidationMsg
+                sValidationMsg = self.ValidateAttributeOptions(lxROIs[0], 'ROIVisibilityCode', sPageReference, self.oIOXml.lValidRoiVisibilityCodes)
+                sMsg = sMsg + sValidationMsg
+                
+                # if the visibility code is Select or Ignore, there must be an ROI element(s) with the name(s) present
+                sVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(lxROIs[0], 'ROIVisibilityCode')
+                if sVisibilityCode == 'Select' or sVisibilityCode == 'Ignore':
+                    sValidationMsg = self.ValidateRequiredElement(lxROIs[0], 'ROI', sPageReference, True)  # True for multiple elements allowed
+                    sMsg = sMsg + sValidationMsg
+
+        
+        return sMsg
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidatePathWithNodeNameID(self, xImage, iPageNum, sNodeNameID ):
+        ''' For any page, test that a path always has only one associated PageID_ImageID (aka node name)
+          (Otherwise, the Image Quizzer will reload the same image with a different node name - causing clashes.)
+        '''
+
+        sMsg = ''
+        
+        lxImagePath = self.oIOXml.GetChildren(xImage, 'Path')
+        if len(lxImagePath) == 1:
+            sImagePath = self.oIOXml.GetDataInNode(lxImagePath[0])
+             
+            # create tuple of path, sNodeName
+            tupPathAndID = (sImagePath, sNodeNameID)
+             
+            # search list of path/nodeNames for existing match
+            bFoundMatchingPath = False
+            ind = 0
+            for lElement in self.lPathAndNodeNames:
+                ind = ind + 1
+                msg = (str(ind) + ':' )
+                if bFoundMatchingPath == False:
+                    # check if path exists in the list elements
+                    if sImagePath in lElement:
+                        bFoundMatchingPath = True
+                        # check that sNodeName exists in that list element
+                        if sNodeNameID not in lElement:
+                            sMsg = sMsg + "\nIn any Page Element, the 'PageID_ImageID' attributes when combined with an Image Path, must be distinct." +\
+                                    "\nEither there are different paths sharing the same 'PageID_ImageID' on this Page" +\
+                                    "\nOR there are identical image paths with different combined 'PageID_ImageID' attributes" +\
+                                    "\n   .....Check all paths for Page: " + str(iPageNum) + ' '+ sNodeNameID + '\n'
+                         
+            if not bFoundMatchingPath:
+                # new path found; add to list
+                self.lPathAndNodeNames.append(tupPathAndID)
+
+        return sMsg
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
