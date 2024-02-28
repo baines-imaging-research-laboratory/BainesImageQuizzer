@@ -12,6 +12,15 @@
 	(A USB plugged into different machines does not guarantee that Python is available
 	so we use Slicer's Python Interactor to run the secondary script.)
 	
+
+    Scripts layout:
+        ImageQuizzerStartup-USB.bat (with Slicer-xxxx.ini file as argument for USB02-UpdateSlicerExtensionList)
+                    |
+                    |-> USB01-RunScriptShell.py (opens Slicer's Python interactor)
+                                    |
+                                    |-> USB02-UpdateSlicerExtensionList.py
+
+	
 '''
 import slicer
 
