@@ -388,6 +388,10 @@ class Session:
         return bTF
     
     #----------
+    def EnableTabBar(self, bTF):
+        self.oQuizWidgets.qTabWidget.tabBar().setEnabled(bTF)
+        
+    #----------
     def EnableMarkupLinesTF(self, bTF):
         
         self.btnAddMarkupsLine.enabled = bTF
@@ -902,6 +906,10 @@ class Session:
         self.qDisplayOptionsGrpBoxLayout.addWidget(qViewImageLabel,0,0)
         
         self.qComboImageList = qt.QComboBox()
+        qSize = qt.QSizePolicy()
+        qSize.setHorizontalPolicy(qt.QSizePolicy.Ignored)
+        self.qComboImageList.setSizePolicy(qSize)
+
         self.qDisplayOptionsGrpBoxLayout.addWidget(self.qComboImageList,0,1)
 
         qViewNPlanesLabel = qt.QLabel("Select view mode:")
@@ -2043,6 +2051,7 @@ class Session:
     def DisplayImageLayout(self, sCaller=None):
 
         try:
+            self.EnableTabBar(False)
             
             xmlPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetCurrentPageIndex())
             self.SetViewingLayout(xmlPageNode)
@@ -2068,7 +2077,7 @@ class Session:
     
             self.ApplySavedImageState()
         
-
+            self.EnableTabBar(True)
         except:
             iPage = self.GetCurrentPageIndex() + 1
             tb = traceback.format_exc()
@@ -2218,10 +2227,10 @@ class Session:
                                 bSaveComplete = True
         except Exception:
             tb = traceback.format_exc()
-            sMsg = sMsg + '\nSession:PerformSave error \n\n' + tb
+            sMsg = sMsg + '\nSession:PerformSave error. Caller: ' + sCaller + '\n\n' + tb
             raise Exception(sMsg)                
     
-        return bSaveComplete
+        return bSaveComplete, sMsg
                         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

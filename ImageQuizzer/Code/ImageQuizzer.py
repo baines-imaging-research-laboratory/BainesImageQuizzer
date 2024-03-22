@@ -66,7 +66,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         # Note: Version 1.0 should be used with Slicer v4.11.20200930
         # self.sVersion = "Image Quizzer   v1.0 "  #  Release Date: May 10, 2022
         # Note: Version 2.0 should be used with Slicer v4.11.20210226
-        self.sVersion = "Image Quizzer v3.3.4" 
+        self.sVersion = "Image Quizzer v3.3.5" 
 
         sSlicerVersion = slicer.app.applicationVersion
         if sSlicerVersion != '4.11.20210226':
@@ -136,6 +136,9 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         slicer.modules.welcome.widgetRepresentation().setVisible(False)
         slicer.util.setPythonConsoleVisible(False)
                
+        slDockPanel = slicer.util.mainWindow().findChild("QWidget","PanelDockWidget")
+        slDockPanel.setFeatures(0)  # cannot move or close quiz panel
+        
         slicer.util.mainWindow().showMaximized()
 ###########
         
