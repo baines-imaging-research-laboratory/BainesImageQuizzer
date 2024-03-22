@@ -2271,15 +2271,10 @@ class Session:
                 else:  
                     # Caller must have been the Previous ,GoToBookmark, Exit buttons or a close (X) was 
                     #     requested (which triggers the event filter)
-                    # Only write if there were responses captured
-                    if sCaptureSuccessLevel == 'AllResponses' or sCaptureSuccessLevel == 'PartialResponses':
-                        self.WriteResponsesToXml()
-                        bResponsesSaved = True
-                    else:
-                        # if no responses were captured 
-                        if sCaptureSuccessLevel == 'NoResponses':
-                            # this isn't the Next button so it is allowed
-                            bResponsesSaved = True
+                    #     Capture current responses
+                    #     Since this isn't the Next button, missing responses are allowed
+                    bResponsesSaved = True  
+                    self.WriteResponsesToXml()
 
                 if bLabelMapsSaved and bResponsesSaved:
                     bSaveComplete = True

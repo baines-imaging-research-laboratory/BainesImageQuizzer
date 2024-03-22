@@ -1,4 +1,18 @@
 <Session>
+	<Page ID="Patient 1">
+        <Image ID="CT" Type="Volume">
+                <DefaultDestination>Red</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Axial</DefaultOrientation>
+                <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
+        </Image>
+        <QuestionSet>
+            <Question Type="CheckBox">
+                <Option>Learning Tool</Option>
+                <Option>Observer Study</Option>
+            </Question>
+        </QuestionSet>
+    </Page>
     <Page ID="Patient 1" EnableSegmentEditor="Y" AllowMultipleResponse="Y">
         <Image ID="CT" Type="Volume"  ZoomFactor="1.2" PanOrigin="-92 27.5 -225.5" InitialSliceOffset="-245">
                 <DefaultDestination>Red</DefaultDestination>
@@ -19,6 +33,9 @@
                 <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
         </Image>
         <QuestionSet ID="Processing script" Descriptor="Python executable">
+			<Question Type = "InfoBox">
+				<Option>Testing Previous/Next for widget value retention</Option>
+			</Question>
             <Question Type="Button" Descriptor="Run external scripts">
                 <Option>script1.py</Option>
 				<Option>script2.py</Option>
@@ -31,6 +48,30 @@
                 <Option>Radio1</Option>
 				<Option>Radio2</Option>
             </Question>
+			<Question Type="Text" Descriptor=" Test Text1">
+				<Option>Testing text 1st option: </Option>
+				<Option>Testing text 2nd option: </Option>
+			</Question>
+			<Question Type="Text" Descriptor=" Test Text2">
+				<Option>Testing text 2: </Option>
+			</Question>
+			<Question Type="IntegerValue" Descriptor=" Test Int1">
+				<Option>Testing integer first option: </Option>
+				<Option>Testing integer second option</Option>
+			</Question>
+			<Question Type="IntegerValue" Descriptor=" Test Int2">
+				<Option>Testing integer 2: </Option>
+			</Question>
+			<Question Type="FloatValue" Descriptor=" Test Float1">
+				<Option>Testing float 1st option: </Option>
+				<Option>Testing float 2nd option:</Option>
+			</Question>
+			<Question Type="FloatValue" Descriptor=" Test Float2">
+				<Option>Testing float 2: </Option>
+			</Question>
+			<Question Type = "Picture" Descriptor="Test Picture">
+				<Option>BainesLogoSmall.png</Option>
+			</Question>
         </QuestionSet>
     </Page>
 	<Page ID="Patient 1">

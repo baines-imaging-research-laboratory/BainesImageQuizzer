@@ -104,7 +104,8 @@ class QuestionSet():
                     
                 else:
                     sLabel = 'Warning : Contact Administrator - Invalid question    '
-                    sWarningMsg = self.sClassName + ':' + sFnName + ':' + 'UnrecognizedQuestionType - Contact Administrator'
+                    sWarningMsg = self.sClassName + ':' + sFnName + '\nType = ' + sQuestionType + '    ...UnrecognizedQuestionType'\
+                                + '\nRemaining Questions will be displayed \n\n - Contact Administrator'
                     self.oMsgUtil.DisplayWarning(sWarningMsg)
                     bQuestionTypeGood = False
                     
@@ -454,8 +455,6 @@ class RadioQuestion(Question):
             bSuccess = True
         else:
             sMsg = 'Missing radio option for: ' + self._sGrpBoxTitle_getter()
-            # if no responses were found, reset the response list to empty (to accomodate partial responses)
-            lsResponses = []
 
         return bSuccess, lsResponses, sMsg
     
@@ -560,8 +559,6 @@ class CheckBoxQuestion(Question):
             bSuccess = True
         else:
             sMsg = 'Missing check box option for: ' + self._sGrpBoxTitle_getter()
-            # if no responses were found, reset the response list to empty (to accomodate partial responses)
-            lsResponses = []
 
         return bSuccess, lsResponses, sMsg
 
@@ -573,7 +570,7 @@ class CheckBoxQuestion(Question):
             i = 0
             for qBox in self.qGrpBox.findChildren(qt.QCheckBox):
                 
-                if lsValues[i] == 'N':
+                if lsValues[i] == 'N' or lsValues == '':
                     qBox.setChecked(False)
                 else:
                     if lsValues[i] == 'Y':
@@ -655,23 +652,23 @@ class TextQuestion(Question):
 
         lsResponses = []
         bSuccess = False
-        bResponseFound = False
+        bResponseFound = True
         sMsg = ''
         
         for qTextBox in self.qGrpBox.findChildren(qt.QLineEdit):
             sText = qTextBox.text
 #             print(sText)
             if not sText =='':
-                bResponseFound = True
+                bResponseFound = bResponseFound * True
                 lsResponses.append(qTextBox.text)
-                
+            else:
+                lsResponses.append('')
+                bResponseFound = bResponseFound * False
 
         if bResponseFound:
             bSuccess = True
         else:
             sMsg = 'Missing text response for: ' + self._sGrpBoxTitle_getter()
-            # if no responses were found, reset the response list to empty (to accomodate partial responses)
-            lsResponses = []
             
         return bSuccess, lsResponses, sMsg
 
@@ -777,7 +774,7 @@ class IntegerValueQuestion(Question):
         lsResponses = []
         bSuccess = False
         sMsg = ''
-        bResponseFound = False
+        bResponseFound = True
         
         sRangeMsg = self.CreateRangePrompt()
 
@@ -807,24 +804,24 @@ class IntegerValueQuestion(Question):
                     bValid = self.ValidateRange(iValue, iMin, iMax)
                     if bValid == True:
                         lsResponses.append(qTextBox.text)
-                        bResponseFound = True
+                        bResponseFound = bResponseFound * True
 
                     else:
+                        bResponseFound = bResponseFound * False
                         raise ValueError()
                         
                 except ValueError:
-                    sMsg = 'Please enter integer for: ' + self._sGrpBoxTitle_getter() + sRangeMsg
-                    bSuccess = bSuccess * False
+                    bResponseFound = bResponseFound * False
+                    lsResponses.append('')  # return empty string if the field if invalid
                     
             else:
-                bResponseFound = False
+                bResponseFound = bResponseFound * False
+                lsResponses.append('')
 
         if bResponseFound:
             bSuccess = True
         else:
             sMsg = 'Invalid integer value response for: ' + self._sGrpBoxTitle_getter() + sRangeMsg
-            # if no responses were found, reset the response list to empty (to accomodate partial responses)
-            lsResponses = []
 
                     
         return bSuccess, lsResponses, sMsg
@@ -932,7 +929,7 @@ class FloatValueQuestion(Question):
         lsResponses = []
         bSuccess = False
         sMsg = ''
-        bResponseFound = False
+        bResponseFound = True
         
         sRangeMsg = self.CreateRangePrompt()
 
@@ -962,16 +959,19 @@ class FloatValueQuestion(Question):
                     bValid = self.ValidateRange(fValue, fMin, fMax)
                     if bValid == True:
                         lsResponses.append(qTextBox.text)
-                        bResponseFound = True
+                        bResponseFound = bResponseFound * True
 
                     else:
+                        bResponseFound = bResponseFound * False
                         raise ValueError()
                         
                 except ValueError:
-                    sMsg = 'Please enter decimal value for: ' + self._sGrpBoxTitle_getter() + sRangeMsg
-                    bSuccess = bSuccess * False
+                    bResponseFound = bResponseFound * False
+                    lsResponses.append('')  # return empty string if the field if invalid
+
             else:
-                bResponseFound = False
+                bResponseFound = bResponseFound * False
+                lsResponses.append('')
     
 
 
@@ -979,8 +979,6 @@ class FloatValueQuestion(Question):
             bSuccess = True
         else:
             sMsg = 'Invalid decimal value response for: ' + self._sGrpBoxTitle_getter() + sRangeMsg
-            # if no responses were found, reset the response list to empty (to accomodate partial responses)
-            lsResponses = []
 
 
         return bSuccess, lsResponses, sMsg
@@ -1190,30 +1188,25 @@ class Button(Question):
 
         lsResponses = []
         bSuccess = False
-        bResponseFound = False
+        bResponseFound = True
         sMsg = ''
         
         for qBtn in self.qGrpBox.findChildren(qt.QPushButton):
             if 'Done' in qBtn.text:
-                bResponseFound = True
+                bResponseFound = bResponseFound * True
                 lsResponses.append(qBtn.text)
             else:
-                bResponseFound = False
-                break
+                bResponseFound = bResponseFound * False
+                lsResponses.append('')
                 
 
         if bResponseFound:
             bSuccess = True
         else:
             sMsg = 'Script run incomplete for: ' + self._sGrpBoxTitle_getter()
-            #  reset the response list to empty (to accomodate partial responses)
-            lsResponses = []
             
         return bSuccess, lsResponses, sMsg
             
-                
-        
-        return bSuccess, lsResponses, sMsg
         
     #-----------------------------------------------
     
