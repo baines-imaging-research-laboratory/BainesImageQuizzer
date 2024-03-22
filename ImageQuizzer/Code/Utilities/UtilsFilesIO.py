@@ -562,6 +562,7 @@ class UtilsFilesIO:
             not have created a label map if there were no lesions to segment. This is acceptable.
         """
             
+        sMsg = ''
         bLabelMapsSaved = True # initialize
         
         bLabelMapFound = False  # to detect if label map was created by user
@@ -636,12 +637,13 @@ class UtilsFilesIO:
                             else:
                                 # user wants to resume work on this page
                                 bLabelMapsSaved = False
+                                sMsg = ' ... cancelled to continue contouring'
                     
                     
         if bLabelMapsSaved == True:
             oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
 
-        return bLabelMapsSaved
+        return bLabelMapsSaved, sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadSavedLabelMaps(self, oSession):

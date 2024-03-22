@@ -236,6 +236,10 @@ class PageState:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateCompletionLists(self, xPageNode):
         ''' For the given xml page element, update the completion states in the lists
+            These lists show whether the item is 
+                [completed, required] for question sets and segmentations
+                [completed, required, number completed] for markup lines
+                More details in class documentation.  
         '''
         
         self.UpdateQuestionSetCompletionList(xPageNode)
@@ -244,13 +248,16 @@ class PageState:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateCompletedFlags(self, xPageNode):
-        ''' Update completed flags for the given xml page element
+        ''' Update completed flags for the given xml page element based on
+            the requirements and the completion lists.
+            
+            Missing requirement information is returned in the messages.
         '''
         sMsg = ''
         sQSetMsg = self.UpdatePageCompletionLevelForQuestionSets()
         sLabelMapMsg = self.UpdatePageCompletionLevelForSegmentations(xPageNode)
         sMarkupLineMsg = self.UpdatePageCompletionLevelForMarkupLines(xPageNode)
-        sMsg = sQSetMsg + '\n' + sLabelMapMsg + '\n' + sMarkupLineMsg
+        sMsg = sQSetMsg + sLabelMapMsg + sMarkupLineMsg
         
         return sMsg
     
@@ -283,7 +290,7 @@ class PageState:
         sMsg = ''
         if 0 in self.liCompletedQuestionSets:
             self.bQuestionSetsCompleted = False
-            sMsg = 'Not all question sets were completed'
+            sMsg = '/nNot all question sets were completed'
         else:
             self.bQuestionSetsCompleted = True
             

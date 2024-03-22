@@ -909,7 +909,6 @@ class Session:
         qSize = qt.QSizePolicy()
         qSize.setHorizontalPolicy(qt.QSizePolicy.Ignored)
         self.qComboImageList.setSizePolicy(qSize)
-
         self.qDisplayOptionsGrpBoxLayout.addWidget(self.qComboImageList,0,1)
 
         qViewNPlanesLabel = qt.QLabel("Select view mode:")
@@ -1141,8 +1140,11 @@ class Session:
         
         try:        
             sMsg = ''
-            
-            self.SetInteractionLogOnOff('Off','Next')
+            sCompletedMsg = ''
+            sSaveMsg = ''
+            sInteractionMsg = 'Next'
+                    
+            self.SetInteractionLogOnOff('Off',sInteractionMsg)
                 
             self.DisableButtons()    
             if self.sViewingMode != 'Default':
@@ -1159,38 +1161,44 @@ class Session:
             else:
                 # this is not end of quiz, do a save and display the next page
                 
-                if self.PerformSave('NextBtn') and self.UpdateCompletionFlags('NextBtn'):
-                        
-                    self.CaptureAndSaveImageState()
-
-                    ########################################    
-                    # set up for next page
-                    ########################################    
+                bSuccess, sSaveMsg = self.PerformSave('NextBtn') 
+                if bSuccess:
                     
-                    # if last question set, clear list and scene
-                    if self.CheckForLastQuestionSetForPage() == True:
-                        self._loQuestionSets = []
-                        slicer.mrmlScene.Clear()
-                        bChangeXmlPageIndex = True
-                    else:
-                        # clear quiz widgets only
-                        self.oQuizWidgets.ClearLayout(self.oQuizWidgets.qQuizLayout)
-                        bChangeXmlPageIndex = False
-
-
-                    self.SetCurrentNavigationIndex(self.GetCurrentNavigationIndex() + 1 )
-                    self.progress.setValue(self.GetCurrentNavigationIndex())
-                    self.InitializeImageDisplayOrderIndices()
-                    
-                    if bChangeXmlPageIndex:
-                        self.SetupPageState(self.GetCurrentPageIndex())
+                    bSuccess, sCompletedMsg = self.UpdateCompletions('NextBtn')
+                    if bSuccess:
                         
-                    self.InitializeTabSettings()
-                    self.DisplayQuizLayout()
-                    self.DisplayImageLayout()
+                        self.CaptureAndSaveImageState()
+    
+                        ########################################    
+                        # set up for next page
+                        ########################################    
+                        
+                        # if last question set, clear list and scene
+                        if self.CheckForLastQuestionSetForPage() == True:
+                            self._loQuestionSets = []
+                            slicer.mrmlScene.Clear()
+                            bChangeXmlPageIndex = True
+                        else:
+                            # clear quiz widgets only
+                            self.oQuizWidgets.ClearLayout(self.oQuizWidgets.qQuizLayout)
+                            bChangeXmlPageIndex = False
+    
+    
+                        self.SetCurrentNavigationIndex(self.GetCurrentNavigationIndex() + 1 )
+                        self.progress.setValue(self.GetCurrentNavigationIndex())
+                        self.InitializeImageDisplayOrderIndices()
+                        
+                        if bChangeXmlPageIndex:
+                            self.SetupPageState(self.GetCurrentPageIndex())
+                            
+                        self.InitializeTabSettings()
+                        self.DisplayQuizLayout()
+                        self.DisplayImageLayout()
 
-            self.SetInteractionLogOnOff('On','Next')
+                        
+            sInteractionMsg = sInteractionMsg + sSaveMsg + sCompletedMsg
 
+            self.SetInteractionLogOnOff('On',sInteractionMsg)
             self.EnableButtons()
                 
         except:
@@ -1225,6 +1233,12 @@ class Session:
 
         try:
             bExit = False
+            sMsg = ''
+            sCompletedMsg = ''
+            sSaveMsg = ''
+            sCancelExitMsg = ''
+            sInteractionMsg = 'Exit'
+                    
             
             self.progress.setValue(self.GetCurrentNavigationIndex() + 1)
             if len(self.GetNavigationList()) >0:
@@ -1245,28 +1259,36 @@ class Session:
             qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
             if qtAns == qt.QMessageBox.Ok:
 
-                self.SetInteractionLogOnOff('Off','Exit')
+                self.SetInteractionLogOnOff('Off',sInteractionMsg)
+                self.DisableButtons()    
 
-                # order here matters - completion state settings must be last
-                if self.PerformSave(sCaller) and self.CaptureAndSaveImageState() and self.UpdateCompletionFlags(sCaller):
+                bSuccess, sSaveMsg = self.PerformSave(sCaller)
+                if bSuccess:
                     
-                    
-                    self.QueryThenSendEmailResults()
-                    
-                    # update shutdown batch file to remove SlicerDICOMDatabase
-                    self.oFilesIO.CreateShutdownBatchFile()
-            
-                    slicer.util.exit(status=EXIT_SUCCESS)
-                    bExit = True    # added for delay in slicer closing down - prevent remaining code from executing
+                    bSuccess, sCompletedMsg = self.UpdateCompletions(sCaller)
+                    if bSuccess:
 
-
+                        self.CaptureAndSaveImageState()
             
+                        self.QueryThenSendEmailResults()
+                        
+                        # update shutdown batch file to remove SlicerDICOMDatabase
+                        self.oFilesIO.CreateShutdownBatchFile()
+                
+                        slicer.util.exit(status=EXIT_SUCCESS)
+                        bExit = True    # added for delay in slicer closing down - prevent remaining code from executing
+    
             
+            else:
+                sCancelExitMsg = ' ... cancelled Exit to continue with quiz'
+                
+            sInteractionMsg = sInteractionMsg + sSaveMsg + sCompletedMsg + sCancelExitMsg
+                
             # if code reaches here, either the exit was cancelled or there was 
             # an error in the save
             
             if not(bExit):
-                self.SetInteractionLogOnOff('On','Exit')
+                self.SetInteractionLogOnOff('On',sInteractionMsg)
                 self.EnableButtons() 
         
                 self.progress.setValue(self.GetCurrentNavigationIndex())
@@ -1294,35 +1316,44 @@ class Session:
         if qtAns == qt.QMessageBox.Ok:
             try:        
                 sMsg = ''
+                sCompletedMsg = ''
+                sSaveMsg = ''
+                sInteractionMsg = 'Repeat'
 
-                self.SetInteractionLogOnOff('Off','Repeat')
+                self.SetInteractionLogOnOff('Off', sInteractionMsg)
                 
                 self.DisableButtons()    
                 if self.sViewingMode != 'Default':
                     self.onResetViewClicked('Repeat')
 
-                if self.PerformSave('NextBtn') and self.UpdateCompletionFlags('NextBtn'):
+                bSuccess, sSaveMsg = self.PerformSave('NextBtn')
+                if bSuccess:
 
-                    self.CaptureAndSaveImageState()
-                    
-                    self.CreateRepeatedPageNode()
-
-                    # cleanup
-                    self._loQuestionSets = []
-                    slicer.mrmlScene.Clear()
-            
-                    
-                    self.progress.setMaximum(len(self.GetNavigationList()))
-                    self.progress.setValue(self.GetCurrentNavigationIndex())
-                    
-                    self.SetupPageState(self.GetCurrentPageIndex())
-                    self.InitializeTabSettings()
-                    self.DisplayQuizLayout()
-                    self.DisplayImageLayout()
-                    
+                    bSuccess, sCompletedMsg = self.UpdateCompletions('NextBtn')
+                    if bSuccess:
     
+                        self.CaptureAndSaveImageState()
+                        
+                        self.CreateRepeatedPageNode()
+    
+                        # cleanup
+                        self._loQuestionSets = []
+                        slicer.mrmlScene.Clear()
+                
+                        
+                        self.progress.setMaximum(len(self.GetNavigationList()))
+                        self.progress.setValue(self.GetCurrentNavigationIndex())
+                        
+                        self.SetupPageState(self.GetCurrentPageIndex())
+                        self.InitializeTabSettings()
+                        self.DisplayQuizLayout()
+                        self.DisplayImageLayout()
+                        
+
+                sInteractionMsg = sInteractionMsg + sSaveMsg + sCompletedMsg
+   
+                self.SetInteractionLogOnOff('On', sInteractionMsg)
                 self.EnableButtons()
-                self.SetInteractionLogOnOff('On','Repeat')
                 
             except:
                 iPage = self.GetCurrentPageIndex() + 1
@@ -1582,6 +1613,10 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onGoToBookmarkButtonClicked(self):
         ''' Function to change to previous bookmarked page
+            The user will be taken to the most recent Page that has the specified 'BookmarkID'
+            Quiz validation checks to see if the GoToBookmark and BookmarkID have the same
+            PageGroup number if randomization is turned on. 
+            Quiz validation also checks if there is an historical BookmarkID for the GoToBookmark 
         '''
         # find previous page with the BookmarkID match
         xPageNode = self.GetCurrentPageNode()
@@ -1631,9 +1666,21 @@ class Session:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SaveAndGoToPreviousPageDisplay(self, sCaller, iNewPageIndex, iNewNavigationIndex):
+        ''' Function will save current state of questions and images.
+            Called when going to Previous page or if the GoToBookmark button is clicked. 
+ 
+            During the 'UpdateCompletions' function, only the completion requirement lists
+            (not the completed flags) are updated allowing the user to return 
+            to the current page to complete it.
+        '''
         
+        sSaveMsg = ''
+        sInteractionMsg = sCaller
+        sCompletedMsg = ''
+
         self.SetInteractionLogOnOff('Off',sCaller)
-            
+        
+           
         self.DisableButtons()    
         if self.sViewingMode != 'Default':
             self.onResetViewClicked(sCaller)
@@ -1644,35 +1691,39 @@ class Session:
             if self.GetNavigationPage(self.GetCurrentNavigationIndex()) == iNewPageIndex:
                 bChangeXmlPageIndex = False  
         
-        if self.PerformSave(sCaller):
-                
-            self.CaptureAndSaveImageState()
+        bSuccess, sSaveMsg = self.PerformSave(sCaller)
+        if bSuccess:
+            
+            bSuccess, sCompletedMsg = self.UpdateCompletions(sCaller)
+            if bSuccess:
 
-            ########################################    
-            # set up for new display page
-            ########################################    
-
-            self.SetCurrentNavigationIndex(iNewNavigationIndex)
-            self.progress.setValue(self.GetCurrentNavigationIndex())
-            self.InitializeImageDisplayOrderIndices()
+                self.CaptureAndSaveImageState()
     
-            if self.GetCurrentNavigationIndex() < 0:
-                # reset to beginning
-                self.SetCurrentNavigationIndex( 0 )
+                ########################################    
+                # set up for new display page
+                ########################################    
+        
+                self.SetCurrentNavigationIndex(iNewNavigationIndex)
+                self.progress.setValue(self.GetCurrentNavigationIndex())
+                self.InitializeImageDisplayOrderIndices()
+        
+                if self.GetCurrentNavigationIndex() < 0:
+                    # reset to beginning
+                    self.SetCurrentNavigationIndex( 0 )
+                
+                self.AdjustToCurrentQuestionSet()
+                
+                if bChangeXmlPageIndex:
+                    slicer.mrmlScene.Clear()
+                    self.SetupPageState(self.GetCurrentPageIndex())
+        
+                self.InitializeTabSettings()
+                self.DisplayQuizLayout()
+                self.DisplayImageLayout()
             
-            self.AdjustToCurrentQuestionSet()
-            
-            if bChangeXmlPageIndex:
-                slicer.mrmlScene.Clear()
-                self.SetupPageState(self.GetCurrentPageIndex())
+        sInteractionMsg = sInteractionMsg + sSaveMsg + sCompletedMsg
 
-            self.InitializeTabSettings()
-            self.DisplayQuizLayout()
-            self.DisplayImageLayout()
-
-        self.SetInteractionLogOnOff('On', sCaller)
-
-               
+        self.SetInteractionLogOnOff('On', sInteractionMsg)
         self.EnableButtons()
 
         
@@ -2186,6 +2237,8 @@ class Session:
         """
         
         sMsg = ''
+        sMissingMsg = ''
+        sReturnMsg = ''
         bSaveComplete = False
         
         try:
@@ -2196,86 +2249,106 @@ class Session:
             else:
                 if sCaller != 'ResetView':
                     self.oQuizWidgets.qTabWidget.setCurrentIndex(0) # move to Quiz tab
+        
+        
+                bLabelMapsSaved, sLabelMapMsg = self.oFilesIO.SaveLabelMaps(self, sCaller)
+                self.oFilesIO.SaveMarkupLines(self)
+      
+                sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponses()
+                   
+                if sCaller == 'NextBtn' or sCaller == 'Finish':
+                    # only write to xml if all responses were captured
+                    if sCaptureSuccessLevel == 'AllResponses':
+                        self.WriteResponsesToXml()
+                        bResponsesSaved = True
+                    else:
+                        sMsg = sMsg + '\n\nAll questions must be answered to proceed'
+                        self.oUtilsMsgs.DisplayWarning( sMsg )
+                        bResponsesSaved = False
+                        sMissingMsg = ' ... missing quiz questions'
+                       
+                           
+                else:  
+                    # Caller must have been the Previous ,GoToBookmark, Exit buttons or a close (X) was 
+                    #     requested (which triggers the event filter)
+                    # Only write if there were responses captured
+                    if sCaptureSuccessLevel == 'AllResponses' or sCaptureSuccessLevel == 'PartialResponses':
+                        self.WriteResponsesToXml()
+                        bResponsesSaved = True
+                    else:
+                        # if no responses were captured 
+                        if sCaptureSuccessLevel == 'NoResponses':
+                            # this isn't the Next button so it is allowed
+                            bResponsesSaved = True
 
+                if bLabelMapsSaved and bResponsesSaved:
+                    bSaveComplete = True
                 
-                if self.oFilesIO.SaveLabelMaps(self, sCaller):
-                    self.oFilesIO.SaveMarkupLines(self)
-       
-                    sCaptureSuccessLevel, self._lsNewResponses, sMsg = self.CaptureNewResponses()
-                    
-                    if sCaller == 'NextBtn' or sCaller == 'Finish':
-                        # only write to xml if all responses were captured
-                        if sCaptureSuccessLevel == 'AllResponses':
-                            self.WriteResponsesToXml()
-                            bSaveComplete = True
-                        else:
-                            sMsg = sMsg + '\n\nAll questions must be answered to proceed'
-                            self.oUtilsMsgs.DisplayWarning( sMsg )
-                            bSaveComplete = False
-                            
-                    else:  
-                        # Caller must have been the Previous or Exit buttons or a close was 
-                        #     requested (which triggers the event filter)
-                        # Only write if there were responses captured
-                        if sCaptureSuccessLevel == 'AllResponses' or sCaptureSuccessLevel == 'PartialResponses':
-                            self.WriteResponsesToXml()
-                            bSaveComplete = True
-                        else:
-                            # if no responses were captured 
-                            if sCaptureSuccessLevel == 'NoResponses':
-                                # this isn't the Next button so it is allowed
-                                bSaveComplete = True
+                sReturnMsg = sLabelMapMsg + sMissingMsg
+        
+        
         except Exception:
             tb = traceback.format_exc()
             sMsg = sMsg + '\nSession:PerformSave error. Caller: ' + sCaller + '\n\n' + tb
             raise Exception(sMsg)                
     
-        return bSaveComplete, sMsg
+        return bSaveComplete, sReturnMsg
                         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def UpdateCompletionFlags(self, sCaller):
-        ''' 
+    def UpdateCompletions(self, sCaller):
+        ''' Function that first updates the completion lists based on the requirements for the
+            page. When moving to the next page (not a previous or a bookmarked page or an exit), 
+            the function will then update the flags that determine whether it is okay to 
+            progress the quiz.
+            The QuizComplete attribute is only set to "Y" if the user presses the 'Finish' button
+            on the last page. (Pressing the 'Exit' button on this page does not set this flag.)
+            
         '''
         ################################################
         ##########  Updating completion flags ##########        
         ################################################
 
-        sMsg = ''
+        sReturnMsg = ''
         bPageComplete = True
         idxQuestionSet = self.GetCurrentQuestionSetIndex()
         iNumQSets = len(self.GetAllQuestionSetNodesForCurrentPage())
 
         
-        #after writing responses, update page states and record the image state
+        # update current state in lists of requirements
         self.oPageState.UpdateCompletionLists(self.GetCurrentPageNode())
         
         
-        # if this was the last question set for the page, check for completion
-        if idxQuestionSet == iNumQSets - 1:
+        if sCaller == 'NextBtn' or sCaller == 'Finish':
             
-            sCompletionFlagMsg = self.oPageState.UpdateCompletedFlags(self.GetCurrentPageNode())
-            sMsg = sCompletionFlagMsg
-            
-            if self.oPageState.GetPageCompletedTF():
-                bPageComplete = True
-
-                if sCaller != 'ExitBtn': #allow resume at this point
-                    self.AddPageCompleteAttribute(self.GetCurrentPageIndex())
+            # if this was the last question set for the page, check for completion
+            if idxQuestionSet == iNumQSets - 1:
                 
-                if sCaller == 'Finish':
-                    self.AddQuizCompleteAttribute()
-                    self.SetQuizComplete(True)
-
-            else:
-                if sCaller == 'ExitBtn':
-                    bPageComplete = True    # allow for exit with unfinished requirements
-
+                sCompletionFlagMsg = self.oPageState.UpdateCompletedFlags(self.GetCurrentPageNode())
+#                 sMsg = sMsg + sCompletionFlagMsg
+                
+                if self.oPageState.GetPageCompletedTF():
+                    bPageComplete = True
+                    self.AddPageCompleteAttribute(self.GetCurrentPageIndex())
+                    
+                    if sCaller == 'Finish':
+                        self.AddQuizCompleteAttribute()
+                        self.SetQuizComplete(True)
+    
                 else:
                     bPageComplete = False
-                    self.oUtilsMsgs.DisplayWarning( sMsg )
+                    self.oUtilsMsgs.DisplayWarning( sCompletionFlagMsg )
+                    sReturnMsg = ' ... missing requirement for Page (contours / markuplines / questions) '
+                        
+
+        else:      # for 'Previous' 'GoToBookmark' 'Exit'
+            bPageComplete = True    # allow with unfinished requirements
+            
+                
+                
+                
                                     
-        return bPageComplete
+        return bPageComplete, sReturnMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def InitializeNullEditorSettings(self):

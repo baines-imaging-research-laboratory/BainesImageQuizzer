@@ -464,19 +464,22 @@ class customEventFilter(qt.QObject):
             
             sExitMsg = 'Image Quizzer Exiting'
             sUserQuizResultsPath = self.oFilesIO.GetUserQuizResultsPath()
-            
+             
             if sUserQuizResultsPath != '':
                 sExitMsg = sExitMsg + '\n   Results will be saved.\
                     \n   Restarting the quiz will resume where you left off.'
-                
+                 
                 sCaller = 'EventFilter'
+                self.oSession.SetInteractionLogOnOff('Off', 'Exit ...X')
                 bSuccess, sMsg = self.oSession.PerformSave(sCaller)
                 if bSuccess == False:
                     if sMsg != '':
                         self.oUtilsMsgs.DisplayWarning(sMsg)
-                    
+                self.oSession.CaptureAndSaveImageState()
+                     
             self.oUtilsMsgs.DisplayInfo(sExitMsg)
             slicer.util.exit(status=EXIT_SUCCESS)
+
             
         # disable minimize for UserInteraction
         elif self.oSession.GetUserInteractionLogRequest() == True and\
