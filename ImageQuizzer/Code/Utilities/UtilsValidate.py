@@ -156,17 +156,15 @@ class UtilsValidate:
             
             iPageNum = 0
             for xPage in lxPageElements:
-                self.lPathAndNodeNames= []
                 iPageNum= iPageNum + 1
 
                 sValidationMsg = self.ValidateRequiredAttribute(xPage, 'ID', str(iPageNum))
                 sMsg = sMsg + sValidationMsg
                 
                 sPageID = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ID')
-                sPageReference = str(iPageNum) # initialize
                 
                 # for any page, make sure there is matching Images Volume to Segmentation or Volume to LabelMap for each destination
-                sValidationMsg = self.ValidateImageToSegmentationMatch(xPage, sPageReference)
+                sValidationMsg = self.ValidateImageToSegmentationMatch(xPage, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
 
                 sValidationMsg = self.ValidateNoSpecialCharacters(xPage, str(iPageNum))
@@ -221,11 +219,6 @@ class UtilsValidate:
                     sMsg = sMsg + sValidationMsg
 
 
-                    # >>>>>>>>>>>>>>>
-                    # Test associations between path and PageID_ImageID
-                    sValidationMsg = self.ValidatePathWithNodeNameID(xImage, iPageNum, sNodeNameID )
-                    sMsg = sMsg + sValidationMsg
-
                             
                     # >>>>>>>>>>>>>>>
                     # Validate ROI elements if the image is RTStruct or Segmentation
@@ -242,23 +235,31 @@ class UtilsValidate:
                             
                 # >>>>>>>>>>>>>>>
                 # validate attributes 'SegmentRequired' and 'MinMarkupLinesRequiredOnAnyImage'
-                sValidationMsg = self.ValidateMarkupLinesRequiredSettings(xPage, sPageReference)
+                sValidationMsg = self.ValidateMarkupLinesRequiredSettings(xPage, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
                             
                 # >>>>>>>>>>>>>>>
                 # Slice4 assignments and TwoOverTwo layout
-                sValidationMsg = self.ValidateSlice4Layout(xPage, sPageReference)
+                sValidationMsg = self.ValidateSlice4Layout(xPage, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
                 
                 # >>>>>>>>>>>>>>>
                 # validate scripts exists for button type questions
-                sValidationMsg = self.ValidateButtonTypeScripts(xPage, sPageReference)
+                sValidationMsg = self.ValidateButtonTypeScripts(xPage, str(iPageNum))
+                sMsg = sMsg + sValidationMsg
+
+                # validate file exists for picture type questions
+                sValidationMsg = self.ValidatePictureTypeQuestion(xPage, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
 
                 # >>>>>>>>>>>>>>>
-                sValidationMsg = self.ValidateImageOnRed( xPage, sPageID, iPageNum)
+                sValidationMsg = self.ValidateImageOnRed( xPage, sPageID, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
 
+                # >>>>>>>>>>>>>>>
+                # Test associations between path and PageID_ImageID (node name)
+                sValidationMsg = self.ValidatePathWithNodeNameID(xPage, sPageID, str(iPageNum) )
+                sMsg = sMsg + sValidationMsg
 
                   
             # >>>>>>>>>>>>>>>
@@ -1174,7 +1175,51 @@ class UtilsValidate:
         return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateImageOnRed(self, xPage, sPageID, iPageNum):
+    def ValidatePictureTypeQuestion(self, xPage, sPageReference):
+        ''' Check that each picture requested to be displayed in a 'Picture' type of question exists and is
+            of an acceptable format.
+            Picture file must be in the Master Quiz directory.
+        '''
+        sMsg = ''
+        
+        lxQuestionSetElements = self.oIOXml.GetChildren(xPage, 'QuestionSet')
+        for xQuestionSet in lxQuestionSetElements:
+            
+            lxQuestionElements = self.oIOXml.GetChildren(xQuestionSet, 'Question')
+            for xQuestion in lxQuestionElements:
+                
+                sQuestionType = self.oIOXml.GetValueOfNodeAttribute(xQuestion, 'Type')
+                if sQuestionType == 'Picture':
+                    
+                    lxOptionElements = self.oIOXml.GetChildren(xQuestion, 'Option')
+                         
+                    for xOption in lxOptionElements:
+                        
+                        sPictureName = self.oIOXml.GetDataInNode(xOption)
+                        sPictureFullPath = os.path.join(self.oFilesIO.GetXmlQuizDir(),sPictureName)
+        
+                        if os.path.exists(sPictureFullPath) == False:
+                            sMsg = sMsg + '\nYou have a Picture type of question but the requested picture does not exist.' \
+                                    + '\nSee Page: ' + str(sPageReference)\
+                                    + ' for Picture: ' + sPictureName\
+                                    + ' in path: ' + sPictureFullPath
+                                    
+                        root, ext = os.path.splitext(sPictureFullPath)
+                        sExt = ext.replace('.','')
+                        if sExt not in qt.QImageReader.supportedImageFormats():
+                            sMsg = sMsg + '\nYou have a Picture type of question but the picture format is not supported.' \
+                                    + '\nSee Page: ' + str(sPageReference)\
+                                    + ' for Picture: ' + sPictureName\
+                                    + ' in path: ' + sPictureFullPath\
+                                    + '\nSome supported formats: bmp, png, jpeg, gif, jpg, pbm, pgm, xbm, spm, svg, ico'
+                            
+        
+
+        
+        return sMsg
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateImageOnRed(self, xPage, sPageID, sPageNum):
         ''' Check that at least one image on the page is set to the Red window
             so that Slicer's segmenting tools are available.
         '''
@@ -1198,7 +1243,7 @@ class UtilsValidate:
         
         if bImageOnRed == False:
             sMsg = sMsg + '\nWhen you have Images on a Page, one of them must be assigned to the "Red" viewing window in "DefaultDestination".' \
-                    + '\nSee Page: ' + str(iPageNum) + ' ' + sPageID
+                    + '\nSee Page: ' + sPageNum + ' ' + sPageID
                     
         return sMsg
         
@@ -1232,41 +1277,62 @@ class UtilsValidate:
         return sMsg
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidatePathWithNodeNameID(self, xImage, iPageNum, sNodeNameID ):
+    def ValidatePathWithNodeNameID(self, xPage, sPageID, sPageNum ):
         ''' For any page, test that a path always has only one associated PageID_ImageID (aka node name)
           (Otherwise, the Image Quizzer will reload the same image with a different node name - causing clashes.)
         '''
 
         sMsg = ''
         
-        lxImagePath = self.oIOXml.GetChildren(xImage, 'Path')
-        if len(lxImagePath) == 1:
-            sImagePath = self.oIOXml.GetDataInNode(lxImagePath[0])
-             
-            # create tuple of path, sNodeName
-            tupPathAndID = (sImagePath, sNodeNameID)
-             
-            # search list of path/nodeNames for existing match
-            bFoundMatchingPath = False
-            ind = 0
-            for lElement in self.lPathAndNodeNames:
-                ind = ind + 1
-                msg = (str(ind) + ':' )
-                if bFoundMatchingPath == False:
-                    # check if path exists in the list elements
-                    if sImagePath in lElement:
-                        bFoundMatchingPath = True
-                        # check that sNodeName exists in that list element
-                        if sNodeNameID not in lElement:
-                            sMsg = sMsg + "\nIn any Page Element, the 'PageID_ImageID' attributes when combined with an Image Path, must be distinct." +\
-                                    "\nEither there are different paths sharing the same 'PageID_ImageID' on this Page" +\
-                                    "\nOR there are identical image paths with different combined 'PageID_ImageID' attributes" +\
-                                    "\n   .....Check all paths for Page: " + str(iPageNum) + ' '+ sNodeNameID + '\n'
-                         
-            if not bFoundMatchingPath:
-                # new path found; add to list
-                self.lPathAndNodeNames.append(tupPathAndID)
+        sNotUniqueMsg = "\nIn any Page Element, the 'PageID_ImageID' attributes when combined with an Image Path, must be distinct." +\
+                            "\nEither there are different paths sharing the same 'PageID_ImageID' on this Page" +\
+                            "\nOR there are identical image paths with different combined 'PageID_ImageID' attributes" +\
+                            "\n   .....Check all paths for Page: "
 
+        lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
+        lPathAndNodeNames= []
+        
+        for xImage in lxImageElements:
+            
+            # Page ID + Image ID creates the node name for the image that is loaded (in ImageView>ViewNodeBase)
+            sImageID = self.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
+            sNodeNameID = sPageID + '_' + sImageID
+
+            lxImagePath = self.oIOXml.GetChildren(xImage, 'Path')
+            if len(lxImagePath) == 1:
+                sImagePath = self.oIOXml.GetDataInNode(lxImagePath[0])
+                 
+                # create tuple of path, sNodeName
+                tupPathAndID = (sImagePath, sNodeNameID)
+                 
+                # search list of path/nodeNames for existing match
+                bFoundMatchingPath = False
+                for lElement in lPathAndNodeNames:
+                    if bFoundMatchingPath == False:
+                        # check if path exists in the list elements
+                        if sImagePath in lElement:
+                            bFoundMatchingPath = True
+                            
+                            # existing path;  but node name does not match - ERROR
+                            if sNodeNameID not in lElement:
+                                sMsg = sMsg + sNotUniqueMsg + sPageNum + ' '+ sNodeNameID + '\n'
+
+                             
+                if not bFoundMatchingPath:
+                    # new path found; add to list
+                    lPathAndNodeNames.append(tupPathAndID)
+                    
+            
+        # in the list of tuples with unique path names, check that all node names are also unique   
+        lsNodeNames = []     
+        for tupPathAndIDItem in lPathAndNodeNames:
+            sNodeName = tupPathAndIDItem[1]
+            if sNodeName not in lsNodeNames:
+                lsNodeNames.append(sNodeName)
+            else:
+                sMsg = sMsg + sNotUniqueMsg + sPageNum + ' '+ sNodeNameID + '\n'
+                break
+            
         return sMsg
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

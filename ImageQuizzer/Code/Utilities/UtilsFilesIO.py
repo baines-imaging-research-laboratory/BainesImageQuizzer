@@ -355,14 +355,24 @@ class UtilsFilesIO:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupForUserQuizResults(self):
         
-        sQuizFileRoot, sExt = os.path.splitext(self.GetQuizFilename())
-         
-        self._sUserQuizResultsDir = os.path.join(self.GetUserDir(), sQuizFileRoot)
-        self._sUserQuizResultsPath = os.path.join(self.GetUserQuizResultsDir(), self.GetQuizFilename())
- 
-        # check that the user folder exists - if not, create it
-        if not os.path.exists(self._sUserQuizResultsDir):
-            os.makedirs(self._sUserQuizResultsDir)
+        try:
+        
+            sQuizFileRoot, sExt = os.path.splitext(self.GetQuizFilename())
+             
+            self._sUserQuizResultsDir = os.path.join(self.GetUserDir(), sQuizFileRoot)
+            self._sUserQuizResultsPath = os.path.join(self.GetUserQuizResultsDir(), self.GetQuizFilename())
+     
+            # check that the user folder exists - if not, create it
+            if not os.path.exists(self._sUserQuizResultsDir):
+                os.makedirs(self._sUserQuizResultsDir)
+                
+        except Exception as error:
+            tb = traceback.format_exc()
+            sMsg = '\SetupForUserQuizResults: Failed to set up directories for results '\
+                    + '   Possible cause: directory path too long. Admin must move Image Quizzer closer to root.'\
+                    + "\n\n" + str(error) \
+                    + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
          
      
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

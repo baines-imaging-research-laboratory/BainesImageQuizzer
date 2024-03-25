@@ -1,6 +1,9 @@
 import os
 import vtk, qt, ctk, slicer
 import sys
+import traceback
+from Utilities.UtilsMsgs import *
+
 
 import sitkUtils
 import SimpleITK as sitk
@@ -93,6 +96,7 @@ class PageState:
                     
         '''
         self.ClearPageStateVariables()
+        self.oUtilsMsgs = UtilsMsgs()
         
     #----------
     def ClearPageStateVariables(self):
@@ -494,16 +498,29 @@ class PageState:
         ''' A function to look at pixels of label map node to determine if a segment exists
             (non-zero pixels)
         '''
-        img = sitk.ReadImage(sPath)
-        stats = sitk.StatisticsImageFilter()
-        stats.Execute(img)
-        fMin = stats.GetMinimum()
-        fMax = stats.GetMaximum()
+        bLabelMapEmpty = True
         
-        if fMin == 0 and fMax == 0:
-            bLabelMapEmpty = True
-        else:
-            bLabelMapEmpty = False
+        try:
+            img = sitk.ReadImage(sPath)
+            stats = sitk.StatisticsImageFilter()
+            stats.Execute(img)
+            fMin = stats.GetMinimum()
+            fMax = stats.GetMaximum()
+            
+            if fMin == 0 and fMax == 0:
+                bLabelMapEmpty = True
+            else:
+                bLabelMapEmpty = False
+                
+        except Exception as error:
+            tb = traceback.format_exc()
+            sMsg = "PageState::TestForEmptyLabelMap: Error reading label map image " + sPath \
+                    + "\n\n Possible cause: - length of label map path exceeds Windows maximum (~256 characters)."\
+                    + "\n      Admin must shorten names or move Image Quizzer module closer to root."\
+                    + "\n\n" + str(error) \
+                    + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
+            
             
         return bLabelMapEmpty
 
