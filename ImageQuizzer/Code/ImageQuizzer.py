@@ -361,7 +361,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
         else:
             # enable the launch button
-            self.qLblQuizFilename.setText(sSelectedQuizPath)
+            sQuizName = self.oFilesIO.GetFilenameNoExtFromPath(sSelectedQuizPath)
+            self.qLblQuizFilename.setText(sQuizName)
             self.qLaunchGrpBox.setEnabled(True)
             self.qUserLoginWidget.show()
             self.qUserLoginWidget.activateWindow()

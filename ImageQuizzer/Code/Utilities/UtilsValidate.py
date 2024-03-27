@@ -261,6 +261,9 @@ class UtilsValidate:
                 sValidationMsg = self.ValidatePathWithNodeNameID(xPage, sPageID, str(iPageNum) )
                 sMsg = sMsg + sValidationMsg
 
+                sValidationMsg = self.ValidateEstimatedPathLengths(xPage, str(iPageNum))
+                sMsg = sMsg + sValidationMsg
+
                   
             # >>>>>>>>>>>>>>>
             # validate that each page has a PageGroup attribute if the session requires page group randomization
@@ -1336,3 +1339,78 @@ class UtilsValidate:
         return sMsg
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateEstimatedPathLengths(self, xPage, sPageNum):
+        ''' Windows has a MAX_PATH limit of 256 characters. Image Quizzer stores the label maps and 
+            markup lines in subfolders and if this maximum is reached, the files will not get written.
+            
+            Slicer also creates a TempWrite directory as it is writing the labelmap file to disk. If the
+            path length approaches the 256 character limit but remains under, this TempWrite folder does
+            not get cleaned up (removed) after the file is written to disk. The TempWrite folder remains empty,
+            but this can be confusing when the admin is doing post-analysis. It can be ignored.
+            
+            Decreasing the file path lengths can be done by reducing the length of the username, patient and 
+            image ids and/or by moving the ImageQuizzer module closer to the root of the drive.
+
+            The threshold for the number of characters allowed before the the file can no longer be written is:
+
+            For LabelMaps:
+                threshold is variable
+                
+                    sWindowsTempFolder = 'TempWrite' + '\PgGroupxx_' + PageID_ImageID\' + '-bainesquizlabel'
+                    iMaxThreshold = 256 - len('nrrd') - len(sWindowsTempFolder)
+            
+                File stored:
+                path userdir + \quizname + '\PgGroupxx_' + PageID_ImageID\' + 
+                 'PgGroupxx_' + PageID_ImageID + '-bainesquizlabel.nrrd'
+
+            For MarkupLines
+                threshold = 256
+                
+                File stored:
+                path userdir + \quizname + '\PgGroupxx_' + PageID_ImageID\' + 
+                 'PgGroupxx_' + PageID_ImageID + 'MarkupsLine_xxx_bainesquizline.mrk.json'
+
+            In some quizzes, it is impossible to predict whether the user is going to create a 
+            contour or markup line so rather than have the user encounter an error, 
+            this validator sets a maximum to stay in a safe-zone for creating these files.
+            
+        '''
+        
+        sMsg = ''
+
+        sUserDir = self.oFilesIO.GetUserDir()
+        sUserDir = sUserDir.replace('/Code\..','')
+        sQuizFilename = self.oFilesIO.GetQuizFilenameNoExt()
+        sPageID = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ID')
+        sPageGroup = 'PgGroup_' + self.oIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup')
+        
+        # max allowed leaves room for adding characters for labelmap (+ ~22) or markupline (+ ~39) files
+        # to keep potential files under the 256 Windows limit
+        iMaxAllowed = 215
+
+        lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
+        
+        for xImage in lxImageElements:
+            
+            # Page ID + Image ID creates the node name for the image that is loaded (in ImageView>ViewNodeBase)
+            sImageID = self.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
+            sNodeNameID = sPageID + '_' + sImageID
+            sImageFolderName = sPageGroup + sNodeNameID
+            
+            # base path common to both label maps and markup lines
+            sBasePath = os.path.join(sUserDir,sQuizFilename, sImageFolderName, sImageFolderName)
+            
+            if len(sBasePath) > iMaxAllowed:
+                sMsg = sMsg + '\n\nEstimate for Image Quizzer results paths are too long: ' + str(len(sBasePath)) + ' characters.'\
+                            + ' (Max allowed is ' + str(iMaxAllowed) + ' )\n'\
+                            + ' See Page ' + sPageNum \
+                            + '\nEither shorten Patient and Image IDs and/or move ImageQuizzer module closer to root. '\
+                            + ' (See documentation for more information.)'
+
+                break # only need one msg per page
+        
+        return sMsg
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        
