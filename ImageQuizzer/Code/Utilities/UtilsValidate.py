@@ -1356,18 +1356,18 @@ class UtilsValidate:
             For LabelMaps:
                 threshold is variable
                 
-                    sWindowsTempFolder = 'TempWrite' + '\PgGroupxx_' + PageID_ImageID\' + '-bainesquizlabel'
+                    sWindowsTempFolder = 'TempWrite' + '\PgGroupxx_' + PageID_ImageID\ + '-bainesquizlabel'
                     iMaxThreshold = 256 - len('nrrd') - len(sWindowsTempFolder)
             
                 File stored:
-                path userdir + \quizname + '\PgGroupxx_' + PageID_ImageID\' + 
+                path userdir + \quizname + '\PgGroupxx_' + Page ID_Descriptor\ + 
                  'PgGroupxx_' + PageID_ImageID + '-bainesquizlabel.nrrd'
 
             For MarkupLines
                 threshold = 256
                 
                 File stored:
-                path userdir + \quizname + '\PgGroupxx_' + PageID_ImageID\' + 
+                path userdir + \quizname + '\PgGroupxx_' + Page ID_Descriptor\ + 
                  'PgGroupxx_' + PageID_ImageID + 'MarkupsLine_xxx_bainesquizline.mrk.json'
 
             In some quizzes, it is impossible to predict whether the user is going to create a 
@@ -1383,6 +1383,7 @@ class UtilsValidate:
         sQuizFilename = self.oFilesIO.GetQuizFilenameNoExt()
         sPageID = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ID')
         sPageGroup = 'PgGroup_' + self.oIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup')
+        sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPage, 'Descriptor')
         
         # max allowed leaves room for adding characters for labelmap (+ ~22) or markupline (+ ~39) files
         # to keep potential files under the 256 Windows limit
@@ -1395,16 +1396,17 @@ class UtilsValidate:
             # Page ID + Image ID creates the node name for the image that is loaded (in ImageView>ViewNodeBase)
             sImageID = self.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
             sNodeNameID = sPageID + '_' + sImageID
+            sFolderName = sPageID + '_' + sPageDescriptor
             sImageFolderName = sPageGroup + sNodeNameID
             
             # base path common to both label maps and markup lines
-            sBasePath = os.path.join(sUserDir,sQuizFilename, sImageFolderName, sImageFolderName)
+            sBasePath = os.path.join(sUserDir,sQuizFilename, sFolderName, sImageFolderName)
             
             if len(sBasePath) > iMaxAllowed:
                 sMsg = sMsg + '\n\nEstimate for Image Quizzer results paths are too long: ' + str(len(sBasePath)) + ' characters.'\
                             + ' (Max allowed is ' + str(iMaxAllowed) + ' )\n'\
                             + ' See Page ' + sPageNum \
-                            + '\nEither shorten Patient and Image IDs and/or move ImageQuizzer module closer to root. '\
+                            + '\Shorten items PageID, Image ID, Page Descriptor and/or move ImageQuizzer module closer to root. '\
                             + ' (See documentation for more information.)'
 
                 break # only need one msg per page

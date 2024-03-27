@@ -333,6 +333,8 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                 self.qUserGrpBox.setStyleSheet("QGroupBox{ background-color: rgba(255, 149, 0, 100)}")
             else:
                 self.comboGetUserName.setStyleSheet("QComboBox{ background-color: white}")
+                self.qUserGrpBox.setTitle('User name')
+
             
         else:
             sMsg = 'No location was selected for image database'
