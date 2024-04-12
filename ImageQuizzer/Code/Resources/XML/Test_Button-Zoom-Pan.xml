@@ -1,5 +1,5 @@
 <Session>
-	<Page ID="Patient 1">
+	<Page ID="Patient 1" Descriptor="Where is this" AllowMultipleResponse="Y" ButtonScriptRerunRequired = "Y">
         <Image ID="CT" Type="Volume">
                 <DefaultDestination>Red</DefaultDestination>
                 <Layer>Background</Layer>
@@ -7,13 +7,13 @@
                 <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
         </Image>
         <QuestionSet>
-            <Question Type="CheckBox">
-                <Option>Learning Tool</Option>
-                <Option>Observer Study</Option>
+            <Question Type="Button" Descriptor="Run external scripts">
+                <Option>script1.py</Option>
+				<Option>script2.py</Option>
             </Question>
         </QuestionSet>
     </Page>
-    <Page ID="Patient 1" EnableSegmentEditor="Y" AllowMultipleResponse="Y">
+    <Page ID="Patient 1" EnableSegmentEditor="Y" AllowMultipleResponse="Y" ButtonScriptRerunRequired = "N">
         <Image ID="CT" Type="Volume"  ZoomFactor="1.2" PanOrigin="-92 27.5 -225.5" InitialSliceOffset="-245">
                 <DefaultDestination>Red</DefaultDestination>
                 <Layer>Background</Layer>
@@ -32,6 +32,12 @@
                 <DefaultOrientation>Sagittal</DefaultOrientation>
                 <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
         </Image>
+        <QuestionSet>
+            <Question Type="InfoBox">
+                <Option>Learning Tool</Option>
+                <Option>Observer Study</Option>
+            </Question>
+        </QuestionSet>
         <QuestionSet ID="Processing script" Descriptor="Python executable">
 			<Question Type = "InfoBox">
 				<Option>Testing Previous/Next for widget value retention</Option>
@@ -48,6 +54,9 @@
                 <Option>Radio1</Option>
 				<Option>Radio2</Option>
             </Question>
+			<Question Type="IntegerValue" Descriptor=" Test Int2" Min="3" Max="7">
+				<Option>Testing integer 2: </Option>
+			</Question>
 			<Question Type="Text" Descriptor=" Test Text1">
 				<Option>Testing text 1st option: </Option>
 				<Option>Testing text 2nd option: </Option>
@@ -72,6 +81,12 @@
 			<Question Type = "Picture" Descriptor="Test Picture">
 				<Option>BainesLogoSmall.png</Option>
 			</Question>
+        </QuestionSet>
+        <QuestionSet>
+            <Question Type="CheckBox">
+                <Option>Learning Tool</Option>
+                <Option>Observer Study</Option>
+            </Question>
         </QuestionSet>
     </Page>
 	<Page ID="Patient 1">

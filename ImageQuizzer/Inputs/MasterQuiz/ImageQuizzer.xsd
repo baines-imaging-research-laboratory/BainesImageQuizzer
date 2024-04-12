@@ -40,6 +40,7 @@
 		<xs:attribute name="GoToBookmark" type="listTypeStrings"/>
 		<xs:attribute name="BookmarkID" type="xs:string"/>
 		<xs:attribute name="ContourToolRadius" type="xs:float" />
+		<xs:attribute name="ButtonScriptRerunRequired" type="yesnoType" default="N"/>
 	</xs:complexType>
 </xs:element>
 

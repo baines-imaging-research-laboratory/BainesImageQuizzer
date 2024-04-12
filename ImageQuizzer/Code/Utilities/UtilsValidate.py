@@ -244,8 +244,8 @@ class UtilsValidate:
                 sMsg = sMsg + sValidationMsg
                 
                 # >>>>>>>>>>>>>>>
-                # validate scripts exists for button type questions
-                sValidationMsg = self.ValidateButtonTypeScripts(xPage, str(iPageNum))
+                # validate button type question scripts and dependencies
+                sValidationMsg = self.ValidateButtonTypeQuestions(xPage, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
 
                 # validate file exists for picture type questions
@@ -1144,13 +1144,22 @@ class UtilsValidate:
         return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateButtonTypeScripts(self, xPage, sPageReference):
+    def ValidateButtonTypeQuestions(self, xPage, sPageReference):
         ''' Check that each script defined in the options of a Button type of question
             exists in the Inputs/Scripts directory.
+            Also check for allow multiple responses if a script rerun on a page is required.
         '''
         
         sMsg = ''
         
+        #check dependency for required script reruns
+        sAllowMultipleResponse = self.oIOXml.GetValueOfNodeAttribute(xPage,'AllowMultipleResponse')
+        sButtonScriptRerunRequired = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ButtonScriptRerunRequired')
+        if sButtonScriptRerunRequired == 'Y' and sAllowMultipleResponse != 'Y':
+            sMsg = sMsg + "\nIf you have 'sButtonScriptRerunRequired' set to 'Y' on a page, you must also set 'AllowMultipleResponse' to 'Y'."\
+                        + '\nSee Page: ' + str(sPageReference)
+        
+        # check that scripts exist
         lxQuestionSetElements = self.oIOXml.GetChildren(xPage, 'QuestionSet')
         for xQuestionSet in lxQuestionSetElements:
             

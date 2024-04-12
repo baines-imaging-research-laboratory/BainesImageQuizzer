@@ -69,12 +69,12 @@ class Session:
         self._fContourToolRadius = 0
         self._dictTabIndices = {'Quiz':0, 'ExtraTools':-1, 'SegmentEditor':-1}  #defaults
         self._iPreviousTabIndex = 0
+        self._bBtnScriptRerunRequired = False
        
         self.oFilesIO = None
         self.oValidation = None
         self.oIOXml = UtilsIOXml()
         self.oUtilsMsgs = UtilsMsgs()
-        self.oPageState = PageState()
         self.oUtilsEmail = UtilsEmail()
         self.oUserInteraction = None
 
@@ -349,7 +349,8 @@ class Session:
             XML specifics for the input page index are used for initializing.
         '''
         xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
-        self.oPageState.InitializeStates(self, xPageNode)
+        self.oPageState.InitializeStates( xPageNode)
+        self.SetButtonScriptRerunRequired(xPageNode)
     
     #----------
     def AddExtraToolsTab(self):
@@ -728,6 +729,19 @@ class Session:
         return self._fContourToolRadius
     
     #----------
+    def SetButtonScriptRerunRequired(self, xPageNode):
+
+        sBtnScriptRequired = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ButtonScriptRerunRequired')
+        if sBtnScriptRequired == 'Y' or sBtnScriptRequired == 'y':
+            self._bBtnScriptRerunRequired = True
+        else:
+            self._bBtnScriptRerunRequired = False
+                
+    #----------
+    def GetButtonScriptRerunRequired(self):
+        return self._bBtnScriptRerunRequired
+    
+    #----------
     def SetRandomizeRequired(self, sYN=None):
         # set randomize required to input value (from unit tests) or from the stored xml attribute
         if sYN == None:
@@ -794,14 +808,16 @@ class Session:
         self._btnNext.toolTip = "Save responses and display next set of questions."
         self._btnNext.enabled = True
         self._btnNext.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
-        self._btnNext.connect('clicked(bool)',self.onNextButtonClicked)
+#         self._btnNext.connect('clicked(bool)',self.onNextButtonClicked)
+        self._btnNext.clicked.connect(self.onNextButtonClicked)
         
         # Back button
         self._btnPrevious = qt.QPushButton("Previous")
         self._btnPrevious.toolTip = "Display previous set of questions."
         self._btnPrevious.enabled = True
         self._btnPrevious.setStyleSheet("QPushButton{ background-color: rgb(255,149,0); color: black }")
-        self._btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
+#         self._btnPrevious.connect('clicked(bool)',self.onPreviousButtonClicked)
+        self._btnPrevious.clicked.connect(self.onPreviousButtonClicked)
 
 
         # Exit button
@@ -810,7 +826,8 @@ class Session:
         self._btnExit.enabled = True
         self._btnExit.setStyleSheet("QPushButton{ background-color: rgb(255,0,0); color: black; font-weight: bold }")
         # use lambda to pass argument to this PyQt slot without invoking the function on setup
-        self._btnExit.connect('clicked(bool)',lambda: self.onExitButtonClicked('ExitBtn'))
+#         self._btnExit.connect('clicked(bool)',lambda: self.onExitButtonClicked('ExitBtn'))
+        self._btnExit.clicked.connect(lambda: self.onExitButtonClicked('ExitBtn'))
 
         # Repeat button
         self._btnRepeat = qt.QPushButton("Repeat")
@@ -818,7 +835,8 @@ class Session:
         self._btnRepeat.enabled = False
         self._btnRepeat.visible = False
         self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
-        self._btnRepeat.connect('clicked(bool)', self.onRepeatButtonClicked)
+#         self._btnRepeat.connect('clicked(bool)', self.onRepeatButtonClicked)
+        self._btnRepeat.clicked.connect(self.onRepeatButtonClicked)
 
 
         # Bookmark button
@@ -827,7 +845,8 @@ class Session:
         self._btnGoToBookmark.enabled = True
         self._btnGoToBookmark.visible = True
         self._btnGoToBookmark.setStyleSheet("QPushButton{ background-color: rgb(136, 82, 191); color: white; font-weight: bold}")
-        self._btnGoToBookmark.connect('clicked(bool)', self.onGoToBookmarkButtonClicked)
+#         self._btnGoToBookmark.connect('clicked(bool)', self.onGoToBookmarkButtonClicked)
+        self._btnGoToBookmark.clicked.connect(self.onGoToBookmarkButtonClicked)
         
 
         self.qButtonGrpBoxLayout.addWidget(self._btnExit)
@@ -868,7 +887,8 @@ class Session:
         self.btnWindowLevel.enabled = True
         self.btnWindowLevel.setCheckable(True)
         self.btnWindowLevel.setStyleSheet("QPushButton{ background-color: rgb(173,220,237); color: black }")
-        self.btnWindowLevel.connect('clicked(bool)',self.onWindowLevelClicked)
+#         self.btnWindowLevel.connect('clicked(bool)',self.onWindowLevelClicked)
+        self.btnWindowLevel.clicked.connect(self.onWindowLevelClicked)
         self.qDisplayMgrGrpBoxLayout.addWidget(self.btnWindowLevel,0,1)
 
         btnHidden = qt.QPushButton('')
@@ -884,7 +904,8 @@ class Session:
         self.btnCrosshairs.enabled = True
         self.btnCrosshairs.setCheckable(True)
         self.btnCrosshairs.setStyleSheet("QPushButton{ background-color: rgb(173,220,237); color: black }")
-        self.btnCrosshairs.connect('clicked(bool)',self.onCrosshairsClicked)
+#         self.btnCrosshairs.connect('clicked(bool)',self.onCrosshairsClicked)
+        self.btnCrosshairs.clicked.connect(self.onCrosshairsClicked)
         self.qDisplayMgrGrpBoxLayout.addWidget(self.btnCrosshairs,0,3)
 
 
@@ -925,14 +946,16 @@ class Session:
         self.btnNPlanesView = qt.QPushButton('Display view')
         self.btnNPlanesView.enabled = True
         self.btnNPlanesView.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
-        self.btnNPlanesView.connect('clicked(bool)', self.onNPlanesViewClicked)
+#         self.btnNPlanesView.connect('clicked(bool)', self.onNPlanesViewClicked)
+        self.btnNPlanesView.clicked.connect(self.onNPlanesViewClicked)
         self.qDisplayOptionsGrpBoxLayout.addWidget(self.btnNPlanesView,0,2)
 
         
         self.btnResetView = qt.QPushButton('Reset to default')
         self.btnResetView.enabled = True
         self.btnResetView.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
-        self.btnResetView.connect('clicked(bool)', lambda: self.onResetViewClicked('NPlanes'))
+#         self.btnResetView.connect('clicked(bool)', lambda: self.onResetViewClicked('NPlanes'))
+        self.btnResetView.clicked.connect(lambda: self.onResetViewClicked('NPlanes'))
         self.qDisplayOptionsGrpBoxLayout.addWidget(self.btnResetView,1,2)
 
         self.tabExtraToolsLayout.addWidget(self.qDisplayOptionsGrpBox)
@@ -964,13 +987,15 @@ class Session:
         self.btnClearLines.toolTip = "Remove all markup lines."
         self.btnClearLines.enabled = True
         self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
-        self.btnClearLines.connect('clicked(bool)',self.onClearLinesButtonClicked)
+#         self.btnClearLines.connect('clicked(bool)',self.onClearLinesButtonClicked)
+        self.btnClearLines.clicked.connect(self.onClearLinesButtonClicked)
         self.qLineToolsGrpBoxLayout.addWidget(self.btnClearLines,0,1)
 
         self.btnAddMarkupsLine = qt.QPushButton("Add new line")
         self.btnAddMarkupsLine.enabled = True
         self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
-        self.btnAddMarkupsLine.connect('clicked(bool)', self.onAddLinesButtonClicked)
+#         self.btnAddMarkupsLine.connect('clicked(bool)', self.onAddLinesButtonClicked)
+        self.btnAddMarkupsLine.clicked.connect(self.onAddLinesButtonClicked)
         self.qLineToolsGrpBoxLayout.addWidget(self.btnAddMarkupsLine,0,2)
         
         # Markup display view visibility
@@ -1743,6 +1768,7 @@ class Session:
         try:
             self.SetFilesIO(oFilesIO)
             self.SetValidation(oValidation)
+            self.oPageState = PageState(self)
     
             # open xml and check for root node
             bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetUserQuizResultsPath(),'Session')
@@ -2004,7 +2030,7 @@ class Session:
 
             for idx in range(indQSet):
                 xNodeQuestionSet = self.GetNthQuestionSetForCurrentPage(idx)
-                oQuestionSet = QuestionSet(self.oFilesIO)
+                oQuestionSet = QuestionSet(self)
                 oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
                 self._loQuestionSets.append(oQuestionSet)
 
@@ -2014,13 +2040,16 @@ class Session:
         try:
             # extract page and question set indices from the current composite index
             xNodeQuestionSet = self.GetCurrentQuestionSetNode()
-            oQuestionSet = QuestionSet(self.oFilesIO)
+            oQuestionSet = QuestionSet(self)
+            
             oQuestionSet.ExtractQuestionsFromXML(xNodeQuestionSet)
             
     
             # first clear any previous widgets (except push buttons)
             self.oQuizWidgets.ClearLayout(self.oQuizWidgets.qQuizLayout)
     
+#             xPageNode = self.GetCurrentPageNode()
+#             self.SetButtonScriptRerunRequired(xPageNode)    # before displaying saved responses
             
             bBuildSuccess, qWidgetQuestionSetForm = oQuestionSet.BuildQuestionSetForm()
             
@@ -2295,7 +2324,8 @@ class Session:
         ''' Function that first updates the completion lists based on the requirements for the
             page. When moving to the next page (not a previous or a bookmarked page or an exit), 
             the function will then update the flags that determine whether it is okay to 
-            progress the quiz.
+            progress with the quiz.
+            
             The QuizComplete attribute is only set to "Y" if the user presses the 'Finish' button
             on the last page. (Pressing the 'Exit' button on this page does not set this flag.)
             
@@ -2704,7 +2734,7 @@ class Session:
                       recorded is 'NoResponses' or 'PartialResponses' (not 'AllResponses')
                     - OR allow if the current Page has not been marked as complete 
                       indicating that there are multiple question sets and Prev or Next was
-                      used to move between them
+                      used to move between them or user has pressed 'Exit'
             '''
             
             # get from xml, the category of saved recorded responses to 
@@ -3001,20 +3031,8 @@ class Session:
                     if sPageComplete != 'Y':    # found first page that was not complete
 #                         iResumeNavigationIndex = indNav
                         self.SetQuizResuming(True)
+
             
-            self.oPageState.UpdateCompletionLists(xPageNode)
-            # adjust resuming index based on completion state of the first incomplete page
-            #    (some question sets, if more than one exists, may have been completed)
-            liCompletedQuestionSets = self.oPageState.GetCompletedQuestionSetsList()
-            
-            for indQSet in range(len(liCompletedQuestionSets)):
-                # only advance if there are more question sets
-                #    if the last question set has been reached and it is complete then 'PageComplete'
-                #    was not set because the segmentation requirements were not met
-                if indQSet < len(liCompletedQuestionSets) -1:
-                    if liCompletedQuestionSets[indQSet] == 1:
-                        iResumeNavigationIndex = iResumeNavigationIndex + 1
-                
             # Display a message to user if resuming (special case if resuming on first page)
             # if not iResumeNavigationIndex == self.GetCurrentNavigationIndex():
             if (not iResumeNavigationIndex == self.GetCurrentNavigationIndex()) or\

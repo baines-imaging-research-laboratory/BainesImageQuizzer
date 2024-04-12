@@ -1,24 +1,24 @@
 <Session >
-    <Page ID="Patient 2" Descriptor="CT" UserInteractionLog="Y" Layout="TwoOverTwo" Loop="Y" EnableSegmentEditor="Y" BookmarkID='123'>
-        <Image ID="CT" Type="Volume"  ZoomFactor="1.2" PanOrigin="-92 27.5 -225.5" InitialSliceOffset="-245" SegmentRequired="Y">
+    <Page ID="Patient 2" Descriptor="CT" UserInteractionLog="N" Layout="TwoOverTwo" Loop="Y" EnableSegmentEditor="Y" BookmarkID='123' AllowMultipleResponse="Y" ButtonScriptRerunRequired="Y">
+        <Image ID="CT" Type="Volume"  ZoomFactor="1.2" PanOrigin="-92 27.5 -225.5" InitialSliceOffset="-245" SegmentRequired="N">
                 <DefaultDestination>Red</DefaultDestination>
                 <Layer>Background</Layer>
                 <DefaultOrientation>Axial</DefaultOrientation>
                 <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
         </Image>
-        <Image ID="CT" Type="Volume" ZoomFactor="1.5" PanOrigin="-43.96383459076361 63.246218183203815 0.0" InitialSliceOffset="-112" SegmentRequired="Y">
+        <Image ID="CT" Type="Volume" ZoomFactor="1.5" PanOrigin="-43.96383459076361 63.246218183203815 0.0" InitialSliceOffset="-112" SegmentRequired="N">
                 <DefaultDestination>Green</DefaultDestination>
                 <Layer>Background</Layer>
                 <DefaultOrientation>Coronal</DefaultOrientation>
                 <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
         </Image>
-        <Image ID="CT2" Type="Volume" ZoomFactor=".75">
+        <Image ID="CT3" Type="Volume" ZoomFactor=".75">
                 <DefaultDestination>Yellow</DefaultDestination>
                 <Layer>Background</Layer>
                 <DefaultOrientation>Axial</DefaultOrientation>
                 <Path>ImageVolumes\MRHead\MRHead.nrrd</Path>
         </Image>
-        <Image ID="CT2" Type="Volume" ZoomFactor=".75" PanOrigin="118 39 0" InitialSliceOffset="91">
+        <Image ID="CT3" Type="Volume" ZoomFactor=".75" PanOrigin="118 39 0" InitialSliceOffset="91">
                 <DefaultDestination>Slice4</DefaultDestination>
                 <Layer>Background</Layer>
                 <DefaultOrientation>Coronal</DefaultOrientation>
@@ -31,6 +31,10 @@
             <Question Type="Radio" Descriptor="Testing locked layout">
                 <Option>Layout locked</Option>
 				<Option>Layout not locked</Option>
+            </Question>
+            <Question Type="Button" Descriptor="Run external scripts">
+                <Option>script1.py</Option>
+				<Option>script2.py</Option>
             </Question>
         </QuestionSet>
     </Page>
