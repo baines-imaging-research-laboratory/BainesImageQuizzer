@@ -350,8 +350,8 @@ class Session:
         '''
         xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
         self.oPageState.InitializeStates( xPageNode)
-        self.SetButtonScriptRerunRequired(xPageNode)
-    
+        self.SetButtonScriptRerunRequired(iPageIndex)
+        
     #----------
     def AddExtraToolsTab(self):
 
@@ -729,11 +729,13 @@ class Session:
         return self._fContourToolRadius
     
     #----------
-    def SetButtonScriptRerunRequired(self, xPageNode):
+    def SetButtonScriptRerunRequired(self, iPageIndex):
 
+        xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iPageIndex)
         sBtnScriptRequired = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ButtonScriptRerunRequired')
         if sBtnScriptRequired == 'Y' or sBtnScriptRequired == 'y':
             self._bBtnScriptRerunRequired = True
+
         else:
             self._bBtnScriptRerunRequired = False
                 
@@ -1072,6 +1074,16 @@ class Session:
                 if self.CheckForLastQuestionSetForPage() == True:
                     self._btnRepeat.enabled = True
                     self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
+                    
+                    # check if button script rerun is required
+                    if self.GetButtonScriptRerunRequired():
+                        if self.CheckIfLastRepAndNextPageIncomplete() == True:
+                            self._btnRepeat.enabled = True
+                            self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black}")
+                        else: # force user to step through subsequent reps
+                            self._btnRepeat.enabled = False
+                            self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white}")
+                            
                 else:
                     self._btnRepeat.enabled = False
                     self._btnRepeat.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white}")
@@ -1151,19 +1163,19 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onNextButtonClicked(self):
 
-        if self._btnRepeat.enabled == True:
-            if self._btnNext.text == 'Finish':
-                sNextPhrase = 'Finish'
-            else:
-                sNextPhrase = 'move to Next set'
-            sMsg = "You have the option to repeat this set of images and questions." +\
-                    "\nClick 'OK' to " + sNextPhrase + " otherwise click 'Cancel'."
-
-            qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
-            if qtAns == qt.QMessageBox.Cancel:
-                return
-        
         try:        
+            if self._btnRepeat.enabled == True:
+                if self._btnNext.text == 'Finish':
+                    sNextPhrase = 'Finish'
+                else:
+                    sNextPhrase = 'move to Next set'
+                sMsg = "You have the option to repeat this set of images and questions." +\
+                        "\nClick 'OK' to " + sNextPhrase + " otherwise click 'Cancel'."
+                
+                qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
+                if qtAns == qt.QMessageBox.Cancel:
+                    return
+
             sMsg = ''
             sCompletedMsg = ''
             sSaveMsg = ''
@@ -1215,6 +1227,8 @@ class Session:
                         
                         if bChangeXmlPageIndex:
                             self.SetupPageState(self.GetCurrentPageIndex())
+                            if self.GetButtonScriptRerunRequired():
+                                self.SetPageIncomplete(self.GetCurrentPageNode())
                             
                         self.InitializeTabSettings()
                         self.DisplayQuizLayout()
@@ -1335,11 +1349,11 @@ class Session:
             This is generally used for multiple lesions.
         '''
         
-        qtAns = self.oUtilsMsgs.DisplayOkCancel(\
-                            "Are you sure you want to repeat this set of images and questions?" +\
-                            "\nIf No, click 'Cancel' and press 'Next' to continue.")
-        if qtAns == qt.QMessageBox.Ok:
-            try:        
+        try:        
+            qtAns = self.oUtilsMsgs.DisplayOkCancel(\
+                                "Are you sure you want to repeat this set of images and questions?" +\
+                                "\nIf No, click 'Cancel' and press 'Next' to continue.")
+            if qtAns == qt.QMessageBox.Ok:
                 sMsg = ''
                 sCompletedMsg = ''
                 sSaveMsg = ''
@@ -1370,6 +1384,9 @@ class Session:
                         self.progress.setValue(self.GetCurrentNavigationIndex())
                         
                         self.SetupPageState(self.GetCurrentPageIndex())
+                        if self.GetButtonScriptRerunRequired():
+                            self.SetPageIncomplete(self.GetCurrentPageNode())
+
                         self.InitializeTabSettings()
                         self.DisplayQuizLayout()
                         self.DisplayImageLayout()
@@ -1380,12 +1397,12 @@ class Session:
                 self.SetInteractionLogOnOff('On', sInteractionMsg)
                 self.EnableButtons()
                 
-            except:
-                iPage = self.GetCurrentPageIndex() + 1
-                tb = traceback.format_exc()
-                sMsg = "onRepeatButtonClicked: Error repeating this page. Current page: " + str(iPage) \
-                       + "\n\n" + tb 
-                self.oUtilsMsgs.DisplayError(sMsg)
+        except:
+            iPage = self.GetCurrentPageIndex() + 1
+            tb = traceback.format_exc()
+            sMsg = "onRepeatButtonClicked: Error repeating this page. Current page: " + str(iPage) \
+                   + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def FindNewRepeatedPosition(self, iSearchPageNum, iSearchRepNum):
@@ -1741,6 +1758,8 @@ class Session:
                 if bChangeXmlPageIndex:
                     slicer.mrmlScene.Clear()
                     self.SetupPageState(self.GetCurrentPageIndex())
+                    if self.GetButtonScriptRerunRequired():
+                        self.SetPageIncomplete(self.GetCurrentPageNode())
         
                 self.InitializeTabSettings()
                 self.DisplayQuizLayout()
@@ -2009,6 +2028,66 @@ class Session:
         return bLastQuestionSet
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def CheckIfLastRepAndNextPageIncomplete(self):
+        ''' Two parts : confirm if this page is at the end of a loop and see if the next page is incomplete.
+                1) Look at PageID for this and next Page to see if it is part of the same loop.
+            
+                2)Identify if any subsequent pages have a PageComplete="Y".
+
+            Note: All repeated looping pages follow each other in the XML with consecutive Rep numbers.
+
+            This can happen if a 'Previous' or 'GoToBookmark' button was pressed putting the user
+            possibly in a page with looping. In this case, the Repeat button needs to be disabled
+            until the last rep has been reached - with no subsequent completed pages.
+            
+        '''
+        bEndOfLoopAndNextPageIncomplete = False
+        
+        bLastLoopingRep = False
+        sNextPageID = ''
+         
+        bLastPageComplete = True
+        sNextPageComplete = ''
+        
+        xPageNode = self.GetCurrentPageNode()
+        sCurrentPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
+ 
+         
+        sRepNum = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "Rep")
+        iRepNum = int(sRepNum)
+        iNextRepNum = iRepNum + 1
+         
+        iSubIndex = sCurrentPageID.find('-Rep')
+        if iSubIndex >=0:
+            sStrippedPageID = sCurrentPageID[0:iSubIndex]
+        else:
+            sStrippedPageID = sCurrentPageID
+         
+        sIDForNextRep = sStrippedPageID + '-Rep' + str(iNextRepNum)
+ 
+        # for next page            
+        iNextNavigationIndex = self.GetCurrentNavigationIndex() + 1
+        if iNextNavigationIndex < len(self.GetNavigationList()):
+            xNextPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', self.GetNavigationPage(iNextNavigationIndex))
+            sNextPageID = self.oIOXml.GetValueOfNodeAttribute(xNextPageNode, 'ID')
+            sNextPageComplete = self.oIOXml.GetValueOfNodeAttribute(xNextPageNode, 'PageComplete')
+         
+          
+        if sNextPageID == sIDForNextRep:
+            bLastLoopingRep = False
+        else:
+            bLastLoopingRep = True
+     
+         
+        if sNextPageComplete == 'Y':
+            bLastPageComplete = False
+        
+        if bLastLoopingRep and bLastPageComplete:
+            bEndOfLoopAndNextPageIncomplete = True
+        
+        return bEndOfLoopAndNextPageIncomplete
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AdjustToCurrentQuestionSet(self):
         '''
             if there are multiple question sets for a page, the list of question sets must
@@ -2048,9 +2127,7 @@ class Session:
             # first clear any previous widgets (except push buttons)
             self.oQuizWidgets.ClearLayout(self.oQuizWidgets.qQuizLayout)
     
-#             xPageNode = self.GetCurrentPageNode()
-#             self.SetButtonScriptRerunRequired(xPageNode)    # before displaying saved responses
-            
+
             bBuildSuccess, qWidgetQuestionSetForm = oQuestionSet.BuildQuestionSetForm()
             
             if bBuildSuccess:
@@ -3135,6 +3212,14 @@ class Session:
         xmlCurrentPageElement.set('PageComplete','Y')
         self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def SetPageIncomplete(self, xPageNode):
+        ''' if requirements were not met, reset the PageComplete attribute to 'N'
+        '''
+        self.oIOXml.UpdateAttributesInElement(xPageNode, {"PageComplete":"N"})
+        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+        
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddUserNameAttribute(self):
         ''' add attribute to Session to record the user's name

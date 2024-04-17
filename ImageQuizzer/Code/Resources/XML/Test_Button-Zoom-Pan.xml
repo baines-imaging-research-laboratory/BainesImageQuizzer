@@ -1,6 +1,6 @@
-<Session>
-	<Page ID="Patient 1" Descriptor="Where is this" AllowMultipleResponse="Y" ButtonScriptRerunRequired = "Y">
-        <Image ID="CT" Type="Volume">
+<Session RandomizePageGroups="N">
+	<Page ID="Patient 1" Descriptor="Where is this" AllowMultipleResponse="Y" ButtonScriptRerunRequired = "Y" PageGroup='1' BookmarkID="123" Loop="Y" EnableSegmentEditor="Y">
+        <Image ID="CT" Type="Volume" SegmentRequired="Y">
                 <DefaultDestination>Red</DefaultDestination>
                 <Layer>Background</Layer>
                 <DefaultOrientation>Axial</DefaultOrientation>
@@ -13,7 +13,7 @@
             </Question>
         </QuestionSet>
     </Page>
-    <Page ID="Patient 1" EnableSegmentEditor="Y" AllowMultipleResponse="Y" ButtonScriptRerunRequired = "N">
+    <Page ID="Patient 1" EnableSegmentEditor="Y" AllowMultipleResponse="N" ButtonScriptRerunRequired = "N" PageGroup='2'>
         <Image ID="CT" Type="Volume"  ZoomFactor="1.2" PanOrigin="-92 27.5 -225.5" InitialSliceOffset="-245">
                 <DefaultDestination>Red</DefaultDestination>
                 <Layer>Background</Layer>
@@ -34,8 +34,7 @@
         </Image>
         <QuestionSet>
             <Question Type="InfoBox">
-                <Option>Learning Tool</Option>
-                <Option>Observer Study</Option>
+                <Option>3 question sets</Option>
             </Question>
         </QuestionSet>
         <QuestionSet ID="Processing script" Descriptor="Python executable">
@@ -54,7 +53,7 @@
                 <Option>Radio1</Option>
 				<Option>Radio2</Option>
             </Question>
-			<Question Type="IntegerValue" Descriptor=" Test Int2" Min="3" Max="7">
+<!--			<Question Type="IntegerValue" Descriptor=" Test Int2" Min="3" Max="7">
 				<Option>Testing integer 2: </Option>
 			</Question>
 			<Question Type="Text" Descriptor=" Test Text1">
@@ -80,7 +79,7 @@
 			</Question>
 			<Question Type = "Picture" Descriptor="Test Picture">
 				<Option>BainesLogoSmall.png</Option>
-			</Question>
+			</Question> -->
         </QuestionSet>
         <QuestionSet>
             <Question Type="CheckBox">
@@ -89,7 +88,7 @@
             </Question>
         </QuestionSet>
     </Page>
-	<Page ID="Patient 1">
+	<Page ID="Patient 1" PageGroup='3'>
         <Image ID="CT" Type="Volume">
                 <DefaultDestination>Red</DefaultDestination>
                 <Layer>Background</Layer>
@@ -98,9 +97,24 @@
         </Image>
         <QuestionSet>
             <Question Type="CheckBox">
-                <Option>Learning Tool</Option>
-                <Option>Observer Study</Option>
+                <Option>Opt 1</Option>
+                <Option>Opt 2</Option>
             </Question>
         </QuestionSet>
     </Page>
+	<Page ID="Patient 1" PageGroup='1' GoToBookmark="123">
+        <Image ID="CT" Type="Volume">
+                <DefaultDestination>Red</DefaultDestination>
+                <Layer>Background</Layer>
+                <DefaultOrientation>Axial</DefaultOrientation>
+                <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
+        </Image>
+        <QuestionSet>
+            <Question Type="Radio">
+                <Option>A</Option>
+                <Option>B</Option>
+            </Question>
+        </QuestionSet>
+    </Page>
+	<RandomizedPageGroupIndices>2,1,3</RandomizedPageGroupIndices>
 </Session>

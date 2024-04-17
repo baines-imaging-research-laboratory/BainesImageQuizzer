@@ -141,7 +141,8 @@ class QuestionSet():
         elif (sQuestionType == 'Button'):
             oQuestion = Button()
             bButtonScriptRerunRequired = self.oSession.GetButtonScriptRerunRequired()
-            dictModifiers = {"ButtonScriptRerunRequired":bButtonScriptRerunRequired}
+            bQuizComplete = self.oSession.GetQuizComplete()
+            dictModifiers = {"ButtonScriptRerunRequired":bButtonScriptRerunRequired, "QuizComplete":bQuizComplete}
             oQuestion.UpdateDictionaryModifiers(dictModifiers)
             
         elif (sQuestionType == 'Picture'):
@@ -1378,8 +1379,9 @@ class Button(Question):
     
     def PopulateQuestionWithResponses(self, lsValues):
 
-        self.bButtonScriptRerunRequired = self.dictModifiers.get('ButtonScriptRerunRequired')
-        if self.bButtonScriptRerunRequired:
+        bButtonScriptRerunRequired = self.dictModifiers.get('ButtonScriptRerunRequired')
+        bQuizComplete = self.dictModifiers.get('QuizComplete')
+        if bButtonScriptRerunRequired and not bQuizComplete:
             #clear responses forcing a script rerun
             for idx in range(len(lsValues)):
                 lsValues[idx] = ''
