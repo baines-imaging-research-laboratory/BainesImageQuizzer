@@ -156,17 +156,15 @@ class UtilsValidate:
             
             iPageNum = 0
             for xPage in lxPageElements:
-                self.lPathAndNodeNames= []
                 iPageNum= iPageNum + 1
 
                 sValidationMsg = self.ValidateRequiredAttribute(xPage, 'ID', str(iPageNum))
                 sMsg = sMsg + sValidationMsg
                 
                 sPageID = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ID')
-                sPageReference = str(iPageNum) # initialize
                 
                 # for any page, make sure there is matching Images Volume to Segmentation or Volume to LabelMap for each destination
-                sValidationMsg = self.ValidateImageToSegmentationMatch(xPage, sPageReference)
+                sValidationMsg = self.ValidateImageToSegmentationMatch(xPage, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
 
                 sValidationMsg = self.ValidateNoSpecialCharacters(xPage, str(iPageNum))
@@ -221,11 +219,6 @@ class UtilsValidate:
                     sMsg = sMsg + sValidationMsg
 
 
-                    # >>>>>>>>>>>>>>>
-                    # Test associations between path and PageID_ImageID
-                    sValidationMsg = self.ValidatePathWithNodeNameID(xImage, iPageNum, sNodeNameID )
-                    sMsg = sMsg + sValidationMsg
-
                             
                     # >>>>>>>>>>>>>>>
                     # Validate ROI elements if the image is RTStruct or Segmentation
@@ -242,23 +235,34 @@ class UtilsValidate:
                             
                 # >>>>>>>>>>>>>>>
                 # validate attributes 'SegmentRequired' and 'MinMarkupLinesRequiredOnAnyImage'
-                sValidationMsg = self.ValidateMarkupLinesRequiredSettings(xPage, sPageReference)
+                sValidationMsg = self.ValidateMarkupLinesRequiredSettings(xPage, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
                             
                 # >>>>>>>>>>>>>>>
                 # Slice4 assignments and TwoOverTwo layout
-                sValidationMsg = self.ValidateSlice4Layout(xPage, sPageReference)
+                sValidationMsg = self.ValidateSlice4Layout(xPage, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
                 
                 # >>>>>>>>>>>>>>>
-                # validate scripts exists for button type questions
-                sValidationMsg = self.ValidateButtonTypeScripts(xPage, sPageReference)
+                # validate button type question scripts and dependencies
+                sValidationMsg = self.ValidateButtonTypeQuestions(xPage, str(iPageNum))
+                sMsg = sMsg + sValidationMsg
+
+                # validate file exists for picture type questions
+                sValidationMsg = self.ValidatePictureTypeQuestion(xPage, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
 
                 # >>>>>>>>>>>>>>>
-                sValidationMsg = self.ValidateImageOnRed( xPage, sPageID, iPageNum)
+                sValidationMsg = self.ValidateImageOnRed( xPage, sPageID, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
 
+                # >>>>>>>>>>>>>>>
+                # Test associations between path and PageID_ImageID (node name)
+                sValidationMsg = self.ValidatePathWithNodeNameID(xPage, sPageID, str(iPageNum) )
+                sMsg = sMsg + sValidationMsg
+
+                sValidationMsg = self.ValidateEstimatedPathLengths(xPage, str(iPageNum))
+                sMsg = sMsg + sValidationMsg
 
                   
             # >>>>>>>>>>>>>>>
@@ -1140,13 +1144,22 @@ class UtilsValidate:
         return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateButtonTypeScripts(self, xPage, sPageReference):
+    def ValidateButtonTypeQuestions(self, xPage, sPageReference):
         ''' Check that each script defined in the options of a Button type of question
             exists in the Inputs/Scripts directory.
+            Also check for allow multiple responses if a script rerun on a page is required.
         '''
         
         sMsg = ''
         
+        #check dependency for required script reruns
+        sAllowMultipleResponse = self.oIOXml.GetValueOfNodeAttribute(xPage,'AllowMultipleResponse')
+        sButtonScriptRerunRequired = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ButtonScriptRerunRequired')
+        if sButtonScriptRerunRequired == 'Y' and sAllowMultipleResponse != 'Y':
+            sMsg = sMsg + "\nIf you have 'sButtonScriptRerunRequired' set to 'Y' on a page, you must also set 'AllowMultipleResponse' to 'Y'."\
+                        + '\nSee Page: ' + str(sPageReference)
+        
+        # check that scripts exist
         lxQuestionSetElements = self.oIOXml.GetChildren(xPage, 'QuestionSet')
         for xQuestionSet in lxQuestionSetElements:
             
@@ -1174,7 +1187,51 @@ class UtilsValidate:
         return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateImageOnRed(self, xPage, sPageID, iPageNum):
+    def ValidatePictureTypeQuestion(self, xPage, sPageReference):
+        ''' Check that each picture requested to be displayed in a 'Picture' type of question exists and is
+            of an acceptable format.
+            Picture file must be in the Master Quiz directory.
+        '''
+        sMsg = ''
+        
+        lxQuestionSetElements = self.oIOXml.GetChildren(xPage, 'QuestionSet')
+        for xQuestionSet in lxQuestionSetElements:
+            
+            lxQuestionElements = self.oIOXml.GetChildren(xQuestionSet, 'Question')
+            for xQuestion in lxQuestionElements:
+                
+                sQuestionType = self.oIOXml.GetValueOfNodeAttribute(xQuestion, 'Type')
+                if sQuestionType == 'Picture':
+                    
+                    lxOptionElements = self.oIOXml.GetChildren(xQuestion, 'Option')
+                         
+                    for xOption in lxOptionElements:
+                        
+                        sPictureName = self.oIOXml.GetDataInNode(xOption)
+                        sPictureFullPath = os.path.join(self.oFilesIO.GetXmlQuizDir(),sPictureName)
+        
+                        if os.path.exists(sPictureFullPath) == False:
+                            sMsg = sMsg + '\nYou have a Picture type of question but the requested picture does not exist.' \
+                                    + '\nSee Page: ' + str(sPageReference)\
+                                    + ' for Picture: ' + sPictureName\
+                                    + ' in path: ' + sPictureFullPath
+                                    
+                        root, ext = os.path.splitext(sPictureFullPath)
+                        sExt = ext.replace('.','')
+                        if sExt not in qt.QImageReader.supportedImageFormats():
+                            sMsg = sMsg + '\nYou have a Picture type of question but the picture format is not supported.' \
+                                    + '\nSee Page: ' + str(sPageReference)\
+                                    + ' for Picture: ' + sPictureName\
+                                    + ' in path: ' + sPictureFullPath\
+                                    + '\nSome supported formats: bmp, png, jpeg, gif, jpg, pbm, pgm, xbm, spm, svg, ico'
+                            
+        
+
+        
+        return sMsg
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateImageOnRed(self, xPage, sPageID, sPageNum):
         ''' Check that at least one image on the page is set to the Red window
             so that Slicer's segmenting tools are available.
         '''
@@ -1198,7 +1255,7 @@ class UtilsValidate:
         
         if bImageOnRed == False:
             sMsg = sMsg + '\nWhen you have Images on a Page, one of them must be assigned to the "Red" viewing window in "DefaultDestination".' \
-                    + '\nSee Page: ' + str(iPageNum) + ' ' + sPageID
+                    + '\nSee Page: ' + sPageNum + ' ' + sPageID
                     
         return sMsg
         
@@ -1232,41 +1289,139 @@ class UtilsValidate:
         return sMsg
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidatePathWithNodeNameID(self, xImage, iPageNum, sNodeNameID ):
+    def ValidatePathWithNodeNameID(self, xPage, sPageID, sPageNum ):
         ''' For any page, test that a path always has only one associated PageID_ImageID (aka node name)
           (Otherwise, the Image Quizzer will reload the same image with a different node name - causing clashes.)
         '''
 
         sMsg = ''
         
-        lxImagePath = self.oIOXml.GetChildren(xImage, 'Path')
-        if len(lxImagePath) == 1:
-            sImagePath = self.oIOXml.GetDataInNode(lxImagePath[0])
-             
-            # create tuple of path, sNodeName
-            tupPathAndID = (sImagePath, sNodeNameID)
-             
-            # search list of path/nodeNames for existing match
-            bFoundMatchingPath = False
-            ind = 0
-            for lElement in self.lPathAndNodeNames:
-                ind = ind + 1
-                msg = (str(ind) + ':' )
-                if bFoundMatchingPath == False:
-                    # check if path exists in the list elements
-                    if sImagePath in lElement:
-                        bFoundMatchingPath = True
-                        # check that sNodeName exists in that list element
-                        if sNodeNameID not in lElement:
-                            sMsg = sMsg + "\nIn any Page Element, the 'PageID_ImageID' attributes when combined with an Image Path, must be distinct." +\
-                                    "\nEither there are different paths sharing the same 'PageID_ImageID' on this Page" +\
-                                    "\nOR there are identical image paths with different combined 'PageID_ImageID' attributes" +\
-                                    "\n   .....Check all paths for Page: " + str(iPageNum) + ' '+ sNodeNameID + '\n'
-                         
-            if not bFoundMatchingPath:
-                # new path found; add to list
-                self.lPathAndNodeNames.append(tupPathAndID)
+        sNotUniqueMsg = "\nIn any Page Element, the 'PageID_ImageID' attributes when combined with an Image Path, must be distinct." +\
+                            "\nEither there are different paths sharing the same 'PageID_ImageID' on this Page" +\
+                            "\nOR there are identical image paths with different combined 'PageID_ImageID' attributes" +\
+                            "\n   .....Check all paths for Page: "
 
+        lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
+        lPathAndNodeNames= []
+        
+        for xImage in lxImageElements:
+            
+            # Page ID + Image ID creates the node name for the image that is loaded (in ImageView>ViewNodeBase)
+            sImageID = self.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
+            sNodeNameID = sPageID + '_' + sImageID
+
+            lxImagePath = self.oIOXml.GetChildren(xImage, 'Path')
+            if len(lxImagePath) == 1:
+                sImagePath = self.oIOXml.GetDataInNode(lxImagePath[0])
+                 
+                # create tuple of path, sNodeName
+                tupPathAndID = (sImagePath, sNodeNameID)
+                 
+                # search list of path/nodeNames for existing match
+                bFoundMatchingPath = False
+                for lElement in lPathAndNodeNames:
+                    if bFoundMatchingPath == False:
+                        # check if path exists in the list elements
+                        if sImagePath in lElement:
+                            bFoundMatchingPath = True
+                            
+                            # existing path;  but node name does not match - ERROR
+                            if sNodeNameID not in lElement:
+                                sMsg = sMsg + sNotUniqueMsg + sPageNum + ' '+ sNodeNameID + '\n'
+
+                             
+                if not bFoundMatchingPath:
+                    # new path found; add to list
+                    lPathAndNodeNames.append(tupPathAndID)
+                    
+            
+        # in the list of tuples with unique path names, check that all node names are also unique   
+        lsNodeNames = []     
+        for tupPathAndIDItem in lPathAndNodeNames:
+            sNodeName = tupPathAndIDItem[1]
+            if sNodeName not in lsNodeNames:
+                lsNodeNames.append(sNodeName)
+            else:
+                sMsg = sMsg + sNotUniqueMsg + sPageNum + ' '+ sNodeNameID + '\n'
+                break
+            
         return sMsg
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def ValidateEstimatedPathLengths(self, xPage, sPageNum):
+        ''' Windows has a MAX_PATH limit of 256 characters. Image Quizzer stores the label maps and 
+            markup lines in subfolders and if this maximum is reached, the files will not get written.
+            
+            Slicer also creates a TempWrite directory as it is writing the labelmap file to disk. If the
+            path length approaches the 256 character limit but remains under, this TempWrite folder does
+            not get cleaned up (removed) after the file is written to disk. The TempWrite folder remains empty,
+            but this can be confusing when the admin is doing post-analysis. It can be ignored.
+            
+            Decreasing the file path lengths can be done by reducing the length of the username, patient and 
+            image ids and/or by moving the ImageQuizzer module closer to the root of the drive.
+
+            The threshold for the number of characters allowed before the the file can no longer be written is:
+
+            For LabelMaps:
+                threshold is variable
+                
+                    sWindowsTempFolder = 'TempWrite' + '\PgGroupxx_' + PageID_ImageID\ + '-bainesquizlabel'
+                    iMaxThreshold = 256 - len('nrrd') - len(sWindowsTempFolder)
+            
+                File stored:
+                path userdir + \quizname + '\PgGroupxx_' + Page ID_Descriptor\ + 
+                 'PgGroupxx_' + PageID_ImageID + '-bainesquizlabel.nrrd'
+
+            For MarkupLines
+                threshold = 256
+                
+                File stored:
+                path userdir + \quizname + '\PgGroupxx_' + Page ID_Descriptor\ + 
+                 'PgGroupxx_' + PageID_ImageID + 'MarkupsLine_xxx_bainesquizline.mrk.json'
+
+            In some quizzes, it is impossible to predict whether the user is going to create a 
+            contour or markup line so rather than have the user encounter an error, 
+            this validator sets a maximum to stay in a safe-zone for creating these files.
+            
+        '''
+        
+        sMsg = ''
+
+        sUserDir = self.oFilesIO.GetUserDir()
+        sUserDir = sUserDir.replace('/Code\..','')
+        sQuizFilename = self.oFilesIO.GetQuizFilenameNoExt()
+        sPageID = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ID')
+        sPageGroup = 'PgGroup_' + self.oIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup')
+        sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPage, 'Descriptor')
+        
+        # max allowed leaves room for adding characters for labelmap (+ ~22) or markupline (+ ~39) files
+        # to keep potential files under the 256 Windows limit
+        iMaxAllowed = 215
+
+        lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
+        
+        for xImage in lxImageElements:
+            
+            # Page ID + Image ID creates the node name for the image that is loaded (in ImageView>ViewNodeBase)
+            sImageID = self.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
+            sNodeNameID = sPageID + '_' + sImageID
+            sFolderName = sPageID + '_' + sPageDescriptor
+            sImageFolderName = sPageGroup + sNodeNameID
+            
+            # base path common to both label maps and markup lines
+            sBasePath = os.path.join(sUserDir,sQuizFilename, sFolderName, sImageFolderName)
+            
+            if len(sBasePath) > iMaxAllowed:
+                sMsg = sMsg + '\n\nEstimate for Image Quizzer results paths are too long: ' + str(len(sBasePath)) + ' characters.'\
+                            + ' (Max allowed is ' + str(iMaxAllowed) + ' )\n'\
+                            + ' See Page ' + sPageNum \
+                            + '\Shorten items PageID, Image ID, Page Descriptor and/or move ImageQuizzer module closer to root. '\
+                            + ' (See documentation for more information.)'
+
+                break # only need one msg per page
+        
+        return sMsg
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        

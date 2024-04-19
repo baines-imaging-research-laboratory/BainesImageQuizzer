@@ -1,24 +1,24 @@
 <Session >
-    <Page ID="Patient 2" Descriptor="CT" UserInteractionLog="Y" Layout="TwoOverTwo" Loop="Y">
-        <Image ID="CT" Type="Volume"  ZoomFactor="1.2" PanOrigin="-92 27.5 -225.5" InitialSliceOffset="-245">
+    <Page ID="Patient 2" Descriptor="CT" UserInteractionLog="N" Layout="TwoOverTwo" Loop="Y" EnableSegmentEditor="Y" BookmarkID='123' AllowMultipleResponse="Y" ButtonScriptRerunRequired="Y">
+        <Image ID="CT" Type="Volume"  ZoomFactor="1.2" PanOrigin="-92 27.5 -225.5" InitialSliceOffset="-245" SegmentRequired="N">
                 <DefaultDestination>Red</DefaultDestination>
                 <Layer>Background</Layer>
                 <DefaultOrientation>Axial</DefaultOrientation>
                 <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
         </Image>
-        <Image ID="CT" Type="Volume" ZoomFactor="1.5" PanOrigin="-43.96383459076361 63.246218183203815 0.0" InitialSliceOffset="-112">
+        <Image ID="CT" Type="Volume" ZoomFactor="1.5" PanOrigin="-43.96383459076361 63.246218183203815 0.0" InitialSliceOffset="-112" SegmentRequired="N">
                 <DefaultDestination>Green</DefaultDestination>
                 <Layer>Background</Layer>
                 <DefaultOrientation>Coronal</DefaultOrientation>
                 <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
         </Image>
-        <Image ID="CT" Type="Volume" ZoomFactor=".75">
+        <Image ID="CT3" Type="Volume" ZoomFactor=".75">
                 <DefaultDestination>Yellow</DefaultDestination>
                 <Layer>Background</Layer>
                 <DefaultOrientation>Axial</DefaultOrientation>
                 <Path>ImageVolumes\MRHead\MRHead.nrrd</Path>
         </Image>
-        <Image ID="CT" Type="Volume" ZoomFactor=".75" PanOrigin="118 39 0" InitialSliceOffset="91">
+        <Image ID="CT3" Type="Volume" ZoomFactor=".75" PanOrigin="118 39 0" InitialSliceOffset="91">
                 <DefaultDestination>Slice4</DefaultDestination>
                 <Layer>Background</Layer>
                 <DefaultOrientation>Coronal</DefaultOrientation>
@@ -32,38 +32,13 @@
                 <Option>Layout locked</Option>
 				<Option>Layout not locked</Option>
             </Question>
-        </QuestionSet>
-    </Page>
-    <Page ID="Patient 1" Descriptor="CT" UserInteractionLog="Y" Layout="OneUpRedSlice">
-        <Image ID="CT" Type="Volume"  >
-                <DefaultDestination>Red</DefaultDestination>
-                <Layer>Background</Layer>
-                <DefaultOrientation>Axial</DefaultOrientation>
-                <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
-        </Image>
-        <Image ID="CT" Type="Volume">
-                <DefaultDestination>Green</DefaultDestination>
-                <Layer>Background</Layer>
-                <DefaultOrientation>Coronal</DefaultOrientation>
-                <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
-        </Image>
-        <Image ID="CT" Type="Volume">
-                <DefaultDestination>Yellow</DefaultDestination>
-                <Layer>Background</Layer>
-                <DefaultOrientation>Sagittal</DefaultOrientation>
-                <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
-        </Image>
-        <QuestionSet ID="Steps" Descriptor="User interaction log feature">
-            <Question Type="CheckBox" Descriptor="Testing user interaction log">
-				<Option>Log on Red Only </Option>
-            </Question>
-            <Question Type="Radio" Descriptor="Testing locked layout">
-                <Option>Layout locked</Option>
-				<Option>Layout not locked</Option>
+            <Question Type="Button" Descriptor="Run external scripts">
+                <Option>script1.py</Option>
+				<Option>script2.py</Option>
             </Question>
         </QuestionSet>
     </Page>
-    <Page ID="Patient 2a" Descriptor="CT" UserInteractionLog="Y" Layout="FourUp">
+    <Page ID="123" Descriptor="CT" UserInteractionLog="N" Layout="TwoOverTwo" EnableSegmentEditor="Y" Loop="Y">
         <Image ID="CT" Type="Volume"  ZoomFactor="1.2" PanOrigin="-92 27.5 -225.5" InitialSliceOffset="-245">
                 <DefaultDestination>Red</DefaultDestination>
                 <Layer>Background</Layer>
@@ -76,30 +51,60 @@
                 <DefaultOrientation>Coronal</DefaultOrientation>
                 <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
         </Image>
-        <Image ID="CT" Type="Volume" ZoomFactor=".75" PanOrigin="118 39 0" InitialSliceOffset="91">
+        <Image ID="CT2" Type="Volume" ZoomFactor=".75" PanOrigin="118 39 0" InitialSliceOffset="91">
                 <DefaultDestination>Yellow</DefaultDestination>
                 <Layer>Background</Layer>
                 <DefaultOrientation>Axial</DefaultOrientation>
                 <Path>ImageVolumes\MRHead\MRHead.nrrd</Path>
         </Image>
+        <Image DicomRead="Y" Type="Volume" ID="CT3">
+            <DefaultDestination>Slice4</DefaultDestination>
+            <Layer>Background</Layer>
+            <DefaultOrientation>Coronal</DefaultOrientation>
+            <Path>ImageVolumes\PETCTFusion-Tutorial-Data\PETCTFusion\CT1\26556672</Path>
+        </Image>
         <QuestionSet ID="Steps" Descriptor="User interaction log feature">
             <Question Type="CheckBox" Descriptor="Testing user interaction log">
-				<Option>Check for log started </Option>
+				<Option>A </Option>
+				<Option>B </Option>
+				<Option>C </Option>
+				<Option>N/A </Option>
             </Question>
             <Question Type="Radio" Descriptor="Testing locked layout">
                 <Option>Layout locked</Option>
 				<Option>Layout not locked</Option>
             </Question>
+            <Question Type="IntegerValue" Descriptor="Testing integer">
+                <Option>Measurement</Option>
+            </Question>
+            <Question Type="InfoBox" Descriptor="Testing Info">
+                <Option>Instructional box</Option>
+            </Question>
+
+        </QuestionSet>
+        <QuestionSet ID="Steps #2" Descriptor="2nd QSet">
+            <Question Type="CheckBox" Descriptor="Testing one box">
+				<Option>One checkbox</Option>
+            </Question>
+            <Question Type="IntegerValue" Descriptor="Testing integer">
+                <Option>Measurement int</Option>
+            </Question>
+            <Question Type="FloatValue" Descriptor="Testing float">
+                <Option>Measurement float</Option>
+            </Question>
+            <Question Type="Text" Descriptor="Testing text">
+                <Option>Text</Option>
+            </Question>
         </QuestionSet>
     </Page>
-    <Page ID="Patient 2b" Descriptor="CT" UserInteractionLog="Y" Layout="SideBySideRedYellow">
+    <Page ID="Patient 2b" Descriptor="CT" UserInteractionLog="Y" Layout="SideBySideRedYellow" Loop="Y" MinMarkupLinesRequiredOnAnyImage="1">
         <Image ID="CT" Type="Volume"  ZoomFactor="1.2" PanOrigin="-92 27.5 -225.5" InitialSliceOffset="-245">
                 <DefaultDestination>Red</DefaultDestination>
                 <Layer>Background</Layer>
                 <DefaultOrientation>Axial</DefaultOrientation>
                 <Path>ImageVolumes\CTChest\CTChest.nrrd</Path>
         </Image>
-        <Image ID="CT" Type="Volume" ZoomFactor=".75" PanOrigin="118 39 0" InitialSliceOffset="91">
+        <Image ID="CT2" Type="Volume" ZoomFactor=".75" PanOrigin="118 39 0" InitialSliceOffset="91">
                 <DefaultDestination>Yellow</DefaultDestination>
                 <Layer>Background</Layer>
                 <DefaultOrientation>Axial</DefaultOrientation>
@@ -115,7 +120,7 @@
             </Question>
         </QuestionSet>
     </Page>
-    <Page ID="Patient 3" Descriptor="PET PSMA" Layout="TwoOverTwo" UserInteractionLog="Y" Loop="Y">
+    <Page ID="Patient 3" Descriptor="PET PSMA" Layout="TwoOverTwo" UserInteractionLog="Y" Loop="Y" EnableSegmentEditor="Y" GoToBookmark='123'>
         <Image DicomRead="Y" Type="Volume" ID="CT">
             <DefaultDestination>Red</DefaultDestination>
             <Layer>Background</Layer>

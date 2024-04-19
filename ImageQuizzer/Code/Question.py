@@ -21,7 +21,7 @@ class QuestionSet():
     """ Class to hold array of all questions that were built into group boxes on the form
     """
     
-    def __init__(self, oFilesIO):
+    def __init__(self, oSession):
         self.sClassName = type(self).__name__
         self.id = ''
         self.descriptor = ''
@@ -31,7 +31,7 @@ class QuestionSet():
         
         self.oIOXml = UtilsIOXml()
         self.oMsgUtil = UtilsMsgs()
-        self.oFilesIO = oFilesIO
+        self.oSession = oSession
         
     #----------
     def SetQuestionList(self, loQuestionsInput):
@@ -62,62 +62,31 @@ class QuestionSet():
             
             
             lxQuestions = self.oIOXml.GetChildren(xNodeQuestionSet, 'Question')
-            
+             
             for xNodeQuestion in lxQuestions:
-
-                dictModifiers = {}
 
                 sQuestionType = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Type')
                 sQuestionDescriptor = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Descriptor')
                 sGroupBoxLayout = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'GroupLayout')
 
 
-                bQuestionTypeGood = True
-
-                if (sQuestionType == 'Radio'):
-                    oQuestion = RadioQuestion()
-
-                elif (sQuestionType == 'CheckBox'):
-                    oQuestion = CheckBoxQuestion()
-
-                elif (sQuestionType == 'Text'):
-                    oQuestion = TextQuestion()
-
-                elif (sQuestionType == 'IntegerValue'):
-                    oQuestion = IntegerValueQuestion()
-                    dictModifiers = oQuestion.GetMinMaxAttributesFromXML(xNodeQuestion)
-                    oQuestion.UpdateDictionaryModifiers(dictModifiers)
-
-                elif (sQuestionType == 'FloatValue'):
-                    oQuestion = FloatValueQuestion()
-                    dictModifiers = oQuestion.GetMinMaxAttributesFromXML(xNodeQuestion)
-                    oQuestion.UpdateDictionaryModifiers(dictModifiers)
-
-                elif (sQuestionType == 'InfoBox'):
-                    oQuestion = InfoBox()
-
-                elif (sQuestionType == 'Button'):
-                    oQuestion = Button()
-                    
-                elif (sQuestionType == 'Picture'):
-                    oQuestion = Picture()
-                    
-                else:
-                    sLabel = 'Warning : Contact Administrator - Invalid question    '
-                    sWarningMsg = self.sClassName + ':' + sFnName + ':' + 'UnrecognizedQuestionType - Contact Administrator'
-                    self.oMsgUtil.DisplayWarning(sWarningMsg)
-                    bQuestionTypeGood = False
-                    
-
-                if bQuestionTypeGood == True:
+                oQuestion = self.GetQuestionItem(sQuestionType, xNodeQuestion)
+                oQuestion.SetXmlNode(xNodeQuestion)
+                if oQuestion != None:
                     oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
                     oQuestion._sGrpBoxLayout_setter(sGroupBoxLayout)
-                    oQuestion._oFilesIO_setter(self.oFilesIO)
-                    
+                    oQuestion._oFilesIO_setter(self.oSession.oFilesIO)
+                     
                     lOptions = self.GetOptionsFromXML(xNodeQuestion)
                     oQuestion._lsOptions_setter(lOptions)
                     self._loQuestions.append(oQuestion)
-
+                    
+                else:
+                    sWarningMsg = self.sClassName + ':' + sFnName + '\nType = ' + sQuestionType + '    ...UnrecognizedQuestionType'\
+                                + '\nRemaining Questions will be displayed \n\n - Contact Administrator'
+                    self.oMsgUtil.DisplayWarning(sWarningMsg)
+                    
+                    
                 
     #-----------------------------------------------
 
@@ -138,6 +107,48 @@ class QuestionSet():
         return lOptions
     
     #-----------------------------------------------
+    
+    def GetQuestionItem(self, sQuestionType, xNodeQuestion):
+        ''' Based on the question type, return the concrete question object.
+        '''
+        
+        dictModifiers = {}
+
+        oQuestion = None
+        
+        if (sQuestionType == 'Radio'):
+            oQuestion = RadioQuestion()
+
+        elif (sQuestionType == 'CheckBox'):
+            oQuestion = CheckBoxQuestion()
+
+        elif (sQuestionType == 'Text'):
+            oQuestion = TextQuestion()
+
+        elif (sQuestionType == 'IntegerValue'):
+            oQuestion = IntegerValueQuestion()
+            dictModifiers = oQuestion.GetMinMaxAttributesFromXML(xNodeQuestion)
+            oQuestion.UpdateDictionaryModifiers(dictModifiers)
+
+        elif (sQuestionType == 'FloatValue'):
+            oQuestion = FloatValueQuestion()
+            dictModifiers = oQuestion.GetMinMaxAttributesFromXML(xNodeQuestion)
+            oQuestion.UpdateDictionaryModifiers(dictModifiers)
+
+        elif (sQuestionType == 'InfoBox'):
+            oQuestion = InfoBox()
+
+        elif (sQuestionType == 'Button'):
+            oQuestion = Button()
+            bButtonScriptRerunRequired = self.oSession.GetButtonScriptRerunRequired()
+            bQuizComplete = self.oSession.GetQuizComplete()
+            dictModifiers = {"ButtonScriptRerunRequired":bButtonScriptRerunRequired, "QuizComplete":bQuizComplete}
+            oQuestion.UpdateDictionaryModifiers(dictModifiers)
+            
+        elif (sQuestionType == 'Picture'):
+            oQuestion = Picture()
+
+        return oQuestion
         
     #-----------------------------------------------
         
@@ -190,6 +201,8 @@ class Question(ABC):
         self._sGrpBoxTitle = ''
         self._sGrpBoxLayout = ''
         self._oFilesIO = None
+        self._lsResponses = []
+        self._xmlNode = None
 
     
     # abstract properties require level of indirection
@@ -211,6 +224,26 @@ class Question(ABC):
     @abstractmethod
     def _lsOptions_getter(self):
         return self._lsOptions
+    #----------
+    
+    #----------
+    # _lsResponses
+    #----------
+    @property
+    def lsResponses(self):
+        return self._lsResponses
+        
+    @lsOptions.setter
+    def lsResponses(self,x):
+        self._lsResponses_setter(x)
+        
+    @abstractmethod
+    def _lsResponses_setter(self, x):
+        pass
+        
+    @abstractmethod
+    def _lsResponses_getter(self):
+        return self._lsResponses
     #----------
     
     #----------
@@ -285,9 +318,19 @@ class Question(ABC):
     
     @abstractmethod
     def PopulateQuestionWithResponses(self, lsResponseValues): pass
+    
+    @abstractmethod
+    def GetQuestionCompleted(self, lsResponses): pass
 
     #-----------------------------------------------
-    
+    def SetXmlNode(self, xNode):
+        self._xmlNode = xNode
+
+    #-----------------------------------------------
+    def GetXmlNode(self):
+        return self._xmlNode
+          
+    #-----------------------------------------------
     def CreateGroupBox(self, sTitle, sGrpBoxLayout='Vertical'):
         # create group box widget to which each subclass can add elements
         self.qGrpBox = qt.QGroupBox()
@@ -391,6 +434,12 @@ class RadioQuestion(Question):
     def _lsOptions_getter(self):
         return self._lsOptions
         
+    def _lsResponses_setter(self, lsInput):
+        self._lsResponses = lsInput
+        
+    def _lsResponses_getter(self):
+        return self._lsResponses
+        
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput
         
@@ -454,8 +503,6 @@ class RadioQuestion(Question):
             bSuccess = True
         else:
             sMsg = 'Missing radio option for: ' + self._sGrpBoxTitle_getter()
-            # if no responses were found, reset the response list to empty (to accomodate partial responses)
-            lsResponses = []
 
         return bSuccess, lsResponses, sMsg
     
@@ -476,7 +523,17 @@ class RadioQuestion(Question):
                         qBtn.setChecked(True)
                 i = i + 1
             
-
+    #-----------------------------------------------
+    
+    def GetQuestionCompleted(self, lsResponses):
+        # there must be a 'Y' response in the radio button list for this question to be complete
+        bCompleted = False
+        
+        if 'Y' in lsResponses:
+            bCompleted = True
+        
+        return bCompleted
+    
 #========================================================================================
 #                     Class CheckBoxQuestion
 #========================================================================================
@@ -496,6 +553,12 @@ class CheckBoxQuestion(Question):
         
     def _lsOptions_getter(self):
         return self._lsOptions
+        
+    def _lsResponses_setter(self, lsInput):
+        self._lsResponses = lsInput
+        
+    def _lsResponses_getter(self):
+        return self._lsResponses
         
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput
@@ -560,8 +623,6 @@ class CheckBoxQuestion(Question):
             bSuccess = True
         else:
             sMsg = 'Missing check box option for: ' + self._sGrpBoxTitle_getter()
-            # if no responses were found, reset the response list to empty (to accomodate partial responses)
-            lsResponses = []
 
         return bSuccess, lsResponses, sMsg
 
@@ -573,14 +634,24 @@ class CheckBoxQuestion(Question):
             i = 0
             for qBox in self.qGrpBox.findChildren(qt.QCheckBox):
                 
-                if lsValues[i] == 'N':
+                if lsValues[i] == 'N' or lsValues == '':
                     qBox.setChecked(False)
                 else:
                     if lsValues[i] == 'Y':
                         qBox.setChecked(True)
                 i = i + 1
         
+    #-----------------------------------------------
+    
+    def GetQuestionCompleted(self, lsResponses):
+        # there must be a 'Y' response in the checkbox list for this question to be complete
+        bCompleted = False
         
+        if 'Y' in lsResponses:
+            bCompleted = True
+            
+        return bCompleted
+    
 
 #========================================================================================
 #                     Class TextQuestion
@@ -601,6 +672,12 @@ class TextQuestion(Question):
         
     def _lsOptions_getter(self):
         return self._lsOptions
+        
+    def _lsResponses_setter(self, lsInput):
+        self._lsResponses = lsInput
+        
+    def _lsResponses_getter(self):
+        return self._lsResponses
         
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput
@@ -655,23 +732,23 @@ class TextQuestion(Question):
 
         lsResponses = []
         bSuccess = False
-        bResponseFound = False
+        bResponseFound = True
         sMsg = ''
         
         for qTextBox in self.qGrpBox.findChildren(qt.QLineEdit):
             sText = qTextBox.text
 #             print(sText)
-            if not sText =='':
-                bResponseFound = True
+            if not sText =='' and not sText.isspace():
+                bResponseFound = bResponseFound * True
                 lsResponses.append(qTextBox.text)
-                
+            else:
+                lsResponses.append('')
+                bResponseFound = bResponseFound * False
 
         if bResponseFound:
             bSuccess = True
         else:
             sMsg = 'Missing text response for: ' + self._sGrpBoxTitle_getter()
-            # if no responses were found, reset the response list to empty (to accomodate partial responses)
-            lsResponses = []
             
         return bSuccess, lsResponses, sMsg
 
@@ -686,6 +763,21 @@ class TextQuestion(Question):
                 qTxt.setText(lsValues[i])
                 i = i + 1
 
+    #-----------------------------------------------
+    
+    def GetQuestionCompleted(self, lsResponses):
+        
+        # there can be no '' (empty) entries in this list for this question to be complete
+        
+        bCompleted = True
+        
+        sEmpty = ''
+        if sEmpty in lsResponses:
+            bCompleted = False
+            
+        
+        return bCompleted
+    
 #========================================================================================
 #                     Class IntegerValueQuestion
 #========================================================================================
@@ -709,6 +801,12 @@ class IntegerValueQuestion(Question):
         
     def _lsOptions_getter(self):
         return self._lsOptions
+        
+    def _lsResponses_setter(self, lsInput):
+        self._lsResponses = lsInput
+        
+    def _lsResponses_getter(self):
+        return self._lsResponses
         
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput
@@ -777,7 +875,7 @@ class IntegerValueQuestion(Question):
         lsResponses = []
         bSuccess = False
         sMsg = ''
-        bResponseFound = False
+        bResponseFound = True
         
         sRangeMsg = self.CreateRangePrompt()
 
@@ -807,24 +905,24 @@ class IntegerValueQuestion(Question):
                     bValid = self.ValidateRange(iValue, iMin, iMax)
                     if bValid == True:
                         lsResponses.append(qTextBox.text)
-                        bResponseFound = True
+                        bResponseFound = bResponseFound * True
 
                     else:
+                        bResponseFound = bResponseFound * False
                         raise ValueError()
                         
                 except ValueError:
-                    sMsg = 'Please enter integer for: ' + self._sGrpBoxTitle_getter() + sRangeMsg
-                    bSuccess = bSuccess * False
+                    bResponseFound = bResponseFound * False
+                    lsResponses.append('')  # return empty string if the field if invalid
                     
             else:
-                bResponseFound = False
+                bResponseFound = bResponseFound * False
+                lsResponses.append('')
 
         if bResponseFound:
             bSuccess = True
         else:
             sMsg = 'Invalid integer value response for: ' + self._sGrpBoxTitle_getter() + sRangeMsg
-            # if no responses were found, reset the response list to empty (to accomodate partial responses)
-            lsResponses = []
 
                     
         return bSuccess, lsResponses, sMsg
@@ -840,6 +938,23 @@ class IntegerValueQuestion(Question):
                 qTxt.setText(lsValues[i])
                 i = i + 1
 
+    #-----------------------------------------------
+    
+    def GetQuestionCompleted(self, lsResponses):
+        # each entry in this list must be a valid integer
+        
+        bCompleted = True
+        
+        for sResponse in lsResponses:
+            try:
+                int(sResponse)
+            except ValueError:
+                bCompleted = False
+                break
+            
+                    
+        return bCompleted
+    
 #========================================================================================
 #                     Class FloatValueQuestion
 #========================================================================================
@@ -862,6 +977,12 @@ class FloatValueQuestion(Question):
         
     def _lsOptions_getter(self):
         return self._lsOptions
+        
+    def _lsResponses_setter(self, lsInput):
+        self._lsResponses = lsInput
+        
+    def _lsResponses_getter(self):
+        return self._lsResponses
         
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput
@@ -932,7 +1053,7 @@ class FloatValueQuestion(Question):
         lsResponses = []
         bSuccess = False
         sMsg = ''
-        bResponseFound = False
+        bResponseFound = True
         
         sRangeMsg = self.CreateRangePrompt()
 
@@ -962,16 +1083,19 @@ class FloatValueQuestion(Question):
                     bValid = self.ValidateRange(fValue, fMin, fMax)
                     if bValid == True:
                         lsResponses.append(qTextBox.text)
-                        bResponseFound = True
+                        bResponseFound = bResponseFound * True
 
                     else:
+                        bResponseFound = bResponseFound * False
                         raise ValueError()
                         
                 except ValueError:
-                    sMsg = 'Please enter decimal value for: ' + self._sGrpBoxTitle_getter() + sRangeMsg
-                    bSuccess = bSuccess * False
+                    bResponseFound = bResponseFound * False
+                    lsResponses.append('')  # return empty string if the field if invalid
+
             else:
-                bResponseFound = False
+                bResponseFound = bResponseFound * False
+                lsResponses.append('')
     
 
 
@@ -979,8 +1103,6 @@ class FloatValueQuestion(Question):
             bSuccess = True
         else:
             sMsg = 'Invalid decimal value response for: ' + self._sGrpBoxTitle_getter() + sRangeMsg
-            # if no responses were found, reset the response list to empty (to accomodate partial responses)
-            lsResponses = []
 
 
         return bSuccess, lsResponses, sMsg
@@ -996,6 +1118,25 @@ class FloatValueQuestion(Question):
                 qTxt.setText(lsValues[i])
                 i = i + 1
 
+    #-----------------------------------------------
+    
+    def GetQuestionCompleted(self, lsResponses):
+        
+        # each entry in this list must be a valid float number
+        
+        bCompleted = True
+        
+        for sResponse in lsResponses:
+            try:
+                float(sResponse)
+                
+            except ValueError:
+                bCompleted = False
+                break
+            
+        
+        return bCompleted
+    
 #========================================================================================
 #                     Class InfoBox
 #========================================================================================
@@ -1016,6 +1157,12 @@ class InfoBox(Question):
         
     def _lsOptions_getter(self):
         return self._lsOptions
+        
+    def _lsResponses_setter(self, lsInput):
+        self._lsResponses = lsInput
+        
+    def _lsResponses_getter(self):
+        return self._lsResponses
         
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput
@@ -1087,6 +1234,15 @@ class InfoBox(Question):
         # there is nothing to populate for info box type questions
         pass
     
+    #-----------------------------------------------
+    
+    def GetQuestionCompleted(self, lsResponses):
+        # info box questions are always complete
+        
+        bCompleted = True
+        
+        return bCompleted
+    
 #========================================================================================
 #                     Class Button
 #========================================================================================
@@ -1110,6 +1266,12 @@ class Button(Question):
     def _lsOptions_getter(self):
         return self._lsOptions
         
+    def _lsResponses_setter(self, lsInput):
+        self._lsResponses = lsInput
+        
+    def _lsResponses_getter(self):
+        return self._lsResponses
+        
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput
         
@@ -1121,6 +1283,9 @@ class Button(Question):
         
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
+
+    def UpdateDictionaryModifiers(self, dictionaryInput):
+        self.dictModifiers = dictionaryInput
 
     def _oFilesIO_setter(self, sInput):
         self._oFilesIO = sInput
@@ -1190,36 +1355,66 @@ class Button(Question):
 
         lsResponses = []
         bSuccess = False
-        bResponseFound = False
+        bResponseFound = True
         sMsg = ''
         
         for qBtn in self.qGrpBox.findChildren(qt.QPushButton):
             if 'Done' in qBtn.text:
-                bResponseFound = True
+                bResponseFound = bResponseFound * True
                 lsResponses.append(qBtn.text)
             else:
-                bResponseFound = False
-                break
+                bResponseFound = bResponseFound * False
+                lsResponses.append('')
                 
 
         if bResponseFound:
             bSuccess = True
         else:
             sMsg = 'Script run incomplete for: ' + self._sGrpBoxTitle_getter()
-            #  reset the response list to empty (to accomodate partial responses)
-            lsResponses = []
             
         return bSuccess, lsResponses, sMsg
             
-                
-        
-        return bSuccess, lsResponses, sMsg
         
     #-----------------------------------------------
     
     def PopulateQuestionWithResponses(self, lsValues):
-        # there is nothing to populate for button type questions
-        pass
+
+        bButtonScriptRerunRequired = self.dictModifiers.get('ButtonScriptRerunRequired')
+        bQuizComplete = self.dictModifiers.get('QuizComplete')
+        if bButtonScriptRerunRequired and not bQuizComplete:
+            #clear responses forcing a script rerun
+            for idx in range(len(lsValues)):
+                lsValues[idx] = ''
+
+        
+        if len(lsValues) > 0:
+            i = 0
+            for qBtn in self.qGrpBox.findChildren(qt.QPushButton):
+                
+                if lsValues[i] != '':
+                    qBtn.setText(lsValues[i])
+                    if '-Done' in lsValues[i]:
+                        qBtn.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+                    else:
+                        qBtn.setStyleSheet("QPushButton{ background-color: rgb(245,159,159); color: black }")
+
+                i = i + 1
+
+    
+    #-----------------------------------------------
+    
+    def GetQuestionCompleted(self, lsResponses):
+        # button type questions are complete if response includes '-Done'
+        
+        bCompleted = True
+        
+        for sResponse in lsResponses:
+            if not '-Done' in sResponse:
+                bCompleted = False
+                break
+        
+        
+        return bCompleted
     
 #========================================================================================
 #                     Class Picture
@@ -1241,6 +1436,12 @@ class Picture(Question):
         
     def _lsOptions_getter(self):
         return self._lsOptions
+        
+    def _lsResponses_setter(self, lsInput):
+        self._lsResponses = lsInput
+        
+    def _lsResponses_getter(self):
+        return self._lsResponses
         
     def _sGrpBoxTitle_setter(self, sInput):
         self._sGrpBoxTitle = sInput
@@ -1313,6 +1514,15 @@ class Picture(Question):
     def PopulateQuestionWithResponses(self, lsValues):
         # there is nothing to populate for info box type questions
         pass
+    
+    #-----------------------------------------------
+    
+    def GetQuestionCompleted(self, lsResponses):
+        # picture type questions are always complete
+        
+        bCompleted = True
+        
+        return bCompleted
     
 
     

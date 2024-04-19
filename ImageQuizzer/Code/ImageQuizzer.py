@@ -66,7 +66,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         # Note: Version 1.0 should be used with Slicer v4.11.20200930
         # self.sVersion = "Image Quizzer   v1.0 "  #  Release Date: May 10, 2022
         # Note: Version 2.0 should be used with Slicer v4.11.20210226
-        self.sVersion = "Image Quizzer v3.3.4" 
+        self.sVersion = "Image Quizzer v3.3.6" 
 
         sSlicerVersion = slicer.app.applicationVersion
         if sSlicerVersion != '4.11.20210226':
@@ -106,11 +106,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         
         
-# ##########  For Development mode    ###########    
-#         slicer.util.setPythonConsoleVisible(True)
-#         slicer.util.setToolbarsVisible(True)
-#         slicer.util.setMenuBarsVisible(True)
-# ##########
 
 
 ###########  For Release mode   ###########
@@ -136,9 +131,17 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         slicer.modules.welcome.widgetRepresentation().setVisible(False)
         slicer.util.setPythonConsoleVisible(False)
                
+        slDockPanel = slicer.util.mainWindow().findChild("QWidget","PanelDockWidget")
+        slDockPanel.setFeatures(0)  # cannot move or close quiz panel
+        
         slicer.util.mainWindow().showMaximized()
 ###########
         
+# ##########  For Development mode    ###########    
+#         slicer.util.setPythonConsoleVisible(True)
+#         slicer.util.setToolbarsVisible(True)
+#         slicer.util.setMenuBarsVisible(True)
+# ##########
 
 
         self.oSession = Session()                    
@@ -323,6 +326,15 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             for sSubFolder in lSubFolders:
                 if sSubFolder not in lCurrentItems:
                     self.comboGetUserName.addItem(sSubFolder)
+                    
+            if self.qLblQuizFilename.text == 'Selected quiz filename':
+                self.comboGetUserName.setStyleSheet("QComboBox{ background-color: rgba(255, 149, 0, 220); color:black}")
+                self.qUserGrpBox.setTitle('Please check your user name...')
+                self.qUserGrpBox.setStyleSheet("QGroupBox{ background-color: rgba(255, 149, 0, 100)}")
+            else:
+                self.comboGetUserName.setStyleSheet("QComboBox{ background-color: white}")
+                self.qUserGrpBox.setTitle('User name')
+
             
         else:
             sMsg = 'No location was selected for image database'
@@ -347,15 +359,20 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             sMsg = 'No quiz was selected'
             self.oUtilsMsgs.DisplayWarning(sMsg)
             self.qUserLoginWidget.raise_()
+            self.qLaunchGrpBox.setEnabled(False)
 
         else:
             # enable the launch button
-            self.qLblQuizFilename.setText(sSelectedQuizPath)
+            sQuizName = self.oFilesIO.GetFilenameNoExtFromPath(sSelectedQuizPath)
+            self.qLblQuizFilename.setText(sQuizName)
             self.qLaunchGrpBox.setEnabled(True)
             self.qUserLoginWidget.show()
             self.qUserLoginWidget.activateWindow()
             
             self.oFilesIO.SetXmlQuizPathAndFilename(sSelectedQuizPath)
+            self.comboGetUserName.setStyleSheet("QComboBox{ background-color: white}")
+            self.qUserGrpBox.setTitle('User name')
+            self.qUserGrpBox.setStyleSheet("QGroupBox{ background-color: white}")
          
  
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -461,19 +478,22 @@ class customEventFilter(qt.QObject):
             
             sExitMsg = 'Image Quizzer Exiting'
             sUserQuizResultsPath = self.oFilesIO.GetUserQuizResultsPath()
-            
+             
             if sUserQuizResultsPath != '':
                 sExitMsg = sExitMsg + '\n   Results will be saved.\
                     \n   Restarting the quiz will resume where you left off.'
-                
+                 
                 sCaller = 'EventFilter'
+                self.oSession.SetInteractionLogOnOff('Off', 'Exit ...X')
                 bSuccess, sMsg = self.oSession.PerformSave(sCaller)
                 if bSuccess == False:
                     if sMsg != '':
                         self.oUtilsMsgs.DisplayWarning(sMsg)
-                    
+                self.oSession.CaptureAndSaveImageState()
+                     
             self.oUtilsMsgs.DisplayInfo(sExitMsg)
             slicer.util.exit(status=EXIT_SUCCESS)
+
             
         # disable minimize for UserInteraction
         elif self.oSession.GetUserInteractionLogRequest() == True and\

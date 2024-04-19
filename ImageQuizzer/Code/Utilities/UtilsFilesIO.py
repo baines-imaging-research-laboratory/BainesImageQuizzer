@@ -355,14 +355,24 @@ class UtilsFilesIO:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupForUserQuizResults(self):
         
-        sQuizFileRoot, sExt = os.path.splitext(self.GetQuizFilename())
-         
-        self._sUserQuizResultsDir = os.path.join(self.GetUserDir(), sQuizFileRoot)
-        self._sUserQuizResultsPath = os.path.join(self.GetUserQuizResultsDir(), self.GetQuizFilename())
- 
-        # check that the user folder exists - if not, create it
-        if not os.path.exists(self._sUserQuizResultsDir):
-            os.makedirs(self._sUserQuizResultsDir)
+        try:
+        
+            sQuizFileRoot, sExt = os.path.splitext(self.GetQuizFilename())
+             
+            self._sUserQuizResultsDir = os.path.join(self.GetUserDir(), sQuizFileRoot)
+            self._sUserQuizResultsPath = os.path.join(self.GetUserQuizResultsDir(), self.GetQuizFilename())
+     
+            # check that the user folder exists - if not, create it
+            if not os.path.exists(self._sUserQuizResultsDir):
+                os.makedirs(self._sUserQuizResultsDir)
+                
+        except Exception as error:
+            tb = traceback.format_exc()
+            sMsg = '\SetupForUserQuizResults: Failed to set up directories for results '\
+                    + '   Possible cause: directory path too long. Admin must move Image Quizzer closer to root.'\
+                    + "\n\n" + str(error) \
+                    + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
          
      
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -562,6 +572,7 @@ class UtilsFilesIO:
             not have created a label map if there were no lesions to segment. This is acceptable.
         """
             
+        sMsg = ''
         bLabelMapsSaved = True # initialize
         
         bLabelMapFound = False  # to detect if label map was created by user
@@ -600,6 +611,14 @@ class UtilsFilesIO:
                             lsLabelMapsStoredForImages.append(oImageNode.sNodeName)
 
 
+                        # there is a quiz validation for this error - estimation during validation may have been off
+                        sErrorMsg = 'ERROR - LabelMap file not saved. Filename too long : ' + str(len(sLabelMapPath))\
+                                    + '\n' + sLabelMapPath\
+                                    + '\n\nContact Administrator'
+                        if len(sLabelMapPath) > 256:  # Windows limitation
+                            self.oUtilsMsgs.DisplayError(sErrorMsg)
+
+                        
                         #    add the label map path element to the image element in the xml
                         #    only one label map path element is to be recorded
                         xLabelMapPathElement = self.oIOXml.GetLastChild(oImageNode.GetXmlImageElement(), 'LabelMapPath')
@@ -636,12 +655,13 @@ class UtilsFilesIO:
                             else:
                                 # user wants to resume work on this page
                                 bLabelMapsSaved = False
+                                sMsg = ' ... cancelled to continue contouring'
                     
                     
         if bLabelMapsSaved == True:
             oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
 
-        return bLabelMapsSaved
+        return bLabelMapsSaved, sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadSavedLabelMaps(self, oSession):
@@ -967,9 +987,15 @@ class UtilsFilesIO:
                                  
                     # save the markup line file to the user's page directory
                     sMarkupsLinePath = os.path.join(sPageMarkupsLineDir, sMarkupsLineFilenameWithExt)
+
+                    # there is a quiz validation for this error - estimation during validation may have been off
+                    sErrorMsg = 'ERROR - MarkupsLine not saved. Filename too long : ' + str(len(sMarkupsLinePath))\
+                                + '\n' + sMarkupsLinePath\
+                                + '\n\nContact Administrator'
+                    if len(sMarkupsLinePath) > 256:  # Windows limitation
+                        self.oUtilsMsgs.DisplayError(sErrorMsg)
+
         
-                     
-                
                     for oImageNode in oSession.oImageView.GetImageViewList():
                         
                         # match the markup line to the image to save the path to the correct xml Image node
@@ -991,8 +1017,11 @@ class UtilsFilesIO:
                                 # update xml storing the path to the markup line file with the image element
                                 oSession.AddPathElement('MarkupLinePath', oImageNode.GetXmlImageElement(),
                                                         sRelativePathToStoreInXml)
+
+                
             
                 oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
+
             
             
         except Exception as error:

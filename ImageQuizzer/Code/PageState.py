@@ -1,6 +1,10 @@
 import os
 import vtk, qt, ctk, slicer
 import sys
+import traceback
+from Utilities.UtilsMsgs import *
+from Question import *
+
 
 import sitkUtils
 import SimpleITK as sitk
@@ -17,7 +21,7 @@ import numpy as np
 
 class PageState:
     
-    def __init__(self):
+    def __init__(self, oSession):
         ''' Class to keep track of completed items that belong to a page.
 
             A completed page requires:
@@ -93,6 +97,8 @@ class PageState:
                     
         '''
         self.ClearPageStateVariables()
+        self.oUtilsMsgs = UtilsMsgs()
+        self.oSession = oSession
         
     #----------
     def ClearPageStateVariables(self):
@@ -136,7 +142,7 @@ class PageState:
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def InitializeStates(self, oSession, xPageNode):
+    def InitializeStates(self, xPageNode):
         ''' 
             Each question set is intialized as incomplete.
 
@@ -155,9 +161,8 @@ class PageState:
                 created. These can be associated with any displayed image.
              
         '''
-        self.oSession = oSession
-        self.oIOXml = self.oSession.oIOXml
         self.oFilesIO = self.oSession.oFilesIO
+        self.oIOXml = self.oSession.oIOXml
 
         self.ClearPageStateVariables()
         
@@ -236,6 +241,10 @@ class PageState:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateCompletionLists(self, xPageNode):
         ''' For the given xml page element, update the completion states in the lists
+            These lists show whether the item is 
+                [completed, required] for question sets and segmentations
+                [completed, required, number completed] for markup lines
+                More details in class documentation.  
         '''
         
         self.UpdateQuestionSetCompletionList(xPageNode)
@@ -244,13 +253,16 @@ class PageState:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateCompletedFlags(self, xPageNode):
-        ''' Update completed flags for the given xml page element
+        ''' Update completed flags for the given xml page element based on
+            the requirements and the completion lists.
+            
+            Missing requirement information is returned in the messages.
         '''
         sMsg = ''
         sQSetMsg = self.UpdatePageCompletionLevelForQuestionSets()
         sLabelMapMsg = self.UpdatePageCompletionLevelForSegmentations(xPageNode)
         sMarkupLineMsg = self.UpdatePageCompletionLevelForMarkupLines(xPageNode)
-        sMsg = sQSetMsg + '\n' + sLabelMapMsg + '\n' + sMarkupLineMsg
+        sMsg = sQSetMsg + sLabelMapMsg + sMarkupLineMsg
         
         return sMsg
     
@@ -283,7 +295,7 @@ class PageState:
         sMsg = ''
         if 0 in self.liCompletedQuestionSets:
             self.bQuestionSetsCompleted = False
-            sMsg = 'Not all question sets were completed'
+            sMsg = '\nNot all question sets were completed'
         else:
             self.bQuestionSetsCompleted = True
             
@@ -307,34 +319,38 @@ class PageState:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetSavedResponseCompletionLevel(self, xQuestionSetNode):
-        """ Check through all questions for the question set looking for a response. This information
-            comes from the currently saved elements in the XML.
-             
-            Assumption: All'Option' elements have a 'Response' element if the question was answered
-            so we just query the first Response 
-            
-            eg: Radio Question     Success?
-                    Opt 1            yes
-                        Response:       y (checked)
-                    Opt 2            no
-                        Response:       n (not checked) 
-            
+        """ Check through responses for all questions in the question set to see if it is completed.
         """
         
         iNumAnsweredQuestions = 0
         
-        iNumQuestions = self.oIOXml.GetNumChildrenByName(xQuestionSetNode, 'Question')
+        oQuestionSet = QuestionSet(self.oSession)
+        oQuestionSet.ExtractQuestionsFromXML(xQuestionSetNode)
+        loQuestions = oQuestionSet.GetQuestionList()
+        lxQuestionNodes = []
+    
+        idx = 0
+        for idx in range(len(loQuestions)):
+            
+            oQuestion = loQuestions[idx]
+            xQuestionNode = oQuestion.GetXmlNode()
+            if xQuestionNode != None:
+                lxQuestionNodes.append(xQuestionNode)
+            
+            lsLatestResponses = []
+             
+            lxOptionNodes = self.oIOXml.GetChildren(xQuestionNode, 'Option')
+            for xOptionNode in lxOptionNodes:
+                 
+                sResponse = self.oIOXml.GetDataFromLastChild(xOptionNode, 'Response')
+                if sResponse != None:
+                    lsLatestResponses.append( sResponse )   
 
-        for indQuestion in range(iNumQuestions):
-            # get first option for the question (all (or none) options have a response so just check the first)
-            xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
-            xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', 0)
-         
-            iNumResponses = self.oIOXml.GetNumChildrenByName(xOptionNode,'Response')
-            if iNumResponses >0:
+             
+            if oQuestion.GetQuestionCompleted(lsLatestResponses):
                 iNumAnsweredQuestions = iNumAnsweredQuestions + 1
                  
-        sSavedResponseCompletionLevel = self.CategorizeResponseCompletionLevel(iNumQuestions, iNumAnsweredQuestions)
+        sSavedResponseCompletionLevel = self.CategorizeResponseCompletionLevel(len(lxQuestionNodes), iNumAnsweredQuestions)
 
         return sSavedResponseCompletionLevel
            
@@ -487,16 +503,29 @@ class PageState:
         ''' A function to look at pixels of label map node to determine if a segment exists
             (non-zero pixels)
         '''
-        img = sitk.ReadImage(sPath)
-        stats = sitk.StatisticsImageFilter()
-        stats.Execute(img)
-        fMin = stats.GetMinimum()
-        fMax = stats.GetMaximum()
+        bLabelMapEmpty = True
         
-        if fMin == 0 and fMax == 0:
-            bLabelMapEmpty = True
-        else:
-            bLabelMapEmpty = False
+        try:
+            img = sitk.ReadImage(sPath)
+            stats = sitk.StatisticsImageFilter()
+            stats.Execute(img)
+            fMin = stats.GetMinimum()
+            fMax = stats.GetMaximum()
+            
+            if fMin == 0 and fMax == 0:
+                bLabelMapEmpty = True
+            else:
+                bLabelMapEmpty = False
+                
+        except Exception as error:
+            tb = traceback.format_exc()
+            sMsg = "PageState::TestForEmptyLabelMap: Error reading label map image " + sPath \
+                    + "\n\n Possible cause: - length of label map path exceeds Windows maximum (~256 characters)."\
+                    + "\n      Admin must shorten names or move Image Quizzer module closer to root."\
+                    + "\n\n" + str(error) \
+                    + "\n\n" + tb 
+            self.oUtilsMsgs.DisplayError(sMsg)
+            
             
         return bLabelMapEmpty
 
