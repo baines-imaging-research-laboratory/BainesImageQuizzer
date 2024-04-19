@@ -791,7 +791,7 @@ class Session:
     def SetupButtons(self):
         
         qProgressLabel = qt.QLabel('Progress ')
-        self.progress = QtGui.QProgressBar()
+        self.progress = qt.QProgressBar()
         self.progress.setGeometry(0, 0, 100, 20)
         self.progress.setStyleSheet("QProgressBar{ text-align: center } QProgressBar::chunk{ background-color: rgb(0,179,246) }")
  
@@ -1139,8 +1139,7 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onTabChanged(self):
-        ''' When changing tabs reset segment editor interface
-            to force user to reset the volume to be contoured.
+        ''' When changing tabs reset segment editor interface.
             Ensure window/level tool is turned off.
         '''
 
@@ -1569,6 +1568,7 @@ class Session:
             self.DisplayImageLayout('ResetView')
             
             self.ResetContourDisplayState(sFillOrOutline, iOpacitySliderValue, fOpacity)
+            slicer.app.applicationLogic().GetInteractionNode().SetCurrentInteractionMode(slicer.vtkMRMLInteractionNode.ViewTransform)
             
             # Populate quiz with current responses
             self.DisplayCurrentResponses(lsCurrentResponses)
@@ -2098,7 +2098,6 @@ class Session:
             
             This function is called 
                - when the previous button is pressed or
-               - if a resume is required into a question set that is not the first for the page
                - if the ResetView button in Extra Tools is pressed  
         '''
         
@@ -3062,9 +3061,10 @@ class Session:
     def SetNavigationIndexIfResumeRequired(self):
         ''' Scan the user's quiz file for existing responses in case the user
             exited the quiz prematurely (before it was complete) on the last login
+
+            We assume the quiz pages and question sets are presented sequentially as stored in the
+            composite navigation index (which takes into account randomization of the pages if requested)
         '''
-        # We assume the quiz pages and question sets are presented sequentially as stored in the
-        # composite navigation index (which takes into account randomization of the pages if requested)
 
             
         # initialize
@@ -3106,7 +3106,6 @@ class Session:
                     
                     sPageComplete = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'PageComplete')
                     if sPageComplete != 'Y':    # found first page that was not complete
-#                         iResumeNavigationIndex = indNav
                         self.SetQuizResuming(True)
 
             
@@ -3118,8 +3117,7 @@ class Session:
                 self.SetQuizResuming(True)
     
         self.SetCurrentNavigationIndex(iResumeNavigationIndex)
-        # adjust if the resume question set is not the first on the page
-        self.AdjustToCurrentQuestionSet()
+
         # reset the default order of image indices based on the new page
         self.InitializeImageDisplayOrderIndices()
     
