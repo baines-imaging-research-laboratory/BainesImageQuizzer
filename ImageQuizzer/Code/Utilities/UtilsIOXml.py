@@ -130,7 +130,7 @@ class UtilsIOXml:
             raise Exception('XML file does not exist: %s' % sXmlPath)
          
 
-        return bSuccess, self._xRootNode
+        return bSuccess
 
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

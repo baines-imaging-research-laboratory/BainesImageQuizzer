@@ -81,8 +81,9 @@ class UtilsEmail:
             tb = traceback.format_exc()
             sMsg = "SetupEmailResults: Error setting up email configuration\n " \
                    + self.GetEmailConfiguration() + '\n\n'+  tb 
-                   
-        return bEmailRequest, sMsg
+            self.oUtilsMsgs.DisplayError(sMsg)
+            
+        return bEmailRequest
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ParseConfigFile(self, sFullFilename, sCategory, sItem):

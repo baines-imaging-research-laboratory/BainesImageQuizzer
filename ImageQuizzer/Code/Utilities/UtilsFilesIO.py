@@ -217,7 +217,7 @@ class UtilsFilesIO:
         """
         
         # get page info from the session's current page to create directory
-        xPageNode = oSession.GetCurrentPageNode()
+        xPageNode = oSession.oCustomWidgets.GetNthPageNode(oSession.GetCurrentPageIndex())
         sPageIndex = str(oSession.GetCurrentPageIndex() + 1)
         sPageID = oSession.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
         sPageDescriptor = oSession.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
@@ -625,7 +625,7 @@ class UtilsFilesIO:
                         
                         if xLabelMapPathElement == None:
                             # update xml storing the path to the label map file with the image element
-                            oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(),\
+                            oSession.oCustomWidgets.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(),\
                                                  self.GetRelativeUserPath(sLabelMapPath))
                             
                             
@@ -644,7 +644,7 @@ class UtilsFilesIO:
                 # user doesn't get the option to cancel if the call was initiated 
                 # from the Close event filter
                 if sCaller != 'EventFilter':
-                    if oSession._bSegmentationModule == True:   # if there is a segmentation module
+                    if oSession.oCustomWidgets.GetSegmentationModuleRequired():   # if there is a segmentation module
                         if oSession.GetSegmentationTabEnabled() == True:    # if the tab is enabled
                             qtAns = oSession.oUtilsMsgs.DisplayOkCancel(\
                                                 'No contours were created. Do you want to continue?')
@@ -807,7 +807,7 @@ class UtilsFilesIO:
 
         # update xml storing the path to the label map file with the image element
         #    for display on the next page
-        oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(), self.GetRelativeUserPath(sLabelMapPathForDest))
+        oSession.oCustomWidgets.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(), self.GetRelativeUserPath(sLabelMapPathForDest))
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -927,7 +927,7 @@ class UtilsFilesIO:
         
                 # update xml storing the path to the label map file with the image element
                 #    for display on the next page
-                oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(), self.GetRelativeUserPath(sLabelMapPath))
+                oSession.oCustomWidgets.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(), self.GetRelativeUserPath(sLabelMapPath))
                 oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
                 xLabelMapPathElement = oSession.oIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
         
@@ -1015,7 +1015,7 @@ class UtilsFilesIO:
                                 
                             if bPathAlreadyInXml == False:   
                                 # update xml storing the path to the markup line file with the image element
-                                oSession.AddPathElement('MarkupLinePath', oImageNode.GetXmlImageElement(),
+                                oSession.oCustomWidgets.AddPathElement('MarkupLinePath', oImageNode.GetXmlImageElement(),
                                                         sRelativePathToStoreInXml)
 
                 
@@ -1088,7 +1088,7 @@ class UtilsFilesIO:
         lxImageElements = []
         lxMarkupLinePaths = []
         
-        lxImageElements = self.oIOXml.GetChildren( oSession.GetCurrentPageNode(), 'Image')
+        lxImageElements = self.oIOXml.GetChildren( oSession.oCustomWidgets.GetNthPageNode(oSession.GetCurrentPageIndex()), 'Image')
         
         for  xImageNode in lxImageElements:
             
@@ -1117,48 +1117,5 @@ class UtilsFilesIO:
                             oSession.oUtilsMsgs.DisplayWarning(sMsg)
                             break # continue in for loop for next label map path element
                 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetupLoopingInitialization(self, xRootNode):
-        
-        # if Loop="Y" for any page in the quiz, add Rep="0" to each page if not defined
-        
-        bLoopingInQuiz = False
-        lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
-        for xPageNode in lxPages:
-            sLoopAllowed = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "Loop")
-            if sLoopAllowed == "Y":
-                bLoopingInQuiz = True
-                break
-            
-        if bLoopingInQuiz:
-            for xPageNode in lxPages:
-                sRepNum = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "Rep")
-                try:
-                    int(sRepNum)
-                except:
-                    # not a valid integer - create/set the attribute to 0
-                    self.oIOXml.UpdateAttributesInElement(xPageNode, {"Rep":"0"})
-    
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetupPageGroupInitialization(self, xRootNode):
-        ''' If no PageGroup attribute exists, update the XML to initialize each page
-            to a unique number. Start PageGroup numbers at '1'. ('0' has specialized
-            meaning when randomizing page groups.
-        '''
-        
-        bPageGroupFound = False
-         
-        lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
-        for xPageNode in lxPages:
-            sPageGroupNum = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "PageGroup")
-            if sPageGroupNum != '':
-                bPageGroupFound = True
-                break
-       
-        if not bPageGroupFound:
-            for iPageNum in range(len(lxPages)):
-                xPageNode = self.oIOXml.GetNthChild(xRootNode, "Page", iPageNum)
-                self.oIOXml.UpdateAttributesInElement(xPageNode, {"PageGroup":str(iPageNum + 1)})
-        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

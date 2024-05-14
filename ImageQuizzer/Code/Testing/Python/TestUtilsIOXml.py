@@ -216,7 +216,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         self.fnName = sys._getframe().f_code.co_name
                 
         sRootName = 'RootNode'
-        [bTestResult,xRootNode ] = self.oIOXml.OpenXml(self.sTestXmlFilePath, 'RootNode')
+        bTestResult = self.oIOXml.OpenXml(self.sTestXmlFilePath, 'RootNode')
+        xRootNode = self.oIOXml.GetRootNode()
         if (self.oIOXml.GetElementNodeName(xRootNode) == sRootName):
             bTestResult = bTestResult * True
         else:
@@ -313,7 +314,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         self.fnName = sys._getframe().f_code.co_name
         bTestResult = False
         
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        bSuccess = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        xRootNode = self.oIOXml.GetRootNode()
 
         # get child of data node and check for expected tag name
         xElementNode = self.oIOXml.GetNthChild(xRootNode,'Data',0)
@@ -335,7 +337,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         self.fnName = sys._getframe().f_code.co_name
         
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        bSuccess = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        xRootNode = self.oIOXml.GetRootNode()
 
         # get an attribute node to test the 'invalid element node'
         xElementNode = self.oIOXml.GetNthChild(xRootNode,'Data',0)
@@ -367,7 +370,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         self.fnName = sys._getframe().f_code.co_name
         
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        bSuccess = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        xRootNode = self.oIOXml.GetRootNode()
             
         bTestResult = True
         
@@ -406,7 +410,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         self.fnName = sys._getframe().f_code.co_name
         
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        bSuccess = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        xRootNode = self.oIOXml.GetRootNode()
             
         bTestResult = True
         
@@ -465,7 +470,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         self.fnName = sys._getframe().f_code.co_name
         
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        bSuccess = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        xRootNode = self.oIOXml.GetRootNode()
         
         import operator
         bTestResult = True
@@ -507,7 +513,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         self.fnName = sys._getframe().f_code.co_name
 
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        bSuccess = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        xRootNode = self.oIOXml.GetRootNode()
             
         bTestResult = True
 
@@ -543,7 +550,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         self.fnName = sys._getframe().f_code.co_name
 
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        bSuccess = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        xRootNode = self.oIOXml.GetRootNode()
             
         bTestResult = True
 
@@ -580,7 +588,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         self.fnName = sys._getframe().f_code.co_name
 
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        bSuccess = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        xRootNode = self.oIOXml.GetRootNode()
             
         bTestResult = True
 

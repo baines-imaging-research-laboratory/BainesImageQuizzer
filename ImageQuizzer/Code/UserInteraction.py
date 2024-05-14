@@ -26,6 +26,7 @@ class UserInteraction:
         
         self.fh = None
         self.fhTemplate = None
+        self.fhInteractionLog = None
         
         self.slMainWindowPos = qt.QPoint()
         
@@ -54,6 +55,14 @@ class UserInteraction:
     def GetMainWindowPosition(self):
         return self.slMainWindowPos
 
+    #----------
+    def SetFileHandlerInteractionLog(self, fh):
+        self.fhInteractionLog
+        
+    #----------
+    def GetFileHandlerInteractionLog(self):
+        return self.fhInteractionLog
+    
     #----------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

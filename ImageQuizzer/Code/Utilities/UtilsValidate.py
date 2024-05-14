@@ -121,7 +121,8 @@ class UtilsValidate:
         
         try:
             # open requested quiz xml 
-            bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetXmlQuizPath(),'Session')
+            bSuccess = self.oIOXml.OpenXml(self.oFilesIO.GetXmlQuizPath(),'Session')
+            xRootNode = self.oIOXml.GetRootNode()
             self.l4iNavList = self.oIOXml.GetNavigationListBase(xRootNode)
 
             # >>>>>>>>>>>>>>>
@@ -394,7 +395,8 @@ class UtilsValidate:
         '''
         
         # open requested quiz xml 
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetXmlQuizPath(),'Session')
+        bSuccess = self.oIOXml.OpenXml(self.oFilesIO.GetXmlQuizPath(),'Session')
+        xRootNode = self.oIOXml.GetRootNode()
         
         if bSuccess:
             

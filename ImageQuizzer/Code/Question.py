@@ -140,8 +140,8 @@ class QuestionSet():
 
         elif (sQuestionType == 'Button'):
             oQuestion = Button()
-            bButtonScriptRerunRequired = self.oSession.GetButtonScriptRerunRequired()
-            bQuizComplete = self.oSession.GetQuizComplete()
+            bButtonScriptRerunRequired = self.oSession.oCustomWidgets.GetButtonScriptRerunRequired()
+            bQuizComplete = self.oSession.oCustomWidgets.GetQuizComplete()
             dictModifiers = {"ButtonScriptRerunRequired":bButtonScriptRerunRequired, "QuizComplete":bQuizComplete}
             oQuestion.UpdateDictionaryModifiers(dictModifiers)
             

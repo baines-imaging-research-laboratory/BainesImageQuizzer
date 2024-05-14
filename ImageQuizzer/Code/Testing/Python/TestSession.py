@@ -1,6 +1,7 @@
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 from Session import *
+from CustomWidgets import *
 from TestingStatus import *
 from Utilities.UtilsIOXml import *
 
@@ -112,6 +113,12 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
         self._oFilesIO = UtilsFilesIO()
         self.oIOXml = UtilsIOXml()
+        self.oSession = Session()
+        self.oSession.SetFilesIO(self._oFilesIO)
+        self.oSession.SetIOXml(self.oIOXml)
+        # reset when overriding Session > CustomWidget's constructor of oIOXml
+        #     since this is customized for unit tests
+        self.oSession.oCustomWidgets.SetIOXml(self.oIOXml)     
         
         # create/set environment variable to be checked in UtilsIOXml class
         #    to prevent displaying error messages during testing
@@ -187,9 +194,6 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         lExpectedCompositeIndices.append([2,0,3,0])
         
         
-        self.oSession = Session()
-        self.oSession.SetFilesIO(self._oFilesIO)
-        self.oSession.SetIOXml(self.oIOXml)
         self.oSession.BuildNavigationList()
         lCompositeIndicesResult = self.oSession.GetNavigationList()
         
@@ -199,7 +203,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
             bTestResult = False
             
         # set quiz as complete for test purposes - so as not to trigger error message
-        self.oSession.SetQuizComplete(True)
+        self.oSession.oCustomWidgets.SetQuizComplete(True)
 
         tupResult = self.fnName, bTestResult
         return tupResult
@@ -245,9 +249,6 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         lExpectedCompositeIndices.append([4,0,1,0])
         
         
-        self.oSession = Session()
-        self.oSession.SetFilesIO(self._oFilesIO)
-        self.oSession.SetIOXml(self.oIOXml)
         self.oSession.BuildNavigationList()
         lCompositeIndicesResult = self.oSession.GetNavigationList()
         
@@ -257,7 +258,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
             bTestResult = False
             
         # set quiz as complete for test purposes - so as not to trigger error message
-        self.oSession.SetQuizComplete(True)
+        self.oSession.oCustomWidgets.SetQuizComplete(True)
 
         tupResult = self.fnName, bTestResult
         return tupResult
@@ -485,7 +486,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         self.oIOXml.SetRootNode(xRoot)
         
         liExpectedIndices = [0,5,3,1,4,2]
-        liStoredIndices = self.oSession.GetStoredRandomizedIndices()
+        liStoredIndices = self.oSession.oCustomWidgets.GetStoredRandomizedIndices()
         
         if liStoredIndices == liExpectedIndices:
             bTestResult = True
@@ -506,12 +507,14 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         xRoot = etree.Element("Session", RandomizePageGroups="Y")
         etree.SubElement(xRoot,"Page", PageGroup="0")
         self.oIOXml.SetRootNode(xRoot)
+#         self.oSession.SetIOXml(self.oIOXml)
+
         
         liIndices = [0,5,3,1,4,2]
-        self.oSession.AddRandomizedIndicesToXML(liIndices)
+        self.oSession.oCustomWidgets.AddRandomizedIndicesToXML(liIndices)
 
         # read the updated xml to get what was stored 
-        liStoredIndices = self.oSession.GetStoredRandomizedIndices()
+        liStoredIndices = self.oSession.oCustomWidgets.GetStoredRandomizedIndices()
         
         if liStoredIndices == liIndices:
             bTestResult = True
@@ -628,27 +631,33 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         
         
         self.oIOXml.SetRootNode(xRoot)
+#         self.oSession.SetIOXml(self.oIOXml)
+
         
         # for debug
         sFullFile = self.sTempDir + '\\PreLoop.xml' 
         self.oIOXml.SaveXml(sFullFile)
         
+#         self.oSession.oCustomWidgets.SetRootNode(xRoot)
          
         #>>>>>>>>>>>>>>>>>>>>>>>
         
         self.oSession.BuildNavigationList()
         # set current index to the repeated xml element
         self.oSession.SetCurrentNavigationIndex(3)
-        self.oSession.AdjustXMLForRepeatedPage()
+        self.oSession.oCustomWidgets.AdjustXMLForRepeatedPage(\
+                    self.oSession.oCustomWidgets.GetCurrentPageNode(self.oSession.GetCurrentNavigationIndex()),\
+                    self.oSession.GetNavigationPage( self.oSession.GetCurrentNavigationIndex() - 1))
         
-        xAdjustedRoot = self.oIOXml.GetRootNode()
+#         xAdjustedRoot = self.oIOXml.GetRootNode()
+        xAdjustedRoot = self.oSession.oCustomWidgets.GetRootNode()
         sAdjustedXML = etree.tostring(xAdjustedRoot)
         sExpectedXML = etree.tostring(xExpectedRoot)
         
         # # for debug
-        # print(sAdjustedXML)
-        # print(sExpectedXML)
-        # print(self.oSession.GetNavigationList())
+#         print(sAdjustedXML)
+#         print(sExpectedXML)
+#         print(self.oSession.GetNavigationList())
         
         if sAdjustedXML == sExpectedXML:
             bTestResult = True
@@ -681,7 +690,8 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         self.oIOXml.SaveXml(sFullFile)
         #############
 
-        
+#         self.oSession.oCustomWidgets.SetRootNode(xRoot)
+        self.oSession.SetIOXml(self.oIOXml)
         self.oSession.BuildNavigationList()
             # print(self.oSession.GetNavigationList())
         '''
@@ -714,6 +724,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
         liResults_test1 = []
         
+
         ########### Test 1
         #     Repeat nav index 3 - loop on Page with only one question set
         self.oSession.SetCurrentNavigationIndex(3) # repeat xPage2 (3 in composite list - 0-based)
@@ -814,9 +825,9 @@ class TestSessionTest(ScriptedLoadableModuleTest):
             #print(self.oSession.GetNavigationList())
         
         # set up for randomizing given a randomized list of PageGroup indices
-        self.oSession.SetRandomizeRequired('Y')
+        self.oSession.oCustomWidgets.SetRandomizeRequired('Y')
         liRandIndices = [0,2,3,1]
-        self.oSession.AddRandomizedIndicesToXML(liRandIndices)
+        self.oSession.oCustomWidgets.AddRandomizedIndicesToXML(liRandIndices)
         # liRandIndices = [2,3,1] # PageGroup numbers
         # self.oSession.SetNavigationList( self.oSession.ShuffleNavigationList(liRandIndices) )
         self.oSession.BuildNavigationList()
