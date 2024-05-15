@@ -32,22 +32,16 @@ class CustomWidgets:
         self.sClassName = type(self).__name__
         self.parent = parent
         
-        self._sLoginTime = ''
-        self._bQuizComplete = False
-        self._bEmailResults = False
         self._bUserInteractionLog = False
-        self._fhInteractionLog = None
-        self._bBtnScriptRerunRequired = False
-        self._xPageNode = None
-        self._sPageID = ''
-        self._sPageDescriptor = ''
-        self._sPageRep = ''
         self._bAllowMultipleResponse = False
         self._bRandomizeRequired = False
-        self._bPageLooping = False
-        self._sSessionContourVisibility = ''
-        self._fContourToolRadius = 0
-#         self._xRootNode = None
+
+        
+        self._sLoginTime = ''
+        self._bQuizComplete = False
+
+        self._xPageNode = None
+        
         
         self.oUtilsMsgs = UtilsMsgs()
         self.oIOXml = oIOXml
@@ -117,82 +111,53 @@ class CustomWidgets:
     #----------
     def GetPageDescriptor(self, iPageIndex):
         xmlPageNode = self.oIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
-        self._sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
-        return self._sPageDescriptor
+        sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
+        
+        return sPageDescriptor
 
     #----------
-    def SetEmailResultsRequest(self, oUtilsEmail, oFilesIO):
-        self._bEmailResults = oUtilsEmail.SetupEmailResults(oFilesIO, \
+    def GetEmailResultsRequest(self, oUtilsEmail, oFilesIO):
+        bEmailResults = oUtilsEmail.SetupEmailResults(oFilesIO, \
                             self.oIOXml.GetValueOfNodeAttribute(self.GetRootNode(), 'EmailResultsTo'))
         
-    #----------
-    def GetEmailResultsRequest(self):
-        return self._bEmailResults
-    
-    #----------
-#     def SetSessionContourVisibilityDefault(self):
-#         # quiz validation checked for valid values
-#         # if no attribute exists, set with the default
-#         self._sSessionContourVisibility = self.oIOXml.GetValueOfNodeAttribute(self.GetRootNode(), 'ContourVisibility')
-#         if self._sSessionContourVisibility == '':
-#             self._sSessionContourVisibility = 'Outline'  # default
-            
+        return bEmailResults
+
     #----------
     def GetSessionContourVisibilityDefault(self):
         # quiz validation checked for valid values
         # if no attribute exists, set with the default
-        self._sSessionContourVisibility = self.oIOXml.GetValueOfNodeAttribute(self.GetRootNode(), 'ContourVisibility')
-        if self._sSessionContourVisibility == '':
-            self._sSessionContourVisibility = 'Outline'  # default
+        sSessionContourVisibility = self.oIOXml.GetValueOfNodeAttribute(self.GetRootNode(), 'ContourVisibility')
+        if sSessionContourVisibility == '':
+            sSessionContourVisibility = 'Outline'  # default
             
-        return self._sSessionContourVisibility
+        return sSessionContourVisibility
     
-#     #----------
-#     def SetPageID(self, iPageIndex):
-#         xmlPageNode = self.oIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
-#         self._sPageID = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'ID')
-        
     #----------
     def GetPageID(self, iPageIndex):
         xmlPageNode = self.oIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
-        self._sPageID = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'ID')
-        return self._sPageID
-
-#     #----------
-#     def SetPageDescriptor(self, iPageIndex):
-#         xmlPageNode = self.oIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
-#         self._sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
-#         
+        sPageID = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'ID')
+        
+        return sPageID
 
     #----------
     def GetPageRep(self, iPageIndex):
         xmlPageNode = self.oIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
-        self._sPageRep = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Rep')
-        return self._sPageRep
+        sPageRep = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Rep')
+        
+        return sPageRep
 
     #----------
-    def SetUserInteractionLogRequest(self, xPageNode):
-        ''' Function to define whether a page is to be set for user interaction logging.
-            If logging is on - the Slicer layout is locked down otherwise, 
-                window and widget resizing is enabled.
-        '''
+    def SetUserInteractionLogRequest(self, iPageIndex):
 
+        xPageNode = self.GetNthPageNode(iPageIndex)
         sUserInteractionLog = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'UserInteractionLog')
 
+        self._bUserInteractionLog = False
         if sUserInteractionLog == 'Y':
             self._bUserInteractionLog = True
             
-        else:
-            self._bUserInteractionLog = False
-
-
-#         if self.oUserInteraction == None:
-#             self.oUserInteraction = UserInteraction()
-#             
-#         self.oUserInteraction.Lock_Unlock_Layout(self.oMaximizedWindowSize, self.GetUserInteractionLogRequest())
-        
+        return self._bUserInteractionLog
             
-        
     #----------
     def GetUserInteractionLogRequest(self):
         return self._bUserInteractionLog
@@ -223,6 +188,7 @@ class CustomWidgets:
     #----------
     def SetMultipleResponse(self, bInput):
         self._bAllowMultipleResponse = bInput
+        
     #----------
     def GetMultipleResponseAllowed(self):
         return self._bAllowMultipleResponse
@@ -267,16 +233,10 @@ class CustomWidgets:
         ''' From the  navigation index in the composite indices list, get the page index.
             Return the nth page node (using the page index) from the root.
         '''
-#         iPageIndex = self.GetNavigationPage(self.GetCurrentNavigationIndex())
         xPageNode = self.oIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
         
         return xPageNode
     
-#     #----------
-#     def GetNthPageNode(self, iPageIndex):
-#         xPageNode = self.oIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
-#         return xPageNode
-#         
     #----------
     def GetImageElements(self, iPageIndex):
         lxImageElements = self.oIOXml.GetChildren(self.GetNthPageNode(iPageIndex), 'Image')
@@ -284,7 +244,6 @@ class CustomWidgets:
     
     #----------
     def GetCurrentQuestionSetNode(self, iPageIndex, iQSetIndex):
-#         iQSetIndex = self.GetNavigationQuestionSet(self.GetCurrentNavigationIndex())
         xPageNode = self.GetNthPageNode(iPageIndex)
         xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', iQSetIndex)
         
@@ -297,13 +256,6 @@ class CustomWidgets:
     
         return xQuestionNode
  
-#     #----------
-#     def GetAllQuestionsForCurrentQuestionSet(self):
-#         xCurrentQuestionSetNode = self.GetCurrentQuestionSetNode()
-#         xAllQuestionNodes = self.oIOXml.GetChildren(xCurrentQuestionSetNode, 'Question')
-#         
-#         return xAllQuestionNodes
-    
     #----------
     def GetNthOptionNode(self, iPageIndex, iQSetIndex, indQuestion, indOption):
 
@@ -325,19 +277,12 @@ class CustomWidgets:
     #----------
     def GetPageLooping(self, iPageIndex):
         
-        self._bPageLooping = False
+        bPageLooping = False
         xPageNode = self.GetNthPageNode(iPageIndex)
         sPageLooping = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Loop')
         if sPageLooping == "Y":
-            self._bPageLooping = True
-        return self._bPageLooping
-
-    #----------
-    def SetPageLooping(self, xPageNode):
-        if self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Loop') == "Y":
-            self._bPageLooping = True
-        else:
-            self._bPageLooping = False
+            bPageLooping = True
+        return bPageLooping
 
     #----------
     def GetSegmentationModuleRequired(self):
@@ -348,13 +293,6 @@ class CustomWidgets:
             
         return bSegModuleRequired
     
-#     #----------
-#     def SetRequestToEnableSegmentEditorTF(self, sYN):
-#         if sYN == 'y' or sYN == 'Y':
-#             self._bRequestToEnableSegmentEditor = True
-#         else:
-#             self._bRequestToEnableSegmentEditor = False
-#         
     #----------
     def GetRequestToEnableSegmentEditorTF(self, iPageIndex):
         bSegmentEditorRequired = False
@@ -366,33 +304,19 @@ class CustomWidgets:
         
         return bSegmentEditorRequired
     
-#     #----------
-#     def GetSegmentationRequired(self, iPageIndex):
-#         
-#         bSegmentEditorRequired = False
-#         xPageNode = self.oIOXml.GetNthPageNode(iPageIndex)
-#         sSegmentEditorRequired = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor')
-#         
-#         if sSegmentEditorRequired == "Y":
-#             bSegmentEditorRequired = True
-#         
-#         return bSegmentEditorRequired
-#         
     #----------
-    def SetButtonScriptRerunRequired(self, iPageIndex):
+    def GetButtonScriptRerunRequired(self, iPageIndex):
 
         xPageNode = self.GetNthPageNode(iPageIndex)
         sBtnScriptRequired = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ButtonScriptRerunRequired')
         if sBtnScriptRequired == 'Y' or sBtnScriptRequired == 'y':
-            self._bBtnScriptRerunRequired = True
+            bBtnScriptRerunRequired = True
 
         else:
-            self._bBtnScriptRerunRequired = False
+            bBtnScriptRerunRequired = False
+            
+        return bBtnScriptRerunRequired
                 
-    #----------
-    def GetButtonScriptRerunRequired(self):
-        return self._bBtnScriptRerunRequired
-    
     #----------
     def SetRandomizeRequired(self, sYN=None):
         # set randomize required to input value (from unit tests) or from the stored xml attribute
@@ -402,25 +326,24 @@ class CustomWidgets:
             self._bRandomizeRequired = True
         else:
             self._bRandomizeRequired = False
-            
+             
     #----------
     def GetRandomizeRequired(self):
         return self._bRandomizeRequired
 
     #----------
-    def SetContourToolRadius(self, xPageNode):
-        
+    def GetContourToolRadius(self, iPageIndex):
+
+        xPageNode = self.GetNthPageNode(iPageIndex)        
         sContourRadius = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ContourToolRadius')
         
         if sContourRadius != '':
-            self._fContourToolRadius = float(sContourRadius)
+            fContourToolRadius = float(sContourRadius)
         else:
-            self._fContourToolRadius = 0.0
+            fContourToolRadius = 0.0
         
-        slicer.modules.quizzereditor.widgetRepresentation().self().SetContourToolRadius(self._fContourToolRadius)        
-    #----------
-    def GetCountourToolRadius(self):
-        return self._fContourToolRadius
+        return fContourToolRadius
+                
     #----------
     def GetQuestionType(self, xQuestionNode):
         
@@ -432,9 +355,7 @@ class CustomWidgets:
         lsResponseValues = []                  
         xAllOptions = self.oIOXml.GetChildren(xQuestionNode, 'Option')
         
-        
         for xOptionNode in xAllOptions:
-             
                                          
             sLatestResponse = ''
             xLatestResponseNode = self.oIOXml.GetLatestChildElement(xOptionNode, 'Response')
@@ -446,8 +367,6 @@ class CustomWidgets:
         
         return lsResponseValues
                  
-     
-
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #-------------------------------------------
@@ -456,7 +375,7 @@ class CustomWidgets:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def AddRandomizedIndicesToXML(self,liIndices):
+    def AddRandomizedIndicesToQuizResultsFile(self,liIndices):
         ''' Function to coordinate adding the randomized indices into the user's XML.
         '''
         # convert indices into a string
@@ -550,12 +469,13 @@ class CustomWidgets:
         return bEndOfLoopAndNextPageIncomplete
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetViewingLayout(self, xmlPageNode):
+    def SetViewingLayout(self, iPageIndex):
         
+        xPageNode = self.GetNthPageNode(iPageIndex)
         # clear combo box
         self.lsLayoutWidgets = []
         # set the requested layout for images
-        self.sPageLayout = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Layout')
+        self.sPageLayout = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Layout')
         if self.sPageLayout == 'TwoOverTwo' :
             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
             self.lsLayoutWidgets.append('Red')
@@ -648,12 +568,7 @@ class CustomWidgets:
         ''' Function to copy the current page into the xml allowing the user to create new segments or  
             measurement lines for the same image. 
         '''
-#         # allow for testing environment to use a pre-set testing file path
-#         if sXmlFilePath == None:
-#             sXmlFilePath = self.oFilesIO.GetUserQuizResultsPath()   # for live run
-        
-#         indXmlPageToRepeat = self.GetCurrentPageIndex()
-        
+#       # allow for testing environment to use a pre-set testing file path
         
         self.SaveQuiz(sXmlFilePath)    # for debug
         xCopyOfXmlPageToRepeatNode = self.oIOXml.CopyElement(self.GetNthPageNode(indXmlPageToRepeat))
@@ -673,7 +588,7 @@ class CustomWidgets:
         return indNextXmlPageWithRep0, iCopiedRepNum
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def AdjustXMLForRepeatedPage(self, xCurrentPageNode, iPageIndex):
+    def AdjustQuizResultsFileForRepeatedPage(self, iNewPageIndex, iPrevPageIndex):
         ''' Function to update the newly repeated Page node.
             The Page ID attribute will have '-Rep#' appended.
             Any previously stored label map and markup line paths are removed.
@@ -685,12 +600,10 @@ class CustomWidgets:
         sMsg = ''
         try:
             
-#             xNewRepeatPage = self.GetCurrentPageNode()
-            xNewRepeatPage = xCurrentPageNode
+            xNewRepeatPage = self.GetNthPageNode(iNewPageIndex)
             
             # get last rep number to increment current rep
-#             xPreviousPage = self.oIOXml.GetNthChild(self.GetRootNode(), "Page", self.GetNavigationPage( self.GetCurrentNavigationIndex() -1 ) )
-            xPreviousPage = self.oIOXml.GetNthChild(self.GetRootNode(), "Page", iPageIndex)
+            xPreviousPage = self.oIOXml.GetNthChild(self.GetRootNode(), "Page", iPrevPageIndex)
             sPreviousRepNum = self.oIOXml.GetValueOfNodeAttribute(xPreviousPage, "Rep")
             sPreviousPageID = self.oIOXml.GetValueOfNodeAttribute(xPreviousPage, 'ID')
             
@@ -731,8 +644,7 @@ class CustomWidgets:
         
         except:
             tb = traceback.format_exc()
-#             iPage = self.GetCurrentPageIndex() + 1
-            iPage = iPageIndex + 1
+            iPage = iPrevPageIndex + 1
             sMsg = 'AdjustXMLForRepeatedPage: Trouble updating repeated page.' + \
                     ' Previous page rep number should be a string that can be converted to an integer.' +\
                     '\nSee Page: ' + str(iPage) + '\n\n' + tb
@@ -980,132 +892,3 @@ class CustomWidgets:
                 xPageNode = self.oIOXml.GetNthChild(xRootNode, "Page", iPageNum)
                 self.oIOXml.UpdateAttributesInElement(xPageNode, {"PageGroup":str(iPageNum + 1)})
         
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def DisplayCurrentResponses(self, lsCurrentResponses):
-# 
-#         indQSet = self.GetCurrentQuestionSetIndex()
-#  
-#         oQuestionSet = self._loQuestionSets[indQSet]
-#         loQuestions = oQuestionSet.GetQuestionList()
-#          
-#         for indQuestion in range(len(loQuestions)):
-#             oQuestion = loQuestions[indQuestion]
-#             oQuestion.PopulateQuestionWithResponses(lsCurrentResponses[indQuestion])
-# 
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def DisplaySavedResponse(self):
-# 
-#         xNodeQuestionSet = self.GetCurrentQuestionSetNode()
-#         indQSet = self.GetCurrentQuestionSetIndex()
-#  
-#         oQuestionSet = self._loQuestionSets[indQSet]
-#         loQuestions = oQuestionSet.GetQuestionList()
-#          
-#         # for each question and each option, extract any existing responses from the XML
-#          
-#         lsAllResponsesForQuestions = []
-#         for indQuestion in range(len(loQuestions)):
-#             oQuestion = loQuestions[indQuestion]
-#             xQuestionNode = self.oIOXml.GetNthChild(xNodeQuestionSet, 'Question', indQuestion)
-#              
-#                  
-#             lsResponseValues = []                  
-#             xAllOptions = self.oIOXml.GetChildren(xQuestionNode, 'Option')
-# 
-# 
-#             xAllOptions = self.GetAllOptionNodes(indQuestion)
-#             for xOptionNode in xAllOptions:
-#                 
-#                                             
-#                 sLatestResponse = ''
-#                 xLatestResponseNode = self.oIOXml.GetLatestChildElement(xOptionNode, 'Response')
-#                 if xLatestResponseNode != None:
-#                     sLatestResponse = self.oIOXml.GetDataInNode(xLatestResponseNode)
-#     
-#                 # search for 'latest' response completed - update the list
-#                 lsResponseValues.append(sLatestResponse)
-#                 
-#             oQuestion.PopulateQuestionWithResponses(lsResponseValues)
-# 
-#             # only InfoBox type of question can have all responses equal to null string
-#             if self.oIOXml.GetValueOfNodeAttribute(xQuestionNode, 'Type') != "InfoBox" \
-#                     and (all(elem == '' for elem in lsResponseValues)):
-#                 lsResponseValues = []   # reset if all are empty
-# 
-#             lsAllResponsesForQuestions.append(lsResponseValues)
-#             
-#     
-#             lsResponseValues = []  # clear for next set of options 
-# 
-#         self.SetPreviousResponses(lsAllResponsesForQuestions)
-#     
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def CaptureNewResponses(self):
-#         ''' When moving to another display of Images and QuestionSet (from pressing Next or Previous)
-#             the new responses that were entered must be captured ready to do the save to XML.
-#             A check for any missing responses to the questions is done and passed back to the calling function.
-#         '''
-#         
-#         # sMsg may be set in Question class function to capture the response
-#         sMsg = ''
-#         sAllMsgs = ''
-#         
-#         # get list of questions from current question set
-#         indQSet = self.GetCurrentQuestionSetIndex()
-#         oQuestionSet = self._loQuestionSets[indQSet]
-#         loQuestions = oQuestionSet.GetQuestionList()
-#             
-#         lsAllResponses = []
-#         lsResponsesForOptions = []
-#         iNumMissingResponses = 0
-#         
-#         for indQuestion in range(len(loQuestions)):
-#             oQuestion = loQuestions[indQuestion]
-#             bResponseCaptured = False
-#             
-#             bResponseCaptured, lsResponsesForOptions, sMsg = oQuestion.CaptureResponse()
-# 
-# 
-#             # append all captured lists - even if it was empty (partial responses)
-#             lsAllResponses.append(lsResponsesForOptions)
-#             
-#             # string together all missing response messages
-#             if sMsg != '':
-#                 if sAllMsgs == '':
-#                     sAllMsgs = sMsg
-#                 else:
-#                     sAllMsgs = sAllMsgs + '\n' + sMsg 
-#             
-#             # keep track if a question was missed
-#             if bResponseCaptured == False:
-#                 iNumMissingResponses = iNumMissingResponses + 1
-#                 
-#         # define success level
-#         sCaptureSuccessLevel = self.oPageState.CategorizeResponseCompletionLevel(len(loQuestions), len(loQuestions)-iNumMissingResponses)
-#                 
-#         return sCaptureSuccessLevel, lsAllResponses, sAllMsgs
-#        
-
-
-
-##########################################################################
-#
-# class SlicerWindowSize
-#
-##########################################################################
-
-class SlicerWindowSize:
-    
-    def __init__(self, parent=None):
-        self.slMainWindowPos = None
-        self.slMainWindowWidth = 0
-        self.slMainWindowHeight = 0
-        
-        self.CaptureWindowSize()
-        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CaptureWindowSize(self):
-        slMainWindow = slicer.util.mainWindow()
-        self.slMainWindowPos = slMainWindow.pos
-        self.slMainWindowWidth = slMainWindow.geometry.width()
-        self.slMainWindowHeight = slMainWindow.geometry.height()

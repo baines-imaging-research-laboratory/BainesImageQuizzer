@@ -149,7 +149,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_RandomizePageGroups_NoSeed())
 
         tupResults.append(self.test_GetStoredRandomizedIndices())
-        tupResults.append(self.test_AddRandomizedIndicesToXML())
+        tupResults.append(self.test_AddRandomizedIndicesToQuizResultsFile())
         
         tupResults.append(self.test_AdjustXMLForRepeatedPage())
         tupResults.append(self.test_TestMultipleRepeats())
@@ -498,7 +498,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         return tupResult
         
     #------------------------------------------- 
-    def test_AddRandomizedIndicesToXML(self):
+    def test_AddRandomizedIndicesToQuizResultsFile(self):
         
         self.fnName = sys._getframe().f_code.co_name
         sMsg = ''
@@ -511,7 +511,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
         
         liIndices = [0,5,3,1,4,2]
-        self.oSession.oCustomWidgets.AddRandomizedIndicesToXML(liIndices)
+        self.oSession.oCustomWidgets.AddRandomizedIndicesToQuizResultsFile(liIndices)
 
         # read the updated xml to get what was stored 
         liStoredIndices = self.oSession.oCustomWidgets.GetStoredRandomizedIndices()
@@ -646,7 +646,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         # set current index to the repeated xml element
         self.oSession.SetCurrentNavigationIndex(3)
         self.oSession.oCustomWidgets.AdjustXMLForRepeatedPage(\
-                    self.oSession.oCustomWidgets.GetCurrentPageNode(self.oSession.GetCurrentNavigationIndex()),\
+                    self.oSession.oCustomWidgets.GetNthPageNode(self.oSession.GetCurrentNavigationIndex()),\
                     self.oSession.GetNavigationPage( self.oSession.GetCurrentNavigationIndex() - 1))
         
 #         xAdjustedRoot = self.oIOXml.GetRootNode()
@@ -827,7 +827,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         # set up for randomizing given a randomized list of PageGroup indices
         self.oSession.oCustomWidgets.SetRandomizeRequired('Y')
         liRandIndices = [0,2,3,1]
-        self.oSession.oCustomWidgets.AddRandomizedIndicesToXML(liRandIndices)
+        self.oSession.oCustomWidgets.AddRandomizedIndicesToQuizResultsFile(liRandIndices)
         # liRandIndices = [2,3,1] # PageGroup numbers
         # self.oSession.SetNavigationList( self.oSession.ShuffleNavigationList(liRandIndices) )
         self.oSession.BuildNavigationList()
