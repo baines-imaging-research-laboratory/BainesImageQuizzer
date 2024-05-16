@@ -123,7 +123,7 @@ class UtilsValidate:
             # open requested quiz xml 
             bSuccess = self.oIOXml.OpenXml(self.oFilesIO.GetXmlQuizPath(),'Session')
             xRootNode = self.oIOXml.GetRootNode()
-            self.l4iNavList = self.oIOXml.GetNavigationListBase(xRootNode)
+            self.l4iNavList = self.oIOXml.GetQuizLayoutForNavigationList(xRootNode)
 
             # >>>>>>>>>>>>>>>
             # check options at the Session level

@@ -520,7 +520,6 @@ class Session:
                         bAddedNewElement = True     # at least one element added
                             
                 if bAddedNewElement:
-#                     self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
                     self.oCustomWidgets.SaveQuiz(self.oFilesIO.GetUserQuizResultsPath())
     
         except:
@@ -887,7 +886,6 @@ class Session:
             if qtEmailAns == qt.QMessageBox.Yes:
     
                 sArchiveFilenameWithPath = os.path.join(self.oFilesIO.GetUserDir(), self.oFilesIO.GetQuizFilenameNoExt())
-#                 sPathToZipFile = self.oIOXml.ZipXml(sArchiveFilenameWithPath, self.oFilesIO.GetUserQuizResultsDir())
                 sPathToZipFile = self.oCustomWidgets.GetXmlUtils().ZipXml(sArchiveFilenameWithPath, self.oFilesIO.GetUserQuizResultsDir())
                 
                 if sPathToZipFile != '':
@@ -999,8 +997,7 @@ class Session:
         #     of indices for each page, question sets, page group and rep number
         
         
-#         self.SetNavigationList(self.oIOXml.GetNavigationListBase(self.oCustomWidgets.GetRootNode()))
-        self.SetNavigationList(self.oIOXml.GetNavigationListBase(self.oIOXml.GetRootNode()))
+        self.SetNavigationList(self.oIOXml.GetQuizLayoutForNavigationList(self.oIOXml.GetRootNode()))
         
         # if randomization is requested - shuffle the page/questionset list
         if self.oCustomWidgets.GetRandomizeRequired():
@@ -1248,7 +1245,7 @@ class Session:
         indNextXmlPageWithRep0, iCopiedRepNum = self.oCustomWidgets.RepeatNode(indXmlPageToRepeat, sXmlFilePath) 
 
 
-#         self.oIOXml.SaveXml(sXmlFilePath)    # for debug
+###         self.oIOXml.SaveXml(sXmlFilePath)    # for debug
         self.oCustomWidgets.SaveQuiz(sXmlFilePath)
         self.BuildNavigationList() # update after adding xml page
          
@@ -1262,7 +1259,7 @@ class Session:
 
 
 
-        # self.oIOXml.SaveXml(sXmlFilePath)    # for debug
+###         self.oIOXml.SaveXml(sXmlFilePath)    # for debug
         self.BuildNavigationList()  # repeated here to pick up attribute adjustments for Rep#
         self.oCustomWidgets.SaveQuiz(sXmlFilePath)
  
@@ -1518,20 +1515,6 @@ class Session:
     #----------   Contours outline/fill and opacity
     #----------
 
-#     #----------
-#     def GetSessionContourVisibilityDefault(self):
-#         return self._sSessionContourVisibility
-#     
-#     #----------
-#     def SetSessionContourVisibilityDefault(self, xRootNode):
-#         # quiz validation checked for valid values
-#         # if no attribute exists, set with the default
-#         self._sSessionContourVisibility = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ContourVisibility')
-#         if self._sSessionContourVisibility == '':
-#             self._sSessionContourVisibility = 'Outline'  # default
-#             
-#         self.SetContourVisibilityCheckBox(self._sSessionContourVisibility)
-#         
     #----------
     def SetContourVisibilityCheckBox(self, sVisibility): 
         # set the contour visibility widget in Extra Tools 
@@ -1940,7 +1923,6 @@ class Session:
         '''
         sMsg = ''
         xPageNode = self.oCustomWidgets.GetNthPageNode(self.GetCurrentPageIndex())
-#         sPageComplete = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageComplete')
         bPageComplete = self.oCustomWidgets.GetPageCompleteAttribute(self.GetCurrentPageIndex())
 
         if bPageComplete and not self.GetMultipleResponseAllowed():
@@ -2180,7 +2162,7 @@ class Session:
             iBookmarkedNavigationIndex = self.oIOXml.GetNavigationIndexForPage(self.GetNavigationList(), iBookmarkedPageIndex)
             
             
-                
+    #### for debug ###            
     #         sMsg = 'Leaving current screen - return to Bookmark page'\
     #                 + '\nCurrentNavigationIndex: ' + str(self.GetCurrentNavigationIndex()) \
     #                 + '\nCurrentPage (0-based): ' + str( self.GetCurrentPageIndex()) \

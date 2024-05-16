@@ -382,20 +382,20 @@ class UtilsIOXml:
         return bRequired
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetNavigationListBase(self, xRootNode):
-        
+    def GetQuizLayoutForNavigationList(self, xRootNode):
+         
         l4iNavList = []
-        
+         
         # get Page nodes
         xPages = self.GetChildren(xRootNode, 'Page')
-
+ 
         iPageNum = 0
         for iPageIndex in range(len(xPages)):
             iPageNum = iPageNum + 1
             # for each page - get number of question sets
             xPageNode = self.GetNthChild(xRootNode, 'Page', iPageIndex)
             xQuestionSets = self.GetChildren(xPageNode,'QuestionSet')
-
+ 
             sPageGroup = self.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
             # if there is no request to randomize the page groups, there may not be a page group number
             try:
@@ -403,19 +403,19 @@ class UtilsIOXml:
             except:
                 # assign a unique page number if no group number exists
                 iPageGroup = iPageNum
-                
+                 
             sRepNum = self.GetValueOfNodeAttribute(xPageNode, 'Rep')
             try:
                 iRepNum = int(sRepNum)
             except:
                 iRepNum = 0
-            
+             
             # if there are no question sets for the page, insert a blank shell
             #    - this allows images to load
             if len(xQuestionSets) == 0:
                 self.AddElement(xPageNode,'QuestionSet', 'Blank Quiz',{})
                 xQuestionSets = self.GetChildren(xPageNode, 'QuestionSet')
-            
+             
             # append to composite indices list
             #    - if there are 2 pages and the 1st page has 2 question sets, 2nd page has 1 question set,
             #        and each page is in a different page group
@@ -427,12 +427,12 @@ class UtilsIOXml:
             #    - there can be numerous questions in each question set
             for iQuestionSetIndex in range(len(xQuestionSets)):
                 l4iNavList.append([iPageIndex,iQuestionSetIndex, iPageGroup, iRepNum])
-        
-        
-        
-        
+         
+         
+         
+         
         return l4iNavList
-    
+     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetNavigationIndexForPage(self, l4iNavList, iPageIndex):
         ''' Returns first navigation index that matches the Page index given.
@@ -443,9 +443,9 @@ class UtilsIOXml:
             if l4iNavList[idx][0] == iPageIndex:
                 iNavigationIndex = idx
                 break
-            
+             
         return iNavigationIndex
-    
+     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetIndexOfNextChildWithAttributeValue(self, xParentNode, sChildTagName, indFrom, sAttrib, sAttribValue):
         ''' given an index to search from, search the attributes in the child that matches the input
