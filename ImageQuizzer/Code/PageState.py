@@ -144,7 +144,7 @@ class PageState:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def InitializeStates(self, xPageNode):
         ''' 
-            Each question set is intialized as incomplete.
+            Each question set is initialized as incomplete.
 
             Each image segmentation state is initialized as incomplete.
             If the xml Image element has an attribute 'SegmentRequired' then 

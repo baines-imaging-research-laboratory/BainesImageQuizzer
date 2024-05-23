@@ -8,8 +8,6 @@ from Utilities.UtilsFilesIO import *
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsEmail import *
 
-from UserInteraction import *
-
 
 ##########################################################################
 #
@@ -28,9 +26,8 @@ class CustomWidgets:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def __init__(self, oIOXml, oFilesIO, parent=None):
+    def __init__(self, oIOXml, oFilesIO=None):
         self.sClassName = type(self).__name__
-        self.parent = parent
         
         self._bUserInteractionLog = False
         self._bAllowMultipleResponse = False

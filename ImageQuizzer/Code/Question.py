@@ -142,7 +142,8 @@ class QuestionSet():
             oQuestion = Button()
             bButtonScriptRerunRequired = self.oSession.oCustomWidgets.GetButtonScriptRerunRequired(self.oSession.GetCurrentPageIndex())
             bQuizComplete = self.oSession.oCustomWidgets.GetQuizComplete()
-            dictModifiers = {"ButtonScriptRerunRequired":bButtonScriptRerunRequired, "QuizComplete":bQuizComplete}
+            bResetView = self.oSession.oCoreWidgets.GetResetView()
+            dictModifiers = {"ButtonScriptRerunRequired":bButtonScriptRerunRequired, "QuizComplete":bQuizComplete, "ResetView":bResetView}
             oQuestion.UpdateDictionaryModifiers(dictModifiers)
             
         elif (sQuestionType == 'Picture'):
@@ -233,7 +234,7 @@ class Question(ABC):
     def lsResponses(self):
         return self._lsResponses
         
-    @lsOptions.setter
+    @lsResponses.setter
     def lsResponses(self,x):
         self._lsResponses_setter(x)
         
@@ -1381,7 +1382,8 @@ class Button(Question):
 
         bButtonScriptRerunRequired = self.dictModifiers.get('ButtonScriptRerunRequired')
         bQuizComplete = self.dictModifiers.get('QuizComplete')
-        if bButtonScriptRerunRequired and not bQuizComplete:
+        bResetView = self.dictModifiers.get('ResetView')
+        if bButtonScriptRerunRequired and not bQuizComplete and not bResetView:
             #clear responses forcing a script rerun
             for idx in range(len(lsValues)):
                 lsValues[idx] = ''

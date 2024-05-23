@@ -19,9 +19,9 @@ from enum import Enum
 #
 ##########################################################################
 
-class UserInteraction:
+class UserInteraction():
     
-    def __init__(self):
+    def __init__(self, parent=None):
         self.sClassName = type(self).__name__
         
         self.fh = None

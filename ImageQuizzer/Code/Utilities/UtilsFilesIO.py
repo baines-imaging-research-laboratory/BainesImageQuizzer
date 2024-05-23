@@ -645,7 +645,7 @@ class UtilsFilesIO:
                 # from the Close event filter
                 if sCaller != 'EventFilter':
                     if oSession.oCustomWidgets.GetSegmentationModuleRequired():   # if there is a segmentation module
-                        if oSession.GetSegmentationTabEnabled() == True:    # if the tab is enabled
+                        if oSession.oCoreWidgets.GetSegmentationTabEnabled() == True:    # if the tab is enabled
                             qtAns = oSession.oUtilsMsgs.DisplayOkCancel(\
                                                 'No contours were created. Do you want to continue?')
                             if qtAns == qt.QMessageBox.Ok:
