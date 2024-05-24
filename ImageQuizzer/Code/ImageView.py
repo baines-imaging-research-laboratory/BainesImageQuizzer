@@ -1,5 +1,3 @@
-from abc import ABC, abstractmethod
-
 import PythonQt
 import os
 import vtk, qt, ctk, slicer

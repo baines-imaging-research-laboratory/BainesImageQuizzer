@@ -66,7 +66,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         # Note: Version 1.0 should be used with Slicer v4.11.20200930
         # self.sVersion = "Image Quizzer   v1.0 "  #  Release Date: May 10, 2022
         # Note: Version 2.0 should be used with Slicer v4.11.20210226
-        self.sVersion = "Image Quizzer v3.3.6" 
+        self.sVersion = "Image Quizzer v3.3.7" 
 
         sSlicerVersion = slicer.app.applicationVersion
         if sSlicerVersion != '4.11.20210226':
@@ -172,12 +172,10 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         qTitleGroupBox.setLayout(qTitleGroupBoxLayout)
                                 
         qLogoImg = qt.QLabel(self)
-#         sLogoName = 'BainesChevrons.png'
         sLogoName = 'BainesLogoSmall.png'
         sLogoPath = os.path.join(self.oFilesIO.GetScriptedModulesPath(),'Resources','Icons',sLogoName)
         pixmap = qt.QPixmap(sLogoPath)
         qLogoImg.setPixmap(pixmap)
-#         qLogoImg.setAlignment(QtCore.Qt.AlignRight)
         qLogoImg.setAlignment(QtCore.Qt.AlignLeft)
 
         qTitle = qt.QLabel('Image Quizzer - User Login')

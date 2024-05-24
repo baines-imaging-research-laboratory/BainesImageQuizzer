@@ -149,14 +149,10 @@ class CoreWidgets:
         if bTF == True:
             # add segment editor tab to quiz widget
             self.oSlicerInterface.qTabWidget.addTab(slicer.modules.quizzereditor.widgetRepresentation(),"Segment Editor")
-#             self._bSegmentationModule = True
             self.SetTabIndex('SegmentEditor', self.oSlicerInterface.qTabWidget.count - 1)
             self.oSlicerInterface.qTabWidget.setTabEnabled(self.GetTabIndex('SegmentEditor'), True)
             self.InitializeTabSettings()
             
-#         else:
-#             self._bSegmentationModule = False
-        
     #----------
     def InitializeNullEditorSettings(self):
         
@@ -355,10 +351,6 @@ class CoreWidgets:
     def SetSliderToolFromContourOpacity(self, fOpacity):
         # set Slider widget position for opacity
         
-        #
-        # if self.qVisibilityOpacity.maximum > self.qVisibilityOpacity.minimum:
-        #     fOpacity = self.GetSessionContourOpacityDefault()
-            
         iSliderValue = int(fOpacity * (self.qVisibilityOpacity.maximum - self.qVisibilityOpacity.minimum))    
         self.qVisibilityOpacity.setValue(iSliderValue)
 
@@ -590,7 +582,6 @@ class CoreWidgets:
         self.btnNPlanesView = qt.QPushButton('Display view')
         self.btnNPlanesView.enabled = True
         self.btnNPlanesView.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
-#         self.btnNPlanesView.connect('clicked(bool)', self.onNPlanesViewClicked)
         self.btnNPlanesView.clicked.connect(self.onNPlanesViewClicked)
         self.qDisplayOptionsGrpBoxLayout.addWidget(self.btnNPlanesView,0,2)
 
@@ -630,14 +621,12 @@ class CoreWidgets:
         self.btnClearLines.toolTip = "Remove all markup lines."
         self.btnClearLines.enabled = True
         self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
-#         self.btnClearLines.connect('clicked(bool)',self.onClearLinesButtonClicked)
         self.btnClearLines.clicked.connect(self.onClearLinesButtonClicked)
         self.qLineToolsGrpBoxLayout.addWidget(self.btnClearLines,0,1)
 
         self.btnAddMarkupsLine = qt.QPushButton("Add new line")
         self.btnAddMarkupsLine.enabled = True
         self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
-#         self.btnAddMarkupsLine.connect('clicked(bool)', self.onAddLinesButtonClicked)
         self.btnAddMarkupsLine.clicked.connect(self.onAddLinesButtonClicked)
         self.qLineToolsGrpBoxLayout.addWidget(self.btnAddMarkupsLine,0,2)
         
@@ -1446,13 +1435,10 @@ class SlicerInterface:
         sLogoName = 'BainesChevrons.png'
         sLogoPath = os.path.join(self.oFilesIO.GetScriptedModulesPath(),'Resources','Icons',sLogoName)
         pixmap = qt.QPixmap(sLogoPath)
-#         pixmapTarget = pixmap.scaled(pixmap.height()-430, pixmap.width()-430, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation);
-#         qLogoImg.setPixmap(pixmapTarget)
         qLogoImg.setPixmap(pixmap)
         qLogoImg.setAlignment(QtCore.Qt.AlignCenter)
 
         qTitle = qt.QLabel('Baines Image Quizzer')
-#         qTitle.setMinimumHeight(pixmap.height())
         qTitle.setFont(qt.QFont('Arial',12, qt.QFont.Bold))
         qTitle.setAlignment(QtCore.Qt.AlignCenter)
 

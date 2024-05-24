@@ -151,7 +151,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_GetStoredRandomizedIndices())
         tupResults.append(self.test_AddRandomizedIndicesToQuizResultsFile())
         
-        tupResults.append(self.test_AdjustXMLForRepeatedPage())
+        tupResults.append(self.test_AdjustQuizResultsFileForRepeatedPage())
         tupResults.append(self.test_TestMultipleRepeats())
         tupResults.append(self.test_LoopingWithRandomizedPages())
         
@@ -553,7 +553,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         
 
     #-------------------------------------------
-    def test_AdjustXMLForRepeatedPage(self):
+    def test_AdjustQuizResultsFileForRepeatedPage(self):
 
         self.fnName = sys._getframe().f_code.co_name
         sMsg = ''
@@ -645,9 +645,10 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         self.oSession.BuildNavigationList()
         # set current index to the repeated xml element
         self.oSession.SetCurrentNavigationIndex(3)
-        self.oSession.oCustomWidgets.AdjustXMLForRepeatedPage(\
-                    self.oSession.oCustomWidgets.GetNthPageNode(self.oSession.GetCurrentNavigationIndex()),\
+        self.oSession.oCustomWidgets.AdjustQuizResultsFileForRepeatedPage(\
+                    self.oSession.GetNavigationPage(self.oSession.GetCurrentNavigationIndex()),\
                     self.oSession.GetNavigationPage( self.oSession.GetCurrentNavigationIndex() - 1))
+
         
 #         xAdjustedRoot = self.oIOXml.GetRootNode()
         xAdjustedRoot = self.oSession.oCustomWidgets.GetRootNode()
