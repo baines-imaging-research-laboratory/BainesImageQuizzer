@@ -869,15 +869,13 @@ class Session:
         
         # update current state in lists of requirements
         self.oPageState.UpdateCompletionLists(self.oCustomWidgets.GetNthPageNode(self.GetCurrentPageIndex()))
+        sCompletionFlagMsg = self.oPageState.UpdateCompletedFlags(self.oCustomWidgets.GetNthPageNode(self.GetCurrentPageIndex()))
         
         
         if sCaller == 'NextBtn' or sCaller == 'Finish':
             
             # if this was the last question set for the page, check for completion
             if idxQuestionSet == iNumQSets - 1:
-                
-                sCompletionFlagMsg = self.oPageState.UpdateCompletedFlags(self.oCustomWidgets.GetNthPageNode(self.GetCurrentPageIndex()))
-#                 sMsg = sMsg + sCompletionFlagMsg
                 
                 if self.oPageState.GetPageCompletedTF():
                     bPageStateComplete = True
@@ -893,7 +891,11 @@ class Session:
                     sReturnMsg = ' ... missing requirement for Page (contours / markuplines / questions) '
                         
 
-        else:      # for 'Previous' 'GoToBookmark' 'Exit'
+        else:      # for 'Previous' 'GoToBookmark' 'Exit' 'EventFilter (exit)'
+            if sCaller == 'ExitBtn' or sCaller == 'EventFilter':
+                if not self.oPageState.GetPageCompletedTF() and not self.oCustomWidgets.GetQuizComplete():
+                    self.oCustomWidgets.SetPageIncomplete(self.GetCurrentPageIndex())  # for Quiz resuming
+                    
             bPageStateComplete = True    # allow with unfinished requirements
             
                 

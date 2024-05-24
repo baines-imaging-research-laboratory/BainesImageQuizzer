@@ -489,7 +489,9 @@ class customEventFilter(qt.QObject):
                 if bSuccess == False:
                     if sMsg != '':
                         self.oUtilsMsgs.DisplayWarning(sMsg)
+                self.oSession.UpdateCompletions('EventFilter')
                 self.oSession.CaptureAndSaveImageState()
+                
                      
             self.oUtilsMsgs.DisplayInfo(sExitMsg)
             slicer.util.exit(status=EXIT_SUCCESS)
