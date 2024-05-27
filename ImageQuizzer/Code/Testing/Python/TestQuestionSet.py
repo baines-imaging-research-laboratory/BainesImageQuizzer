@@ -1,6 +1,6 @@
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
-from Question import *
+from QuestionSet import *
 from TestingStatus import *
 import sys
 

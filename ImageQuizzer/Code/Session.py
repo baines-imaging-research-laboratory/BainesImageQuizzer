@@ -13,7 +13,7 @@ from Utilities.UtilsFilesIO import *
 from Utilities.UtilsEmail import *
 from Utilities.UtilsValidate import *
 
-from Question import *
+from QuestionSet import *
 from ImageView import *
 from PageState import *
 from UserInteraction import *
@@ -22,7 +22,6 @@ from CoreWidgets import *
 
 
 from slicer.util import EXIT_SUCCESS
-from datetime import datetime
 
 
 ##########################################################################

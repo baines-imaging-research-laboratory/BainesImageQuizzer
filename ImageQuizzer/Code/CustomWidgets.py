@@ -8,6 +8,8 @@ from Utilities.UtilsFilesIO import *
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsEmail import *
 
+from datetime import datetime
+
 
 ##########################################################################
 #
@@ -405,66 +407,6 @@ class CustomWidgets:
         
         return liStoredRandIndices
     
-#     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#     def CheckIfLastRepAndNextPageIncomplete(self, iPageIndex):
-#         ''' Two parts : confirm if this page is at the end of a loop and see if the next page is incomplete.
-#                 1) Look at PageID for this and next Page to see if it is part of the same loop.
-#             
-#                 2)Identify if any subsequent pages have a PageComplete="Y".
-# 
-#             Note: All repeated looping pages follow each other in the XML with consecutive Rep numbers.
-# 
-#             This can happen if a 'Previous' or 'GoToBookmark' button was pressed putting the user
-#             possibly in a page with looping. In this case, the Repeat button needs to be disabled
-#             until the last rep has been reached - with no subsequent completed pages.
-#             
-#         '''
-#         bEndOfLoopAndNextPageIncomplete = False
-#         
-#         bLastLoopingRep = False
-#         sNextPageID = ''
-#          
-#         bLastPageComplete = True
-#         sNextPageComplete = ''
-#         
-#         xPageNode = self.GetNthPageNode(iPageIndex)
-#         sCurrentPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
-#  
-#          
-#         sRepNum = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "Rep")
-#         iRepNum = int(sRepNum)
-#         iNextRepNum = iRepNum + 1
-#          
-#         iSubIndex = sCurrentPageID.find('-Rep')
-#         if iSubIndex >=0:
-#             sStrippedPageID = sCurrentPageID[0:iSubIndex]
-#         else:
-#             sStrippedPageID = sCurrentPageID
-#          
-#         sIDForNextRep = sStrippedPageID + '-Rep' + str(iNextRepNum)
-#  
-#         # for next page            
-#         iNextNavigationIndex = self.GetCurrentNavigationIndex() + 1
-#         if iNextNavigationIndex < len(self.GetNavigationList()):
-#             xNextPageNode = self.oIOXml.GetNthChild(self.GetRootNode(), 'Page', self.GetNavigationPage(iNextNavigationIndex))
-#             sNextPageID = self.oIOXml.GetValueOfNodeAttribute(xNextPageNode, 'ID')
-#             sNextPageComplete = self.oIOXml.GetValueOfNodeAttribute(xNextPageNode, 'PageComplete')
-#          
-#           
-#         if sNextPageID == sIDForNextRep:
-#             bLastLoopingRep = False
-#         else:
-#             bLastLoopingRep = True
-#      
-#          
-#         if sNextPageComplete == 'Y':
-#             bLastPageComplete = False
-#         
-#         if bLastLoopingRep and bLastPageComplete:
-#             bEndOfLoopAndNextPageIncomplete = True
-#         
-#         return bEndOfLoopAndNextPageIncomplete
-#     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetViewingLayout(self, iPageIndex):
         

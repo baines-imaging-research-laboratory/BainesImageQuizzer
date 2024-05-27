@@ -3,7 +3,7 @@ import vtk, qt, ctk, slicer
 import sys
 import traceback
 from Utilities.UtilsMsgs import *
-from Question import *
+from QuestionSet import *
 
 
 import sitkUtils
