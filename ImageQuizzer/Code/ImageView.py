@@ -5,6 +5,8 @@ import sys
 import unittest
 import traceback
 
+import Utilities.UtilsMsgs as UtilsMsgs
+
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsIOXml import *
 
@@ -108,7 +110,6 @@ class ImageView:
 
         # self.quizLayout = quizLayout
         self.oIOXml = UtilsIOXml()
-        self.oUtilsMsgs = UtilsMsgs()
         self.sParentDataDir = sParentDataDir
         self.xPageNode = xPageNode
 
@@ -170,7 +171,7 @@ class ImageView:
                 sMsg = 'BuildViewNodes:Image load Failed : ' + self.sPageID + ':' + oImageViewItem.sImagePath\
                         + "\n\nYou may have selected the wrong folder for the image data."\
                         + "\nExit 3D Slicer and restart the Image Quizzer with the correct database directory."
-                self.oUtilsMsgs.DisplayError(sMsg)
+                UtilsMsgs.DisplayError(sMsg)
                  
             slicer.app.processEvents()
         
@@ -214,7 +215,7 @@ class ImageView:
                                     + oViewNode.sImagePath \
                                     + '\n\n' + tb
                         
-                        self.oUtilsMsgs.DisplayError(sErrorMsg)         
+                        UtilsMsgs.DisplayError(sErrorMsg)         
                 
                 
                 oSlicerWidget = WidgetItem(oViewNode.sDestination)
@@ -324,7 +325,7 @@ class ImageView:
                     + 'See Page: ' + self.sPageID + '_' + self.sPageDescriptor \
                     + '  Image: ' + oViewNode.sNodeName + '\n' + oViewNode.sImagePath \
                     + '\n\n' + tb
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
           
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetLabelMapOutlineOrFill(self, lsLayoutWidgets):
@@ -679,7 +680,6 @@ class ViewNodeBase:
     def RunSetup(self):
         self.sClassName = type(self).__name__
         self.oIOXml = UtilsIOXml()
-        self.oUtilsMsgs = UtilsMsgs()
         
         self.SetXmlImageElement(self.iImageIndex)
         self.SetPageID(self.oSession.sPageID)
@@ -1079,7 +1079,7 @@ class DataVolumeDetail(ViewNodeBase):
             else:
                 
                 sErrorMsg = ('Undefined image type: %s' % self.sImageType)
-                self.oUtilsMsgs.DisplayError(sErrorMsg)
+                UtilsMsgs.DisplayError(sErrorMsg)
                 bLoadSuccess = False
                 
         except:
@@ -1240,12 +1240,12 @@ class DicomVolumeDetail(ViewNodeBase):
             except:
                 sMsg = 'Cannot read SeriesInstanceUID from DICOM using pydicom.' \
                         + '\n See administrator : ' + sys._getframe(  ).f_code.co_name
-                self.oUtilsMsgs.DisplayError(sMsg)
+                UtilsMsgs.DisplayError(sMsg)
 
         else:
             sMsg = 'Image file does not exist: ' + self.sImagePath \
                     + '\n See administrator : ' + sys._getframe(  ).f_code.co_name
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadVolume(self):
@@ -1343,7 +1343,7 @@ class DicomVolumeDetail(ViewNodeBase):
         else:
             bLoadSuccess = False
             sErrorMsg = ('Slicer Database is not open')
-            self.oUtilsMsgs.DisplayError(sErrorMsg)
+            UtilsMsgs.DisplayError(sErrorMsg)
 
         
 

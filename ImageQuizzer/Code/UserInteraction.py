@@ -7,8 +7,9 @@ try:
 except:
     print("OpenCV not imported. CPU time will not be recorded in User Interaction logs.")
 
+import Utilities.UtilsMsgs as UtilsMsgs
+
 from Utilities.UtilsMsgs import *
-# from Utilities.UtilsFilesIO import *
 
 from enum import Enum
 from datetime import datetime
@@ -36,8 +37,6 @@ class UserInteraction():
         self.lViewingWindows = ['Red','Green','Yellow','Slice4']
         self.ldictObserverIDs = {}
         
-        self.oUtilsMsgs = UtilsMsgs()
-
         self.slMaximizedWindowPos = None   
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -227,7 +226,7 @@ class UserInteraction():
                 self.fh = open(sUserInteractionLogPath,"a")
                 break
             except IOError:
-                self.oUtilsMsgs.DisplayWarning("UserInteractionLog.csv file is open. Please close Excel to continue.")
+                UtilsMsgs.DisplayWarning("UserInteractionLog.csv file is open. Please close Excel to continue.")
 
         if bCreatingNewFile:
             # write header lines (no indents for proper csv formatting)
@@ -349,7 +348,6 @@ class LogDetails():
         self.sImageNodeName_bg = ''
         self.sImageNodeName_fg = ''
         
-        self.oUtilsMsgs = UtilsMsgs()
         
         try:
             self.iCPUUptime = cv2.getTickCount()
@@ -389,7 +387,7 @@ class LogDetails():
         except Exception:
             tb = traceback.format_exc()
             sMsg = 'GetImageNodeName: Failed to get image node from viewing window. \n\n' + tb
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
             
                     
 
@@ -416,8 +414,6 @@ class CornerCoordinates():
         self.iWidgetHeight = 0
         self.iWidgetWidth = 0
         
-        self.oUtilsMsgs = UtilsMsgs()
-
         
         self.GetCornerCoordinates()
         self.ConvertWidgetCornerXYZToIJK(sImageNodeName_bg, sImageNodeName_fg)
@@ -506,7 +502,7 @@ class CornerCoordinates():
             
         except:
             sMsg = "Cannot convert widget corner XYZ to IJK"
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
             
 
         

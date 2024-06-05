@@ -4,6 +4,8 @@ import vtk, qt, ctk, slicer
 import sys
 import unittest
 
+import Utilities.UtilsMsgs as UtilsMsgs
+
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsFilesIO import *
 from Utilities.UtilsMsgs import *
@@ -36,8 +38,6 @@ class CoreWidgets:
     def __init__(self, oSession):
         self.sClassName = type(self).__name__
         
-        self.oUtilsMsgs = UtilsMsgs()
-
         self.oSession = oSession
 
         self._dictTabIndices = {'Quiz':0, 'ExtraTools':-1, 'SegmentEditor':-1}  #defaults
@@ -791,7 +791,7 @@ class CoreWidgets:
                 sMsg = "You have the option to repeat this set of images and questions." +\
                         "\nClick 'OK' to " + sNextPhrase + " otherwise click 'Cancel'."
                 
-                qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
+                qtAns = UtilsMsgs.DisplayOkCancel(sMsg)
                 if qtAns == qt.QMessageBox.Cancel:
                     return
 
@@ -864,7 +864,7 @@ class CoreWidgets:
             tb = traceback.format_exc()
             sMsg = "onNextButtonClicked: Error moving to next page. Current page: " + str(iPage) \
                    + "\n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
                 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onPreviousButtonClicked(self):
@@ -881,7 +881,7 @@ class CoreWidgets:
             tb = traceback.format_exc()
             sMsg = "onPreviousButtonClicked: Error moving to previous page. Current page: " + str(iPage) \
                    + "\n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onExitButtonClicked(self,sCaller):
@@ -905,7 +905,7 @@ class CoreWidgets:
                 iProgressPercent = int((self.oSession.GetCurrentNavigationIndex() + 1) / len(self.oSession.GetNavigationList()) * 100)
             else:
                 # error in creating the composite navigation index - assign percent to 100 for exiting
-                self.oUtilsMsgs.DisplayError('ERROR creating quiz indices - Exiting')
+                UtilsMsgs.DisplayError('ERROR creating quiz indices - Exiting')
             self.progress.setFormat(sPageID + '  ' + sPageDescriptor + '    ' + str(iProgressPercent) + '%')
             
             sMsg = 'Do you wish to exit?'
@@ -916,7 +916,7 @@ class CoreWidgets:
                     sMsg = sMsg + " \nYour quiz is complete and your responses will be locked." \
                                 + " \n\nIf you wish to resume at a later time, press 'Cancel' here, then use the 'Exit' button."
     
-            qtAns = self.oUtilsMsgs.DisplayOkCancel(sMsg)
+            qtAns = UtilsMsgs.DisplayOkCancel(sMsg)
             if qtAns == qt.QMessageBox.Ok:
 
                 self.oSession.SetInteractionLogOnOff('Off',sInteractionMsg)
@@ -961,7 +961,7 @@ class CoreWidgets:
             tb = traceback.format_exc()
             sMsg = "onExitButtonClicked: Error exiting quiz. Current page: " + str(iPage) \
                    + "\n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
             
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -971,7 +971,7 @@ class CoreWidgets:
         '''
         
         try:        
-            qtAns = self.oUtilsMsgs.DisplayOkCancel(\
+            qtAns = UtilsMsgs.DisplayOkCancel(\
                                 "Are you sure you want to repeat this set of images and questions?" +\
                                 "\nIf No, click 'Cancel' and press 'Next' to continue.")
             if qtAns == qt.QMessageBox.Ok:
@@ -1023,7 +1023,7 @@ class CoreWidgets:
             tb = traceback.format_exc()
             sMsg = "onRepeatButtonClicked: Error repeating this page. Current page: " + str(iPage) \
                    + "\n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
     
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1047,7 +1047,7 @@ class CoreWidgets:
 
         if bPageComplete and not self.oCustomWidgets.GetMultipleResponseAllowed():
             sMsg = '\nThis page has already been completed. You cannot remove the markup lines.'
-            self.oUtilsMsgs.DisplayWarning(sMsg)
+            UtilsMsgs.DisplayWarning(sMsg)
         else:
             try:           
                 slLineNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsLineNode')
@@ -1071,7 +1071,7 @@ class CoreWidgets:
             except:
                 tb = traceback.format_exc()
                 sMsg = "onClearLinesButtonClicked: Error clearing all markup lines.  \n\n" + tb 
-                self.oUtilsMsgs.DisplayError(sMsg)
+                UtilsMsgs.DisplayError(sMsg)
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onMarkupInteraction(self, caller, event):
@@ -1134,15 +1134,15 @@ class CoreWidgets:
                 self.oSession.ApplySavedImageState()
             else:
                 sMsg = 'No images have been loaded to display in an alternate viewing mode.'
-                self.oUtilsMsgs.DisplayWarning(sMsg)
+                UtilsMsgs.DisplayWarning(sMsg)
                 
-            self.oUtilsMsgs.DisplayTimedMessage('***','Waiting',100) #force Slicer to refresh display before logging resumes
+            UtilsMsgs.DisplayTimedMessage('***','Waiting',100) #force Slicer to refresh display before logging resumes
             self.oSession.SetInteractionLogOnOff('On','Changing View - Display View Button - ' + self.qComboNPlanesList.currentText)
 
         except:
             tb = traceback.format_exc()
             sMsg = "onNPlanesViewClicked: Error setting the NPlanes view (closeup) request.  \n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
             
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1179,7 +1179,7 @@ class CoreWidgets:
             
 
             if sCaller == 'NPlanes':
-                self.oUtilsMsgs.DisplayTimedMessage('***','Waiting',100) #force Slicer to refresh display before logging resumes
+                UtilsMsgs.DisplayTimedMessage('***','Waiting',100) #force Slicer to refresh display before logging resumes
                 self.oSession.SetInteractionLogOnOff('On','Changing View - Reset Button - caller: ' + sCaller)
                 
             self.SetResetView(False)    
@@ -1187,7 +1187,7 @@ class CoreWidgets:
         except:
             tb = traceback.format_exc()
             sMsg = "onResetViewClicked: Error resetting the view after NPlanes (closeup) request.  \n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
             
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1291,7 +1291,7 @@ class CoreWidgets:
 #                     + '\nCurrentPage (0-based): ' + str( self.oSession.GetCurrentPageIndex()) \
 #                     + '\nPageIndex: ' + str(iBookmarkedPageIndex)\
 #                     + '\nNavigationIndex: ' + str(iBookmarkedNavigationIndex)
-#             self.oUtilsMsgs.DisplayWarning(sMsg)
+#             UtilsMsgs.DisplayWarning(sMsg)
              
     
     
@@ -1305,7 +1305,7 @@ class CoreWidgets:
                 tb = traceback.format_exc()
                 sMsg = "onGoToBookmarkButtonClicked: Error moving to bookmarked page. Current page: " + str(iPage) \
                        + "\n\n" + tb 
-                self.oUtilsMsgs.DisplayError(sMsg)
+                UtilsMsgs.DisplayError(sMsg)
             
         
         

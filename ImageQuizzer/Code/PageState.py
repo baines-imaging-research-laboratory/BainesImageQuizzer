@@ -2,6 +2,9 @@ import os
 import vtk, qt, ctk, slicer
 import sys
 import traceback
+
+import Utilities.UtilsMsgs as UtilsMsgs
+
 from Utilities.UtilsMsgs import *
 from QuestionSet import *
 
@@ -97,7 +100,6 @@ class PageState:
                     
         '''
         self.ClearPageStateVariables()
-        self.oUtilsMsgs = UtilsMsgs()
         self.oSession = oSession
         
     #----------
@@ -524,7 +526,7 @@ class PageState:
                     + "\n      Admin must shorten names or move Image Quizzer module closer to root."\
                     + "\n\n" + str(error) \
                     + "\n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
             
             
         return bLabelMapEmpty

@@ -2,6 +2,8 @@ import os, sys
 import vtk, qt, ctk, slicer
 import traceback
 
+import Utilities.UtilsMsgs as UtilsMsgs
+
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
@@ -25,7 +27,6 @@ class UtilsValidate:
         self.parent = parent
 
 
-        self.oUtilsMsgs = UtilsMsgs()
         self.oFilesIO = oFilesIO
         self.oIOXml = self.oFilesIO.oIOXml
 
@@ -301,10 +302,11 @@ class UtilsValidate:
             
         except:
             bSuccess = False
-            self.oUtilsMsgs.DisplayWarning('Quiz Validation Errors \n' + sMsg)
+            UtilsMsgs.DisplayWarning('Quiz Validation Errors \n' + sMsg)
+
             # after warning, reset the message for calling function to display error and exit
             tb = traceback.format_exc()
-            self.oUtilsMsgs.DisplayWarning('Quiz Validation Errors \n' + sMsg)
+            UtilsMsgs.DisplayWarning('Quiz Validation Errors \n' + sMsg)
             # after warning, reset the message for calling function to display error and exit
             sMsg = 'See Administrator: ERROR in quiz XML validation. --Exiting--'\
                    + "\n\n" + tb 

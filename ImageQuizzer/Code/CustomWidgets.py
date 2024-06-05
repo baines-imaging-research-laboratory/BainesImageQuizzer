@@ -3,6 +3,8 @@ import vtk, qt, ctk, slicer
 import sys
 import unittest
 
+import Utilities.UtilsMsgs as UtilsMsgs
+
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsFilesIO import *
 from Utilities.UtilsMsgs import *
@@ -42,7 +44,6 @@ class CustomWidgets:
         self._xPageNode = None
         
         
-        self.oUtilsMsgs = UtilsMsgs()
         self.oIOXml = oIOXml
         self.oFilesIO = oFilesIO
 
@@ -587,7 +588,7 @@ class CustomWidgets:
             sMsg = 'AdjustQuizResultsFileForRepeatedPage: Trouble updating repeated page.' + \
                     ' Previous page rep number should be a string that can be converted to an integer.' +\
                     '\nSee Page: ' + str(iPage) + '\n\n' + tb
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
         
         
         

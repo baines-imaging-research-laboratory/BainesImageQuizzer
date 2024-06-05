@@ -7,6 +7,8 @@ import random
 import traceback
 from copy import deepcopy
 
+import Utilities.UtilsMsgs as UtilsMsgs
+
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
@@ -61,7 +63,6 @@ class Session:
         self.oFilesIO = None
         self.oValidation = None
         self.oIOXml = UtilsIOXml()
-        self.oUtilsMsgs = UtilsMsgs()
         self.oUtilsEmail = UtilsEmail()
         self.oUserInteraction = None
 
@@ -289,7 +290,7 @@ class Session:
             tb = traceback.format_exc()
             sMsg = sMsg + "RunSetup: Error trying to set up the quiz. Page: " + str(iPage) \
                    + "\n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
             
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -373,7 +374,7 @@ class Session:
             tb = traceback.format_exc()
             sMsg = "Session:DisplayQuizLayout: Error trying to display questions. Page: " + str(iPage) \
                    + "\n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
             
         
         
@@ -415,7 +416,7 @@ class Session:
             tb = traceback.format_exc()
             sMsg = "Session:DisplayImageLayout: Error trying to display images. Page: " + str(iPage) \
                    + "\n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
     
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -454,7 +455,7 @@ class Session:
                         bResponsesSaved = True
                     else:
                         sMsg = sMsg + '\n\nAll questions must be answered to proceed'
-                        self.oUtilsMsgs.DisplayWarning( sMsg )
+                        UtilsMsgs.DisplayWarning( sMsg )
                         bResponsesSaved = False
                         sMissingMsg = ' ... missing quiz questions'
                        
@@ -554,7 +555,7 @@ class Session:
             tb = traceback.format_exc()
             sMsg = "CaptureAndSaveImageState: Error saving the image state. Current page: " + str(iPage) \
                    + "\n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
             
         return bSuccess
             
@@ -831,7 +832,7 @@ class Session:
                 + self.oFilesIO.GetUserQuizResultsPath()\
                 + '\n\n' + tb
             # critical error - exit
-            self.oUtilsMsgs.DisplayError( sMsg )
+            UtilsMsgs.DisplayError( sMsg )
              
         return 
      
@@ -876,7 +877,7 @@ class Session:
     
                 else:
                     bPageStateComplete = False
-                    self.oUtilsMsgs.DisplayWarning( sCompletionFlagMsg )
+                    UtilsMsgs.DisplayWarning( sCompletionFlagMsg )
                     sReturnMsg = ' ... missing requirement for Page (contours / markuplines / questions) '
                         
 
@@ -900,7 +901,7 @@ class Session:
             the quiz was completed - exit
         """
         self.QueryThenSendEmailResults()
-        self.oUtilsMsgs.DisplayInfo('Quiz Complete - Exiting')
+        UtilsMsgs.DisplayInfo('Quiz Complete - Exiting')
         slicer.util.exit(status=EXIT_SUCCESS)
         
 
@@ -909,7 +910,7 @@ class Session:
         
         if self.oCustomWidgets.GetEmailResultsRequest(self.oUtilsEmail, self.oFilesIO) and self.oCustomWidgets.GetQuizComplete():
             sMsg = 'Ready to email results?'
-            qtEmailAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
+            qtEmailAns = UtilsMsgs.DisplayYesNo(sMsg)
     
             if qtEmailAns == qt.QMessageBox.Yes:
     
@@ -920,7 +921,7 @@ class Session:
                     self.oUtilsEmail.SendEmail(sPathToZipFile)
                 else:
                     sMsg = 'Trouble archiving quiz results: ' + sPathToZipFile
-                    self.oUtilsMsgs.DisplayError(sMsg)
+                    UtilsMsgs.DisplayError(sMsg)
         
     #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -1174,7 +1175,7 @@ class Session:
             else:
                 sMsg = sMsg + '\n\nClick No to exit.'
                 
-            qtAns = self.oUtilsMsgs.DisplayYesNo(sMsg)
+            qtAns = UtilsMsgs.DisplayYesNo(sMsg)
 
             if qtAns == qt.QMessageBox.Yes:
                 iResumeNavigationIndex = 0
@@ -1202,7 +1203,7 @@ class Session:
             # if not iResumeNavigationIndex == self.GetCurrentNavigationIndex():
             if (not iResumeNavigationIndex == self.GetCurrentNavigationIndex()) or\
                 (iResumeNavigationIndex == 0 and dtLastLogin != ''):
-                self.oUtilsMsgs.DisplayInfo('Resuming quiz from previous login session.')
+                UtilsMsgs.DisplayInfo('Resuming quiz from previous login session.')
                 self.SetQuizResuming(True)
     
         self.SetCurrentNavigationIndex(iResumeNavigationIndex)

@@ -5,6 +5,10 @@ from os.path import basename
 import smtplib
 import traceback
 
+import Utilities.UtilsMsgs as UtilsMsgs
+
+from Utilities.UtilsMsgs import *
+
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
@@ -81,7 +85,7 @@ class UtilsEmail:
             tb = traceback.format_exc()
             sMsg = "SetupEmailResults: Error setting up email configuration\n " \
                    + self.GetEmailConfiguration() + '\n\n'+  tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
             
         return bEmailRequest
             
@@ -94,7 +98,7 @@ class UtilsEmail:
             Any lines beginning with '#' are ignored
         """
         
-        itemValue = ''
+        sItemValue = ''
         bItemFound = False
         sCategorySyntax = '[' + sCategory + ']'
         sItemSyntax = sItem + '='

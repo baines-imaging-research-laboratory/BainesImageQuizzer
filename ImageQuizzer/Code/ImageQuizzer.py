@@ -5,6 +5,8 @@ from Session import *
 from pip._vendor.distlib._backport.shutil import copyfile
 from slicer.util import findChild
 
+import Utilities.UtilsMsgs as UtilsMsgs
+
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
 from Utilities.UtilsValidate import *
@@ -57,7 +59,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         sModuleName = 'ImageQuizzer'
 
-        self.oUtilsMsgs = UtilsMsgs()
         self.oFilesIO = UtilsFilesIO()
         self.oFilesIO.SetModuleDirs(sModuleName)
         self.oValidation = UtilsValidate(self.oFilesIO)
@@ -72,7 +73,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         if sSlicerVersion != '4.11.20210226':
             sMsg = 'This version of Image Quizzer requires 3D Slicer v4.11.20210226' +\
                     '\n You are running 3D Slicer v' + sSlicerVersion
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
 
 
         
@@ -336,7 +337,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             
         else:
             sMsg = 'No location was selected for image database'
-            self.oUtilsMsgs.DisplayWarning(sMsg)
+            UtilsMsgs.DisplayWarning(sMsg)
             self.qUserLoginWidget.raise_()
             
                 
@@ -355,7 +356,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         # check that file was selected
         if not sSelectedQuizPath:
             sMsg = 'No quiz was selected'
-            self.oUtilsMsgs.DisplayWarning(sMsg)
+            UtilsMsgs.DisplayWarning(sMsg)
             self.qUserLoginWidget.raise_()
             self.qLaunchGrpBox.setEnabled(False)
 
@@ -401,7 +402,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
             if sMissingFiles != '':
                 sMsgMissigFiles = 'Database images are missing. ' + sMissingFiles \
                                 + '\nReselect the proper database location or contact your administrator.'
-                self.oUtilsMsgs.DisplayWarning(sMsgMissigFiles)
+                UtilsMsgs.DisplayWarning(sMsgMissigFiles)
                 self.qUserLoginWidget.raise_()
     
             else:
@@ -419,7 +420,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                     self.oSession.RunSetup(self.oFilesIO, self.oValidation, self.slicerMainLayout)
     
         else:
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -471,7 +472,6 @@ class customEventFilter(qt.QObject):
             to exit the quiz.
         '''
          
-        self.oUtilsMsgs = UtilsMsgs()
         if event.type() == qt.QEvent.Close:
             
             sExitMsg = 'Image Quizzer Exiting'
@@ -486,12 +486,12 @@ class customEventFilter(qt.QObject):
                 bSuccess, sMsg = self.oSession.PerformSave(sCaller)
                 if bSuccess == False:
                     if sMsg != '':
-                        self.oUtilsMsgs.DisplayWarning(sMsg)
+                        UtilsMsgs.DisplayWarning(sMsg)
                 self.oSession.UpdateCompletions('EventFilter')
                 self.oSession.CaptureAndSaveImageState()
                 
                      
-            self.oUtilsMsgs.DisplayInfo(sExitMsg)
+            UtilsMsgs.DisplayInfo(sExitMsg)
             slicer.util.exit(status=EXIT_SUCCESS)
 
             

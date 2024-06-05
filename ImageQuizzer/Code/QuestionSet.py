@@ -7,6 +7,7 @@ import sys
 import warnings
 import traceback
 
+import Utilities.UtilsMsgs as UtilsMsgs
 
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsIOXml import *
@@ -30,7 +31,6 @@ class QuestionSet():
         self._loQuestions = []
         
         self.oIOXml = UtilsIOXml()
-        self.oMsgUtil = UtilsMsgs()
         self.oSession = oSession
         
     #----------
@@ -84,7 +84,7 @@ class QuestionSet():
                 else:
                     sWarningMsg = self.sClassName + ':' + sFnName + '\nType = ' + sQuestionType + '    ...UnrecognizedQuestionType'\
                                 + '\nRemaining Questions will be displayed \n\n - Contact Administrator'
-                    self.oMsgUtil.DisplayWarning(sWarningMsg)
+                    UtilsMsgs.DisplayWarning(sWarningMsg)
                     
                     
                 
@@ -792,7 +792,6 @@ class IntegerValueQuestion(Question):
     def __init__(self):
         self.sClassName = type(self).__name__
 
-        self.oMsgUtil = UtilsMsgs()
         self.dictModifiers = {}
         self.sMin = ''
         self.sMax = ''
@@ -892,7 +891,7 @@ class IntegerValueQuestion(Question):
         except ValueError:
             bSuccess = False
             sErrorMsg = 'See Administrator. Invalid range attribute in XML tag : ' + self._sGrpBoxTitle_getter()
-            self.oMsgUtil.DisplayError(sErrorMsg)
+            UtilsMsgs.DisplayError(sErrorMsg)
             
                 
         
@@ -968,7 +967,6 @@ class FloatValueQuestion(Question):
     def __init__(self):
         self.sClassName = type(self).__name__
 
-        self.oMsgUtil = UtilsMsgs()
         self.dictModifiers = {}
         self.sMin = ''
         self.sMax = ''
@@ -1070,7 +1068,7 @@ class FloatValueQuestion(Question):
         except ValueError:
             bSuccess = False
             sErrorMsg = 'See Administrator. Invalid range attribute in XML tag : ' + self._sGrpBoxTitle_getter()
-            self.oMsgUtil.DisplayError(sErrorMsg)
+            UtilsMsgs.DisplayError(sErrorMsg)
             
                 
         
@@ -1258,7 +1256,6 @@ class Button(Question):
     def __init__(self):
         self.sClassName = type(self).__name__
 
-        self.oMsgUtil = UtilsMsgs()
 
         
     def _lsOptions_setter(self, lsInput):
@@ -1345,7 +1342,7 @@ class Button(Question):
             qBtn.setStyleSheet("QPushButton{ background-color: rgb(245,159,159); color: black }")
             sMsg = "onButtonClicked: Error running script. \nContact administrator\n" + sScript \
                    + "\n\n" + tb 
-            self.oMsgUtil.DisplayWarning(sMsg)
+            UtilsMsgs.DisplayWarning(sMsg)
 
         
     #-----------------------------------------------

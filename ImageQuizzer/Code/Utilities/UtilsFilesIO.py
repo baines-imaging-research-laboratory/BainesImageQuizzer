@@ -2,6 +2,8 @@ import os, sys
 import warnings
 import vtk, qt, ctk, slicer
 
+import Utilities.UtilsMsgs as UtilsMsgs
+
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
 
@@ -60,7 +62,6 @@ class UtilsFilesIO:
         self._sQuizzerROIColorTableNameWithExt = 'QuizzerROIColorTable.txt'
         self._sQuizzerROIColorTablePath = ''
 
-        self.oUtilsMsgs = UtilsMsgs()
         self.oIOXml = UtilsIOXml()
 
         self.setupTestEnvironment()
@@ -372,7 +373,7 @@ class UtilsFilesIO:
                     + '   Possible cause: directory path too long. Admin must move Image Quizzer closer to root.'\
                     + "\n\n" + str(error) \
                     + "\n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
          
      
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -414,7 +415,7 @@ class UtilsFilesIO:
         else:
             sMsg = 'Trouble opening SlicerDICOMDatabase in : '\
                  + self.GetDICOMDatabaseDir()
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -426,7 +427,7 @@ class UtilsFilesIO:
 
             if not os.path.isfile(self.GetXmlQuizPath()):
                 sErrorMsg = 'Selected Quiz file does not exist'
-                self.oUtilsMsgs.DisplayWarning(sErrorMsg)
+                UtilsMsgs.DisplayWarning(sErrorMsg)
                 return False  
             else:
                 copyfile(self.GetXmlQuizPath(), self.GetUserQuizResultsPath())
@@ -441,7 +442,7 @@ class UtilsFilesIO:
             if not os.access(self.GetUserQuizResultsPath(), os.R_OK):
                 # existing file is unreadable
                 sErrorMsg = 'Quiz file is not readable'
-                self.oUtilsMsgs.DisplayWarning(sErrorMsg)     
+                UtilsMsgs.DisplayWarning(sErrorMsg)     
                 return False
             else:
                 return True
@@ -524,7 +525,7 @@ class UtilsFilesIO:
             sMsg = '\nExportResultsItemToFile: Failed to store ' + sItemName + ' as file: \n' + sPath \
                     + str(error) \
                     + "\n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
     
         return bSuccess, sMsg
     
@@ -616,7 +617,7 @@ class UtilsFilesIO:
                                     + '\n' + sLabelMapPath\
                                     + '\n\nContact Administrator'
                         if len(sLabelMapPath) > 256:  # Windows limitation
-                            self.oUtilsMsgs.DisplayError(sErrorMsg)
+                            UtilsMsgs.DisplayError(sErrorMsg)
 
                         
                         #    add the label map path element to the image element in the xml
@@ -646,7 +647,7 @@ class UtilsFilesIO:
                 if sCaller != 'EventFilter':
                     if oSession.oCustomWidgets.GetSegmentationModuleRequired():   # if there is a segmentation module
                         if oSession.oCoreWidgets.GetSegmentationTabEnabled() == True:    # if the tab is enabled
-                            qtAns = oSession.oUtilsMsgs.DisplayOkCancel(\
+                            qtAns = UtilsMsgs.DisplayOkCancel(\
                                                 'No contours were created. Do you want to continue?')
                             if qtAns == qt.QMessageBox.Ok:
                                 # user did not create a label map but there may be no lesions to segment
@@ -749,7 +750,7 @@ class UtilsFilesIO:
                                 else:
                                     sMsg = 'Stored path to label map file does not exist. Label map will not be loaded.\n' \
                                         + sAbsolutePath
-                                    oSession.oUtilsMsgs.DisplayWarning(sMsg)
+                                    UtilsMsgs.DisplayWarning(sMsg)
                                     break # continue in for loop for next label map path element
                             
                             
@@ -773,7 +774,7 @@ class UtilsFilesIO:
                         except:
                              
                             sMsg = 'Trouble loading label map file:' + sAbsolutePath
-                            oSession.oUtilsMsgs.DisplayWarning(sMsg)
+                            UtilsMsgs.DisplayWarning(sMsg)
                            
 
                 # add the label map node to the image property so that it gets
@@ -940,7 +941,7 @@ class UtilsFilesIO:
             sMsg = "MergeLabelMapsAndSave: Error while merging label maps."  \
                     + str(error) \
                     + "\n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
 
 
         
@@ -993,7 +994,7 @@ class UtilsFilesIO:
                                 + '\n' + sMarkupsLinePath\
                                 + '\n\nContact Administrator'
                     if len(sMarkupsLinePath) > 256:  # Windows limitation
-                        self.oUtilsMsgs.DisplayError(sErrorMsg)
+                        UtilsMsgs.DisplayError(sErrorMsg)
 
         
                     for oImageNode in oSession.oImageView.GetImageViewList():
@@ -1114,7 +1115,7 @@ class UtilsFilesIO:
                         else:
                             sMsg = 'Stored path to markup line file does not exist. Markup line will not be loaded.\n' \
                                 + sAbsolutePath
-                            oSession.oUtilsMsgs.DisplayWarning(sMsg)
+                            UtilsMsgs.DisplayWarning(sMsg)
                             break # continue in for loop for next label map path element
                 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
