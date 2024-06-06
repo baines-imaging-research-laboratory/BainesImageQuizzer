@@ -7,6 +7,7 @@ from slicer.util import findChild
 
 import Utilities.UtilsMsgs as UtilsMsgs
 import Utilities.UtilsFilesIO as UtilsFilesIO
+import Utilities.UtilsValidate as UtilsValidate
 
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
@@ -61,7 +62,6 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         sModuleName = 'ImageQuizzer'
 
         UtilsFilesIO.SetModuleDirs(sModuleName)
-        self.oValidation = UtilsValidate()
         
         # previous and current release dates
         # Note: Version 1.0 should be used with Slicer v4.11.20200930
@@ -386,19 +386,20 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
             
         # check for errors in quiz xml layout before populating the user response folder
-        bQuizValidated, sMsg = self.oValidation.ValidateQuiz()
+        bQuizValidated, sMsg = UtilsValidate.ValidateQuiz()
     
 
         if bQuizValidated:
+            UtilsFilesIO.setupTestEnvironment()
             # create user and results folders if it doesn't exist
             UtilsFilesIO.SetupForUserQuizResults()
 
             ##### for debug... #####
-            UtilsFilesIO.PrintDirLocations()
+            #UtilsFilesIO.PrintDirLocations()
             ########################
             
             
-            sMissingFiles = self.oValidation.ValidateDatabaseLocation()
+            sMissingFiles = UtilsValidate.ValidateDatabaseLocation()
             if sMissingFiles != '':
                 sMsgMissigFiles = 'Database images are missing. ' + sMissingFiles \
                                 + '\nReselect the proper database location or contact your administrator.'
@@ -417,7 +418,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                     self.qUserLoginWidget.show()
                     
                     # start the session
-                    self.oSession.RunSetup(self.oValidation, self.slicerMainLayout)
+                    self.oSession.RunSetup( self.slicerMainLayout)
     
         else:
             UtilsMsgs.DisplayError(sMsg)

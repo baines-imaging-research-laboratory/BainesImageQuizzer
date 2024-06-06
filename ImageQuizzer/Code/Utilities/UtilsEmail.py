@@ -35,18 +35,6 @@ class UtilsEmail:
     sEmailSubjectLine = ''
     sEmailMessage = ''
     sEmailAttachment = ''
-#     def __init__(self):
-#         
-#         self.sHostServer = ''
-#         self.sHostUsername = ''
-#         self.sHostPassword = ''
-#         self.iHostPort = 0
-#         
-#         self.sEmailResultsFrom = ''
-#         self.sEmailResultsTo = ''
-#         self.sEmailSubjectLine = ''
-#         self.sEmailMessage = ''
-#         self.sEmailAttachment = ''
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -10,6 +10,7 @@ from copy import deepcopy
 import Utilities.UtilsMsgs as UtilsMsgs
 import Utilities.UtilsFilesIO as UtilsFilesIO
 import Utilities.UtilsEmail as UtilsEmail
+import Utilities.UtilsValidate as UtilsValidate
 
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
@@ -62,7 +63,6 @@ class Session:
         self._bQuizResuming = False
 
        
-        self.oValidation = None
         self.oIOXml = UtilsIOXml()
         self.oUserInteraction = None
 
@@ -85,7 +85,7 @@ class Session:
     def __del__(self):
 
         # clean up of editor observers and nodes that may cause memory leaks (color table?)
-        if self.GetTabIndex('SegmentEditor') > 0:
+        if self.oCoreWidgets.GetTabIndex('SegmentEditor') > 0:
             slicer.modules.quizzereditor.widgetRepresentation().self().exit()
 
     #----------
@@ -101,14 +101,6 @@ class Session:
     #        Getters / Setters
     #-------------------------------------------
 
-#     #----------
-#     def SetFilesIO(self, oFilesIO):
-#         self.oFilesIO = oFilesIO
-#         self.oCustomWidgets.SetFilesIO(oFilesIO)
-
-    #----------
-    def SetValidation(self, oValidation):
-        self.oValidation = oValidation
         
     #----------
     def SetIOXml(self, oIOXml):
@@ -202,13 +194,12 @@ class Session:
     #-------------------------------------------
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def RunSetup(self, oValidation, slicerMainLayout):
+    def RunSetup(self, slicerMainLayout):
         
         sMsg = ''
         try:
             self.SetupCoreWidgets()
 
-            self.SetValidation(oValidation)
             self.oPageState = PageState(self)
 
             # open xml and check for root node
@@ -1034,7 +1025,7 @@ class Session:
             if liRandIndices == []:
                 # get the unique list  of all Page Group numbers to randomize
                 #    this was set during xml validation during the initial read
-                liIndicesToRandomize = self.oValidation.GetListUniquePageGroups()
+                liIndicesToRandomize = UtilsValidate.GetListUniquePageGroups()
                 liRandIndices = self.RandomizePageGroups(liIndicesToRandomize)
                 self.oCustomWidgets.AddRandomizedIndicesToQuizResultsFile(liRandIndices)
              

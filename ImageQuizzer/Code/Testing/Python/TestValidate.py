@@ -2,6 +2,7 @@ import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 
 import Utilities.UtilsFilesIO as UtilsFilesIO
+import Utilities.UtilsValidate as UtilsValidate
 
 from Utilities.UtilsFilesIO import *
 
@@ -115,14 +116,13 @@ class TestValidateTest(ScriptedLoadableModuleTest):
 
         sModuleName = 'ImageQuizzer'
 
-        self.oValidation = UtilsValidate()
-        self.oIOXml = self.oValidation.oIOXml
+        UtilsValidate.SetIOXml()
         
         # create/set environment variable to be checked in UtilsIOXml class
         #    to prevent displaying error messages during testing
         os.environ["testing"] = "1"
         UtilsFilesIO.setupTestEnvironment()
-        self.oValidation.setupTestEnvironment()
+        UtilsValidate.setupTestEnvironment()
 
         self.sTempDir = os.path.join(tempfile.gettempdir(),'ImageQuizzer')
         if not os.path.exists(self.sTempDir):
@@ -209,7 +209,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         # tree.write(sPath)
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidatePageGroupNumbers(xRoot)
+                UtilsValidate.ValidatePageGroupNumbers(xRoot)
                 
             sMsg = context.exception.args[0]
             if sMsg.find('Missing PageGroup attribute')>=0:
@@ -242,7 +242,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
             
         try:
             with self.assertRaises(ValueError) as context:
-                self.oValidation.ValidatePageGroupNumbers(xRoot)
+                UtilsValidate.ValidatePageGroupNumbers(xRoot)
 
             sMsg = context.exception.args[0]
             if sMsg.find('Invalid PageGroup value')>=0:
@@ -281,7 +281,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
             
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidatePageGroupNumbers(xRoot)
+                UtilsValidate.ValidatePageGroupNumbers(xRoot)
             
             # the validation was supposed to catch an error 
             # check that the correct error was raised
@@ -320,9 +320,9 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xImage = etree.SubElement(xPage,"Image", ID="TestImage", Type="Volume", Opacity="0.7")
         xImageChild = etree.SubElement(xImage,"Path")
         xImageChild.text = "C:\TestFolder"
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
 
-        sMsg = self.oValidation.ValidateOpacity(xImage, iPageNum)
+        sMsg = UtilsValidate.ValidateOpacity(xImage, iPageNum)
         if sMsg == '':
             bCaseTestResult = True
         else:
@@ -337,11 +337,11 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xImageChild = etree.SubElement(xImage,"Path")
         xImageChild.text = "C:\TestFolder"
         
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateOpacity(xImage, iPageNum)
+                UtilsValidate.ValidateOpacity(xImage, iPageNum)
             sMsg = context.exception.args[0]
             if sMsg.find('Invalid Opacity value') >= 0:
                 bCaseTestResult = True
@@ -361,11 +361,11 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xImage = etree.SubElement(xPage,"Image", ID="TestImage", Type="Volume", Opacity="15")
         xImageChild = etree.SubElement(xImage,"Path")
         xImageChild.text = "C:\TestFolder"
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateOpacity(xImage, iPageNum)
+                UtilsValidate.ValidateOpacity(xImage, iPageNum)
             sMsg = context.exception.args[0]
             if sMsg.find('Invalid Opacity value') >= 0:
                 bCaseTestResult = True
@@ -382,11 +382,11 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xImage = etree.SubElement(xPage,"Image", ID="TestImage", Type="Volume", Opacity="a")
         xImageChild = etree.SubElement(xImage,"Path")
         xImageChild.text = "C:\TestFolder"
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateOpacity(xImage, iPageNum)
+                UtilsValidate.ValidateOpacity(xImage, iPageNum)
             sMsg = context.exception.args[0]
             if sMsg.find('Invalid Opacity value') >= 0:
                 bCaseTestResult = True
@@ -402,10 +402,10 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xImage = etree.SubElement(xPage,"Image", ID="TestImage", Type="Volume")
         xImageChild = etree.SubElement(xImage,"Path")
         xImageChild.text = "C:\TestFolder"
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         
-        sMsg = self.oValidation.ValidateOpacity(xImage, iPageNum)
+        sMsg = UtilsValidate.ValidateOpacity(xImage, iPageNum)
         if sMsg == '':
             bCaseTestResult = True
         else:
@@ -437,19 +437,19 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot = self.CreateXMLBaseForTests()
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("BookmarkID","ReturnHere")
         xPageNode.set("PageGroup","2")
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("GoToBookmark","ReturnHere ABORT")
         xPageNode.set("PageGroup","3")
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateGoToBookmarkRequest()
+                UtilsValidate.ValidateGoToBookmarkRequest()
             sMsg = context.exception.args[0]
             if sMsg.find('Missing historical BookmarkID') >= 0:
                 bTestResult = False
@@ -480,19 +480,19 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot.set("RandomizePageGroups","Y")
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("BookmarkID","ReturnHere")
         xPageNode.set("PageGroup","2")
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("GoToBookmark","ReturnHere ABORT")
         xPageNode.set("PageGroup","2")
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateGoToBookmarkRequest()
+                UtilsValidate.ValidateGoToBookmarkRequest()
             sMsg = context.exception.args[0]
             if sMsg.find('Missing historical BookmarkID') >= 0:
                 bTestResult = False
@@ -521,19 +521,19 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot.set("RandomizePageGroups","Y")
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("BookmarkID","ReturnHere")
         xPageNode.set("PageGroup","0")
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("GoToBookmark","ReturnHere ABORT")
         xPageNode.set("PageGroup","0")
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateGoToBookmarkRequest()
+                UtilsValidate.ValidateGoToBookmarkRequest()
             sMsg = context.exception.args[0]
             if sMsg.find('Missing historical BookmarkID') >= 0:
                 bTestResult = False
@@ -562,19 +562,19 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot.set("RandomizePageGroups","Y")
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("BookmarkID","ReturnHere")
         xPageNode.set("PageGroup","0")
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("GoToBookmark","ReturnHere ABORT")
         xPageNode.set("PageGroup","2")
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateGoToBookmarkRequest()
+                UtilsValidate.ValidateGoToBookmarkRequest()
             sMsg = context.exception.args[0]
             if sMsg.find('Missing historical BookmarkID') >= 0:
                 bTestResult = False
@@ -603,19 +603,19 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot.set("RandomizePageGroups","Y")
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("BookmarkID","ReturnHere")
         xPageNode.set("PageGroup","0")
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("GoToBookmark","ReturnHere ABORT")
         xPageNode.set("PageGroup","2")
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateGoToBookmarkRequest()
+                UtilsValidate.ValidateGoToBookmarkRequest()
             sMsg = context.exception.args[0]
             if sMsg.find('Missing historical BookmarkID') >= 0:
                 bTestResult = False
@@ -644,19 +644,19 @@ class TestValidateTest(ScriptedLoadableModuleTest):
 
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("BookmarkID","ReturnHere")
         xPageNode.set("PageGroup","2")
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("GoToBookmark","ReturnHere ABORT")
         xPageNode.set("PageGroup","0")
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateGoToBookmarkRequest()
+                UtilsValidate.ValidateGoToBookmarkRequest()
             sMsg = context.exception.args[0]
             if sMsg.find('Missing historical BookmarkID') >= 0:
                 bTestResult = True
@@ -685,19 +685,19 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot.set("RandomizePageGroups","Y")
         
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("BookmarkID","ReturnHere")
         xPageNode.set("PageGroup","2")
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("GoToBookmark","ReturnHere ABORT")
         xPageNode.set("PageGroup","3")
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateGoToBookmarkRequest()
+                UtilsValidate.ValidateGoToBookmarkRequest()
             sMsg = context.exception.args[0]
             if sMsg.find('do not match') >= 0:
                 bTestResult = True
@@ -721,22 +721,22 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         bTestResult = True
         
         xRoot = self.CreateXMLBaseForTests()
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("BookmarkID","ReturnHere")
         xPageNode.set("PageGroup","2")
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("GoToBookmark","ReturnHere ABORT")
         xPageNode.set("PageGroup","3")
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateGoToBookmarkRequest()
+                UtilsValidate.ValidateGoToBookmarkRequest()
             sMsg = context.exception.args[0]
             if sMsg.find('Missing historical BookmarkID') >= 0:
                 bTestResult = True
@@ -762,22 +762,22 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot = self.CreateXMLBaseForTests()
         
         xRoot.set("RandomizePageGroups","Y")
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("BookmarkID","ReturnHere")
         xPageNode.set("PageGroup","2")
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("GoToBookmark","ReturnHere ABORT")
         xPageNode.set("PageGroup","2")
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateGoToBookmarkRequest()
+                UtilsValidate.ValidateGoToBookmarkRequest()
             sMsg = context.exception.args[0]
             if sMsg.find('Missing historical BookmarkID') >= 0:
                 bTestResult = True
@@ -806,19 +806,19 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot.set("RandomizePageGroups","Y")
         
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("BookmarkID","ReturnHere")
         xPageNode.set("PageGroup","3")
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("GoToBookmark","ReturnHere ABORT")
         xPageNode.set("PageGroup","2")
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateGoToBookmarkRequest()
+                UtilsValidate.ValidateGoToBookmarkRequest()
             sMsg = context.exception.args[0]
             if sMsg.find('do not match') >= 0:
                 bTestResult = True
@@ -848,19 +848,19 @@ class TestValidateTest(ScriptedLoadableModuleTest):
 
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("BookmarkID","ReturnHere")
         xPageNode.set("PageGroup","0")
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("GoToBookmark","ReturnHere ABORT")
         xPageNode.set("PageGroup","0")
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateGoToBookmarkRequest()
+                UtilsValidate.ValidateGoToBookmarkRequest()
             sMsg = context.exception.args[0]
             if sMsg.find('Missing historical BookmarkID') >= 0:
                 bTestResult = True
@@ -889,19 +889,19 @@ class TestValidateTest(ScriptedLoadableModuleTest):
 
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("BookmarkID","ReturnHere")
         xPageNode.set("PageGroup","2")
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("GoToBookmark","ReturnHere ABORT")
         xPageNode.set("PageGroup","0")
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateGoToBookmarkRequest()
+                UtilsValidate.ValidateGoToBookmarkRequest()
             sMsg = context.exception.args[0]
             if sMsg.find('Missing historical BookmarkID') >= 0:
                 bTestResult = True
@@ -938,23 +938,23 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot.set("RandomizePageGroups","Y")
         
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("PageGroup","3")
         xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
         xPath0 = etree.SubElement(xImage0,"Path")
         xPath0.text = "C:\\Documents"
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("PageGroup","3")
         xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
         xPath1 = etree.SubElement(xImage1,"Path")
         xPath1.text = "C:\\Documents\\NewFolder"
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateDisplayLabelMapID()
+                UtilsValidate.ValidateDisplayLabelMapID()
             sMsg = context.exception.args[0]
             if sMsg.find('do not match') >= 0:
                 bTestResult = True
@@ -981,20 +981,20 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot = self.CreateXMLBaseForTests()
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("PageGroup","2")
         xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
         
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("PageGroup","3")
         xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateDisplayLabelMapID()
+                UtilsValidate.ValidateDisplayLabelMapID()
             sMsg = context.exception.args[0]
             if sMsg.find('Missing historical LabelMapID') >= 0:
                 bTestResult = False
@@ -1022,20 +1022,20 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot.set("RandomizePageGroups","Y")
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("PageGroup","2")
         xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
         
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("PageGroup","2")
         xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateDisplayLabelMapID()
+                UtilsValidate.ValidateDisplayLabelMapID()
             sMsg = context.exception.args[0]
             if sMsg.find('Missing historical LabelMapID') >= 0:
                 bTestResult = False
@@ -1063,20 +1063,20 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot.set("RandomizePageGroups","Y")
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("PageGroup","0")
         xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
         
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("PageGroup","0")
         xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateDisplayLabelMapID()
+                UtilsValidate.ValidateDisplayLabelMapID()
             sMsg = context.exception.args[0]
             if sMsg.find('Missing historical LabelMapID') >= 0:
                 bTestResult = False
@@ -1105,20 +1105,20 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot.set("RandomizePageGroups","Y")
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("PageGroup","0")
         xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
         
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("PageGroup","2")
         xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateDisplayLabelMapID()
+                UtilsValidate.ValidateDisplayLabelMapID()
             sMsg = context.exception.args[0]
             if sMsg.find('Missing historical LabelMapID') >= 0:
                 bTestResult = False
@@ -1147,20 +1147,20 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot.set("RandomizePageGroups","Y")
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("PageGroup","0")
         xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
         
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("PageGroup","2")
         xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateDisplayLabelMapID()
+                UtilsValidate.ValidateDisplayLabelMapID()
             sMsg = context.exception.args[0]
             if sMsg.find('Missing historical LabelMapID') >= 0:
                 bTestResult = False
@@ -1189,19 +1189,19 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot.set("RandomizePageGroups","Y")
  
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("PageGroup","2")
         xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
  
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("PageGroup","0")
         xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
  
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
          
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateDisplayLabelMapID()
+                UtilsValidate.ValidateDisplayLabelMapID()
             sMsg = context.exception.args[0]
             if sMsg.find('do not match') >= 0:
                 bTestResult = True
@@ -1230,19 +1230,19 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot.set("RandomizePageGroups","Y")
         
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("PageGroup","2")
         xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("PageGroup","3")
         xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateDisplayLabelMapID()
+                UtilsValidate.ValidateDisplayLabelMapID()
             sMsg = context.exception.args[0]
             if sMsg.find('do not match') >= 0:
                 bTestResult = True
@@ -1268,19 +1268,19 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot = self.CreateXMLBaseForTests()
         
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("PageGroup","2")
         xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("PageGroup","3")
         xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateDisplayLabelMapID()
+                UtilsValidate.ValidateDisplayLabelMapID()
             sMsg = context.exception.args[0]
             if sMsg.find('do not match') >= 0:
                 bTestResult = True
@@ -1309,19 +1309,19 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot.set("RandomizePageGroups","Y")
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("PageGroup","2")
         xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("PageGroup","2")
         xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateDisplayLabelMapID()
+                UtilsValidate.ValidateDisplayLabelMapID()
             sMsg = context.exception.args[0]
             if sMsg.find('do not match') >= 0:
                 bTestResult = True
@@ -1350,19 +1350,19 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot.set("RandomizePageGroups","Y")
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("PageGroup","3")
         xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("PageGroup","2")
         xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateDisplayLabelMapID()
+                UtilsValidate.ValidateDisplayLabelMapID()
             sMsg = context.exception.args[0]
             if sMsg.find('do not match') >= 0:
                 bTestResult = True
@@ -1391,19 +1391,19 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot.set("RandomizePageGroups","Y")
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("PageGroup","0")
         xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("PageGroup","0")
         xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateDisplayLabelMapID()
+                UtilsValidate.ValidateDisplayLabelMapID()
             sMsg = context.exception.args[0]
             if sMsg.find('do not match') >= 0:
                 bTestResult = True
@@ -1433,19 +1433,19 @@ class TestValidateTest(ScriptedLoadableModuleTest):
         xRoot.set("RandomizePageGroups","Y")
 
         # add attributes to specific pages
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 5)
         xPageNode.set("PageGroup","2")
         xImage0 = etree.SubElement(xPageNode,"Image", {"LabelMapID":"DCE-Contour"})
 
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsValidate.oIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("PageGroup","0")
         xImage1 = etree.SubElement(xPageNode,"Image", {"DisplayLabelMapID":"DCE-Contour"})
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsValidate.oIOXml.SetRootNode(xRoot)
         
         try:
             with self.assertRaises(Exception) as context:
-                self.oValidation.ValidateDisplayLabelMapID()
+                UtilsValidate.ValidateDisplayLabelMapID()
             sMsg = context.exception.args[0]
             if sMsg.find('do not match') >= 0:
                 bTestResult = True
