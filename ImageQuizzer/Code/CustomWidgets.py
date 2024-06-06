@@ -5,6 +5,7 @@ import unittest
 
 import Utilities.UtilsMsgs as UtilsMsgs
 import Utilities.UtilsFilesIO as UtilsFilesIO
+import Utilities.UtilsEmail as UtilsEmail
 
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsFilesIO import *
@@ -112,8 +113,8 @@ class CustomWidgets:
         return sPageDescriptor
 
     #----------
-    def GetEmailResultsRequest(self, oUtilsEmail):
-        bEmailResults = oUtilsEmail.SetupEmailResults( \
+    def GetEmailResultsRequest(self):
+        bEmailResults = UtilsEmail.SetupEmailResults( \
                             self.oIOXml.GetValueOfNodeAttribute(self.GetRootNode(), 'EmailResultsTo'))
         
         return bEmailResults

@@ -3,10 +3,13 @@ import vtk, qt, ctk, slicer
 import traceback
 
 import Utilities.UtilsMsgs as UtilsMsgs
+import Utilities.UtilsFilesIO as UtilsFilesIO
+import Utilities.UtilsEmail as UtilsEmail
 
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
+from Utilities.UtilsEmail import *
 
 
 
@@ -23,12 +26,11 @@ class UtilsValidate:
     """
 
     
-    def __init__(self, oFilesIO, parent=None):
+    def __init__(self, parent=None):
         self.parent = parent
 
 
-        self.oFilesIO = oFilesIO
-        self.oIOXml = self.oFilesIO.oIOXml
+        self.oIOXml = UtilsIOXml()
 
         self._liPageGroups = []
         self._liUniquePageGroups = []
@@ -122,7 +124,7 @@ class UtilsValidate:
         
         try:
             # open requested quiz xml 
-            bSuccess = self.oIOXml.OpenXml(self.oFilesIO.GetXmlQuizPath(),'Session')
+            bSuccess = self.oIOXml.OpenXml(UtilsFilesIO.GetXmlQuizPath(),'Session')
             xRootNode = self.oIOXml.GetRootNode()
             self.l4iNavList = self.oIOXml.GetQuizLayoutForNavigationList(xRootNode)
 
@@ -136,9 +138,10 @@ class UtilsValidate:
             sEmailResultsTo = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'EmailResultsTo')
             if sEmailResultsTo != '':
                 # ensure that the smtp config file exists
-                sSmtpConfigFile = os.path.join(self.oFilesIO.GetConfigDir(), 'smtp_config.txt')
+                sSmtpConfigFile = os.path.join(UtilsFilesIO.GetConfigDir(), 'smtp_config.txt')
                 if not (os.path.exists(sSmtpConfigFile)) :
                     sMsg = sMsg + '\nMissing smtp configuration file for request to email quiz results : ' + sSmtpConfigFile
+                UtilsEmail.SetupEmailResults(sEmailResultsTo)
             
             
             sValidationMsg = self.ValidateROIColorFile()
@@ -280,9 +283,9 @@ class UtilsValidate:
             if sROIColorFile.endswith('.txt'):
                 sMsg = sMsg + '\nRemove .txt extenstion from ROIColorFile name.'
             if sROIColorFile == '':
-                sROIColorFilePath = self.oFilesIO.GetDefaultROIColorFilePath()
+                sROIColorFilePath = UtilsFilesIO.GetDefaultROIColorFilePath()
             else:
-                sROIColorFilePath = self.oFilesIO.GetCustomROIColorTablePath(sROIColorFile)
+                sROIColorFilePath = UtilsFilesIO.GetCustomROIColorTablePath(sROIColorFile)
             if not os.path.isfile(sROIColorFilePath):
                 sMsg = sMsg + '\nCustom ROIColorFile does not exist in the directory with the quiz.' + sROIColorFilePath
                 
@@ -397,7 +400,7 @@ class UtilsValidate:
         '''
         
         # open requested quiz xml 
-        bSuccess = self.oIOXml.OpenXml(self.oFilesIO.GetXmlQuizPath(),'Session')
+        bSuccess = self.oIOXml.OpenXml(UtilsFilesIO.GetXmlQuizPath(),'Session')
         xRootNode = self.oIOXml.GetRootNode()
         
         if bSuccess:
@@ -422,7 +425,7 @@ class UtilsValidate:
                             pass
                         else:
                             lsUniqueImagePaths.append(sPath)
-                            sFullPath = os.path.join(self.oFilesIO.GetDataParentDir(), sPath)
+                            sFullPath = os.path.join(UtilsFilesIO.GetDataParentDir(), sPath)
                             if not os.path.exists(sFullPath):
                                 if sMissingFiles == '':
                                     sMissingFiles = sMissingFiles + sMissingFilesPrefix
@@ -1052,7 +1055,7 @@ class UtilsValidate:
         
         sROIColorFile = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'ROIColorFile')
         if sROIColorFile != '':
-                sROIColorFilePath = os.path.join(self.oFilesIO.GetXmlQuizDir(), sROIColorFile + '.txt')
+                sROIColorFilePath = os.path.join(UtilsFilesIO.GetXmlQuizDir(), sROIColorFile + '.txt')
 
                 if not (os.path.exists(sROIColorFilePath)) :
                     sMsg = sMsg + sErrorMsgMissingFile + sROIColorFilePath
@@ -1178,7 +1181,7 @@ class UtilsValidate:
                     for xOption in lxOptionElements:
                         
                         sScriptName = self.oIOXml.GetDataInNode(xOption)
-                        sScriptFullPath = os.path.join(self.oFilesIO.GetScriptsDir(),sScriptName)
+                        sScriptFullPath = os.path.join(UtilsFilesIO.GetScriptsDir(),sScriptName)
                         
                         if os.path.exists(sScriptFullPath) == False:
                             sMsg = sMsg + '\nYou have a Button type of question but the script name defined in the Option does not exist' \
@@ -1212,7 +1215,7 @@ class UtilsValidate:
                     for xOption in lxOptionElements:
                         
                         sPictureName = self.oIOXml.GetDataInNode(xOption)
-                        sPictureFullPath = os.path.join(self.oFilesIO.GetXmlQuizDir(),sPictureName)
+                        sPictureFullPath = os.path.join(UtilsFilesIO.GetXmlQuizDir(),sPictureName)
         
                         if os.path.exists(sPictureFullPath) == False:
                             sMsg = sMsg + '\nYou have a Picture type of question but the requested picture does not exist.' \
@@ -1391,9 +1394,9 @@ class UtilsValidate:
         
         sMsg = ''
 
-        sUserDir = self.oFilesIO.GetUserDir()
+        sUserDir = UtilsFilesIO.GetUserDir()
         sUserDir = sUserDir.replace('/Code\..','')
-        sQuizFilename = self.oFilesIO.GetQuizFilenameNoExt()
+        sQuizFilename = UtilsFilesIO.GetQuizFilenameNoExt()
         sPageID = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ID')
         sPageGroup = 'PgGroup_' + self.oIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup')
         sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPage, 'Descriptor')

@@ -9,6 +9,7 @@ from copy import deepcopy
 
 import Utilities.UtilsMsgs as UtilsMsgs
 import Utilities.UtilsFilesIO as UtilsFilesIO
+import Utilities.UtilsEmail as UtilsEmail
 
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
@@ -63,7 +64,6 @@ class Session:
        
         self.oValidation = None
         self.oIOXml = UtilsIOXml()
-        self.oUtilsEmail = UtilsEmail()
         self.oUserInteraction = None
 
         self.oImageView = None
@@ -907,7 +907,7 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def QueryThenSendEmailResults(self):
         
-        if self.oCustomWidgets.GetEmailResultsRequest(self.oUtilsEmail) and self.oCustomWidgets.GetQuizComplete():
+        if self.oCustomWidgets.GetEmailResultsRequest() and self.oCustomWidgets.GetQuizComplete():
             sMsg = 'Ready to email results?'
             qtEmailAns = UtilsMsgs.DisplayYesNo(sMsg)
     
@@ -917,7 +917,7 @@ class Session:
                 sPathToZipFile = self.oCustomWidgets.GetXmlUtils().ZipXml(sArchiveFilenameWithPath, UtilsFilesIO.GetUserQuizResultsDir())
                 
                 if sPathToZipFile != '':
-                    self.oUtilsEmail.SendEmail(sPathToZipFile)
+                    UtilsEmail.SendEmail(sPathToZipFile)
                 else:
                     sMsg = 'Trouble archiving quiz results: ' + sPathToZipFile
                     UtilsMsgs.DisplayError(sMsg)
@@ -1169,7 +1169,7 @@ class Session:
             # quiz does not allow for changing responses - review is allowed
             sMsg = 'Quiz has already been completed and responses cannot be modified.'\
                     + ' \nWould you like to review the quiz? '
-            if self.oCustomWidgets.GetEmailResultsRequest(self.oUtilsEmail):
+            if self.oCustomWidgets.GetEmailResultsRequest():
                 sMsg = sMsg + '\n\nClick No to exit. You will have the option to email results.'
             else:
                 sMsg = sMsg + '\n\nClick No to exit.'
