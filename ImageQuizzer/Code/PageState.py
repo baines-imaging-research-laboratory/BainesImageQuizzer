@@ -4,8 +4,10 @@ import sys
 import traceback
 
 import Utilities.UtilsMsgs as UtilsMsgs
+import Utilities.UtilsFilesIO as UtilsFilesIO
 
 from Utilities.UtilsMsgs import *
+from Utilities.UtilsFilesIO import *
 from QuestionSet import *
 
 
@@ -163,7 +165,6 @@ class PageState:
                 created. These can be associated with any displayed image.
              
         '''
-        self.oFilesIO = self.oSession.oFilesIO
         self.oIOXml = self.oSession.oIOXml
 
         self.ClearPageStateVariables()
@@ -387,7 +388,7 @@ class PageState:
                 bExists = True
                 
                 # test for empty segmentation (label map exists but all zeros)
-                sLabelMapAbsolutePath = self.oFilesIO.GetAbsoluteUserPath(sLabelMapRelativePath)
+                sLabelMapAbsolutePath = UtilsFilesIO.GetAbsoluteUserPath(sLabelMapRelativePath)
                 bEmptyLabelMap = self.TestForEmptyLabelMap(sLabelMapAbsolutePath)
                 
                 # if labelmap is redisplayed from previous page, check for change in segmentation
@@ -410,7 +411,7 @@ class PageState:
                         if xHistoricalLabelMapMatch != None:
                             # found a label map for this image in history
                             sHistoricalLabelMapRelativePath = self.oIOXml.GetDataInNode(xHistoricalLabelMapMatch)
-                            sHistoricalLabelMapAbsolutePath = self.oFilesIO.GetAbsoluteUserPath(sHistoricalLabelMapRelativePath)
+                            sHistoricalLabelMapAbsolutePath = UtilsFilesIO.GetAbsoluteUserPath(sHistoricalLabelMapRelativePath)
                             bModified = self.TestForModifiedLabelMap(sHistoricalLabelMapAbsolutePath, sLabelMapAbsolutePath)
                         else:
                             # there was no labelmap in history so this must be a 'new' contour - reset flag

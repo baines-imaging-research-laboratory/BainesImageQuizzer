@@ -8,8 +8,10 @@ import warnings
 import traceback
 
 import Utilities.UtilsMsgs as UtilsMsgs
+import Utilities.UtilsFilesIO as UtilsFilesIO
 
 from Utilities.UtilsMsgs import *
+from Utilities.UtilsFilesIO import *
 from Utilities.UtilsIOXml import *
 
 
@@ -75,7 +77,6 @@ class QuestionSet():
                 if oQuestion != None:
                     oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
                     oQuestion._sGrpBoxLayout_setter(sGroupBoxLayout)
-                    oQuestion._oFilesIO_setter(self.oSession.oFilesIO)
                      
                     lOptions = self.GetOptionsFromXML(xNodeQuestion)
                     oQuestion._lsOptions_setter(lOptions)
@@ -201,7 +202,6 @@ class Question(ABC):
         self._lsOptions = []
         self._sGrpBoxTitle = ''
         self._sGrpBoxLayout = ''
-        self._oFilesIO = None
         self._lsResponses = []
         self._xmlNode = None
 
@@ -289,26 +289,6 @@ class Question(ABC):
     #----------
     
     
-    #----------
-    # _oFilesIO
-    #----------
-    @property
-    def oFilesIO(self):
-        return self._oFilesIO
-    
-    @oFilesIO.setter
-    def oFilesIO(self, x):
-        self._oFilesIO_setter(x)
-        
-    @abstractmethod
-    def _oFilesIO_setter(self,x):
-        pass
-    
-    @abstractmethod
-    def _oFilesIO_getter(self):
-        return self._oFilesIO
-    #----------
-
     
     #----------
     @abstractmethod        
@@ -453,11 +433,6 @@ class RadioQuestion(Question):
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
 
-    def _oFilesIO_setter(self, sInput):
-        self._oFilesIO = sInput
-        
-    def _oFilesIO_getter(self):
-        return self._oFilesIO
 
     #-----------------------------------------------
     
@@ -573,11 +548,6 @@ class CheckBoxQuestion(Question):
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
 
-    def _oFilesIO_setter(self, sInput):
-        self._oFilesIO = sInput
-        
-    def _oFilesIO_getter(self):
-        return self._oFilesIO
 
     #-----------------------------------------------
        
@@ -692,11 +662,6 @@ class TextQuestion(Question):
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
 
-    def _oFilesIO_setter(self, sInput):
-        self._oFilesIO = sInput
-        
-    def _oFilesIO_getter(self):
-        return self._oFilesIO
 
     #-----------------------------------------------
     
@@ -823,11 +788,6 @@ class IntegerValueQuestion(Question):
     def UpdateDictionaryModifiers(self, dictionaryInput):
         self.dictModifiers = dictionaryInput
 
-    def _oFilesIO_setter(self, sInput):
-        self._oFilesIO = sInput
-        
-    def _oFilesIO_getter(self):
-        return self._oFilesIO
         
     #-----------------------------------------------
         
@@ -998,11 +958,6 @@ class FloatValueQuestion(Question):
     def UpdateDictionaryModifiers(self, dictionaryInput):
         self.dictModifiers = dictionaryInput
 
-    def _oFilesIO_setter(self, sInput):
-        self._oFilesIO = sInput
-        
-    def _oFilesIO_getter(self):
-        return self._oFilesIO
         
     #-----------------------------------------------
 
@@ -1175,11 +1130,6 @@ class InfoBox(Question):
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
 
-    def _oFilesIO_setter(self, sInput):
-        self._oFilesIO = sInput
-        
-    def _oFilesIO_getter(self):
-        return self._oFilesIO
 
     #-----------------------------------------------
 
@@ -1285,11 +1235,6 @@ class Button(Question):
     def UpdateDictionaryModifiers(self, dictionaryInput):
         self.dictModifiers = dictionaryInput
 
-    def _oFilesIO_setter(self, sInput):
-        self._oFilesIO = sInput
-        
-    def _oFilesIO_getter(self):
-        return self._oFilesIO
 
     #-----------------------------------------------
 
@@ -1307,11 +1252,10 @@ class Button(Question):
             self.DisplayGroupBoxEmpty()
             return False, self.qGrpBox
 
-        oFilesIO = self._oFilesIO_getter()
         self.dictQButtons = {}
         i = 0
         while i < length:
-            element1 = os.path.join(oFilesIO.GetScriptsDir(),lsStoredOptions[i])
+            element1 = os.path.join(UtilsFilesIO.GetScriptsDir(),lsStoredOptions[i])
             head, tail = os.path.split(element1)
             qButton = qt.QPushButton(str(i+1)+'-'+tail)
             qButton.setStyleSheet("QPushButton{ background-color: rgb(173,220,237); color: black }")
@@ -1454,11 +1398,6 @@ class Picture(Question):
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
 
-    def _oFilesIO_setter(self, sInput):
-        self._oFilesIO = sInput
-        
-    def _oFilesIO_getter(self):
-        return self._oFilesIO
 
     #-----------------------------------------------
 
@@ -1474,12 +1413,11 @@ class Picture(Question):
             return False, self.qGrpBox
 
 
-        oFilesIO = self._oFilesIO_getter()
         i = 0
         while i < length:
             qLabel = qt.QLabel(self)
 
-            element1 = os.path.join(oFilesIO.GetXmlQuizDir(),lsStoredOptions[i])
+            element1 = os.path.join(UtilsFilesIO.GetXmlQuizDir(),lsStoredOptions[i])
 
             qPixmap = qt.QPixmap(element1)
             qLabel.setPixmap(qPixmap)

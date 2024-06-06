@@ -1,5 +1,9 @@
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
+
+import Utilities.UtilsFilesIO as UtilsFilesIO
+
+from Utilities.UtilsFilesIO import *
 from Session import *
 from CustomWidgets import *
 from TestingStatus import *
@@ -97,8 +101,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
     def __init__(self):
         
-        
-        self._oFilesIO = None
+        pass
         
         
     #------------------------------------------- 
@@ -111,10 +114,9 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
         sModuleName = 'ImageQuizzer'
 
-        self._oFilesIO = UtilsFilesIO()
         self.oIOXml = UtilsIOXml()
         self.oSession = Session()
-        self.oSession.SetFilesIO(self._oFilesIO)
+#         self.oSession.SetFilesIO(self._oFilesIO)
         self.oSession.SetIOXml(self.oIOXml)
         # reset when overriding Session > CustomWidget's constructor of oIOXml
         #     since this is customized for unit tests
@@ -123,7 +125,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         # create/set environment variable to be checked in UtilsIOXml class
         #    to prevent displaying error messages during testing
         os.environ["testing"] = "1"
-        self._oFilesIO.setupTestEnvironment()
+        UtilsFilesIO.setupTestEnvironment()
 
         self.sTempDir = os.path.join(tempfile.gettempdir(),'ImageQuizzer')
         if not os.path.exists(self.sTempDir):

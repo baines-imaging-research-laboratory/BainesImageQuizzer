@@ -1,5 +1,10 @@
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
+
+import Utilities.UtilsFilesIO as UtilsFilesIO
+
+from Utilities.UtilsFilesIO import *
+
 from Session import *
 from TestingStatus import *
 from Utilities.UtilsIOXml import *
@@ -97,8 +102,7 @@ class TestValidateTest(ScriptedLoadableModuleTest):
 
     def __init__(self):
         
-        
-        self._oFilesIO = None
+        pass
         
         
     #------------------------------------------- 
@@ -111,14 +115,13 @@ class TestValidateTest(ScriptedLoadableModuleTest):
 
         sModuleName = 'ImageQuizzer'
 
-        self._oFilesIO = UtilsFilesIO()
-        self.oValidation = UtilsValidate(self._oFilesIO)
+        self.oValidation = UtilsValidate()
         self.oIOXml = self.oValidation.oIOXml
         
         # create/set environment variable to be checked in UtilsIOXml class
         #    to prevent displaying error messages during testing
         os.environ["testing"] = "1"
-        self._oFilesIO.setupTestEnvironment()
+        UtilsFilesIO.setupTestEnvironment()
         self.oValidation.setupTestEnvironment()
 
         self.sTempDir = os.path.join(tempfile.gettempdir(),'ImageQuizzer')

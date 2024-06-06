@@ -8,6 +8,7 @@ import traceback
 from copy import deepcopy
 
 import Utilities.UtilsMsgs as UtilsMsgs
+import Utilities.UtilsFilesIO as UtilsFilesIO
 
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
@@ -60,7 +61,6 @@ class Session:
         self._bQuizResuming = False
 
        
-        self.oFilesIO = None
         self.oValidation = None
         self.oIOXml = UtilsIOXml()
         self.oUtilsEmail = UtilsEmail()
@@ -68,7 +68,7 @@ class Session:
 
         self.oImageView = None
         
-        self.oCustomWidgets = CustomWidgets(self.oIOXml, self.oFilesIO)
+        self.oCustomWidgets = CustomWidgets(self.oIOXml)
         self.oCoreWidgets = CoreWidgets(self)
         
         
@@ -101,10 +101,10 @@ class Session:
     #        Getters / Setters
     #-------------------------------------------
 
-    #----------
-    def SetFilesIO(self, oFilesIO):
-        self.oFilesIO = oFilesIO
-        self.oCustomWidgets.SetFilesIO(oFilesIO)
+#     #----------
+#     def SetFilesIO(self, oFilesIO):
+#         self.oFilesIO = oFilesIO
+#         self.oCustomWidgets.SetFilesIO(oFilesIO)
 
     #----------
     def SetValidation(self, oValidation):
@@ -116,7 +116,7 @@ class Session:
 
     #----------
     def SetupCoreWidgets(self):
-        self.oCoreWidgets.SetFilesIO(self.oFilesIO)
+#         self.oCoreWidgets.SetFilesIO(self.oFilesIO)
         self.oCoreWidgets.SetIOXml(self.oIOXml)
         self.oCoreWidgets.SetCustomWidgets(self.oCustomWidgets)
         
@@ -202,18 +202,17 @@ class Session:
     #-------------------------------------------
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def RunSetup(self, oFilesIO, oValidation, slicerMainLayout):
+    def RunSetup(self, oValidation, slicerMainLayout):
         
         sMsg = ''
         try:
-            self.SetFilesIO(oFilesIO)
             self.SetupCoreWidgets()
 
             self.SetValidation(oValidation)
             self.oPageState = PageState(self)
 
             # open xml and check for root node
-            bSuccess = self.oCustomWidgets.OpenQuiz(self.oFilesIO)
+            bSuccess = self.oCustomWidgets.OpenQuiz()
             
     
             if bSuccess == False:
@@ -237,7 +236,7 @@ class Session:
                 self.oCoreWidgets.AddSegmentationModule( self.oCustomWidgets.GetSegmentationModuleRequired())
                 
                 # set up and initialize Session attributes
-                self.oFilesIO.SetupROIColorFile(self.oCustomWidgets.GetROIColorFile())
+                UtilsFilesIO.SetupROIColorFile(self.oCustomWidgets.GetROIColorFile())
                 self.oCoreWidgets.SetContourVisibilityCheckBox(self.oCustomWidgets.GetSessionContourVisibilityDefault())
                 self.oCustomWidgets.SetRandomizeRequired()
                 
@@ -271,8 +270,8 @@ class Session:
                     self.SetupPageState(self.GetCurrentPageIndex())     # create new state object
                     
                 if not self.oCustomWidgets.GetQuizComplete():
-                    self.oCustomWidgets.AddSessionLoginTimestamp(self.oFilesIO)
-                    self.oCustomWidgets.AddUserNameAttribute(self.oFilesIO)
+                    self.oCustomWidgets.AddSessionLoginTimestamp()
+                    self.oCustomWidgets.AddUserNameAttribute()
                     
                     
                 self.oCoreWidgets.EnableButtons()
@@ -391,12 +390,12 @@ class Session:
             self.oCoreWidgets.SetImageView(self.oImageView)
             
             self.oImageView.RunSetup(self.oCustomWidgets.GetNthPageNode(self.GetCurrentPageIndex()),\
-                                      self.oFilesIO.GetDataParentDir())
+                                      UtilsFilesIO.GetDataParentDir())
             
     
             # load label maps and markup lines if a path has been stored in the xml for the images on this page
-            self.oFilesIO.LoadSavedLabelMaps(self)
-            self.oFilesIO.LoadSavedMarkupLines(self)
+            UtilsFilesIO.LoadSavedLabelMaps(self)
+            UtilsFilesIO.LoadSavedMarkupLines(self)
 
             self.oCoreWidgets.ResetExtraToolsDefaults()
     
@@ -442,8 +441,8 @@ class Session:
                     self.oCoreWidgets.oSlicerInterface.qTabWidget.setCurrentIndex(0) # move to Quiz tab
         
         
-                bLabelMapsSaved, sLabelMapMsg = self.oFilesIO.SaveLabelMaps(self, sCaller)
-                self.oFilesIO.SaveMarkupLines(self)
+                bLabelMapsSaved, sLabelMapMsg = UtilsFilesIO.SaveLabelMaps(self, sCaller)
+                UtilsFilesIO.SaveMarkupLines(self)
       
                 sCaptureSuccessLevel, lsNewResponses, sMsg = self.CaptureNewResponses()
                 self.SetNewResponses(lsNewResponses)
@@ -547,7 +546,7 @@ class Session:
                         bAddedNewElement = True     # at least one element added
                             
                 if bAddedNewElement:
-                    self.oCustomWidgets.SaveQuiz(self.oFilesIO.GetUserQuizResultsPath())
+                    self.oCustomWidgets.SaveQuiz(UtilsFilesIO.GetUserQuizResultsPath())
     
         except:
             bSuccess = False
@@ -600,7 +599,7 @@ class Session:
                     
                 bLatestWindowLevelFound = False
                 ldictAllImageStateItems =\
-                    self.oCustomWidgets.GetStateElementsForMatchingImagePath(self.oFilesIO.GetRelativeDataPath(oImageNode.sImagePath), self.GetCurrentPageIndex())
+                    self.oCustomWidgets.GetStateElementsForMatchingImagePath(UtilsFilesIO.GetRelativeDataPath(oImageNode.sImagePath), self.GetCurrentPageIndex())
     
                 for sRequiredOrientation in lsRequiredOrientations:
                     bFoundOrientation = False
@@ -823,13 +822,13 @@ class Session:
                     # potential exit of quiz - update logout time with each write
                     self.oCustomWidgets.UpdateSessionLogoutTimestamp()
                      
-                    self.oCustomWidgets.SaveQuiz(self.oFilesIO.GetUserQuizResultsPath())
+                    self.oCustomWidgets.SaveQuiz(UtilsFilesIO.GetUserQuizResultsPath())
                      
          
         except Exception:
             tb = traceback.format_exc()
             sMsg = 'Error writing responses to results file' + '\n Does this file exist? : \n' \
-                + self.oFilesIO.GetUserQuizResultsPath()\
+                + UtilsFilesIO.GetUserQuizResultsPath()\
                 + '\n\n' + tb
             # critical error - exit
             UtilsMsgs.DisplayError( sMsg )
@@ -908,14 +907,14 @@ class Session:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def QueryThenSendEmailResults(self):
         
-        if self.oCustomWidgets.GetEmailResultsRequest(self.oUtilsEmail, self.oFilesIO) and self.oCustomWidgets.GetQuizComplete():
+        if self.oCustomWidgets.GetEmailResultsRequest(self.oUtilsEmail) and self.oCustomWidgets.GetQuizComplete():
             sMsg = 'Ready to email results?'
             qtEmailAns = UtilsMsgs.DisplayYesNo(sMsg)
     
             if qtEmailAns == qt.QMessageBox.Yes:
     
-                sArchiveFilenameWithPath = os.path.join(self.oFilesIO.GetUserDir(), self.oFilesIO.GetQuizFilenameNoExt())
-                sPathToZipFile = self.oCustomWidgets.GetXmlUtils().ZipXml(sArchiveFilenameWithPath, self.oFilesIO.GetUserQuizResultsDir())
+                sArchiveFilenameWithPath = os.path.join(UtilsFilesIO.GetUserDir(), UtilsFilesIO.GetQuizFilenameNoExt())
+                sPathToZipFile = self.oCustomWidgets.GetXmlUtils().ZipXml(sArchiveFilenameWithPath, UtilsFilesIO.GetUserQuizResultsDir())
                 
                 if sPathToZipFile != '':
                     self.oUtilsEmail.SendEmail(sPathToZipFile)
@@ -1170,7 +1169,7 @@ class Session:
             # quiz does not allow for changing responses - review is allowed
             sMsg = 'Quiz has already been completed and responses cannot be modified.'\
                     + ' \nWould you like to review the quiz? '
-            if self.oCustomWidgets.GetEmailResultsRequest(self.oUtilsEmail, self.oFilesIO):
+            if self.oCustomWidgets.GetEmailResultsRequest(self.oUtilsEmail):
                 sMsg = sMsg + '\n\nClick No to exit. You will have the option to email results.'
             else:
                 sMsg = sMsg + '\n\nClick No to exit.'
@@ -1267,7 +1266,7 @@ class Session:
         '''
         # allow for testing environment to use a pre-set testing file path
         if sXmlFilePath == None:
-            sXmlFilePath = self.oFilesIO.GetUserQuizResultsPath()   # for live run
+            sXmlFilePath = UtilsFilesIO.GetUserQuizResultsPath()   # for live run
          
         indXmlPageToRepeat = self.GetCurrentPageIndex()
          

@@ -6,6 +6,7 @@ from pip._vendor.distlib._backport.shutil import copyfile
 from slicer.util import findChild
 
 import Utilities.UtilsMsgs as UtilsMsgs
+import Utilities.UtilsFilesIO as UtilsFilesIO
 
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
@@ -59,15 +60,14 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         sModuleName = 'ImageQuizzer'
 
-        self.oFilesIO = UtilsFilesIO()
-        self.oFilesIO.SetModuleDirs(sModuleName)
-        self.oValidation = UtilsValidate(self.oFilesIO)
+        UtilsFilesIO.SetModuleDirs(sModuleName)
+        self.oValidation = UtilsValidate()
         
         # previous and current release dates
         # Note: Version 1.0 should be used with Slicer v4.11.20200930
         # self.sVersion = "Image Quizzer   v1.0 "  #  Release Date: May 10, 2022
         # Note: Version 2.0 should be used with Slicer v4.11.20210226
-        self.sVersion = "Image Quizzer v3.3.7" 
+        self.sVersion = "Image Quizzer v3.4.0" 
 
         sSlicerVersion = slicer.app.applicationVersion
         if sSlicerVersion != '4.11.20210226':
@@ -146,10 +146,10 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
 
         self.oSession = Session()                    
-        self.oCustomEventFilter = customEventFilter(self.oSession, self.oFilesIO)
+        self.oCustomEventFilter = customEventFilter(self.oSession)
         slicer.util.mainWindow().installEventFilter(self.oCustomEventFilter)        
-
-
+ 
+ 
         self.BuildUserLoginWidget()
         self.qUserLoginWidget.show()
         
@@ -174,7 +174,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                                 
         qLogoImg = qt.QLabel(self)
         sLogoName = 'BainesLogoSmall.png'
-        sLogoPath = os.path.join(self.oFilesIO.GetScriptedModulesPath(),'Resources','Icons',sLogoName)
+        sLogoPath = os.path.join(UtilsFilesIO.GetScriptedModulesPath(),'Resources','Icons',sLogoName)
         pixmap = qt.QPixmap(sLogoPath)
         qLogoImg.setPixmap(pixmap)
         qLogoImg.setAlignment(QtCore.Qt.AlignLeft)
@@ -292,7 +292,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
     def onUserComboboxChanged(self):
         
         # capture selected user name
-        self.oFilesIO.SetQuizUsername(self.comboGetUserName.currentText)
+        UtilsFilesIO.SetQuizUsername(self.comboGetUserName.currentText)
      
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -300,20 +300,20 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         
         # File Picker
         self.qDBLocationFileDialog = qt.QFileDialog()
-        sDefaultDataDir = os.path.join(self.oFilesIO.GetScriptedModulesPath(), '..','Inputs','Images')
+        sDefaultDataDir = os.path.join(UtilsFilesIO.GetScriptedModulesPath(), '..','Inputs','Images')
         sDataLocation = self.qDBLocationFileDialog.getExistingDirectory(None, "SELECT DIRECTORY FOR IMAGE DATABASE", sDefaultDataDir,  qt.QFileDialog.ShowDirsOnly )
         
         if sDataLocation != '':
-            self.oFilesIO.SetDataParentDir(sDataLocation)
+            UtilsFilesIO.SetDataParentDir(sDataLocation)
        
-            self.qLblDataLocation.setText(self.oFilesIO.GetDataParentDir())
+            self.qLblDataLocation.setText(UtilsFilesIO.GetDataParentDir())
             self.qQuizSelectionGrpBox.setEnabled(True)
             self.qUserGrpBox.setEnabled(True)
             
-            self.oFilesIO.SetupOutputDirs()  # dirs in UserResults folder will populate User names
+            UtilsFilesIO.SetupOutputDirs()  # dirs in UserResults folder will populate User names
             
             # populate user name list in combo box
-            sUsersParentDir = self.oFilesIO.GetUsersParentDir()
+            sUsersParentDir = UtilsFilesIO.GetUsersParentDir()
             lSubFolders = [f.name for f in os.scandir(sUsersParentDir) if f.is_dir()]
             
             if os.getlogin() in lSubFolders:
@@ -351,7 +351,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
  
         # get quiz filename
         self.quizInputFileDialog = qt.QFileDialog()
-        sSelectedQuizPath = self.quizInputFileDialog.getOpenFileName(self.qUserLoginWidget, "SELECT QUIZ FILE", self.oFilesIO.GetXmlQuizDir(), "XML files (*.xml)" )
+        sSelectedQuizPath = self.quizInputFileDialog.getOpenFileName(self.qUserLoginWidget, "SELECT QUIZ FILE", UtilsFilesIO.GetXmlQuizDir(), "XML files (*.xml)" )
  
         # check that file was selected
         if not sSelectedQuizPath:
@@ -362,13 +362,13 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
         else:
             # enable the launch button
-            sQuizName = self.oFilesIO.GetFilenameNoExtFromPath(sSelectedQuizPath)
+            sQuizName = UtilsFilesIO.GetFilenameNoExtFromPath(sSelectedQuizPath)
             self.qLblQuizFilename.setText(sQuizName)
             self.qLaunchGrpBox.setEnabled(True)
             self.qUserLoginWidget.show()
             self.qUserLoginWidget.activateWindow()
             
-            self.oFilesIO.SetXmlQuizPathAndFilename(sSelectedQuizPath)
+            UtilsFilesIO.SetQuizPathAndFilename(sSelectedQuizPath)
             self.comboGetUserName.setStyleSheet("QComboBox{ background-color: white}")
             self.qUserGrpBox.setTitle('User name')
             self.qUserGrpBox.setStyleSheet("QGroupBox{ background-color: white}")
@@ -381,7 +381,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
         bSuccess = True
 
             
-        self.oFilesIO.SetUsernameAndDir(self.comboGetUserName.currentText)
+        UtilsFilesIO.SetUsernameAndDir(self.comboGetUserName.currentText)
 
 
             
@@ -391,10 +391,10 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
 
         if bQuizValidated:
             # create user and results folders if it doesn't exist
-            self.oFilesIO.SetupForUserQuizResults()
+            UtilsFilesIO.SetupForUserQuizResults()
 
             ##### for debug... #####
-            #self.oFilesIO.PrintDirLocations()
+            UtilsFilesIO.PrintDirLocations()
             ########################
             
             
@@ -409,7 +409,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
     
     
                 # copy file from Resource into user folder
-                if self.oFilesIO.PopulateUserQuizFolder(): # success
+                if UtilsFilesIO.PopulateUserQuizFolder(): # success
     
                     # turn off login widget modality (hide first)
                     self.qUserLoginWidget.hide()
@@ -417,7 +417,7 @@ class ImageQuizzerWidget(ScriptedLoadableModuleWidget):
                     self.qUserLoginWidget.show()
                     
                     # start the session
-                    self.oSession.RunSetup(self.oFilesIO, self.oValidation, self.slicerMainLayout)
+                    self.oSession.RunSetup(self.oValidation, self.slicerMainLayout)
     
         else:
             UtilsMsgs.DisplayError(sMsg)
@@ -460,11 +460,10 @@ class customEventFilter(qt.QObject):
     """
      
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def __init__(self, oSession, oFilesIO):
+    def __init__(self, oSession):
         qSlicerMainWindow.__init__(self) # required for event filter
         
         self.oSession = oSession
-        self.oFilesIO = oFilesIO
      
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def eventFilter(self, obj, event):
@@ -475,7 +474,7 @@ class customEventFilter(qt.QObject):
         if event.type() == qt.QEvent.Close:
             
             sExitMsg = 'Image Quizzer Exiting'
-            sUserQuizResultsPath = self.oFilesIO.GetUserQuizResultsPath()
+            sUserQuizResultsPath = UtilsFilesIO.GetUserQuizResultsPath()
              
             if sUserQuizResultsPath != '':
                 sExitMsg = sExitMsg + '\n   Results will be saved.\

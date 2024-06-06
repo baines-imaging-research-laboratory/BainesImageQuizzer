@@ -4,6 +4,7 @@ import sys
 import unittest
 
 import Utilities.UtilsMsgs as UtilsMsgs
+import Utilities.UtilsFilesIO as UtilsFilesIO
 
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsFilesIO import *
@@ -30,7 +31,7 @@ class CustomWidgets:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def __init__(self, oIOXml, oFilesIO=None):
+    def __init__(self, oIOXml):
         self.sClassName = type(self).__name__
         
         self._bUserInteractionLog = False
@@ -45,7 +46,6 @@ class CustomWidgets:
         
         
         self.oIOXml = oIOXml
-        self.oFilesIO = oFilesIO
 
 
         self.setupTestEnvironment()
@@ -70,12 +70,8 @@ class CustomWidgets:
         self.oIOXml = oIOXml
         
     #----------
-    def SetFilesIO(self, oFilesIO):
-        self.oFilesIO = oFilesIO
-
-    #----------
-    def OpenQuiz(self, oFilesIO):
-        bSuccess = self.oIOXml.OpenXml(oFilesIO.GetUserQuizResultsPath(),'Session')
+    def OpenQuiz(self):
+        bSuccess = self.oIOXml.OpenXml(UtilsFilesIO.GetUserQuizResultsPath(),'Session')
 
         return bSuccess
     
@@ -116,8 +112,8 @@ class CustomWidgets:
         return sPageDescriptor
 
     #----------
-    def GetEmailResultsRequest(self, oUtilsEmail, oFilesIO):
-        bEmailResults = oUtilsEmail.SetupEmailResults(oFilesIO, \
+    def GetEmailResultsRequest(self, oUtilsEmail):
+        bEmailResults = oUtilsEmail.SetupEmailResults( \
                             self.oIOXml.GetValueOfNodeAttribute(self.GetRootNode(), 'EmailResultsTo'))
         
         return bEmailResults
@@ -661,7 +657,7 @@ class CustomWidgets:
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def AddSessionLoginTimestamp(self, oFilesIO):
+    def AddSessionLoginTimestamp(self):
         ''' Function to add an element holding the login time for the session.
             Set up the logout time attribute to be updated on each write.
             Also - record the user's name
@@ -677,7 +673,7 @@ class CustomWidgets:
         
         self.oIOXml.AddElement(self.GetRootNode(),'Login', sNullText, dictAttrib)
         
-        self.oIOXml.SaveXml(oFilesIO.GetUserQuizResultsPath())
+        self.oIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateSessionLogoutTimestamp(self):
@@ -753,7 +749,7 @@ class CustomWidgets:
         '''
         xmlLastLoginElement = self.oIOXml.GetLastChild(self.GetRootNode(),'Login')
         xmlLastLoginElement.set('QuizComplete','Y')
-        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+        self.oIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddPageCompleteAttribute(self, idxPage):
@@ -762,7 +758,7 @@ class CustomWidgets:
         '''
         xmlCurrentPageElement = self.oIOXml.GetNthChild(self.GetRootNode(),'Page', idxPage)
         xmlCurrentPageElement.set('PageComplete','Y')
-        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+        self.oIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetPageIncomplete(self, iPageIndex):
@@ -770,22 +766,22 @@ class CustomWidgets:
         '''
         xPageNode = self.GetNthPageNode(iPageIndex)
         self.oIOXml.UpdateAttributesInElement(xPageNode, {"PageComplete":"N"})
-        self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+        self.oIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def AddUserNameAttribute(self, oFilesIO):
+    def AddUserNameAttribute(self):
         ''' add attribute to Session to record the user's name
         '''
         xRootNode = self.GetRootNode()
         dictAttrib = self.oIOXml.GetAttributes(xRootNode)
 
-        dictAttrib['UserName'] = oFilesIO.GetUsername()
+        dictAttrib['UserName'] = UtilsFilesIO.GetUsername()
             
         # reset the Login element
         self.oIOXml.UpdateAttributesInElement(xRootNode, dictAttrib)
 
-        self.oIOXml.SaveXml(oFilesIO.GetUserQuizResultsPath())
+        self.oIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupLoopingInitialization(self):

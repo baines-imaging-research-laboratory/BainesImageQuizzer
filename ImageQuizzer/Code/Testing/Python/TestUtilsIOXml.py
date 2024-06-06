@@ -1,6 +1,9 @@
 import os, sys
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
+
+import Utilities.UtilsFilesIO as UtilsFilesIO
+
 from Utilities.UtilsFilesIO import *
 from Utilities.UtilsIOXml import *
 from TestingStatus import *
@@ -123,14 +126,13 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         sModuleName = 'ImageQuizzer'
         self.sUsername = 'Tests'
-        self.oFilesIO = UtilsFilesIO()
-        self.oIOXml = self.oFilesIO.oIOXml
+        self.oIOXml = UtilsIOXml()
         self.sTestXmlFilePath = ''
 
         # create/set environment variable to be checked in UtilsIOXml class
         #    to prevent displaying error messages during testing
         os.environ["testing"] = "1"
-        self.oFilesIO.setupTestEnvironment()
+        UtilsFilesIO.setupTestEnvironment()
         self.oIOXml.setupTestEnvironment()
 
 

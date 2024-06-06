@@ -5,6 +5,7 @@ import sys
 import unittest
 
 import Utilities.UtilsMsgs as UtilsMsgs
+import Utilities.UtilsFilesIO as UtilsFilesIO
 
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsFilesIO import *
@@ -51,10 +52,6 @@ class CoreWidgets:
     #-------------------------------------------
     #        Getters / Setters
     #-------------------------------------------
-        
-    #----------
-    def SetFilesIO(self, oFilesIO):
-        self.oFilesIO = oFilesIO
         
     #----------
     def SetIOXml(self, oIOXml):
@@ -417,7 +414,7 @@ class CoreWidgets:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupWidgets(self, slicerMainLayout):
 
-        self.oSlicerInterface = SlicerInterface(self.oFilesIO)
+        self.oSlicerInterface = SlicerInterface()
         self.oSlicerInterface.CreateLeftLayoutAndWidget()
 
         self.SetupButtons()
@@ -933,7 +930,7 @@ class CoreWidgets:
                         self.oSession.QueryThenSendEmailResults()
                         
                         # update shutdown batch file to remove SlicerDICOMDatabase
-                        self.oFilesIO.CreateShutdownBatchFile()
+                        UtilsFilesIO.CreateShutdownBatchFile()
                 
                         slicer.util.exit(status=EXIT_SUCCESS)
                         bExit = True    # added for delay in slicer closing down - prevent remaining code from executing
@@ -1061,12 +1058,12 @@ class CoreWidgets:
                     lxMarkupLines = self.oIOXml.GetChildren(xImage, 'MarkupLinePath')
                     for xMarkupLine in lxMarkupLines:
                         sPath = self.oIOXml.GetDataInNode(xMarkupLine)
-                        sAbsolutePath = self.oFilesIO.GetAbsoluteUserPath(sPath)
+                        sAbsolutePath = UtilsFilesIO.GetAbsoluteUserPath(sPath)
                         if os.path.exists(sAbsolutePath):    # same path may exist in multiple xml Image elements
                             os.remove(sAbsolutePath)
                 
                     self.oIOXml.RemoveAllElements(xImage, 'MarkupLinePath')
-                self.oIOXml.SaveXml(self.oFilesIO.GetUserQuizResultsPath())
+                self.oIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
             
             except:
                 tb = traceback.format_exc()
@@ -1394,12 +1391,11 @@ class CoreWidgets:
 
 class SlicerInterface:
     
-    def __init__(self, oFilesIOInput, parent=None):
+    def __init__(self, parent=None):
         self.sClassName = type(self).__name__
         self.parent = parent
 #         print('Constructor for SlicerInterface')
         
-        self.oFilesIO = oFilesIOInput
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1433,7 +1429,7 @@ class SlicerInterface:
                                 
         qLogoImg = qt.QLabel(self)
         sLogoName = 'BainesChevrons.png'
-        sLogoPath = os.path.join(self.oFilesIO.GetScriptedModulesPath(),'Resources','Icons',sLogoName)
+        sLogoPath = os.path.join(UtilsFilesIO.GetScriptedModulesPath(),'Resources','Icons',sLogoName)
         pixmap = qt.QPixmap(sLogoPath)
         qLogoImg.setPixmap(pixmap)
         qLogoImg.setAlignment(QtCore.Qt.AlignCenter)

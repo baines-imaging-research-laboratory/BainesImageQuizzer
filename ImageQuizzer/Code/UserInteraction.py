@@ -8,8 +8,10 @@ except:
     print("OpenCV not imported. CPU time will not be recorded in User Interaction logs.")
 
 import Utilities.UtilsMsgs as UtilsMsgs
+import Utilities.UtilsFilesIO as UtilsFilesIO
 
 from Utilities.UtilsMsgs import *
+from Utilities.UtilsFilesIO import *
 
 from enum import Enum
 from datetime import datetime
@@ -210,8 +212,8 @@ class UserInteraction():
         ''' Open the user interaction log
             Return the file handler for the current log.
         '''
-        sDirName = oSession.oFilesIO.GetFolderNameForPageResults(oSession)
-        sPageUserInteractionDir = oSession.oFilesIO.CreatePageDir(sDirName)
+        sDirName = UtilsFilesIO.GetFolderNameForPageResults(oSession)
+        sPageUserInteractionDir = UtilsFilesIO.CreatePageDir(sDirName)
         
         # sUserInteractionLogPath = os.path.join(oSession.oFilesIO.GetUserQuizResultsDir(), 'UserInteraction.log')
         sUserInteractionLogPath = os.path.join(sPageUserInteractionDir, 'UserInteractionLog.csv')
