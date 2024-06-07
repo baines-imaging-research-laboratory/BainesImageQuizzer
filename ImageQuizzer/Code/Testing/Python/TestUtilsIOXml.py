@@ -3,6 +3,7 @@ import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 
 import Utilities.UtilsFilesIO as UtilsFilesIO
+import Utilities.UtilsIOXml as UtilsIOXml
 
 from Utilities.UtilsFilesIO import *
 from Utilities.UtilsIOXml import *
@@ -126,14 +127,13 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         sModuleName = 'ImageQuizzer'
         self.sUsername = 'Tests'
-        self.oIOXml = UtilsIOXml()
         self.sTestXmlFilePath = ''
 
         # create/set environment variable to be checked in UtilsIOXml class
         #    to prevent displaying error messages during testing
         os.environ["testing"] = "1"
         UtilsFilesIO.setupTestEnvironment()
-        self.oIOXml.setupTestEnvironment()
+        UtilsIOXml.setupTestEnvironment()
 
 
        
@@ -201,9 +201,9 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
             
             # build test xml
             xRoot = self.buildXMLfile()
-            self.oIOXml.SetRootNode(xRoot)
+            UtilsIOXml.SetRootNode(xRoot)
     
-            self.oIOXml.SaveXml(self.sTestXmlFilePath)
+            UtilsIOXml.SaveXml(self.sTestXmlFilePath)
             
         except:
             bTestResult = False
@@ -218,9 +218,9 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         self.fnName = sys._getframe().f_code.co_name
                 
         sRootName = 'RootNode'
-        bTestResult = self.oIOXml.OpenXml(self.sTestXmlFilePath, 'RootNode')
-        xRootNode = self.oIOXml.GetRootNode()
-        if (self.oIOXml.GetElementNodeName(xRootNode) == sRootName):
+        bTestResult = UtilsIOXml.OpenXml(self.sTestXmlFilePath, 'RootNode')
+        xRootNode = UtilsIOXml.GetRootNode()
+        if (UtilsIOXml.GetElementNodeName(xRootNode) == sRootName):
             bTestResult = bTestResult * True
         else:
             bTestResult = False
@@ -241,7 +241,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
             bTestResult = False
 
             with self.assertRaises(Exception) as context:
-                self.oIOXml.OpenXml(sXmlPath,'RootNode')
+                UtilsIOXml.OpenXml(sXmlPath,'RootNode')
 
             sMsg = context.exception.args[0]
             if sMsg.find('XML file does not exist')>=0:
@@ -262,7 +262,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         try:
 
             with self.assertRaises(NameError) as context:
-                self.oIOXml.OpenXml(self.sTestXmlFilePath,'InvalidRootNodeName')
+                UtilsIOXml.OpenXml(self.sTestXmlFilePath,'InvalidRootNodeName')
 
             sMsg = context.exception.args[0]
             if sMsg.find('Invalid XML root node')>=0:
@@ -295,7 +295,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
             bTestResult = False
 
             with self.assertRaises(Exception) as context:
-                self.oIOXml.OpenXml(sTestBadXmlFilePath,'RootNode')
+                UtilsIOXml.OpenXml(sTestBadXmlFilePath,'RootNode')
 
             sMsg = context.exception.args[0]
             if sMsg.find('Parsing XML file error')>=0:
@@ -316,14 +316,14 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         self.fnName = sys._getframe().f_code.co_name
         bTestResult = False
         
-        bSuccess = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
-        xRootNode = self.oIOXml.GetRootNode()
+        bSuccess = UtilsIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        xRootNode = UtilsIOXml.GetRootNode()
 
         # get child of data node and check for expected tag name
-        xElementNode = self.oIOXml.GetNthChild(xRootNode,'Data',0)
+        xElementNode = UtilsIOXml.GetNthChild(xRootNode,'Data',0)
         sExpectedTag = 'Data'
         
-        sActualTag = self.oIOXml.GetElementNodeName(xElementNode)
+        sActualTag = UtilsIOXml.GetElementNodeName(xElementNode)
         if (sExpectedTag == sActualTag):
             bTestResult = True
         
@@ -339,11 +339,11 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         self.fnName = sys._getframe().f_code.co_name
         
-        bSuccess = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
-        xRootNode = self.oIOXml.GetRootNode()
+        bSuccess = UtilsIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        xRootNode = UtilsIOXml.GetRootNode()
 
         # get an attribute node to test the 'invalid element node'
-        xElementNode = self.oIOXml.GetNthChild(xRootNode,'Data',0)
+        xElementNode = UtilsIOXml.GetNthChild(xRootNode,'Data',0)
 #         xAttributeNode = xElementNode.getAttributeNode('id')
         dictAttribs = xElementNode.attrib
         xAttributeNode = dictAttribs['ID']
@@ -352,7 +352,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
             bTestResult = False
 
             with self.assertRaises(TypeError) as context:
-                self.oIOXml.GetElementNodeName(xAttributeNode)
+                UtilsIOXml.GetElementNodeName(xAttributeNode)
 
             sMsg = context.exception.args[0]
             if sMsg.find('Invalid XML node type: should be Element type of node')>=0:
@@ -372,8 +372,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         self.fnName = sys._getframe().f_code.co_name
         
-        bSuccess = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
-        xRootNode = self.oIOXml.GetRootNode()
+        bSuccess = UtilsIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        xRootNode = UtilsIOXml.GetRootNode()
             
         bTestResult = True
         
@@ -383,14 +383,14 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         xDataNode = lDataNodes[0]
         
         dExpectedNumChildren = 3
-        dNumChildren = self.oIOXml.GetNumChildrenByName(xDataNode,'InfoGroup')
+        dNumChildren = UtilsIOXml.GetNumChildrenByName(xDataNode,'InfoGroup')
         if (dNumChildren == dExpectedNumChildren):
             bTestResult = bTestResult * True
         else:
             bTestResult = bTestResult * False
         
         dExpectedNumChildren = 1
-        dNumChildren = self.oIOXml.GetNumChildrenByName(xDataNode,'SoloTag')
+        dNumChildren = UtilsIOXml.GetNumChildrenByName(xDataNode,'SoloTag')
         if (dNumChildren == dExpectedNumChildren):
             bTestResult = bTestResult * True
         else:
@@ -412,8 +412,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         self.fnName = sys._getframe().f_code.co_name
         
-        bSuccess = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
-        xRootNode = self.oIOXml.GetRootNode()
+        bSuccess = UtilsIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        xRootNode = UtilsIOXml.GetRootNode()
             
         bTestResult = True
         
@@ -424,7 +424,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         sExpectedDescriptors = ['First Child Page1', 'Second Child Page1', 'Third Child Page1']
         dExpectedNumChildren = 3
         
-        dNumChildren = self.oIOXml.GetNumChildrenByName(xDataNode,'InfoGroup')
+        dNumChildren = UtilsIOXml.GetNumChildrenByName(xDataNode,'InfoGroup')
 
         # ensure we have a node with the expected number of children
         if (dNumChildren == dExpectedNumChildren):
@@ -432,12 +432,12 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
             # Test 1: Get All children and then loop through children to see
             #    if the 2nd child has the proper descriptor
 
-            xAllInfoGroupNodes = self.oIOXml.GetChildren(xDataNode, 'InfoGroup')
+            xAllInfoGroupNodes = UtilsIOXml.GetChildren(xDataNode, 'InfoGroup')
             for iNode in range( 0,dNumChildren-1 ):
 
 #                 xInfoGroupChildNode = xAllInfoGroupNodes.item(iNode)
                 xInfoGroupChildNode = xAllInfoGroupNodes[iNode]
-                sDescriptor = self.oIOXml.GetValueOfNodeAttribute(xInfoGroupChildNode,'Descriptor')
+                sDescriptor = UtilsIOXml.GetValueOfNodeAttribute(xInfoGroupChildNode,'Descriptor')
 
                 if sDescriptor == sExpectedDescriptors[iNode]:
                     bTestResult = bTestResult * True
@@ -448,9 +448,9 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
             # Test 2: Access the second child directly
 
             # access the 2nd child (0 indexed) and check that it has the expected descriptor
-            xSecondChildNode = self.oIOXml.GetNthChild(xDataNode, 'InfoGroup', 1)
+            xSecondChildNode = UtilsIOXml.GetNthChild(xDataNode, 'InfoGroup', 1)
             
-            sSecondChildDescriptor = self.oIOXml.GetValueOfNodeAttribute(xSecondChildNode,'Descriptor')
+            sSecondChildDescriptor = UtilsIOXml.GetValueOfNodeAttribute(xSecondChildNode,'Descriptor')
             if (sSecondChildDescriptor == sExpectedDescriptors[1]) :
             
                 bTestResult = bTestResult * True
@@ -472,8 +472,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         self.fnName = sys._getframe().f_code.co_name
         
-        bSuccess = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
-        xRootNode = self.oIOXml.GetRootNode()
+        bSuccess = UtilsIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        xRootNode = UtilsIOXml.GetRootNode()
         
         import operator
         bTestResult = True
@@ -482,7 +482,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         xNode = lDataNodes[1]
 
 
-        listOfAttributes = self.oIOXml.GetListOfNodeAttributes(xNode)
+        listOfAttributes = UtilsIOXml.GetListOfNodeAttributes(xNode)
         lsExpectedNames = ['ID', 'Descriptor']
         lsExpectedValues = ['002', 'TestData Page2' ]
 
@@ -515,14 +515,14 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         self.fnName = sys._getframe().f_code.co_name
 
-        bSuccess = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
-        xRootNode = self.oIOXml.GetRootNode()
+        bSuccess = UtilsIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        xRootNode = UtilsIOXml.GetRootNode()
             
         bTestResult = True
 
         lDataNodes = xRootNode.findall('Data')
         xNode1 = lDataNodes[1]
-        sValue = self.oIOXml.GetValueOfNodeAttribute(xNode1, 'Descriptor')
+        sValue = UtilsIOXml.GetValueOfNodeAttribute(xNode1, 'Descriptor')
 #         print('returned sValue {x}'.format(x=sValue))
 
         if (sValue == 'TestData Page2'):
@@ -532,7 +532,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
             
         xNode0 = lDataNodes[0]
         xSoloNode = xNode0.find('SoloTag')
-        sValue = self.oIOXml.GetValueOfNodeAttribute(xSoloNode, 'Path')
+        sValue = UtilsIOXml.GetValueOfNodeAttribute(xSoloNode, 'Path')
 #         print('returned sValue {x}'.format(x=sValue))
 
 
@@ -552,8 +552,8 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         self.fnName = sys._getframe().f_code.co_name
 
-        bSuccess = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
-        xRootNode = self.oIOXml.GetRootNode()
+        bSuccess = UtilsIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        xRootNode = UtilsIOXml.GetRootNode()
             
         bTestResult = True
 
@@ -565,11 +565,11 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         sExpectedData = 'item2uvw'
         
-        xDataNode2 = self.oIOXml.GetNthChild(xRootNode,'Data', 1)
-        xInfoGroup1 = self.oIOXml.GetNthChild(xDataNode2, 'InfoGroup', 0)
-        xInfoPiece2 = self.oIOXml.GetNthChild(xInfoGroup1, 'InfoPiece', 1)
+        xDataNode2 = UtilsIOXml.GetNthChild(xRootNode,'Data', 1)
+        xInfoGroup1 = UtilsIOXml.GetNthChild(xDataNode2, 'InfoGroup', 0)
+        xInfoPiece2 = UtilsIOXml.GetNthChild(xInfoGroup1, 'InfoPiece', 1)
         
-        xStoredData = self.oIOXml.GetDataInNode(xInfoPiece2)
+        xStoredData = UtilsIOXml.GetDataInNode(xInfoPiece2)
         
         if xStoredData == sExpectedData :
             bTestResult = True
@@ -590,16 +590,16 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         self.fnName = sys._getframe().f_code.co_name
 
-        bSuccess = self.oIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
-        xRootNode = self.oIOXml.GetRootNode()
+        bSuccess = UtilsIOXml.OpenXml(self.sTestXmlFilePath,'RootNode')
+        xRootNode = UtilsIOXml.GetRootNode()
             
         bTestResult = True
 
         sExpectedData = ''
         
-        xDataNode2 = self.oIOXml.GetNthChild(xRootNode,'Data', 1)
+        xDataNode2 = UtilsIOXml.GetNthChild(xRootNode,'Data', 1)
 
-        xStoredData = self.oIOXml.GetDataInNode(xDataNode2)
+        xStoredData = UtilsIOXml.GetDataInNode(xDataNode2)
         
         if xStoredData == sExpectedData :
             bTestResult = True
@@ -627,9 +627,9 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         etree.SubElement(xRoot,"Login", LoginTime="30", LogoutTime="35")
         etree.SubElement(xRoot,"Login", LoginTime="40", LogoutTime="45")
         
-        xLastChild = self.oIOXml.GetLastChild(xRoot, 'Login')
+        xLastChild = UtilsIOXml.GetLastChild(xRoot, 'Login')
         
-        if self.oIOXml.GetValueOfNodeAttribute(xLastChild, 'LogoutTime') != "45":
+        if UtilsIOXml.GetValueOfNodeAttribute(xLastChild, 'LogoutTime') != "45":
             bTestResult = False
 
         tupResult = self.fnName, bTestResult
@@ -645,7 +645,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         # build XML
         xRoot = etree.Element("Session")
         
-        xLastChild = self.oIOXml.GetLastChild(xRoot, 'Login')
+        xLastChild = UtilsIOXml.GetLastChild(xRoot, 'Login')
         
         if xLastChild != None:
             bTestResult = False
@@ -672,7 +672,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         # search from index 4 for the next child with Rep="0"
         iExpectedIndex = 6
-        iNextInd = self.oIOXml.GetIndexOfNextChildWithAttributeValue(xRoot, 'Page', 4, 'Rep', '0')
+        iNextInd = UtilsIOXml.GetIndexOfNextChildWithAttributeValue(xRoot, 'Page', 4, 'Rep', '0')
         
         if iNextInd == iExpectedIndex:
             bTestResult = True
@@ -695,9 +695,9 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         xNewElem = etree.Element("Page")
         dNewAttrib = {"Rep":"2"}
-        self.oIOXml.UpdateAttributesInElement(xNewElem, dNewAttrib)
+        UtilsIOXml.UpdateAttributesInElement(xNewElem, dNewAttrib)
 
-        self.oIOXml.AppendElement(xRoot, xNewElem)
+        UtilsIOXml.AppendElement(xRoot, xNewElem)
 
         xExpectedRoot = etree.Element("Session")
         etree.SubElement(xExpectedRoot,"Page", Rep="0")
@@ -734,9 +734,9 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         xNewElem = etree.Element("Page")
         dNewAttrib = {"Rep":"2"}
-        self.oIOXml.UpdateAttributesInElement(xNewElem, dNewAttrib)
+        UtilsIOXml.UpdateAttributesInElement(xNewElem, dNewAttrib)
         
-        self.oIOXml.InsertElementBeforeIndex(xRoot, xNewElem, 5)
+        UtilsIOXml.InsertElementBeforeIndex(xRoot, xNewElem, 5)
 
         xExpectedRoot = etree.Element("Session")
         etree.SubElement(xExpectedRoot,"Page", Rep="0")
@@ -765,7 +765,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         xRoot = etree.Element("Session")
         
-        newRoot = self.oIOXml.CopyElement(xRoot)
+        newRoot = UtilsIOXml.CopyElement(xRoot)
         if id(xRoot) != id(newRoot):
             bTestResult = True
         
@@ -812,7 +812,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         Im61 = etree.SubElement(xPage6,'Image',  {"ID":"Im61", "DisplayLabelMapID":"RoiY-contour"})
         Im62 = etree.SubElement(xPage6,'Image',  {"ID":"Im62"})
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsIOXml.SetRootNode(xRoot)
 
 
 
@@ -845,7 +845,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         # Test1 - check that matching attribute is not found
         iNavIndex = 7
-        xImageElement, xPageElement = self.oIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","DisplayLabelMapID", "XXX")
+        xImageElement, xPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","DisplayLabelMapID", "XXX")
         if xImageElement == None and xPageElement == None:
             bCaseTestResult = True
         else:
@@ -855,9 +855,9 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         # Test2 - check that matching attribute belongs to Pt1 and Im01
         iNavIndex = 5
-        xImageElement, xPageElement = self.oIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiX-contour")
-        sImID =  self.oIOXml.GetValueOfNodeAttribute(xImageElement,"ID")
-        sPtID =  self.oIOXml.GetValueOfNodeAttribute(xPageElement,"ID")
+        xImageElement, xPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiX-contour")
+        sImID =  UtilsIOXml.GetValueOfNodeAttribute(xImageElement,"ID")
+        sPtID =  UtilsIOXml.GetValueOfNodeAttribute(xPageElement,"ID")
         if sImID == "Im01" and sPtID == "Pt1":
             bCaseTestResult = True
         else:
@@ -867,9 +867,9 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         # Test3 - look for historical that doesn't fall on the first page to make sure the function breaks after the find
         iNavIndex = 7
-        xImageElement, xPageElement = self.oIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiY-contour")
-        sImID =  self.oIOXml.GetValueOfNodeAttribute(xImageElement,"ID")
-        sPtID =  self.oIOXml.GetValueOfNodeAttribute(xPageElement,"ID")
+        xImageElement, xPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiY-contour")
+        sImID =  UtilsIOXml.GetValueOfNodeAttribute(xImageElement,"ID")
+        sPtID =  UtilsIOXml.GetValueOfNodeAttribute(xPageElement,"ID")
         if sImID == "Im31" and sPtID == "Pt4":
             bCaseTestResult = True
         else:
@@ -879,9 +879,9 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         # Test4 - look for historical that isn't historical anymore because of randomization
         iNavIndex = 3
-        xImageElement, xPageElement = self.oIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiY-contour")
-        sImID =  self.oIOXml.GetValueOfNodeAttribute(xImageElement,"ID")
-        sPtID =  self.oIOXml.GetValueOfNodeAttribute(xPageElement,"ID")
+        xImageElement, xPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiY-contour")
+        sImID =  UtilsIOXml.GetValueOfNodeAttribute(xImageElement,"ID")
+        sPtID =  UtilsIOXml.GetValueOfNodeAttribute(xPageElement,"ID")
         if sImID == "" and sPtID == "":
             bCaseTestResult = True
         else:
@@ -935,7 +935,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         Im61 = etree.SubElement(xPage6,'Image',  {"ID":"Im61", "DisplayLabelMapID":"RoiY-contour"})
         Im62 = etree.SubElement(xPage6,'Image',  {"ID":"Im62"})
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsIOXml.SetRootNode(xRoot)
 
 
 
@@ -967,25 +967,25 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         # Test1 - check that matching attribute is not found
         iNavIndex = 7
-        xImageElement, xPageElement = self.oIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","DisplayLabelMapID", "XXX")
+        xImageElement, xPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","DisplayLabelMapID", "XXX")
         if xImageElement == None and xPageElement == None:
             bTest1 = True
         
         
         # Test2 - check that matching attribute belongs to Pt1 and Im01
         iNavIndex = 7
-        xImageElement, xPageElement = self.oIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiX-contour")
-        sImID =  self.oIOXml.GetValueOfNodeAttribute(xImageElement,"ID")
-        sPtID =  self.oIOXml.GetValueOfNodeAttribute(xPageElement,"ID")
+        xImageElement, xPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiX-contour")
+        sImID =  UtilsIOXml.GetValueOfNodeAttribute(xImageElement,"ID")
+        sPtID =  UtilsIOXml.GetValueOfNodeAttribute(xPageElement,"ID")
         if sImID == "Im01" and sPtID == "Pt1":
             bTest2 = True
         # print("Im ID:", sImID,  "   Pt ID:", sPtID)
         
         # Test3 - look for historical that doesn't fall on the first page to make sure the function breaks after the find
         iNavIndex = 7
-        xImageElement, xPageElement = self.oIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiY-contour")
-        sImID =  self.oIOXml.GetValueOfNodeAttribute(xImageElement,"ID")
-        sPtID =  self.oIOXml.GetValueOfNodeAttribute(xPageElement,"ID")
+        xImageElement, xPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiY-contour")
+        sImID =  UtilsIOXml.GetValueOfNodeAttribute(xImageElement,"ID")
+        sPtID =  UtilsIOXml.GetValueOfNodeAttribute(xPageElement,"ID")
         if sImID == "Im31" and sPtID == "Pt4":
             bTest3 = True
         # print("Im ID:", sImID,  "   Pt ID:", sPtID)
@@ -1012,26 +1012,26 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         xRoot = self.CreateXMLBaseForTests1()
         
         # add attributes to specific pages
-        xPageNode0 = self.oIOXml.GetNthChild(xRoot, 'Page', 0)
-        xPageNode1 = self.oIOXml.GetNthChild(xRoot, 'Page', 1)
-        xPageNode2 = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode0 = UtilsIOXml.GetNthChild(xRoot, 'Page', 0)
+        xPageNode1 = UtilsIOXml.GetNthChild(xRoot, 'Page', 1)
+        xPageNode2 = UtilsIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode2.set("Descriptor","MarkedPage")
-        xPageNode3 = self.oIOXml.GetNthChild(xRoot, 'Page', 3)
+        xPageNode3 = UtilsIOXml.GetNthChild(xRoot, 'Page', 3)
         xPageNode3.set("Descriptor","MarkedPage")
-        xPageNode4 = self.oIOXml.GetNthChild(xRoot, 'Page', 4)
-        xPageNode5 = self.oIOXml.GetNthChild(xRoot, 'Page', 5)
+        xPageNode4 = UtilsIOXml.GetNthChild(xRoot, 'Page', 4)
+        xPageNode5 = UtilsIOXml.GetNthChild(xRoot, 'Page', 5)
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsIOXml.SetRootNode(xRoot)
         
         #>>>>>>>>>>>>>>>
         # navigate without randomizing
         lxPageNodes = []
         lNavIndices = [0,1,2,3,4,5]
         for iNavInd in lNavIndices:
-            lxPageNodes.append(self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iNavInd))
+            lxPageNodes.append(UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', iNavInd))
             
         
-        iNavidx, xPageNode = self.oIOXml.GetFirstXmlNodeWithMatchingAttributes(lxPageNodes, dictAttrib)
+        iNavidx, xPageNode = UtilsIOXml.GetFirstXmlNodeWithMatchingAttributes(lxPageNodes, dictAttrib)
         
         if iNavidx == 2 and xPageNode == xPageNode2:
             bCaseTestResult = True
@@ -1045,9 +1045,9 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         lxPageNodes = []
         lNavIndices = [3, 0, 1, 2, 5, 4]
         for iNavInd in lNavIndices:
-            lxPageNodes.append(self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', iNavInd))
+            lxPageNodes.append(UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', iNavInd))
             
-        iNavidx, xPageNode = self.oIOXml.GetFirstXmlNodeWithMatchingAttributes(lxPageNodes, dictAttrib)
+        iNavidx, xPageNode = UtilsIOXml.GetFirstXmlNodeWithMatchingAttributes(lxPageNodes, dictAttrib)
         
         if iNavidx == 3 and xPageNode == xPageNode2:
             bCaseTestResult = True
@@ -1072,17 +1072,17 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         xRoot = self.CreateXMLBaseForTests1()
         
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("Descriptor","MarkedPage")
         xPageNode.set("BookmarkID","ReturnHere")
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsIOXml.SetRootNode(xRoot)
         
         
-        xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 2)
-        self.oIOXml.RemoveAttributeInElement(xPageNode,'NonExistentKey')
+        xPageNode = UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', 2)
+        UtilsIOXml.RemoveAttributeInElement(xPageNode,'NonExistentKey')
         dictExpectedValues = {"ID":"Pt3","Descriptor":"MarkedPage", "BookmarkID":"ReturnHere"}
-        dictUpdatedValues = self.oIOXml.GetAttributes(xPageNode)
+        dictUpdatedValues = UtilsIOXml.GetAttributes(xPageNode)
         
         if dictExpectedValues == dictUpdatedValues:
             bCaseTestResult = True
@@ -1096,16 +1096,16 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         xRoot = self.CreateXMLBaseForTests1()
         
-        xPageNode = self.oIOXml.GetNthChild(xRoot, 'Page', 2)
+        xPageNode = UtilsIOXml.GetNthChild(xRoot, 'Page', 2)
         xPageNode.set("Descriptor","MarkedPage")
         xPageNode.set("BookmarkID","ReturnHere")
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsIOXml.SetRootNode(xRoot)
 
-        xPageNode = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 2)
-        self.oIOXml.RemoveAttributeInElement(xPageNode,'BookmarkID')
+        xPageNode = UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', 2)
+        UtilsIOXml.RemoveAttributeInElement(xPageNode,'BookmarkID')
         dictExpectedValues = {"ID":"Pt3","Descriptor":"MarkedPage"}
-        dictUpdatedValues = self.oIOXml.GetAttributes(xPageNode)
+        dictUpdatedValues = UtilsIOXml.GetAttributes(xPageNode)
         
         if dictExpectedValues == dictUpdatedValues:
             bCaseTestResult = True
@@ -1137,7 +1137,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         xPage5 = etree.SubElement(xRoot,"Page", {"ID":"Pt4", "PageGroup":"4",  "Tag":"Label2"})
         xPage6 = etree.SubElement(xRoot,"Page", {"ID":"Pt5", "PageGroup":"5",  "Tag":"Label3"})
         xPage7 = etree.SubElement(xRoot,"Page", {"ID":"Pt6", "PageGroup":"6",  "Tag":"Label1"})
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsIOXml.SetRootNode(xRoot)
 
         # [pg, qs, pgGp, rep]
         # Pages 0,1 are part of group 1 (they have a 'Rep')
@@ -1170,20 +1170,20 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
               9      6     0    5   0     Pt5       Label3
               10     7     0    6   0     Pt6       Label1
         '''
-        xNode0 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 0)
-        xNode1 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 1)
-        xNode2 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 2)
-        xNode3 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 3)
-        xNode4 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 4)
-        xNode5 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 5)
-        xNode6 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 6)
-        xNode7 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 7)
+        xNode0 = UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', 0)
+        xNode1 = UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', 1)
+        xNode2 = UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', 2)
+        xNode3 = UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', 3)
+        xNode4 = UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', 4)
+        xNode5 = UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', 5)
+        xNode6 = UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', 6)
+        xNode7 = UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', 7)
 
         #>>>>>>>>>>>>        
         # test nothing matches
         dictAttribsToMatch = {"ID":"Pt2","Tag":"Label1"}
         dictExpectedResult = {}
-        dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch)
+        dictPgNodeAndPgIndex = UtilsIOXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch)
         
         if dictExpectedResult == dictPgNodeAndPgIndex:
             bCaseTestResult = True
@@ -1196,7 +1196,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         # test match to one attribute
         dictAttribsToMatch = {"Tag":"Label1"}
         dictExpectedResult = {xNode4:4, xNode1:1, xNode0:0}
-        dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch)
+        dictPgNodeAndPgIndex = UtilsIOXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch)
         
         if dictExpectedResult == dictPgNodeAndPgIndex:
             bCaseTestResult = True
@@ -1209,7 +1209,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         # test match to two attributes
         dictAttribsToMatch = {"ID":"Pt2","Tag":"Label2"}
         dictExpectedResult = {xNode2:2}
-        dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch)
+        dictPgNodeAndPgIndex = UtilsIOXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch)
         
         if dictExpectedResult == dictPgNodeAndPgIndex:
             bCaseTestResult = True
@@ -1222,7 +1222,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         reIgnoreSubstring= '-Rep[0-9]+'  # remove -Rep with any number of digits following
         dictAttribsToMatch = {"ID":"Pt2","Tag":"Label2"}
         dictExpectedResult = {xNode3:3, xNode2:2}
-        dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch, reIgnoreSubstring)
+        dictPgNodeAndPgIndex = UtilsIOXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch, reIgnoreSubstring)
         
         if dictExpectedResult == dictPgNodeAndPgIndex:
             bCaseTestResult = True
@@ -1258,7 +1258,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         xPage7 = etree.SubElement(xRoot,"Page", {"ID":"Pt6", "PageGroup":"6",  "Tag":"Label1"})
 
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsIOXml.SetRootNode(xRoot)
 
 
         # [pg, qs, pgGp, rep]
@@ -1297,21 +1297,21 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
 
 
-        xNode0 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 0)
-        xNode1 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 1)
-        xNode2 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 2)
-        xNode3 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 3)
-        xNode4 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 4)
-        xNode5 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 5)
-        xNode6 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 6)
-        xNode7 = self.oIOXml.GetNthChild(self.oIOXml.GetRootNode(), 'Page', 7)
+        xNode0 = UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', 0)
+        xNode1 = UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', 1)
+        xNode2 = UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', 2)
+        xNode3 = UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', 3)
+        xNode4 = UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', 4)
+        xNode5 = UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', 5)
+        xNode6 = UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', 6)
+        xNode7 = UtilsIOXml.GetNthChild(UtilsIOXml.GetRootNode(), 'Page', 7)
 
 
         #>>>>>>>>>>>>        
         # test nothing matches
         dictAttribsToMatch = {"ID":"Pt2","Tag":"Label1"}
         dictExpectedResult = {}
-        dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(8, l4iNavigationIndices, dictAttribsToMatch)
+        dictPgNodeAndPgIndex = UtilsIOXml.GetMatchingXmlPagesFromAttributeHistory(8, l4iNavigationIndices, dictAttribsToMatch)
         
         if dictExpectedResult == dictPgNodeAndPgIndex:
             bCaseTestResult = True
@@ -1324,7 +1324,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         # test match to one attribute
         dictAttribsToMatch = {"Tag":"Label1"}
         dictExpectedResult = {xNode1:1, xNode0:0}
-        dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(8, l4iNavigationIndices, dictAttribsToMatch)
+        dictPgNodeAndPgIndex = UtilsIOXml.GetMatchingXmlPagesFromAttributeHistory(8, l4iNavigationIndices, dictAttribsToMatch)
         
         if dictExpectedResult == dictPgNodeAndPgIndex:
             bCaseTestResult = True
@@ -1335,7 +1335,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         # test match to one attribute
         dictAttribsToMatch = {"Tag":"Label2"}
         dictExpectedResult = {xNode5:5, xNode3:3, xNode2:2 }
-        dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(8, l4iNavigationIndices, dictAttribsToMatch)
+        dictPgNodeAndPgIndex = UtilsIOXml.GetMatchingXmlPagesFromAttributeHistory(8, l4iNavigationIndices, dictAttribsToMatch)
         
         if dictExpectedResult == dictPgNodeAndPgIndex:
             bCaseTestResult = True
@@ -1353,7 +1353,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
     
     ### NOTE : FOR NEXT TEST - Watch for what root is being used.
     ###        test_GetXmlPageAndChildFromAttributeHistory did a 
-    ###            self.oIOXml.SetRootNode(xRoot)
+    ###            UtilsIOXml.SetRootNode(xRoot)
     ###        with a different tree structure from the helper function
     
     #-------------------------------------------
@@ -1467,6 +1467,6 @@ if __name__ == "__main__":
 #         print('***************************')
 #         xParentNode = xRootNode.getElementsByTagName('data')[0]
 #         sChildTagName = 'soloTag'
-#         self.oIOXml.GetListOfAttributes(xParentNode, sChildTagName)
+#         UtilsIOXml.GetListOfAttributes(xParentNode, sChildTagName)
 # 
 

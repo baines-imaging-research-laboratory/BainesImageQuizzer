@@ -2,6 +2,8 @@ import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 
 import Utilities.UtilsFilesIO as UtilsFilesIO
+import Utilities.UtilsIOXml as UtilsIOXml
+
 
 from Utilities.UtilsFilesIO import *
 from Session import *
@@ -114,13 +116,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
         sModuleName = 'ImageQuizzer'
 
-        self.oIOXml = UtilsIOXml()
         self.oSession = Session()
-#         self.oSession.SetFilesIO(self._oFilesIO)
-        self.oSession.SetIOXml(self.oIOXml)
-        # reset when overriding Session > CustomWidget's constructor of oIOXml
-        #     since this is customized for unit tests
-        self.oSession.oCustomWidgets.SetIOXml(self.oIOXml)     
         
         # create/set environment variable to be checked in UtilsIOXml class
         #    to prevent displaying error messages during testing
@@ -187,7 +183,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         xQS1 = etree.SubElement(xPage2, "QuestionSet")
         xQS1 = etree.SubElement(xPage3, "QuestionSet")
         
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsIOXml.SetRootNode(xRoot)
         
         lExpectedCompositeIndices = []
         lExpectedCompositeIndices.append([0,0,1,0])
@@ -232,15 +228,15 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         xQS1 = etree.SubElement(xPage5, "QuestionSet")
         
         dAttrib = {"PageGroup":"1"}
-        self.oIOXml.UpdateAttributesInElement(xPage1, dAttrib)
-        self.oIOXml.UpdateAttributesInElement(xPage2, dAttrib)
-        self.oIOXml.UpdateAttributesInElement(xPage3, dAttrib)
-        self.oIOXml.UpdateAttributesInElement(xPage4, dAttrib)
-        self.oIOXml.UpdateAttributesInElement(xPage5, dAttrib)
+        UtilsIOXml.UpdateAttributesInElement(xPage1, dAttrib)
+        UtilsIOXml.UpdateAttributesInElement(xPage2, dAttrib)
+        UtilsIOXml.UpdateAttributesInElement(xPage3, dAttrib)
+        UtilsIOXml.UpdateAttributesInElement(xPage4, dAttrib)
+        UtilsIOXml.UpdateAttributesInElement(xPage5, dAttrib)
         dAttrib = {"Rep":"1"}
-        self.oIOXml.UpdateAttributesInElement(xPage4, dAttrib)
+        UtilsIOXml.UpdateAttributesInElement(xPage4, dAttrib)
         
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsIOXml.SetRootNode(xRoot)
         
         lExpectedCompositeIndices = []
         lExpectedCompositeIndices.append([0,0,1,0])
@@ -485,7 +481,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         etree.SubElement(xRoot,"Page", PageGroup="1")
         child = etree.SubElement(xRoot,"RandomizedPageGroupIndices")
         child.text = '0,5,3,1,4,2' 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsIOXml.SetRootNode(xRoot)
         
         liExpectedIndices = [0,5,3,1,4,2]
         liStoredIndices = self.oSession.oCustomWidgets.GetStoredRandomizedIndices()
@@ -508,8 +504,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         
         xRoot = etree.Element("Session", RandomizePageGroups="Y")
         etree.SubElement(xRoot,"Page", PageGroup="0")
-        self.oIOXml.SetRootNode(xRoot)
-#         self.oSession.SetIOXml(self.oIOXml)
+        UtilsIOXml.SetRootNode(xRoot)
 
         
         liIndices = [0,5,3,1,4,2]
@@ -591,10 +586,10 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         O3 = etree.SubElement(Q3, 'Option')
         QS4 = etree.SubElement(xExpPage4,'QuestionSet')
 
-        self.oIOXml.SetRootNode(xExpectedRoot)
+        UtilsIOXml.SetRootNode(xExpectedRoot)
         
         sFullFile = self.sTempDir + '\\ExpectedLoop.xml'
-        self.oIOXml.SaveXml(sFullFile)
+        UtilsIOXml.SaveXml(sFullFile)
 
         
         #>>>>>>>>>>>>>>>>>>>>>>> Input
@@ -632,15 +627,13 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         
         
         
-        self.oIOXml.SetRootNode(xRoot)
-#         self.oSession.SetIOXml(self.oIOXml)
+        UtilsIOXml.SetRootNode(xRoot)
 
         
         # for debug
         sFullFile = self.sTempDir + '\\PreLoop.xml' 
-        self.oIOXml.SaveXml(sFullFile)
+        UtilsIOXml.SaveXml(sFullFile)
         
-#         self.oSession.oCustomWidgets.SetRootNode(xRoot)
          
         #>>>>>>>>>>>>>>>>>>>>>>>
         
@@ -652,7 +645,6 @@ class TestSessionTest(ScriptedLoadableModuleTest):
                     self.oSession.GetNavigationPage( self.oSession.GetCurrentNavigationIndex() - 1))
 
         
-#         xAdjustedRoot = self.oIOXml.GetRootNode()
         xAdjustedRoot = self.oSession.oCustomWidgets.GetRootNode()
         sAdjustedXML = etree.tostring(xAdjustedRoot)
         sExpectedXML = etree.tostring(xExpectedRoot)
@@ -683,18 +675,17 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         xRoot = self.CreateTestXmlForLooping()
 
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsIOXml.SetRootNode(xRoot)
         
         #############
         # for debug visualization - save inputs and outputs to temp files
         # comment out the deletion of these files at the end of 'runTest' if you need to visualize the xml structure
         sResultsPath = self.sTempDir + '\\Results.xml'
         sFullFile = self.sTempDir + '\\PreLoop.xml'
-        self.oIOXml.SaveXml(sFullFile)
+        UtilsIOXml.SaveXml(sFullFile)
         #############
 
 #         self.oSession.oCustomWidgets.SetRootNode(xRoot)
-        self.oSession.SetIOXml(self.oIOXml)
         self.oSession.BuildNavigationList()
             # print(self.oSession.GetNavigationList())
         '''
@@ -814,15 +805,15 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         # comment out the deletion of these files at the end of 'runTest' if you need to visualize the xml structure
         sResultsPath = self.sTempDir + '\\Results.xml'
         sFullFile = self.sTempDir + '\\PreLoop.xml'
-        self.oIOXml.SaveXml(sFullFile)
+        UtilsIOXml.SaveXml(sFullFile)
         #############
 
         # build xml
         xRoot = self.CreateTestXmlForLooping()
 
         
-        self.oIOXml.SetRootNode(xRoot)
-        self.oIOXml.SaveXml(sFullFile)
+        UtilsIOXml.SetRootNode(xRoot)
+        UtilsIOXml.SaveXml(sFullFile)
         
         self.oSession.BuildNavigationList()
             #print(self.oSession.GetNavigationList())

@@ -5,9 +5,13 @@ import traceback
 
 import Utilities.UtilsMsgs as UtilsMsgs
 import Utilities.UtilsFilesIO as UtilsFilesIO
+import Utilities.UtilsIOXml as UtilsIOXml
 
+ 
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
+from Utilities.UtilsIOXml import *
+
 from QuestionSet import *
 
 
@@ -165,11 +169,10 @@ class PageState:
                 created. These can be associated with any displayed image.
              
         '''
-        self.oIOXml = self.oSession.oIOXml
 
         self.ClearPageStateVariables()
         
-        sPageComplete = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'PageComplete')
+        sPageComplete = UtilsIOXml.GetValueOfNodeAttribute(xPageNode,'PageComplete')
         if sPageComplete == 'Y':
             self.bQuestionSetsCompleted = True
             self.bSegmentationsCompleted = True
@@ -181,8 +184,8 @@ class PageState:
             self.bMarkupLinesCompleted = False
             iCompletedTF = 0
             
-        lxQuestionSets = self.oIOXml.GetChildren(xPageNode,'QuestionSet')
-        lxImageNodes = self.oIOXml.GetChildren(xPageNode,'Image')
+        lxQuestionSets = UtilsIOXml.GetChildren(xPageNode,'QuestionSet')
+        lxImageNodes = UtilsIOXml.GetChildren(xPageNode,'Image')
 
         # initialize list of question sets to incomplete
         for xQSetNode in lxQuestionSets:
@@ -192,12 +195,12 @@ class PageState:
         ##########################
         # store requirement codes - for not required or required on any image
         ##########################
-        sSegRequiredAnyImage = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'SegmentRequiredOnAnyImage')
+        sSegRequiredAnyImage = UtilsIOXml.GetValueOfNodeAttribute(xPageNode,'SegmentRequiredOnAnyImage')
         if sSegRequiredAnyImage == 'Y' or sSegRequiredAnyImage == 'y':
             self.sSegmentationRequiredState = 'AnySegReq'
 
         self.iMarkupLinesOnAnyImageMinimum = 0
-        sLinesRequiredAnyImage = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'MinMarkupLinesRequiredOnAnyImage')
+        sLinesRequiredAnyImage = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'MinMarkupLinesRequiredOnAnyImage')
         if sLinesRequiredAnyImage != '':
             self.sMarkupLineRequiredState = 'AnyLinesReq'
             self.iMarkupLinesOnAnyImageMinimum = int(sLinesRequiredAnyImage)
@@ -212,13 +215,13 @@ class PageState:
         self.l3iCompletedMarkupLines = [[0 for col in range(3)] for row in range(len(lxImageNodes))]
             
         for iImgIdx in range(len(lxImageNodes)):
-            xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', iImgIdx)
-            lxMarkupLinePathNodes = self.oIOXml.GetChildren(xImageNode, 'MarkupLinePath')
+            xImageNode = UtilsIOXml.GetNthChild(xPageNode, 'Image', iImgIdx)
+            lxMarkupLinePathNodes = UtilsIOXml.GetChildren(xImageNode, 'MarkupLinePath')
 
             
             ##########################
             # segments
-            sSegRequired = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'SegmentRequired')
+            sSegRequired = UtilsIOXml.GetValueOfNodeAttribute(xImageNode,'SegmentRequired')
             if sSegRequired == 'Y' or sSegRequired == 'y':
                 # use code = 1 for required  
                 self.l2iCompletedSegmentations[iImgIdx] = [iCompletedTF, 1]
@@ -230,7 +233,7 @@ class PageState:
 
             ##########################
             # markup lines
-            sLinesRequired = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'MinMarkupLinesRequired')
+            sLinesRequired = UtilsIOXml.GetValueOfNodeAttribute(xImageNode,'MinMarkupLinesRequired')
             if sLinesRequired != '':
                 # use code = 'n' for minimum number of lines required  
                 self.sMarkupLineRequiredState = 'SpecificLinesReq' # override default
@@ -279,7 +282,7 @@ class PageState:
             for each question set.
         '''
         
-        lxQSetNodes = self.oIOXml.GetChildren(xPageNode, 'QuestionSet')
+        lxQSetNodes = UtilsIOXml.GetChildren(xPageNode, 'QuestionSet')
         iQSetIdx = -1
         for xQSetNode in lxQSetNodes:
             
@@ -342,10 +345,10 @@ class PageState:
             
             lsLatestResponses = []
              
-            lxOptionNodes = self.oIOXml.GetChildren(xQuestionNode, 'Option')
+            lxOptionNodes = UtilsIOXml.GetChildren(xQuestionNode, 'Option')
             for xOptionNode in lxOptionNodes:
                  
-                sResponse = self.oIOXml.GetDataFromLastChild(xOptionNode, 'Response')
+                sResponse = UtilsIOXml.GetDataFromLastChild(xOptionNode, 'Response')
                 if sResponse != None:
                     lsLatestResponses.append( sResponse )   
 
@@ -368,7 +371,7 @@ class PageState:
             This is based on the LabelMapPath element stored in the xml Image element.
         '''
         
-        lxImageNodes = self.oIOXml.GetChildren(xPageNode,'Image')
+        lxImageNodes = UtilsIOXml.GetChildren(xPageNode,'Image')
         idxImage = -1
 
         #######################################
@@ -380,11 +383,11 @@ class PageState:
             bEmptyLabelMap = True
             bModified = False
             idxImage = idxImage + 1
-            xLabelMapElement = self.oIOXml.GetLastChild(xImageNode, 'LabelMapPath')
+            xLabelMapElement = UtilsIOXml.GetLastChild(xImageNode, 'LabelMapPath')
 
             
             if xLabelMapElement != None:
-                sLabelMapRelativePath = self.oIOXml.GetDataInNode(xLabelMapElement)
+                sLabelMapRelativePath = UtilsIOXml.GetDataInNode(xLabelMapElement)
                 bExists = True
                 
                 # test for empty segmentation (label map exists but all zeros)
@@ -392,25 +395,25 @@ class PageState:
                 bEmptyLabelMap = self.TestForEmptyLabelMap(sLabelMapAbsolutePath)
                 
                 # if labelmap is redisplayed from previous page, check for change in segmentation
-                sLabelMapToRedisplay = self.oIOXml.GetValueOfNodeAttribute(xImageNode, 'DisplayLabelMapID')
+                sLabelMapToRedisplay = UtilsIOXml.GetValueOfNodeAttribute(xImageNode, 'DisplayLabelMapID')
                 if sLabelMapToRedisplay != '':
                     bRedisplayed = True
                     # get image element from history that holds the same label map id; 
                     xHistoricalImageElement = None  # initialize
                     xHistoricalLabelMapMatch = None
                     xHistoricalImageElement, xHistoricalPageElement = \
-                                                self.oIOXml.GetXmlPageAndChildFromAttributeHistory(\
+                                                UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(\
                                                                              self.oSession.GetCurrentNavigationIndex(),\
                                                                              self.oSession.GetNavigationList(),\
                                                                              'Image','LabelMapID',\
                                                                              sLabelMapToRedisplay)
                                                 
                     if xHistoricalImageElement != None:
-                        xHistoricalLabelMapMatch = self.oSession.oIOXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')
+                        xHistoricalLabelMapMatch = self.UtilsIOXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')
                     
                         if xHistoricalLabelMapMatch != None:
                             # found a label map for this image in history
-                            sHistoricalLabelMapRelativePath = self.oIOXml.GetDataInNode(xHistoricalLabelMapMatch)
+                            sHistoricalLabelMapRelativePath = UtilsIOXml.GetDataInNode(xHistoricalLabelMapMatch)
                             sHistoricalLabelMapAbsolutePath = UtilsFilesIO.GetAbsoluteUserPath(sHistoricalLabelMapRelativePath)
                             bModified = self.TestForModifiedLabelMap(sHistoricalLabelMapAbsolutePath, sLabelMapAbsolutePath)
                         else:
@@ -489,9 +492,9 @@ class PageState:
                     if self.l2iCompletedSegmentations[idx][1] == 1 : # required on this image
                         if self.l2iCompletedSegmentations[idx][0] != 1: # segmentation not complete
                             self.bSegmentationsCompleted = False
-                            xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', idx)
-                            sPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'ID')
-                            sImageID = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'ID')
+                            xImageNode = UtilsIOXml.GetNthChild(xPageNode, 'Image', idx)
+                            sPageID = UtilsIOXml.GetValueOfNodeAttribute(xPageNode,'ID')
+                            sImageID = UtilsIOXml.GetValueOfNodeAttribute(xImageNode,'ID')
                             sNodeName = sPageID + '_' + sImageID
                             sSegReqMsg = '\nYou must complete a segmentation for this image: ' + sNodeName + \
                                 '\nIt cannot be empty. If a contour has been redisplayed for this image, it must be modified.' + \
@@ -563,12 +566,12 @@ class PageState:
             This is based on the MarkupLinePath element stored in the Image element.
         '''
         lsRecordedLinePaths = []
-        lxImageNodes = self.oIOXml.GetChildren(xPageNode,'Image')
+        lxImageNodes = UtilsIOXml.GetChildren(xPageNode,'Image')
         idxImage = -1
 
         for xImageNode in lxImageNodes:
             idxImage = idxImage + 1
-            lxMarkupLinePathElement = self.oIOXml.GetChildren(xImageNode, 'MarkupLinePath')
+            lxMarkupLinePathElement = UtilsIOXml.GetChildren(xImageNode, 'MarkupLinePath')
             self.l3iCompletedMarkupLines[idxImage][2] = len(lxMarkupLinePathElement)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -590,9 +593,9 @@ class PageState:
             #    - some images are repeated in different views so we want to
             #    only add to the total if it's a different image
             for iImageIdx in range(len(self.l3iCompletedMarkupLines)):
-                xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', iImageIdx)
-                xImagePathNode = self.oIOXml.GetNthChild(xImageNode,'Path', 0)
-                sImagePath = self.oIOXml.GetDataInNode(xImagePathNode)
+                xImageNode = UtilsIOXml.GetNthChild(xPageNode, 'Image', iImageIdx)
+                xImagePathNode = UtilsIOXml.GetNthChild(xImageNode,'Path', 0)
+                sImagePath = UtilsIOXml.GetDataInNode(xImagePathNode)
                 if iImageIdx == 0:
                     iNumLines = iNumLines + self.l3iCompletedMarkupLines[iImageIdx][2]
                     lsUniqueImagePaths.append(sImagePath)
@@ -623,9 +626,9 @@ class PageState:
                 for idx in range(len(self.l3iCompletedMarkupLines)):
                     if self.l3iCompletedMarkupLines[idx][2] < self.l3iCompletedMarkupLines[idx][1]:
                         self.bMarkupLinesCompleted = False
-                        xImageNode = self.oIOXml.GetNthChild(xPageNode, 'Image', idx)
-                        sPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'ID')
-                        sImageID = self.oIOXml.GetValueOfNodeAttribute(xImageNode,'ID')
+                        xImageNode = UtilsIOXml.GetNthChild(xPageNode, 'Image', idx)
+                        sPageID = UtilsIOXml.GetValueOfNodeAttribute(xPageNode,'ID')
+                        sImageID = UtilsIOXml.GetValueOfNodeAttribute(xImageNode,'ID')
                         sNodeName = sPageID + '_' + sImageID
                         sMsg = sMsg +  '\nYou must complete at least ' + str(self.l3iCompletedMarkupLines[idx][1]) + \
                                     ' markup lines for this image: ' + sNodeName + \

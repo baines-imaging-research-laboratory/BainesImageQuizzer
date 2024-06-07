@@ -11,6 +11,8 @@ import Utilities.UtilsMsgs as UtilsMsgs
 import Utilities.UtilsFilesIO as UtilsFilesIO
 import Utilities.UtilsEmail as UtilsEmail
 import Utilities.UtilsValidate as UtilsValidate
+import Utilities.UtilsIOXml as UtilsIOXml
+
 
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
@@ -63,12 +65,11 @@ class Session:
         self._bQuizResuming = False
 
        
-        self.oIOXml = UtilsIOXml()
         self.oUserInteraction = None
 
         self.oImageView = None
         
-        self.oCustomWidgets = CustomWidgets(self.oIOXml)
+        self.oCustomWidgets = CustomWidgets()
         self.oCoreWidgets = CoreWidgets(self)
         
         
@@ -102,14 +103,9 @@ class Session:
     #-------------------------------------------
 
         
-    #----------
-    def SetIOXml(self, oIOXml):
-        self.oIOXml = oIOXml
 
     #----------
     def SetupCoreWidgets(self):
-#         self.oCoreWidgets.SetFilesIO(self.oFilesIO)
-        self.oCoreWidgets.SetIOXml(self.oIOXml)
         self.oCoreWidgets.SetCustomWidgets(self.oCustomWidgets)
         
     #----------
@@ -905,7 +901,7 @@ class Session:
             if qtEmailAns == qt.QMessageBox.Yes:
     
                 sArchiveFilenameWithPath = os.path.join(UtilsFilesIO.GetUserDir(), UtilsFilesIO.GetQuizFilenameNoExt())
-                sPathToZipFile = self.oCustomWidgets.GetXmlUtils().ZipXml(sArchiveFilenameWithPath, UtilsFilesIO.GetUserQuizResultsDir())
+                sPathToZipFile = UtilsIOXml.ZipXml(sArchiveFilenameWithPath, UtilsFilesIO.GetUserQuizResultsDir())
                 
                 if sPathToZipFile != '':
                     UtilsEmail.SendEmail(sPathToZipFile)
@@ -1016,7 +1012,7 @@ class Session:
         #     of indices for each page, question sets, page group and rep number
         
         
-        self.SetNavigationList(self.oIOXml.GetQuizLayoutForNavigationList(self.oIOXml.GetRootNode()))
+        self.SetNavigationList(UtilsIOXml.GetQuizLayoutForNavigationList(UtilsIOXml.GetRootNode()))
         
         # if randomization is requested - shuffle the page/questionset list
         if self.oCustomWidgets.GetRandomizeRequired():
@@ -1264,7 +1260,7 @@ class Session:
         indNextXmlPageWithRep0, iCopiedRepNum = self.oCustomWidgets.RepeatNode(indXmlPageToRepeat, sXmlFilePath) 
 
 
-###         self.oIOXml.SaveXml(sXmlFilePath)    # for debug
+###         UtilsIOXml.SaveXml(sXmlFilePath)    # for debug
         self.oCustomWidgets.SaveQuiz(sXmlFilePath)
         self.BuildNavigationList() # update after adding xml page
          
@@ -1278,7 +1274,7 @@ class Session:
 
 
 
-###         self.oIOXml.SaveXml(sXmlFilePath)    # for debug
+###         UtilsIOXml.SaveXml(sXmlFilePath)    # for debug
         self.BuildNavigationList()  # repeated here to pick up attribute adjustments for Rep#
         self.oCustomWidgets.SaveQuiz(sXmlFilePath)
  

@@ -9,6 +9,7 @@ import traceback
 
 import Utilities.UtilsMsgs as UtilsMsgs
 import Utilities.UtilsFilesIO as UtilsFilesIO
+import Utilities.UtilsIOXml as UtilsIOXml
 
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
@@ -32,7 +33,6 @@ class QuestionSet():
         
         self._loQuestions = []
         
-        self.oIOXml = UtilsIOXml()
         self.oSession = oSession
         
     #----------
@@ -52,24 +52,24 @@ class QuestionSet():
         sFnName = sys._getframe().f_code.co_name
         
         
-        sNodeName = self.oIOXml.GetElementNodeName(xNodeQuestionSet)
+        sNodeName = UtilsIOXml.GetElementNodeName(xNodeQuestionSet)
         if not (sNodeName == "QuestionSet"):
             raise Exception("Invalid XML node. Expecting 'QuestionSet', node name was: %s" % sNodeName)
         else:
             # for each child named 'Question' extract labels and options
-            iNumQuestions = self.oIOXml.GetNumChildrenByName(xNodeQuestionSet, "Question")
+            iNumQuestions = UtilsIOXml.GetNumChildrenByName(xNodeQuestionSet, "Question")
             
-            self.id = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'ID')
-            self.descriptor = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'Descriptor')
+            self.id = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'ID')
+            self.descriptor = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'Descriptor')
             
             
-            lxQuestions = self.oIOXml.GetChildren(xNodeQuestionSet, 'Question')
+            lxQuestions = UtilsIOXml.GetChildren(xNodeQuestionSet, 'Question')
              
             for xNodeQuestion in lxQuestions:
 
-                sQuestionType = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Type')
-                sQuestionDescriptor = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Descriptor')
-                sGroupBoxLayout = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'GroupLayout')
+                sQuestionType = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Type')
+                sQuestionDescriptor = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Descriptor')
+                sGroupBoxLayout = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'GroupLayout')
 
 
                 oQuestion = self.GetQuestionItem(sQuestionType, xNodeQuestion)
@@ -96,12 +96,12 @@ class QuestionSet():
         lOptions = []
 
         # get options for each question
-        lxOptions = self.oIOXml.GetChildren(xNodeQuestion, 'Option')
+        lxOptions = UtilsIOXml.GetChildren(xNodeQuestion, 'Option')
 
         for iElem in range(len(lxOptions)):
             
-            xNodeOption = self.oIOXml.GetNthChild(xNodeQuestion, 'Option', iElem)
-            sValue = self.oIOXml.GetDataInNode(xNodeOption)
+            xNodeOption = UtilsIOXml.GetNthChild(xNodeQuestion, 'Option', iElem)
+            sValue = UtilsIOXml.GetDataInNode(xNodeOption)
             
             lOptions.append(sValue)
 
@@ -359,11 +359,10 @@ class Question(ABC):
 
     def GetMinMaxAttributesFromXML(self, xNodeQuestion):
 
-        oIOXml = UtilsIOXml()
         dictModifiers = {}
 
-        sMin = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Min')               
-        sMax = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Max')
+        sMin = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Min')               
+        sMax = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Max')
 
         dictModifiers['Min'] = sMin
         dictModifiers['Max'] = sMax

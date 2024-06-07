@@ -3,6 +3,7 @@ import warnings
 import vtk, qt, ctk, slicer
 
 import Utilities.UtilsMsgs as UtilsMsgs
+import Utilities.UtilsIOXml as UtilsIOXml
 
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
@@ -59,8 +60,6 @@ class UtilsFilesIO:
     _sQuizzerROIColorTableNameWithExt = 'QuizzerROIColorTable.txt'
     _sQuizzerROIColorTablePath = ''
 
-    _oIOXml = None
-    
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -86,10 +85,6 @@ class UtilsFilesIO:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
-    #----------
-    @staticmethod
-    def SetIOXml():
-        UtilsFilesIO._oIOXml = UtilsIOXml()
         
     #----------
     @staticmethod
@@ -248,9 +243,9 @@ class UtilsFilesIO:
         # get page info from the session's current page to create directory
         xPageNode = oSession.oCustomWidgets.GetNthPageNode(oSession.GetCurrentPageIndex())
         sPageIndex = str(oSession.GetCurrentPageIndex() + 1)
-        sPageID = oSession.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
-        sPageDescriptor = oSession.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
-        sPageGroup = oSession.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
+        sPageID = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
+        sPageDescriptor = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
+        sPageGroup = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
         # sDirName = os.path.join(self.GetUserQuizResultsDir(), 'Pg'+ sPageIndex + '_' + sPageID )
         sDirName = os.path.join(UtilsFilesIO.GetUserQuizResultsDir(), 'PgGroup' + sPageGroup + '_' + sPageID + '_' + sPageDescriptor )
 
@@ -369,7 +364,6 @@ class UtilsFilesIO:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @staticmethod
     def SetModuleDirs( sModuleName):
-        UtilsFilesIO.SetIOXml()
 
         UtilsFilesIO.SetScriptedModulesPath(sModuleName)
         UtilsFilesIO._sQuizDir = os.path.join(UtilsFilesIO.GetScriptedModulesPath(),'..', 'Inputs','MasterQuiz')
@@ -677,7 +671,7 @@ class UtilsFilesIO:
                         
                         #    add the label map path element to the image element in the xml
                         #    only one label map path element is to be recorded
-                        xLabelMapPathElement = UtilsFilesIO._oIOXml.GetLastChild(oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                        xLabelMapPathElement = UtilsIOXml.GetLastChild(oImageNode.GetXmlImageElement(), 'LabelMapPath')
                         
                         if xLabelMapPathElement == None:
                             # update xml storing the path to the label map file with the image element
@@ -715,7 +709,7 @@ class UtilsFilesIO:
                     
                     
         if bLabelMapsSaved == True:
-            oSession.oIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
+            UtilsIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
 
         return bLabelMapsSaved, sMsg
         
@@ -738,7 +732,7 @@ class UtilsFilesIO:
                 # read attribute from xml file whether to use label maps previously created
                 #    by the user in the quiz for this image
                 sLabelMapIDLink = '' # initialize
-                sLabelMapIDLink = oSession.oIOXml.GetValueOfNodeAttribute(oImageNode.GetXmlImageElement(), 'DisplayLabelMapID')
+                sLabelMapIDLink = UtilsIOXml.GetValueOfNodeAttribute(oImageNode.GetXmlImageElement(), 'DisplayLabelMapID')
                 if sLabelMapIDLink != '':
                     bUsePreviousLabelMap = True
                 else:
@@ -746,7 +740,7 @@ class UtilsFilesIO:
 
         
                 # look at latest instance of the label map elements stored in the xml
-                xLabelMapPathElement = oSession.oIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                xLabelMapPathElement = UtilsIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
                 slLabelMapNode = None # initialize
 
                 # if there were no label map paths stored with the image, and xml attribute has DisplayLabelMapID 
@@ -757,8 +751,8 @@ class UtilsFilesIO:
                     # get image element from history that holds the same label map id; 
                     xHistoricalImageElement = None  # initialize
                     xHistoricalLabelMapMatch = None
-#                     xHistoricalImageElement, xHistoricalPageElement = oSession.oIOXml.GetXmlPageAndChildFromAttributeHistory(oSession.GetCurrentPageIndex(),'Image','LabelMapID',sLabelMapIDLink)
-                    xHistoricalImageElement, xHistoricalPageElement = oSession.oIOXml.GetXmlPageAndChildFromAttributeHistory(\
+#                     xHistoricalImageElement, xHistoricalPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(oSession.GetCurrentPageIndex(),'Image','LabelMapID',sLabelMapIDLink)
+                    xHistoricalImageElement, xHistoricalPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(\
                                                                                     oSession.GetCurrentNavigationIndex(), \
                                                                                     oSession.GetNavigationList(),\
                                                                                     'Image',\
@@ -773,7 +767,7 @@ class UtilsFilesIO:
                     else:
                         # load single label map
                         if xHistoricalImageElement != None:
-                            xHistoricalLabelMapMatch = oSession.oIOXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')
+                            xHistoricalLabelMapMatch = UtilsIOXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')
                         
                         if xHistoricalLabelMapMatch != None:
                             # found a label map for this image in history
@@ -781,12 +775,12 @@ class UtilsFilesIO:
                             UtilsFilesIO.CopyAndStoreLabelMapFromHistory(oSession, xHistoricalLabelMapMatch, oImageNode)
     
                             #    assign newly stored xml element to xLabelMapPathElement
-                            xLabelMapPathElement = oSession.oIOXml.GetLatestChildElement( oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                            xLabelMapPathElement = UtilsIOXml.GetLatestChildElement( oImageNode.GetXmlImageElement(), 'LabelMapPath')
                     
                 
                 # load labelmap file from stored path in XML                
                 if xLabelMapPathElement != None:
-                    sStoredRelativePath = oSession.oIOXml.GetDataInNode(xLabelMapPathElement)
+                    sStoredRelativePath = UtilsIOXml.GetDataInNode(xLabelMapPathElement)
                     
                     # check if label map was already loaded (if between question sets, label map will persisit)
                     sLabelMapNodeName = UtilsFilesIO.GetFilenameNoExtFromPath(sStoredRelativePath)
@@ -844,7 +838,7 @@ class UtilsFilesIO:
     def CopyAndStoreLabelMapFromHistory( oSession, xHistoricalLabelMapElement, oImageNode):
 
         # define source for copy
-        sStoredRelativePathForSource = oSession.oIOXml.GetDataInNode(xHistoricalLabelMapElement)
+        sStoredRelativePathForSource = UtilsIOXml.GetDataInNode(xHistoricalLabelMapElement)
         sAbsolutePathForSource = UtilsFilesIO.GetAbsoluteUserPath(sStoredRelativePathForSource)
 
         # create new folder for destination based on current page information
@@ -884,21 +878,21 @@ class UtilsFilesIO:
             lsLabelMapFullPaths = []
             
             # Search for all previous Pages that match PageID_Descriptor (without the -Rep## substring)
-            sPageIDToSearch = oSession.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'ID')
+            sPageIDToSearch = UtilsIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'ID')
                         # remove ignore string
             reIgnoreSubstring= '-Rep[0-9]+'  # remove -Rep with any number of digits following
             sPageIDToSearchStripped = re.sub(reIgnoreSubstring,'',sPageIDToSearch)
-            sPageDescriptorToSearch = oSession.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'Descriptor')
+            sPageDescriptorToSearch = UtilsIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'Descriptor')
     
             dictAttribToMatch = {}
             dictAttribToMatch['ID'] = sPageIDToSearchStripped
             dictAttribToMatch['Descriptor'] = sPageDescriptorToSearch
     
-            sLabelMapIDToMatch = oSession.oIOXml.GetValueOfNodeAttribute(xHistoricalImageElement, 'LabelMapID')
+            sLabelMapIDToMatch = UtilsIOXml.GetValueOfNodeAttribute(xHistoricalImageElement, 'LabelMapID')
             
             
             # collect label map paths
-            dictPgNodeAndPgIndex = oSession.oIOXml.GetMatchingXmlPagesFromAttributeHistory(\
+            dictPgNodeAndPgIndex = UtilsIOXml.GetMatchingXmlPagesFromAttributeHistory(\
                                                     oSession.GetCurrentNavigationIndex(),\
                                                     oSession.GetNavigationList() , \
                                                     dictAttribToMatch, \
@@ -907,16 +901,16 @@ class UtilsFilesIO:
             lMatchingPageNodes = list(dictPgNodeAndPgIndex.keys())
             for xPageNode in lMatchingPageNodes:
                 
-                lxImageElements = oSession.oIOXml.GetChildren(xPageNode, 'Image')
+                lxImageElements = UtilsIOXml.GetChildren(xPageNode, 'Image')
     
                 for xImage in lxImageElements:
-                    sLabelMapID = oSession.oIOXml.GetValueOfNodeAttribute(xImage,'LabelMapID')
+                    sLabelMapID = UtilsIOXml.GetValueOfNodeAttribute(xImage,'LabelMapID')
     
                     if sLabelMapID == sLabelMapIDToMatch:
-                        lxLabelMapPath = UtilsFilesIO._oIOXml.GetChildren(xImage, 'LabelMapPath')
+                        lxLabelMapPath = UtilsIOXml.GetChildren(xImage, 'LabelMapPath')
     
                         for xPath in lxLabelMapPath:
-                            sLabelMapPath = oSession.oIOXml.GetDataInNode(xPath)
+                            sLabelMapPath = UtilsIOXml.GetDataInNode(xPath)
                             sLabelMapFullPath = os.path.join(UtilsFilesIO.GetUserDir(), sLabelMapPath)
                             lsLabelMapFullPaths.append(sLabelMapFullPath)
             
@@ -987,8 +981,8 @@ class UtilsFilesIO:
                 # update xml storing the path to the label map file with the image element
                 #    for display on the next page
                 oSession.oCustomWidgets.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(), UtilsFilesIO.GetRelativeUserPath(sLabelMapPath))
-                oSession.oIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
-                xLabelMapPathElement = oSession.oIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                UtilsIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
+                xLabelMapPathElement = UtilsIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
         
                 # cleanup
                 slicer.mrmlScene.RemoveNode(slLabelMapVolumeReference)
@@ -1065,10 +1059,10 @@ class UtilsFilesIO:
                             # store the path name in the xml file
                                 
                             sRelativePathToStoreInXml = UtilsFilesIO.GetRelativeUserPath(sMarkupsLinePath)
-                            lxLinePathElements = UtilsFilesIO._oIOXml.GetChildren(oImageNode.GetXmlImageElement(), 'MarkupLinePath')
+                            lxLinePathElements = UtilsIOXml.GetChildren(oImageNode.GetXmlImageElement(), 'MarkupLinePath')
                             bPathAlreadyInXml = False
                             for xPathElement in lxLinePathElements:
-                                sStoredRelativePath = UtilsFilesIO._oIOXml.GetDataInNode(xPathElement)
+                                sStoredRelativePath = UtilsIOXml.GetDataInNode(xPathElement)
                                 if sStoredRelativePath == sRelativePathToStoreInXml:
                                     bPathAlreadyInXml = True
                                     break
@@ -1080,7 +1074,7 @@ class UtilsFilesIO:
 
                 
             
-                oSession.oIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
+                UtilsIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
 
             
             
@@ -1151,15 +1145,15 @@ class UtilsFilesIO:
         lxImageElements = []
         lxMarkupLinePaths = []
         
-        lxImageElements = UtilsFilesIO._oIOXml.GetChildren( oSession.oCustomWidgets.GetNthPageNode(oSession.GetCurrentPageIndex()), 'Image')
+        lxImageElements = UtilsIOXml.GetChildren( oSession.oCustomWidgets.GetNthPageNode(oSession.GetCurrentPageIndex()), 'Image')
         
         for  xImageNode in lxImageElements:
             
-            lxMarkupLinePaths = UtilsFilesIO._oIOXml.GetChildren( xImageNode, 'MarkupLinePath')
+            lxMarkupLinePaths = UtilsIOXml.GetChildren( xImageNode, 'MarkupLinePath')
             
             for xLinePathNode in lxMarkupLinePaths:
                 
-                sStoredRelativePath = UtilsFilesIO._oIOXml.GetDataInNode( xLinePathNode )
+                sStoredRelativePath = UtilsIOXml.GetDataInNode( xLinePathNode )
                 if sStoredRelativePath != '':
                     sAbsolutePath = UtilsFilesIO.GetAbsoluteUserPath(sStoredRelativePath)
                     

@@ -5,6 +5,7 @@ import traceback
 import Utilities.UtilsMsgs as UtilsMsgs
 import Utilities.UtilsFilesIO as UtilsFilesIO
 import Utilities.UtilsEmail as UtilsEmail
+import Utilities.UtilsIOXml as UtilsIOXml
 
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
@@ -56,16 +57,7 @@ class UtilsValidate:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    #----------
-    @staticmethod
-    def SetIOXml():
-        UtilsValidate.oIOXml = UtilsIOXml()
-    
-    #----------
-    @staticmethod
-    def GetIOXml():
-        return UtilsValidate.oIOXml
-    
+   
     #----------
     #----------Page Groups
     #----------
@@ -130,24 +122,23 @@ class UtilsValidate:
         '''
         sMsg = ''
         bSuccess = True
-        UtilsValidate.SetIOXml()
         UtilsValidate.setupTestEnvironment()
         
         
         try:
             # open requested quiz xml 
-            bSuccess = UtilsValidate.oIOXml.OpenXml(UtilsFilesIO.GetXmlQuizPath(),'Session')
-            xRootNode = UtilsValidate.oIOXml.GetRootNode()
-            UtilsValidate.l4iNavList = UtilsValidate.oIOXml.GetQuizLayoutForNavigationList(xRootNode)
+            bSuccess = UtilsIOXml.OpenXml(UtilsFilesIO.GetXmlQuizPath(),'Session')
+            xRootNode = UtilsIOXml.GetRootNode()
+            UtilsValidate.l4iNavList = UtilsIOXml.GetQuizLayoutForNavigationList(xRootNode)
 
             # >>>>>>>>>>>>>>>
             # check options at the Session level
-            sContourVisibility = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ContourVisibility')
+            sContourVisibility = UtilsIOXml.GetValueOfNodeAttribute(xRootNode, 'ContourVisibility')
             if not (sContourVisibility == 'Fill' or sContourVisibility == 'Outline' or sContourVisibility == ''):
                 sValidationMsg = "\nContourVisibility value must be 'Fill' or 'Outline'. See attribute in Session"
                 sMsg = sMsg + sValidationMsg
                 
-            sEmailResultsTo = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xRootNode, 'EmailResultsTo')
+            sEmailResultsTo = UtilsIOXml.GetValueOfNodeAttribute(xRootNode, 'EmailResultsTo')
             if sEmailResultsTo != '':
                 # ensure that the smtp config file exists
                 sSmtpConfigFile = os.path.join(UtilsFilesIO.GetConfigDir(), 'smtp_config.txt')
@@ -169,7 +160,7 @@ class UtilsValidate:
             sMsg = sMsg + sValidationMsg
             
             # >>>>>>>>>>>>>>>
-            lxPageElements = UtilsValidate.oIOXml.GetChildren(xRootNode, 'Page')
+            lxPageElements = UtilsIOXml.GetChildren(xRootNode, 'Page')
             
             iPageNum = 0
             for xPage in lxPageElements:
@@ -178,7 +169,7 @@ class UtilsValidate:
                 sValidationMsg = UtilsValidate.ValidateRequiredAttribute(xPage, 'ID', str(iPageNum))
                 sMsg = sMsg + sValidationMsg
                 
-                sPageID = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPage, 'ID')
+                sPageID = UtilsIOXml.GetValueOfNodeAttribute(xPage, 'ID')
                 
                 # for any page, make sure there is matching Images Volume to Segmentation or Volume to LabelMap for each destination
                 sValidationMsg = UtilsValidate.ValidateImageToSegmentationMatch(xPage, str(iPageNum))
@@ -188,9 +179,9 @@ class UtilsValidate:
                 sMsg = sMsg + sValidationMsg
                 
                 # Image element validations
-                lxImageElements = UtilsValidate.oIOXml.GetChildren(xPage, 'Image')
+                lxImageElements = UtilsIOXml.GetChildren(xPage, 'Image')
                 for xImage in lxImageElements:
-                    sImageID = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
+                    sImageID = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'ID')
     
                     # Page ID + Image ID creates the node name for the image that is loaded (in ImageView>ViewNodeBase)
                     sNodeNameID = sPageID + '_' + sImageID
@@ -203,25 +194,25 @@ class UtilsValidate:
                     sValidationMsg = UtilsValidate.ValidateRequiredAttribute(xImage, 'Type', sPageReference)
                     sMsg = sMsg + sValidationMsg
                     
-                    sValidationMsg = UtilsValidate.ValidateAttributeOptions(xImage, 'Type', sPageReference, UtilsValidate.oIOXml.lValidImageTypes)
+                    sValidationMsg = UtilsValidate.ValidateAttributeOptions(xImage, 'Type', sPageReference, UtilsIOXml.lValidImageTypes)
                     sMsg = sMsg + sValidationMsg
                     
                     # >>>>>>>>>>>>>>> Elements
                     sValidationMsg = UtilsValidate.ValidateRequiredElement(xImage, 'Path', sPageReference)
                     sMsg = sMsg + sValidationMsg
                     
-                    sValidationMsg = UtilsValidate.ValidateElementOptions(xImage, 'Layer', sPageReference, UtilsValidate.oIOXml.lValidLayers)
+                    sValidationMsg = UtilsValidate.ValidateElementOptions(xImage, 'Layer', sPageReference, UtilsIOXml.lValidLayers)
                     sMsg = sMsg + sValidationMsg
                     
-                    sValidationMsg = UtilsValidate.ValidateElementOptions(xImage, 'DefaultDestination', sPageReference, UtilsValidate.oIOXml.lValidSliceWidgets)
+                    sValidationMsg = UtilsValidate.ValidateElementOptions(xImage, 'DefaultDestination', sPageReference, UtilsIOXml.lValidSliceWidgets)
                     sMsg = sMsg + sValidationMsg
                     
-                    sImageType = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
+                    sImageType = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'Type')
                     if not (sImageType == 'Segmentation' or sImageType == 'RTStruct' or sImageType == 'LabelMap'):
-                        sValidationMsg = UtilsValidate.ValidateElementOptions(xImage, 'DefaultOrientation', sPageReference, UtilsValidate.oIOXml.lValidOrientations)
+                        sValidationMsg = UtilsValidate.ValidateElementOptions(xImage, 'DefaultOrientation', sPageReference, UtilsIOXml.lValidOrientations)
                         sMsg = sMsg + sValidationMsg
                         
-                    sPanOrigin = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xImage, 'PanOrigin')
+                    sPanOrigin = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'PanOrigin')
                     if sPanOrigin != '':
                         sValidationMsg = UtilsValidate.ValidateListOfNumbers(sPanOrigin, 'Float', 3, 'PanOrigin', sPageReference)
                         sMsg = sMsg + sValidationMsg
@@ -285,13 +276,13 @@ class UtilsValidate:
             # >>>>>>>>>>>>>>>
             # validate that each page has a PageGroup attribute if the session requires page group randomization
             #    a quiz that has no PageGroup attributes will be assigned the default numbers during the session setup
-            sRandomizeRequested = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
+            sRandomizeRequested = UtilsIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
             if sRandomizeRequested == "Y":
                 sValidationMsg = UtilsValidate.ValidatePageGroupNumbers(xRootNode)
                 sMsg = sMsg + sValidationMsg
 
             # check that the ROI Color file exists if requested
-            sROIColorFile = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xRootNode,'ROIColorFile')
+            sROIColorFile = UtilsIOXml.GetValueOfNodeAttribute(xRootNode,'ROIColorFile')
             if sROIColorFile.endswith('.txt'):
                 sMsg = sMsg + '\nRemove .txt extenstion from ROIColorFile name.'
             if sROIColorFile == '':
@@ -342,7 +333,7 @@ class UtilsValidate:
         sMsgMultipleNotAllowed = 'More than one of this element was found. Only one is allowed.'
         sMsgEnding = '  See Page:' + sPageReference
         
-        lxChildren = UtilsValidate.oIOXml.GetChildren(xParentElement, sElementName)
+        lxChildren = UtilsIOXml.GetChildren(xParentElement, sElementName)
         if len(lxChildren) == 0:
             sMsg = sMsgPrefix +  sMsgMissing + sMsgEnding
         elif len(lxChildren) >1 and bMultipleAllowed == False:
@@ -361,10 +352,10 @@ class UtilsValidate:
         for sOption in lValidOptions:
             sValidOptions = sValidOptions + ', ' + sOption
         
-        lxChildren = UtilsValidate.oIOXml.GetChildren(xParentElement, sElementName)
+        lxChildren = UtilsIOXml.GetChildren(xParentElement, sElementName)
 
         for xChild in lxChildren:
-            sDataValue = UtilsValidate.oIOXml.GetDataInNode(xChild)
+            sDataValue = UtilsIOXml.GetDataInNode(xChild)
             if sDataValue not in lValidOptions:
                 sMsg = sMsg + '\nNot a valid option for ' + sElementName + ' : ' + sDataValue + '   See Page:' + sPageReference\
                         + '\n   .....Valid options are:' + sValidOptions
@@ -381,7 +372,7 @@ class UtilsValidate:
     def ValidateRequiredAttribute( xParentElement, sAttributeName, sPageReference):
         sMsg = ''
         sDataValue = ''
-        sDataValue = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xParentElement, sAttributeName)
+        sDataValue = UtilsIOXml.GetValueOfNodeAttribute(xParentElement, sAttributeName)
         if sDataValue == '':
             sMsg = sMsg + '\nError for ' + sAttributeName + ' Attribute.   See Page:' + sPageReference\
                      + '\n   .....The required attribute is missing.'
@@ -397,7 +388,7 @@ class UtilsValidate:
         
         sMsg = ''
         
-        sDataValue = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xParentElement, sAttributeName)
+        sDataValue = UtilsIOXml.GetValueOfNodeAttribute(xParentElement, sAttributeName)
 
         # check for valid option if it exists
         if sDataValue != '':
@@ -417,8 +408,8 @@ class UtilsValidate:
         '''
         
         # open requested quiz xml 
-        bSuccess = UtilsValidate.oIOXml.OpenXml(UtilsFilesIO.GetXmlQuizPath(),'Session')
-        xRootNode = UtilsValidate.oIOXml.GetRootNode()
+        bSuccess = UtilsIOXml.OpenXml(UtilsFilesIO.GetXmlQuizPath(),'Session')
+        xRootNode = UtilsIOXml.GetRootNode()
         
         if bSuccess:
             
@@ -426,17 +417,17 @@ class UtilsValidate:
             sMissingFiles = ''
             sMissingFilesPrefix = 'Do you indicate the wrong Database directory? Check file path. \n\n'
             
-            lxPageNodes = UtilsValidate.oIOXml.GetChildren(xRootNode,'Page')
+            lxPageNodes = UtilsIOXml.GetChildren(xRootNode,'Page')
             iPageNum = 0
             for xPageNode in lxPageNodes:
                 iPageNum = iPageNum + 1
                 
-                lxImageNodes = UtilsValidate.oIOXml.GetChildren(xPageNode, 'Image')
+                lxImageNodes = UtilsIOXml.GetChildren(xPageNode, 'Image')
                 for xImageNode in lxImageNodes:
                     
-                    lxPathNodes = UtilsValidate.oIOXml.GetChildren(xImageNode, 'Path')
+                    lxPathNodes = UtilsIOXml.GetChildren(xImageNode, 'Path')
                     for xPathNode in lxPathNodes:
-                        sPath = UtilsValidate.oIOXml.GetDataInNode(xPathNode)
+                        sPath = UtilsIOXml.GetDataInNode(xPathNode)
                         
                         if sPath in lsUniqueImagePaths:
                             pass
@@ -464,7 +455,7 @@ class UtilsValidate:
         UtilsValidate.ClearPageGroupLists()
         
         # check that each page has a page group number and that it is an integer
-        lxPages = UtilsValidate.oIOXml.GetChildren(xRootNode,'Page')
+        lxPages = UtilsIOXml.GetChildren(xRootNode,'Page')
         iPageNum = 0
         for xPage in lxPages:
             iPageNum = iPageNum + 1
@@ -478,7 +469,7 @@ class UtilsValidate:
             
             try:
                 # test that the value is an integer
-                iPageGroup = int(UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup'))
+                iPageGroup = int(UtilsIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup'))
                 # if iPageGroup == 0:
                 #     sValidationMsg = 'Page Group must be an integer > 0. See Page: ' + str(iPageNum)
                 #     sMsg = sMsg + sValidationMsg
@@ -514,7 +505,7 @@ class UtilsValidate:
         sMsg = ''
         sErrorMsg = '\nOpacity must be a number between 0.0 and 1.0.   See Page: '
         
-        sOpacity = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xImage, 'Opacity')   # not required
+        sOpacity = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'Opacity')   # not required
         if sOpacity != '':
             try:
                 fOpacity = float(sOpacity)
@@ -544,10 +535,10 @@ class UtilsValidate:
         sErrorMsgMismatchSegmentRequired = "\nAll image elements with the same path (but different destinations) must have the same attribute 'SegmentRequired' setting. See Page: "
         sErrorMsgSegmentRequiredOnWrongLayer = "\n'SegmentRequired' attribute cannot be on an image assigned to Layer='Segmentation' or 'Label' See Page: "
         
-        sEnableSegmentEditorSetting = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor')
-        sSegmentOnAnyImageSetting = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPageNode, 'SegmentRequiredOnAnyImage')
+        sEnableSegmentEditorSetting = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor')
+        sSegmentOnAnyImageSetting = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'SegmentRequiredOnAnyImage')
         
-        lxImageNodes = UtilsValidate.oIOXml.GetChildren(xPageNode, 'Image')
+        lxImageNodes = UtilsIOXml.GetChildren(xPageNode, 'Image')
         
         bFoundSegmentRequiredForImage = False
         l2tupImageSettings = []
@@ -556,13 +547,13 @@ class UtilsValidate:
             xImageNode = lxImageNodes[idx]
 
             # collect settings for image
-            sSegmentRequiredSetting = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xImageNode, 'SegmentRequired')
+            sSegmentRequiredSetting = UtilsIOXml.GetValueOfNodeAttribute(xImageNode, 'SegmentRequired')
             if sSegmentRequiredSetting == '':
                 sSegmentRequiredSetting = 'N'
-            sImageLayerNode = UtilsValidate.oIOXml.GetLastChild(xImageNode, 'Layer')
-            sImageLayer = UtilsValidate.oIOXml.GetDataInNode(sImageLayerNode)
-            sImagePathNode = UtilsValidate.oIOXml.GetLastChild(xImageNode,'Path')
-            sImagePath = UtilsValidate.oIOXml.GetDataInNode(sImagePathNode)
+            sImageLayerNode = UtilsIOXml.GetLastChild(xImageNode, 'Layer')
+            sImageLayer = UtilsIOXml.GetDataInNode(sImageLayerNode)
+            sImagePathNode = UtilsIOXml.GetLastChild(xImageNode,'Path')
+            sImagePath = UtilsIOXml.GetDataInNode(sImagePathNode)
             tupImageSettings = [sImagePath, sSegmentRequiredSetting]
             l2tupImageSettings.append(tupImageSettings)
             
@@ -615,25 +606,25 @@ class UtilsValidate:
         bFoundMarkupLinesRequiredForImage = False
         l2tupImageSettings = []
 
-        sMarkupLinesOnAnyImageSetting = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPageNode, 'MinMarkupLinesRequiredOnAnyImage')
-        lxImageNodes = UtilsValidate.oIOXml.GetChildren(xPageNode, 'Image')
+        sMarkupLinesOnAnyImageSetting = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'MinMarkupLinesRequiredOnAnyImage')
+        lxImageNodes = UtilsIOXml.GetChildren(xPageNode, 'Image')
         
 
         for idx in range(len(lxImageNodes)):
             xImageNode = lxImageNodes[idx]
 
             # collect settings for image
-            sMarkupLinesRequiredSetting = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xImageNode, 'MinMarkupLinesRequired')
+            sMarkupLinesRequiredSetting = UtilsIOXml.GetValueOfNodeAttribute(xImageNode, 'MinMarkupLinesRequired')
             if sMarkupLinesRequiredSetting == '':
                 iNumRequiredLines = 0
             else:
                 iNumRequiredLines = int(sMarkupLinesRequiredSetting)
                 
                 
-            sImageLayerNode = UtilsValidate.oIOXml.GetLastChild(xImageNode, 'Layer')
-            sImageLayer = UtilsValidate.oIOXml.GetDataInNode(sImageLayerNode)
-            sImagePathNode = UtilsValidate.oIOXml.GetLastChild(xImageNode,'Path')
-            sImagePath = UtilsValidate.oIOXml.GetDataInNode(sImagePathNode)
+            sImageLayerNode = UtilsIOXml.GetLastChild(xImageNode, 'Layer')
+            sImageLayer = UtilsIOXml.GetDataInNode(sImageLayerNode)
+            sImagePathNode = UtilsIOXml.GetLastChild(xImageNode,'Path')
+            sImagePath = UtilsIOXml.GetDataInNode(sImagePathNode)
             tupImageSettings = [sImagePath, sMarkupLinesRequiredSetting]
             l2tupImageSettings.append(tupImageSettings)
 
@@ -676,14 +667,14 @@ class UtilsValidate:
             that the Page has the attribute 'Layout="TwoOverTwo" '
         '''
         sMsg = ''
-        sLayoutSetting = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Layout')
+        sLayoutSetting = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'Layout')
         
-        lxImageNodes = UtilsValidate.oIOXml.GetChildren(xPageNode, 'Image')
+        lxImageNodes = UtilsIOXml.GetChildren(xPageNode, 'Image')
 
         for idx in range(len(lxImageNodes)):
             xImageNode = lxImageNodes[idx]
-            xDestination = UtilsValidate.oIOXml.GetNthChild(xImageNode, 'DefaultDestination',0)
-            sDestination = UtilsValidate.oIOXml.GetDataInNode(xDestination)
+            xDestination = UtilsIOXml.GetNthChild(xImageNode, 'DefaultDestination',0)
+            sDestination = UtilsIOXml.GetDataInNode(xDestination)
             
             if sDestination == 'Slice4' and sLayoutSetting != 'TwoOverTwo':
                 sMsg = sMsg + "\nAssigning an image to Slice4 requires the Page Layout attribute to be set to 'TwoOverTwo'."\
@@ -703,25 +694,25 @@ class UtilsValidate:
         sMsg = ''
         ltupGoToBookmarks = []
         ltupBookmarkIDs = []
-        sRandomizeSetting = UtilsValidate.oIOXml.GetValueOfNodeAttribute(UtilsValidate.oIOXml.GetRootNode(), 'RandomizePageGroups')
+        sRandomizeSetting = UtilsIOXml.GetValueOfNodeAttribute(UtilsIOXml.GetRootNode(), 'RandomizePageGroups')
         if sRandomizeSetting == 'Y':
             bRandomizing = True
         else:
             bRandomizing = False
         
-        lxPageNodes = UtilsValidate.oIOXml.GetChildren(UtilsValidate.oIOXml.GetRootNode(), 'Page')
+        lxPageNodes = UtilsIOXml.GetChildren(UtilsIOXml.GetRootNode(), 'Page')
         
         # collect all instances of BookmarkID and GoToBookmark and which page they are set
         for idxPage in range(len(lxPageNodes)):
             xPageNode = lxPageNodes[idxPage]
         
-            sBookmarkID = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPageNode, 'BookmarkID')
+            sBookmarkID = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'BookmarkID')
             sGoToBookmark = ''
-            sGoToBookmarkRequest = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPageNode, 'GoToBookmark')
+            sGoToBookmarkRequest = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'GoToBookmark')
             if sGoToBookmarkRequest != '':
                 sGoToBookmark = sGoToBookmarkRequest.split()[0]
 
-            sPageGroup = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
+            sPageGroup = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
             if sPageGroup != '':
                 iPageGroup = int(sPageGroup)
             else:
@@ -800,19 +791,19 @@ class UtilsValidate:
         sMsg = ''
         ltupDisplayLabelMapIDs = []
         ltupLabelMapIDs = []
-        sRandomizeSetting = UtilsValidate.oIOXml.GetValueOfNodeAttribute(UtilsValidate.oIOXml.GetRootNode(), 'RandomizePageGroups')
+        sRandomizeSetting = UtilsIOXml.GetValueOfNodeAttribute(UtilsIOXml.GetRootNode(), 'RandomizePageGroups')
         if sRandomizeSetting == 'Y':
             bRandomizing = True
         else:
             bRandomizing = False
         
-        lxPageNodes = UtilsValidate.oIOXml.GetChildren(UtilsValidate.oIOXml.GetRootNode(), 'Page')
+        lxPageNodes = UtilsIOXml.GetChildren(UtilsIOXml.GetRootNode(), 'Page')
         
         # collect all instances of LabelMapID and DisplayLabelMapID and which page they are set
         for idxPage in range(len(lxPageNodes)):
             xPageNode = lxPageNodes[idxPage]
-            lxImageNodes = UtilsValidate.oIOXml.GetChildren(xPageNode, 'Image')
-            sPageGroup = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
+            lxImageNodes = UtilsIOXml.GetChildren(xPageNode, 'Image')
+            sPageGroup = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
             if sPageGroup != '':
                 iPageGroup = int(sPageGroup)
             else:
@@ -820,10 +811,10 @@ class UtilsValidate:
     
             for idxImage in range(len(lxImageNodes)):
                 xImageNode = lxImageNodes[idxImage]
-                sLabelMapID = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xImageNode, 'LabelMapID')
-                sDisplayLabelMapID = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xImageNode, 'DisplayLabelMapID')
-                xImagePath = UtilsValidate.oIOXml.GetNthChild(xImageNode, 'Path', 0)
-                sImagePath = UtilsValidate.oIOXml.GetDataInNode(xImagePath)
+                sLabelMapID = UtilsIOXml.GetValueOfNodeAttribute(xImageNode, 'LabelMapID')
+                sDisplayLabelMapID = UtilsIOXml.GetValueOfNodeAttribute(xImageNode, 'DisplayLabelMapID')
+                xImagePath = UtilsIOXml.GetNthChild(xImageNode, 'Path', 0)
+                sImagePath = UtilsIOXml.GetDataInNode(xImagePath)
 
                 if sLabelMapID != '':
                     ltupLabelMapIDs.append([sLabelMapID, idxPage, sImagePath, iPageGroup])
@@ -908,13 +899,13 @@ class UtilsValidate:
         sErrorMsgEmptyPageGroups = "\nYou requested a label map merge but the PageGroup numbers of this page are either empty or don't exist. Page Group numbers must match with the previous page that has the matching LabelMapID to be merged."
         sErrorMsgLoopingNotAllowed = "\nThere can not be Looping on a Page with the 'MergeLabelMaps' attribute"
         
-        sMergeLabelMaps = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xImage, sAttributeName)
+        sMergeLabelMaps = UtilsIOXml.GetValueOfNodeAttribute(xImage, sAttributeName)
 
         if sMergeLabelMaps == "Y":                       
             try:
                 
                 # capture the DisplayLabelMapID attribute for this image
-                sLabelMapIDLink = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xImage, 'DisplayLabelMapID')
+                sLabelMapIDLink = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'DisplayLabelMapID')
 
                 if sLabelMapIDLink == '':
                     # missing attribute
@@ -922,29 +913,29 @@ class UtilsValidate:
                 
                 
                 
-                if UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPage, 'EnableSegmentEditor') == 'Y' or\
-                    UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPage, 'SegmentRequiredOnAnyImage') == 'Y' or\
-                    UtilsValidate.oIOXml.GetValueOfNodeAttribute(xImage, 'SegmentRequired') == 'Y' :
+                if UtilsIOXml.GetValueOfNodeAttribute(xPage, 'EnableSegmentEditor') == 'Y' or\
+                    UtilsIOXml.GetValueOfNodeAttribute(xPage, 'SegmentRequiredOnAnyImage') == 'Y' or\
+                    UtilsIOXml.GetValueOfNodeAttribute(xImage, 'SegmentRequired') == 'Y' :
                     raise Exception(sErrorMsgSegmentingNotAllowed)
 
                 # look for historical LabelMapID match
                 iPageIndex = iPageNum - 1  # zero indexing for current page
-                iNavIdx = UtilsValidate.oIOXml.GetNavigationIndexForPage(UtilsValidate.l4iNavList, iPageIndex)  # zero indexing for current page
-                xHistoricalImageElement, xHistoricalPageElement = UtilsValidate.oIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIdx, UtilsValidate.l4iNavList, 'Image','LabelMapID',sLabelMapIDLink)
+                iNavIdx = UtilsIOXml.GetNavigationIndexForPage(UtilsValidate.l4iNavList, iPageIndex)  # zero indexing for current page
+                xHistoricalImageElement, xHistoricalPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIdx, UtilsValidate.l4iNavList, 'Image','LabelMapID',sLabelMapIDLink)
                 if xHistoricalImageElement == None:
                     raise Exception(sErrorMsgNoMatchingHistoricalLabelMapID)
                 
                 # look for Loop=Y on historical page
-                if UtilsValidate.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'Loop') != "Y":
+                if UtilsIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'Loop') != "Y":
                     raise Exception(sErrorMsgNoLoopOnHistoricalPage)
 
-                if UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPage, 'Loop') == 'Y':
+                if UtilsIOXml.GetValueOfNodeAttribute(xPage, 'Loop') == 'Y':
                     raise Exception(sErrorMsgLoopingNotAllowed)
 
 
                 # look for matching PageGroup number (these might be empty strings)
-                sPageGroupNumToMatch = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup')
-                sHistoricalPageGroupNum = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'PageGroup')
+                sPageGroupNumToMatch = UtilsIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup')
+                sHistoricalPageGroupNum = UtilsIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'PageGroup')
                 
                 if sPageGroupNumToMatch == sHistoricalPageGroupNum and sPageGroupNumToMatch ==  '':
                     raise Exception(sErrorMsgEmptyPageGroups)
@@ -1004,8 +995,8 @@ class UtilsValidate:
         '''
         sMsg = ''
         special_characters = '"\'#&{}\\<>*?/$!:@+`~%^()+=,`|'
-        sID = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
-        sDescriptor  = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
+        sID = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
+        sDescriptor  = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
 
         if any(c in special_characters for c in sID):
             sMsg = sMsg + '\n Special characters are not allowed in the page attribute ID.'
@@ -1032,15 +1023,15 @@ class UtilsValidate:
         llDestSegImageType = []
         
         # collect images and their destinations
-        lxAllImages = UtilsValidate.oIOXml.GetChildren(xPageNode, 'Image')
+        lxAllImages = UtilsIOXml.GetChildren(xPageNode, 'Image')
         
         for xImage in lxAllImages:
             
-            sImageType = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
-            xDestination = UtilsValidate.oIOXml.GetNthChild(xImage, 'DefaultDestination', 0)
-            sDestination = UtilsValidate.oIOXml.GetDataInNode(xDestination)
-            xImagePath = UtilsValidate.oIOXml.GetNthChild(xImage, 'Path', 0)
-            sImagePath = UtilsValidate.oIOXml.GetDataInNode(xImagePath)
+            sImageType = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'Type')
+            xDestination = UtilsIOXml.GetNthChild(xImage, 'DefaultDestination', 0)
+            sDestination = UtilsIOXml.GetDataInNode(xDestination)
+            xImagePath = UtilsIOXml.GetNthChild(xImage, 'Path', 0)
+            sImagePath = UtilsIOXml.GetDataInNode(xImagePath)
             
             if sImageType == 'Volume' or sImageType == 'VolumeSequence':
                 llDestImageVolume.append([sDestination, sImagePath])
@@ -1082,7 +1073,7 @@ class UtilsValidate:
         sErrorMsgInvalidEntry = "\nROI Color File has invalid entry. Syntax: id descriptor r g b a . Integer values required for id, r, g, b and a values. \n"
 
         
-        sROIColorFile = UtilsValidate.oIOXml.GetValueOfNodeAttribute(UtilsValidate.oIOXml.GetRootNode(), 'ROIColorFile')
+        sROIColorFile = UtilsIOXml.GetValueOfNodeAttribute(UtilsIOXml.GetRootNode(), 'ROIColorFile')
         if sROIColorFile != '':
                 sROIColorFilePath = os.path.join(UtilsFilesIO.GetXmlQuizDir(), sROIColorFile + '.txt')
 
@@ -1191,27 +1182,27 @@ class UtilsValidate:
         sMsg = ''
         
         #check dependency for required script reruns
-        sAllowMultipleResponse = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPage,'AllowMultipleResponse')
-        sButtonScriptRerunRequired = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPage, 'ButtonScriptRerunRequired')
+        sAllowMultipleResponse = UtilsIOXml.GetValueOfNodeAttribute(xPage,'AllowMultipleResponse')
+        sButtonScriptRerunRequired = UtilsIOXml.GetValueOfNodeAttribute(xPage, 'ButtonScriptRerunRequired')
         if sButtonScriptRerunRequired == 'Y' and sAllowMultipleResponse != 'Y':
             sMsg = sMsg + "\nIf you have 'sButtonScriptRerunRequired' set to 'Y' on a page, you must also set 'AllowMultipleResponse' to 'Y'."\
                         + '\nSee Page: ' + str(sPageReference)
         
         # check that scripts exist
-        lxQuestionSetElements = UtilsValidate.oIOXml.GetChildren(xPage, 'QuestionSet')
+        lxQuestionSetElements = UtilsIOXml.GetChildren(xPage, 'QuestionSet')
         for xQuestionSet in lxQuestionSetElements:
             
-            lxQuestionElements = UtilsValidate.oIOXml.GetChildren(xQuestionSet, 'Question')
+            lxQuestionElements = UtilsIOXml.GetChildren(xQuestionSet, 'Question')
             for xQuestion in lxQuestionElements:
                 
-                sQuestionType = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xQuestion, 'Type')
+                sQuestionType = UtilsIOXml.GetValueOfNodeAttribute(xQuestion, 'Type')
                 if sQuestionType == 'Button':
                     
-                    lxOptionElements = UtilsValidate.oIOXml.GetChildren(xQuestion, 'Option')
+                    lxOptionElements = UtilsIOXml.GetChildren(xQuestion, 'Option')
                          
                     for xOption in lxOptionElements:
                         
-                        sScriptName = UtilsValidate.oIOXml.GetDataInNode(xOption)
+                        sScriptName = UtilsIOXml.GetDataInNode(xOption)
                         sScriptFullPath = os.path.join(UtilsFilesIO.GetScriptsDir(),sScriptName)
                         
                         if os.path.exists(sScriptFullPath) == False:
@@ -1233,20 +1224,20 @@ class UtilsValidate:
         '''
         sMsg = ''
         
-        lxQuestionSetElements = UtilsValidate.oIOXml.GetChildren(xPage, 'QuestionSet')
+        lxQuestionSetElements = UtilsIOXml.GetChildren(xPage, 'QuestionSet')
         for xQuestionSet in lxQuestionSetElements:
             
-            lxQuestionElements = UtilsValidate.oIOXml.GetChildren(xQuestionSet, 'Question')
+            lxQuestionElements = UtilsIOXml.GetChildren(xQuestionSet, 'Question')
             for xQuestion in lxQuestionElements:
                 
-                sQuestionType = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xQuestion, 'Type')
+                sQuestionType = UtilsIOXml.GetValueOfNodeAttribute(xQuestion, 'Type')
                 if sQuestionType == 'Picture':
                     
-                    lxOptionElements = UtilsValidate.oIOXml.GetChildren(xQuestion, 'Option')
+                    lxOptionElements = UtilsIOXml.GetChildren(xQuestion, 'Option')
                          
                     for xOption in lxOptionElements:
                         
-                        sPictureName = UtilsValidate.oIOXml.GetDataInNode(xOption)
+                        sPictureName = UtilsIOXml.GetDataInNode(xOption)
                         sPictureFullPath = os.path.join(UtilsFilesIO.GetXmlQuizDir(),sPictureName)
         
                         if os.path.exists(sPictureFullPath) == False:
@@ -1279,16 +1270,16 @@ class UtilsValidate:
         sMsg = ''
         bImageOnRed = False
         
-        lxImageElements = UtilsValidate.oIOXml.GetChildren(xPage, 'Image')
+        lxImageElements = UtilsIOXml.GetChildren(xPage, 'Image')
         if len(lxImageElements) == 0:
             bImageOnRed = True
         else:
             for xImage in lxImageElements:
                 
-                lxWindowDestination = UtilsValidate.oIOXml.GetChildren(xImage, 'DefaultDestination')
+                lxWindowDestination = UtilsIOXml.GetChildren(xImage, 'DefaultDestination')
                 for xWindowDestination in lxWindowDestination:
                     
-                    sDestination = UtilsValidate.oIOXml.GetDataInNode(xWindowDestination)
+                    sDestination = UtilsIOXml.GetDataInNode(xWindowDestination)
                     if sDestination == 'Red':
                         bImageOnRed = True
         
@@ -1308,20 +1299,20 @@ class UtilsValidate:
         sMsg = ''
         
         # If the image type is an RTStruct or Segmentation, validate the ROIs element
-        sImageType = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
+        sImageType = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'Type')
         if sImageType == 'RTStruct' or sImageType == 'Segmentation':
             sValidationMsg = UtilsValidate.ValidateRequiredElement(xImage, 'ROIs', sPageReference)
             sMsg = sMsg + sValidationMsg
             
-            lxROIs = UtilsValidate.oIOXml.GetChildren(xImage, 'ROIs')
+            lxROIs = UtilsIOXml.GetChildren(xImage, 'ROIs')
             if len(lxROIs) >0:
                 sValidationMsg = UtilsValidate.ValidateRequiredAttribute(lxROIs[0], 'ROIVisibilityCode', sPageReference)
                 sMsg = sMsg + sValidationMsg
-                sValidationMsg = UtilsValidate.ValidateAttributeOptions(lxROIs[0], 'ROIVisibilityCode', sPageReference, UtilsValidate.oIOXml.lValidRoiVisibilityCodes)
+                sValidationMsg = UtilsValidate.ValidateAttributeOptions(lxROIs[0], 'ROIVisibilityCode', sPageReference, UtilsIOXml.lValidRoiVisibilityCodes)
                 sMsg = sMsg + sValidationMsg
                 
                 # if the visibility code is Select or Ignore, there must be an ROI element(s) with the name(s) present
-                sVisibilityCode = UtilsValidate.oIOXml.GetValueOfNodeAttribute(lxROIs[0], 'ROIVisibilityCode')
+                sVisibilityCode = UtilsIOXml.GetValueOfNodeAttribute(lxROIs[0], 'ROIVisibilityCode')
                 if sVisibilityCode == 'Select' or sVisibilityCode == 'Ignore':
                     sValidationMsg = UtilsValidate.ValidateRequiredElement(lxROIs[0], 'ROI', sPageReference, True)  # True for multiple elements allowed
                     sMsg = sMsg + sValidationMsg
@@ -1343,18 +1334,18 @@ class UtilsValidate:
                             "\nOR there are identical image paths with different combined 'PageID_ImageID' attributes" +\
                             "\n   .....Check all paths for Page: "
 
-        lxImageElements = UtilsValidate.oIOXml.GetChildren(xPage, 'Image')
+        lxImageElements = UtilsIOXml.GetChildren(xPage, 'Image')
         lPathAndNodeNames= []
         
         for xImage in lxImageElements:
             
             # Page ID + Image ID creates the node name for the image that is loaded (in ImageView>ViewNodeBase)
-            sImageID = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
+            sImageID = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'ID')
             sNodeNameID = sPageID + '_' + sImageID
 
-            lxImagePath = UtilsValidate.oIOXml.GetChildren(xImage, 'Path')
+            lxImagePath = UtilsIOXml.GetChildren(xImage, 'Path')
             if len(lxImagePath) == 1:
-                sImagePath = UtilsValidate.oIOXml.GetDataInNode(lxImagePath[0])
+                sImagePath = UtilsIOXml.GetDataInNode(lxImagePath[0])
                  
                 # create tuple of path, sNodeName
                 tupPathAndID = (sImagePath, sNodeNameID)
@@ -1433,20 +1424,20 @@ class UtilsValidate:
         sUserDir = UtilsFilesIO.GetUserDir()
         sUserDir = sUserDir.replace('/Code\..','')
         sQuizFilename = UtilsFilesIO.GetQuizFilenameNoExt()
-        sPageID = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPage, 'ID')
-        sPageGroup = 'PgGroup_' + UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup')
-        sPageDescriptor = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xPage, 'Descriptor')
+        sPageID = UtilsIOXml.GetValueOfNodeAttribute(xPage, 'ID')
+        sPageGroup = 'PgGroup_' + UtilsIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup')
+        sPageDescriptor = UtilsIOXml.GetValueOfNodeAttribute(xPage, 'Descriptor')
         
         # max allowed leaves room for adding characters for labelmap (+ ~22) or markupline (+ ~39) files
         # to keep potential files under the 256 Windows limit
         iMaxAllowed = 215
 
-        lxImageElements = UtilsValidate.oIOXml.GetChildren(xPage, 'Image')
+        lxImageElements = UtilsIOXml.GetChildren(xPage, 'Image')
         
         for xImage in lxImageElements:
             
             # Page ID + Image ID creates the node name for the image that is loaded (in ImageView>ViewNodeBase)
-            sImageID = UtilsValidate.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
+            sImageID = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'ID')
             sNodeNameID = sPageID + '_' + sImageID
             sFolderName = sPageID + '_' + sPageDescriptor
             sImageFolderName = sPageGroup + sNodeNameID

@@ -6,6 +6,7 @@ import unittest
 
 import Utilities.UtilsMsgs as UtilsMsgs
 import Utilities.UtilsFilesIO as UtilsFilesIO
+import Utilities.UtilsIOXml as UtilsIOXml
 
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsFilesIO import *
@@ -52,10 +53,6 @@ class CoreWidgets:
     #-------------------------------------------
     #        Getters / Setters
     #-------------------------------------------
-        
-    #----------
-    def SetIOXml(self, oIOXml):
-        self.oIOXml = oIOXml
         
     #----------
     def SetCustomWidgets(self, oCustomWidgets):
@@ -1053,17 +1050,17 @@ class CoreWidgets:
                 
                 # remove all markup line elements stored in xml for this page node
                 # and delete the markup line file stored in folder
-                lxImages = self.oIOXml.GetChildren(xPageNode, 'Image')
+                lxImages = UtilsIOXml.GetChildren(xPageNode, 'Image')
                 for xImage in lxImages:
-                    lxMarkupLines = self.oIOXml.GetChildren(xImage, 'MarkupLinePath')
+                    lxMarkupLines = UtilsIOXml.GetChildren(xImage, 'MarkupLinePath')
                     for xMarkupLine in lxMarkupLines:
-                        sPath = self.oIOXml.GetDataInNode(xMarkupLine)
+                        sPath = UtilsIOXml.GetDataInNode(xMarkupLine)
                         sAbsolutePath = UtilsFilesIO.GetAbsoluteUserPath(sPath)
                         if os.path.exists(sAbsolutePath):    # same path may exist in multiple xml Image elements
                             os.remove(sAbsolutePath)
                 
-                    self.oIOXml.RemoveAllElements(xImage, 'MarkupLinePath')
-                self.oIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
+                    UtilsIOXml.RemoveAllElements(xImage, 'MarkupLinePath')
+                UtilsIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
             
             except:
                 tb = traceback.format_exc()
@@ -1266,7 +1263,7 @@ class CoreWidgets:
         xPageNode = self.oCustomWidgets.GetNthPageNode(self.oSession.GetCurrentPageIndex())
 
         sGoToBookmark = ''
-        sGoToBookmarkRequest = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'GoToBookmark')
+        sGoToBookmarkRequest = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'GoToBookmark')
         if sGoToBookmarkRequest != '':
             sGoToBookmark = sGoToBookmarkRequest.split()[0]
 
@@ -1275,11 +1272,11 @@ class CoreWidgets:
         dictAttribToMatchInHistory['BookmarkID'] = sGoToBookmark
         
         # all page nodes that match - ordered with most recent first
-        dictPgNodeAndPgIndex = self.oIOXml.GetMatchingXmlPagesFromAttributeHistory(self.oSession.GetCurrentNavigationIndex(), self.oSession.GetNavigationList(), dictAttribToMatchInHistory)
+        dictPgNodeAndPgIndex = UtilsIOXml.GetMatchingXmlPagesFromAttributeHistory(self.oSession.GetCurrentNavigationIndex(), self.oSession.GetNavigationList(), dictAttribToMatchInHistory)
         lPageIndices = list(dictPgNodeAndPgIndex.values())
         if len(lPageIndices) > 0:
             iBookmarkedPageIndex = lPageIndices[0]
-            iBookmarkedNavigationIndex = self.oIOXml.GetNavigationIndexForPage(self.oSession.GetNavigationList(), iBookmarkedPageIndex)
+            iBookmarkedNavigationIndex = UtilsIOXml.GetNavigationIndexForPage(self.oSession.GetNavigationList(), iBookmarkedPageIndex)
             
             
 #             ### for debug ###            
@@ -1323,7 +1320,7 @@ class CoreWidgets:
         sInteractionMsg = sCaller
         sCompletedMsg = ''
 
-        iNewPageIndex = self.oIOXml.GetNavigationIndexForPage(self.oSession.GetNavigationList(), iNewNavigationIndex)
+        iNewPageIndex = UtilsIOXml.GetNavigationIndexForPage(self.oSession.GetNavigationList(), iNewNavigationIndex)
         self.oSession.SetInteractionLogOnOff('Off',sCaller)
         
            

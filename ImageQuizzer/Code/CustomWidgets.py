@@ -6,6 +6,7 @@ import unittest
 import Utilities.UtilsMsgs as UtilsMsgs
 import Utilities.UtilsFilesIO as UtilsFilesIO
 import Utilities.UtilsEmail as UtilsEmail
+import Utilities.UtilsIOXml as UtilsIOXml
 
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsFilesIO import *
@@ -32,8 +33,9 @@ class CustomWidgets:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def __init__(self, oIOXml):
+    def __init__(self, parent=None):
         self.sClassName = type(self).__name__
+        self.parent = parent
         
         self._bUserInteractionLog = False
         self._bAllowMultipleResponse = False
@@ -46,9 +48,6 @@ class CustomWidgets:
         self._xPageNode = None
         
         
-        self.oIOXml = oIOXml
-
-
         self.setupTestEnvironment()
 
     #----------
@@ -66,20 +65,13 @@ class CustomWidgets:
     #-------------------------------------------
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
-    #----------
-    def SetIOXml(self, oIOXml):
-        self.oIOXml = oIOXml
         
     #----------
     def OpenQuiz(self):
-        bSuccess = self.oIOXml.OpenXml(UtilsFilesIO.GetUserQuizResultsPath(),'Session')
+        bSuccess = UtilsIOXml.OpenXml(UtilsFilesIO.GetUserQuizResultsPath(),'Session')
 
         return bSuccess
     
-    #----------
-    def GetXmlUtils(self):
-        return self.oIOXml
-        
     #----------
     def SetRootNode(self, xInputNode):
         self._xRootNode = xInputNode
@@ -87,7 +79,7 @@ class CustomWidgets:
     #----------
     def GetRootNode(self):
 #         return self._xRootNode
-        return self.oIOXml.GetRootNode()
+        return UtilsIOXml.GetRootNode()
         
     #----------
     def SetLoginTime(self, sTime):
@@ -107,15 +99,15 @@ class CustomWidgets:
             
     #----------
     def GetPageDescriptor(self, iPageIndex):
-        xmlPageNode = self.oIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
-        sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
+        xmlPageNode = UtilsIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
+        sPageDescriptor = UtilsIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Descriptor')
         
         return sPageDescriptor
 
     #----------
     def GetEmailResultsRequest(self):
         bEmailResults = UtilsEmail.SetupEmailResults( \
-                            self.oIOXml.GetValueOfNodeAttribute(self.GetRootNode(), 'EmailResultsTo'))
+                            UtilsIOXml.GetValueOfNodeAttribute(self.GetRootNode(), 'EmailResultsTo'))
         
         return bEmailResults
 
@@ -123,7 +115,7 @@ class CustomWidgets:
     def GetSessionContourVisibilityDefault(self):
         # quiz validation checked for valid values
         # if no attribute exists, set with the default
-        sSessionContourVisibility = self.oIOXml.GetValueOfNodeAttribute(self.GetRootNode(), 'ContourVisibility')
+        sSessionContourVisibility = UtilsIOXml.GetValueOfNodeAttribute(self.GetRootNode(), 'ContourVisibility')
         if sSessionContourVisibility == '':
             sSessionContourVisibility = 'Outline'  # default
             
@@ -131,15 +123,15 @@ class CustomWidgets:
     
     #----------
     def GetPageID(self, iPageIndex):
-        xmlPageNode = self.oIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
-        sPageID = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'ID')
+        xmlPageNode = UtilsIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
+        sPageID = UtilsIOXml.GetValueOfNodeAttribute(xmlPageNode, 'ID')
         
         return sPageID
 
     #----------
     def GetPageRep(self, iPageIndex):
-        xmlPageNode = self.oIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
-        sPageRep = self.oIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Rep')
+        xmlPageNode = UtilsIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
+        sPageRep = UtilsIOXml.GetValueOfNodeAttribute(xmlPageNode, 'Rep')
         
         return sPageRep
 
@@ -147,7 +139,7 @@ class CustomWidgets:
     def SetUserInteractionLogRequest(self, iPageIndex):
 
         xPageNode = self.GetNthPageNode(iPageIndex)
-        sUserInteractionLog = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'UserInteractionLog')
+        sUserInteractionLog = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'UserInteractionLog')
 
         self._bUserInteractionLog = False
         if sUserInteractionLog == 'Y':
@@ -164,7 +156,7 @@ class CustomWidgets:
         
         xPageNode = self.GetNthPageNode(iPageIndex)
         lsBookmarkRequest = []
-        sGoToBookmarkRequest =  self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'GoToBookmark')
+        sGoToBookmarkRequest =  UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'GoToBookmark')
         
         if sGoToBookmarkRequest != '':
             lsBookmarkRequest = sGoToBookmarkRequest.split()
@@ -175,7 +167,7 @@ class CustomWidgets:
     def SetMultipleResponseAllowed(self,iPageIndex):
         
         xPageNode = self.GetNthPageNode(iPageIndex)
-        sYN = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'AllowMultipleResponse')
+        sYN = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'AllowMultipleResponse')
 
         if sYN == 'y' or sYN == 'Y':
             self._bAllowMultipleResponse = True
@@ -192,14 +184,14 @@ class CustomWidgets:
             
     #----------
     def GetROIColorFile(self):
-        return self.oIOXml.GetValueOfNodeAttribute(self.GetRootNode(), 'ROIColorFile') 
+        return UtilsIOXml.GetValueOfNodeAttribute(self.GetRootNode(), 'ROIColorFile') 
 
     #----------
     def GetPageCompleteAttribute(self, iPageIndex):
         bPageComplete = False
-        xPageNode = self.oIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
+        xPageNode = UtilsIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
 
-        sPageComplete = self.oIOXml.GetValueOfNodeAttribute(xPageNode,'PageComplete')
+        sPageComplete = UtilsIOXml.GetValueOfNodeAttribute(xPageNode,'PageComplete')
         if sPageComplete == "Y":
             bPageComplete = True
         
@@ -207,21 +199,21 @@ class CustomWidgets:
         
     #----------
     def GetAllQuestionSetsForNthPage(self, iPageIndex):
-        self._xPageNode = self.oIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
-        xNodesAllQuestionSets = self.oIOXml.GetChildren(self._xPageNode, 'QuestionSet')
+        self._xPageNode = UtilsIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
+        xNodesAllQuestionSets = UtilsIOXml.GetChildren(self._xPageNode, 'QuestionSet')
         
         return xNodesAllQuestionSets
 
     #----------
     def GetAllQuestionSetNodesForCurrentPage(self, iPageIndex):
         xPageNode = self.GetNthPageNode(iPageIndex)
-        xAllQuestionSetNodes = self.oIOXml.GetChildren(xPageNode, 'QuestionSet')
+        xAllQuestionSetNodes = UtilsIOXml.GetChildren(xPageNode, 'QuestionSet')
         
         return xAllQuestionSetNodes
     #----------
     def GetNthQuestionSetForCurrentPage(self, idxQSet, iPageIndex):
         xPageNode = self.GetNthPageNode(iPageIndex)
-        xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', idxQSet)
+        xQuestionSetNode = UtilsIOXml.GetNthChild(xPageNode, 'QuestionSet', idxQSet)
         
         return xQuestionSetNode
         
@@ -230,26 +222,26 @@ class CustomWidgets:
         ''' From the  navigation index in the composite indices list, get the page index.
             Return the nth page node (using the page index) from the root.
         '''
-        xPageNode = self.oIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
+        xPageNode = UtilsIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIndex)
         
         return xPageNode
     
     #----------
     def GetImageElements(self, iPageIndex):
-        lxImageElements = self.oIOXml.GetChildren(self.GetNthPageNode(iPageIndex), 'Image')
+        lxImageElements = UtilsIOXml.GetChildren(self.GetNthPageNode(iPageIndex), 'Image')
         return lxImageElements
     
     #----------
     def GetCurrentQuestionSetNode(self, iPageIndex, iQSetIndex):
         xPageNode = self.GetNthPageNode(iPageIndex)
-        xQuestionSetNode = self.oIOXml.GetNthChild(xPageNode, 'QuestionSet', iQSetIndex)
+        xQuestionSetNode = UtilsIOXml.GetNthChild(xPageNode, 'QuestionSet', iQSetIndex)
         
         return xQuestionSetNode
 
     #----------
     def GetCurrentQuestionNode(self, iPageIndex, iQSetIndex, iQuestionIndex):
         xQSetNode = self.GetCurrentQuestionSetNode(iPageIndex, iQSetIndex)
-        xQuestionNode = self.oIOXml.GetNthChild(xQSetNode, 'Question', iQuestionIndex)
+        xQuestionNode = UtilsIOXml.GetNthChild(xQSetNode, 'Question', iQuestionIndex)
     
         return xQuestionNode
  
@@ -257,8 +249,8 @@ class CustomWidgets:
     def GetNthOptionNode(self, iPageIndex, iQSetIndex, indQuestion, indOption):
 
         xQuestionSetNode = self.GetCurrentQuestionSetNode(iPageIndex, iQSetIndex)
-        xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
-        xOptionNode = self.oIOXml.GetNthChild(xQuestionNode, 'Option', indOption)
+        xQuestionNode = UtilsIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
+        xOptionNode = UtilsIOXml.GetNthChild(xQuestionNode, 'Option', indOption)
         
         return xOptionNode
         
@@ -266,8 +258,8 @@ class CustomWidgets:
     def GetAllOptionNodes(self, iPageIndex, iQSetIndex, indQuestion):
 
         xQuestionSetNode = self.GetCurrentQuestionSetNode(iPageIndex, iQSetIndex)
-        xQuestionNode = self.oIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
-        xAllOptionNodes = self.oIOXml.GetChildren(xQuestionNode,'Option')
+        xQuestionNode = UtilsIOXml.GetNthChild(xQuestionSetNode, 'Question', indQuestion)
+        xAllOptionNodes = UtilsIOXml.GetChildren(xQuestionNode,'Option')
         
         return xAllOptionNodes
         
@@ -276,7 +268,7 @@ class CustomWidgets:
         
         bPageLooping = False
         xPageNode = self.GetNthPageNode(iPageIndex)
-        sPageLooping = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Loop')
+        sPageLooping = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'Loop')
         if sPageLooping == "Y":
             bPageLooping = True
         return bPageLooping
@@ -285,7 +277,7 @@ class CustomWidgets:
     def GetSegmentationModuleRequired(self):
         # check if any page in the quiz requires the segmentation module
         bSegModuleRequired = False
-        if self.oIOXml.CheckForRequiredFunctionalityInAttribute( './/Page', 'EnableSegmentEditor','Y' ):
+        if UtilsIOXml.CheckForRequiredFunctionalityInAttribute( './/Page', 'EnableSegmentEditor','Y' ):
             bSegModuleRequired = True
             
         return bSegModuleRequired
@@ -294,7 +286,7 @@ class CustomWidgets:
     def GetRequestToEnableSegmentEditorTF(self, iPageIndex):
         bSegmentEditorRequired = False
         xPageNode = self.GetNthPageNode(iPageIndex)
-        sSegmentEditorRequired = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor')
+        sSegmentEditorRequired = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor')
         
         if sSegmentEditorRequired == "Y":
             bSegmentEditorRequired = True
@@ -305,7 +297,7 @@ class CustomWidgets:
     def GetButtonScriptRerunRequired(self, iPageIndex):
 
         xPageNode = self.GetNthPageNode(iPageIndex)
-        sBtnScriptRequired = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ButtonScriptRerunRequired')
+        sBtnScriptRequired = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'ButtonScriptRerunRequired')
         if sBtnScriptRequired == 'Y' or sBtnScriptRequired == 'y':
             bBtnScriptRerunRequired = True
 
@@ -318,7 +310,7 @@ class CustomWidgets:
     def SetRandomizeRequired(self, sYN=None):
         # set randomize required to input value (from unit tests) or from the stored xml attribute
         if sYN == None:
-            sYN = self.oIOXml.GetValueOfNodeAttribute(self.GetRootNode(),'RandomizePageGroups')
+            sYN = UtilsIOXml.GetValueOfNodeAttribute(self.GetRootNode(),'RandomizePageGroups')
         if sYN == 'Y':
             self._bRandomizeRequired = True
         else:
@@ -332,7 +324,7 @@ class CustomWidgets:
     def GetContourToolRadius(self, iPageIndex):
 
         xPageNode = self.GetNthPageNode(iPageIndex)        
-        sContourRadius = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ContourToolRadius')
+        sContourRadius = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'ContourToolRadius')
         
         if sContourRadius != '':
             fContourToolRadius = float(sContourRadius)
@@ -344,20 +336,20 @@ class CustomWidgets:
     #----------
     def GetQuestionType(self, xQuestionNode):
         
-        return self.oIOXml.GetValueOfNodeAttribute(xQuestionNode, 'Type')
+        return UtilsIOXml.GetValueOfNodeAttribute(xQuestionNode, 'Type')
          
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetSavedResponses(self, xQuestionNode):
  
         lsResponseValues = []                  
-        xAllOptions = self.oIOXml.GetChildren(xQuestionNode, 'Option')
+        xAllOptions = UtilsIOXml.GetChildren(xQuestionNode, 'Option')
         
         for xOptionNode in xAllOptions:
                                          
             sLatestResponse = ''
-            xLatestResponseNode = self.oIOXml.GetLatestChildElement(xOptionNode, 'Response')
+            xLatestResponseNode = UtilsIOXml.GetLatestChildElement(xOptionNode, 'Response')
             if xLatestResponseNode != None:
-                sLatestResponse = self.oIOXml.GetDataInNode(xLatestResponseNode)
+                sLatestResponse = UtilsIOXml.GetDataInNode(xLatestResponseNode)
         
             # search for 'latest' response completed - update the list
             lsResponseValues.append(sLatestResponse)
@@ -386,7 +378,7 @@ class CustomWidgets:
                 sIndicesToStore = sIndicesToStore + ','
                 
         dictAttrib = {}     # no attributes for this element
-        self.oIOXml.AddElement(self.GetRootNode(),'RandomizedPageGroupIndices',sIndicesToStore, dictAttrib)
+        UtilsIOXml.AddElement(self.GetRootNode(),'RandomizedPageGroupIndices',sIndicesToStore, dictAttrib)
         
                 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -398,9 +390,9 @@ class CustomWidgets:
         liRandIndices = []
         liStoredRandIndices = []
         
-        xRandIndicesNode = self.oIOXml.GetNthChild(self.GetRootNode(), 'RandomizedPageGroupIndices', 0)
+        xRandIndicesNode = UtilsIOXml.GetNthChild(self.GetRootNode(), 'RandomizedPageGroupIndices', 0)
         if xRandIndicesNode != None:
-            sStoredRandIndices = self.oIOXml.GetDataInNode(xRandIndicesNode)
+            sStoredRandIndices = UtilsIOXml.GetDataInNode(xRandIndicesNode)
             liStoredRandIndices = [int(s) for s in sStoredRandIndices.split(",")]
         
         return liStoredRandIndices
@@ -412,7 +404,7 @@ class CustomWidgets:
         # clear combo box
         self.lsLayoutWidgets = []
         # set the requested layout for images
-        self.sPageLayout = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Layout')
+        self.sPageLayout = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'Layout')
         if self.sPageLayout == 'TwoOverTwo' :
             slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutTwoOverTwoView)
             self.lsLayoutWidgets.append('Red')
@@ -456,7 +448,7 @@ class CustomWidgets:
                 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def GetImageStateAttributes(self, ldictItems):
-        dictImageState = self.oIOXml.GetAttributes(ldictItems['StateElement'])
+        dictImageState = UtilsIOXml.GetAttributes(ldictItems['StateElement'])
         return dictImageState
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -464,28 +456,28 @@ class CustomWidgets:
         
         ldictAllImageStateItems = []
         
-        lxPages = self.oIOXml.GetChildren(self.GetRootNode(), 'Page')
+        lxPages = UtilsIOXml.GetChildren(self.GetRootNode(), 'Page')
         
         # for each page in the xml (up to and including  the current page) get all image elements
         for iPageIdx in range(len(lxPages)):
             if iPageIdx <= iCurrentPageIndex:
-                xPage = self.oIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIdx)
-                lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
+                xPage = UtilsIOXml.GetNthChild(self.GetRootNode(), 'Page', iPageIdx)
+                lxImageElements = UtilsIOXml.GetChildren(xPage, 'Image')
                 
                 # for all images on the page, if a volume type image, collect the State elements
                 for xImage in lxImageElements:
-                    sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
+                    sImageType = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'Type')
                     if sImageType == 'Volume' or sImageType == 'VolumeSequence':
                         
 
-                        sPath = self.oIOXml.GetDataFromLastChild(xImage, 'Path')
+                        sPath = UtilsIOXml.GetDataFromLastChild(xImage, 'Path')
                         if sPath == sCurrentImagePath:
                             
                             
-                            sImageDefaultOrientation = self.oIOXml.GetDataFromLastChild(xImage, 'DefaultOrientation')
+                            sImageDefaultOrientation = UtilsIOXml.GetDataFromLastChild(xImage, 'DefaultOrientation')
                                 
-                            if self.oIOXml.GetNumChildrenByName(xImage, 'State') > 0:
-                                lStateElements = self.oIOXml.GetChildren(xImage, 'State')
+                            if UtilsIOXml.GetNumChildrenByName(xImage, 'State') > 0:
+                                lStateElements = UtilsIOXml.GetChildren(xImage, 'State')
                                 for xState in lStateElements:
                                     
                                     dictImageStateItems = {'DefaultOrientation':sImageDefaultOrientation, 'Page':str(iPageIdx),'StateElement':xState}
@@ -497,7 +489,7 @@ class CustomWidgets:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SaveQuiz(self, sQuizPath):
-        self.oIOXml.SaveXml(sQuizPath)
+        UtilsIOXml.SaveXml(sQuizPath)
         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -508,18 +500,18 @@ class CustomWidgets:
 #       # allow for testing environment to use a pre-set testing file path
         
         self.SaveQuiz(sXmlFilePath)    # for debug
-        xCopyOfXmlPageToRepeatNode = self.oIOXml.CopyElement(self.GetNthPageNode(indXmlPageToRepeat))
-        iCopiedRepNum = int(self.oIOXml.GetValueOfNodeAttribute(xCopyOfXmlPageToRepeatNode, "Rep"))
+        xCopyOfXmlPageToRepeatNode = UtilsIOXml.CopyElement(self.GetNthPageNode(indXmlPageToRepeat))
+        iCopiedRepNum = int(UtilsIOXml.GetValueOfNodeAttribute(xCopyOfXmlPageToRepeatNode, "Rep"))
         
         # find the next xml page that has Rep 0 (move past all repeated pages for this loop)
-        indNextXmlPageWithRep0 = self.oIOXml.GetIndexOfNextChildWithAttributeValue(self.GetRootNode(), "Page", indXmlPageToRepeat + 1, "Rep", "0")
+        indNextXmlPageWithRep0 = UtilsIOXml.GetIndexOfNextChildWithAttributeValue(self.GetRootNode(), "Page", indXmlPageToRepeat + 1, "Rep", "0")
 
         if indNextXmlPageWithRep0 != -1:
-            self.oIOXml.InsertElementBeforeIndex(self.GetRootNode(), xCopyOfXmlPageToRepeatNode, indNextXmlPageWithRep0)
+            UtilsIOXml.InsertElementBeforeIndex(self.GetRootNode(), xCopyOfXmlPageToRepeatNode, indNextXmlPageWithRep0)
         else:
             # attribute was not found
-            self.oIOXml.AppendElement(self.GetRootNode(), xCopyOfXmlPageToRepeatNode)
-            indNextXmlPageWithRep0 = self.oIOXml.GetNumChildrenByName(self.GetRootNode(), 'Page') - 1
+            UtilsIOXml.AppendElement(self.GetRootNode(), xCopyOfXmlPageToRepeatNode)
+            indNextXmlPageWithRep0 = UtilsIOXml.GetNumChildrenByName(self.GetRootNode(), 'Page') - 1
             
 
         return indNextXmlPageWithRep0, iCopiedRepNum
@@ -540,16 +532,16 @@ class CustomWidgets:
             xNewRepeatPage = self.GetNthPageNode(iNewPageIndex)
             
             # get last rep number to increment current rep
-            xPreviousPage = self.oIOXml.GetNthChild(self.GetRootNode(), "Page", iPrevPageIndex)
-            sPreviousRepNum = self.oIOXml.GetValueOfNodeAttribute(xPreviousPage, "Rep")
-            sPreviousPageID = self.oIOXml.GetValueOfNodeAttribute(xPreviousPage, 'ID')
+            xPreviousPage = UtilsIOXml.GetNthChild(self.GetRootNode(), "Page", iPrevPageIndex)
+            sPreviousRepNum = UtilsIOXml.GetValueOfNodeAttribute(xPreviousPage, "Rep")
+            sPreviousPageID = UtilsIOXml.GetValueOfNodeAttribute(xPreviousPage, 'ID')
             
             
-            self.oIOXml.UpdateAttributesInElement(xNewRepeatPage, {"PageComplete":"N"})
+            UtilsIOXml.UpdateAttributesInElement(xNewRepeatPage, {"PageComplete":"N"})
             iPreviousRepNum = int(sPreviousRepNum)
             sNewRepNum = str(iPreviousRepNum + 1)
-            self.oIOXml.UpdateAttributesInElement(xNewRepeatPage, {"Rep":sNewRepNum})
-            self.oIOXml.RemoveAttributeInElement(xNewRepeatPage, "BookmarkID")
+            UtilsIOXml.UpdateAttributesInElement(xNewRepeatPage, {"Rep":sNewRepNum})
+            UtilsIOXml.RemoveAttributeInElement(xNewRepeatPage, "BookmarkID")
             
             iSubIndex = sPreviousPageID.find('-Rep')
             if iSubIndex >=0:
@@ -558,24 +550,24 @@ class CustomWidgets:
                 sStrippedPageID = sPreviousPageID
             
             sNewPageID = sStrippedPageID + '-Rep' + str(sNewRepNum)
-            self.oIOXml.UpdateAttributesInElement(xNewRepeatPage, {"ID":sNewPageID})
+            UtilsIOXml.UpdateAttributesInElement(xNewRepeatPage, {"ID":sNewPageID})
             
             
                 
             # remove LabelmapPath and MarkupLinePath elements
-            lxImages = self.oIOXml.GetChildren(xNewRepeatPage, 'Image')
+            lxImages = UtilsIOXml.GetChildren(xNewRepeatPage, 'Image')
             for xImage in lxImages:
-                self.oIOXml.RemoveAllElements(xImage, "LabelMapPath")
-                self.oIOXml.RemoveAllElements(xImage, "MarkupLinePath")
+                UtilsIOXml.RemoveAllElements(xImage, "LabelMapPath")
+                UtilsIOXml.RemoveAllElements(xImage, "MarkupLinePath")
                 
             # remove Response elements
-            lxQuestionSets = self.oIOXml.GetChildren(xNewRepeatPage, "QuestionSet")
+            lxQuestionSets = UtilsIOXml.GetChildren(xNewRepeatPage, "QuestionSet")
             for xQuestionSet in lxQuestionSets:
-                lxQuestions = self.oIOXml.GetChildren(xQuestionSet, "Question")
+                lxQuestions = UtilsIOXml.GetChildren(xQuestionSet, "Question")
                 for xQuestion in lxQuestions:
-                    lxOptions = self.oIOXml.GetChildren(xQuestion, "Option")
+                    lxOptions = UtilsIOXml.GetChildren(xQuestion, "Option")
                     for xOption in lxOptions:
-                        self.oIOXml.RemoveAllElements(xOption, "Response")
+                        UtilsIOXml.RemoveAllElements(xOption, "Response")
         
         
         
@@ -621,11 +613,11 @@ class CustomWidgets:
     def AddResponseElement(self, xOptionNode, sResponse):
         
         now = datetime.now()
-        sResponseTime = now.strftime(self.oIOXml.sTimestampFormat)
+        sResponseTime = now.strftime(UtilsIOXml.sTimestampFormat)
         
         dictAttrib = { 'LoginTime': self.LoginTime(), 'ResponseTime': sResponseTime}
         
-        self.oIOXml.AddElement(xOptionNode,'Response', sResponse, dictAttrib)
+        UtilsIOXml.AddElement(xOptionNode,'Response', sResponse, dictAttrib)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddImageStateElement(self, xImageNode, dictAttrib):
@@ -637,12 +629,12 @@ class CustomWidgets:
 
         # add login and response times to the existing state attributes
         now = datetime.now()
-        sResponseTime = now.strftime(self.oIOXml.sTimestampFormat)
+        sResponseTime = now.strftime(UtilsIOXml.sTimestampFormat)
         
         dictTimeAttributes = { 'LoginTime': self.LoginTime(), 'ResponseTime': sResponseTime} 
         dictAttrib.update(dictTimeAttributes)
 
-        self.oIOXml.AddElement(xImageNode,'State', sNullData, dictAttrib)
+        UtilsIOXml.AddElement(xImageNode,'State', sNullData, dictAttrib)
         
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -650,11 +642,11 @@ class CustomWidgets:
         
         # add login and response times to the label map path element
         now = datetime.now()
-        sResponseTime = now.strftime(self.oIOXml.sTimestampFormat)
+        sResponseTime = now.strftime(UtilsIOXml.sTimestampFormat)
         
         dictAttrib = { 'LoginTime': self.LoginTime(), 'ResponseTime': sResponseTime} 
         
-        self.oIOXml.AddElement(xImageNode, sElementName, sInputPath, dictAttrib)
+        UtilsIOXml.AddElement(xImageNode, sElementName, sInputPath, dictAttrib)
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -666,15 +658,15 @@ class CustomWidgets:
 
         now = datetime.now()
 
-        self.SetLoginTime( now.strftime(self.oIOXml.sTimestampFormat) )
+        self.SetLoginTime( now.strftime(UtilsIOXml.sTimestampFormat) )
         
         dictAttrib = {'LoginTime': self.LoginTime(), 'LogoutTime': self.LoginTime()}
         
         sNullText = ''
         
-        self.oIOXml.AddElement(self.GetRootNode(),'Login', sNullText, dictAttrib)
+        UtilsIOXml.AddElement(self.GetRootNode(),'Login', sNullText, dictAttrib)
         
-        self.oIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
+        UtilsIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def UpdateSessionLogoutTimestamp(self):
@@ -685,19 +677,19 @@ class CustomWidgets:
 
         now = datetime.now()
 
-        sLogoutTime = now.strftime(self.oIOXml.sTimestampFormat)
+        sLogoutTime = now.strftime(UtilsIOXml.sTimestampFormat)
         
         # get existing attributes from the Login element
-        xLoginNode = self.oIOXml.GetLastChild(self.GetRootNode(), "Login")
+        xLoginNode = UtilsIOXml.GetLastChild(self.GetRootNode(), "Login")
         
         if xLoginNode != None:
             # update logout time if login element exists
-            dictAttrib = self.oIOXml.GetAttributes(xLoginNode)
+            dictAttrib = UtilsIOXml.GetAttributes(xLoginNode)
     
             dictAttrib['LogoutTime'] = sLogoutTime
                 
             # reset the Login element
-            self.oIOXml.UpdateAttributesInElement(xLoginNode, dictAttrib)
+            UtilsIOXml.UpdateAttributesInElement(xLoginNode, dictAttrib)
 
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -709,18 +701,18 @@ class CustomWidgets:
         dtLastTimestamp = ''    # timestamp of type 'datetime'
 
         
-        xmlLoginNodes = self.oIOXml.GetChildren(self.GetRootNode(), 'Login')
+        xmlLoginNodes = UtilsIOXml.GetChildren(self.GetRootNode(), 'Login')
 
         # collect all login timestamps (type 'string')
         for indElem in range(len(xmlLoginNodes)):
             # get date/time from attribute
-            xmlLoginNode = self.oIOXml.GetNthChild(self.GetRootNode(), 'Login', indElem)
+            xmlLoginNode = UtilsIOXml.GetNthChild(self.GetRootNode(), 'Login', indElem)
 
-            sTimestamp = self.oIOXml.GetValueOfNodeAttribute(xmlLoginNode, 'LoginTime')
+            sTimestamp = UtilsIOXml.GetValueOfNodeAttribute(xmlLoginNode, 'LoginTime')
             lsTimestamps.append(sTimestamp)
             
             # look for Quiz Complete status
-            sQuizCompleteStatus = self.oIOXml.GetValueOfNodeAttribute(xmlLoginNode, 'QuizComplete')
+            sQuizCompleteStatus = UtilsIOXml.GetValueOfNodeAttribute(xmlLoginNode, 'QuizComplete')
             if sQuizCompleteStatus == 'Y':
                 self.SetQuizComplete(True)
             
@@ -730,7 +722,7 @@ class CustomWidgets:
             
             sNewTimestamp = lsTimestamps[indTime]
             # convert to datetime format for compare
-            dtNewTimestamp = datetime.strptime(sNewTimestamp, self.oIOXml.sTimestampFormat)
+            dtNewTimestamp = datetime.strptime(sNewTimestamp, UtilsIOXml.sTimestampFormat)
             
             if dtLastTimestamp == '': # for initial compare
                 dtLastTimestamp = dtNewTimestamp
@@ -748,26 +740,26 @@ class CustomWidgets:
     def AddQuizCompleteAttribute(self):
         ''' add attribute to last login element to indicate user has completed the quiz
         '''
-        xmlLastLoginElement = self.oIOXml.GetLastChild(self.GetRootNode(),'Login')
+        xmlLastLoginElement = UtilsIOXml.GetLastChild(self.GetRootNode(),'Login')
         xmlLastLoginElement.set('QuizComplete','Y')
-        self.oIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
+        UtilsIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def AddPageCompleteAttribute(self, idxPage):
         ''' add attribute to current page element to indicate all 
             question sets and segmentations have been completed
         '''
-        xmlCurrentPageElement = self.oIOXml.GetNthChild(self.GetRootNode(),'Page', idxPage)
+        xmlCurrentPageElement = UtilsIOXml.GetNthChild(self.GetRootNode(),'Page', idxPage)
         xmlCurrentPageElement.set('PageComplete','Y')
-        self.oIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
+        UtilsIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetPageIncomplete(self, iPageIndex):
         ''' if requirements were not met, reset the PageComplete attribute to 'N'
         '''
         xPageNode = self.GetNthPageNode(iPageIndex)
-        self.oIOXml.UpdateAttributesInElement(xPageNode, {"PageComplete":"N"})
-        self.oIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
+        UtilsIOXml.UpdateAttributesInElement(xPageNode, {"PageComplete":"N"})
+        UtilsIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -775,14 +767,14 @@ class CustomWidgets:
         ''' add attribute to Session to record the user's name
         '''
         xRootNode = self.GetRootNode()
-        dictAttrib = self.oIOXml.GetAttributes(xRootNode)
+        dictAttrib = UtilsIOXml.GetAttributes(xRootNode)
 
         dictAttrib['UserName'] = UtilsFilesIO.GetUsername()
             
         # reset the Login element
-        self.oIOXml.UpdateAttributesInElement(xRootNode, dictAttrib)
+        UtilsIOXml.UpdateAttributesInElement(xRootNode, dictAttrib)
 
-        self.oIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
+        UtilsIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupLoopingInitialization(self):
@@ -791,21 +783,21 @@ class CustomWidgets:
         
         xRootNode = self.GetRootNode()
         bLoopingInQuiz = False
-        lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
+        lxPages = UtilsIOXml.GetChildren(xRootNode,'Page')
         for xPageNode in lxPages:
-            sLoopAllowed = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "Loop")
+            sLoopAllowed = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, "Loop")
             if sLoopAllowed == "Y":
                 bLoopingInQuiz = True
                 break
             
         if bLoopingInQuiz:
             for xPageNode in lxPages:
-                sRepNum = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "Rep")
+                sRepNum = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, "Rep")
                 try:
                     int(sRepNum)
                 except:
                     # not a valid integer - create/set the attribute to 0
-                    self.oIOXml.UpdateAttributesInElement(xPageNode, {"Rep":"0"})
+                    UtilsIOXml.UpdateAttributesInElement(xPageNode, {"Rep":"0"})
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupPageGroupInitialization(self):
@@ -817,15 +809,15 @@ class CustomWidgets:
         bPageGroupFound = False
         xRootNode = self.GetRootNode()
         
-        lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
+        lxPages = UtilsIOXml.GetChildren(xRootNode,'Page')
         for xPageNode in lxPages:
-            sPageGroupNum = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "PageGroup")
+            sPageGroupNum = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, "PageGroup")
             if sPageGroupNum != '':
                 bPageGroupFound = True
                 break
        
         if not bPageGroupFound:
             for iPageNum in range(len(lxPages)):
-                xPageNode = self.oIOXml.GetNthChild(xRootNode, "Page", iPageNum)
-                self.oIOXml.UpdateAttributesInElement(xPageNode, {"PageGroup":str(iPageNum + 1)})
+                xPageNode = UtilsIOXml.GetNthChild(xRootNode, "Page", iPageNum)
+                UtilsIOXml.UpdateAttributesInElement(xPageNode, {"PageGroup":str(iPageNum + 1)})
         

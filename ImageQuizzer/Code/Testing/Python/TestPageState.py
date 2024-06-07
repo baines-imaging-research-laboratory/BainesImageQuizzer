@@ -127,7 +127,6 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         self.sUsername = 'Tests'
         self.sTestXmlFilePath = ''
         self.oSession = Session()
-        self.oIOXml = self.oSession.oIOXml
         self.oPageState = PageState(self.oSession)
 
     #------------------------------------------- 
@@ -345,7 +344,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         bTestResult = False
 
         xRoot = self.buildXML_TestFile_Generic()
-        xPage = self.oIOXml.GetNthChild(xRoot, 'Page', 0)
+        xPage = UtilsIOXml.GetNthChild(xRoot, 'Page', 0)
         
         self.oPageState.InitializeStates(xPage)
 
@@ -380,7 +379,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         bTestResult3 = False
         
         xRoot = self.buildXML_TestFile_Generic()
-        xPage = self.oIOXml.GetNthChild(xRoot, 'Page', 0)
+        xPage = UtilsIOXml.GetNthChild(xRoot, 'Page', 0)
         
         self.oPageState.InitializeStates(xPage)
         self.oPageState.sMarkupLineRequiredState = 'AnyLinesReq'
@@ -434,7 +433,7 @@ class TestPageStateTest(ScriptedLoadableModuleTest):
         bTestResult2 = False
         
         xRoot = self.buildXML_TestFile_Generic()
-        xPage = self.oIOXml.GetNthChild(xRoot, 'Page', 0)
+        xPage = UtilsIOXml.GetNthChild(xRoot, 'Page', 0)
         
         self.oPageState.InitializeStates(xPage)
         self.oPageState.sMarkupLineRequiredState = 'SpecificLinesReq'
