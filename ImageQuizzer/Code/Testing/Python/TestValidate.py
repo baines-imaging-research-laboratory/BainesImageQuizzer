@@ -3,7 +3,9 @@ from slicer.ScriptedLoadableModule import *
 
 import Utilities.UtilsFilesIO as UtilsFilesIO
 import Utilities.UtilsValidate as UtilsValidate
+import Utilities.UtilsCustomXml as UtilsCustomXml
 
+from Utilities.UtilsCustomXml import *
 from Utilities.UtilsFilesIO import *
 
 from Session import *

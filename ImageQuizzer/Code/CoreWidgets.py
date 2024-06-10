@@ -7,7 +7,9 @@ import unittest
 import Utilities.UtilsMsgs as UtilsMsgs
 import Utilities.UtilsFilesIO as UtilsFilesIO
 import Utilities.UtilsIOXml as UtilsIOXml
+import Utilities.UtilsCustomXml as UtilsCustomXml
 
+from Utilities.UtilsCustomXml import *
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsFilesIO import *
 from Utilities.UtilsMsgs import *
@@ -1272,11 +1274,11 @@ class CoreWidgets:
         dictAttribToMatchInHistory['BookmarkID'] = sGoToBookmark
         
         # all page nodes that match - ordered with most recent first
-        dictPgNodeAndPgIndex = UtilsIOXml.GetMatchingXmlPagesFromAttributeHistory(self.oSession.GetCurrentNavigationIndex(), self.oSession.GetNavigationList(), dictAttribToMatchInHistory)
+        dictPgNodeAndPgIndex = UtilsCustomXml.GetMatchingXmlPagesFromAttributeHistory(self.oSession.GetCurrentNavigationIndex(), self.oSession.GetNavigationList(), dictAttribToMatchInHistory)
         lPageIndices = list(dictPgNodeAndPgIndex.values())
         if len(lPageIndices) > 0:
             iBookmarkedPageIndex = lPageIndices[0]
-            iBookmarkedNavigationIndex = UtilsIOXml.GetNavigationIndexForPage(self.oSession.GetNavigationList(), iBookmarkedPageIndex)
+            iBookmarkedNavigationIndex = UtilsCustomXml.GetNavigationIndexForPage(self.oSession.GetNavigationList(), iBookmarkedPageIndex)
             
             
 #             ### for debug ###            
@@ -1320,7 +1322,7 @@ class CoreWidgets:
         sInteractionMsg = sCaller
         sCompletedMsg = ''
 
-        iNewPageIndex = UtilsIOXml.GetNavigationIndexForPage(self.oSession.GetNavigationList(), iNewNavigationIndex)
+        iNewPageIndex = UtilsCustomXml.GetNavigationIndexForPage(self.oSession.GetNavigationList(), iNewNavigationIndex)
         self.oSession.SetInteractionLogOnOff('Off',sCaller)
         
            

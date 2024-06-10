@@ -6,8 +6,9 @@ import traceback
 import Utilities.UtilsMsgs as UtilsMsgs
 import Utilities.UtilsFilesIO as UtilsFilesIO
 import Utilities.UtilsIOXml as UtilsIOXml
+import Utilities.UtilsCustomXml as UtilsCustomXml
 
- 
+from Utilities.UtilsCustomXml import *
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
 from Utilities.UtilsIOXml import *
@@ -402,14 +403,14 @@ class PageState:
                     xHistoricalImageElement = None  # initialize
                     xHistoricalLabelMapMatch = None
                     xHistoricalImageElement, xHistoricalPageElement = \
-                                                UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(\
+                                                UtilsCustomXml.GetXmlPageAndChildFromAttributeHistory(\
                                                                              self.oSession.GetCurrentNavigationIndex(),\
                                                                              self.oSession.GetNavigationList(),\
                                                                              'Image','LabelMapID',\
                                                                              sLabelMapToRedisplay)
                                                 
                     if xHistoricalImageElement != None:
-                        xHistoricalLabelMapMatch = self.UtilsIOXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')
+                        xHistoricalLabelMapMatch = UtilsCustomXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')
                     
                         if xHistoricalLabelMapMatch != None:
                             # found a label map for this image in history

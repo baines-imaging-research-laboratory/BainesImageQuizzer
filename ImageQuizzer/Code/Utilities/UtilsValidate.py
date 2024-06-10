@@ -6,7 +6,9 @@ import Utilities.UtilsMsgs as UtilsMsgs
 import Utilities.UtilsFilesIO as UtilsFilesIO
 import Utilities.UtilsEmail as UtilsEmail
 import Utilities.UtilsIOXml as UtilsIOXml
+import Utilities.UtilsCustomXml as UtilsCustomXml
 
+from Utilities.UtilsCustomXml import *
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
@@ -129,7 +131,7 @@ class UtilsValidate:
             # open requested quiz xml 
             bSuccess = UtilsIOXml.OpenXml(UtilsFilesIO.GetXmlQuizPath(),'Session')
             xRootNode = UtilsIOXml.GetRootNode()
-            UtilsValidate.l4iNavList = UtilsIOXml.GetQuizLayoutForNavigationList(xRootNode)
+            UtilsValidate.l4iNavList = UtilsCustomXml.GetQuizLayoutForNavigationList(xRootNode)
 
             # >>>>>>>>>>>>>>>
             # check options at the Session level
@@ -194,22 +196,22 @@ class UtilsValidate:
                     sValidationMsg = UtilsValidate.ValidateRequiredAttribute(xImage, 'Type', sPageReference)
                     sMsg = sMsg + sValidationMsg
                     
-                    sValidationMsg = UtilsValidate.ValidateAttributeOptions(xImage, 'Type', sPageReference, UtilsIOXml.lValidImageTypes)
+                    sValidationMsg = UtilsValidate.ValidateAttributeOptions(xImage, 'Type', sPageReference, UtilsCustomXml.lValidImageTypes)
                     sMsg = sMsg + sValidationMsg
                     
                     # >>>>>>>>>>>>>>> Elements
                     sValidationMsg = UtilsValidate.ValidateRequiredElement(xImage, 'Path', sPageReference)
                     sMsg = sMsg + sValidationMsg
                     
-                    sValidationMsg = UtilsValidate.ValidateElementOptions(xImage, 'Layer', sPageReference, UtilsIOXml.lValidLayers)
+                    sValidationMsg = UtilsValidate.ValidateElementOptions(xImage, 'Layer', sPageReference, UtilsCustomXml.lValidLayers)
                     sMsg = sMsg + sValidationMsg
                     
-                    sValidationMsg = UtilsValidate.ValidateElementOptions(xImage, 'DefaultDestination', sPageReference, UtilsIOXml.lValidSliceWidgets)
+                    sValidationMsg = UtilsValidate.ValidateElementOptions(xImage, 'DefaultDestination', sPageReference, UtilsCustomXml.lValidSliceWidgets)
                     sMsg = sMsg + sValidationMsg
                     
                     sImageType = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'Type')
                     if not (sImageType == 'Segmentation' or sImageType == 'RTStruct' or sImageType == 'LabelMap'):
-                        sValidationMsg = UtilsValidate.ValidateElementOptions(xImage, 'DefaultOrientation', sPageReference, UtilsIOXml.lValidOrientations)
+                        sValidationMsg = UtilsValidate.ValidateElementOptions(xImage, 'DefaultOrientation', sPageReference, UtilsCustomXml.lValidOrientations)
                         sMsg = sMsg + sValidationMsg
                         
                     sPanOrigin = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'PanOrigin')
@@ -920,8 +922,8 @@ class UtilsValidate:
 
                 # look for historical LabelMapID match
                 iPageIndex = iPageNum - 1  # zero indexing for current page
-                iNavIdx = UtilsIOXml.GetNavigationIndexForPage(UtilsValidate.l4iNavList, iPageIndex)  # zero indexing for current page
-                xHistoricalImageElement, xHistoricalPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIdx, UtilsValidate.l4iNavList, 'Image','LabelMapID',sLabelMapIDLink)
+                iNavIdx = UtilsCustomXml.GetNavigationIndexForPage(UtilsValidate.l4iNavList, iPageIndex)  # zero indexing for current page
+                xHistoricalImageElement, xHistoricalPageElement = UtilsCustomXml.GetXmlPageAndChildFromAttributeHistory(iNavIdx, UtilsValidate.l4iNavList, 'Image','LabelMapID',sLabelMapIDLink)
                 if xHistoricalImageElement == None:
                     raise Exception(sErrorMsgNoMatchingHistoricalLabelMapID)
                 
@@ -1308,7 +1310,7 @@ class UtilsValidate:
             if len(lxROIs) >0:
                 sValidationMsg = UtilsValidate.ValidateRequiredAttribute(lxROIs[0], 'ROIVisibilityCode', sPageReference)
                 sMsg = sMsg + sValidationMsg
-                sValidationMsg = UtilsValidate.ValidateAttributeOptions(lxROIs[0], 'ROIVisibilityCode', sPageReference, UtilsIOXml.lValidRoiVisibilityCodes)
+                sValidationMsg = UtilsValidate.ValidateAttributeOptions(lxROIs[0], 'ROIVisibilityCode', sPageReference, UtilsCustomXml.lValidRoiVisibilityCodes)
                 sMsg = sMsg + sValidationMsg
                 
                 # if the visibility code is Select or Ignore, there must be an ROI element(s) with the name(s) present
@@ -1329,10 +1331,10 @@ class UtilsValidate:
 
         sMsg = ''
         
-        sNotUniqueMsg = "\nIn any Page Element, the 'PageID_ImageID' attributes when combined with an Image Path, must be distinct." +\
+        sNotUniqueMsg = "\nIn any Page Element, the 'PageID_ImageID' attributes when combined with an Image Path, must be unique." +\
                             "\nEither there are different paths sharing the same 'PageID_ImageID' on this Page" +\
-                            "\nOR there are identical image paths with different combined 'PageID_ImageID' attributes" +\
-                            "\n   .....Check all paths for Page: "
+                            "\nOR there are identical image paths with different combined 'PageID_ImageID' attributes" 
+        sErrEmptyPath = "\nPath Element cannot be empty. "
 
         lxImageElements = UtilsIOXml.GetChildren(xPage, 'Image')
         lPathAndNodeNames= []
@@ -1346,6 +1348,9 @@ class UtilsValidate:
             lxImagePath = UtilsIOXml.GetChildren(xImage, 'Path')
             if len(lxImagePath) == 1:
                 sImagePath = UtilsIOXml.GetDataInNode(lxImagePath[0])
+                
+                if sImagePath == '':
+                    sMsg = sMsg + sErrEmptyPath
                  
                 # create tuple of path, sNodeName
                 tupPathAndID = (sImagePath, sNodeNameID)
@@ -1360,7 +1365,7 @@ class UtilsValidate:
                             
                             # existing path;  but node name does not match - ERROR
                             if sNodeNameID not in lElement:
-                                sMsg = sMsg + sNotUniqueMsg + sPageNum + ' '+ sNodeNameID + '\n'
+                                sMsg = sMsg + sNotUniqueMsg
 
                              
                 if not bFoundMatchingPath:
@@ -1375,8 +1380,11 @@ class UtilsValidate:
             if sNodeName not in lsNodeNames:
                 lsNodeNames.append(sNodeName)
             else:
-                sMsg = sMsg + sNotUniqueMsg + sPageNum + ' '+ sNodeNameID + '\n'
+                sMsg = sMsg + sNotUniqueMsg
                 break
+            
+        if sMsg != '':
+            sMsg = sMsg + "\n   .....Check all paths for Page: " + sPageNum + ' '+ sNodeNameID + '\n'
             
         return sMsg
 

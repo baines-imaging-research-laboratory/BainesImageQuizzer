@@ -4,7 +4,9 @@ import vtk, qt, ctk, slicer
 
 import Utilities.UtilsMsgs as UtilsMsgs
 import Utilities.UtilsIOXml as UtilsIOXml
+import Utilities.UtilsCustomXml as UtilsCustomXml
 
+from Utilities.UtilsCustomXml import *
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
 
@@ -740,7 +742,7 @@ class UtilsFilesIO:
 
         
                 # look at latest instance of the label map elements stored in the xml
-                xLabelMapPathElement = UtilsIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                xLabelMapPathElement = UtilsCustomXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
                 slLabelMapNode = None # initialize
 
                 # if there were no label map paths stored with the image, and xml attribute has DisplayLabelMapID 
@@ -752,7 +754,7 @@ class UtilsFilesIO:
                     xHistoricalImageElement = None  # initialize
                     xHistoricalLabelMapMatch = None
 #                     xHistoricalImageElement, xHistoricalPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(oSession.GetCurrentPageIndex(),'Image','LabelMapID',sLabelMapIDLink)
-                    xHistoricalImageElement, xHistoricalPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(\
+                    xHistoricalImageElement, xHistoricalPageElement = UtilsCustomXml.GetXmlPageAndChildFromAttributeHistory(\
                                                                                     oSession.GetCurrentNavigationIndex(), \
                                                                                     oSession.GetNavigationList(),\
                                                                                     'Image',\
@@ -767,7 +769,7 @@ class UtilsFilesIO:
                     else:
                         # load single label map
                         if xHistoricalImageElement != None:
-                            xHistoricalLabelMapMatch = UtilsIOXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')
+                            xHistoricalLabelMapMatch = UtilsCustomXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')
                         
                         if xHistoricalLabelMapMatch != None:
                             # found a label map for this image in history
@@ -775,7 +777,7 @@ class UtilsFilesIO:
                             UtilsFilesIO.CopyAndStoreLabelMapFromHistory(oSession, xHistoricalLabelMapMatch, oImageNode)
     
                             #    assign newly stored xml element to xLabelMapPathElement
-                            xLabelMapPathElement = UtilsIOXml.GetLatestChildElement( oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                            xLabelMapPathElement = UtilsCustomXml.GetLatestChildElement( oImageNode.GetXmlImageElement(), 'LabelMapPath')
                     
                 
                 # load labelmap file from stored path in XML                
@@ -892,7 +894,7 @@ class UtilsFilesIO:
             
             
             # collect label map paths
-            dictPgNodeAndPgIndex = UtilsIOXml.GetMatchingXmlPagesFromAttributeHistory(\
+            dictPgNodeAndPgIndex = UtilsCustomXml.GetMatchingXmlPagesFromAttributeHistory(\
                                                     oSession.GetCurrentNavigationIndex(),\
                                                     oSession.GetNavigationList() , \
                                                     dictAttribToMatch, \
@@ -982,7 +984,7 @@ class UtilsFilesIO:
                 #    for display on the next page
                 oSession.oCustomWidgets.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(), UtilsFilesIO.GetRelativeUserPath(sLabelMapPath))
                 UtilsIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
-                xLabelMapPathElement = UtilsIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                xLabelMapPathElement = UtilsCustomXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
         
                 # cleanup
                 slicer.mrmlScene.RemoveNode(slLabelMapVolumeReference)

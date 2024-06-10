@@ -12,8 +12,9 @@ import Utilities.UtilsFilesIO as UtilsFilesIO
 import Utilities.UtilsEmail as UtilsEmail
 import Utilities.UtilsValidate as UtilsValidate
 import Utilities.UtilsIOXml as UtilsIOXml
+import Utilities.UtilsCustomXml as UtilsCustomXml
 
-
+from Utilities.UtilsCustomXml import *
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
@@ -1012,7 +1013,7 @@ class Session:
         #     of indices for each page, question sets, page group and rep number
         
         
-        self.SetNavigationList(UtilsIOXml.GetQuizLayoutForNavigationList(UtilsIOXml.GetRootNode()))
+        self.SetNavigationList(UtilsCustomXml.GetQuizLayoutForNavigationList(UtilsIOXml.GetRootNode()))
         
         # if randomization is requested - shuffle the page/questionset list
         if self.oCustomWidgets.GetRandomizeRequired():

@@ -7,7 +7,9 @@ import traceback
 
 import Utilities.UtilsMsgs as UtilsMsgs
 import Utilities.UtilsIOXml as UtilsIOXml
+import Utilities.UtilsCustomXml as UtilsCustomXml
 
+from Utilities.UtilsCustomXml import *
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsIOXml import *
 
@@ -349,7 +351,7 @@ class ImageView:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ClearWidgets(self):
         # make sure the widget exists in case the default layout changes
-        for sWidgetName in UtilsIOXml.lValidSliceWidgets:
+        for sWidgetName in UtilsCustomXml.lValidSliceWidgets:
             
             oSlicerWidget = WidgetItem(sWidgetName)
             if oSlicerWidget.slWidget != None:

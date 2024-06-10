@@ -7,7 +7,9 @@ import Utilities.UtilsMsgs as UtilsMsgs
 import Utilities.UtilsFilesIO as UtilsFilesIO
 import Utilities.UtilsEmail as UtilsEmail
 import Utilities.UtilsIOXml as UtilsIOXml
+import Utilities.UtilsCustomXml as UtilsCustomXml
 
+from Utilities.UtilsCustomXml import *
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsFilesIO import *
 from Utilities.UtilsMsgs import *
@@ -347,7 +349,7 @@ class CustomWidgets:
         for xOptionNode in xAllOptions:
                                          
             sLatestResponse = ''
-            xLatestResponseNode = UtilsIOXml.GetLatestChildElement(xOptionNode, 'Response')
+            xLatestResponseNode = UtilsCustomXml.GetLatestChildElement(xOptionNode, 'Response')
             if xLatestResponseNode != None:
                 sLatestResponse = UtilsIOXml.GetDataInNode(xLatestResponseNode)
         
@@ -613,7 +615,7 @@ class CustomWidgets:
     def AddResponseElement(self, xOptionNode, sResponse):
         
         now = datetime.now()
-        sResponseTime = now.strftime(UtilsIOXml.sTimestampFormat)
+        sResponseTime = now.strftime(UtilsCustomXml.sTimestampFormat)
         
         dictAttrib = { 'LoginTime': self.LoginTime(), 'ResponseTime': sResponseTime}
         
@@ -629,7 +631,7 @@ class CustomWidgets:
 
         # add login and response times to the existing state attributes
         now = datetime.now()
-        sResponseTime = now.strftime(UtilsIOXml.sTimestampFormat)
+        sResponseTime = now.strftime(UtilsCustomXml.sTimestampFormat)
         
         dictTimeAttributes = { 'LoginTime': self.LoginTime(), 'ResponseTime': sResponseTime} 
         dictAttrib.update(dictTimeAttributes)
@@ -642,7 +644,7 @@ class CustomWidgets:
         
         # add login and response times to the label map path element
         now = datetime.now()
-        sResponseTime = now.strftime(UtilsIOXml.sTimestampFormat)
+        sResponseTime = now.strftime(UtilsCustomXml.sTimestampFormat)
         
         dictAttrib = { 'LoginTime': self.LoginTime(), 'ResponseTime': sResponseTime} 
         
@@ -658,7 +660,7 @@ class CustomWidgets:
 
         now = datetime.now()
 
-        self.SetLoginTime( now.strftime(UtilsIOXml.sTimestampFormat) )
+        self.SetLoginTime( now.strftime(UtilsCustomXml.sTimestampFormat) )
         
         dictAttrib = {'LoginTime': self.LoginTime(), 'LogoutTime': self.LoginTime()}
         
@@ -677,7 +679,7 @@ class CustomWidgets:
 
         now = datetime.now()
 
-        sLogoutTime = now.strftime(UtilsIOXml.sTimestampFormat)
+        sLogoutTime = now.strftime(UtilsCustomXml.sTimestampFormat)
         
         # get existing attributes from the Login element
         xLoginNode = UtilsIOXml.GetLastChild(self.GetRootNode(), "Login")
@@ -722,7 +724,7 @@ class CustomWidgets:
             
             sNewTimestamp = lsTimestamps[indTime]
             # convert to datetime format for compare
-            dtNewTimestamp = datetime.strptime(sNewTimestamp, UtilsIOXml.sTimestampFormat)
+            dtNewTimestamp = datetime.strptime(sNewTimestamp, UtilsCustomXml.sTimestampFormat)
             
             if dtLastTimestamp == '': # for initial compare
                 dtLastTimestamp = dtNewTimestamp

@@ -4,7 +4,9 @@ from slicer.ScriptedLoadableModule import *
 
 import Utilities.UtilsFilesIO as UtilsFilesIO
 import Utilities.UtilsIOXml as UtilsIOXml
+import Utilities.UtilsCustomXml as UtilsCustomXml
 
+from Utilities.UtilsCustomXml import *
 from Utilities.UtilsFilesIO import *
 from Utilities.UtilsIOXml import *
 from TestingStatus import *
@@ -845,7 +847,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         # Test1 - check that matching attribute is not found
         iNavIndex = 7
-        xImageElement, xPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","DisplayLabelMapID", "XXX")
+        xImageElement, xPageElement = UtilsCustomXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","DisplayLabelMapID", "XXX")
         if xImageElement == None and xPageElement == None:
             bCaseTestResult = True
         else:
@@ -855,7 +857,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         # Test2 - check that matching attribute belongs to Pt1 and Im01
         iNavIndex = 5
-        xImageElement, xPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiX-contour")
+        xImageElement, xPageElement = UtilsCustomXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiX-contour")
         sImID =  UtilsIOXml.GetValueOfNodeAttribute(xImageElement,"ID")
         sPtID =  UtilsIOXml.GetValueOfNodeAttribute(xPageElement,"ID")
         if sImID == "Im01" and sPtID == "Pt1":
@@ -867,7 +869,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         # Test3 - look for historical that doesn't fall on the first page to make sure the function breaks after the find
         iNavIndex = 7
-        xImageElement, xPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiY-contour")
+        xImageElement, xPageElement = UtilsCustomXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiY-contour")
         sImID =  UtilsIOXml.GetValueOfNodeAttribute(xImageElement,"ID")
         sPtID =  UtilsIOXml.GetValueOfNodeAttribute(xPageElement,"ID")
         if sImID == "Im31" and sPtID == "Pt4":
@@ -879,7 +881,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
 
         # Test4 - look for historical that isn't historical anymore because of randomization
         iNavIndex = 3
-        xImageElement, xPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiY-contour")
+        xImageElement, xPageElement = UtilsCustomXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiY-contour")
         sImID =  UtilsIOXml.GetValueOfNodeAttribute(xImageElement,"ID")
         sPtID =  UtilsIOXml.GetValueOfNodeAttribute(xPageElement,"ID")
         if sImID == "" and sPtID == "":
@@ -967,14 +969,14 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         # Test1 - check that matching attribute is not found
         iNavIndex = 7
-        xImageElement, xPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","DisplayLabelMapID", "XXX")
+        xImageElement, xPageElement = UtilsCustomXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","DisplayLabelMapID", "XXX")
         if xImageElement == None and xPageElement == None:
             bTest1 = True
         
         
         # Test2 - check that matching attribute belongs to Pt1 and Im01
         iNavIndex = 7
-        xImageElement, xPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiX-contour")
+        xImageElement, xPageElement = UtilsCustomXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiX-contour")
         sImID =  UtilsIOXml.GetValueOfNodeAttribute(xImageElement,"ID")
         sPtID =  UtilsIOXml.GetValueOfNodeAttribute(xPageElement,"ID")
         if sImID == "Im01" and sPtID == "Pt1":
@@ -983,7 +985,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         
         # Test3 - look for historical that doesn't fall on the first page to make sure the function breaks after the find
         iNavIndex = 7
-        xImageElement, xPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiY-contour")
+        xImageElement, xPageElement = UtilsCustomXml.GetXmlPageAndChildFromAttributeHistory(iNavIndex, l4iNavigationIndices, "Image","LabelMapID", "RoiY-contour")
         sImID =  UtilsIOXml.GetValueOfNodeAttribute(xImageElement,"ID")
         sPtID =  UtilsIOXml.GetValueOfNodeAttribute(xPageElement,"ID")
         if sImID == "Im31" and sPtID == "Pt4":
@@ -1183,7 +1185,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         # test nothing matches
         dictAttribsToMatch = {"ID":"Pt2","Tag":"Label1"}
         dictExpectedResult = {}
-        dictPgNodeAndPgIndex = UtilsIOXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch)
+        dictPgNodeAndPgIndex = UtilsCustomXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch)
         
         if dictExpectedResult == dictPgNodeAndPgIndex:
             bCaseTestResult = True
@@ -1196,7 +1198,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         # test match to one attribute
         dictAttribsToMatch = {"Tag":"Label1"}
         dictExpectedResult = {xNode4:4, xNode1:1, xNode0:0}
-        dictPgNodeAndPgIndex = UtilsIOXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch)
+        dictPgNodeAndPgIndex = UtilsCustomXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch)
         
         if dictExpectedResult == dictPgNodeAndPgIndex:
             bCaseTestResult = True
@@ -1209,7 +1211,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         # test match to two attributes
         dictAttribsToMatch = {"ID":"Pt2","Tag":"Label2"}
         dictExpectedResult = {xNode2:2}
-        dictPgNodeAndPgIndex = UtilsIOXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch)
+        dictPgNodeAndPgIndex = UtilsCustomXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch)
         
         if dictExpectedResult == dictPgNodeAndPgIndex:
             bCaseTestResult = True
@@ -1222,7 +1224,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         reIgnoreSubstring= '-Rep[0-9]+'  # remove -Rep with any number of digits following
         dictAttribsToMatch = {"ID":"Pt2","Tag":"Label2"}
         dictExpectedResult = {xNode3:3, xNode2:2}
-        dictPgNodeAndPgIndex = UtilsIOXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch, reIgnoreSubstring)
+        dictPgNodeAndPgIndex = UtilsCustomXml.GetMatchingXmlPagesFromAttributeHistory(9, l4iNavigationIndices, dictAttribsToMatch, reIgnoreSubstring)
         
         if dictExpectedResult == dictPgNodeAndPgIndex:
             bCaseTestResult = True
@@ -1311,7 +1313,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         # test nothing matches
         dictAttribsToMatch = {"ID":"Pt2","Tag":"Label1"}
         dictExpectedResult = {}
-        dictPgNodeAndPgIndex = UtilsIOXml.GetMatchingXmlPagesFromAttributeHistory(8, l4iNavigationIndices, dictAttribsToMatch)
+        dictPgNodeAndPgIndex = UtilsCustomXml.GetMatchingXmlPagesFromAttributeHistory(8, l4iNavigationIndices, dictAttribsToMatch)
         
         if dictExpectedResult == dictPgNodeAndPgIndex:
             bCaseTestResult = True
@@ -1324,7 +1326,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         # test match to one attribute
         dictAttribsToMatch = {"Tag":"Label1"}
         dictExpectedResult = {xNode1:1, xNode0:0}
-        dictPgNodeAndPgIndex = UtilsIOXml.GetMatchingXmlPagesFromAttributeHistory(8, l4iNavigationIndices, dictAttribsToMatch)
+        dictPgNodeAndPgIndex = UtilsCustomXml.GetMatchingXmlPagesFromAttributeHistory(8, l4iNavigationIndices, dictAttribsToMatch)
         
         if dictExpectedResult == dictPgNodeAndPgIndex:
             bCaseTestResult = True
@@ -1335,7 +1337,7 @@ class TestUtilsIOXmlTest(ScriptedLoadableModuleTest):
         # test match to one attribute
         dictAttribsToMatch = {"Tag":"Label2"}
         dictExpectedResult = {xNode5:5, xNode3:3, xNode2:2 }
-        dictPgNodeAndPgIndex = UtilsIOXml.GetMatchingXmlPagesFromAttributeHistory(8, l4iNavigationIndices, dictAttribsToMatch)
+        dictPgNodeAndPgIndex = UtilsCustomXml.GetMatchingXmlPagesFromAttributeHistory(8, l4iNavigationIndices, dictAttribsToMatch)
         
         if dictExpectedResult == dictPgNodeAndPgIndex:
             bCaseTestResult = True
