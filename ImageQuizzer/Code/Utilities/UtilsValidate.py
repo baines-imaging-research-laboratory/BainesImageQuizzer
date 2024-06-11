@@ -227,12 +227,14 @@ class UtilsValidate:
                     # check merging of label maps have a matching LabelMapID Image and Loop in Page
                     sValidationMsg = UtilsValidate.ValidateMergeLabelMaps(xImage, xPage, iPageNum)
                     sMsg = sMsg + sValidationMsg
-
-
                             
                     # >>>>>>>>>>>>>>>
                     # Validate ROI elements if the image is RTStruct or Segmentation
                     sValidationMsg = UtilsValidate.ValidateROIsElements(xImage, sPageReference)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    # >>>>>>>>>>>>>>>
+                    sValidationMsg = UtilsValidate.ValidateVectorImages(xImage, sPageReference)
                     sMsg = sMsg + sValidationMsg
                     
                     # >>>>>>>>>>>>>>>
@@ -1407,19 +1409,19 @@ class UtilsValidate:
             For LabelMaps:
                 threshold is variable
                 
-                    sWindowsTempFolder = 'TempWrite' + '\PgGroupxx_' + PageID_ImageID\ + '-bainesquizlabel'
+                    sWindowsTempFolder = 'TempWrite' + '\PgGroupxx_' + PageID_ImageID + '-Repx'\ + '-quizlabel'
                     iMaxThreshold = 256 - len('nrrd') - len(sWindowsTempFolder)
             
                 File stored:
                 path userdir + \quizname + '\PgGroupxx_' + Page ID_Descriptor\ + 
-                 'PgGroupxx_' + PageID_ImageID + '-bainesquizlabel.nrrd'
+                 'PgGroupxx_' + PageID_ImageID  + '-Repx' + '-quizlabel.nrrd'
 
             For MarkupLines
                 threshold = 256
                 
                 File stored:
                 path userdir + \quizname + '\PgGroupxx_' + Page ID_Descriptor\ + 
-                 'PgGroupxx_' + PageID_ImageID + 'MarkupsLine_xxx_bainesquizline.mrk.json'
+                 'PgGroupxx_' + PageID_ImageID  + '-Repx' + 'MarkupsLine_xxx_quizline.mrk.json'
 
             In some quizzes, it is impossible to predict whether the user is going to create a 
             contour or markup line so rather than have the user encounter an error, 
@@ -1436,7 +1438,7 @@ class UtilsValidate:
         sPageGroup = 'PgGroup_' + UtilsIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup')
         sPageDescriptor = UtilsIOXml.GetValueOfNodeAttribute(xPage, 'Descriptor')
         
-        # max allowed leaves room for adding characters for labelmap (+ ~22) or markupline (+ ~39) files
+        # max allowed leaves room for adding characters for rep # (+ ~6) and labelmap (+ ~18) or markupline (+ ~33) files
         # to keep potential files under the 256 Windows limit
         iMaxAllowed = 215
 
@@ -1465,5 +1467,35 @@ class UtilsValidate:
         return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    @staticmethod
+    def ValidateVectorImages(xImage, sPageReference):
+        ''' Validation function to make sure images of type 'Vector' fall into to list of valid types and that
+            the SegmentRequired function is not set to "Y" (otherwise the user is not allowed to press Next - Slicer does not
+            allow for segmenting on vector type images)
+            
+            Vector images are like pictures - and includes single slice dicom files (histology).
+        '''
+        
+        sMsg = ''
+        sErrNotValidType = "\nExtension of this image is not part of the valid list of extensions for Vector type images: " + ','.join(UtilsCustomXml.lValidVectorImageExtensions)
+        sErrSegmentNotAllowed = "Segmenting is not allowed on Vector type images. Do not set 'SegmentRequired' to 'Y' ."
+        
+        
+        if UtilsIOXml.GetValueOfNodeAttribute(xImage, 'Type') == 'Vector':
+            
+            sPath = UtilsIOXml.GetDataInNode( UtilsIOXml.GetLastChild(xImage, 'Path') )
+            sExt = UtilsFilesIO.GetExtensionFromPath(sPath).upper()[1:]
+            
+            if sExt not in UtilsCustomXml.lValidVectorImageExtensions:
+                sMsg = sMsg + sErrNotValidType
+                
+            if UtilsIOXml.GetValueOfNodeAttribute(xImage, 'SegmentRequired') == "Y":
+                sMsg = sMsg + sErrSegmentNotAllowed
+                
+            
+        if sMsg != '':
+            sMsg = sMsg + "\nSee Page: " + sPageReference
+            
+        return sMsg
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         

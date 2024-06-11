@@ -22,8 +22,9 @@ class UtilsCustomXml:
     lValidLayouts = ['TwoOverTwo', 'OneUpRedSlice', 'SideBySideRedYellow', 'FourUp']
     lValidLayers = ['Foreground', 'Background', 'Segmentation', 'Label']
     lValidOrientations = ['Axial', 'Sagittal', 'Coronal']
-    lValidImageTypes = ['Volume', 'VolumeSequence', 'LabelMap', 'Segmentation', 'RTStruct']
+    lValidImageTypes = ['Volume', 'VolumeSequence', 'LabelMap', 'Segmentation', 'RTStruct', 'Vector']
     lValidRoiVisibilityCodes = ['All', 'None', 'Select', 'Ignore']
+    lValidVectorImageExtensions = ['PNG','BMP','JPG','JPEG','PDF','DCM']
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

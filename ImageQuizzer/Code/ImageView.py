@@ -412,11 +412,11 @@ class ImageView:
             bLabelMapMatchFound = False
 
             #    label maps may be loaded directly from xml or
-            #        the label map may have been created by the user (name + '-bainesquizlabel')
+            #        the label map may have been created by the user (name + '-quizlabel')
             #    User defined label maps will be assigned here as a priority over 
             #         any labelmaps loaded through xml file
             for slLabelMapNode in lLabelMapNodes:
-                if slLabelMapNode.GetName() == oImageForNPlanesNode.sNodeName + '-bainesquizlabel':
+                if slLabelMapNode.GetName() == oImageForNPlanesNode.sNodeName + '-quizlabel':
                     bLabelMapMatchFound = True
                     oSlicerWidget.slCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
                     break
@@ -548,7 +548,7 @@ class ImageView:
 
                     # match label map file with xml image
                     sLabelMapFilename = slNodeLabelMap.GetName()
-                    if oImageNode.sNodeName + '-bainesquizlabel' == sLabelMapFilename:
+                    if oImageNode.sNodeName + '-quizlabel' == sLabelMapFilename:
                         
                         slLabelMapNodeID = slNodeLabelMap.GetID()
                         
@@ -1034,6 +1034,15 @@ class DataVolumeDetail(ViewNodeBase):
             if (self.sImageType == 'Volume'):
                 
                 bNodeExists = self.CheckForNodeExists('vtkMRMLScalarVolumeNode')
+                if not (bNodeExists):
+                    self.slNode = slicer.util.loadVolume(self.sImagePath, {'show': False, 'name': self.sNodeName, 'singleFile': True} )
+                else: # make sure a node exists after load
+                    if bNodeExists and (self.slNode is None):
+                        bLoadSuccess = False
+            
+            elif (self.sImageType == 'Vector'):
+                
+                bNodeExists = self.CheckForNodeExists('vtkMRMLVectorVolumeNode')
                 if not (bNodeExists):
                     self.slNode = slicer.util.loadVolume(self.sImagePath, {'show': False, 'name': self.sNodeName, 'singleFile': True} )
                 else: # make sure a node exists after load

@@ -15,11 +15,11 @@ import shutil
 import re    # for regex re.sub
 import SimpleITK as sitk
 import numpy as np
+import pathlib
 
 from datetime import datetime
 import DICOMLib
 from DICOMLib import DICOMUtils
-from pathlib import Path
 
 import logging
 import time
@@ -234,6 +234,14 @@ class UtilsFilesIO:
         sFilenameNoExt = os.path.splitext(sFilenameExt)[0]
 
         return sFilenameNoExt
+    
+    #----------
+    @staticmethod
+    def GetExtensionFromPath( sFilePath):
+        
+        sExt = pathlib.Path(sFilePath).suffix
+
+        return sExt
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @staticmethod
@@ -610,17 +618,17 @@ class UtilsFilesIO:
     def SaveLabelMaps( oSession, sCaller):
 
         """ label map volume nodes may exist in the mrmlScene if the user created a label map
-            (in which case it is named with a '-bainesquizlabel' suffix), or if a label map 
+            (in which case it is named with a '-quizlabel' suffix), or if a label map 
             or segmentation was loaded in through the xml quiz file.
             
-            This function looks for label maps created by the user (-bainesquizlabel suffix) 
+            This function looks for label maps created by the user (-quizlabel suffix) 
             and if found, saves them as a data volume  (.nrrd file) in the specified directory.
             The path to this file is then stored in the xml file within the associated image element.
             
             Also store label maps as RTStructs if the attribute to do so was set in the xml root node.
             
             A warning is presented if the xml question set had the 'EnableSegmentEditor' flag set to 'y'
-            but no label maps (with -bainesquizlabel suffix) were found. The user purposely may 
+            but no label maps (with -quizlabel suffix) were found. The user purposely may 
             not have created a label map if there were no lesions to segment. This is acceptable.
         """
             
@@ -646,9 +654,9 @@ class UtilsFilesIO:
 
                     # match label map file with xml image
                     sLabelMapFilename = slNodeLabelMap.GetName()
-                    if oImageNode.sNodeName + '-bainesquizlabel' == sLabelMapFilename:
+                    if oImageNode.sNodeName + '-quizlabel' == sLabelMapFilename:
                         
-                        bLabelMapFound = True  # -bainesquizlabel suffix is associated with an image on the page
+                        bLabelMapFound = True  # -quizlabel suffix is associated with an image on the page
                         
                         sDirName = UtilsFilesIO.GetFolderNameForPageResults(oSession)
                         sPageLabelMapDir = UtilsFilesIO.CreatePageDir(sDirName)
@@ -688,7 +696,7 @@ class UtilsFilesIO:
             # Display warning if segmentation was required but no user created label map was found.
             #####
             #    If there were no label map volume nodes 
-            #    OR if there were label map volume nodes, but there wasn't a -bainesquizlabel suffix 
+            #    OR if there were label map volume nodes, but there wasn't a -quizlabel suffix 
             #        to match an image on the page, ie. the labelMaps found flag was left as false
             #    Check if the segmentation was required and if enabled present the warning
             if len(lSlicerLabelMapNodes) == 0 or (len(lSlicerLabelMapNodes) > 0 and bLabelMapFound == False):    
@@ -810,7 +818,7 @@ class UtilsFilesIO:
     
                             # set associated volume to connect label map to master
                             sLabelMapNodeName = slLabelMapNode.GetName()
-#                             sAssociatedName = sLabelMapNodeName.replace('-bainesquizlabel','')
+#                             sAssociatedName = sLabelMapNodeName.replace('-quizlabel','')
                             sAssociatedName = oImageNode.sNodeName
                             slAssociatedNodeCollection = slicer.mrmlScene.GetNodesByName(sAssociatedName)
                             slAssociatedNode = slAssociatedNodeCollection.GetItemAsObject(0)
@@ -848,7 +856,7 @@ class UtilsFilesIO:
         sLabelMapDirForDest = UtilsFilesIO.CreatePageDir(sCurrentLabelMapFolderName)
         
         # create new file name to which the historical label map is to be copied
-        sLabelMapFilenameWithExtForDest = oImageNode.sNodeName + '-bainesquizlabel' + '.nrrd'
+        sLabelMapFilenameWithExtForDest = oImageNode.sNodeName + '-quizlabel' + '.nrrd'
         
         # define destination path
         sLabelMapPathForDest = os.path.join(sLabelMapDirForDest, sLabelMapFilenameWithExtForDest)
@@ -966,7 +974,7 @@ class UtilsFilesIO:
                 sDirName = UtilsFilesIO.GetFolderNameForPageResults(oSession)
                 sPageLabelMapDir = UtilsFilesIO.CreatePageDir(sDirName)
         
-                sLabelMapFilenameWithExt = oImageNode.sNodeName + '-bainesquizlabel.nrrd'
+                sLabelMapFilenameWithExt = oImageNode.sNodeName + '-quizlabel.nrrd'
                 
                 
                 sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
@@ -1099,7 +1107,7 @@ class UtilsFilesIO:
             If there is already a node that has the proposed name, we need to add the 'next' integer suffix
         '''
 
-        sProposedName =  sAssociatedReferenceNodeName  + '_' + sSystemGeneratedName + '_bainesquizline'
+        sProposedName =  sAssociatedReferenceNodeName  + '_' + sSystemGeneratedName + '_quizline'
         sUniqueName = sProposedName # default
          
         lExistingNamesWithProposedName = []
@@ -1108,7 +1116,7 @@ class UtilsFilesIO:
                 lExistingNamesWithProposedName.append(slNode.GetName())
                 
         if len(lExistingNamesWithProposedName) > 0:
-            sSubstringToSearch = 'bainesquizline_'
+            sSubstringToSearch = 'quizline_'
             iNewSuffix = UtilsFilesIO.GetSuffix(lExistingNamesWithProposedName, sSubstringToSearch)
             if iNewSuffix > 0:
                 sUniqueName = sProposedName + '_' + str(iNewSuffix)
