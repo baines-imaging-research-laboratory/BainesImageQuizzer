@@ -890,7 +890,7 @@ class CoreWidgets:
             sCompletedMsg = ''
             sSaveMsg = ''
             sCancelExitMsg = ''
-            sInteractionMsg = 'Exit'
+            sInteractionMsg = sCaller
             
             sPageID = self.oCustomWidgets.GetPageID(self.oSession.GetCurrentPageIndex())
             sPageDescriptor = self.oCustomWidgets.GetPageDescriptor(self.oSession.GetCurrentPageIndex())
@@ -914,7 +914,7 @@ class CoreWidgets:
     
             qtAns = UtilsMsgs.DisplayOkCancel(sMsg)
             if qtAns == qt.QMessageBox.Ok:
-
+                
                 self.oSession.SetInteractionLogOnOff('Off',sInteractionMsg)
                 self.DisableButtons()    
 
@@ -933,12 +933,12 @@ class CoreWidgets:
                 
                         slicer.util.exit(status=EXIT_SUCCESS)
                         bExit = True    # added for delay in slicer closing down - prevent remaining code from executing
-    
-            
+
             else:
                 sCancelExitMsg = ' ... cancelled Exit to continue with quiz'
                 
             sInteractionMsg = sInteractionMsg + sSaveMsg + sCompletedMsg + sCancelExitMsg
+
                 
             # if code reaches here, either the exit was cancelled or there was 
             # an error in the save
@@ -982,7 +982,7 @@ class CoreWidgets:
                 if self.oSession.sViewingMode != 'Default':
                     self.onResetViewClicked('Repeat')
 
-                bSuccess, sSaveMsg = self.oSession.PerformSave('NextBtn')
+                bSuccess, sSaveMsg = self.oSession.PerformSave('Repeat')
                 if bSuccess:
 
                     bSuccess, sCompletedMsg = self.oSession.UpdateCompletions('NextBtn')
@@ -1368,6 +1368,7 @@ class CoreWidgets:
                 self.oSession.DisplayQuizLayout()
                 self.oSession.DisplayImageLayout()
             
+                                    
         sInteractionMsg = sInteractionMsg + sSaveMsg + sCompletedMsg
 
         self.oSession.SetInteractionLogOnOff('On', sInteractionMsg)

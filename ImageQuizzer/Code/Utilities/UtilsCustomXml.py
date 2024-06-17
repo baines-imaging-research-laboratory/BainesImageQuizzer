@@ -247,4 +247,39 @@ class UtilsCustomXml:
         
         return dictPgNodeAndPgIndex
         
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    @staticmethod
+    def TagResponse(xQuestionSet, sDescription, sQuizPath):
+        ''' Function to add attribute to response element to give a description
+            as to what event took place to generate the save of the response
+            (eg. a Next or Previous button click; remain on page due to missing requirement etc.
+        '''
+        
+        sMissingDescription   = "Missed contour/line"
+        sCancelledDescription = "Canc for contouring"
+        
+        # shorten event messages
+        if 'missing' in sDescription:
+            sDescription = sMissingDescription
+        elif 'cancelled' in sDescription:
+            sDescription = sCancelledDescription
+            
+        if len(sDescription) < len(sMissingDescription):
+            sDescription = sDescription.ljust(len(sMissingDescription)) 
+                
+        
+        lxQuestions = UtilsIOXml.GetChildren(xQuestionSet, 'Question')
+        
+        for xQuestion in lxQuestions:
+            lxOptions = UtilsIOXml.GetChildren(xQuestion, 'Option')
+            
+            for xOption in lxOptions:
+                xLastResponse = UtilsIOXml.GetLastChild(xOption, 'Response')
+                dictAttribute = {'Event':sDescription}
+                if xLastResponse != None:
+                    UtilsIOXml.UpdateAttributesInElement(xLastResponse, dictAttribute )
+                
+        UtilsIOXml.SaveXml(sQuizPath)
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         

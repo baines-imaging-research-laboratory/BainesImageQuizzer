@@ -20,6 +20,7 @@ import pathlib
 from datetime import datetime
 import DICOMLib
 from DICOMLib import DICOMUtils
+from pathlib import Path
 
 import logging
 import time

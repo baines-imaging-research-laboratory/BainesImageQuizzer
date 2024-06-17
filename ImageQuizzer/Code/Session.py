@@ -435,7 +435,7 @@ class Session:
                 sCaptureSuccessLevel, lsNewResponses, sMsg = self.CaptureNewResponses()
                 self.SetNewResponses(lsNewResponses)
                    
-                if sCaller == 'NextBtn' or sCaller == 'Finish':
+                if sCaller == 'NextBtn' or sCaller == 'Finish' or sCaller == 'Repeat':
                     # only write to xml if all responses were captured
                     if sCaptureSuccessLevel == 'AllResponses':
                         self.SaveResponses()
@@ -458,13 +458,28 @@ class Session:
                     # if caller was Exit or close (X) reset the page to incomplete if there were
                     # missing pieces in order to resume on this page
                     if sLabelMapMsg != '' or sMissingMsg != '':
-                        self.oSession.SetPageIncomplete(self.oSession.GetCurrentPageIndex())
+                        self.oCustomWidgets.SetPageIncomplete(self.GetCurrentPageIndex())
                         
 
                 if bLabelMapsSaved and bResponsesSaved:
                     bSaveComplete = True
                 
                 sReturnMsg = sLabelMapMsg + sMissingMsg
+                
+                
+                # tag new response with event 
+                if bResponsesSaved == True:
+                    if sCaller == 'EventFilter':
+                        sEventMsg = 'Exit ...X'
+                    elif sReturnMsg !='':
+                        sEventMsg = sReturnMsg
+                    else:
+                        sEventMsg = sCaller
+                    UtilsCustomXml.TagResponse( self.oCustomWidgets.GetCurrentQuestionSetNode(\
+                                                            self.GetCurrentPageIndex(),\
+                                                            self.GetCurrentQuestionSetIndex()),\
+                                                    sEventMsg,\
+                                                    UtilsFilesIO.GetUserQuizResultsPath())                
         
         
         except Exception:
@@ -849,7 +864,7 @@ class Session:
         sCompletionFlagMsg = self.oPageState.UpdateCompletedFlags(self.oCustomWidgets.GetNthPageNode(self.GetCurrentPageIndex()))
         
         
-        if sCaller == 'NextBtn' or sCaller == 'Finish':
+        if sCaller == 'NextBtn' or sCaller == 'Finish' or sCaller == 'Repeat':
             
             # if this was the last question set for the page, check for completion
             if idxQuestionSet == iNumQSets - 1:
@@ -875,9 +890,14 @@ class Session:
                     
             bPageStateComplete = True    # allow with unfinished requirements
             
-                
-                
-                
+        if sReturnMsg != '':
+            # update not required on missing questions as a new response element is not saved
+            if 'question' not in sCompletionFlagMsg:
+                UtilsCustomXml.TagResponse( self.oCustomWidgets.GetCurrentQuestionSetNode(\
+                                                        self.GetCurrentPageIndex(),\
+                                                        self.GetCurrentQuestionSetIndex()),\
+                                                sReturnMsg,\
+                                                UtilsFilesIO.GetUserQuizResultsPath())                
                                     
         return bPageStateComplete, sReturnMsg
     

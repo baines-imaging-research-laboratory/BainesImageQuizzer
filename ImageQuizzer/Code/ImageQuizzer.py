@@ -475,9 +475,8 @@ class customEventFilter(qt.QObject):
         if event.type() == qt.QEvent.Close:
             
             sExitMsg = 'Image Quizzer Exiting'
-            sUserQuizResultsPath = UtilsFilesIO.GetUserQuizResultsPath()
              
-            if sUserQuizResultsPath != '':
+            if UtilsFilesIO.GetUserQuizResultsPath() != '':
                 sExitMsg = sExitMsg + '\n   Results will be saved.\
                     \n   Restarting the quiz will resume where you left off.'
                  
