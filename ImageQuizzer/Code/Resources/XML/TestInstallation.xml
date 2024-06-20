@@ -62,16 +62,6 @@
 				<Option>If this window is greyed out, you cannot change your selection.</Option>
 			</Question>
 		</QuestionSet>
-		<QuestionSet ID="Test Dicom With ROIs" Descriptor="Test dicom patient showing ROIs" >
-			<Question Type="InfoBox" Descriptor="Exiting the quiz:">
-				<Option>Click on the Exit button.</Option>
-				<Option>If you exit your responses will be saved.</Option>
-				<Option>Restarting the quiz will resume where you left off.</Option>
-			</Question>
-			<Question Type="CheckBox" Descriptor="Resume Test">
-				<Option>Check when resumed.</Option>
-			</Question>
-		</QuestionSet>
 	</Page>
 	<Page ID="Pt Dicom" Descriptor="DicomSeries"  AllowMultipleResponse="Y">
 		<Image DicomRead="Y" Type="Volume" ID="CTSeries">
@@ -126,6 +116,16 @@
 			<DefaultOrientation>Coronal</DefaultOrientation>
 			<Path>ImageVolumes\Brain\BrainCT_fixed.nrrd</Path>
 		</Image>
+		<QuestionSet ID="Test Exit" Descriptor="Resume " >
+			<Question Type="InfoBox" Descriptor="Exiting the quiz:">
+				<Option>Click on the Exit button.</Option>
+				<Option>If you exit your responses will be saved.</Option>
+				<Option>Restarting the quiz will resume to first question set of current page.</Option>
+			</Question>
+			<Question Type="CheckBox" Descriptor="Resume Test">
+				<Option>Check when resumed.</Option>
+			</Question>
+		</QuestionSet>
 		<QuestionSet ID="QS-Checkup" Descriptor="Test more 3D Slicer features">
 			<Question Type="CheckBox"  Descriptor="Try the following:">
 				<Option>Adjust window-level</Option>
@@ -176,18 +176,8 @@
 				<Option>Undo/Redo</Option>
 				<Option>Erase</Option>
 			</Question>
-			<Question Type="InfoBox" Descriptor="Editor Shortcuts">
-				<Option>e        ...Toggle label with erase mode</Option>
-				<Option>z        ...Undo</Option>
-				<Option>y        ...Redo</Option>
-				<Option>o        ...Toggle label outline</Option>
-				<Option>t        ...Toggle foreground/background</Option>
-				<Option>p        ...Paint tool</Option>
-				<Option>d        ...Draw tool</Option>
-				<Option>c        ...Show colour box</Option>
-				<Option>Rt click ...Apply (in Draw mode)</Option>
-				<Option>+        ...Increase brush radius</Option>
-				<Option>-        ...Decrease brush radius</Option>
+			<Question Type="Picture" Descriptor="Segment Editor Shortcuts">
+				<Option>EditorShortcuts.png</Option>
 			</Question>
 		</QuestionSet>
 	</Page>

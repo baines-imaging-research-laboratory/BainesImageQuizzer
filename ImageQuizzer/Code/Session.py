@@ -74,8 +74,6 @@ class Session:
         self.oCoreWidgets = CoreWidgets(self)
         
         
-        self.bNPlanesViewingMode = False
-        self.sViewingMode = "Default"
         self.loCurrentQuizImageViewNodes = []
         self.liImageDisplayOrder = []
         self.lsLayoutWidgets = []
@@ -507,7 +505,7 @@ class Session:
                 lsDestOrientNode = []
                 llsNodeProperties = []
                 
-                if not self.bNPlanesViewingMode:
+                if not self.oCoreWidgets.GetNPlanesViewingMode():
                     # quizzer is in the default view mode - get state from assigned widgets
                     for oImageNode in self.oImageView.GetImageViewList():
                         if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
@@ -532,7 +530,7 @@ class Session:
                     if (oImageNode.sImageType == 'Volume' or oImageNode.sImageType == 'VolumeSequence'):
         
                         dictAttribState = self.oImageView.GetViewState(oImageNode.slNode, sWidgetName)
-                        dictViewModeAttributes = {"Orientation": sOrientation, "Destination": sWidgetName, "ViewingMode": self.sViewingMode}
+                        dictViewModeAttributes = {"Orientation": sOrientation, "Destination": sWidgetName, "ViewingMode": self.oCoreWidgets.GetViewingMode()}
                         dictAttribState.update(dictViewModeAttributes)
                         
                         if oImageNode.sImageType == 'VolumeSequence':
@@ -578,7 +576,7 @@ class Session:
         dictBackgroundWidgetsToResetWithOffsets = {}
         idxCurrentPage = self.GetCurrentPageIndex()
         
-        if not self.bNPlanesViewingMode:
+        if not self.oCoreWidgets.GetNPlanesViewingMode():
             loImageNodes = self.oImageView.GetImageViewList()
         else:
             oImageNodeOverride, iQuizImageIndex = self.oCoreWidgets.GetNPlanesImageComboBoxSelection()
@@ -588,7 +586,7 @@ class Session:
                 dictNPlanesOrientDest.update({self.oCoreWidgets.llsNPlanesOrientDest[i][0] : self.oCoreWidgets.llsNPlanesOrientDest[i][1]})
             
         for ind in range(len(loImageNodes)):
-            if self.bNPlanesViewingMode:
+            if self.oCoreWidgets.GetNPlanesViewingMode():
                 oImageNode = loImageNodes[ind]
             else:
                 oImageNode = loImageNodes[self.GetImageDisplayOrderIndices()[ind]]
@@ -597,7 +595,7 @@ class Session:
             
             if (oImageNode.sImageType == "Volume" or oImageNode.sImageType == "VolumeSequence"):
 
-                if self.sViewingMode == "Default":
+                if self.oCoreWidgets.GetViewingMode() == "Default":
                     lsRequiredOrientations = [oImageNode.sOrientation]
                     
                 bLatestWindowLevelFound = False
@@ -633,7 +631,7 @@ class Session:
                     #     only one slice (eg. histology) )
 
                     # work with destination depending on the viewing mode        
-                    if not self.bNPlanesViewingMode:
+                    if not self.oCoreWidgets.GetNPlanesViewingMode():
                         sDestination = oImageNode.sDestination
                     else:
                         sDestination = dictNPlanesOrientDest[sRequiredOrientation]
@@ -661,7 +659,7 @@ class Session:
                             dictImageState["Window"] = sWindow
                             dictImageState["Level"] = sLevel
                             
-                        if not self.bNPlanesViewingMode:
+                        if not self.oCoreWidgets.GetNPlanesViewingMode():
                             oImageNode.SetImageState(dictImageState)
                         else:
                             # for NPlanes viewing mode, adjust with the destination override
@@ -689,7 +687,7 @@ class Session:
 
         # reset field of view and origin if zoom/pan was requested
         for ind in range(len(loImageNodes)):
-            if not self.bNPlanesViewingMode:
+            if not self.oCoreWidgets.GetNPlanesViewingMode():
                 oImageNode = loImageNodes[self.GetImageDisplayOrderIndices()[ind]]
                 oImageNode.SetFieldOfViewAndOrigin()
             else:

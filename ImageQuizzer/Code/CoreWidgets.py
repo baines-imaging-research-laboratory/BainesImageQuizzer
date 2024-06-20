@@ -51,6 +51,8 @@ class CoreWidgets:
         self._sSessionContourOpacity = 1.0
         
         self._bResetView = False
+        self._bNPlanesViewingMode = False
+        self._sViewingMode = 'Default'
 
     #-------------------------------------------
     #        Getters / Setters
@@ -94,6 +96,24 @@ class CoreWidgets:
     def GetResetView(self):
         return self._bResetView
         
+    #----------
+    def SetNPlanesViewingMode(self, bTF):
+        # on / off flag for NPlanes View
+        self._bNPlanesViewingMode = bTF
+        
+    #----------
+    def GetNPlanesViewingMode(self):
+        return self._bNPlanesViewingMode
+    
+    #----------
+    def SetViewingMode(self, sInput):
+        # description for NPlanes View mode
+        self._sViewingMode = sInput
+        
+    #----------
+    def GetViewingMode(self):
+        return self._sViewingMode
+    
     #----------
     def AddExtraToolsTab(self):
  
@@ -241,20 +261,21 @@ class CoreWidgets:
     #----------
     def SetNPlanesView(self):
         
-        self.oSession.sViewingMode = self.qComboNPlanesList.currentText
+        self.SetViewingMode(self.qComboNPlanesList.currentText)
+
 
        
         self.oSession.lsLayoutWidgets = []  # widgets for contour visibility list
         self.oSession.lsLayoutWidgets.append('Red')
 
         
-        if self.oSession.sViewingMode == "1 Plane Axial":
+        if self.GetViewingMode() == "1 Plane Axial":
             self.llsNPlanesOrientDest = [["Axial","Red"]]
-        elif self.oSession.sViewingMode == "1 Plane Sagittal":
+        elif self.GetViewingMode() == "1 Plane Sagittal":
             self.llsNPlanesOrientDest = [["Sagittal","Red"]]
-        elif self.oSession.sViewingMode == "1 Plane Coronal":
+        elif self.GetViewingMode() == "1 Plane Coronal":
             self.llsNPlanesOrientDest = [["Coronal","Red"]]
-        elif self.oSession.sViewingMode == "3 Planes":
+        elif self.GetViewingMode() == "3 Planes":
             self.llsNPlanesOrientDest = [["Axial","Red"],["Coronal","Green"],["Sagittal","Yellow"]]
             self.oSession.lsLayoutWidgets.append('Green')
             self.oSession.lsLayoutWidgets.append('Yellow')
@@ -400,15 +421,22 @@ class CoreWidgets:
         self.onMeasurementVisibilityStateChanged()
         
     #----------
+    def GetMeasurementVisibility(self):
+        return self.qChkBoxMeasurementVisibility.isChecked()
+        
+    #----------
     def SetViewLinesOnAllDisplays(self, bTF):
         self.qChkBoxViewOnAllDisplays.setChecked(bTF)
         self.onViewLinesOnAllDisplaysStateChanged()
+        
+    #----------
+    def GetViewLinesOnAllDisplays(self):
+        return self.qChkBoxViewOnAllDisplays.isChecked()
         
 
     #-------------------------------------------
     #        Functions
     #-------------------------------------------
-    
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupWidgets(self, slicerMainLayout):
@@ -799,7 +827,7 @@ class CoreWidgets:
             self.oSession.SetInteractionLogOnOff('Off',sInteractionMsg)
                 
             self.DisableButtons()    
-            if self.oSession.sViewingMode != 'Default':
+            if self.GetViewingMode() != 'Default':
                 self.onResetViewClicked('Next')
     
             if self.oSession.GetCurrentNavigationIndex() + 1 == len(self.oSession.GetNavigationList()):
@@ -979,13 +1007,13 @@ class CoreWidgets:
                 self.oSession.SetInteractionLogOnOff('Off', sInteractionMsg)
                 
                 self.DisableButtons()    
-                if self.oSession.sViewingMode != 'Default':
+                if self.GetViewingMode() != 'Default':
                     self.onResetViewClicked('Repeat')
 
                 bSuccess, sSaveMsg = self.oSession.PerformSave('Repeat')
                 if bSuccess:
 
-                    bSuccess, sCompletedMsg = self.oSession.UpdateCompletions('NextBtn')
+                    bSuccess, sCompletedMsg = self.oSession.UpdateCompletions('Repeat')
                     if bSuccess:
     
                         self.oSession.CaptureAndSaveImageState()
@@ -1077,8 +1105,8 @@ class CoreWidgets:
         markupIndex = markupsNode.GetDisplayNode().GetActiveControlPoint()
 
         if markupIndex == 1:        
-            self.SetViewLinesOnAllDisplays(self.qChkBoxViewOnAllDisplays.isChecked())
-            self.SetMeasurementVisibility(self.qChkBoxMeasurementVisibility.isChecked())
+            self.SetViewLinesOnAllDisplays(self.GetViewLinesOnAllDisplays())
+            self.SetMeasurementVisibility(self.GetMeasurementVisibility())
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onWindowLevelClicked(self):
@@ -1122,7 +1150,7 @@ class CoreWidgets:
                 oImageNodeOverride, iQuizImageIndex = self.GetNPlanesImageComboBoxSelection()
                 self.oSession.liImageDisplayOrder = self.oSession.ReorderImageIndexToEnd(iQuizImageIndex)
                 self.oImageView.AssignNPlanes(oImageNodeOverride, self.llsNPlanesOrientDest)
-                self.oSession.bNPlanesViewingMode = True
+                self.SetNPlanesViewingMode(True)
         
                 #    the current image node being displayed in an alternate view may have been 
                 #    repeated in different orientations in the quiz file
@@ -1160,8 +1188,8 @@ class CoreWidgets:
             
             sFillOrOutline, iOpacitySliderValue, fOpacity = self.GetContourDisplayState()
             self.oSession.AdjustToCurrentQuestionSet()
-            self.oSession.bNPlanesViewingMode = False
-            self.oSession.sViewingMode = "Default"
+            self.SetNPlanesViewingMode(False)
+            self.SetViewingMode( "Default" )
             self.oSession.loCurrentQuizImageViewNodes = []
             self.oSession.DisplayQuizLayout()
             self.oSession.DisplayImageLayout('ResetView')
@@ -1215,27 +1243,27 @@ class CoreWidgets:
         
         dictViewNodes = {"Red":"vtkMRMLSliceNodeRed", "Green":"vtkMRMLSliceNodeGreen", "Yellow":"vtkMRMLSliceNodeYellow", "Slice4":"vtkMRMLSliceNodeSlice4"}
 
-
         slMarkupNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsLineNode')
         
         for slMarkupNode in slMarkupNodes:
             slMarkupDisplayNode = slMarkupNode.GetDisplayNode()
+            
             lViewNodes = []
             
-            if self.qChkBoxViewOnAllDisplays.isChecked():
+            if self.GetViewLinesOnAllDisplays():
                 slMarkupDisplayNode.SetViewNodeIDs(list(dictViewNodes.values()))
                 
             else:
                 slAssociatedNodeID = slMarkupNode.GetNthMarkupAssociatedNodeID(0)
                 
-                
                 for oViewNode in self.oImageView.GetImageViewList():
 
                     if oViewNode.slNode.GetID() == slAssociatedNodeID:                
                         slViewNode = oViewNode.sDestination
+
                         lViewNodes.append(dictViewNodes[slViewNode])
                         slMarkupDisplayNode.SetViewNodeIDs(lViewNodes)
-
+                        
         slMarkupNodes.UnRegister(slicer.mrmlScene)    #cleanup memory
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1245,7 +1273,7 @@ class CoreWidgets:
         
         for slNode in slMarkupNodes:
             slDisplayNode = slNode.GetDisplayNode()
-            if self.qChkBoxMeasurementVisibility.isChecked():
+            if self.GetMeasurementVisibility():
                 slDisplayNode.PropertiesLabelVisibilityOn()
             else:
                 slDisplayNode.PropertiesLabelVisibilityOff()
@@ -1327,7 +1355,7 @@ class CoreWidgets:
         
            
         self.DisableButtons()    
-        if self.oSession.sViewingMode != 'Default':
+        if self.GetViewingMode() != 'Default':
             self.onResetViewClicked(sCaller)
 
         bChangeXmlPageIndex = True
