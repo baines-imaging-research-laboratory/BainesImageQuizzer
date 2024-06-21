@@ -14,6 +14,8 @@ from Utilities.UtilsIOXml import *
 from Utilities.UtilsFilesIO import *
 from Utilities.UtilsMsgs import *
 
+from ImageView import *
+
 from PythonQt import QtCore, QtGui
 
 import QuizzerEditorLib
@@ -216,7 +218,7 @@ class CoreWidgets:
         if len(self.GetNPlanesView()) > 1:
             sSelectedOrientation = 'All'   # all 3 planes was selected
         else:
-            sSelectedOrientation = self.GetNPlanesViewOrientation(0)  # 1 Plane in a specific orientation
+            sSelectedOrientation = self.GetNPlanesViewOrientation(0)  # single Plane in a specific orientation
         
         # get selected image name from combo box
         sImageName = self.qComboImageList.currentText
@@ -259,7 +261,7 @@ class CoreWidgets:
         return self.qComboImageList.count
     
     #----------
-    def SetNPlanesView(self):
+    def SetupNPlanesView(self):
         
         self.SetViewingMode(self.qComboNPlanesList.currentText)
 
@@ -1146,7 +1148,7 @@ class CoreWidgets:
             if self.GetNPlanesComboBoxCount() > 0:
                 self.oSession.CaptureAndSaveImageState()
                 
-                self.SetNPlanesView()
+                self.SetupNPlanesView()
                 oImageNodeOverride, iQuizImageIndex = self.GetNPlanesImageComboBoxSelection()
                 self.oSession.liImageDisplayOrder = self.oSession.ReorderImageIndexToEnd(iQuizImageIndex)
                 self.oImageView.AssignNPlanes(oImageNodeOverride, self.llsNPlanesOrientDest)
@@ -1156,6 +1158,9 @@ class CoreWidgets:
                 #    repeated in different orientations in the quiz file
                 self.oSession.loCurrentQuizImageViewNodes = self.oCustomWidgets.GetMatchingQuizImageNodes(oImageNodeOverride.sImagePath, self.oImageView)
                 self.oSession.ApplySavedImageState()
+                
+                self.SetViewLinesOnAllDisplays(False)
+                
             else:
                 sMsg = 'No images have been loaded to display in an alternate viewing mode.'
                 UtilsMsgs.DisplayWarning(sMsg)
@@ -1248,6 +1253,11 @@ class CoreWidgets:
         for slMarkupNode in slMarkupNodes:
             slMarkupDisplayNode = slMarkupNode.GetDisplayNode()
             
+            # Slicer doesn't recognize [] to initialize and won't turn off
+            #    if not associated with the background node 
+            slMarkupDisplayNode.SetViewNodeIDs(['DummyView']) 
+            
+            
             lViewNodes = []
             
             if self.GetViewLinesOnAllDisplays():
@@ -1255,14 +1265,17 @@ class CoreWidgets:
                 
             else:
                 slAssociatedNodeID = slMarkupNode.GetNthMarkupAssociatedNodeID(0)
+
+                lLayoutViewNodes = slicer.app.layoutManager().layoutLogic().GetViewNodes()
+                for slLayoutViewNode in lLayoutViewNodes:
+                    
+                    oWidgetItem = WidgetItem(slLayoutViewNode.GetName())
+                    if oWidgetItem.slCompositeNode != None:
+                        if oWidgetItem.slCompositeNode.GetBackgroundVolumeID() == slAssociatedNodeID:
+    
+                            lViewNodes.append(dictViewNodes[slLayoutViewNode.GetName()])
+                            slMarkupDisplayNode.SetViewNodeIDs(lViewNodes)
                 
-                for oViewNode in self.oImageView.GetImageViewList():
-
-                    if oViewNode.slNode.GetID() == slAssociatedNodeID:                
-                        slViewNode = oViewNode.sDestination
-
-                        lViewNodes.append(dictViewNodes[slViewNode])
-                        slMarkupDisplayNode.SetViewNodeIDs(lViewNodes)
                         
         slMarkupNodes.UnRegister(slicer.mrmlScene)    #cleanup memory
 

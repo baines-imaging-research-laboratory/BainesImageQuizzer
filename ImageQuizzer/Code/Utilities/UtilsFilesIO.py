@@ -754,15 +754,13 @@ class UtilsFilesIO:
                 xLabelMapPathElement = UtilsCustomXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
                 slLabelMapNode = None # initialize
 
-                # if there were no label map paths stored with the image, and xml attribute has DisplayLabelMapID 
+                # if the image has the xml attribute DisplayLabelMapID 
                 #    to use a previous label map, check previous pages for the first matching image
-                if (xLabelMapPathElement == None and bUsePreviousLabelMap == True)\
-                    or (bUsePreviousLabelMap == True and oImageNode.bMergeLabelMaps):
+                if (bUsePreviousLabelMap == True):
 
                     # get image element from history that holds the same label map id; 
                     xHistoricalImageElement = None  # initialize
                     xHistoricalLabelMapMatch = None
-#                     xHistoricalImageElement, xHistoricalPageElement = UtilsIOXml.GetXmlPageAndChildFromAttributeHistory(oSession.GetCurrentPageIndex(),'Image','LabelMapID',sLabelMapIDLink)
                     xHistoricalImageElement, xHistoricalPageElement = UtilsCustomXml.GetXmlPageAndChildFromAttributeHistory(\
                                                                                     oSession.GetCurrentNavigationIndex(), \
                                                                                     oSession.GetNavigationList(),\
@@ -847,6 +845,10 @@ class UtilsFilesIO:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @staticmethod
     def CopyAndStoreLabelMapFromHistory( oSession, xHistoricalLabelMapElement, oImageNode):
+        ''' given an element holding the path for a label map, the file is copied into the
+            results folder for the current page. If a label map file of that name already 
+            exists in this folder, it will be overwritten
+        '''
 
         # define source for copy
         sStoredRelativePathForSource = UtilsIOXml.GetDataInNode(xHistoricalLabelMapElement)
@@ -862,11 +864,8 @@ class UtilsFilesIO:
         # define destination path
         sLabelMapPathForDest = os.path.join(sLabelMapDirForDest, sLabelMapFilenameWithExtForDest)
 
-        # check if exists
-        if not os.path.exists(sLabelMapPathForDest):
-        
-            # copy source to dest
-            shutil.copy(sAbsolutePathForSource, sLabelMapPathForDest)
+        # copy source to dest
+        shutil.copy(sAbsolutePathForSource, sLabelMapPathForDest)
 
         # update xml storing the path to the label map file with the image element
         #    for display on the next page
@@ -882,6 +881,21 @@ class UtilsFilesIO:
             From these pages, collect the LabelMapPath values for the Images with the matching LabelMapID
             and merge these.
             The merged label map is then saved to disk and the current ImageElement is updated with a new LabelMapPath element. 
+
+
+            Merging methodology:
+                initialize combined map (C) with the first image (A)
+                For each labelmap (B), take the difference (Diff = B - C)
+                    -In Diff, Any existing LM pixels from C will be marked as the -ve value of its label
+                    - Any new LM pixels from B will be marked with its LM value
+                    - Any overlap, will now have an offset value 
+                        - example label 5 (from B) overlapped label 3 (in C) - offset = 2
+                        - Example, label 2 (from B) overlapped label 5  (in C) - offset=-3
+    
+                Create offset array --> Reset all -ve pixels to 0 (they won't be added into the combined LM array)
+                    - (-ve values from overlap means that it was a smaller label map value and is to be 'ignored', allowing the higher value (already in C) to take priority)
+                Update the combined array C)
+    
         '''
 
         try:        
@@ -934,22 +948,6 @@ class UtilsFilesIO:
                 
     
             # merge label maps
-    
-            ''' Merging methodology:
-                initialize combined map (C) with the first image (A)
-                For each labelmap (B), take the difference (Diff = B - C)
-                    -In Diff, Any existing LM pixels from C will be marked as the -ve value of its label
-                    - Any new LM pixels from B will be marked with its LM value
-                    - Any overlap, will now have an offset value 
-                        - example label 5 (from B) overlapped label 3 (in C) - offset = 2
-                        - Example, label 2 (from B) overlapped label 5  (in C) - offset=-3
-    
-                Create offset array --> Reset all -ve pixels to 0 (they won't be added into the combined LM array)
-                    - (-ve values from overlap means that it was a smaller label map value and is to be 'ignored', allowing the higher value (already in C) to take priority)
-                Update the combined array C)
-    
-            '''
-    
             dictProperties = {'LabelMap' : True}
             if len(lsLabelMapFullPaths) > 0:
 

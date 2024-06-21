@@ -383,7 +383,6 @@ class Session:
             UtilsFilesIO.LoadSavedLabelMaps(self)
             UtilsFilesIO.LoadSavedMarkupLines(self)
 
-            self.oCoreWidgets.ResetExtraToolsDefaults()
     
             # assign each image node and its label map (if applicable) to the viewing widget
             self.oImageView.AssignNodesToView()
@@ -394,6 +393,8 @@ class Session:
             self.oCoreWidgets.SetNPlanesComboBoxImageNames()
     
             self.ApplySavedImageState()
+
+            self.oCoreWidgets.ResetExtraToolsDefaults()
         
             self.oCoreWidgets.EnableTabBar(True)
         except:
