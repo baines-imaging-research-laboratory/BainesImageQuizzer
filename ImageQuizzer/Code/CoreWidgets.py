@@ -406,18 +406,6 @@ class CoreWidgets:
     #----------
 
     #----------
-    def EnableMarkupLinesTF(self, bTF):
-        
-        self.btnAddMarkupsLine.enabled = bTF
-        self.btnClearLines.enabled = bTF
-        if bTF:
-            self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
-            self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
-        else:
-            self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: white }")
-            self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white }")
-
-    #----------
     def SetMeasurementVisibility(self, bTF):
         self.qChkBoxMeasurementVisibility.setChecked(bTF)
         self.onMeasurementVisibilityStateChanged()
@@ -435,6 +423,18 @@ class CoreWidgets:
     def GetViewLinesOnAllDisplays(self):
         return self.qChkBoxViewOnAllDisplays.isChecked()
         
+    #----------
+    def EnableMarkupLinesTF(self, bTF):
+        
+        self.btnAddMarkupsLine.enabled = bTF
+        self.btnClearLines.enabled = bTF
+        if bTF:
+            self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+            self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: black }")
+        else:
+            self.btnAddMarkupsLine.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: white }")
+            self.btnClearLines.setStyleSheet("QPushButton{ background-color: rgb(211,211,211); color: white }")
+
 
     #-------------------------------------------
     #        Functions
@@ -442,6 +442,8 @@ class CoreWidgets:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupWidgets(self, slicerMainLayout):
+        ''' Function to set up widgets that interact with Slicer
+        '''
 
         self.oSlicerInterface = SlicerInterface()
         self.oSlicerInterface.CreateLeftLayoutAndWidget()
@@ -456,6 +458,8 @@ class CoreWidgets:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupButtons(self):
+        ''' Function to set up the buttons at the top of each quiz
+        '''
         
         qProgressLabel = qt.QLabel('Progress ')
         self.progress = qt.QProgressBar()
@@ -523,6 +527,8 @@ class CoreWidgets:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetupExtraToolsButtons(self):
+        ''' Function to create the widgets on the Extra Tools tab
+        '''
         
         # create buttons
 
@@ -711,6 +717,13 @@ class CoreWidgets:
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def EnableButtons(self):
+        ''' Function to display /hide or enable/disable the buttons depending
+            on where the user is in the quiz - changing the text of the button
+            when the last question set of the quiz has been reached.
+            
+            The repeat button has special conditions for enabling in case there
+            are multiple question sets and in case the user used a 'Previous' or 'GoToBookmark' button.
+        '''
         
         
         # for Repeat button
@@ -894,7 +907,6 @@ class CoreWidgets:
                 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onPreviousButtonClicked(self):
-        
             
         sMsg = ''
         try:
@@ -1112,6 +1124,8 @@ class CoreWidgets:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onWindowLevelClicked(self):
+        ''' activate Slicer's Window/Level tool
+        '''
         
         if self.btnWindowLevel.isChecked():
             self.btnWindowLevel.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
@@ -1221,8 +1235,9 @@ class CoreWidgets:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onContourDisplayStateChanged(self):
-        # when user changes a contour visibility widget setting in the extra tools tab,
-        #    adjust the image view property and turn on fill/outline for label maps and segmentations
+        ''' when user changes a contour visibility widget setting in the extra tools tab,
+            adjust the image view property and turn on fill/outline for label maps and segmentations
+        '''
         
         if self.oImageView != None:
             if self.qChkBoxFillOrOutline.isChecked():
@@ -1253,8 +1268,9 @@ class CoreWidgets:
         for slMarkupNode in slMarkupNodes:
             slMarkupDisplayNode = slMarkupNode.GetDisplayNode()
             
-            # Slicer doesn't recognize [] to initialize and won't turn off
-            #    if not associated with the background node 
+            # Slicer doesn't recognize [] to initialize
+            #    Without a dummy view node to initialize it, a markup line won't be turned off
+            #    (if not associated with the background node) 
             slMarkupDisplayNode.SetViewNodeIDs(['DummyView']) 
             
             
@@ -1281,7 +1297,8 @@ class CoreWidgets:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onMeasurementVisibilityStateChanged(self):
-        # display line measurements on/off
+        ''' Function to turn on/off the markup lines measurements
+        '''
         slMarkupNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLMarkupsLineNode')
         
         for slNode in slMarkupNodes:

@@ -1,6 +1,6 @@
 import os, sys
 # import warnings
-# import vtk, qt, ctk, slicer
+import vtk, qt, ctk, slicer
 
 import xml.dom.minidom
 import shutil
@@ -9,11 +9,11 @@ import re
 from datetime import datetime
 
 
-
 try:
     from lxml import etree
 
     print("running with lxml.etree")
+
 except ImportError:
     try:
         # Python 2.5
@@ -40,6 +40,19 @@ except ImportError:
                     print("running with ElementTree")
                 except ImportError:
                     print("Failed to import ElementTree from any known place")
+
+try:
+    slicer.util.pip_install('xmlschema')
+    bXmlSchemaLoaded = True
+    import xmlschema
+    from xmlschema import *
+
+    print("UtilsIOXml::Loaded xmlschema")
+except:
+    #xmlschema did not install - assume quiz was validated externally 
+    print("\n>>>>>>>>>>>>>>>>>>>\nUTILSIOXML::pip install failed for xmlschema.")
+    print("Please validate externally using Notepad++ against ImageQuizzer.xsd schema\n>>>>>>>>>>>>>>>>>>>\n")
+    bXmlSchemaLoaded = False
 
 
 ##########################################################################
@@ -123,7 +136,28 @@ class UtilsIOXml:
 
         return bSuccess
 
-    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    @staticmethod
+    def ValidateAgainstSchema(sXmlSchemaPath):
+        ''' Function to validate quiz against the schema .
+            This is run only if the pip install for xmlschema was loaded successfully
+        '''
+        
+        sMsg = ''
+            
+        if bXmlSchemaLoaded:
+            
+            if os.path.exists(sXmlSchemaPath):
+                xSchema = xmlschema.XMLSchema(sXmlSchemaPath)
+                
+                bValid = xSchema.is_valid(UtilsIOXml._xTree)
+                if not bValid:
+                    sMsg = '\nQuiz not valid according to schema. \nYou can use Notepad++ with XMLPlugin for more details on how to fix XML quiz file.'
+                    
+            else:
+                sMsg = '\nCannot validate against XML Schema as file does not exist : ' + sXmlSchemaPath
+                        
+        return sMsg
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @staticmethod
     def GetElementNodeName( xNode):

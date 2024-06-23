@@ -45,7 +45,8 @@ class UtilsFilesIO:
     _sQuizDir = ''                 # folder - holds quiz files to copy to user
     _sQuizPath = ''                # full path (dir/file) of quiz to copy to user
     _sQuizFilename = ''            # quiz filename only (no dir)
-
+    _sXmlSchemaFilePath = ''       # path to schema file for validation
+    
     _sDataParentDir = ''           # parent folder to images
     
     _sUsersParentDir = ''          # folder - parent dir to all user folders
@@ -122,6 +123,11 @@ class UtilsFilesIO:
     def SetDICOMDatabaseDir( sInputDir):
         UtilsFilesIO._sDICOMDatabaseDir = sInputDir
     
+    #----------
+    @staticmethod
+    def SetSchemaFilePath(sInputFile):
+        UtilsFilesIO._sXmlSchemaFilePath = os.path.join(UtilsFilesIO.GetXmlQuizDir(),sInputFile)
+        
  
     #----------
     #----------
@@ -186,6 +192,11 @@ class UtilsFilesIO:
     @staticmethod
     def GetXmlQuizDir():
         return UtilsFilesIO._sQuizDir
+    
+    #----------
+    @staticmethod
+    def GetSchemaFilePath():
+        return UtilsFilesIO._sXmlSchemaFilePath
     
     #----------
     @staticmethod
@@ -379,6 +390,7 @@ class UtilsFilesIO:
         UtilsFilesIO.SetScriptedModulesPath(sModuleName)
         UtilsFilesIO._sQuizDir = os.path.join(UtilsFilesIO.GetScriptedModulesPath(),'..', 'Inputs','MasterQuiz')
         UtilsFilesIO.SetResourcesROIColorFilesDir()
+        UtilsFilesIO.SetSchemaFilePath('ImageQuizzer.xsd')
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @staticmethod
