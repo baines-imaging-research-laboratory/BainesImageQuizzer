@@ -2,9 +2,17 @@ import os, sys
 import vtk, qt, ctk, slicer
 import traceback
 
+import Utilities.UtilsMsgs as UtilsMsgs
+import Utilities.UtilsFilesIO as UtilsFilesIO
+import Utilities.UtilsEmail as UtilsEmail
+import Utilities.UtilsIOXml as UtilsIOXml
+import Utilities.UtilsCustomXml as UtilsCustomXml
+
+from Utilities.UtilsCustomXml import *
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
+from Utilities.UtilsEmail import *
 
 
 
@@ -21,20 +29,10 @@ class UtilsValidate:
     """
 
     
-    def __init__(self, oFilesIO, parent=None):
-        self.parent = parent
 
-
-        self.oUtilsMsgs = UtilsMsgs()
-        self.oFilesIO = oFilesIO
-        self.oIOXml = self.oFilesIO.oIOXml
-
-        self._liPageGroups = []
-        self._liUniquePageGroups = []
-        
-        self.setupTestEnvironment()
-
-
+    _liPageGroups = []
+    _liUniquePageGroups = []
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     #-------------------------------------------
@@ -44,12 +42,13 @@ class UtilsValidate:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
         
-    def setupTestEnvironment(self):
+    @staticmethod
+    def setupTestEnvironment():
         # check if function is being called from unit testing
         if "testing" in os.environ:
-            self.sTestMode = os.environ.get("testing")
+            UtilsValidate.sTestMode = os.environ.get("testing")
         else:
-            self.sTestMode = "0"
+            UtilsValidate.sTestMode = "0"
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -59,29 +58,35 @@ class UtilsValidate:
     #-------------------------------------------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    
+
+   
     #----------
     #----------Page Groups
     #----------
-    def SetListPageGroupNumbers(self, liNumbers):
-        self._liPageGroups = liNumbers
+    @staticmethod
+    def SetListPageGroupNumbers( liNumbers):
+        UtilsValidate._liPageGroups = liNumbers
         
     #----------
-    def GetListPageGroupNumbers(self):
-        return self._liPageGroups
+    @staticmethod
+    def GetListPageGroupNumbers():
+        return UtilsValidate._liPageGroups
     
     #----------
-    def SetListUniquePageGroups(self, liNumbers):
-        self._liUniquePageGroups = liNumbers
+    @staticmethod
+    def SetListUniquePageGroups( liNumbers):
+        UtilsValidate._liUniquePageGroups = liNumbers
         
     #----------
-    def GetListUniquePageGroups(self):
-        return self._liUniquePageGroups
+    @staticmethod
+    def GetListUniquePageGroups():
+        return UtilsValidate._liUniquePageGroups
     
     #----------
-    def ClearPageGroupLists(self):
-        self._liPageGroups = []
-        self._liUniquePageGroups = []
+    @staticmethod
+    def ClearPageGroupLists():
+        UtilsValidate._liPageGroups = []
+        UtilsValidate._liUniquePageGroups = []
     
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -92,7 +97,8 @@ class UtilsValidate:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetUniqueNumbers(self, liNumbers):
+    @staticmethod
+    def GetUniqueNumbers( liNumbers):
         ''' Utility to return the unique numbers from a given list of numbers.
         '''
 
@@ -111,118 +117,126 @@ class UtilsValidate:
     #-------------------------------------------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateQuiz(self):
+    @staticmethod
+    def ValidateQuiz():
         '''
             a function to check for specific validation requirements for the quiz
         '''
         sMsg = ''
         bSuccess = True
-        
+        UtilsValidate.setupTestEnvironment()
         
         try:
             # open requested quiz xml 
-            bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetXmlQuizPath(),'Session')
-            self.l4iNavList = self.oIOXml.GetNavigationListBase(xRootNode)
+            bSuccess = UtilsIOXml.OpenXml(UtilsFilesIO.GetXmlQuizPath(),'Session')
+            xRootNode = UtilsIOXml.GetRootNode()
+            UtilsValidate.l4iNavList = UtilsCustomXml.GetQuizLayoutForNavigationList(xRootNode)
+
+            # sValidationMsg = UtilsIOXml.ValidateAgainstSchema(UtilsFilesIO.GetSchemaFilePath())
+            # sMsg = sMsg + sValidationMsg
 
             # >>>>>>>>>>>>>>>
             # check options at the Session level
-            sContourVisibility = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'ContourVisibility')
+            sContourVisibility = UtilsIOXml.GetValueOfNodeAttribute(xRootNode, 'ContourVisibility')
             if not (sContourVisibility == 'Fill' or sContourVisibility == 'Outline' or sContourVisibility == ''):
                 sValidationMsg = "\nContourVisibility value must be 'Fill' or 'Outline'. See attribute in Session"
                 sMsg = sMsg + sValidationMsg
                 
-            sEmailResultsTo = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'EmailResultsTo')
+            sEmailResultsTo = UtilsIOXml.GetValueOfNodeAttribute(xRootNode, 'EmailResultsTo')
             if sEmailResultsTo != '':
                 # ensure that the smtp config file exists
-                sSmtpConfigFile = os.path.join(self.oFilesIO.GetConfigDir(), 'smtp_config.txt')
+                sSmtpConfigFile = os.path.join(UtilsFilesIO.GetConfigDir(), 'smtp_config.txt')
                 if not (os.path.exists(sSmtpConfigFile)) :
                     sMsg = sMsg + '\nMissing smtp configuration file for request to email quiz results : ' + sSmtpConfigFile
+                UtilsEmail.SetupEmailResults(sEmailResultsTo)
             
             
-            sValidationMsg = self.ValidateROIColorFile()
+            sValidationMsg = UtilsValidate.ValidateROIColorFile()
             sMsg = sMsg + sValidationMsg
             
             
             # check matches of LabelMapID with DisplayLabelMapID
-            sValidationMsg = self.ValidateDisplayLabelMapID()
+            sValidationMsg = UtilsValidate.ValidateDisplayLabelMapID()
             sMsg = sMsg + sValidationMsg
             
             # check matches of BookmarkID with request 'GoToBookmark' attribute
-            sValidationMsg = self.ValidateGoToBookmarkRequest()
+            sValidationMsg = UtilsValidate.ValidateGoToBookmarkRequest()
             sMsg = sMsg + sValidationMsg
             
             # >>>>>>>>>>>>>>>
-            lxPageElements = self.oIOXml.GetChildren(xRootNode, 'Page')
+            lxPageElements = UtilsIOXml.GetChildren(xRootNode, 'Page')
             
             iPageNum = 0
             for xPage in lxPageElements:
                 iPageNum= iPageNum + 1
 
-                sValidationMsg = self.ValidateRequiredAttribute(xPage, 'ID', str(iPageNum))
+                sValidationMsg = UtilsValidate.ValidateRequiredAttribute(xPage, 'ID', str(iPageNum))
                 sMsg = sMsg + sValidationMsg
                 
-                sPageID = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ID')
+                sPageID = UtilsIOXml.GetValueOfNodeAttribute(xPage, 'ID')
                 
                 # for any page, make sure there is matching Images Volume to Segmentation or Volume to LabelMap for each destination
-                sValidationMsg = self.ValidateImageToSegmentationMatch(xPage, str(iPageNum))
+                sValidationMsg = UtilsValidate.ValidateImageToSegmentationMatch(xPage, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
 
-                sValidationMsg = self.ValidateNoSpecialCharacters(xPage, str(iPageNum))
+                sValidationMsg = UtilsValidate.ValidateNoSpecialCharacters(xPage, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
                 
                 # Image element validations
-                lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
+                lxImageElements = UtilsIOXml.GetChildren(xPage, 'Image')
                 for xImage in lxImageElements:
-                    sImageID = self.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
+                    sImageID = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'ID')
     
                     # Page ID + Image ID creates the node name for the image that is loaded (in ImageView>ViewNodeBase)
                     sNodeNameID = sPageID + '_' + sImageID
                     sPageReference = str(iPageNum) + ' ' + sNodeNameID
 
                     # >>>>>>>>>>>>>>> Attributes
-                    sValidationMsg = self.ValidateRequiredAttribute(xImage, 'ID', sPageReference)
+                    sValidationMsg = UtilsValidate.ValidateRequiredAttribute(xImage, 'ID', sPageReference)
                     sMsg = sMsg + sValidationMsg
                     
-                    sValidationMsg = self.ValidateRequiredAttribute(xImage, 'Type', sPageReference)
+                    sValidationMsg = UtilsValidate.ValidateRequiredAttribute(xImage, 'Type', sPageReference)
                     sMsg = sMsg + sValidationMsg
                     
-                    sValidationMsg = self.ValidateAttributeOptions(xImage, 'Type', sPageReference, self.oIOXml.lValidImageTypes)
+                    sValidationMsg = UtilsValidate.ValidateAttributeOptions(xImage, 'Type', sPageReference, UtilsCustomXml.lValidImageTypes)
                     sMsg = sMsg + sValidationMsg
                     
                     # >>>>>>>>>>>>>>> Elements
-                    sValidationMsg = self.ValidateRequiredElement(xImage, 'Path', sPageReference)
+                    sValidationMsg = UtilsValidate.ValidateRequiredElement(xImage, 'Path', sPageReference)
                     sMsg = sMsg + sValidationMsg
                     
-                    sValidationMsg = self.ValidateElementOptions(xImage, 'Layer', sPageReference, self.oIOXml.lValidLayers)
+                    sValidationMsg = UtilsValidate.ValidateElementOptions(xImage, 'Layer', sPageReference, UtilsCustomXml.lValidLayers)
                     sMsg = sMsg + sValidationMsg
                     
-                    sValidationMsg = self.ValidateElementOptions(xImage, 'DefaultDestination', sPageReference, self.oIOXml.lValidSliceWidgets)
+                    sValidationMsg = UtilsValidate.ValidateElementOptions(xImage, 'DefaultDestination', sPageReference, UtilsCustomXml.lValidSliceWidgets)
                     sMsg = sMsg + sValidationMsg
                     
-                    sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
+                    sImageType = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'Type')
                     if not (sImageType == 'Segmentation' or sImageType == 'RTStruct' or sImageType == 'LabelMap'):
-                        sValidationMsg = self.ValidateElementOptions(xImage, 'DefaultOrientation', sPageReference, self.oIOXml.lValidOrientations)
+                        sValidationMsg = UtilsValidate.ValidateElementOptions(xImage, 'DefaultOrientation', sPageReference, UtilsCustomXml.lValidOrientations)
                         sMsg = sMsg + sValidationMsg
                         
-                    sPanOrigin = self.oIOXml.GetValueOfNodeAttribute(xImage, 'PanOrigin')
+                    sPanOrigin = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'PanOrigin')
                     if sPanOrigin != '':
-                        sValidationMsg = self.ValidateListOfNumbers(sPanOrigin, 'Float', 3, 'PanOrigin', sPageReference)
+                        sValidationMsg = UtilsValidate.ValidateListOfNumbers(sPanOrigin, 'Float', 3, 'PanOrigin', sPageReference)
                         sMsg = sMsg + sValidationMsg
                     
                     # >>>>>>>>>>>>>>>
-                    sValidationMsg = self.ValidateOpacity(xImage, iPageNum)
+                    sValidationMsg = UtilsValidate.ValidateOpacity(xImage, iPageNum)
                     sMsg = sMsg + sValidationMsg
 
                     # >>>>>>>>>>>>>>>
                     # check merging of label maps have a matching LabelMapID Image and Loop in Page
-                    sValidationMsg = self.ValidateMergeLabelMaps(xImage, xPage, iPageNum)
+                    sValidationMsg = UtilsValidate.ValidateMergeLabelMaps(xImage, xPage, iPageNum)
                     sMsg = sMsg + sValidationMsg
-
-
                             
                     # >>>>>>>>>>>>>>>
                     # Validate ROI elements if the image is RTStruct or Segmentation
-                    sValidationMsg = self.ValidateROIsElements(xImage, sPageReference)
+                    sValidationMsg = UtilsValidate.ValidateROIsElements(xImage, sPageReference)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    # >>>>>>>>>>>>>>>
+                    sValidationMsg = UtilsValidate.ValidateVectorImages(xImage, sPageReference)
                     sMsg = sMsg + sValidationMsg
                     
                     # >>>>>>>>>>>>>>>
@@ -230,57 +244,57 @@ class UtilsValidate:
 
                 # >>>>>>>>>>>>>>>
                 # validate attributes 'SegmentRequired' and 'SegmentRequiredOnAnyImage'
-                sValidationMsg = self.ValidateSegmentRequiredSettings(xPage, iPageNum)
+                sValidationMsg = UtilsValidate.ValidateSegmentRequiredSettings(xPage, iPageNum)
                 sMsg = sMsg + sValidationMsg
                             
                 # >>>>>>>>>>>>>>>
                 # validate attributes 'SegmentRequired' and 'MinMarkupLinesRequiredOnAnyImage'
-                sValidationMsg = self.ValidateMarkupLinesRequiredSettings(xPage, str(iPageNum))
+                sValidationMsg = UtilsValidate.ValidateMarkupLinesRequiredSettings(xPage, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
                             
                 # >>>>>>>>>>>>>>>
                 # Slice4 assignments and TwoOverTwo layout
-                sValidationMsg = self.ValidateSlice4Layout(xPage, str(iPageNum))
+                sValidationMsg = UtilsValidate.ValidateSlice4Layout(xPage, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
                 
                 # >>>>>>>>>>>>>>>
                 # validate button type question scripts and dependencies
-                sValidationMsg = self.ValidateButtonTypeQuestions(xPage, str(iPageNum))
+                sValidationMsg = UtilsValidate.ValidateButtonTypeQuestions(xPage, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
 
                 # validate file exists for picture type questions
-                sValidationMsg = self.ValidatePictureTypeQuestion(xPage, str(iPageNum))
+                sValidationMsg = UtilsValidate.ValidatePictureTypeQuestion(xPage, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
 
                 # >>>>>>>>>>>>>>>
-                sValidationMsg = self.ValidateImageOnRed( xPage, sPageID, str(iPageNum))
+                sValidationMsg = UtilsValidate.ValidateImageOnRed( xPage, sPageID, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
 
                 # >>>>>>>>>>>>>>>
                 # Test associations between path and PageID_ImageID (node name)
-                sValidationMsg = self.ValidatePathWithNodeNameID(xPage, sPageID, str(iPageNum) )
+                sValidationMsg = UtilsValidate.ValidatePathWithNodeNameID(xPage, sPageID, str(iPageNum) )
                 sMsg = sMsg + sValidationMsg
 
-                sValidationMsg = self.ValidateEstimatedPathLengths(xPage, str(iPageNum))
+                sValidationMsg = UtilsValidate.ValidateEstimatedPathLengths(xPage, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
 
                   
             # >>>>>>>>>>>>>>>
             # validate that each page has a PageGroup attribute if the session requires page group randomization
             #    a quiz that has no PageGroup attributes will be assigned the default numbers during the session setup
-            sRandomizeRequested = self.oIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
+            sRandomizeRequested = UtilsIOXml.GetValueOfNodeAttribute(xRootNode, 'RandomizePageGroups')
             if sRandomizeRequested == "Y":
-                sValidationMsg = self.ValidatePageGroupNumbers(xRootNode)
+                sValidationMsg = UtilsValidate.ValidatePageGroupNumbers(xRootNode)
                 sMsg = sMsg + sValidationMsg
 
             # check that the ROI Color file exists if requested
-            sROIColorFile = self.oIOXml.GetValueOfNodeAttribute(xRootNode,'ROIColorFile')
+            sROIColorFile = UtilsIOXml.GetValueOfNodeAttribute(xRootNode,'ROIColorFile')
             if sROIColorFile.endswith('.txt'):
                 sMsg = sMsg + '\nRemove .txt extenstion from ROIColorFile name.'
             if sROIColorFile == '':
-                sROIColorFilePath = self.oFilesIO.GetDefaultROIColorFilePath()
+                sROIColorFilePath = UtilsFilesIO.GetDefaultROIColorFilePath()
             else:
-                sROIColorFilePath = self.oFilesIO.GetCustomROIColorTablePath(sROIColorFile)
+                sROIColorFilePath = UtilsFilesIO.GetCustomROIColorTablePath(sROIColorFile)
             if not os.path.isfile(sROIColorFilePath):
                 sMsg = sMsg + '\nCustom ROIColorFile does not exist in the directory with the quiz.' + sROIColorFilePath
                 
@@ -293,17 +307,18 @@ class UtilsValidate:
                 raise
         
         except ValueError:
-            if self.sTestMode == "0":
+            if UtilsValidate.sTestMode == "0":
                 raise   # rethrow for live run
             else:
                 raise ('Value Error: %s' % sMsg)
             
         except:
             bSuccess = False
-            self.oUtilsMsgs.DisplayWarning('Quiz Validation Errors \n' + sMsg)
+            UtilsMsgs.DisplayWarning('Quiz Validation Errors \n' + sMsg)
+
             # after warning, reset the message for calling function to display error and exit
             tb = traceback.format_exc()
-            self.oUtilsMsgs.DisplayWarning('Quiz Validation Errors \n' + sMsg)
+            UtilsMsgs.DisplayWarning('Quiz Validation Errors \n' + sMsg)
             # after warning, reset the message for calling function to display error and exit
             sMsg = 'See Administrator: ERROR in quiz XML validation. --Exiting--'\
                    + "\n\n" + tb 
@@ -312,7 +327,8 @@ class UtilsValidate:
         return bSuccess, sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateRequiredElement(self, xParentElement, sElementName, sPageReference, bMultipleAllowed=False):
+    @staticmethod
+    def ValidateRequiredElement( xParentElement, sElementName, sPageReference, bMultipleAllowed=False):
         '''
             This function checks that there is exactly one child element for the input parent element if the flag for
             multiples has not been set to true.
@@ -323,7 +339,7 @@ class UtilsValidate:
         sMsgMultipleNotAllowed = 'More than one of this element was found. Only one is allowed.'
         sMsgEnding = '  See Page:' + sPageReference
         
-        lxChildren = self.oIOXml.GetChildren(xParentElement, sElementName)
+        lxChildren = UtilsIOXml.GetChildren(xParentElement, sElementName)
         if len(lxChildren) == 0:
             sMsg = sMsgPrefix +  sMsgMissing + sMsgEnding
         elif len(lxChildren) >1 and bMultipleAllowed == False:
@@ -332,7 +348,8 @@ class UtilsValidate:
         return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateElementOptions(self, xParentElement, sElementName, sPageReference, lValidOptions):
+    @staticmethod
+    def ValidateElementOptions( xParentElement, sElementName, sPageReference, lValidOptions):
         '''
             This function checks that the data stored in the xml element exists in the list of valid options.
         '''
@@ -341,10 +358,10 @@ class UtilsValidate:
         for sOption in lValidOptions:
             sValidOptions = sValidOptions + ', ' + sOption
         
-        lxChildren = self.oIOXml.GetChildren(xParentElement, sElementName)
+        lxChildren = UtilsIOXml.GetChildren(xParentElement, sElementName)
 
         for xChild in lxChildren:
-            sDataValue = self.oIOXml.GetDataInNode(xChild)
+            sDataValue = UtilsIOXml.GetDataInNode(xChild)
             if sDataValue not in lValidOptions:
                 sMsg = sMsg + '\nNot a valid option for ' + sElementName + ' : ' + sDataValue + '   See Page:' + sPageReference\
                         + '\n   .....Valid options are:' + sValidOptions
@@ -357,10 +374,11 @@ class UtilsValidate:
         return sMsg
                         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateRequiredAttribute(self, xParentElement, sAttributeName, sPageReference):
+    @staticmethod
+    def ValidateRequiredAttribute( xParentElement, sAttributeName, sPageReference):
         sMsg = ''
         sDataValue = ''
-        sDataValue = self.oIOXml.GetValueOfNodeAttribute(xParentElement, sAttributeName)
+        sDataValue = UtilsIOXml.GetValueOfNodeAttribute(xParentElement, sAttributeName)
         if sDataValue == '':
             sMsg = sMsg + '\nError for ' + sAttributeName + ' Attribute.   See Page:' + sPageReference\
                      + '\n   .....The required attribute is missing.'
@@ -368,14 +386,15 @@ class UtilsValidate:
         return sMsg
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateAttributeOptions(self, xParentElement, sAttributeName, sPageReference, lValidOptions):
+    @staticmethod
+    def ValidateAttributeOptions( xParentElement, sAttributeName, sPageReference, lValidOptions):
         ''' Given the list of valid options, the function checks that the
             data stored in the element exists in that list.
         '''
         
         sMsg = ''
         
-        sDataValue = self.oIOXml.GetValueOfNodeAttribute(xParentElement, sAttributeName)
+        sDataValue = UtilsIOXml.GetValueOfNodeAttribute(xParentElement, sAttributeName)
 
         # check for valid option if it exists
         if sDataValue != '':
@@ -389,12 +408,14 @@ class UtilsValidate:
         return sMsg
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateDatabaseLocation(self):
+    @staticmethod
+    def ValidateDatabaseLocation():
         ''' collect all file paths and ensure the file exists in the given database location
         '''
         
         # open requested quiz xml 
-        bSuccess, xRootNode = self.oIOXml.OpenXml(self.oFilesIO.GetXmlQuizPath(),'Session')
+        bSuccess = UtilsIOXml.OpenXml(UtilsFilesIO.GetXmlQuizPath(),'Session')
+        xRootNode = UtilsIOXml.GetRootNode()
         
         if bSuccess:
             
@@ -402,23 +423,23 @@ class UtilsValidate:
             sMissingFiles = ''
             sMissingFilesPrefix = 'Do you indicate the wrong Database directory? Check file path. \n\n'
             
-            lxPageNodes = self.oIOXml.GetChildren(xRootNode,'Page')
+            lxPageNodes = UtilsIOXml.GetChildren(xRootNode,'Page')
             iPageNum = 0
             for xPageNode in lxPageNodes:
                 iPageNum = iPageNum + 1
                 
-                lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
+                lxImageNodes = UtilsIOXml.GetChildren(xPageNode, 'Image')
                 for xImageNode in lxImageNodes:
                     
-                    lxPathNodes = self.oIOXml.GetChildren(xImageNode, 'Path')
+                    lxPathNodes = UtilsIOXml.GetChildren(xImageNode, 'Path')
                     for xPathNode in lxPathNodes:
-                        sPath = self.oIOXml.GetDataInNode(xPathNode)
+                        sPath = UtilsIOXml.GetDataInNode(xPathNode)
                         
                         if sPath in lsUniqueImagePaths:
                             pass
                         else:
                             lsUniqueImagePaths.append(sPath)
-                            sFullPath = os.path.join(self.oFilesIO.GetDataParentDir(), sPath)
+                            sFullPath = os.path.join(UtilsFilesIO.GetDataParentDir(), sPath)
                             if not os.path.exists(sFullPath):
                                 if sMissingFiles == '':
                                     sMissingFiles = sMissingFiles + sMissingFilesPrefix
@@ -428,7 +449,8 @@ class UtilsValidate:
         return sMissingFiles
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidatePageGroupNumbers(self, xRootNode):
+    @staticmethod
+    def ValidatePageGroupNumbers( xRootNode):
         ''' If the Session requires randomization of page groups, each page must have a PageGroup attribute
             If all page group numbers are equal, no randomization will be done.
             The page group values must be integer values.
@@ -436,24 +458,24 @@ class UtilsValidate:
         '''
         sMsg = ''
         sValidationMsg = ''
-        self.ClearPageGroupLists()
+        UtilsValidate.ClearPageGroupLists()
         
         # check that each page has a page group number and that it is an integer
-        lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
+        lxPages = UtilsIOXml.GetChildren(xRootNode,'Page')
         iPageNum = 0
         for xPage in lxPages:
             iPageNum = iPageNum + 1
             
             # required attribute for randomization
-            sValidationMsg = self.ValidateRequiredAttribute(xPage, 'PageGroup', str(iPageNum))
+            sValidationMsg = UtilsValidate.ValidateRequiredAttribute(xPage, 'PageGroup', str(iPageNum))
             if sValidationMsg != '':
                 sMsg = sMsg + sValidationMsg
-                if self.sTestMode == "1":
+                if UtilsValidate.sTestMode == "1":
                     raise Exception('Missing PageGroup attribute: %s' %sValidationMsg)
             
             try:
                 # test that the value is an integer
-                iPageGroup = int(self.oIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup'))
+                iPageGroup = int(UtilsIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup'))
                 # if iPageGroup == 0:
                 #     sValidationMsg = 'Page Group must be an integer > 0. See Page: ' + str(iPageNum)
                 #     sMsg = sMsg + sValidationMsg
@@ -461,54 +483,56 @@ class UtilsValidate:
             except ValueError:
                 sValidationMsg = '\nPage Group is not an integer. See Page: ' + str(iPageNum)
                 sMsg = sMsg + sValidationMsg
-                if self.sTestMode == "1":
+                if UtilsValidate.sTestMode == "1":
                     raise ValueError('Invalid PageGroup value: %s' % sValidationMsg)
             
             if sMsg == '':
-                self._liPageGroups.append(iPageGroup)
+                UtilsValidate._liPageGroups.append(iPageGroup)
 
         # check that number of different page group numbers (that are >0) must be >1
         # you can't randomize if all the pages are assigned to the same group
-        self.SetListUniquePageGroups(self.GetUniqueNumbers(self._liPageGroups))
+        UtilsValidate.SetListUniquePageGroups(UtilsValidate.GetUniqueNumbers(UtilsValidate._liPageGroups))
         
         liValidationPageGroups=[]
-        liValidationPageGroups = self._liUniquePageGroups[:]   # use a working copy of the list of unique page groups
+        liValidationPageGroups = UtilsValidate._liUniquePageGroups[:]   # use a working copy of the list of unique page groups
         if 0 in liValidationPageGroups:
             liValidationPageGroups.remove(0) # ignore page groups set to 0
         if len(liValidationPageGroups) <= 1: # <= in case of an empty list
             sValidationMsg = '\nNot enough unique PageGroups for requested randomization. \nYou must have more than one page group (other than 0)'
             sMsg = sMsg + sValidationMsg
-            if self.sTestMode == "1":
+            if UtilsValidate.sTestMode == "1":
                 raise Exception('Validating PageGroups Error: %s' % sValidationMsg)
             
         return sMsg
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateOpacity(self,xImage, iPageNum):
+    @staticmethod
+    def ValidateOpacity(xImage, iPageNum):
         sMsg = ''
         sErrorMsg = '\nOpacity must be a number between 0.0 and 1.0.   See Page: '
         
-        sOpacity = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Opacity')   # not required
+        sOpacity = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'Opacity')   # not required
         if sOpacity != '':
             try:
                 fOpacity = float(sOpacity)
                 if fOpacity < 0 or fOpacity > 1.0:
                     sMsg = sErrorMsg + str(iPageNum)
-                    if self.sTestMode == "1":
+                    if UtilsValidate.sTestMode == "1":
                         raise
             except ValueError:  # to catch : not a number
                 sMsg = sErrorMsg + str(iPageNum)
-                if self.sTestMode == "1":
+                if UtilsValidate.sTestMode == "1":
                     raise ValueError('Invalid Opacity value: %s' % sMsg)
             except:
                 sMsg = sErrorMsg + str(iPageNum)
-                if self.sTestMode == "1":
+                if UtilsValidate.sTestMode == "1":
                     raise Exception('Invalid Opacity value: %s' % sMsg)
         
         return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateSegmentRequiredSettings(self, xPageNode, iPageReference):
+    @staticmethod
+    def ValidateSegmentRequiredSettings( xPageNode, iPageReference):
         
        
         sMsg = ''
@@ -517,10 +541,10 @@ class UtilsValidate:
         sErrorMsgMismatchSegmentRequired = "\nAll image elements with the same path (but different destinations) must have the same attribute 'SegmentRequired' setting. See Page: "
         sErrorMsgSegmentRequiredOnWrongLayer = "\n'SegmentRequired' attribute cannot be on an image assigned to Layer='Segmentation' or 'Label' See Page: "
         
-        sEnableSegmentEditorSetting = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor')
-        sSegmentOnAnyImageSetting = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'SegmentRequiredOnAnyImage')
+        sEnableSegmentEditorSetting = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'EnableSegmentEditor')
+        sSegmentOnAnyImageSetting = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'SegmentRequiredOnAnyImage')
         
-        lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
+        lxImageNodes = UtilsIOXml.GetChildren(xPageNode, 'Image')
         
         bFoundSegmentRequiredForImage = False
         l2tupImageSettings = []
@@ -529,13 +553,13 @@ class UtilsValidate:
             xImageNode = lxImageNodes[idx]
 
             # collect settings for image
-            sSegmentRequiredSetting = self.oIOXml.GetValueOfNodeAttribute(xImageNode, 'SegmentRequired')
+            sSegmentRequiredSetting = UtilsIOXml.GetValueOfNodeAttribute(xImageNode, 'SegmentRequired')
             if sSegmentRequiredSetting == '':
                 sSegmentRequiredSetting = 'N'
-            sImageLayerNode = self.oIOXml.GetLastChild(xImageNode, 'Layer')
-            sImageLayer = self.oIOXml.GetDataInNode(sImageLayerNode)
-            sImagePathNode = self.oIOXml.GetLastChild(xImageNode,'Path')
-            sImagePath = self.oIOXml.GetDataInNode(sImagePathNode)
+            sImageLayerNode = UtilsIOXml.GetLastChild(xImageNode, 'Layer')
+            sImageLayer = UtilsIOXml.GetDataInNode(sImageLayerNode)
+            sImagePathNode = UtilsIOXml.GetLastChild(xImageNode,'Path')
+            sImagePath = UtilsIOXml.GetDataInNode(sImagePathNode)
             tupImageSettings = [sImagePath, sSegmentRequiredSetting]
             l2tupImageSettings.append(tupImageSettings)
             
@@ -577,7 +601,8 @@ class UtilsValidate:
         return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateMarkupLinesRequiredSettings(self, xPageNode, iPageReference):
+    @staticmethod
+    def ValidateMarkupLinesRequiredSettings( xPageNode, iPageReference):
         
         sMsg = ''
         sErrorMsgMarkupLinesOnAnyImage = "\nContradicting attributes. You cannot have both 'MinMarkupLinesRequired' on an image and 'MinMarkupLinesRequiredOnAnyImage' on a page. See Page: "
@@ -587,25 +612,25 @@ class UtilsValidate:
         bFoundMarkupLinesRequiredForImage = False
         l2tupImageSettings = []
 
-        sMarkupLinesOnAnyImageSetting = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'MinMarkupLinesRequiredOnAnyImage')
-        lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
+        sMarkupLinesOnAnyImageSetting = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'MinMarkupLinesRequiredOnAnyImage')
+        lxImageNodes = UtilsIOXml.GetChildren(xPageNode, 'Image')
         
 
         for idx in range(len(lxImageNodes)):
             xImageNode = lxImageNodes[idx]
 
             # collect settings for image
-            sMarkupLinesRequiredSetting = self.oIOXml.GetValueOfNodeAttribute(xImageNode, 'MinMarkupLinesRequired')
+            sMarkupLinesRequiredSetting = UtilsIOXml.GetValueOfNodeAttribute(xImageNode, 'MinMarkupLinesRequired')
             if sMarkupLinesRequiredSetting == '':
                 iNumRequiredLines = 0
             else:
                 iNumRequiredLines = int(sMarkupLinesRequiredSetting)
                 
                 
-            sImageLayerNode = self.oIOXml.GetLastChild(xImageNode, 'Layer')
-            sImageLayer = self.oIOXml.GetDataInNode(sImageLayerNode)
-            sImagePathNode = self.oIOXml.GetLastChild(xImageNode,'Path')
-            sImagePath = self.oIOXml.GetDataInNode(sImagePathNode)
+            sImageLayerNode = UtilsIOXml.GetLastChild(xImageNode, 'Layer')
+            sImageLayer = UtilsIOXml.GetDataInNode(sImageLayerNode)
+            sImagePathNode = UtilsIOXml.GetLastChild(xImageNode,'Path')
+            sImagePath = UtilsIOXml.GetDataInNode(sImagePathNode)
             tupImageSettings = [sImagePath, sMarkupLinesRequiredSetting]
             l2tupImageSettings.append(tupImageSettings)
 
@@ -642,19 +667,20 @@ class UtilsValidate:
         return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateSlice4Layout(self, xPageNode, iPageReference):
+    @staticmethod
+    def ValidateSlice4Layout( xPageNode, iPageReference):
         ''' For all image elements, check if it is assigned to Slice4, 
             that the Page has the attribute 'Layout="TwoOverTwo" '
         '''
         sMsg = ''
-        sLayoutSetting = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Layout')
+        sLayoutSetting = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'Layout')
         
-        lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
+        lxImageNodes = UtilsIOXml.GetChildren(xPageNode, 'Image')
 
         for idx in range(len(lxImageNodes)):
             xImageNode = lxImageNodes[idx]
-            xDestination = self.oIOXml.GetNthChild(xImageNode, 'DefaultDestination',0)
-            sDestination = self.oIOXml.GetDataInNode(xDestination)
+            xDestination = UtilsIOXml.GetNthChild(xImageNode, 'DefaultDestination',0)
+            sDestination = UtilsIOXml.GetDataInNode(xDestination)
             
             if sDestination == 'Slice4' and sLayoutSetting != 'TwoOverTwo':
                 sMsg = sMsg + "\nAssigning an image to Slice4 requires the Page Layout attribute to be set to 'TwoOverTwo'."\
@@ -663,7 +689,8 @@ class UtilsValidate:
         return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateGoToBookmarkRequest(self):
+    @staticmethod
+    def ValidateGoToBookmarkRequest():
         ''' For all instances of 'GoToBookmark', ensure that there is a corresponding
             BookmarkID. This can help trap spelling mistakes. 
             (This is not checked
@@ -673,25 +700,25 @@ class UtilsValidate:
         sMsg = ''
         ltupGoToBookmarks = []
         ltupBookmarkIDs = []
-        sRandomizeSetting = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'RandomizePageGroups')
+        sRandomizeSetting = UtilsIOXml.GetValueOfNodeAttribute(UtilsIOXml.GetRootNode(), 'RandomizePageGroups')
         if sRandomizeSetting == 'Y':
             bRandomizing = True
         else:
             bRandomizing = False
         
-        lxPageNodes = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
+        lxPageNodes = UtilsIOXml.GetChildren(UtilsIOXml.GetRootNode(), 'Page')
         
         # collect all instances of BookmarkID and GoToBookmark and which page they are set
         for idxPage in range(len(lxPageNodes)):
             xPageNode = lxPageNodes[idxPage]
         
-            sBookmarkID = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'BookmarkID')
+            sBookmarkID = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'BookmarkID')
             sGoToBookmark = ''
-            sGoToBookmarkRequest = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'GoToBookmark')
+            sGoToBookmarkRequest = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'GoToBookmark')
             if sGoToBookmarkRequest != '':
                 sGoToBookmark = sGoToBookmarkRequest.split()[0]
 
-            sPageGroup = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
+            sPageGroup = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
             if sPageGroup != '':
                 iPageGroup = int(sPageGroup)
             else:
@@ -745,7 +772,7 @@ class UtilsValidate:
                             + '\nSee Page #: '\
                             + str(iGoToBookmarkPage + 1)
                             
-                if self.sTestMode == "1":
+                if UtilsValidate.sTestMode == "1":
                     raise ValueError('Missing historical BookmarkID: %s' % sMsg)
                 
         
@@ -753,7 +780,8 @@ class UtilsValidate:
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateDisplayLabelMapID(self):
+    @staticmethod
+    def ValidateDisplayLabelMapID():
         ''' For all instances of DisplayLabelMapID, ensure that there is a corresponding
             LabelMapID. This can help trap spelling mistakes. 
             If Randomizing is set to "Y", an extra check is done to make sure the two pages with 
@@ -769,19 +797,19 @@ class UtilsValidate:
         sMsg = ''
         ltupDisplayLabelMapIDs = []
         ltupLabelMapIDs = []
-        sRandomizeSetting = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'RandomizePageGroups')
+        sRandomizeSetting = UtilsIOXml.GetValueOfNodeAttribute(UtilsIOXml.GetRootNode(), 'RandomizePageGroups')
         if sRandomizeSetting == 'Y':
             bRandomizing = True
         else:
             bRandomizing = False
         
-        lxPageNodes = self.oIOXml.GetChildren(self.oIOXml.GetRootNode(), 'Page')
+        lxPageNodes = UtilsIOXml.GetChildren(UtilsIOXml.GetRootNode(), 'Page')
         
         # collect all instances of LabelMapID and DisplayLabelMapID and which page they are set
         for idxPage in range(len(lxPageNodes)):
             xPageNode = lxPageNodes[idxPage]
-            lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
-            sPageGroup = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
+            lxImageNodes = UtilsIOXml.GetChildren(xPageNode, 'Image')
+            sPageGroup = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
             if sPageGroup != '':
                 iPageGroup = int(sPageGroup)
             else:
@@ -789,10 +817,10 @@ class UtilsValidate:
     
             for idxImage in range(len(lxImageNodes)):
                 xImageNode = lxImageNodes[idxImage]
-                sLabelMapID = self.oIOXml.GetValueOfNodeAttribute(xImageNode, 'LabelMapID')
-                sDisplayLabelMapID = self.oIOXml.GetValueOfNodeAttribute(xImageNode, 'DisplayLabelMapID')
-                xImagePath = self.oIOXml.GetNthChild(xImageNode, 'Path', 0)
-                sImagePath = self.oIOXml.GetDataInNode(xImagePath)
+                sLabelMapID = UtilsIOXml.GetValueOfNodeAttribute(xImageNode, 'LabelMapID')
+                sDisplayLabelMapID = UtilsIOXml.GetValueOfNodeAttribute(xImageNode, 'DisplayLabelMapID')
+                xImagePath = UtilsIOXml.GetNthChild(xImageNode, 'Path', 0)
+                sImagePath = UtilsIOXml.GetDataInNode(xImagePath)
 
                 if sLabelMapID != '':
                     ltupLabelMapIDs.append([sLabelMapID, idxPage, sImagePath, iPageGroup])
@@ -846,14 +874,15 @@ class UtilsValidate:
                             + "\n...OR... if RandomizePageGroups is set to 'Y', the PageGroup numbers do not match for page with attribute 'LabelMapID' and 'DisplayLabelMapID'."\
                             + "\nSeePage #: " + str(iDisplayLabelMapIDPage + 1)
                             
-                if self.sTestMode == "1":
+                if UtilsValidate.sTestMode == "1":
                     raise ValueError('Missing historical LabelMapID: %s' % sMsg)
                 
     
         return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateMergeLabelMaps(self, xImage, xPage, iPageNum):
+    @staticmethod
+    def ValidateMergeLabelMaps( xImage, xPage, iPageNum):
         ''' For the attribute MergeLabeMaps , this function makes sure of the following conditions:
             - EnableSegmentEditor attribute must be turned off (no contouring on a merge display page)
             - there is also a DisplayLabelMapID attribute on that image
@@ -876,13 +905,13 @@ class UtilsValidate:
         sErrorMsgEmptyPageGroups = "\nYou requested a label map merge but the PageGroup numbers of this page are either empty or don't exist. Page Group numbers must match with the previous page that has the matching LabelMapID to be merged."
         sErrorMsgLoopingNotAllowed = "\nThere can not be Looping on a Page with the 'MergeLabelMaps' attribute"
         
-        sMergeLabelMaps = self.oIOXml.GetValueOfNodeAttribute(xImage, sAttributeName)
+        sMergeLabelMaps = UtilsIOXml.GetValueOfNodeAttribute(xImage, sAttributeName)
 
         if sMergeLabelMaps == "Y":                       
             try:
                 
                 # capture the DisplayLabelMapID attribute for this image
-                sLabelMapIDLink = self.oIOXml.GetValueOfNodeAttribute(xImage, 'DisplayLabelMapID')
+                sLabelMapIDLink = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'DisplayLabelMapID')
 
                 if sLabelMapIDLink == '':
                     # missing attribute
@@ -890,29 +919,29 @@ class UtilsValidate:
                 
                 
                 
-                if self.oIOXml.GetValueOfNodeAttribute(xPage, 'EnableSegmentEditor') == 'Y' or\
-                    self.oIOXml.GetValueOfNodeAttribute(xPage, 'SegmentRequiredOnAnyImage') == 'Y' or\
-                    self.oIOXml.GetValueOfNodeAttribute(xImage, 'SegmentRequired') == 'Y' :
+                if UtilsIOXml.GetValueOfNodeAttribute(xPage, 'EnableSegmentEditor') == 'Y' or\
+                    UtilsIOXml.GetValueOfNodeAttribute(xPage, 'SegmentRequiredOnAnyImage') == 'Y' or\
+                    UtilsIOXml.GetValueOfNodeAttribute(xImage, 'SegmentRequired') == 'Y' :
                     raise Exception(sErrorMsgSegmentingNotAllowed)
 
                 # look for historical LabelMapID match
                 iPageIndex = iPageNum - 1  # zero indexing for current page
-                iNavIdx = self.oIOXml.GetNavigationIndexForPage(self.l4iNavList, iPageIndex)  # zero indexing for current page
-                xHistoricalImageElement, xHistoricalPageElement = self.oIOXml.GetXmlPageAndChildFromAttributeHistory(iNavIdx, self.l4iNavList, 'Image','LabelMapID',sLabelMapIDLink)
+                iNavIdx = UtilsCustomXml.GetNavigationIndexForPage(UtilsValidate.l4iNavList, iPageIndex)  # zero indexing for current page
+                xHistoricalImageElement, xHistoricalPageElement = UtilsCustomXml.GetXmlPageAndChildFromAttributeHistory(iNavIdx, UtilsValidate.l4iNavList, 'Image','LabelMapID',sLabelMapIDLink)
                 if xHistoricalImageElement == None:
                     raise Exception(sErrorMsgNoMatchingHistoricalLabelMapID)
                 
                 # look for Loop=Y on historical page
-                if self.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'Loop') != "Y":
+                if UtilsIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'Loop') != "Y":
                     raise Exception(sErrorMsgNoLoopOnHistoricalPage)
 
-                if self.oIOXml.GetValueOfNodeAttribute(xPage, 'Loop') == 'Y':
+                if UtilsIOXml.GetValueOfNodeAttribute(xPage, 'Loop') == 'Y':
                     raise Exception(sErrorMsgLoopingNotAllowed)
 
 
                 # look for matching PageGroup number (these might be empty strings)
-                sPageGroupNumToMatch = self.oIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup')
-                sHistoricalPageGroupNum = self.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'PageGroup')
+                sPageGroupNumToMatch = UtilsIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup')
+                sHistoricalPageGroupNum = UtilsIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'PageGroup')
                 
                 if sPageGroupNumToMatch == sHistoricalPageGroupNum and sPageGroupNumToMatch ==  '':
                     raise Exception(sErrorMsgEmptyPageGroups)
@@ -932,7 +961,8 @@ class UtilsValidate:
         return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateListOfNumbers(self, sString, sType, iLength, sAttributeName, sPageReference):
+    @staticmethod
+    def ValidateListOfNumbers( sString, sType, iLength, sAttributeName, sPageReference):
         # function to validate a string holds a list of values of given type and length
         
         sMsg = ''
@@ -964,14 +994,15 @@ class UtilsValidate:
         return sMsg
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateNoSpecialCharacters(self, xPageNode, sPageReference):
+    @staticmethod
+    def ValidateNoSpecialCharacters( xPageNode, sPageReference):
         ''' Page ID and Page Descriptor are used to build a results folder name and
             are therefore not allowed certain characters.
         '''
         sMsg = ''
         special_characters = '"\'#&{}\\<>*?/$!:@+`~%^()+=,`|'
-        sID = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
-        sDescriptor  = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
+        sID = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
+        sDescriptor  = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
 
         if any(c in special_characters for c in sID):
             sMsg = sMsg + '\n Special characters are not allowed in the page attribute ID.'
@@ -985,7 +1016,8 @@ class UtilsValidate:
         return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateImageToSegmentationMatch(self, xPageNode, sPageReference):
+    @staticmethod
+    def ValidateImageToSegmentationMatch( xPageNode, sPageReference):
         '''
         '''
         sMsg = ''
@@ -997,15 +1029,15 @@ class UtilsValidate:
         llDestSegImageType = []
         
         # collect images and their destinations
-        lxAllImages = self.oIOXml.GetChildren(xPageNode, 'Image')
+        lxAllImages = UtilsIOXml.GetChildren(xPageNode, 'Image')
         
         for xImage in lxAllImages:
             
-            sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
-            xDestination = self.oIOXml.GetNthChild(xImage, 'DefaultDestination', 0)
-            sDestination = self.oIOXml.GetDataInNode(xDestination)
-            xImagePath = self.oIOXml.GetNthChild(xImage, 'Path', 0)
-            sImagePath = self.oIOXml.GetDataInNode(xImagePath)
+            sImageType = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'Type')
+            xDestination = UtilsIOXml.GetNthChild(xImage, 'DefaultDestination', 0)
+            sDestination = UtilsIOXml.GetDataInNode(xDestination)
+            xImagePath = UtilsIOXml.GetNthChild(xImage, 'Path', 0)
+            sImagePath = UtilsIOXml.GetDataInNode(xImagePath)
             
             if sImageType == 'Volume' or sImageType == 'VolumeSequence':
                 llDestImageVolume.append([sDestination, sImagePath])
@@ -1019,11 +1051,11 @@ class UtilsValidate:
 
             
            
-        sSegmentationMsg = self.SyncSegsAndVolumes(llDestImageVolume, 'Segmentation', llDestSegmentation)
+        sSegmentationMsg = UtilsValidate.SyncSegsAndVolumes(llDestImageVolume, 'Segmentation', llDestSegmentation)
         
-        sLabelMapMsg = self.SyncSegsAndVolumes(llDestImageVolume, 'LabelMap', llDestLabelMap)
+        sLabelMapMsg = UtilsValidate.SyncSegsAndVolumes(llDestImageVolume, 'LabelMap', llDestLabelMap)
         
-        sRTStructMsg = self.SyncSegsAndVolumes(llDestImageVolume, 'RTStruct', llDestRTStruct)
+        sRTStructMsg = UtilsValidate.SyncSegsAndVolumes(llDestImageVolume, 'RTStruct', llDestRTStruct)
 
         sMsg = sMsg + sSegmentationMsg + sLabelMapMsg + sRTStructMsg
         if sMsg != '':
@@ -1032,7 +1064,8 @@ class UtilsValidate:
         return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateROIColorFile(self):
+    @staticmethod
+    def ValidateROIColorFile():
         ''' Function to validate:
             - the ROIColorFile exists in the Master quiz directory
             - each line has 6 entries    id descriptor r g b a
@@ -1046,9 +1079,9 @@ class UtilsValidate:
         sErrorMsgInvalidEntry = "\nROI Color File has invalid entry. Syntax: id descriptor r g b a . Integer values required for id, r, g, b and a values. \n"
 
         
-        sROIColorFile = self.oIOXml.GetValueOfNodeAttribute(self.oIOXml.GetRootNode(), 'ROIColorFile')
+        sROIColorFile = UtilsIOXml.GetValueOfNodeAttribute(UtilsIOXml.GetRootNode(), 'ROIColorFile')
         if sROIColorFile != '':
-                sROIColorFilePath = os.path.join(self.oFilesIO.GetXmlQuizDir(), sROIColorFile + '.txt')
+                sROIColorFilePath = os.path.join(UtilsFilesIO.GetXmlQuizDir(), sROIColorFile + '.txt')
 
                 if not (os.path.exists(sROIColorFilePath)) :
                     sMsg = sMsg + sErrorMsgMissingFile + sROIColorFilePath
@@ -1078,7 +1111,8 @@ class UtilsValidate:
         return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SyncSegsAndVolumes(self, llDestImageVolume, sSegImageType, llDestSegImageType):
+    @staticmethod
+    def SyncSegsAndVolumes( llDestImageVolume, sSegImageType, llDestSegImageType):
         
         sMsg = ''
         bMismatchFound = False
@@ -1144,7 +1178,8 @@ class UtilsValidate:
         return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateButtonTypeQuestions(self, xPage, sPageReference):
+    @staticmethod
+    def ValidateButtonTypeQuestions( xPage, sPageReference):
         ''' Check that each script defined in the options of a Button type of question
             exists in the Inputs/Scripts directory.
             Also check for allow multiple responses if a script rerun on a page is required.
@@ -1153,28 +1188,28 @@ class UtilsValidate:
         sMsg = ''
         
         #check dependency for required script reruns
-        sAllowMultipleResponse = self.oIOXml.GetValueOfNodeAttribute(xPage,'AllowMultipleResponse')
-        sButtonScriptRerunRequired = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ButtonScriptRerunRequired')
+        sAllowMultipleResponse = UtilsIOXml.GetValueOfNodeAttribute(xPage,'AllowMultipleResponse')
+        sButtonScriptRerunRequired = UtilsIOXml.GetValueOfNodeAttribute(xPage, 'ButtonScriptRerunRequired')
         if sButtonScriptRerunRequired == 'Y' and sAllowMultipleResponse != 'Y':
             sMsg = sMsg + "\nIf you have 'sButtonScriptRerunRequired' set to 'Y' on a page, you must also set 'AllowMultipleResponse' to 'Y'."\
                         + '\nSee Page: ' + str(sPageReference)
         
         # check that scripts exist
-        lxQuestionSetElements = self.oIOXml.GetChildren(xPage, 'QuestionSet')
+        lxQuestionSetElements = UtilsIOXml.GetChildren(xPage, 'QuestionSet')
         for xQuestionSet in lxQuestionSetElements:
             
-            lxQuestionElements = self.oIOXml.GetChildren(xQuestionSet, 'Question')
+            lxQuestionElements = UtilsIOXml.GetChildren(xQuestionSet, 'Question')
             for xQuestion in lxQuestionElements:
                 
-                sQuestionType = self.oIOXml.GetValueOfNodeAttribute(xQuestion, 'Type')
+                sQuestionType = UtilsIOXml.GetValueOfNodeAttribute(xQuestion, 'Type')
                 if sQuestionType == 'Button':
                     
-                    lxOptionElements = self.oIOXml.GetChildren(xQuestion, 'Option')
+                    lxOptionElements = UtilsIOXml.GetChildren(xQuestion, 'Option')
                          
                     for xOption in lxOptionElements:
                         
-                        sScriptName = self.oIOXml.GetDataInNode(xOption)
-                        sScriptFullPath = os.path.join(self.oFilesIO.GetScriptsDir(),sScriptName)
+                        sScriptName = UtilsIOXml.GetDataInNode(xOption)
+                        sScriptFullPath = os.path.join(UtilsFilesIO.GetScriptsDir(),sScriptName)
                         
                         if os.path.exists(sScriptFullPath) == False:
                             sMsg = sMsg + '\nYou have a Button type of question but the script name defined in the Option does not exist' \
@@ -1187,28 +1222,29 @@ class UtilsValidate:
         return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidatePictureTypeQuestion(self, xPage, sPageReference):
+    @staticmethod
+    def ValidatePictureTypeQuestion( xPage, sPageReference):
         ''' Check that each picture requested to be displayed in a 'Picture' type of question exists and is
             of an acceptable format.
             Picture file must be in the Master Quiz directory.
         '''
         sMsg = ''
         
-        lxQuestionSetElements = self.oIOXml.GetChildren(xPage, 'QuestionSet')
+        lxQuestionSetElements = UtilsIOXml.GetChildren(xPage, 'QuestionSet')
         for xQuestionSet in lxQuestionSetElements:
             
-            lxQuestionElements = self.oIOXml.GetChildren(xQuestionSet, 'Question')
+            lxQuestionElements = UtilsIOXml.GetChildren(xQuestionSet, 'Question')
             for xQuestion in lxQuestionElements:
                 
-                sQuestionType = self.oIOXml.GetValueOfNodeAttribute(xQuestion, 'Type')
+                sQuestionType = UtilsIOXml.GetValueOfNodeAttribute(xQuestion, 'Type')
                 if sQuestionType == 'Picture':
                     
-                    lxOptionElements = self.oIOXml.GetChildren(xQuestion, 'Option')
+                    lxOptionElements = UtilsIOXml.GetChildren(xQuestion, 'Option')
                          
                     for xOption in lxOptionElements:
                         
-                        sPictureName = self.oIOXml.GetDataInNode(xOption)
-                        sPictureFullPath = os.path.join(self.oFilesIO.GetXmlQuizDir(),sPictureName)
+                        sPictureName = UtilsIOXml.GetDataInNode(xOption)
+                        sPictureFullPath = os.path.join(UtilsFilesIO.GetXmlQuizDir(),sPictureName)
         
                         if os.path.exists(sPictureFullPath) == False:
                             sMsg = sMsg + '\nYou have a Picture type of question but the requested picture does not exist.' \
@@ -1231,7 +1267,8 @@ class UtilsValidate:
         return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateImageOnRed(self, xPage, sPageID, sPageNum):
+    @staticmethod
+    def ValidateImageOnRed( xPage, sPageID, sPageNum):
         ''' Check that at least one image on the page is set to the Red window
             so that Slicer's segmenting tools are available.
         '''
@@ -1239,16 +1276,16 @@ class UtilsValidate:
         sMsg = ''
         bImageOnRed = False
         
-        lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
+        lxImageElements = UtilsIOXml.GetChildren(xPage, 'Image')
         if len(lxImageElements) == 0:
             bImageOnRed = True
         else:
             for xImage in lxImageElements:
                 
-                lxWindowDestination = self.oIOXml.GetChildren(xImage, 'DefaultDestination')
+                lxWindowDestination = UtilsIOXml.GetChildren(xImage, 'DefaultDestination')
                 for xWindowDestination in lxWindowDestination:
                     
-                    sDestination = self.oIOXml.GetDataInNode(xWindowDestination)
+                    sDestination = UtilsIOXml.GetDataInNode(xWindowDestination)
                     if sDestination == 'Red':
                         bImageOnRed = True
         
@@ -1261,58 +1298,63 @@ class UtilsValidate:
         
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateROIsElements(self, xImage, sPageReference):
+    @staticmethod
+    def ValidateROIsElements( xImage, sPageReference):
         
     
         sMsg = ''
         
         # If the image type is an RTStruct or Segmentation, validate the ROIs element
-        sImageType = self.oIOXml.GetValueOfNodeAttribute(xImage, 'Type')
+        sImageType = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'Type')
         if sImageType == 'RTStruct' or sImageType == 'Segmentation':
-            sValidationMsg = self.ValidateRequiredElement(xImage, 'ROIs', sPageReference)
+            sValidationMsg = UtilsValidate.ValidateRequiredElement(xImage, 'ROIs', sPageReference)
             sMsg = sMsg + sValidationMsg
             
-            lxROIs = self.oIOXml.GetChildren(xImage, 'ROIs')
+            lxROIs = UtilsIOXml.GetChildren(xImage, 'ROIs')
             if len(lxROIs) >0:
-                sValidationMsg = self.ValidateRequiredAttribute(lxROIs[0], 'ROIVisibilityCode', sPageReference)
+                sValidationMsg = UtilsValidate.ValidateRequiredAttribute(lxROIs[0], 'ROIVisibilityCode', sPageReference)
                 sMsg = sMsg + sValidationMsg
-                sValidationMsg = self.ValidateAttributeOptions(lxROIs[0], 'ROIVisibilityCode', sPageReference, self.oIOXml.lValidRoiVisibilityCodes)
+                sValidationMsg = UtilsValidate.ValidateAttributeOptions(lxROIs[0], 'ROIVisibilityCode', sPageReference, UtilsCustomXml.lValidRoiVisibilityCodes)
                 sMsg = sMsg + sValidationMsg
                 
                 # if the visibility code is Select or Ignore, there must be an ROI element(s) with the name(s) present
-                sVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(lxROIs[0], 'ROIVisibilityCode')
+                sVisibilityCode = UtilsIOXml.GetValueOfNodeAttribute(lxROIs[0], 'ROIVisibilityCode')
                 if sVisibilityCode == 'Select' or sVisibilityCode == 'Ignore':
-                    sValidationMsg = self.ValidateRequiredElement(lxROIs[0], 'ROI', sPageReference, True)  # True for multiple elements allowed
+                    sValidationMsg = UtilsValidate.ValidateRequiredElement(lxROIs[0], 'ROI', sPageReference, True)  # True for multiple elements allowed
                     sMsg = sMsg + sValidationMsg
 
         
         return sMsg
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidatePathWithNodeNameID(self, xPage, sPageID, sPageNum ):
+    @staticmethod
+    def ValidatePathWithNodeNameID( xPage, sPageID, sPageNum ):
         ''' For any page, test that a path always has only one associated PageID_ImageID (aka node name)
           (Otherwise, the Image Quizzer will reload the same image with a different node name - causing clashes.)
         '''
 
         sMsg = ''
         
-        sNotUniqueMsg = "\nIn any Page Element, the 'PageID_ImageID' attributes when combined with an Image Path, must be distinct." +\
+        sNotUniqueMsg = "\nIn any Page Element, the 'PageID_ImageID' attributes when combined with an Image Path, must be unique." +\
                             "\nEither there are different paths sharing the same 'PageID_ImageID' on this Page" +\
-                            "\nOR there are identical image paths with different combined 'PageID_ImageID' attributes" +\
-                            "\n   .....Check all paths for Page: "
+                            "\nOR there are identical image paths with different combined 'PageID_ImageID' attributes" 
+        sErrEmptyPath = "\nPath Element cannot be empty. "
 
-        lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
+        lxImageElements = UtilsIOXml.GetChildren(xPage, 'Image')
         lPathAndNodeNames= []
         
         for xImage in lxImageElements:
             
             # Page ID + Image ID creates the node name for the image that is loaded (in ImageView>ViewNodeBase)
-            sImageID = self.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
+            sImageID = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'ID')
             sNodeNameID = sPageID + '_' + sImageID
 
-            lxImagePath = self.oIOXml.GetChildren(xImage, 'Path')
+            lxImagePath = UtilsIOXml.GetChildren(xImage, 'Path')
             if len(lxImagePath) == 1:
-                sImagePath = self.oIOXml.GetDataInNode(lxImagePath[0])
+                sImagePath = UtilsIOXml.GetDataInNode(lxImagePath[0])
+                
+                if sImagePath == '':
+                    sMsg = sMsg + sErrEmptyPath
                  
                 # create tuple of path, sNodeName
                 tupPathAndID = (sImagePath, sNodeNameID)
@@ -1327,7 +1369,7 @@ class UtilsValidate:
                             
                             # existing path;  but node name does not match - ERROR
                             if sNodeNameID not in lElement:
-                                sMsg = sMsg + sNotUniqueMsg + sPageNum + ' '+ sNodeNameID + '\n'
+                                sMsg = sMsg + sNotUniqueMsg
 
                              
                 if not bFoundMatchingPath:
@@ -1342,13 +1384,17 @@ class UtilsValidate:
             if sNodeName not in lsNodeNames:
                 lsNodeNames.append(sNodeName)
             else:
-                sMsg = sMsg + sNotUniqueMsg + sPageNum + ' '+ sNodeNameID + '\n'
+                sMsg = sMsg + sNotUniqueMsg
                 break
+            
+        if sMsg != '':
+            sMsg = sMsg + "\n   .....Check all paths for Page: " + sPageNum + ' '+ sNodeNameID + '\n'
             
         return sMsg
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ValidateEstimatedPathLengths(self, xPage, sPageNum):
+    @staticmethod
+    def ValidateEstimatedPathLengths( xPage, sPageNum):
         ''' Windows has a MAX_PATH limit of 256 characters. Image Quizzer stores the label maps and 
             markup lines in subfolders and if this maximum is reached, the files will not get written.
             
@@ -1365,19 +1411,19 @@ class UtilsValidate:
             For LabelMaps:
                 threshold is variable
                 
-                    sWindowsTempFolder = 'TempWrite' + '\PgGroupxx_' + PageID_ImageID\ + '-bainesquizlabel'
+                    sWindowsTempFolder = 'TempWrite' + '\PgGroupxx_' + PageID_ImageID + '-Repx'\ + '-quizlabel'
                     iMaxThreshold = 256 - len('nrrd') - len(sWindowsTempFolder)
             
                 File stored:
                 path userdir + \quizname + '\PgGroupxx_' + Page ID_Descriptor\ + 
-                 'PgGroupxx_' + PageID_ImageID + '-bainesquizlabel.nrrd'
+                 'PgGroupxx_' + PageID_ImageID  + '-Repx' + '-quizlabel.nrrd'
 
             For MarkupLines
                 threshold = 256
                 
                 File stored:
                 path userdir + \quizname + '\PgGroupxx_' + Page ID_Descriptor\ + 
-                 'PgGroupxx_' + PageID_ImageID + 'MarkupsLine_xxx_bainesquizline.mrk.json'
+                 'PgGroupxx_' + PageID_ImageID  + '-Repx' + 'MarkupsLine_xxx_quizline.mrk.json'
 
             In some quizzes, it is impossible to predict whether the user is going to create a 
             contour or markup line so rather than have the user encounter an error, 
@@ -1387,23 +1433,23 @@ class UtilsValidate:
         
         sMsg = ''
 
-        sUserDir = self.oFilesIO.GetUserDir()
+        sUserDir = UtilsFilesIO.GetUserDir()
         sUserDir = sUserDir.replace('/Code\..','')
-        sQuizFilename = self.oFilesIO.GetQuizFilenameNoExt()
-        sPageID = self.oIOXml.GetValueOfNodeAttribute(xPage, 'ID')
-        sPageGroup = 'PgGroup_' + self.oIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup')
-        sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPage, 'Descriptor')
+        sQuizFilename = UtilsFilesIO.GetQuizFilenameNoExt()
+        sPageID = UtilsIOXml.GetValueOfNodeAttribute(xPage, 'ID')
+        sPageGroup = 'PgGroup_' + UtilsIOXml.GetValueOfNodeAttribute(xPage, 'PageGroup')
+        sPageDescriptor = UtilsIOXml.GetValueOfNodeAttribute(xPage, 'Descriptor')
         
-        # max allowed leaves room for adding characters for labelmap (+ ~22) or markupline (+ ~39) files
+        # max allowed leaves room for adding characters for rep # (+ ~6) and labelmap (+ ~18) or markupline (+ ~33) files
         # to keep potential files under the 256 Windows limit
         iMaxAllowed = 215
 
-        lxImageElements = self.oIOXml.GetChildren(xPage, 'Image')
+        lxImageElements = UtilsIOXml.GetChildren(xPage, 'Image')
         
         for xImage in lxImageElements:
             
             # Page ID + Image ID creates the node name for the image that is loaded (in ImageView>ViewNodeBase)
-            sImageID = self.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
+            sImageID = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'ID')
             sNodeNameID = sPageID + '_' + sImageID
             sFolderName = sPageID + '_' + sPageDescriptor
             sImageFolderName = sPageGroup + sNodeNameID
@@ -1423,5 +1469,35 @@ class UtilsValidate:
         return sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    @staticmethod
+    def ValidateVectorImages(xImage, sPageReference):
+        ''' Validation function to make sure images of type 'Vector' fall into to list of valid types and that
+            the SegmentRequired function is not set to "Y" (otherwise the user is not allowed to press Next - Slicer does not
+            allow for segmenting on vector type images)
+            
+            Vector images are like pictures - and includes single slice dicom files (histology).
+        '''
+        
+        sMsg = ''
+        sErrNotValidType = "\nExtension of this image is not part of the valid list of extensions for Vector type images: " + ','.join(UtilsCustomXml.lValidVectorImageExtensions)
+        sErrSegmentNotAllowed = "Segmenting is not allowed on Vector type images. Do not set 'SegmentRequired' to 'Y' ."
+        
+        
+        if UtilsIOXml.GetValueOfNodeAttribute(xImage, 'Type') == 'Vector':
+            
+            sPath = UtilsIOXml.GetDataInNode( UtilsIOXml.GetLastChild(xImage, 'Path') )
+            sExt = UtilsFilesIO.GetExtensionFromPath(sPath).upper()[1:]
+            
+            if sExt not in UtilsCustomXml.lValidVectorImageExtensions:
+                sMsg = sMsg + sErrNotValidType
+                
+            if UtilsIOXml.GetValueOfNodeAttribute(xImage, 'SegmentRequired') == "Y":
+                sMsg = sMsg + sErrSegmentNotAllowed
+                
+            
+        if sMsg != '':
+            sMsg = sMsg + "\nSee Page: " + sPageReference
+            
+        return sMsg
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         

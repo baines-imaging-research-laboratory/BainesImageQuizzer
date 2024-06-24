@@ -7,10 +7,15 @@ try:
 except:
     print("OpenCV not imported. CPU time will not be recorded in User Interaction logs.")
 
+import Utilities.UtilsMsgs as UtilsMsgs
+import Utilities.UtilsFilesIO as UtilsFilesIO
+
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsFilesIO import *
 
 from enum import Enum
+from datetime import datetime
+
 
 
 ##########################################################################
@@ -19,13 +24,14 @@ from enum import Enum
 #
 ##########################################################################
 
-class UserInteraction:
+class UserInteraction():
     
-    def __init__(self):
+    def __init__(self, parent=None):
         self.sClassName = type(self).__name__
         
         self.fh = None
         self.fhTemplate = None
+        self.fhInteractionLog = None
         
         self.slMainWindowPos = qt.QPoint()
         
@@ -33,8 +39,6 @@ class UserInteraction:
         self.lViewingWindows = ['Red','Green','Yellow','Slice4']
         self.ldictObserverIDs = {}
         
-        self.oUtilsMsgs = UtilsMsgs()
-
         self.slMaximizedWindowPos = None   
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -54,6 +58,14 @@ class UserInteraction:
     def GetMainWindowPosition(self):
         return self.slMainWindowPos
 
+    #----------
+    def SetFileHandlerInteractionLog(self, fh):
+        self.fhInteractionLog
+        
+    #----------
+    def GetFileHandlerInteractionLog(self):
+        return self.fhInteractionLog
+    
     #----------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -200,8 +212,8 @@ class UserInteraction:
         ''' Open the user interaction log
             Return the file handler for the current log.
         '''
-        sDirName = oSession.oFilesIO.GetFolderNameForPageResults(oSession)
-        sPageUserInteractionDir = oSession.oFilesIO.CreatePageDir(sDirName)
+        sDirName = UtilsFilesIO.GetFolderNameForPageResults(oSession)
+        sPageUserInteractionDir = UtilsFilesIO.CreatePageDir(sDirName)
         
         # sUserInteractionLogPath = os.path.join(oSession.oFilesIO.GetUserQuizResultsDir(), 'UserInteraction.log')
         sUserInteractionLogPath = os.path.join(sPageUserInteractionDir, 'UserInteractionLog.csv')
@@ -216,7 +228,7 @@ class UserInteraction:
                 self.fh = open(sUserInteractionLogPath,"a")
                 break
             except IOError:
-                self.oUtilsMsgs.DisplayWarning("UserInteractionLog.csv file is open. Please close Excel to continue.")
+                UtilsMsgs.DisplayWarning("UserInteractionLog.csv file is open. Please close Excel to continue.")
 
         if bCreatingNewFile:
             # write header lines (no indents for proper csv formatting)
@@ -338,7 +350,6 @@ class LogDetails():
         self.sImageNodeName_bg = ''
         self.sImageNodeName_fg = ''
         
-        self.oUtilsMsgs = UtilsMsgs()
         
         try:
             self.iCPUUptime = cv2.getTickCount()
@@ -378,7 +389,7 @@ class LogDetails():
         except Exception:
             tb = traceback.format_exc()
             sMsg = 'GetImageNodeName: Failed to get image node from viewing window. \n\n' + tb
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
             
                     
 
@@ -405,8 +416,6 @@ class CornerCoordinates():
         self.iWidgetHeight = 0
         self.iWidgetWidth = 0
         
-        self.oUtilsMsgs = UtilsMsgs()
-
         
         self.GetCornerCoordinates()
         self.ConvertWidgetCornerXYZToIJK(sImageNodeName_bg, sImageNodeName_fg)
@@ -495,7 +504,7 @@ class CornerCoordinates():
             
         except:
             sMsg = "Cannot convert widget corner XYZ to IJK"
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
             
 
         

@@ -149,6 +149,7 @@
     <xs:enumeration value="LabelMap"/>
     <xs:enumeration value="Segmentation"/>
     <xs:enumeration value="RTStruct"/>
+    <xs:enumeration value="Vector"/>
   </xs:restriction>
 </xs:simpleType>
 

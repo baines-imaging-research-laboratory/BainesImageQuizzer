@@ -1,5 +1,3 @@
-from abc import ABC, abstractmethod
-
 import PythonQt
 import os
 import vtk, qt, ctk, slicer
@@ -7,6 +5,11 @@ import sys
 import unittest
 import traceback
 
+import Utilities.UtilsMsgs as UtilsMsgs
+import Utilities.UtilsIOXml as UtilsIOXml
+import Utilities.UtilsCustomXml as UtilsCustomXml
+
+from Utilities.UtilsCustomXml import *
 from Utilities.UtilsMsgs import *
 from Utilities.UtilsIOXml import *
 
@@ -109,24 +112,22 @@ class ImageView:
     def RunSetup(self, xPageNode, sParentDataDir):
 
         # self.quizLayout = quizLayout
-        self.oIOXml = UtilsIOXml()
-        self.oUtilsMsgs = UtilsMsgs()
         self.sParentDataDir = sParentDataDir
         self.xPageNode = xPageNode
 
 
         # get ID and descriptor
-        self.sPageID = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
-        self.sPageDescriptor = self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
+        self.sPageID = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
+        self.sPageDescriptor = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
         
         # assign link views
-        if (self.oIOXml.GetValueOfNodeAttribute(xPageNode, 'LinkViews') == 'Y'):
+        if (UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'LinkViews') == 'Y'):
             self.bLinkViews = True
         else:
             self.bLinkViews = False
 
         # display Images
-        self.lxImageNodes = self.oIOXml.GetChildren(xPageNode, 'Image')
+        self.lxImageNodes = UtilsIOXml.GetChildren(xPageNode, 'Image')
        
         self.BuildViewNodes()
         
@@ -153,7 +154,7 @@ class ImageView:
             
             # Extract the type of volume to be displayed 
             #     if not a DICOM - assume it is a 'Data' volume
-            sDICOMRead = self.oIOXml.GetValueOfNodeAttribute(self.lxImageNodes[indImage], 'DicomRead')
+            sDICOMRead = UtilsIOXml.GetValueOfNodeAttribute(self.lxImageNodes[indImage], 'DicomRead')
             
             if (sDICOMRead == 'Y'):
                 oImageViewItem = DicomVolumeDetail(self, indImage)
@@ -172,7 +173,7 @@ class ImageView:
                 sMsg = 'BuildViewNodes:Image load Failed : ' + self.sPageID + ':' + oImageViewItem.sImagePath\
                         + "\n\nYou may have selected the wrong folder for the image data."\
                         + "\nExit 3D Slicer and restart the Image Quizzer with the correct database directory."
-                self.oUtilsMsgs.DisplayError(sMsg)
+                UtilsMsgs.DisplayError(sMsg)
                  
             slicer.app.processEvents()
         
@@ -216,7 +217,7 @@ class ImageView:
                                     + oViewNode.sImagePath \
                                     + '\n\n' + tb
                         
-                        self.oUtilsMsgs.DisplayError(sErrorMsg)         
+                        UtilsMsgs.DisplayError(sErrorMsg)         
                 
                 
                 oSlicerWidget = WidgetItem(oViewNode.sDestination)
@@ -326,7 +327,7 @@ class ImageView:
                     + 'See Page: ' + self.sPageID + '_' + self.sPageDescriptor \
                     + '  Image: ' + oViewNode.sNodeName + '\n' + oViewNode.sImagePath \
                     + '\n\n' + tb
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
           
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def SetLabelMapOutlineOrFill(self, lsLayoutWidgets):
@@ -350,7 +351,7 @@ class ImageView:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def ClearWidgets(self):
         # make sure the widget exists in case the default layout changes
-        for sWidgetName in self.oIOXml.lValidSliceWidgets:
+        for sWidgetName in UtilsCustomXml.lValidSliceWidgets:
             
             oSlicerWidget = WidgetItem(sWidgetName)
             if oSlicerWidget.slWidget != None:
@@ -411,11 +412,11 @@ class ImageView:
             bLabelMapMatchFound = False
 
             #    label maps may be loaded directly from xml or
-            #        the label map may have been created by the user (name + '-bainesquizlabel')
+            #        the label map may have been created by the user (name + '-quizlabel')
             #    User defined label maps will be assigned here as a priority over 
             #         any labelmaps loaded through xml file
             for slLabelMapNode in lLabelMapNodes:
-                if slLabelMapNode.GetName() == oImageForNPlanesNode.sNodeName + '-bainesquizlabel':
+                if slLabelMapNode.GetName() == oImageForNPlanesNode.sNodeName + '-quizlabel':
                     bLabelMapMatchFound = True
                     oSlicerWidget.slCompositeNode.SetLabelVolumeID(slLabelMapNode.GetID())
                     break
@@ -547,7 +548,7 @@ class ImageView:
 
                     # match label map file with xml image
                     sLabelMapFilename = slNodeLabelMap.GetName()
-                    if oImageNode.sNodeName + '-bainesquizlabel' == sLabelMapFilename:
+                    if oImageNode.sNodeName + '-quizlabel' == sLabelMapFilename:
                         
                         slLabelMapNodeID = slNodeLabelMap.GetID()
                         
@@ -680,8 +681,6 @@ class ViewNodeBase:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def RunSetup(self):
         self.sClassName = type(self).__name__
-        self.oIOXml = UtilsIOXml()
-        self.oUtilsMsgs = UtilsMsgs()
         
         self.SetXmlImageElement(self.iImageIndex)
         self.SetPageID(self.oSession.sPageID)
@@ -694,25 +693,25 @@ class ViewNodeBase:
             Validation of these attributes for acceptable values was carried out when the quiz was loaded.
         '''
 
-        sImageID = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'ID')
-        self.sImageType = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'Type')
-#         self.sVolumeFormat = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'Format')
+        sImageID = UtilsIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'ID')
+        self.sImageType = UtilsIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'Type')
+#         self.sVolumeFormat = UtilsIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'Format')
 
-        self.sColorTableName = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'ColorTable')
+        self.sColorTableName = UtilsIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'ColorTable')
 
-        sRotateToAcquisition = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'RotateToAcquisition')
+        sRotateToAcquisition = UtilsIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'RotateToAcquisition')
         if sRotateToAcquisition == 'Y':
             self.bRotateToAcquisition = True
         else:
             self.bRotateToAcquisition = False
 
-        sOpacity = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'Opacity')
+        sOpacity = UtilsIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'Opacity')
         if sOpacity != '':
             self.fOpacity = float(sOpacity)
         else:
             self.fOpacity = 0.5 # NOTE: you must assign the default here - it is not inherited
             
-        sInitialSliceOffset = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'InitialSliceOffset')
+        sInitialSliceOffset = UtilsIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'InitialSliceOffset')
         if sInitialSliceOffset != '':
             self.fInitialSliceOffset = float(sInitialSliceOffset)
         else:
@@ -721,27 +720,27 @@ class ViewNodeBase:
         self.sNodeName =  self.GetPageID() + '_' + sImageID
         
         
-        sMergeLabelMaps = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'MergeLabelMaps')
+        sMergeLabelMaps = UtilsIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'MergeLabelMaps')
         if sMergeLabelMaps == 'Y':
             self.bMergeLabelMaps = True
         else:
             self.bMergeLabelMaps = False
 
-        sZoomFactor = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'ZoomFactor')
+        sZoomFactor = UtilsIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'ZoomFactor')
         if sZoomFactor != '':
             # convert for field of view factor
             self.fZoomFactorForFOV = 1.0 / float(sZoomFactor)
         else:
             self.fZoomFactorForFOV = 1.0
 
-        sPanOrigin = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'PanOrigin')
+        sPanOrigin = UtilsIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'PanOrigin')
         self.lfPanOrigin = []
         if sPanOrigin != '':
             lsPanOrigin = sPanOrigin.split()
             for ind in range(len(lsPanOrigin)):
                 self.lfPanOrigin.append(float(lsPanOrigin[ind]))
                 
-        sWindowLevel = self.oIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'WindowLevel')
+        sWindowLevel = UtilsIOXml.GetValueOfNodeAttribute(self.GetXmlImageElement(), 'WindowLevel')
         self.SetInitialWindowLevel(sWindowLevel)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -749,18 +748,18 @@ class ViewNodeBase:
         
 
         # Extract Destination (Red, Green, Yellow, Slice4)
-        lxDestinationNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'DefaultDestination')
+        lxDestinationNodes = UtilsIOXml.GetChildren(self.GetXmlImageElement(), 'DefaultDestination')
         if len(lxDestinationNodes) == 0:
             self.sDestination = 'Red'
         else:
-            self.sDestination = self.oIOXml.GetDataInNode(lxDestinationNodes[0])
+            self.sDestination = UtilsIOXml.GetDataInNode(lxDestinationNodes[0])
             
         # Extract viewing layer (foreground, background, label)
-        lxLayerNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Layer')
+        lxLayerNodes = UtilsIOXml.GetChildren(self.GetXmlImageElement(), 'Layer')
         if len(lxLayerNodes) == 0: # default
             self.sViewLayer = 'Background'
         else:
-            self.sViewLayer = self.oIOXml.GetDataInNode(lxLayerNodes[0])
+            self.sViewLayer = UtilsIOXml.GetDataInNode(lxLayerNodes[0])
 
 
         # Extract orientation (axial, sagittal, coronal)
@@ -768,20 +767,20 @@ class ViewNodeBase:
             # Only image volumes have an orientation, 
             # segmentation layer (RTStruct) follows the orientation of the display node
              
-            lxOrientationNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'DefaultOrientation')
+            lxOrientationNodes = UtilsIOXml.GetChildren(self.GetXmlImageElement(), 'DefaultOrientation')
             if len(lxOrientationNodes) == 0:
                 self.sOrientation = 'Axial'
                 
             else:
-                self.sOrientation = self.oIOXml.GetDataInNode(lxOrientationNodes[0])
+                self.sOrientation = UtilsIOXml.GetDataInNode(lxOrientationNodes[0])
 
         # Extract path element
-        lxPathNodes = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'Path')
+        lxPathNodes = UtilsIOXml.GetChildren(self.GetXmlImageElement(), 'Path')
 
         if len(lxPathNodes) == 0:
             self.sImagePath = ''
         else:
-            self.sImagePath = os.path.join(sParentDataDir, self.oIOXml.GetDataInNode(lxPathNodes[0]))
+            self.sImagePath = os.path.join(sParentDataDir, UtilsIOXml.GetDataInNode(lxPathNodes[0]))
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def CheckForNodeExists(self, sNodeClass):
@@ -892,20 +891,20 @@ class ViewNodeBase:
         '''
         
         # get XML ROIs element
-        lxRoisNode = self.oIOXml.GetChildren(self.GetXmlImageElement(), 'ROIs')
+        lxRoisNode = UtilsIOXml.GetChildren(self.GetXmlImageElement(), 'ROIs')
         
         # get visibility code from the attribute
         #    if the attribute doesn't exist, the code remains as it was initialized
         if len(lxRoisNode) > 0 :
-            self.sRoiVisibilityCode = self.oIOXml.GetValueOfNodeAttribute(lxRoisNode[0], 'ROIVisibilityCode')
+            self.sRoiVisibilityCode = UtilsIOXml.GetValueOfNodeAttribute(lxRoisNode[0], 'ROIVisibilityCode')
 
         if (self.sRoiVisibilityCode == 'Select' or self.sRoiVisibilityCode == 'Ignore'):
             
             # get list of ROI children
-            lxRoiChildren = self.oIOXml.GetChildren(lxRoisNode[0], 'ROI')
+            lxRoiChildren = UtilsIOXml.GetChildren(lxRoisNode[0], 'ROI')
 
             for indRoi in range(len(lxRoiChildren)):
-                sRoiName = self.oIOXml.GetDataInNode(lxRoiChildren[indRoi])
+                sRoiName = UtilsIOXml.GetDataInNode(lxRoiChildren[indRoi])
                 self.AppendToROIList(sRoiName)
                 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1041,6 +1040,15 @@ class DataVolumeDetail(ViewNodeBase):
                     if bNodeExists and (self.slNode is None):
                         bLoadSuccess = False
             
+            elif (self.sImageType == 'Vector'):
+                
+                bNodeExists = self.CheckForNodeExists('vtkMRMLVectorVolumeNode')
+                if not (bNodeExists):
+                    self.slNode = slicer.util.loadVolume(self.sImagePath, {'show': False, 'name': self.sNodeName, 'singleFile': True} )
+                else: # make sure a node exists after load
+                    if bNodeExists and (self.slNode is None):
+                        bLoadSuccess = False
+            
             elif (self.sImageType == 'Segmentation'):
                 
                 bNodeExists = self.CheckForNodeExists('vtkMRMLSegmentationNode')
@@ -1081,7 +1089,7 @@ class DataVolumeDetail(ViewNodeBase):
             else:
                 
                 sErrorMsg = ('Undefined image type: %s' % self.sImageType)
-                self.oUtilsMsgs.DisplayError(sErrorMsg)
+                UtilsMsgs.DisplayError(sErrorMsg)
                 bLoadSuccess = False
                 
         except:
@@ -1101,7 +1109,7 @@ class DataVolumeDetail(ViewNodeBase):
 
         lSegNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLSegmentationNode')
         
-        lxImages = self.oIOXml.GetChildren(xPageNode, 'Image')
+        lxImages = UtilsIOXml.GetChildren(xPageNode, 'Image')
         
         
         for indSegNode in range(lSegNodes.GetNumberOfItems()):
@@ -1112,10 +1120,10 @@ class DataVolumeDetail(ViewNodeBase):
                 
                 # look for xml Image entry for this page that matches this segmentation node
                 for xImage in lxImages:
-                    sXmlNodeName = self.GetPageID() + '_' + self.oIOXml.GetValueOfNodeAttribute(xImage, 'ID')
+                    sXmlNodeName = self.GetPageID() + '_' + UtilsIOXml.GetValueOfNodeAttribute(xImage, 'ID')
                     if sXmlNodeName == sSegNodeName:
-                        lxDestinations = self.oIOXml.GetChildren(xImage, 'DefaultDestination')
-                        sXmlDestination = self.oIOXml.GetDataInNode(lxDestinations[0])
+                        lxDestinations = UtilsIOXml.GetChildren(xImage, 'DefaultDestination')
+                        sXmlDestination = UtilsIOXml.GetDataInNode(lxDestinations[0])
                         if sXmlDestination == self.sDestination:
                             # found a matching segmentation node to the image being displayed
                             bFoundSegNode = True
@@ -1242,12 +1250,12 @@ class DicomVolumeDetail(ViewNodeBase):
             except:
                 sMsg = 'Cannot read SeriesInstanceUID from DICOM using pydicom.' \
                         + '\n See administrator : ' + sys._getframe(  ).f_code.co_name
-                self.oUtilsMsgs.DisplayError(sMsg)
+                UtilsMsgs.DisplayError(sMsg)
 
         else:
             sMsg = 'Image file does not exist: ' + self.sImagePath \
                     + '\n See administrator : ' + sys._getframe(  ).f_code.co_name
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def LoadVolume(self):
@@ -1345,7 +1353,7 @@ class DicomVolumeDetail(ViewNodeBase):
         else:
             bLoadSuccess = False
             sErrorMsg = ('Slicer Database is not open')
-            self.oUtilsMsgs.DisplayError(sErrorMsg)
+            UtilsMsgs.DisplayError(sErrorMsg)
 
         
 

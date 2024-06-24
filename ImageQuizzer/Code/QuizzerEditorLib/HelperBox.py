@@ -80,7 +80,7 @@ class HelperBox(VTKObservationMixin):
     self.colorNodeID = None
     # string
     self.createMergeOptions = ""
-    self.mergeVolumePostfix = "-bainesquizlabel"
+    self.mergeVolumePostfix = "-quizlabel"
     # slicer helper class
     self.volumesLogic = slicer.modules.volumes.logic()
     # widgets that are dynamically created on demand

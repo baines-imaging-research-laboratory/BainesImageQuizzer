@@ -5,7 +5,7 @@
 			<DefaultDestination>Green</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
-			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\DICOM\DCE\IGPC2-026.MR.MMR_PELVIS_MMR.0031.0001.2016.05.11.12.40.24.890625.175644657</Path>
+			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\DICOM\DCE\IGPC2-026.MR.MMR_PELVIS_MMR.0031.0001.2016.05.11.12.40.24.890625.175644657.IMA</Path>
 		</Image>
 		<Image Type="Volume" ID="ADC" RotateToAcquisition="Y">
 			<DefaultDestination>Red</DefaultDestination>
@@ -52,7 +52,7 @@
 			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\IGPC2026\In-Vivo Image Volumes\Raw\NiFTi\PSMA PET.nii</Path>
 		</Image>
-		<Image Type="Volume" ID="Slice3" RotateToAcquisition="Y" DicomRead="N">
+		<Image Type="Vector" ID="Slice3" RotateToAcquisition="Y" DicomRead="N">
 			<DefaultDestination>Slice4</DefaultDestination>
 			<Layer>Background</Layer>
 			<DefaultOrientation>Axial</DefaultOrientation>
