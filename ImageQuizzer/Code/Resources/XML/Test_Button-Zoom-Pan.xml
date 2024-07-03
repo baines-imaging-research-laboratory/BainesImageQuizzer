@@ -11,6 +11,9 @@
                 <Option>script1.py</Option>
 				<Option>script2.py</Option>
             </Question>
+			<Question Type="CheckBox" Descriptor="Test Check">
+				<Option>chk 1</Option>
+            </Question>
         </QuestionSet>
     </Page>
     <Page ID="Patient 1" EnableSegmentEditor="Y" AllowMultipleResponse="N" ButtonScriptRerunRequired = "N" PageGroup='2'>
@@ -35,6 +38,9 @@
         <QuestionSet>
             <Question Type="InfoBox">
                 <Option>3 question sets</Option>
+            </Question>
+            <Question Type="CheckBox" Descriptor="Test Checkboxes">
+                <Option>Check1</Option>
             </Question>
         </QuestionSet>
         <QuestionSet ID="Processing script" Descriptor="Python executable">

@@ -1,6 +1,13 @@
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
+
+import Utilities.UtilsFilesIO as UtilsFilesIO
+import Utilities.UtilsIOXml as UtilsIOXml
+
+
+from Utilities.UtilsFilesIO import *
 from Session import *
+from CustomWidgets import *
 from TestingStatus import *
 from Utilities.UtilsIOXml import *
 
@@ -96,8 +103,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
     def __init__(self):
         
-        
-        self._oFilesIO = None
+        pass
         
         
     #------------------------------------------- 
@@ -110,13 +116,12 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
         sModuleName = 'ImageQuizzer'
 
-        self._oFilesIO = UtilsFilesIO()
-        self.oIOXml = UtilsIOXml()
+        self.oSession = Session()
         
         # create/set environment variable to be checked in UtilsIOXml class
         #    to prevent displaying error messages during testing
         os.environ["testing"] = "1"
-        self._oFilesIO.setupTestEnvironment()
+        UtilsFilesIO.setupTestEnvironment()
 
         self.sTempDir = os.path.join(tempfile.gettempdir(),'ImageQuizzer')
         if not os.path.exists(self.sTempDir):
@@ -142,9 +147,9 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         tupResults.append(self.test_RandomizePageGroups_NoSeed())
 
         tupResults.append(self.test_GetStoredRandomizedIndices())
-        tupResults.append(self.test_AddRandomizedIndicesToXML())
+        tupResults.append(self.test_AddRandomizedIndicesToQuizResultsFile())
         
-        tupResults.append(self.test_AdjustXMLForRepeatedPage())
+        tupResults.append(self.test_AdjustQuizResultsFileForRepeatedPage())
         tupResults.append(self.test_TestMultipleRepeats())
         tupResults.append(self.test_LoopingWithRandomizedPages())
         
@@ -178,7 +183,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         xQS1 = etree.SubElement(xPage2, "QuestionSet")
         xQS1 = etree.SubElement(xPage3, "QuestionSet")
         
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsIOXml.SetRootNode(xRoot)
         
         lExpectedCompositeIndices = []
         lExpectedCompositeIndices.append([0,0,1,0])
@@ -187,9 +192,6 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         lExpectedCompositeIndices.append([2,0,3,0])
         
         
-        self.oSession = Session()
-        self.oSession.SetFilesIO(self._oFilesIO)
-        self.oSession.SetIOXml(self.oIOXml)
         self.oSession.BuildNavigationList()
         lCompositeIndicesResult = self.oSession.GetNavigationList()
         
@@ -199,7 +201,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
             bTestResult = False
             
         # set quiz as complete for test purposes - so as not to trigger error message
-        self.oSession.SetQuizComplete(True)
+        self.oSession.oCustomWidgets.SetQuizComplete(True)
 
         tupResult = self.fnName, bTestResult
         return tupResult
@@ -226,15 +228,15 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         xQS1 = etree.SubElement(xPage5, "QuestionSet")
         
         dAttrib = {"PageGroup":"1"}
-        self.oIOXml.UpdateAttributesInElement(xPage1, dAttrib)
-        self.oIOXml.UpdateAttributesInElement(xPage2, dAttrib)
-        self.oIOXml.UpdateAttributesInElement(xPage3, dAttrib)
-        self.oIOXml.UpdateAttributesInElement(xPage4, dAttrib)
-        self.oIOXml.UpdateAttributesInElement(xPage5, dAttrib)
+        UtilsIOXml.UpdateAttributesInElement(xPage1, dAttrib)
+        UtilsIOXml.UpdateAttributesInElement(xPage2, dAttrib)
+        UtilsIOXml.UpdateAttributesInElement(xPage3, dAttrib)
+        UtilsIOXml.UpdateAttributesInElement(xPage4, dAttrib)
+        UtilsIOXml.UpdateAttributesInElement(xPage5, dAttrib)
         dAttrib = {"Rep":"1"}
-        self.oIOXml.UpdateAttributesInElement(xPage4, dAttrib)
+        UtilsIOXml.UpdateAttributesInElement(xPage4, dAttrib)
         
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsIOXml.SetRootNode(xRoot)
         
         lExpectedCompositeIndices = []
         lExpectedCompositeIndices.append([0,0,1,0])
@@ -245,9 +247,6 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         lExpectedCompositeIndices.append([4,0,1,0])
         
         
-        self.oSession = Session()
-        self.oSession.SetFilesIO(self._oFilesIO)
-        self.oSession.SetIOXml(self.oIOXml)
         self.oSession.BuildNavigationList()
         lCompositeIndicesResult = self.oSession.GetNavigationList()
         
@@ -257,7 +256,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
             bTestResult = False
             
         # set quiz as complete for test purposes - so as not to trigger error message
-        self.oSession.SetQuizComplete(True)
+        self.oSession.oCustomWidgets.SetQuizComplete(True)
 
         tupResult = self.fnName, bTestResult
         return tupResult
@@ -482,10 +481,10 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         etree.SubElement(xRoot,"Page", PageGroup="1")
         child = etree.SubElement(xRoot,"RandomizedPageGroupIndices")
         child.text = '0,5,3,1,4,2' 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsIOXml.SetRootNode(xRoot)
         
         liExpectedIndices = [0,5,3,1,4,2]
-        liStoredIndices = self.oSession.GetStoredRandomizedIndices()
+        liStoredIndices = self.oSession.oCustomWidgets.GetStoredRandomizedIndices()
         
         if liStoredIndices == liExpectedIndices:
             bTestResult = True
@@ -497,7 +496,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         return tupResult
         
     #------------------------------------------- 
-    def test_AddRandomizedIndicesToXML(self):
+    def test_AddRandomizedIndicesToQuizResultsFile(self):
         
         self.fnName = sys._getframe().f_code.co_name
         sMsg = ''
@@ -505,13 +504,14 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         
         xRoot = etree.Element("Session", RandomizePageGroups="Y")
         etree.SubElement(xRoot,"Page", PageGroup="0")
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsIOXml.SetRootNode(xRoot)
+
         
         liIndices = [0,5,3,1,4,2]
-        self.oSession.AddRandomizedIndicesToXML(liIndices)
+        self.oSession.oCustomWidgets.AddRandomizedIndicesToQuizResultsFile(liIndices)
 
         # read the updated xml to get what was stored 
-        liStoredIndices = self.oSession.GetStoredRandomizedIndices()
+        liStoredIndices = self.oSession.oCustomWidgets.GetStoredRandomizedIndices()
         
         if liStoredIndices == liIndices:
             bTestResult = True
@@ -550,7 +550,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         
 
     #-------------------------------------------
-    def test_AdjustXMLForRepeatedPage(self):
+    def test_AdjustQuizResultsFileForRepeatedPage(self):
 
         self.fnName = sys._getframe().f_code.co_name
         sMsg = ''
@@ -586,10 +586,10 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         O3 = etree.SubElement(Q3, 'Option')
         QS4 = etree.SubElement(xExpPage4,'QuestionSet')
 
-        self.oIOXml.SetRootNode(xExpectedRoot)
+        UtilsIOXml.SetRootNode(xExpectedRoot)
         
         sFullFile = self.sTempDir + '\\ExpectedLoop.xml'
-        self.oIOXml.SaveXml(sFullFile)
+        UtilsIOXml.SaveXml(sFullFile)
 
         
         #>>>>>>>>>>>>>>>>>>>>>>> Input
@@ -627,11 +627,12 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         
         
         
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsIOXml.SetRootNode(xRoot)
+
         
         # for debug
         sFullFile = self.sTempDir + '\\PreLoop.xml' 
-        self.oIOXml.SaveXml(sFullFile)
+        UtilsIOXml.SaveXml(sFullFile)
         
          
         #>>>>>>>>>>>>>>>>>>>>>>>
@@ -639,16 +640,19 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         self.oSession.BuildNavigationList()
         # set current index to the repeated xml element
         self.oSession.SetCurrentNavigationIndex(3)
-        self.oSession.AdjustXMLForRepeatedPage()
+        self.oSession.oCustomWidgets.AdjustQuizResultsFileForRepeatedPage(\
+                    self.oSession.GetNavigationPage(self.oSession.GetCurrentNavigationIndex()),\
+                    self.oSession.GetNavigationPage( self.oSession.GetCurrentNavigationIndex() - 1))
+
         
-        xAdjustedRoot = self.oIOXml.GetRootNode()
+        xAdjustedRoot = self.oSession.oCustomWidgets.GetRootNode()
         sAdjustedXML = etree.tostring(xAdjustedRoot)
         sExpectedXML = etree.tostring(xExpectedRoot)
         
         # # for debug
-        # print(sAdjustedXML)
-        # print(sExpectedXML)
-        # print(self.oSession.GetNavigationList())
+#         print(sAdjustedXML)
+#         print(sExpectedXML)
+#         print(self.oSession.GetNavigationList())
         
         if sAdjustedXML == sExpectedXML:
             bTestResult = True
@@ -671,17 +675,17 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         xRoot = self.CreateTestXmlForLooping()
 
 
-        self.oIOXml.SetRootNode(xRoot)
+        UtilsIOXml.SetRootNode(xRoot)
         
         #############
         # for debug visualization - save inputs and outputs to temp files
         # comment out the deletion of these files at the end of 'runTest' if you need to visualize the xml structure
         sResultsPath = self.sTempDir + '\\Results.xml'
         sFullFile = self.sTempDir + '\\PreLoop.xml'
-        self.oIOXml.SaveXml(sFullFile)
+        UtilsIOXml.SaveXml(sFullFile)
         #############
 
-        
+#         self.oSession.oCustomWidgets.SetRootNode(xRoot)
         self.oSession.BuildNavigationList()
             # print(self.oSession.GetNavigationList())
         '''
@@ -714,6 +718,7 @@ class TestSessionTest(ScriptedLoadableModuleTest):
 
         liResults_test1 = []
         
+
         ########### Test 1
         #     Repeat nav index 3 - loop on Page with only one question set
         self.oSession.SetCurrentNavigationIndex(3) # repeat xPage2 (3 in composite list - 0-based)
@@ -800,23 +805,23 @@ class TestSessionTest(ScriptedLoadableModuleTest):
         # comment out the deletion of these files at the end of 'runTest' if you need to visualize the xml structure
         sResultsPath = self.sTempDir + '\\Results.xml'
         sFullFile = self.sTempDir + '\\PreLoop.xml'
-        self.oIOXml.SaveXml(sFullFile)
+        UtilsIOXml.SaveXml(sFullFile)
         #############
 
         # build xml
         xRoot = self.CreateTestXmlForLooping()
 
         
-        self.oIOXml.SetRootNode(xRoot)
-        self.oIOXml.SaveXml(sFullFile)
+        UtilsIOXml.SetRootNode(xRoot)
+        UtilsIOXml.SaveXml(sFullFile)
         
         self.oSession.BuildNavigationList()
             #print(self.oSession.GetNavigationList())
         
         # set up for randomizing given a randomized list of PageGroup indices
-        self.oSession.SetRandomizeRequired('Y')
+        self.oSession.oCustomWidgets.SetRandomizeRequired('Y')
         liRandIndices = [0,2,3,1]
-        self.oSession.AddRandomizedIndicesToXML(liRandIndices)
+        self.oSession.oCustomWidgets.AddRandomizedIndicesToQuizResultsFile(liRandIndices)
         # liRandIndices = [2,3,1] # PageGroup numbers
         # self.oSession.SetNavigationList( self.oSession.ShuffleNavigationList(liRandIndices) )
         self.oSession.BuildNavigationList()

@@ -2,6 +2,11 @@ import os, sys
 import warnings
 import vtk, qt, ctk, slicer
 
+import Utilities.UtilsMsgs as UtilsMsgs
+import Utilities.UtilsIOXml as UtilsIOXml
+import Utilities.UtilsCustomXml as UtilsCustomXml
+
+from Utilities.UtilsCustomXml import *
 from Utilities.UtilsIOXml import *
 from Utilities.UtilsMsgs import *
 
@@ -10,6 +15,7 @@ import shutil
 import re    # for regex re.sub
 import SimpleITK as sitk
 import numpy as np
+import pathlib
 
 from datetime import datetime
 import DICOMLib
@@ -34,39 +40,31 @@ class UtilsFilesIO:
         - to handle disk input/output
     """
     
-    def __init__(self, parent=None):
-        self.parent = parent
-        
-        self._sScriptedModulesPath = ''     # location of quizzer module project
+    _sScriptedModulesPath = ''     # location of quizzer module project
+    
+    _sQuizDir = ''                 # folder - holds quiz files to copy to user
+    _sQuizPath = ''                # full path (dir/file) of quiz to copy to user
+    _sQuizFilename = ''            # quiz filename only (no dir)
+    _sXmlSchemaFilePath = ''       # path to schema file for validation
+    
+    _sDataParentDir = ''           # parent folder to images
+    
+    _sUsersParentDir = ''          # folder - parent dir to all user folders
+    _sUsername = ''                # name of user taking the quiz
+    _sUserDir = ''                 # folder - holds quiz subfolders for specific user
 
-        self._sXmlQuizDir = ''         # folder - holds XML quiz files to copy to user
-        self._sXmlQuizPath = ''       # full path (dir/file) of quiz to copy to user
-        self._sXmlQuizFilename = ''            # quiz filename only (no dir)
+    _sUserQuizResultsDir = ''      # folder for quiz results
+    _sUserQuizResultsPath = ''     # full path (dir/file) for user's quiz results
 
-        self._sDataParentDir = ''           # parent folder to images
-        
-        self._sUsersParentDir = ''          # folder - parent dir to all user folders
-        self._sUsername = ''                # name of user taking the quiz
-        self._sUserDir = ''                 # folder - holds quiz subfolders for specific user
-
-        self._sUserQuizResultsDir = ''      # folder for quiz results
-        self._sUserQuizResultsPath = ''     # full path (dir/file) for user's quiz results
-
-        self._sDICOMDatabaseDir = ''
+    _sDICOMDatabaseDir = ''
 #         self._sImageVolumeDataDir = ''
 
-        self._sResourcesROIColorFilesDir = ''  # folder to the Quizzer specific roi color files
-        self._sDefaultROIColorTableName = 'GenericColors'
-        self._sQuizzerROIColorTableNameWithExt = 'QuizzerROIColorTable.txt'
-        self._sQuizzerROIColorTablePath = ''
+    _sResourcesROIColorFilesDir = ''  # folder to the Quizzer specific roi color files
+    _sDefaultROIColorTableName = 'GenericColors'
+    _sQuizzerROIColorTableNameWithExt = 'QuizzerROIColorTable.txt'
+    _sQuizzerROIColorTablePath = ''
 
-        self.oUtilsMsgs = UtilsMsgs()
-        self.oIOXml = UtilsIOXml()
-
-        self.setupTestEnvironment()
-
-
-
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     #-------------------------------------------
@@ -76,14 +74,13 @@ class UtilsFilesIO:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
         
-    def setupTestEnvironment(self):
+    @staticmethod
+    def setupTestEnvironment():
         # check if function is being called from unit testing
         if "testing" in os.environ:
-            self.sTestMode = os.environ.get("testing")
+            UtilsFilesIO.sTestMode = os.environ.get("testing")
         else:
-            self.sTestMode = "0"
-
- 
+            UtilsFilesIO.sTestMode = "0"
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
     #-------------------------------------------
@@ -92,138 +89,187 @@ class UtilsFilesIO:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
-    #----------
-    def SetDataParentDir(self, sDataDirInput):
-        self._sDataParentDir = sDataDirInput
         
     #----------
-    def SetUsersParentDir(self, sDirInput):
-        self._sUsersParentDir = sDirInput
-        
-    #----------
-    def SetQuizUsername(self, sInput):
-        self._sUsername = sInput
-        
-    #----------
-    def SetXmlQuizPathAndFilename(self, sSelectedQuizPath):
-
-        self._sXmlQuizPath = os.path.join(self._sXmlQuizDir, sSelectedQuizPath)
-        self._sXmlQuizDir, self._sXmlQuizFilename = os.path.split(self._sXmlQuizPath)
-        
-    #----------
-    def SetUsernameAndDir(self, sSelectedUser):
-        self._sUsername = sSelectedUser
-        self._sUserDir = os.path.join(self.GetUsersParentDir(), self._sUsername)
-        
-    #----------
-    def SetDICOMDatabaseDir(self, sInputDir):
-        self._sDICOMDatabaseDir = sInputDir
-    
-    #----------
-    #----------
-    def GetDataParentDir(self):
-        return self._sDataParentDir
+    @staticmethod
+    def SetDataParentDir(sDataDirInput):
+        UtilsFilesIO._sDataParentDir = sDataDirInput
 
     #----------
-    def GetDICOMDatabaseDir(self):
-        return self._sDICOMDatabaseDir
+    @staticmethod
+    def SetUsersParentDir(sDirInput):
+        UtilsFilesIO._sUsersParentDir = sDirInput
+        
+    #----------
+    @staticmethod
+    def SetQuizUsername(sInput):
+        UtilsFilesIO._sUsername = sInput
+        
+    #----------
+    @staticmethod
+    def SetQuizPathAndFilename(sSelectedQuizPath):
+
+        UtilsFilesIO._sQuizPath = os.path.join(UtilsFilesIO._sQuizDir, sSelectedQuizPath)
+        UtilsFilesIO._sQuizDir, UtilsFilesIO._sQuizFilename = os.path.split(UtilsFilesIO._sQuizPath)
+        
+    #----------
+    @staticmethod
+    def SetUsernameAndDir( sSelectedUser):
+        UtilsFilesIO._sUsername = sSelectedUser
+        UtilsFilesIO._sUserDir = os.path.join(UtilsFilesIO.GetUsersParentDir(), UtilsFilesIO._sUsername)
+        
+    #----------
+    @staticmethod
+    def SetDICOMDatabaseDir( sInputDir):
+        UtilsFilesIO._sDICOMDatabaseDir = sInputDir
     
     #----------
-    def GetScriptsDir(self):
-        sImageQuizzerDir = str(Path(self.GetScriptedModulesPath()).parents[0])
+    @staticmethod
+    def SetSchemaFilePath(sInputFile):
+        UtilsFilesIO._sXmlSchemaFilePath = os.path.join(UtilsFilesIO.GetXmlQuizDir(),sInputFile)
+        
+ 
+    #----------
+    #----------
+    #----------
+    @staticmethod
+    def GetDataParentDir():
+        return UtilsFilesIO._sDataParentDir
+
+    #----------
+    @staticmethod
+    def GetDICOMDatabaseDir():
+        return UtilsFilesIO._sDICOMDatabaseDir
+    
+    #----------
+    @staticmethod
+    def GetScriptsDir():
+        sImageQuizzerDir = str(Path(UtilsFilesIO.GetScriptedModulesPath()).parents[0])
         return os.path.join(sImageQuizzerDir,'Inputs','Scripts')
     
     #----------
-    def GetDirFromPath(self, sFullPath):
+    @staticmethod
+    def GetDirFromPath( sFullPath):
         head, tail = os.path.split(sFullPath)
         return head
     
     #----------
-    def GetScriptedModulesPath(self):
-        return self._sScriptedModulesPath
+    @staticmethod
+    def GetScriptedModulesPath():
+        return UtilsFilesIO._sScriptedModulesPath
     
     #----------
-    def GetXmlQuizPath(self):
-        return self._sXmlQuizPath
+    @staticmethod
+    def GetXmlQuizPath():
+        return UtilsFilesIO._sQuizPath
     
     #----------
-    def GetUsername(self):
-        return self._sUsername
+    @staticmethod
+    def GetUsername():
+        return UtilsFilesIO._sUsername
      
     #----------
-    def GetUserDir(self):
-        return self._sUserDir
-
-    def GetUsersParentDir(self):
-        return self._sUsersParentDir    
+    @staticmethod
+    def GetUserDir():
+        return UtilsFilesIO._sUserDir
 
     #----------
-    def GetUserQuizResultsDir(self):
-        return self._sUserQuizResultsDir
+    @staticmethod
+    def GetUsersParentDir():
+        return UtilsFilesIO._sUsersParentDir    
 
     #----------
-    def GetUserQuizResultsPath(self):
-        return self._sUserQuizResultsPath
+    @staticmethod
+    def GetUserQuizResultsDir():
+        return UtilsFilesIO._sUserQuizResultsDir
+
+    #----------
+    @staticmethod
+    def GetUserQuizResultsPath():
+        return UtilsFilesIO._sUserQuizResultsPath
     
     #----------
-    def GetXmlQuizDir(self):
-        return self._sXmlQuizDir
+    @staticmethod
+    def GetXmlQuizDir():
+        return UtilsFilesIO._sQuizDir
     
     #----------
-    def GetRelativeUserPath(self, sInputPath):
+    @staticmethod
+    def GetSchemaFilePath():
+        return UtilsFilesIO._sXmlSchemaFilePath
+    
+    #----------
+    @staticmethod
+    def GetRelativeUserPath( sInputPath):
         # remove absolute path to user folders
-        return sInputPath.replace(self.GetUserDir()+'\\','')
+        return sInputPath.replace(UtilsFilesIO.GetUserDir()+'\\','')
 
     #----------
-    def GetRelativeDataPath(self, sInputPath):
+    @staticmethod
+    def GetRelativeDataPath( sInputPath):
         # remove absolute path to user folders
-        return sInputPath.replace(self.GetDataParentDir()+'\\','')
+        return sInputPath.replace(UtilsFilesIO.GetDataParentDir()+'\\','')
 
     #----------
-    def GetAbsoluteDataPath(self, sInputPath):
-        return os.path.join(self._sDataParentDir, sInputPath)
+    @staticmethod
+    def GetAbsoluteDataPath( sInputPath):
+        return os.path.join(UtilsFilesIO._sDataParentDir, sInputPath)
     
     #----------
-    def GetAbsoluteUserPath(self, sInputPath):
-        return os.path.join(self.GetUserDir(), sInputPath)
+    @staticmethod
+    def GetAbsoluteUserPath( sInputPath):
+        return os.path.join(UtilsFilesIO.GetUserDir(), sInputPath)
     
     #----------
-    def GetQuizFilename(self):
-        return self._sXmlQuizFilename
+    @staticmethod
+    def GetQuizFilename():
+        return UtilsFilesIO._sQuizFilename
     
     #----------
-    def GetQuizFilenameNoExt(self):
-        sFilenameNoExt = os.path.splitext(self.GetQuizFilename())[0]
+    @staticmethod
+    def GetQuizFilenameNoExt():
+        sFilenameNoExt = os.path.splitext(UtilsFilesIO.GetQuizFilename())[0]
         
         return sFilenameNoExt
     
     #----------
-    def GetFilenameWithExtFromPath(self, sFilePath):
+    @staticmethod
+    def GetFilenameWithExtFromPath( sFilePath):
         sDir,sFilenameWithExt = os.path.split(sFilePath)
 
         return sFilenameWithExt
     
     #----------
-    def GetFilenameNoExtFromPath(self, sFilePath):
+    @staticmethod
+    def GetFilenameNoExtFromPath( sFilePath):
         sDir, sFilenameExt = os.path.split(sFilePath)
         sFilenameNoExt = os.path.splitext(sFilenameExt)[0]
 
         return sFilenameNoExt
     
+    #----------
+    @staticmethod
+    def GetExtensionFromPath( sFilePath):
+        
+        sExt = pathlib.Path(sFilePath).suffix
+
+        return sExt
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetFolderNameForPageResults(self, oSession):
+    @staticmethod
+    def GetFolderNameForPageResults( oSession):
         """ Quiz results (eg. LabelMaps, MarkupLines) are stored in a directory where the name is derived from the 
             current page of the Session.
         """
         
         # get page info from the session's current page to create directory
-        xPageNode = oSession.GetCurrentPageNode()
+        xPageNode = oSession.oCustomWidgets.GetNthPageNode(oSession.GetCurrentPageIndex())
         sPageIndex = str(oSession.GetCurrentPageIndex() + 1)
-        sPageID = oSession.oIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
-        sPageDescriptor = oSession.oIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
-        sPageGroup = oSession.oIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
+        sPageID = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'ID')
+        sPageDescriptor = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'Descriptor')
+        sPageGroup = UtilsIOXml.GetValueOfNodeAttribute(xPageNode, 'PageGroup')
         # sDirName = os.path.join(self.GetUserQuizResultsDir(), 'Pg'+ sPageIndex + '_' + sPageID )
-        sDirName = os.path.join(self.GetUserQuizResultsDir(), 'PgGroup' + sPageGroup + '_' + sPageID + '_' + sPageDescriptor )
+        sDirName = os.path.join(UtilsFilesIO.GetUserQuizResultsDir(), 'PgGroup' + sPageGroup + '_' + sPageID + '_' + sPageDescriptor )
 
         return sDirName
         
@@ -232,49 +278,61 @@ class UtilsFilesIO:
     #----------
     #----------ROI Color Files
     #----------
-    def SetResourcesROIColorFilesDir(self):
-        self._sResourcesROIColorFilesDir = os.path.join(self.GetScriptedModulesPath(),\
+    @staticmethod
+    def SetResourcesROIColorFilesDir():
+        UtilsFilesIO._sResourcesROIColorFilesDir = os.path.join(UtilsFilesIO.GetScriptedModulesPath(),\
                                                         'Resources','ColorFiles')
         
     #----------
-    def GetResourcesROIColorFilesDir(self):
-        return self._sResourcesROIColorFilesDir
+    @staticmethod
+    def GetResourcesROIColorFilesDir():
+        return UtilsFilesIO._sResourcesROIColorFilesDir
     
     #----------
-    def GetQuizzerROIColorTableNameWithExt(self):
-        return self._sQuizzerROIColorTableNameWithExt
+    @staticmethod
+    def GetQuizzerROIColorTableNameWithExt():
+        return UtilsFilesIO._sQuizzerROIColorTableNameWithExt
     
     #----------
-    def SetQuizzerROIColorTablePath(self, sInputPath):
-        self._sQuizzerROIColorTablePath = sInputPath
+    @staticmethod
+    def SetQuizzerROIColorTablePath( sInputPath):
+        UtilsFilesIO._sQuizzerROIColorTablePath = sInputPath
 
     #----------
-    def GetQuizzerROIColorTablePath(self):
-        return self._sQuizzerROIColorTablePath
+    @staticmethod
+    def GetQuizzerROIColorTablePath():
+        return UtilsFilesIO._sQuizzerROIColorTablePath
     
     #----------
-    def GetCustomROIColorTablePath(self, sROIColorFile):
-        return os.path.join(self.GetXmlQuizDir(), sROIColorFile + '.txt')
+    @staticmethod
+    def GetCustomROIColorTablePath( sROIColorFile):
+        return os.path.join(UtilsFilesIO.GetXmlQuizDir(), sROIColorFile + '.txt')
 
     #----------
-    def GetDefaultROIColorTableName(self):
-        return self._sDefaultROIColorTableName
+    @staticmethod
+    def GetDefaultROIColorTableName():
+        return UtilsFilesIO._sDefaultROIColorTableName
 
     #----------
-    def GetDefaultROIColorFilePath(self):
-        return os.path.join(self.GetResourcesROIColorFilesDir(), self.GetDefaultROIColorTableName() + '.txt')
+    @staticmethod
+    def GetDefaultROIColorFilePath():
+        return os.path.join(UtilsFilesIO.GetResourcesROIColorFilesDir(), UtilsFilesIO.GetDefaultROIColorTableName() + '.txt')
 
     #----------
-    def GetConfigDir(self):
-        sImageQuizzerDir = str(Path(self.GetScriptedModulesPath()).parents[0])
+    @staticmethod
+    def GetConfigDir():
+        sImageQuizzerDir = str(Path(UtilsFilesIO.GetScriptedModulesPath()).parents[0])
         return os.path.join(sImageQuizzerDir,'Inputs','Config')
 
-
-    
+   
     #----------
     #----------General functions
     #----------
-    def CleanFilename(self, sInputFilename):
+    
+    
+    #----------
+    @staticmethod
+    def CleanFilename( sInputFilename):
 #         sInvalid = '<>:"/\|?* '
         sInvalid = '<>:"/\|?*'
         sCleanName = sInputFilename
@@ -285,7 +343,8 @@ class UtilsFilesIO:
         return sCleanName
 
     #----------
-    def getNodes(self):
+    @staticmethod
+    def getNodes():
         
         ##### For Debug #####
         # return nodes in the mrmlScene
@@ -298,73 +357,79 @@ class UtilsFilesIO:
         ######################
         # set the following line before code being investigated
         #
-        #        nodes1 = self.oFilesIO.getNodes()
+        #        nodes1 = UtilsFilesIO.getNodes()
         #
         # set these lines after code being investigated
         #
-        #        nodes2 = self.oFilesIO.getNodes()
+        #        nodes2 = UtilsFilesIO.getNodes()
         #        filteredX = ' '.join((filter(lambda x: x not in nodes1, nodes2)))
         #        print(':',filteredX)
         ######################
 
     #----------
-    def PrintDirLocations(self):
+    @staticmethod
+    def PrintDirLocations():
         
         ##### For Debug #####
-        print('Data parent dir:      ', self.GetDataParentDir())
-        print('DICOM DB dir:         ', self.GetDICOMDatabaseDir())
-        print('User parent dir:      ', self.GetUsersParentDir())
-        print('User dir:             ', self.GetUserDir())
-        print('User Quiz Results dir:', self.GetUserQuizResultsDir())
-        print('User Quiz Results XML path:', self.GetUserQuizResultsPath())
-        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        print('Data parent dir:      ', UtilsFilesIO.GetDataParentDir())
+        print('DICOM DB dir:         ', UtilsFilesIO.GetDICOMDatabaseDir())
+        print('User parent dir:      ', UtilsFilesIO.GetUsersParentDir())
+        print('User dir:             ', UtilsFilesIO.GetUserDir())
+        print('User Quiz Results dir:', UtilsFilesIO.GetUserQuizResultsDir())
+        print('User Quiz Results XML path:', UtilsFilesIO.GetUserQuizResultsPath())
+
 
     #-------------------------------------------
     #        Setup Functions
     #-------------------------------------------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetModuleDirs(self, sModuleName):
-        self.SetScriptedModulesPath(sModuleName)
-        self._sXmlQuizDir = os.path.join(self.GetScriptedModulesPath(),'..', 'Inputs','MasterQuiz')
-        self.SetResourcesROIColorFilesDir()
+    @staticmethod
+    def SetModuleDirs( sModuleName):
+
+        UtilsFilesIO.SetScriptedModulesPath(sModuleName)
+        UtilsFilesIO._sQuizDir = os.path.join(UtilsFilesIO.GetScriptedModulesPath(),'..', 'Inputs','MasterQuiz')
+        UtilsFilesIO.SetResourcesROIColorFilesDir()
+        UtilsFilesIO.SetSchemaFilePath('ImageQuizzer.xsd')
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetScriptedModulesPath(self,sModuleName):
+    @staticmethod
+    def SetScriptedModulesPath(sModuleName):
         # from Slicer's Application settings> modules
-        self._sScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
-        self._sScriptedModulesPath = os.path.dirname(self._sScriptedModulesPath)
-#         print('Path:',self._sScriptedModulesPath)
+        sScriptedModulesPath = eval('slicer.modules.%s.path' % sModuleName.lower())
+        UtilsFilesIO._sScriptedModulesPath = os.path.dirname(sScriptedModulesPath)
+#         print('Path:',_sScriptedModulesPath)
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetupROIColorFile(self, sCustomInputROIColorFile):
+    @staticmethod
+    def SetupROIColorFile( sCustomInputROIColorFile):
         """ If quiz has a custom color table for segmenting ROI's, move this 
             into the color table file that is read in by the QuizzerEditor HelperBox
         """
         if sCustomInputROIColorFile == '':
-            sROIColorFilePath = self.GetDefaultROIColorFilePath()
+            sROIColorFilePath = UtilsFilesIO.GetDefaultROIColorFilePath()
         else:
-            sROIColorFilePath = os.path.join(self.GetXmlQuizDir(), sCustomInputROIColorFile + '.txt')
+            sROIColorFilePath = os.path.join(UtilsFilesIO.GetXmlQuizDir(), sCustomInputROIColorFile + '.txt')
         
-        self.SetQuizzerROIColorTablePath( os.path.join(self.GetResourcesROIColorFilesDir(), \
-                                             self.GetQuizzerROIColorTableNameWithExt()) )
-        copyfile(sROIColorFilePath, self.GetQuizzerROIColorTablePath() )
+        UtilsFilesIO.SetQuizzerROIColorTablePath( os.path.join(UtilsFilesIO.GetResourcesROIColorFilesDir(), \
+                                             UtilsFilesIO.GetQuizzerROIColorTableNameWithExt()) )
+        copyfile(sROIColorFilePath, UtilsFilesIO.GetQuizzerROIColorTablePath() )
                 
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetupForUserQuizResults(self):
+    @staticmethod
+    def SetupForUserQuizResults():
         
         try:
         
-            sQuizFileRoot, sExt = os.path.splitext(self.GetQuizFilename())
+            sQuizFileRoot, sExt = os.path.splitext(UtilsFilesIO.GetQuizFilename())
              
-            self._sUserQuizResultsDir = os.path.join(self.GetUserDir(), sQuizFileRoot)
-            self._sUserQuizResultsPath = os.path.join(self.GetUserQuizResultsDir(), self.GetQuizFilename())
+            UtilsFilesIO._sUserQuizResultsDir = os.path.join(UtilsFilesIO.GetUserDir(), sQuizFileRoot)
+            UtilsFilesIO._sUserQuizResultsPath = os.path.join(UtilsFilesIO.GetUserQuizResultsDir(), UtilsFilesIO.GetQuizFilename())
      
             # check that the user folder exists - if not, create it
-            if not os.path.exists(self._sUserQuizResultsDir):
-                os.makedirs(self._sUserQuizResultsDir)
+            if not os.path.exists(UtilsFilesIO._sUserQuizResultsDir):
+                os.makedirs(UtilsFilesIO._sUserQuizResultsDir)
                 
         except Exception as error:
             tb = traceback.format_exc()
@@ -372,11 +437,12 @@ class UtilsFilesIO:
                     + '   Possible cause: directory path too long. Admin must move Image Quizzer closer to root.'\
                     + "\n\n" + str(error) \
                     + "\n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
          
      
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetupOutputDirs(self):
+    @staticmethod
+    def SetupOutputDirs():
         
         # the parent of the Outputs directory is  path/to/ImageQuizzermodule/Outputs
         #    Quiz results in XML format are stored in the UsersResults subfolders
@@ -385,23 +451,23 @@ class UtilsFilesIO:
         #        to coordinate import/load of images
         
         
-        sParentOutputsDir = os.path.join(self.GetScriptedModulesPath(),'..', 'Outputs')
+        sParentOutputsDir = os.path.join(UtilsFilesIO.GetScriptedModulesPath(),'..', 'Outputs')
         
         # if users directory does not exist yet, it will be created
-        self.SetUsersParentDir(os.path.join(sParentOutputsDir, 'UsersResults'))
-        if not os.path.exists(self._sUsersParentDir):
-            os.makedirs(self._sUsersParentDir)
+        UtilsFilesIO.SetUsersParentDir(os.path.join(sParentOutputsDir, 'UsersResults'))
+        if not os.path.exists(UtilsFilesIO._sUsersParentDir):
+            os.makedirs(UtilsFilesIO._sUsersParentDir)
                     
         
         # create the DICOM database if it is not there ready for importing
-        self.SetDICOMDatabaseDir( os.path.join(sParentOutputsDir, 'SlicerDICOMDatabase') )
-        if not os.path.exists(self.GetDICOMDatabaseDir()):
-            os.makedirs(self.GetDICOMDatabaseDir())
+        UtilsFilesIO.SetDICOMDatabaseDir( os.path.join(sParentOutputsDir, 'SlicerDICOMDatabase') )
+        if not os.path.exists(UtilsFilesIO.GetDICOMDatabaseDir()):
+            os.makedirs(UtilsFilesIO.GetDICOMDatabaseDir())
         
         # assign the database directory to the browser widget
         slDicomBrowser = slicer.modules.dicom.widgetRepresentation().self() 
         slDicomBrowserWidget = slDicomBrowser.browserWidget
-        slDicomBrowserWidget.dicomBrowser.setDatabaseDirectory(self.GetDICOMDatabaseDir())
+        slDicomBrowserWidget.dicomBrowser.setDatabaseDirectory(UtilsFilesIO.GetDICOMDatabaseDir())
         
         # update the database through the dicom browser 
         # this clears out path entries that can no longer be resolved
@@ -409,39 +475,40 @@ class UtilsFilesIO:
         slDicomBrowserWidget.dicomBrowser.updateDatabase()
         
         # test opening the database
-        if DICOMUtils.openDatabase(self.GetDICOMDatabaseDir()):
+        if DICOMUtils.openDatabase(UtilsFilesIO.GetDICOMDatabaseDir()):
             pass
         else:
             sMsg = 'Trouble opening SlicerDICOMDatabase in : '\
-                 + self.GetDICOMDatabaseDir()
-            self.oUtilsMsgs.DisplayError(sMsg)
+                 + UtilsFilesIO.GetDICOMDatabaseDir()
+            UtilsMsgs.DisplayError(sMsg)
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def PopulateUserQuizFolder(self):
+    @staticmethod
+    def PopulateUserQuizFolder():
             
         # check if there is an existing file in the output users results directory (partially completed quiz)
         #    if not - copy from the master quiz file in inputs to outputs directory
-        if not os.path.isfile(self.GetUserQuizResultsPath()):
+        if not os.path.isfile(UtilsFilesIO.GetUserQuizResultsPath()):
 
-            if not os.path.isfile(self.GetXmlQuizPath()):
+            if not os.path.isfile(UtilsFilesIO.GetXmlQuizPath()):
                 sErrorMsg = 'Selected Quiz file does not exist'
-                self.oUtilsMsgs.DisplayWarning(sErrorMsg)
+                UtilsMsgs.DisplayWarning(sErrorMsg)
                 return False  
             else:
-                copyfile(self.GetXmlQuizPath(), self.GetUserQuizResultsPath())
+                copyfile(UtilsFilesIO.GetXmlQuizPath(), UtilsFilesIO.GetUserQuizResultsPath())
                 return True
 
         else:
 
             # create backup of existing file
-            self.BackupUserQuizResults()
+            UtilsFilesIO.BackupUserQuizResults()
                 
             # file exists - make sure it is readable
-            if not os.access(self.GetUserQuizResultsPath(), os.R_OK):
+            if not os.access(UtilsFilesIO.GetUserQuizResultsPath(), os.R_OK):
                 # existing file is unreadable
                 sErrorMsg = 'Quiz file is not readable'
-                self.oUtilsMsgs.DisplayWarning(sErrorMsg)     
+                UtilsMsgs.DisplayWarning(sErrorMsg)     
                 return False
             else:
                 return True
@@ -453,10 +520,11 @@ class UtilsFilesIO:
     #-------------------------------------------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CreatePageDir(self, sPageName):
+    @staticmethod
+    def CreatePageDir( sPageName):
         # page dir stores label maps for the specified page
         # store these in the user directory
-        sPageDir = os.path.join(self.GetUserDir(), sPageName)
+        sPageDir = os.path.join(UtilsFilesIO.GetUserDir(), sPageName)
         
         # check that the Page directory exists - if not create it
         if not os.path.exists(sPageDir):
@@ -465,7 +533,8 @@ class UtilsFilesIO:
         return sPageDir
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CreateShutdownBatchFile(self):
+    @staticmethod
+    def CreateShutdownBatchFile():
         """ If Image Quizzer was started using the batch file, 
             the shutdown batch file will be called on close.
             This function sets up the shutdown batch file instructing it to
@@ -476,10 +545,10 @@ class UtilsFilesIO:
         """
         
         # get parent directory of the Image Quizzer module
-        sShutdownDir = os.path.abspath(os.path.join(self.GetScriptedModulesPath(),'..', os.pardir))
+        sShutdownDir = os.path.abspath(os.path.join(UtilsFilesIO.GetScriptedModulesPath(),'..', os.pardir))
         sShutdownPath = os.path.join(sShutdownDir,'ImageQuizzerShutdown.bat')
 
-        sCommand = 'RMDIR /S /Q ' + '"' + self.GetDICOMDatabaseDir() +'"'
+        sCommand = 'RMDIR /S /Q ' + '"' + UtilsFilesIO.GetDICOMDatabaseDir() +'"'
         
         fh = open(sShutdownPath,"w")
         fh.write(sCommand)
@@ -487,26 +556,28 @@ class UtilsFilesIO:
 
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def BackupUserQuizResults(self):
+    @staticmethod
+    def BackupUserQuizResults():
         
         # get current date/time
         from datetime import datetime
         now = datetime.now()
         sSuffix = now.strftime("%b-%d-%Y-%H-%M-%S")
         
-        sFileRoot, sExt = os.path.splitext(self.GetQuizFilename())
+        sFileRoot, sExt = os.path.splitext(UtilsFilesIO.GetQuizFilename())
         
         sNewFileRoot = '_'.join([sFileRoot, sSuffix])
         sNewFilename = ''.join([sNewFileRoot, sExt])
         
-        sBackupQuizResultsPath = os.path.join(self.GetUserQuizResultsDir(), sNewFilename)
+        sBackupQuizResultsPath = os.path.join(UtilsFilesIO.GetUserQuizResultsDir(), sNewFilename)
         
         # create copy with data/time stamp as suffix
-        copyfile(self.GetUserQuizResultsPath(), sBackupQuizResultsPath)
+        copyfile(UtilsFilesIO.GetUserQuizResultsPath(), sBackupQuizResultsPath)
         
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def ExportResultsItemToFile(self, sItemName, sPath, slNode):
+    @staticmethod
+    def ExportResultsItemToFile( sItemName, sPath, slNode):
         """ Use Slicer's storage node to export node to a file
         """
         
@@ -524,12 +595,13 @@ class UtilsFilesIO:
             sMsg = '\nExportResultsItemToFile: Failed to store ' + sItemName + ' as file: \n' + sPath \
                     + str(error) \
                     + "\n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
     
         return bSuccess, sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CheckForLoadedNodeInScene(self, sFilenameNoExt):
+    @staticmethod
+    def CheckForLoadedNodeInScene( sFilenameNoExt):
         """ A label map or markup line is stored on disk with the same name as the node in the mrmlScene.
             Using the filename for the entity (with no extension) check if it is already
             loaded into the scene.
@@ -555,20 +627,21 @@ class UtilsFilesIO:
     #-------------------------------------------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SaveLabelMaps(self, oSession, sCaller):
+    @staticmethod
+    def SaveLabelMaps( oSession, sCaller):
 
         """ label map volume nodes may exist in the mrmlScene if the user created a label map
-            (in which case it is named with a '-bainesquizlabel' suffix), or if a label map 
+            (in which case it is named with a '-quizlabel' suffix), or if a label map 
             or segmentation was loaded in through the xml quiz file.
             
-            This function looks for label maps created by the user (-bainesquizlabel suffix) 
+            This function looks for label maps created by the user (-quizlabel suffix) 
             and if found, saves them as a data volume  (.nrrd file) in the specified directory.
             The path to this file is then stored in the xml file within the associated image element.
             
             Also store label maps as RTStructs if the attribute to do so was set in the xml root node.
             
             A warning is presented if the xml question set had the 'EnableSegmentEditor' flag set to 'y'
-            but no label maps (with -bainesquizlabel suffix) were found. The user purposely may 
+            but no label maps (with -quizlabel suffix) were found. The user purposely may 
             not have created a label map if there were no lesions to segment. This is acceptable.
         """
             
@@ -594,18 +667,18 @@ class UtilsFilesIO:
 
                     # match label map file with xml image
                     sLabelMapFilename = slNodeLabelMap.GetName()
-                    if oImageNode.sNodeName + '-bainesquizlabel' == sLabelMapFilename:
+                    if oImageNode.sNodeName + '-quizlabel' == sLabelMapFilename:
                         
-                        bLabelMapFound = True  # -bainesquizlabel suffix is associated with an image on the page
+                        bLabelMapFound = True  # -quizlabel suffix is associated with an image on the page
                         
-                        sDirName = self.GetFolderNameForPageResults(oSession)
-                        sPageLabelMapDir = self.CreatePageDir(sDirName)
+                        sDirName = UtilsFilesIO.GetFolderNameForPageResults(oSession)
+                        sPageLabelMapDir = UtilsFilesIO.CreatePageDir(sDirName)
                         sLabelMapFilenameWithExt = sLabelMapFilename + '.nrrd'
                         sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
                         
                         if not oImageNode.sNodeName in lsLabelMapsStoredForImages:
                             # save the label map file to the user's page directory
-                            self.ExportResultsItemToFile('LabelMap', sLabelMapPath, slNodeLabelMap) 
+                            UtilsFilesIO.ExportResultsItemToFile('LabelMap', sLabelMapPath, slNodeLabelMap) 
                          
                             # update list of names of images that have the label maps stored
                             lsLabelMapsStoredForImages.append(oImageNode.sNodeName)
@@ -616,17 +689,17 @@ class UtilsFilesIO:
                                     + '\n' + sLabelMapPath\
                                     + '\n\nContact Administrator'
                         if len(sLabelMapPath) > 256:  # Windows limitation
-                            self.oUtilsMsgs.DisplayError(sErrorMsg)
+                            UtilsMsgs.DisplayError(sErrorMsg)
 
                         
                         #    add the label map path element to the image element in the xml
                         #    only one label map path element is to be recorded
-                        xLabelMapPathElement = self.oIOXml.GetLastChild(oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                        xLabelMapPathElement = UtilsIOXml.GetLastChild(oImageNode.GetXmlImageElement(), 'LabelMapPath')
                         
                         if xLabelMapPathElement == None:
                             # update xml storing the path to the label map file with the image element
-                            oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(),\
-                                                 self.GetRelativeUserPath(sLabelMapPath))
+                            oSession.oCustomWidgets.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(),\
+                                                 UtilsFilesIO.GetRelativeUserPath(sLabelMapPath))
                             
                             
 
@@ -636,7 +709,7 @@ class UtilsFilesIO:
             # Display warning if segmentation was required but no user created label map was found.
             #####
             #    If there were no label map volume nodes 
-            #    OR if there were label map volume nodes, but there wasn't a -bainesquizlabel suffix 
+            #    OR if there were label map volume nodes, but there wasn't a -quizlabel suffix 
             #        to match an image on the page, ie. the labelMaps found flag was left as false
             #    Check if the segmentation was required and if enabled present the warning
             if len(lSlicerLabelMapNodes) == 0 or (len(lSlicerLabelMapNodes) > 0 and bLabelMapFound == False):    
@@ -644,9 +717,9 @@ class UtilsFilesIO:
                 # user doesn't get the option to cancel if the call was initiated 
                 # from the Close event filter
                 if sCaller != 'EventFilter':
-                    if oSession._bSegmentationModule == True:   # if there is a segmentation module
-                        if oSession.GetSegmentationTabEnabled() == True:    # if the tab is enabled
-                            qtAns = oSession.oUtilsMsgs.DisplayOkCancel(\
+                    if oSession.oCustomWidgets.GetSegmentationModuleRequired():   # if there is a segmentation module
+                        if oSession.oCoreWidgets.GetSegmentationTabEnabled() == True:    # if the tab is enabled
+                            qtAns = UtilsMsgs.DisplayOkCancel(\
                                                 'No contours were created. Do you want to continue?')
                             if qtAns == qt.QMessageBox.Ok:
                                 # user did not create a label map but there may be no lesions to segment
@@ -659,12 +732,13 @@ class UtilsFilesIO:
                     
                     
         if bLabelMapsSaved == True:
-            oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
+            UtilsIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
 
         return bLabelMapsSaved, sMsg
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def LoadSavedLabelMaps(self, oSession):
+    @staticmethod
+    def LoadSavedLabelMaps( oSession):
         # when loading label maps created in the quiz, associate it with the correct 
         #    image node in the subject hierarchy
         # add it to the slquizlabelmap property of the image node 
@@ -681,7 +755,7 @@ class UtilsFilesIO:
                 # read attribute from xml file whether to use label maps previously created
                 #    by the user in the quiz for this image
                 sLabelMapIDLink = '' # initialize
-                sLabelMapIDLink = oSession.oIOXml.GetValueOfNodeAttribute(oImageNode.GetXmlImageElement(), 'DisplayLabelMapID')
+                sLabelMapIDLink = UtilsIOXml.GetValueOfNodeAttribute(oImageNode.GetXmlImageElement(), 'DisplayLabelMapID')
                 if sLabelMapIDLink != '':
                     bUsePreviousLabelMap = True
                 else:
@@ -689,19 +763,17 @@ class UtilsFilesIO:
 
         
                 # look at latest instance of the label map elements stored in the xml
-                xLabelMapPathElement = oSession.oIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                xLabelMapPathElement = UtilsCustomXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
                 slLabelMapNode = None # initialize
 
-                # if there were no label map paths stored with the image, and xml attribute has DisplayLabelMapID 
+                # if the image has the xml attribute DisplayLabelMapID 
                 #    to use a previous label map, check previous pages for the first matching image
-                if (xLabelMapPathElement == None and bUsePreviousLabelMap == True)\
-                    or (bUsePreviousLabelMap == True and oImageNode.bMergeLabelMaps):
+                if (bUsePreviousLabelMap == True):
 
                     # get image element from history that holds the same label map id; 
                     xHistoricalImageElement = None  # initialize
                     xHistoricalLabelMapMatch = None
-#                     xHistoricalImageElement, xHistoricalPageElement = oSession.oIOXml.GetXmlPageAndChildFromAttributeHistory(oSession.GetCurrentPageIndex(),'Image','LabelMapID',sLabelMapIDLink)
-                    xHistoricalImageElement, xHistoricalPageElement = oSession.oIOXml.GetXmlPageAndChildFromAttributeHistory(\
+                    xHistoricalImageElement, xHistoricalPageElement = UtilsCustomXml.GetXmlPageAndChildFromAttributeHistory(\
                                                                                     oSession.GetCurrentNavigationIndex(), \
                                                                                     oSession.GetNavigationList(),\
                                                                                     'Image',\
@@ -710,34 +782,34 @@ class UtilsFilesIO:
 
                     if oImageNode.bMergeLabelMaps:
                         # combine label maps and store on disk
-                        xLabelMapPathElement = self.MergeLabelMapsAndSave(oSession, oImageNode, xHistoricalImageElement, xHistoricalPageElement)
+                        xLabelMapPathElement = UtilsFilesIO.MergeLabelMapsAndSave(oSession, oImageNode, xHistoricalImageElement, xHistoricalPageElement)
                         
                         
                     else:
                         # load single label map
                         if xHistoricalImageElement != None:
-                            xHistoricalLabelMapMatch = oSession.oIOXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')
+                            xHistoricalLabelMapMatch = UtilsCustomXml.GetLatestChildElement(xHistoricalImageElement, 'LabelMapPath')
                         
                         if xHistoricalLabelMapMatch != None:
                             # found a label map for this image in history
                             # copy to disk and store it in xml for the current image
-                            self.CopyAndStoreLabelMapFromHistory(oSession, xHistoricalLabelMapMatch, oImageNode)
+                            UtilsFilesIO.CopyAndStoreLabelMapFromHistory(oSession, xHistoricalLabelMapMatch, oImageNode)
     
                             #    assign newly stored xml element to xLabelMapPathElement
-                            xLabelMapPathElement = oSession.oIOXml.GetLatestChildElement( oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                            xLabelMapPathElement = UtilsCustomXml.GetLatestChildElement( oImageNode.GetXmlImageElement(), 'LabelMapPath')
                     
                 
                 # load labelmap file from stored path in XML                
                 if xLabelMapPathElement != None:
-                    sStoredRelativePath = oSession.oIOXml.GetDataInNode(xLabelMapPathElement)
+                    sStoredRelativePath = UtilsIOXml.GetDataInNode(xLabelMapPathElement)
                     
                     # check if label map was already loaded (if between question sets, label map will persisit)
-                    sLabelMapNodeName = self.GetFilenameNoExtFromPath(sStoredRelativePath)
-                    bFoundLabelMap, slLabelMapNode = self.CheckForLoadedNodeInScene(sLabelMapNodeName)
+                    sLabelMapNodeName = UtilsFilesIO.GetFilenameNoExtFromPath(sStoredRelativePath)
+                    bFoundLabelMap, slLabelMapNode = UtilsFilesIO.CheckForLoadedNodeInScene(sLabelMapNodeName)
 
                     # only load the label map once
                     if not sStoredRelativePath in lLoadedLabelMaps:
-                        sAbsolutePath = self.GetAbsoluteUserPath(sStoredRelativePath)
+                        sAbsolutePath = UtilsFilesIO.GetAbsoluteUserPath(sStoredRelativePath)
                         dictProperties = {'LabelMap' : True}
                         
                         try:
@@ -749,7 +821,7 @@ class UtilsFilesIO:
                                 else:
                                     sMsg = 'Stored path to label map file does not exist. Label map will not be loaded.\n' \
                                         + sAbsolutePath
-                                    oSession.oUtilsMsgs.DisplayWarning(sMsg)
+                                    UtilsMsgs.DisplayWarning(sMsg)
                                     break # continue in for loop for next label map path element
                             
                             
@@ -757,7 +829,7 @@ class UtilsFilesIO:
     
                             # set associated volume to connect label map to master
                             sLabelMapNodeName = slLabelMapNode.GetName()
-#                             sAssociatedName = sLabelMapNodeName.replace('-bainesquizlabel','')
+#                             sAssociatedName = sLabelMapNodeName.replace('-quizlabel','')
                             sAssociatedName = oImageNode.sNodeName
                             slAssociatedNodeCollection = slicer.mrmlScene.GetNodesByName(sAssociatedName)
                             slAssociatedNode = slAssociatedNodeCollection.GetItemAsObject(0)
@@ -766,14 +838,14 @@ class UtilsFilesIO:
                             # apply ROIColor table to label map display node
                             slLabelMapDisplayNode = slLabelMapNode.GetDisplayNode()
                             slColorLogic = slicer.modules.colors.logic()
-                            slColorNode = slColorLogic.LoadColorFile(self.GetQuizzerROIColorTablePath())
+                            slColorNode = slColorLogic.LoadColorFile(UtilsFilesIO.GetQuizzerROIColorTablePath())
                             slLabelMapDisplayNode.SetAndObserveColorNodeID(slColorNode.GetID())
     
     
                         except:
                              
                             sMsg = 'Trouble loading label map file:' + sAbsolutePath
-                            oSession.oUtilsMsgs.DisplayWarning(sMsg)
+                            UtilsMsgs.DisplayWarning(sMsg)
                            
 
                 # add the label map node to the image property so that it gets
@@ -783,95 +855,47 @@ class UtilsFilesIO:
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CopyAndStoreLabelMapFromHistory(self, oSession, xHistoricalLabelMapElement, oImageNode):
+    @staticmethod
+    def CopyAndStoreLabelMapFromHistory( oSession, xHistoricalLabelMapElement, oImageNode):
+        ''' given an element holding the path for a label map, the file is copied into the
+            results folder for the current page. If a label map file of that name already 
+            exists in this folder, it will be overwritten
+        '''
 
         # define source for copy
-        sStoredRelativePathForSource = oSession.oIOXml.GetDataInNode(xHistoricalLabelMapElement)
-        sAbsolutePathForSource = oSession.oFilesIO.GetAbsoluteUserPath(sStoredRelativePathForSource)
+        sStoredRelativePathForSource = UtilsIOXml.GetDataInNode(xHistoricalLabelMapElement)
+        sAbsolutePathForSource = UtilsFilesIO.GetAbsoluteUserPath(sStoredRelativePathForSource)
 
         # create new folder for destination based on current page information
-        sCurrentLabelMapFolderName = self.GetFolderNameForPageResults(oSession)
-        sLabelMapDirForDest = self.CreatePageDir(sCurrentLabelMapFolderName)
+        sCurrentLabelMapFolderName = UtilsFilesIO.GetFolderNameForPageResults(oSession)
+        sLabelMapDirForDest = UtilsFilesIO.CreatePageDir(sCurrentLabelMapFolderName)
         
         # create new file name to which the historical label map is to be copied
-        sLabelMapFilenameWithExtForDest = oImageNode.sNodeName + '-bainesquizlabel' + '.nrrd'
+        sLabelMapFilenameWithExtForDest = oImageNode.sNodeName + '-quizlabel' + '.nrrd'
         
         # define destination path
         sLabelMapPathForDest = os.path.join(sLabelMapDirForDest, sLabelMapFilenameWithExtForDest)
 
-        # check if exists
-        if not os.path.exists(sLabelMapPathForDest):
-        
-            # copy source to dest
-            shutil.copy(sAbsolutePathForSource, sLabelMapPathForDest)
+        # copy source to dest
+        shutil.copy(sAbsolutePathForSource, sLabelMapPathForDest)
 
         # update xml storing the path to the label map file with the image element
         #    for display on the next page
-        oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(), self.GetRelativeUserPath(sLabelMapPathForDest))
+        oSession.oCustomWidgets.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(), UtilsFilesIO.GetRelativeUserPath(sLabelMapPathForDest))
 
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def MergeLabelMapsAndSave(self, oSession, oImageNode, xHistoricalImageElement, xHistoricalPageElement):
+    @staticmethod
+    def MergeLabelMapsAndSave( oSession, oImageNode, xHistoricalImageElement, xHistoricalPageElement):
         ''' This function will search for all Pages with the same 'base' name as the historical page that
             was found to have the matching LabelMapID for the DisplayLabelMapID.
             The base name is the PageID_Descriptor without the '-Rep##' which is added when using the Repeat button.
             From these pages, collect the LabelMapPath values for the Images with the matching LabelMapID
             and merge these.
             The merged label map is then saved to disk and the current ImageElement is updated with a new LabelMapPath element. 
-        '''
 
-        try:        
-            xLabelMapPathElement = None
-            lsLabelMapFullPaths = []
-            
-            # Search for all previous Pages that match PageID_Descriptor (without the -Rep## substring)
-            sPageIDToSearch = oSession.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'ID')
-                        # remove ignore string
-            reIgnoreSubstring= '-Rep[0-9]+'  # remove -Rep with any number of digits following
-            sPageIDToSearchStripped = re.sub(reIgnoreSubstring,'',sPageIDToSearch)
-            sPageDescriptorToSearch = oSession.oIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'Descriptor')
-    
-            dictAttribToMatch = {}
-            dictAttribToMatch['ID'] = sPageIDToSearchStripped
-            dictAttribToMatch['Descriptor'] = sPageDescriptorToSearch
-    
-            sLabelMapIDToMatch = oSession.oIOXml.GetValueOfNodeAttribute(xHistoricalImageElement, 'LabelMapID')
-            
-            
-            # collect label map paths
-            dictPgNodeAndPgIndex = oSession.oIOXml.GetMatchingXmlPagesFromAttributeHistory(\
-                                                    oSession.GetCurrentNavigationIndex(),\
-                                                    oSession.GetNavigationList() , \
-                                                    dictAttribToMatch, \
-                                                    reIgnoreSubstring)
-            
-            lMatchingPageNodes = list(dictPgNodeAndPgIndex.keys())
-            for xPageNode in lMatchingPageNodes:
-                
-                lxImageElements = oSession.oIOXml.GetChildren(xPageNode, 'Image')
-    
-                for xImage in lxImageElements:
-                    sLabelMapID = oSession.oIOXml.GetValueOfNodeAttribute(xImage,'LabelMapID')
-    
-                    if sLabelMapID == sLabelMapIDToMatch:
-                        lxLabelMapPath = self.oIOXml.GetChildren(xImage, 'LabelMapPath')
-    
-                        for xPath in lxLabelMapPath:
-                            sLabelMapPath = oSession.oIOXml.GetDataInNode(xPath)
-                            sLabelMapFullPath = os.path.join(oSession.oFilesIO.GetUserDir(), sLabelMapPath)
-                            lsLabelMapFullPaths.append(sLabelMapFullPath)
-            
-            
-            # use SimpleITK to collect all matching images
-            litkAllLabelImages = []
-            for sPath in lsLabelMapFullPaths:
-                itkLabelImage = sitk.ReadImage(sPath)
-                litkAllLabelImages.append(itkLabelImage)
-                
-    
-            # merge label maps
-    
-            ''' Merging methodology:
+
+            Merging methodology:
                 initialize combined map (C) with the first image (A)
                 For each labelmap (B), take the difference (Diff = B - C)
                     -In Diff, Any existing LM pixels from C will be marked as the -ve value of its label
@@ -884,8 +908,58 @@ class UtilsFilesIO:
                     - (-ve values from overlap means that it was a smaller label map value and is to be 'ignored', allowing the higher value (already in C) to take priority)
                 Update the combined array C)
     
-            '''
+        '''
+
+        try:        
+            xLabelMapPathElement = None
+            lsLabelMapFullPaths = []
+            
+            # Search for all previous Pages that match PageID_Descriptor (without the -Rep## substring)
+            sPageIDToSearch = UtilsIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'ID')
+                        # remove ignore string
+            reIgnoreSubstring= '-Rep[0-9]+'  # remove -Rep with any number of digits following
+            sPageIDToSearchStripped = re.sub(reIgnoreSubstring,'',sPageIDToSearch)
+            sPageDescriptorToSearch = UtilsIOXml.GetValueOfNodeAttribute(xHistoricalPageElement, 'Descriptor')
     
+            dictAttribToMatch = {}
+            dictAttribToMatch['ID'] = sPageIDToSearchStripped
+            dictAttribToMatch['Descriptor'] = sPageDescriptorToSearch
+    
+            sLabelMapIDToMatch = UtilsIOXml.GetValueOfNodeAttribute(xHistoricalImageElement, 'LabelMapID')
+            
+            
+            # collect label map paths
+            dictPgNodeAndPgIndex = UtilsCustomXml.GetMatchingXmlPagesFromAttributeHistory(\
+                                                    oSession.GetCurrentNavigationIndex(),\
+                                                    oSession.GetNavigationList() , \
+                                                    dictAttribToMatch, \
+                                                    reIgnoreSubstring)
+            
+            lMatchingPageNodes = list(dictPgNodeAndPgIndex.keys())
+            for xPageNode in lMatchingPageNodes:
+                
+                lxImageElements = UtilsIOXml.GetChildren(xPageNode, 'Image')
+    
+                for xImage in lxImageElements:
+                    sLabelMapID = UtilsIOXml.GetValueOfNodeAttribute(xImage,'LabelMapID')
+    
+                    if sLabelMapID == sLabelMapIDToMatch:
+                        lxLabelMapPath = UtilsIOXml.GetChildren(xImage, 'LabelMapPath')
+    
+                        for xPath in lxLabelMapPath:
+                            sLabelMapPath = UtilsIOXml.GetDataInNode(xPath)
+                            sLabelMapFullPath = os.path.join(UtilsFilesIO.GetUserDir(), sLabelMapPath)
+                            lsLabelMapFullPaths.append(sLabelMapFullPath)
+            
+            
+            # use SimpleITK to collect all matching images
+            litkAllLabelImages = []
+            for sPath in lsLabelMapFullPaths:
+                itkLabelImage = sitk.ReadImage(sPath)
+                litkAllLabelImages.append(itkLabelImage)
+                
+    
+            # merge label maps
             dictProperties = {'LabelMap' : True}
             if len(lsLabelMapFullPaths) > 0:
 
@@ -908,10 +982,10 @@ class UtilsFilesIO:
                 
                 
                 # save new labelmap to disk
-                sDirName = self.GetFolderNameForPageResults(oSession)
-                sPageLabelMapDir = self.CreatePageDir(sDirName)
+                sDirName = UtilsFilesIO.GetFolderNameForPageResults(oSession)
+                sPageLabelMapDir = UtilsFilesIO.CreatePageDir(sDirName)
         
-                sLabelMapFilenameWithExt = oImageNode.sNodeName + '-bainesquizlabel.nrrd'
+                sLabelMapFilenameWithExt = oImageNode.sNodeName + '-quizlabel.nrrd'
                 
                 
                 sLabelMapPath = os.path.join(sPageLabelMapDir, sLabelMapFilenameWithExt)
@@ -923,13 +997,13 @@ class UtilsFilesIO:
                 if os.path.exists(sLabelMapPath):
                     os.remove(sLabelMapPath)
         
-                self.ExportResultsItemToFile('LabelMap', sLabelMapPath, slLabelMapVolumeCombined)
+                UtilsFilesIO.ExportResultsItemToFile('LabelMap', sLabelMapPath, slLabelMapVolumeCombined)
         
                 # update xml storing the path to the label map file with the image element
                 #    for display on the next page
-                oSession.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(), self.GetRelativeUserPath(sLabelMapPath))
-                oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
-                xLabelMapPathElement = oSession.oIOXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
+                oSession.oCustomWidgets.AddPathElement('LabelMapPath', oImageNode.GetXmlImageElement(), UtilsFilesIO.GetRelativeUserPath(sLabelMapPath))
+                UtilsIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
+                xLabelMapPathElement = UtilsCustomXml.GetLatestChildElement(oImageNode.GetXmlImageElement(), 'LabelMapPath')
         
                 # cleanup
                 slicer.mrmlScene.RemoveNode(slLabelMapVolumeReference)
@@ -940,7 +1014,7 @@ class UtilsFilesIO:
             sMsg = "MergeLabelMapsAndSave: Error while merging label maps."  \
                     + str(error) \
                     + "\n\n" + tb 
-            self.oUtilsMsgs.DisplayError(sMsg)
+            UtilsMsgs.DisplayError(sMsg)
 
 
         
@@ -953,7 +1027,8 @@ class UtilsFilesIO:
     #-------------------------------------------
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SaveMarkupLines(self, oSession):
+    @staticmethod
+    def SaveMarkupLines( oSession):
         ''' This function will capture all markup lines, rename them to reflect the associated 
             reference node and save them in the json format.
         '''
@@ -976,12 +1051,12 @@ class UtilsFilesIO:
                         #    - if not all lines are created yet and user moves between Next and Previous, a 
                         #    newly created markup line node may be created with the same base name ('MarkupsLine'),
                         #    so a suffix needs to be added to the new line name
-                        sLineName = self.CreateUniqueLineName(lsMarkupLineNodes, slMarkupLine.GetName(), sAssociatedReferenceNodeName)
+                        sLineName = UtilsFilesIO.CreateUniqueLineName(lsMarkupLineNodes, slMarkupLine.GetName(), sAssociatedReferenceNodeName)
                         slMarkupLine.SetName(sLineName)
                 
                     # save the markup line in the directory
-                    sDirName = self.GetFolderNameForPageResults(oSession)
-                    sPageMarkupsLineDir = self.CreatePageDir(sDirName)
+                    sDirName = UtilsFilesIO.GetFolderNameForPageResults(oSession)
+                    sPageMarkupsLineDir = UtilsFilesIO.CreatePageDir(sDirName)
         
                     sMarkupsLineFilenameWithExt = slMarkupLine.GetName() + '.mrk.json'
                                  
@@ -993,34 +1068,34 @@ class UtilsFilesIO:
                                 + '\n' + sMarkupsLinePath\
                                 + '\n\nContact Administrator'
                     if len(sMarkupsLinePath) > 256:  # Windows limitation
-                        self.oUtilsMsgs.DisplayError(sErrorMsg)
+                        UtilsMsgs.DisplayError(sErrorMsg)
 
         
                     for oImageNode in oSession.oImageView.GetImageViewList():
                         
                         # match the markup line to the image to save the path to the correct xml Image node
                         if slicer.mrmlScene.GetNodeByID(sAssociatedReferenceNodeID).GetName() == oImageNode.sNodeName:
-                            self.ExportResultsItemToFile('MarkupsLine', sMarkupsLinePath, slMarkupLine)
+                            UtilsFilesIO.ExportResultsItemToFile('MarkupsLine', sMarkupsLinePath, slMarkupLine)
 
                             # store the path name in the xml file
                                 
-                            sRelativePathToStoreInXml = self.GetRelativeUserPath(sMarkupsLinePath)
-                            lxLinePathElements = self.oIOXml.GetChildren(oImageNode.GetXmlImageElement(), 'MarkupLinePath')
+                            sRelativePathToStoreInXml = UtilsFilesIO.GetRelativeUserPath(sMarkupsLinePath)
+                            lxLinePathElements = UtilsIOXml.GetChildren(oImageNode.GetXmlImageElement(), 'MarkupLinePath')
                             bPathAlreadyInXml = False
                             for xPathElement in lxLinePathElements:
-                                sStoredRelativePath = self.oIOXml.GetDataInNode(xPathElement)
+                                sStoredRelativePath = UtilsIOXml.GetDataInNode(xPathElement)
                                 if sStoredRelativePath == sRelativePathToStoreInXml:
                                     bPathAlreadyInXml = True
                                     break
                                 
                             if bPathAlreadyInXml == False:   
                                 # update xml storing the path to the markup line file with the image element
-                                oSession.AddPathElement('MarkupLinePath', oImageNode.GetXmlImageElement(),
+                                oSession.oCustomWidgets.AddPathElement('MarkupLinePath', oImageNode.GetXmlImageElement(),
                                                         sRelativePathToStoreInXml)
 
                 
             
-                oSession.oIOXml.SaveXml(oSession.oFilesIO.GetUserQuizResultsPath())
+                UtilsIOXml.SaveXml(UtilsFilesIO.GetUserQuizResultsPath())
 
             
             
@@ -1034,7 +1109,8 @@ class UtilsFilesIO:
         return
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def CreateUniqueLineName(self, lAllNodeNamesInScene, sSystemGeneratedName, sAssociatedReferenceNodeName):
+    @staticmethod
+    def CreateUniqueLineName( lAllNodeNamesInScene, sSystemGeneratedName, sAssociatedReferenceNodeName):
         ''' Input parameters:
                 - list of all nodes in the scene
                 - the system generated node name to be changed
@@ -1042,7 +1118,7 @@ class UtilsFilesIO:
             If there is already a node that has the proposed name, we need to add the 'next' integer suffix
         '''
 
-        sProposedName =  sAssociatedReferenceNodeName  + '_' + sSystemGeneratedName + '_bainesquizline'
+        sProposedName =  sAssociatedReferenceNodeName  + '_' + sSystemGeneratedName + '_quizline'
         sUniqueName = sProposedName # default
          
         lExistingNamesWithProposedName = []
@@ -1051,15 +1127,16 @@ class UtilsFilesIO:
                 lExistingNamesWithProposedName.append(slNode.GetName())
                 
         if len(lExistingNamesWithProposedName) > 0:
-            sSubstringToSearch = 'bainesquizline_'
-            iNewSuffix = self.GetSuffix(lExistingNamesWithProposedName, sSubstringToSearch)
+            sSubstringToSearch = 'quizline_'
+            iNewSuffix = UtilsFilesIO.GetSuffix(lExistingNamesWithProposedName, sSubstringToSearch)
             if iNewSuffix > 0:
                 sUniqueName = sProposedName + '_' + str(iNewSuffix)
 
         return sUniqueName
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def GetSuffix(self, lExistingNamesWithProposedName, sSubstringToSearch ):
+    @staticmethod
+    def GetSuffix( lExistingNamesWithProposedName, sSubstringToSearch ):
     
         iNextInteger = 0
         
@@ -1082,30 +1159,31 @@ class UtilsFilesIO:
         return iNextInteger
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def LoadSavedMarkupLines(self, oSession):
+    @staticmethod
+    def LoadSavedMarkupLines( oSession):
         ''' Scan the xml for markup line path elements and load the saved file.
         '''
         lxImageElements = []
         lxMarkupLinePaths = []
         
-        lxImageElements = self.oIOXml.GetChildren( oSession.GetCurrentPageNode(), 'Image')
+        lxImageElements = UtilsIOXml.GetChildren( oSession.oCustomWidgets.GetNthPageNode(oSession.GetCurrentPageIndex()), 'Image')
         
         for  xImageNode in lxImageElements:
             
-            lxMarkupLinePaths = self.oIOXml.GetChildren( xImageNode, 'MarkupLinePath')
+            lxMarkupLinePaths = UtilsIOXml.GetChildren( xImageNode, 'MarkupLinePath')
             
             for xLinePathNode in lxMarkupLinePaths:
                 
-                sStoredRelativePath = self.oIOXml.GetDataInNode( xLinePathNode )
+                sStoredRelativePath = UtilsIOXml.GetDataInNode( xLinePathNode )
                 if sStoredRelativePath != '':
-                    sAbsolutePath = self.GetAbsoluteUserPath(sStoredRelativePath)
+                    sAbsolutePath = UtilsFilesIO.GetAbsoluteUserPath(sStoredRelativePath)
                     
                     # check that the markup line does not already exist in the scene 
                     #    (if relative path has double extension .mrk.json - additional remove .mrk)
-                    sMarkupLineNodeName = self.GetFilenameNoExtFromPath(sStoredRelativePath)
+                    sMarkupLineNodeName = UtilsFilesIO.GetFilenameNoExtFromPath(sStoredRelativePath)
                     if sMarkupLineNodeName.endswith('.mrk') and sMarkupLineNodeName != '.mrk':
                         sMarkupLineNodeName = sMarkupLineNodeName[:-len('.mrk')]
-                    bFoundMarkupLine, slMarkupLineNode = self.CheckForLoadedNodeInScene(sMarkupLineNodeName)
+                    bFoundMarkupLine, slMarkupLineNode = UtilsFilesIO.CheckForLoadedNodeInScene(sMarkupLineNodeName)
                     
                     if not bFoundMarkupLine:
                         if os.path.exists(sAbsolutePath):
@@ -1114,51 +1192,8 @@ class UtilsFilesIO:
                         else:
                             sMsg = 'Stored path to markup line file does not exist. Markup line will not be loaded.\n' \
                                 + sAbsolutePath
-                            oSession.oUtilsMsgs.DisplayWarning(sMsg)
+                            UtilsMsgs.DisplayWarning(sMsg)
                             break # continue in for loop for next label map path element
                 
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetupLoopingInitialization(self, xRootNode):
-        
-        # if Loop="Y" for any page in the quiz, add Rep="0" to each page if not defined
-        
-        bLoopingInQuiz = False
-        lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
-        for xPageNode in lxPages:
-            sLoopAllowed = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "Loop")
-            if sLoopAllowed == "Y":
-                bLoopingInQuiz = True
-                break
-            
-        if bLoopingInQuiz:
-            for xPageNode in lxPages:
-                sRepNum = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "Rep")
-                try:
-                    int(sRepNum)
-                except:
-                    # not a valid integer - create/set the attribute to 0
-                    self.oIOXml.UpdateAttributesInElement(xPageNode, {"Rep":"0"})
-    
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def SetupPageGroupInitialization(self, xRootNode):
-        ''' If no PageGroup attribute exists, update the XML to initialize each page
-            to a unique number. Start PageGroup numbers at '1'. ('0' has specialized
-            meaning when randomizing page groups.
-        '''
-        
-        bPageGroupFound = False
-         
-        lxPages = self.oIOXml.GetChildren(xRootNode,'Page')
-        for xPageNode in lxPages:
-            sPageGroupNum = self.oIOXml.GetValueOfNodeAttribute(xPageNode, "PageGroup")
-            if sPageGroupNum != '':
-                bPageGroupFound = True
-                break
-       
-        if not bPageGroupFound:
-            for iPageNum in range(len(lxPages)):
-                xPageNode = self.oIOXml.GetNthChild(xRootNode, "Page", iPageNum)
-                self.oIOXml.UpdateAttributesInElement(xPageNode, {"PageGroup":str(iPageNum + 1)})
-        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

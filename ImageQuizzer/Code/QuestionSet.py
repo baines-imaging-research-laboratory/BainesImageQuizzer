@@ -7,8 +7,12 @@ import sys
 import warnings
 import traceback
 
+import Utilities.UtilsMsgs as UtilsMsgs
+import Utilities.UtilsFilesIO as UtilsFilesIO
+import Utilities.UtilsIOXml as UtilsIOXml
 
 from Utilities.UtilsMsgs import *
+from Utilities.UtilsFilesIO import *
 from Utilities.UtilsIOXml import *
 
 
@@ -29,8 +33,6 @@ class QuestionSet():
         
         self._loQuestions = []
         
-        self.oIOXml = UtilsIOXml()
-        self.oMsgUtil = UtilsMsgs()
         self.oSession = oSession
         
     #----------
@@ -50,24 +52,24 @@ class QuestionSet():
         sFnName = sys._getframe().f_code.co_name
         
         
-        sNodeName = self.oIOXml.GetElementNodeName(xNodeQuestionSet)
+        sNodeName = UtilsIOXml.GetElementNodeName(xNodeQuestionSet)
         if not (sNodeName == "QuestionSet"):
             raise Exception("Invalid XML node. Expecting 'QuestionSet', node name was: %s" % sNodeName)
         else:
             # for each child named 'Question' extract labels and options
-            iNumQuestions = self.oIOXml.GetNumChildrenByName(xNodeQuestionSet, "Question")
+            iNumQuestions = UtilsIOXml.GetNumChildrenByName(xNodeQuestionSet, "Question")
             
-            self.id = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'ID')
-            self.descriptor = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'Descriptor')
+            self.id = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'ID')
+            self.descriptor = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestionSet, 'Descriptor')
             
             
-            lxQuestions = self.oIOXml.GetChildren(xNodeQuestionSet, 'Question')
+            lxQuestions = UtilsIOXml.GetChildren(xNodeQuestionSet, 'Question')
              
             for xNodeQuestion in lxQuestions:
 
-                sQuestionType = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Type')
-                sQuestionDescriptor = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Descriptor')
-                sGroupBoxLayout = self.oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'GroupLayout')
+                sQuestionType = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Type')
+                sQuestionDescriptor = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Descriptor')
+                sGroupBoxLayout = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'GroupLayout')
 
 
                 oQuestion = self.GetQuestionItem(sQuestionType, xNodeQuestion)
@@ -75,7 +77,6 @@ class QuestionSet():
                 if oQuestion != None:
                     oQuestion._sGrpBoxTitle_setter(sQuestionDescriptor)
                     oQuestion._sGrpBoxLayout_setter(sGroupBoxLayout)
-                    oQuestion._oFilesIO_setter(self.oSession.oFilesIO)
                      
                     lOptions = self.GetOptionsFromXML(xNodeQuestion)
                     oQuestion._lsOptions_setter(lOptions)
@@ -84,7 +85,7 @@ class QuestionSet():
                 else:
                     sWarningMsg = self.sClassName + ':' + sFnName + '\nType = ' + sQuestionType + '    ...UnrecognizedQuestionType'\
                                 + '\nRemaining Questions will be displayed \n\n - Contact Administrator'
-                    self.oMsgUtil.DisplayWarning(sWarningMsg)
+                    UtilsMsgs.DisplayWarning(sWarningMsg)
                     
                     
                 
@@ -95,12 +96,12 @@ class QuestionSet():
         lOptions = []
 
         # get options for each question
-        lxOptions = self.oIOXml.GetChildren(xNodeQuestion, 'Option')
+        lxOptions = UtilsIOXml.GetChildren(xNodeQuestion, 'Option')
 
         for iElem in range(len(lxOptions)):
             
-            xNodeOption = self.oIOXml.GetNthChild(xNodeQuestion, 'Option', iElem)
-            sValue = self.oIOXml.GetDataInNode(xNodeOption)
+            xNodeOption = UtilsIOXml.GetNthChild(xNodeQuestion, 'Option', iElem)
+            sValue = UtilsIOXml.GetDataInNode(xNodeOption)
             
             lOptions.append(sValue)
 
@@ -140,9 +141,10 @@ class QuestionSet():
 
         elif (sQuestionType == 'Button'):
             oQuestion = Button()
-            bButtonScriptRerunRequired = self.oSession.GetButtonScriptRerunRequired()
-            bQuizComplete = self.oSession.GetQuizComplete()
-            dictModifiers = {"ButtonScriptRerunRequired":bButtonScriptRerunRequired, "QuizComplete":bQuizComplete}
+            bButtonScriptRerunRequired = self.oSession.oCustomWidgets.GetButtonScriptRerunRequired(self.oSession.GetCurrentPageIndex())
+            bQuizComplete = self.oSession.oCustomWidgets.GetQuizComplete()
+            bResetView = self.oSession.oCoreWidgets.GetResetView()
+            dictModifiers = {"ButtonScriptRerunRequired":bButtonScriptRerunRequired, "QuizComplete":bQuizComplete, "ResetView":bResetView}
             oQuestion.UpdateDictionaryModifiers(dictModifiers)
             
         elif (sQuestionType == 'Picture'):
@@ -200,7 +202,6 @@ class Question(ABC):
         self._lsOptions = []
         self._sGrpBoxTitle = ''
         self._sGrpBoxLayout = ''
-        self._oFilesIO = None
         self._lsResponses = []
         self._xmlNode = None
 
@@ -233,7 +234,7 @@ class Question(ABC):
     def lsResponses(self):
         return self._lsResponses
         
-    @lsOptions.setter
+    @lsResponses.setter
     def lsResponses(self,x):
         self._lsResponses_setter(x)
         
@@ -288,26 +289,6 @@ class Question(ABC):
     #----------
     
     
-    #----------
-    # _oFilesIO
-    #----------
-    @property
-    def oFilesIO(self):
-        return self._oFilesIO
-    
-    @oFilesIO.setter
-    def oFilesIO(self, x):
-        self._oFilesIO_setter(x)
-        
-    @abstractmethod
-    def _oFilesIO_setter(self,x):
-        pass
-    
-    @abstractmethod
-    def _oFilesIO_getter(self):
-        return self._oFilesIO
-    #----------
-
     
     #----------
     @abstractmethod        
@@ -378,11 +359,10 @@ class Question(ABC):
 
     def GetMinMaxAttributesFromXML(self, xNodeQuestion):
 
-        oIOXml = UtilsIOXml()
         dictModifiers = {}
 
-        sMin = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Min')               
-        sMax = oIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Max')
+        sMin = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Min')               
+        sMax = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Max')
 
         dictModifiers['Min'] = sMin
         dictModifiers['Max'] = sMax
@@ -452,11 +432,6 @@ class RadioQuestion(Question):
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
 
-    def _oFilesIO_setter(self, sInput):
-        self._oFilesIO = sInput
-        
-    def _oFilesIO_getter(self):
-        return self._oFilesIO
 
     #-----------------------------------------------
     
@@ -572,11 +547,6 @@ class CheckBoxQuestion(Question):
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
 
-    def _oFilesIO_setter(self, sInput):
-        self._oFilesIO = sInput
-        
-    def _oFilesIO_getter(self):
-        return self._oFilesIO
 
     #-----------------------------------------------
        
@@ -691,11 +661,6 @@ class TextQuestion(Question):
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
 
-    def _oFilesIO_setter(self, sInput):
-        self._oFilesIO = sInput
-        
-    def _oFilesIO_getter(self):
-        return self._oFilesIO
 
     #-----------------------------------------------
     
@@ -791,7 +756,6 @@ class IntegerValueQuestion(Question):
     def __init__(self):
         self.sClassName = type(self).__name__
 
-        self.oMsgUtil = UtilsMsgs()
         self.dictModifiers = {}
         self.sMin = ''
         self.sMax = ''
@@ -823,11 +787,6 @@ class IntegerValueQuestion(Question):
     def UpdateDictionaryModifiers(self, dictionaryInput):
         self.dictModifiers = dictionaryInput
 
-    def _oFilesIO_setter(self, sInput):
-        self._oFilesIO = sInput
-        
-    def _oFilesIO_getter(self):
-        return self._oFilesIO
         
     #-----------------------------------------------
         
@@ -891,7 +850,7 @@ class IntegerValueQuestion(Question):
         except ValueError:
             bSuccess = False
             sErrorMsg = 'See Administrator. Invalid range attribute in XML tag : ' + self._sGrpBoxTitle_getter()
-            self.oMsgUtil.DisplayError(sErrorMsg)
+            UtilsMsgs.DisplayError(sErrorMsg)
             
                 
         
@@ -967,7 +926,6 @@ class FloatValueQuestion(Question):
     def __init__(self):
         self.sClassName = type(self).__name__
 
-        self.oMsgUtil = UtilsMsgs()
         self.dictModifiers = {}
         self.sMin = ''
         self.sMax = ''
@@ -999,11 +957,6 @@ class FloatValueQuestion(Question):
     def UpdateDictionaryModifiers(self, dictionaryInput):
         self.dictModifiers = dictionaryInput
 
-    def _oFilesIO_setter(self, sInput):
-        self._oFilesIO = sInput
-        
-    def _oFilesIO_getter(self):
-        return self._oFilesIO
         
     #-----------------------------------------------
 
@@ -1069,7 +1022,7 @@ class FloatValueQuestion(Question):
         except ValueError:
             bSuccess = False
             sErrorMsg = 'See Administrator. Invalid range attribute in XML tag : ' + self._sGrpBoxTitle_getter()
-            self.oMsgUtil.DisplayError(sErrorMsg)
+            UtilsMsgs.DisplayError(sErrorMsg)
             
                 
         
@@ -1176,11 +1129,6 @@ class InfoBox(Question):
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
 
-    def _oFilesIO_setter(self, sInput):
-        self._oFilesIO = sInput
-        
-    def _oFilesIO_getter(self):
-        return self._oFilesIO
 
     #-----------------------------------------------
 
@@ -1257,7 +1205,6 @@ class Button(Question):
     def __init__(self):
         self.sClassName = type(self).__name__
 
-        self.oMsgUtil = UtilsMsgs()
 
         
     def _lsOptions_setter(self, lsInput):
@@ -1287,11 +1234,6 @@ class Button(Question):
     def UpdateDictionaryModifiers(self, dictionaryInput):
         self.dictModifiers = dictionaryInput
 
-    def _oFilesIO_setter(self, sInput):
-        self._oFilesIO = sInput
-        
-    def _oFilesIO_getter(self):
-        return self._oFilesIO
 
     #-----------------------------------------------
 
@@ -1309,11 +1251,10 @@ class Button(Question):
             self.DisplayGroupBoxEmpty()
             return False, self.qGrpBox
 
-        oFilesIO = self._oFilesIO_getter()
         self.dictQButtons = {}
         i = 0
         while i < length:
-            element1 = os.path.join(oFilesIO.GetScriptsDir(),lsStoredOptions[i])
+            element1 = os.path.join(UtilsFilesIO.GetScriptsDir(),lsStoredOptions[i])
             head, tail = os.path.split(element1)
             qButton = qt.QPushButton(str(i+1)+'-'+tail)
             qButton.setStyleSheet("QPushButton{ background-color: rgb(173,220,237); color: black }")
@@ -1344,7 +1285,7 @@ class Button(Question):
             qBtn.setStyleSheet("QPushButton{ background-color: rgb(245,159,159); color: black }")
             sMsg = "onButtonClicked: Error running script. \nContact administrator\n" + sScript \
                    + "\n\n" + tb 
-            self.oMsgUtil.DisplayWarning(sMsg)
+            UtilsMsgs.DisplayWarning(sMsg)
 
         
     #-----------------------------------------------
@@ -1381,7 +1322,8 @@ class Button(Question):
 
         bButtonScriptRerunRequired = self.dictModifiers.get('ButtonScriptRerunRequired')
         bQuizComplete = self.dictModifiers.get('QuizComplete')
-        if bButtonScriptRerunRequired and not bQuizComplete:
+        bResetView = self.dictModifiers.get('ResetView')
+        if bButtonScriptRerunRequired and not bQuizComplete and not bResetView:
             #clear responses forcing a script rerun
             for idx in range(len(lsValues)):
                 lsValues[idx] = ''
@@ -1455,11 +1397,6 @@ class Picture(Question):
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
 
-    def _oFilesIO_setter(self, sInput):
-        self._oFilesIO = sInput
-        
-    def _oFilesIO_getter(self):
-        return self._oFilesIO
 
     #-----------------------------------------------
 
@@ -1475,12 +1412,11 @@ class Picture(Question):
             return False, self.qGrpBox
 
 
-        oFilesIO = self._oFilesIO_getter()
         i = 0
         while i < length:
             qLabel = qt.QLabel(self)
 
-            element1 = os.path.join(oFilesIO.GetXmlQuizDir(),lsStoredOptions[i])
+            element1 = os.path.join(UtilsFilesIO.GetXmlQuizDir(),lsStoredOptions[i])
 
             qPixmap = qt.QPixmap(element1)
             qLabel.setPixmap(qPixmap)
