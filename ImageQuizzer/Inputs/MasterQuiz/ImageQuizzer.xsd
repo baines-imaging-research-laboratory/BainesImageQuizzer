@@ -5,10 +5,9 @@
 <xs:element name="Session">
 	<xs:complexType>
 		<xs:sequence>
-			<xs:choice minOccurs="0" maxOccurs="unbounded">
-				<xs:element name="Login"/>
-				<xs:element ref="Page" />
-			</xs:choice>
+			<xs:element ref="Page" minOccurs="1" maxOccurs="unbounded" />
+			<xs:element name="Login" minOccurs="0" maxOccurs="unbounded" />
+			<xs:element name="RandomizedPageGroupIndices" minOccurs="0" maxOccurs="1" type="comma-separated-integers"/>
 		</xs:sequence>
 		<xs:attribute name="ROIColorFile" type="xs:string" />
 		<xs:attribute name="RandomizePageGroups" type="yesnoType" default="N" />
@@ -246,6 +245,12 @@
 
 <xs:simpleType name="intListType">
   <xs:list itemType="xs:int"/>
+</xs:simpleType>
+
+<xs:simpleType name="comma-separated-integers">
+  <xs:restriction base="xs:token">
+    <xs:pattern value="[1-9][0-9]*(, ?[1-9][0-9]*)*"/>
+  </xs:restriction>
 </xs:simpleType>
 
 </xs:schema>

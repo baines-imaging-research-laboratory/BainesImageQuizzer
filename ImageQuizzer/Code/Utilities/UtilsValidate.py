@@ -132,8 +132,8 @@ class UtilsValidate:
             xRootNode = UtilsIOXml.GetRootNode()
             UtilsValidate.l4iNavList = UtilsCustomXml.GetQuizLayoutForNavigationList(xRootNode)
 
-            # sValidationMsg = UtilsIOXml.ValidateAgainstSchema(UtilsFilesIO.GetSchemaFilePath())
-            # sMsg = sMsg + sValidationMsg
+            sValidationMsg = UtilsIOXml.ValidateAgainstSchema(UtilsFilesIO.GetSchemaFilePath())
+            sMsg = sMsg + sValidationMsg
 
             # >>>>>>>>>>>>>>>
             # check options at the Session level
