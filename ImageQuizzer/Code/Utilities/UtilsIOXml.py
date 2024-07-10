@@ -150,9 +150,12 @@ class UtilsIOXml:
             if os.path.exists(sXmlSchemaPath):
                 xSchema = xmlschema.XMLSchema(sXmlSchemaPath)
                 
-                bValid = xSchema.is_valid(UtilsIOXml._xTree)
-                if not bValid:
-                    sMsg = '\nQuiz not valid according to schema. \nYou can use Notepad++ with XMLPlugin for more details on how to fix XML quiz file.'
+                try:
+                    xSchema.validate(UtilsIOXml._xTree)
+
+                except Exception as e:      
+                        sMsg = '\nQuiz not valid according to schema. \nUsing Notepad++ with XMLPlugin may give more details on how to fix XML quiz file.'
+                        sMsg = sMsg + '\n\n' + str(e)
                     
             else:
                 sMsg = '\nCannot validate against XML Schema as file does not exist : ' + sXmlSchemaPath
