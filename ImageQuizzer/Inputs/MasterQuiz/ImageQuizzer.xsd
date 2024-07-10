@@ -6,7 +6,6 @@
 	<xs:complexType>
 		<xs:sequence>
 			<xs:element ref="Page" minOccurs="1" maxOccurs="unbounded" />
-			<xs:element name="Login" minOccurs="0" maxOccurs="unbounded" />
 			<xs:element name="RandomizedPageGroupIndices" minOccurs="0" maxOccurs="1" type="comma-separated-integers"/>
 		</xs:sequence>
 		<xs:attribute name="ROIColorFile" type="xs:string" />
@@ -18,13 +17,30 @@
 
 <!--  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Pages -->
 <xs:element name="Page">
+
 	<xs:complexType>
+		<!-- 
+			Choice allows for multiple Question sets with no Image elements.
+			If an Image element exists, there must also be a QuestionSet element on the Page.
+			The QuestionSet element must follow the Image elements and
+			can be empty (since no Question elements are required).
+			This passes Notepad++ validation as well as the XMLSchema check in the ImageQuizzer validation.
+		-->
 		<xs:sequence>
-			<xs:choice minOccurs="1" maxOccurs="unbounded" >
-				<xs:element ref="QuestionSet"/>
-				<xs:element ref="Image"/>
+			<xs:choice>
+
+				<xs:sequence>
+					<xs:element ref="Image" maxOccurs="unbounded"/>
+					<xs:element ref="QuestionSet" maxOccurs="unbounded"/>
+				</xs:sequence>
+				
+				<xs:sequence>
+					<xs:element ref="QuestionSet" maxOccurs="unbounded" />
+				</xs:sequence>
+				
 			</xs:choice>
 		</xs:sequence>
+
 		<xs:attribute name="ID" type="xs:string" use="required" />
 		<xs:attribute name="Descriptor" type="xs:string" />
 		<xs:attribute name="LinkViews" type="yesnoType" default="N" />

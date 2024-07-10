@@ -70,6 +70,7 @@
 			<Layer>Label</Layer>
 			<Path>ImageVolumes\Brain\Fixed Volume-Labelmap.nrrd</Path>
 		</Image>
+		<QuestionSet></QuestionSet>
 	</Page>
 	<Page ID="Mixed" Descriptor="BG-FG Testing" LinkViews="N" EnableSegmentEditor="Y" Layout="TwoOverTwo">
 		<Image ID="Y-BG-1_T2-N4" Type="Volume" RotateToAcquisition="Y" DisplayLabelMapID='T2-contour'>
@@ -126,6 +127,7 @@
 			<DefaultOrientation>Axial</DefaultOrientation>
 			<Path>ImageVolumes\TinyRtStudy\image0000_1.2.826.0.1.3680043.8.274.1.1.2750954856.34924.5415589575.496.dcm</Path>
 		</Image>
+		<QuestionSet></QuestionSet>
 	</Page>
 
 </Session>
