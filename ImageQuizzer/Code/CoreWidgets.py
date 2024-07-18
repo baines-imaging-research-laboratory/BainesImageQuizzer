@@ -203,6 +203,13 @@ class CoreWidgets:
         
         slicer.modules.quizzereditor.widgetRepresentation().self().SetContourToolRadius(fRadius)
         
+    #----------
+    def SetROIColorSpinBoxLabels(self, sDefaultSpinBoxLabel, liValidLabels):
+        
+        UtilsFilesIO.SetColorSpinBoxDefaultLabel(sDefaultSpinBoxLabel)
+        UtilsFilesIO.SetColorSpinBoxValidLabels(liValidLabels)
+
+        
     
     #----------
     #----------   NPlanes View

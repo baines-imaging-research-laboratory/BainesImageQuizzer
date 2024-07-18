@@ -109,6 +109,16 @@ class EditColor(VTKObservationMixin):
   def updateMRMLFromGUI(self, label):
     self.parameterNode.SetParameter(self.parameter, str(label))
 
+    #### CJ Image Quizzer Jul/24
+    #override if custom ColorROITable being used
+    #    if user enters a label index into spin box that is not defined in the roi color file 
+    #         set index to 0 (erase mode) 
+    liValidLabels = slicer.modules.quizzereditor.widgetRepresentation().self().GetColorSpinBoxValidLabels()
+    if liValidLabels != []:
+        if label not in liValidLabels:
+            self.parameterNode.SetParameter(self.parameter, '0')
+            
+
   #
   # update the GUI from MRML
   #

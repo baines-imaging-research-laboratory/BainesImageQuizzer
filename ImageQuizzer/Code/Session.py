@@ -223,6 +223,8 @@ class Session:
                 
                 # set up and initialize Session attributes
                 UtilsFilesIO.SetupROIColorFile(self.oCustomWidgets.GetROIColorFile())
+                self.oCoreWidgets.SetROIColorSpinBoxLabels(\
+                                    UtilsValidate.GetROIColorSpinBoxDefaultLabel(), UtilsValidate.GetROIListValidLabels())
                 self.oCoreWidgets.SetContourVisibilityCheckBox(self.oCustomWidgets.GetSessionContourVisibilityDefault())
                 self.oCustomWidgets.SetRandomizeRequired()
                 
@@ -318,6 +320,8 @@ class Session:
             self.SetupForUserInteraction(self.GetCurrentPageIndex())
             self.oCoreWidgets.SetGoToBookmarkRequestButton(self.GetCurrentPageIndex())
             self.oCoreWidgets.SetEditorContourToolRadius(self.oCustomWidgets.GetContourToolRadius(self.GetCurrentPageIndex()))
+            self.oCoreWidgets.SetROIColorSpinBoxLabels( UtilsValidate.GetROIColorSpinBoxDefaultLabel(),\
+                                                       UtilsValidate.GetROIListValidLabels())
 
     
             if self.oCustomWidgets.GetQuizComplete():

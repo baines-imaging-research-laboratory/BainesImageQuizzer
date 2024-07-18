@@ -408,8 +408,21 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   # get/set to transfer Image Quizzer request for a specific contour tool radius
   def SetContourToolRadius(self, fValue):
       self.fContourRadius = fValue
+
   def GetContourToolRadius(self):
       return self.fContourRadius
+  
+  # custom color table get/set - handles label indices not starting at 1
+  def SetColorSpinBoxDefaultLabel(self, sLabel):
+      self.liValidColorSpinBoxValidLabels = []  # initial set for updating GUI
+      if self.parameterNode:
+          self.parameterNode.SetParameter("label",sLabel)
+  
+  def SetColorSpinBoxValidLabels(self, liLabels):
+      self.liValidColorSpinBoxValidLabels = liLabels
+
+  def GetColorSpinBoxValidLabels(self):
+      return self.liValidColorSpinBoxValidLabels
   
 ###
 #################################################
