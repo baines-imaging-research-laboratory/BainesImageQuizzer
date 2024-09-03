@@ -317,7 +317,6 @@ class Session:
             self.oCustomWidgets.SetMultipleResponseAllowed(self.GetCurrentPageIndex())
             bPageComplete = self.oCustomWidgets.GetPageCompleteAttribute(self.GetCurrentPageIndex())
             
-            self.SetupForUserInteraction(self.GetCurrentPageIndex())
             self.oCoreWidgets.SetGoToBookmarkRequestButton(self.GetCurrentPageIndex())
             self.oCoreWidgets.SetEditorContourToolRadius(self.oCustomWidgets.GetContourToolRadius(self.GetCurrentPageIndex()))
             self.oCoreWidgets.SetROIColorSpinBoxLabels( UtilsValidate.GetROIColorSpinBoxDefaultLabel(),\
