@@ -763,7 +763,7 @@ class ViewNodeBase:
 
 
         # Extract orientation (axial, sagittal, coronal)
-        if (self.sImageType == 'Volume' or self.sImageType == 'VolumeSequence'):
+        if (self.sImageType == 'Volume' or self.sImageType == 'VolumeSequence' or self.sImageType == "Vector"):
             # Only image volumes have an orientation, 
             # segmentation layer (RTStruct) follows the orientation of the display node
              

@@ -260,6 +260,11 @@ class UtilsValidate:
                     sMsg = sMsg + sValidationMsg
                     
                     # >>>>>>>>>>>>>>>
+                    # Validate layer for different image types
+                    sValidationMsg = UtilsValidate.ValidateLayerForImageType(xImage, str(iPageNum))
+                    sMsg = sMsg + sValidationMsg
+                    
+                    # >>>>>>>>>>>>>>>
                     
 
                 # >>>>>>>>>>>>>>>
@@ -1531,5 +1536,35 @@ class UtilsValidate:
             sMsg = sMsg + "\nSee Page: " + sPageReference
             
         return sMsg
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    @staticmethod
+    def ValidateLayerForImageType(xImage, sPageNum):
+
+        sMsg = ''
         
+        sErrorMsgBase = '\nThe Layer must match the image Type. '
+        dictTypeLayer = {'Vector':'Background', 'LabelMap':'Label', 'Segmentation': 'Segmentation', 'RTStruct':'Segmentation'}
+        # ensure the image is going on the right layer
+        sImageType = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'Type')
+        sImageLayerNode = UtilsIOXml.GetLastChild(xImage, 'Layer')
+        sImageLayer = UtilsIOXml.GetDataInNode(sImageLayerNode)
+
+        for sType, sLayer in dictTypeLayer.items():
+            if sImageType == sType and sImageLayer != sLayer:
+                sMsg = sErrorMsgBase + 'An Image of type ' + sImageType \
+                        + ' must be assigned to the Layer : ' + sLayer \
+                        + '\nSee Page: ' + sPageNum 
+
+        if sImageType == "Volume" or sImageType == "VolumeSequence":
+            if sImageLayer == "Foreground" or sImageLayer == "Background":
+                pass
+            else:
+                sMsg = sErrorMsgBase + 'An Image of type ' + sImageType \
+                        + ' must be assigned to the Layer "Foreground" or "Background" ' \
+                        + '\nSee Page: ' + sPageNum 
+
+
+        return sMsg
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
