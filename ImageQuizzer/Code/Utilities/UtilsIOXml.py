@@ -1,6 +1,4 @@
 import os, sys
-# import warnings
-import vtk, qt, ctk, slicer
 
 import xml.dom.minidom
 import shutil
