@@ -246,6 +246,7 @@ class Session:
                 self.oCoreWidgets.progress.setMaximum(len(self.GetNavigationList()))
                 self.oCoreWidgets.progress.setValue(self.GetCurrentNavigationIndex())
         
+                self.SetupForUserInteraction(self.GetCurrentPageIndex()) # initialize
                 self.SetInteractionLogOnOff('Off','Login')
                 self.DisplayQuizLayout()
                 self.DisplayImageLayout()
