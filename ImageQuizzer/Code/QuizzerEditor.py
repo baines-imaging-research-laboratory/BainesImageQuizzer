@@ -123,7 +123,7 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # ('w', lambda : self.toolsBox.selectEffect('WandEffect')),
         # ('r', lambda : self.toolsBox.selectEffect('RectangleEffect')),
         ('c', self.toolsColor.showColorBox),
-        (Key_Space, self.toolsBox.toggleFloatingMode),
+#         (Key_Space, self.toolsBox.toggleFloatingMode),
         )
     for key,callback in keysAndCallbacks:
       shortcut = qt.QShortcut(slicer.util.mainWindow())
@@ -408,8 +408,21 @@ class QuizzerEditorWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   # get/set to transfer Image Quizzer request for a specific contour tool radius
   def SetContourToolRadius(self, fValue):
       self.fContourRadius = fValue
+
   def GetContourToolRadius(self):
       return self.fContourRadius
+  
+  # custom color table get/set - handles label indices not starting at 1
+  def SetColorSpinBoxDefaultLabel(self, sLabel):
+      self.liColorSpinBoxValidLabels = []  # initial set for updating GUI
+      if self.parameterNode:
+          self.parameterNode.SetParameter("label",sLabel)
+  
+  def SetColorSpinBoxValidLabels(self, liLabels):
+      self.liColorSpinBoxValidLabels = liLabels
+
+  def GetColorSpinBoxValidLabels(self):
+      return self.liColorSpinBoxValidLabels
   
 ###
 #################################################

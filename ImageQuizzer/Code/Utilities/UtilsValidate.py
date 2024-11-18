@@ -59,6 +59,26 @@ class UtilsValidate:
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    #----------
+    @staticmethod
+    def SetROIColorSpinBoxDefaultLabel( sLabelNumber):
+        UtilsValidate._sROIColorSpinBoxDefaultLabel = sLabelNumber
+        
+    #----------
+    @staticmethod
+    def GetROIColorSpinBoxDefaultLabel():
+        return UtilsValidate._sROIColorSpinBoxDefaultLabel
+    
+    #----------
+    @staticmethod
+    def SetROIListValidLabels( liLabels):
+        UtilsValidate._liROIListValidLabels = liLabels
+        
+    #----------
+    @staticmethod
+    def GetROIListValidLabels():
+        return UtilsValidate._liROIListValidLabels
+    
    
     #----------
     #----------Page Groups
@@ -237,6 +257,11 @@ class UtilsValidate:
                     
                     # >>>>>>>>>>>>>>>
                     sValidationMsg = UtilsValidate.ValidateVectorImages(xImage, sPageReference)
+                    sMsg = sMsg + sValidationMsg
+                    
+                    # >>>>>>>>>>>>>>>
+                    # Validate layer for different image types
+                    sValidationMsg = UtilsValidate.ValidateLayerForImageType(xImage, str(iPageNum))
                     sMsg = sMsg + sValidationMsg
                     
                     # >>>>>>>>>>>>>>>
@@ -1078,6 +1103,8 @@ class UtilsValidate:
         sErrorMsgInvalidLength = "\nROI Color File has an invalid number of entries in a line. Syntax: id descriptor r g b a\n"
         sErrorMsgInvalidEntry = "\nROI Color File has invalid entry. Syntax: id descriptor r g b a . Integer values required for id, r, g, b and a values. \n"
 
+        bDefaultColorLabelSet = False
+        liValidLabels = []
         
         sROIColorFile = UtilsIOXml.GetValueOfNodeAttribute(UtilsIOXml.GetRootNode(), 'ROIColorFile')
         if sROIColorFile != '':
@@ -1104,9 +1131,19 @@ class UtilsValidate:
                                     liVal =  [int(lEntries[0]), int(lEntries[2]), int(lEntries[3]), int(lEntries[4]), int(lEntries[5])]
                                     if liVal[0] == 0:
                                         sMsg = sMsg + sErrorMsgIdZero + sROIColorFilePath
+                                    else:
+                                        if bDefaultColorLabelSet == False:
+                                            UtilsValidate.SetROIColorSpinBoxDefaultLabel(str(liVal[0]))
+                                            bDefaultColorLabelSet = True
+                                        liValidLabels.append(liVal[0])
                                     
                                 except:
                                     sMsg = sMsg + sErrorMsgInvalidEntry + sROIColorFilePath
+                                    
+        else:
+            UtilsValidate.SetROIColorSpinBoxDefaultLabel('1')
+        
+        UtilsValidate.SetROIListValidLabels(liValidLabels)
             
         return sMsg
         
@@ -1499,5 +1536,35 @@ class UtilsValidate:
             sMsg = sMsg + "\nSee Page: " + sPageReference
             
         return sMsg
+    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    @staticmethod
+    def ValidateLayerForImageType(xImage, sPageNum):
+
+        sMsg = ''
         
+        sErrorMsgBase = '\nThe Layer must match the image Type. '
+        dictTypeLayer = {'Vector':'Background', 'LabelMap':'Label', 'Segmentation': 'Segmentation', 'RTStruct':'Segmentation'}
+        # ensure the image is going on the right layer
+        sImageType = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'Type')
+        sImageLayerNode = UtilsIOXml.GetLastChild(xImage, 'Layer')
+        sImageLayer = UtilsIOXml.GetDataInNode(sImageLayerNode)
+
+        for sType, sLayer in dictTypeLayer.items():
+            if sImageType == sType and sImageLayer != sLayer:
+                sMsg = sErrorMsgBase + 'An Image of type ' + sImageType \
+                        + ' must be assigned to the Layer : ' + sLayer \
+                        + '\nSee Page: ' + sPageNum 
+
+        if sImageType == "Volume" or sImageType == "VolumeSequence":
+            if sImageLayer == "Foreground" or sImageLayer == "Background":
+                pass
+            else:
+                sMsg = sErrorMsgBase + 'An Image of type ' + sImageType \
+                        + ' must be assigned to the Layer "Foreground" or "Background" ' \
+                        + '\nSee Page: ' + sPageNum 
+
+
+        return sMsg
+        
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

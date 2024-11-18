@@ -60,7 +60,7 @@ class UserInteraction():
 
     #----------
     def SetFileHandlerInteractionLog(self, fh):
-        self.fhInteractionLog
+        self.fhInteractionLog = fh
         
     #----------
     def GetFileHandlerInteractionLog(self):
@@ -323,9 +323,9 @@ m_fg(3-0),m_fg(3-1),m_fg(3-2),m_fg(3-3)\n')
         ''' Given the currently open file handler, flush the buffer and close the log
         '''
         
-        self.InsertTransitionRow(fh, 'Leaving Page --' + sCaller)
-
         if fh != None:
+            self.InsertTransitionRow(fh, 'Leaving Page --' + sCaller)
+
             fh.flush()
             fh.close()
 

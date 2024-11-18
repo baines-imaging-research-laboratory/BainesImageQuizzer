@@ -223,6 +223,8 @@ class Session:
                 
                 # set up and initialize Session attributes
                 UtilsFilesIO.SetupROIColorFile(self.oCustomWidgets.GetROIColorFile())
+                self.oCoreWidgets.SetROIColorSpinBoxLabels(\
+                                    UtilsValidate.GetROIColorSpinBoxDefaultLabel(), UtilsValidate.GetROIListValidLabels())
                 self.oCoreWidgets.SetContourVisibilityCheckBox(self.oCustomWidgets.GetSessionContourVisibilityDefault())
                 self.oCustomWidgets.SetRandomizeRequired()
                 
@@ -244,6 +246,7 @@ class Session:
                 self.oCoreWidgets.progress.setMaximum(len(self.GetNavigationList()))
                 self.oCoreWidgets.progress.setValue(self.GetCurrentNavigationIndex())
         
+                self.SetupForUserInteraction(self.GetCurrentPageIndex()) # initialize
                 self.SetInteractionLogOnOff('Off','Login')
                 self.DisplayQuizLayout()
                 self.DisplayImageLayout()
@@ -315,9 +318,10 @@ class Session:
             self.oCustomWidgets.SetMultipleResponseAllowed(self.GetCurrentPageIndex())
             bPageComplete = self.oCustomWidgets.GetPageCompleteAttribute(self.GetCurrentPageIndex())
             
-            self.SetupForUserInteraction(self.GetCurrentPageIndex())
             self.oCoreWidgets.SetGoToBookmarkRequestButton(self.GetCurrentPageIndex())
             self.oCoreWidgets.SetEditorContourToolRadius(self.oCustomWidgets.GetContourToolRadius(self.GetCurrentPageIndex()))
+            self.oCoreWidgets.SetROIColorSpinBoxLabels( UtilsValidate.GetROIColorSpinBoxDefaultLabel(),\
+                                                       UtilsValidate.GetROIListValidLabels())
 
     
             if self.oCustomWidgets.GetQuizComplete():

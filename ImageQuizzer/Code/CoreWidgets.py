@@ -55,6 +55,19 @@ class CoreWidgets:
         self._bResetView = False
         self._bNPlanesViewingMode = False
         self._sViewingMode = 'Default'
+        
+        try:
+
+            self.observerID = slicer.util.getNode("Layout").AddObserver(vtk.vtkCommand.ModifiedEvent, self.onModifiedLayout)        
+
+        except:
+            # layout node may not have been established on initial setup (constructor)
+            pass
+        
+    #----------
+    def __del__(self):
+
+        slicer.util.getNode("Layout").RemoveObserver(self.observerID)
 
     #-------------------------------------------
     #        Getters / Setters
@@ -202,6 +215,13 @@ class CoreWidgets:
     def SetEditorContourToolRadius(self, fRadius):
         
         slicer.modules.quizzereditor.widgetRepresentation().self().SetContourToolRadius(fRadius)
+        
+    #----------
+    def SetROIColorSpinBoxLabels(self, sDefaultSpinBoxLabel, liValidLabels):
+        
+        UtilsFilesIO.SetColorSpinBoxDefaultLabel(sDefaultSpinBoxLabel)
+        UtilsFilesIO.SetColorSpinBoxValidLabels(liValidLabels)
+
         
     
     #----------
@@ -796,6 +816,16 @@ class CoreWidgets:
     #        Event Handlers
     #-------------------------------------------
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def onModifiedLayout(self, caller, event):
+        ''' Event function to catch when the layout changes 
+            - includes initial change from Slicer's default (FourUp) to render the
+              requested layout of first page of Image Quizzer
+            - lockdown of all viewing windows for the current page can then be performed
+              for UserInteraction functionality
+        '''
+        self.oSession.SetupForUserInteraction(self.oSession.GetCurrentPageIndex())
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onTabChanged(self):
         ''' When changing tabs reset segment editor interface.

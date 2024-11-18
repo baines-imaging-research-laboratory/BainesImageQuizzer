@@ -1,6 +1,4 @@
 import os, sys
-# import warnings
-import vtk, qt, ctk, slicer
 
 import xml.dom.minidom
 import shutil
@@ -154,7 +152,9 @@ class UtilsIOXml:
                     xSchema.validate(UtilsIOXml._xTree)
 
                 except Exception as e:      
-                        sMsg = '\nQuiz not valid according to schema. \nUsing Notepad++ with XMLPlugin may give more details on how to fix XML quiz file.'
+                        sMsg = '\nQuiz not valid according to schema. Refer to Image Quizzer documentation:'\
+                        +  '\nhttps://baines-imaging-research-laboratory.github.io/ImageQuizzerDocumentation/' \
+                        + '\nAlso, using Notepad++ with XMLPlugin may give more details on how to fix XML quiz file.'
                         sMsg = sMsg + '\n\n' + str(e)
                     
             else:

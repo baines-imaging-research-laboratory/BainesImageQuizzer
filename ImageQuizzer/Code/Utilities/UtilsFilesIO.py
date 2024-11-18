@@ -324,6 +324,16 @@ class UtilsFilesIO:
         sImageQuizzerDir = str(Path(UtilsFilesIO.GetScriptedModulesPath()).parents[0])
         return os.path.join(sImageQuizzerDir,'Inputs','Config')
 
+    #----------
+    @staticmethod
+    def SetColorSpinBoxDefaultLabel(sLabel):
+        slicer.modules.quizzereditor.widgetRepresentation().self().SetColorSpinBoxDefaultLabel(sLabel)
+
+    #----------
+    @staticmethod
+    def SetColorSpinBoxValidLabels(lsLabels):
+        slicer.modules.quizzereditor.widgetRepresentation().self().SetColorSpinBoxValidLabels(lsLabels)
+
    
     #----------
     #----------General functions
@@ -414,7 +424,7 @@ class UtilsFilesIO:
         UtilsFilesIO.SetQuizzerROIColorTablePath( os.path.join(UtilsFilesIO.GetResourcesROIColorFilesDir(), \
                                              UtilsFilesIO.GetQuizzerROIColorTableNameWithExt()) )
         copyfile(sROIColorFilePath, UtilsFilesIO.GetQuizzerROIColorTablePath() )
-                
+        
             
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @staticmethod
