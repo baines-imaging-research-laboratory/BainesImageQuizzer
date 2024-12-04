@@ -1053,7 +1053,7 @@ class UtilsValidate:
         llDestRTStruct = []
         llDestSegImageType = []
         
-        # collect images and their destinations
+        # collect xml image elements and their destinations
         lxAllImages = UtilsIOXml.GetChildren(xPageNode, 'Image')
         
         for xImage in lxAllImages:
@@ -1076,13 +1076,15 @@ class UtilsValidate:
 
             
            
-        sSegmentationMsg = UtilsValidate.SyncSegsAndVolumes(llDestImageVolume, 'Segmentation', llDestSegmentation)
+#         sSegmentationMsg = UtilsValidate.SyncSegsAndVolumes(llDestImageVolume, 'Segmentation', llDestSegmentation)
+#         
+#         sLabelMapMsg = UtilsValidate.SyncSegsAndVolumes(llDestImageVolume, 'LabelMap', llDestLabelMap)
+#         
+#         sRTStructMsg = UtilsValidate.SyncSegsAndVolumes(llDestImageVolume, 'RTStruct', llDestRTStruct)
+# 
+#         sMsg = sMsg + sSegmentationMsg + sLabelMapMsg + sRTStructMsg
+#         sMsg = sMsg + sRTStructMsg
         
-        sLabelMapMsg = UtilsValidate.SyncSegsAndVolumes(llDestImageVolume, 'LabelMap', llDestLabelMap)
-        
-        sRTStructMsg = UtilsValidate.SyncSegsAndVolumes(llDestImageVolume, 'RTStruct', llDestRTStruct)
-
-        sMsg = sMsg + sSegmentationMsg + sLabelMapMsg + sRTStructMsg
         if sMsg != '':
             sMsg = sMsg + '\n----------See Page: ' + sPageReference
 

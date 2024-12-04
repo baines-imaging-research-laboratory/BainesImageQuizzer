@@ -128,24 +128,38 @@ class QuestionSet():
 
         elif (sQuestionType == 'IntegerValue'):
             oQuestion = IntegerValueQuestion()
-            dictModifiers = oQuestion.GetMinMaxAttributesFromXML(xNodeQuestion)
-            oQuestion.UpdateDictionaryModifiers(dictModifiers)
+            dictModifiers = self.oSession.oCustomWidgets.GetMinMaxAttributesFromXML(xNodeQuestion)
+            oQuestion.SetDictionaryModifiers(dictModifiers)
 
         elif (sQuestionType == 'FloatValue'):
             oQuestion = FloatValueQuestion()
-            dictModifiers = oQuestion.GetMinMaxAttributesFromXML(xNodeQuestion)
-            oQuestion.UpdateDictionaryModifiers(dictModifiers)
+            dictModifiers = self.oSession.oCustomWidgets.GetMinMaxAttributesFromXML(xNodeQuestion)
+            oQuestion.SetDictionaryModifiers(dictModifiers)
 
         elif (sQuestionType == 'InfoBox'):
             oQuestion = InfoBox()
 
         elif (sQuestionType == 'Button'):
             oQuestion = Button()
+
             bButtonScriptRerunRequired = self.oSession.oCustomWidgets.GetButtonScriptRerunRequired(self.oSession.GetCurrentPageIndex())
             bQuizComplete = self.oSession.oCustomWidgets.GetQuizComplete()
             bResetView = self.oSession.oCoreWidgets.GetResetView()
-            dictModifiers = {"ButtonScriptRerunRequired":bButtonScriptRerunRequired, "QuizComplete":bQuizComplete, "ResetView":bResetView}
-            oQuestion.UpdateDictionaryModifiers(dictModifiers)
+            
+            liButtonCustomColorOn = self.oSession.oCustomWidgets.GetButtonCustomColorOn(xNodeQuestion)
+            liButtonToggleColorOff = self.oSession.oCustomWidgets.GetButtonToggleColorOff(xNodeQuestion)
+
+            bToggleMode = False
+            if liButtonToggleColorOff != []:
+                bToggleMode = True
+
+            dictModifiers = {"ButtonScriptRerunRequired":bButtonScriptRerunRequired,\
+                              "QuizComplete":bQuizComplete, "ResetView":bResetView,\
+                              "ButtonCustomColorOn":liButtonCustomColorOn,\
+                              "ButtonToggleColorOff":liButtonToggleColorOff,\
+                              "ToggleMode":bToggleMode}
+
+            oQuestion.SetDictionaryModifiers(dictModifiers)
             
         elif (sQuestionType == 'Picture'):
             oQuestion = Picture()
@@ -354,20 +368,6 @@ class Question(ABC):
 
         return sRangeMsg
 
-    
-    #-----------------------------------------------
-
-    def GetMinMaxAttributesFromXML(self, xNodeQuestion):
-
-        dictModifiers = {}
-
-        sMin = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Min')               
-        sMax = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Max')
-
-        dictModifiers['Min'] = sMin
-        dictModifiers['Max'] = sMax
-
-        return dictModifiers
     
     #-----------------------------------------------
 
@@ -784,7 +784,7 @@ class IntegerValueQuestion(Question):
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
 
-    def UpdateDictionaryModifiers(self, dictionaryInput):
+    def SetDictionaryModifiers(self, dictionaryInput):
         self.dictModifiers = dictionaryInput
 
         
@@ -954,7 +954,7 @@ class FloatValueQuestion(Question):
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
 
-    def UpdateDictionaryModifiers(self, dictionaryInput):
+    def SetDictionaryModifiers(self, dictionaryInput):
         self.dictModifiers = dictionaryInput
 
         
@@ -1231,12 +1231,33 @@ class Button(Question):
     def _sGrpBoxLayout_getter(self):
         return self._sGrpBoxLayout
 
-    def UpdateDictionaryModifiers(self, dictionaryInput):
+    def SetDictionaryModifiers(self, dictionaryInput):
         self.dictModifiers = dictionaryInput
 
 
+    def SetButtonProperties(self):
+        
+        # set defaults
+        self.dictModifiers["ToggleMode"] = False
+        self.qColorOn = qt.QColor(173,220,237)
+        self.qColorAfterClick = qt.QColor(0,179,246)
+        
+        # user requested a custom color for button
+        liButtonCustomColorOn = self.dictModifiers.get("ButtonCustomColorOn")
+        if liButtonCustomColorOn != []:
+            self.qColorOn = qt.QColor(liButtonCustomColorOn[0], liButtonCustomColorOn[1], liButtonCustomColorOn[2]) 
+        
+        # if this attribute is set, the button is used as a toggle
+        # underlying script can be run multiple times and color flips between on/off with each click
+        liButtonToggleColorOff = self.dictModifiers.get("ButtonToggleColorOff")
+        if liButtonToggleColorOff != []:
+            self.dictModifiers["ToggleMode"] = True
+            self.qColorAfterClick = qt.QColor(liButtonToggleColorOff[0], liButtonToggleColorOff[1], liButtonToggleColorOff[2])
+                    
+        return
+    
     #-----------------------------------------------
-
+    
     def BuildQuestion(self):
         self.sFnName = sys._getframe().f_code.co_name
 
@@ -1251,13 +1272,16 @@ class Button(Question):
             self.DisplayGroupBoxEmpty()
             return False, self.qGrpBox
 
+        self.SetButtonProperties()
+
         self.dictQButtons = {}
         i = 0
         while i < length:
             element1 = os.path.join(UtilsFilesIO.GetScriptsDir(),lsStoredOptions[i])
             head, tail = os.path.split(element1)
             qButton = qt.QPushButton(str(i+1)+'-'+tail)
-            qButton.setStyleSheet("QPushButton{ background-color: rgb(173,220,237); color: black }")
+            qButton.setStyleSheet("QPushButton{ background-color: %s; color: black }" % self.qColorOn.name())
+
             newLayout.addWidget(qButton, i, 0)
             self.dictQButtons[element1]=qButton
             i = i + 1
@@ -1277,12 +1301,24 @@ class Button(Question):
             #    passes global dictionary of the main context to exec()
             exec(open(sScript).read(),globals())
 
-            qBtn.setText(qBtn.text+'-Done')
-            qBtn.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+            
+            if self.dictModifiers.get("ToggleMode"):
+                # get current button color
+                qCurrentColor = qBtn.palette.window().color()
+                # switch to other color
+                if qCurrentColor == self.qColorAfterClick:
+                    qNewColor = self.qColorOn
+                else:
+                    qNewColor = self.qColorAfterClick
+                qBtn.setStyleSheet("QPushButton{ background-color: %s; color: black }" % qNewColor.name())
+                
+            else:
+                qBtn.setText(qBtn.text+'-Done')
+                qBtn.setStyleSheet("QPushButton{ background-color: %s; color: black }" % self.qColorAfterClick.name())
 
         except:
             tb = traceback.format_exc()
-            qBtn.setStyleSheet("QPushButton{ background-color: rgb(245,159,159); color: black }")
+            qBtn.setStyleSheet("QPushButton{ background-color: rgb(245,159,159); color: black }")    # red
             sMsg = "onButtonClicked: Error running script. \nContact administrator\n" + sScript \
                    + "\n\n" + tb 
             UtilsMsgs.DisplayWarning(sMsg)
@@ -1300,13 +1336,15 @@ class Button(Question):
         sMsg = ''
         
         for qBtn in self.qGrpBox.findChildren(qt.QPushButton):
-            if 'Done' in qBtn.text:
+            
+            
+            if 'Done' in qBtn.text or self.dictModifiers.get("ToggleMode"):
                 bResponseFound = bResponseFound * True
                 lsResponses.append(qBtn.text)
             else:
                 bResponseFound = bResponseFound * False
                 lsResponses.append('')
-                
+                    
 
         if bResponseFound:
             bSuccess = True
@@ -1335,10 +1373,13 @@ class Button(Question):
                 
                 if lsValues[i] != '':
                     qBtn.setText(lsValues[i])
-                    if '-Done' in lsValues[i]:
-                        qBtn.setStyleSheet("QPushButton{ background-color: rgb(0,179,246); color: black }")
+                    if self.dictModifiers.get("ToggleMode"):
+                        qBtn.setStyleSheet("QPushButton{ background-color: %s; color: black }" % self.qColorOn.name())
                     else:
-                        qBtn.setStyleSheet("QPushButton{ background-color: rgb(245,159,159); color: black }")
+                        if '-Done' in lsValues[i]:
+                            qBtn.setStyleSheet("QPushButton{ background-color: %s; color: black }" % self.qColorAfterClick.name())
+                        else:
+                            qBtn.setStyleSheet("QPushButton{ background-color: rgb(245,159,159); color: black }")  # red
 
                 i = i + 1
 
@@ -1346,14 +1387,17 @@ class Button(Question):
     #-----------------------------------------------
     
     def GetQuestionCompleted(self, lsResponses):
-        # button type questions are complete if response includes '-Done'
-        
+
+        # button type questions are complete if response includes '-Done' or if in toggle mode
         bCompleted = True
         
         for sResponse in lsResponses:
-            if not '-Done' in sResponse:
-                bCompleted = False
-                break
+            if self.dictModifiers.get("ToggleMode"):
+                pass
+            else:
+                if not '-Done' in sResponse:
+                    bCompleted = False
+                    break
         
         
         return bCompleted
