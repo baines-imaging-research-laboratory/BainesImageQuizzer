@@ -340,7 +340,7 @@ class CustomWidgets:
         
         return UtilsIOXml.GetValueOfNodeAttribute(xQuestionNode, 'Type')
          
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #----------
     def GetSavedResponses(self, xQuestionNode):
  
         lsResponseValues = []                  
@@ -357,6 +357,54 @@ class CustomWidgets:
             lsResponseValues.append(sLatestResponse)
         
         return lsResponseValues
+
+    #----------
+
+    def GetMinMaxAttributesFromXML(self, xNodeQuestion):
+
+        dictModifiers = {}
+
+        sMin = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Min')               
+        sMax = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'Max')
+
+        dictModifiers['Min'] = sMin
+        dictModifiers['Max'] = sMax
+
+        return dictModifiers
+    
+    #----------
+
+    def GetButtonCustomColorOn(self, xNodeQuestion):
+        
+        liButtonCustomColorOnRgb = []
+
+        sButtonColorOnRgb = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'ButtonCustomColorOn')
+
+        if sButtonColorOnRgb != '':
+            lsButtonColorOnRgb = sButtonColorOnRgb.split()
+            for ind in range(len(lsButtonColorOnRgb)):
+                liButtonCustomColorOnRgb.append(int(lsButtonColorOnRgb[ind]))
+
+        
+        return liButtonCustomColorOnRgb
+
+    #----------
+
+    def GetButtonToggleColorOff(self, xNodeQuestion):
+        
+        liButtonToggleColorOffRgb = []
+
+        sButtonToggleColorOffRgb = UtilsIOXml.GetValueOfNodeAttribute(xNodeQuestion, 'ButtonToggleColorOff')
+
+        if sButtonToggleColorOffRgb != '':
+            lsButtonToggleColorOffRgb = sButtonToggleColorOffRgb.split()
+            for ind in range(len(lsButtonToggleColorOffRgb)):
+                liButtonToggleColorOffRgb.append(int(lsButtonToggleColorOffRgb[ind]))
+
+        
+        return liButtonToggleColorOffRgb
+
+
                  
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
