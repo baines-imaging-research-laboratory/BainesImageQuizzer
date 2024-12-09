@@ -148,6 +148,8 @@ class Session:
                 turn off observers to prevent logging of slice changes during transitions 
         '''
 
+        self.SetupForUserInteraction(self.GetCurrentPageIndex())
+        
         if self.oCustomWidgets.GetQuizComplete() == False:   
             if sState=='On':
     #             print('Log On *********')
@@ -377,7 +379,7 @@ class Session:
     
             # set up the images on the page
             self.oImageView = ImageView()
-            self.oCoreWidgets.SetImageView(self.oImageView)
+#             self.oCoreWidgets.SetImageView(self.oImageView)
             
             self.oImageView.RunSetup(self.oCustomWidgets.GetNthPageNode(self.GetCurrentPageIndex()),\
                                       UtilsFilesIO.GetDataParentDir())

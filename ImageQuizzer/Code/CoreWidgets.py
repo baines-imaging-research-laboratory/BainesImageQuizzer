@@ -78,10 +78,6 @@ class CoreWidgets:
         self.oCustomWidgets = oCustomWidgets
 
     #----------
-    def SetImageView(self, oImageView):
-        self.oImageView = oImageView
-        
-    #----------
     def SetTabIndex(self, sTabName, iTabIndex):
         self._dictTabIndices[sTabName] = iTabIndex
         
@@ -248,7 +244,7 @@ class CoreWidgets:
         bFoundOrientationMatch = False
         
         # determine which image is to be displayed in an alternate viewing mode (3 Planes or 1 Plane)
-        loImageViewNodes = self.oImageView.GetImageViewList()
+        loImageViewNodes = self.oSession.oImageView.GetImageViewList()
         for oImageViewNode in loImageViewNodes:
             if oImageViewNode.sNodeName == sImageName:
                 if not bFoundFirstNameMatch:
@@ -319,7 +315,7 @@ class CoreWidgets:
         self.qComboImageList.clear()
         
         lNamesAdded = []
-        loImageViewNodes = self.oImageView.GetImageViewList()
+        loImageViewNodes = self.oSession.oImageView.GetImageViewList()
         for oImageViewNode in loImageViewNodes:
             if oImageViewNode.sViewLayer == 'Background' or oImageViewNode.sViewLayer == 'Foreground':
                 if oImageViewNode.sNodeName in lNamesAdded:
@@ -377,11 +373,11 @@ class CoreWidgets:
     def SetContourOpacityFromSliderValue(self, iSliderValue):
         # set the ContourOpacity property of the image view object based on slider value for opacity
         
-        if self.oImageView != None:
+        if self.oSession.oImageView != None:
             if self.qVisibilityOpacity.maximum > self.qVisibilityOpacity.minimum:  # no div by zero
-                self.oImageView.SetContourOpacity(iSliderValue / (self.qVisibilityOpacity.maximum - self.qVisibilityOpacity.minimum))
+                self.oSession.oImageView.SetContourOpacity(iSliderValue / (self.qVisibilityOpacity.maximum - self.qVisibilityOpacity.minimum))
             else:
-                self.oImageView.SetContourOpacity(self.GetSessionContourOpacityDefault())
+                self.oSession.oImageView.SetContourOpacity(self.GetSessionContourOpacityDefault())
                 
             # reset outline or fill
             self.onContourDisplayStateChanged()
@@ -869,8 +865,7 @@ class CoreWidgets:
             sSaveMsg = ''
             sInteractionMsg = 'Next'
                     
-            self.oSession.SetInteractionLogOnOff('Off',sInteractionMsg)
-                
+                    
             self.DisableButtons()    
             if self.GetViewingMode() != 'Default':
                 self.onResetViewClicked('Next')
@@ -885,6 +880,8 @@ class CoreWidgets:
     
             else:
                 # this is not end of quiz, do a save and display the next page
+                
+                self.oSession.SetInteractionLogOnOff('Off',sInteractionMsg)
                 
                 bSuccess, sSaveMsg = self.oSession.PerformSave('NextBtn') 
                 if bSuccess:
@@ -921,7 +918,7 @@ class CoreWidgets:
                         self.InitializeTabSettings()
                         self.oSession.DisplayQuizLayout()
                         self.oSession.DisplayImageLayout()
-
+                        
                         
             sInteractionMsg = sInteractionMsg + sSaveMsg + sCompletedMsg
 
@@ -1098,12 +1095,14 @@ class CoreWidgets:
     def onAddLinesButtonClicked(self):
         ''' Add a new markup line - using the PlaceMode functionality
         '''
-        self.slMarkupsLineWidget.setMRMLScene(slicer.mrmlScene)
-        markupsNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsLineNode")
-        self.slMarkupsLineWidget.setCurrentNode(slicer.mrmlScene.GetNodeByID(markupsNode.GetID()))
-        self.slMarkupsLineWidget.setPlaceModeEnabled(True)
-
-        markupsNode.AddObserver(slicer.vtkMRMLMarkupsLineNode.PointModifiedEvent, self.onMarkupInteraction)
+        if len(self.oSession.oImageView.GetImageViewList()) > 0:
+            
+            self.slMarkupsLineWidget.setMRMLScene(slicer.mrmlScene)
+            markupsNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsLineNode")
+            self.slMarkupsLineWidget.setCurrentNode(slicer.mrmlScene.GetNodeByID(markupsNode.GetID()))
+            self.slMarkupsLineWidget.setPlaceModeEnabled(True)
+    
+            markupsNode.AddObserver(slicer.vtkMRMLMarkupsLineNode.PointModifiedEvent, self.onMarkupInteraction)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onClearLinesButtonClicked(self):
@@ -1195,12 +1194,12 @@ class CoreWidgets:
                 self.SetupNPlanesView()
                 oImageNodeOverride, iQuizImageIndex = self.GetNPlanesImageComboBoxSelection()
                 self.oSession.liImageDisplayOrder = self.oSession.ReorderImageIndexToEnd(iQuizImageIndex)
-                self.oImageView.AssignNPlanes(oImageNodeOverride, self.llsNPlanesOrientDest)
+                self.oSession.oImageView.AssignNPlanes(oImageNodeOverride, self.llsNPlanesOrientDest)
                 self.SetNPlanesViewingMode(True)
         
                 #    the current image node being displayed in an alternate view may have been 
                 #    repeated in different orientations in the quiz file
-                self.oSession.loCurrentQuizImageViewNodes = self.oCustomWidgets.GetMatchingQuizImageNodes(oImageNodeOverride.sImagePath, self.oImageView)
+                self.oSession.loCurrentQuizImageViewNodes = self.oCustomWidgets.GetMatchingQuizImageNodes(oImageNodeOverride.sImagePath, self.oSession.oImageView)
                 self.oSession.ApplySavedImageState()
                 
                 self.SetViewLinesOnAllDisplays(False)
@@ -1269,20 +1268,20 @@ class CoreWidgets:
             adjust the image view property and turn on fill/outline for label maps and segmentations
         '''
         
-        if self.oImageView != None:
+        if self.oSession.oImageView != None:
             if self.qChkBoxFillOrOutline.isChecked():
-                self.oImageView.SetContourVisibility('Fill')
+                self.oSession.oImageView.SetContourVisibility('Fill')
             else:
-                self.oImageView.SetContourVisibility('Outline')
+                self.oSession.oImageView.SetContourVisibility('Outline')
             
-            self.oImageView.SetLabelMapOutlineOrFill(self.oSession.lsLayoutWidgets)
+            self.oSession.oImageView.SetLabelMapOutlineOrFill(self.oSession.lsLayoutWidgets)
     
             xPageNode = self.oCustomWidgets.GetNthPageNode(self.oSession.GetCurrentPageIndex())
-            loImageViewNodes = self.oImageView.GetImageViewList()
+            loImageViewNodes = self.oSession.oImageView.GetImageViewList()
             for oViewNode in loImageViewNodes:
                 if oViewNode.sViewLayer == 'Segmentation':
                     slSegDisplayNode, slSegDataNode = oViewNode.GetSegmentationNodes(xPageNode)
-                    self.oImageView.SetSegmentationOutlineOrFill(oViewNode, slSegDisplayNode)
+                    self.oSession.oImageView.SetSegmentationOutlineOrFill(oViewNode, slSegDisplayNode)
                 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def onViewLinesOnAllDisplaysStateChanged(self):
