@@ -1279,7 +1279,8 @@ class Button(Question):
         while i < length:
             element1 = os.path.join(UtilsFilesIO.GetScriptsDir(),lsStoredOptions[i])
             head, tail = os.path.split(element1)
-            qButton = qt.QPushButton(str(i+1)+'-'+tail)
+            tupFname_Ext = os.path.splitext(tail)
+            qButton = qt.QPushButton(tupFname_Ext[0])
             qButton.setStyleSheet("QPushButton{ background-color: %s; color: black }" % self.qColorOn.name())
 
             newLayout.addWidget(qButton, i, 0)
