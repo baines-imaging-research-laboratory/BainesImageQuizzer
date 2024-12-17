@@ -195,10 +195,6 @@ class UtilsValidate:
                 
                 sPageID = UtilsIOXml.GetValueOfNodeAttribute(xPage, 'ID')
                 
-                # for any page, make sure there is matching Images Volume to Segmentation or Volume to LabelMap for each destination
-                sValidationMsg = UtilsValidate.ValidateImageToSegmentationMatch(xPage, str(iPageNum))
-                sMsg = sMsg + sValidationMsg
-
                 sValidationMsg = UtilsValidate.ValidateNoSpecialCharacters(xPage, str(iPageNum))
                 sMsg = sMsg + sValidationMsg
                 
@@ -1042,56 +1038,6 @@ class UtilsValidate:
         
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @staticmethod
-    def ValidateImageToSegmentationMatch( xPageNode, sPageReference):
-        '''
-        '''
-        sMsg = ''
-        lxAllImages = []
-        llDestImageVolume = []
-        llDestSegmentation = []
-        llDestLabelMap = []
-        llDestRTStruct = []
-        llDestSegImageType = []
-        
-        # collect xml image elements and their destinations
-        lxAllImages = UtilsIOXml.GetChildren(xPageNode, 'Image')
-        
-        for xImage in lxAllImages:
-            
-            sImageType = UtilsIOXml.GetValueOfNodeAttribute(xImage, 'Type')
-            xDestination = UtilsIOXml.GetNthChild(xImage, 'DefaultDestination', 0)
-            sDestination = UtilsIOXml.GetDataInNode(xDestination)
-            xImagePath = UtilsIOXml.GetNthChild(xImage, 'Path', 0)
-            sImagePath = UtilsIOXml.GetDataInNode(xImagePath)
-            
-            if sImageType == 'Volume' or sImageType == 'VolumeSequence':
-                llDestImageVolume.append([sDestination, sImagePath])
-            elif sImageType == 'Segmentation':
-                llDestSegmentation.append([sDestination, sImagePath])
-            elif sImageType == 'LabelMap':
-                llDestLabelMap.append([sDestination, sImagePath])
-            elif sImageType == 'RTStruct':
-                llDestRTStruct.append([sDestination, sImagePath])
-                
-
-            
-           
-#         sSegmentationMsg = UtilsValidate.SyncSegsAndVolumes(llDestImageVolume, 'Segmentation', llDestSegmentation)
-#         
-#         sLabelMapMsg = UtilsValidate.SyncSegsAndVolumes(llDestImageVolume, 'LabelMap', llDestLabelMap)
-#         
-#         sRTStructMsg = UtilsValidate.SyncSegsAndVolumes(llDestImageVolume, 'RTStruct', llDestRTStruct)
-# 
-#         sMsg = sMsg + sSegmentationMsg + sLabelMapMsg + sRTStructMsg
-#         sMsg = sMsg + sRTStructMsg
-        
-        if sMsg != '':
-            sMsg = sMsg + '\n----------See Page: ' + sPageReference
-
-        return sMsg
-        
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    @staticmethod
     def ValidateROIColorFile():
         ''' Function to validate:
             - the ROIColorFile exists in the Master quiz directory
@@ -1149,72 +1095,6 @@ class UtilsValidate:
             
         return sMsg
         
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    @staticmethod
-    def SyncSegsAndVolumes( llDestImageVolume, sSegImageType, llDestSegImageType):
-        
-        sMsg = ''
-        bMismatchFound = False
-        
-        for indSegTypeToMatch in range(len(llDestSegImageType)):
-            if not bMismatchFound:
-                # there must be an image volume to sync with the  destination of this segmentation type of image
-                sSegTypeDestToMatch = llDestSegImageType[indSegTypeToMatch][0]
-                sSegTypePathToMatch = llDestSegImageType[indSegTypeToMatch][1]
-                lDestMatchedVolImagePaths = []
-                
-                for indVol in range(len(llDestImageVolume)):
-                    if llDestImageVolume[indVol][0] == sSegTypeDestToMatch:
-                        lDestMatchedVolImagePaths.append(llDestImageVolume[indVol][1])
-                        
-                        
-                if len(lDestMatchedVolImagePaths) > 0:        
-                    # image volumes found at that destination
-                    # there may have been more than one image found (FG and BG)
-                    # check if they are repeated in another destination
-                    lAllDests = []
-                    for indMatchedPath in range(len(lDestMatchedVolImagePaths)):
-                        sMatchedVolPathToSearch = lDestMatchedVolImagePaths[indMatchedPath]
-                        for indMatchedPath in range(len(llDestImageVolume)):
-                            if sMatchedVolPathToSearch == llDestImageVolume[indMatchedPath][1]:
-                                if llDestImageVolume[indMatchedPath][0] not in lAllDests: # only keep FG or BG
-                                    lAllDests.append(llDestImageVolume[indMatchedPath][0])
-                    
-                        if len(lAllDests) > 0:
-                            # the same image volume is repeated in other destinations
-                            # there needs to be the same seg type image in those destinations
-                            iNumMatches = 0
-                            for indDest in range(len(lAllDests)):
-                                sDest = lAllDests[indDest]
-                                for indSeg in range(len(llDestSegImageType)):
-                                    if (sSegTypePathToMatch == llDestSegImageType[indSeg][1]):
-                                        if llDestSegImageType[indSeg][0] == sDest:
-                                            iNumMatches = iNumMatches + 1
-                            
-                        if iNumMatches == len(lAllDests):
-                            pass
-                        else:
-                            sMsg = sMsg + '\n\nYou do not have a ' + sSegImageType + ' xml entry for each ' +\
-                                    'of the associated image volume entries.' +\
-                                    '\n(eg. If Vol1 is on Red and Green; there must be the same ' + sSegImageType + ' entry for each of these destinations' +\
-                                    '\n.....Images defined as ' + sSegImageType + ' and Volumes are not in sync.'
-                            bMismatchFound = True
-                            break
-        
-                            
-                        
-                        
-                        
-                else:
-                    sMsg = sMsg + '\n\nYou have a ' + sSegImageType + ' type of image defined in the xml ' +\
-                            '\nwith no matching volume in the same default destination.' +\
-                            '\n.....Images defined as ' + sSegImageType + ' and Volumes are not in sync.'
-                            
-                
-
-       
-        
-        return sMsg
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @staticmethod
