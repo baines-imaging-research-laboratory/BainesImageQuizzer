@@ -1,0 +1,110 @@
+<Session>
+	<Page ID="1-1" Descriptor="1-1" LinkViews="Y" AllowMultipleResponse="Y">
+		<Image Type="Volume" ID="MR" DicomRead="N" RotateToAcquisition="Y" InitialSliceOffset="-31.75">
+			<DefaultDestination>Red</DefaultDestination>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="MR" DicomRead="N" RotateToAcquisition="Y" InitialSliceOffset="-40.35">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="MR" DicomRead="N" RotateToAcquisition="Y" InitialSliceOffset="-35.56">
+			<DefaultDestination>Green</DefaultDestination>
+			<DefaultOrientation>Coronal</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Segmentation" ID="RS" DicomRead="N" RotateToAcquisition="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All">
+			</ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="RS" DicomRead="N" RotateToAcquisition="Y">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All">
+			</ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="RS2" DicomRead="N" RotateToAcquisition="Y">
+			<DefaultDestination>Green</DefaultDestination>
+			<DefaultOrientation>Coronal</DefaultOrientation>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\seg-ROI2-only.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="All">
+			</ROIs>
+		</Image>
+		<QuestionSet ID="Toggle Button Testing" Descriptor="Testing Toggle Colors">
+			<Question Type="Button" Descriptor="Toggle Button" ButtonCustomColorOn="50 168 82" ButtonToggleColorOff="0 246 176">
+				<Option>Toggle.py</Option>
+			</Question>
+			<Question Type="Button" Descriptor="Script Button 1" ButtonCustomColorOn="168 50 111">
+				<Option>script1.py</Option>
+			</Question>
+			<Question Type="Button" Descriptor="Script Button 2">
+				<Option>script2.py</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+	<Page ID="1-2" Descriptor="1-2" LinkViews="Y">
+		<Image Type="Volume" ID="MR" DicomRead="N" RotateToAcquisition="Y" InitialSliceOffset="-31.75">
+			<DefaultDestination>Red</DefaultDestination>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="MR" DicomRead="N" RotateToAcquisition="Y" InitialSliceOffset="117.03">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Volume" ID="MR" DicomRead="N" RotateToAcquisition="Y" InitialSliceOffset="-67.77">
+			<DefaultDestination>Green</DefaultDestination>
+			<DefaultOrientation>Coronal</DefaultOrientation>
+			<Layer>Background</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\TinyPhantom_1.nrrd</Path>
+		</Image>
+		<Image Type="Segmentation" ID="RS" DicomRead="N" RotateToAcquisition="Y">
+			<DefaultDestination>Red</DefaultDestination>
+			<DefaultOrientation>Axial</DefaultOrientation>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>Segment_2</ROI>
+			</ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="RS" DicomRead="N" RotateToAcquisition="Y">
+			<DefaultDestination>Yellow</DefaultDestination>
+			<DefaultOrientation>Sagittal</DefaultOrientation>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>Segment_2</ROI>
+			</ROIs>
+		</Image>
+		<Image Type="Segmentation" ID="RS" DicomRead="N" RotateToAcquisition="Y">
+			<DefaultDestination>Green</DefaultDestination>
+			<DefaultOrientation>Coronal</DefaultOrientation>
+			<Layer>Segmentation</Layer>
+			<Path>ImageVolumes\TinyRtStudy-data\segAll.seg.nrrd</Path>
+			<ROIs ROIVisibilityCode="Select">
+				<ROI>Segment_2</ROI>
+			</ROIs>
+		</Image>
+		<QuestionSet ID="Page2" Descriptor="Follow up">
+			<Question Type="CheckBox" Descriptor="Test" GroupLayout="Horizontal">
+				<Option>Chk 1</Option>
+				<Option>Chk 2</Option>
+			</Question>
+		</QuestionSet>
+	</Page>
+</Session>

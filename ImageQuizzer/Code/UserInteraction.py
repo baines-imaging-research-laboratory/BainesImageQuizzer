@@ -323,7 +323,7 @@ m_fg(3-0),m_fg(3-1),m_fg(3-2),m_fg(3-3)\n')
         ''' Given the currently open file handler, flush the buffer and close the log
         '''
         
-        if fh != None:
+        if fh != None and fh.closed != True :
             self.InsertTransitionRow(fh, 'Leaving Page --' + sCaller)
 
             fh.flush()

@@ -119,6 +119,8 @@
 		<xs:attribute name="Min" />
 		<xs:attribute name="Max" />
 		<xs:attribute name="GroupLayout" type="groupLayoutType" />
+		<xs:attribute name="ButtonCustomColorOn" type="listType3Ints"/>
+		<xs:attribute name="ButtonToggleColorOff" type="listType3Ints"/>
 	</xs:complexType>
 </xs:element>
 
@@ -256,6 +258,12 @@
 <xs:simpleType name="listTypeInts">
   <xs:restriction base="intListType">
     <xs:length value="2"/>
+  </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="listType3Ints">
+  <xs:restriction base="intListType">
+    <xs:length value="3"/>
   </xs:restriction>
 </xs:simpleType>
 
