@@ -29,3 +29,5 @@ smtp_config.txt
 ImageQuizzer/Inputs/Scripts/*.py
 
 ImageQuizzer/Outputs/UsersResults/
+ImageQuizzer/Inputs/MasterQuiz/
+ImageQuizzer/Inputs/Scripts/

@@ -198,7 +198,7 @@ class QuestionSet():
         self.qQuizWidgetLayout = qt.QVBoxLayout()
         self.qQuizWidget.setLayout(self.qQuizWidgetLayout)
         self.qQuizTitle = qt.QLabel(self.id + '     ' + self.descriptor)
-        self.qQuizTitle.setStyleSheet("QLabel{ font: bold}")
+        self.qQuizTitle.setStyleSheet("QLabel{ font: bold; font-size:16px}")
         self.qQuizWidgetLayout.addWidget(self.qQuizTitle)
         
 #========================================================================================
@@ -336,7 +336,7 @@ class Question(ABC):
             self.qGrpBoxLayout = qt.QVBoxLayout()
         self.qGrpBox.setLayout(self.qGrpBoxLayout)
         self.qGrpBox.setStyleSheet("QGroupBox { \
-            margin: 10px; border: 1px solid gray;\
+            margin: 15px; border: 1px solid gray; font-size:14px; font:bold;\
             border-top-style:solid; border-bottom-style:none;\
             border-left-style:solid; border-right-style:none; }")
         
@@ -450,6 +450,7 @@ class RadioQuestion(Question):
         while i < length:
             element1 = lsStoredOptions[i]
             qRadioBtn = qt.QRadioButton(element1)
+            qRadioBtn.setStyleSheet("QRadioButton { font-size:12px }");
             self.qGrpBoxLayout.addWidget(qRadioBtn)
             i = i + 1
 
@@ -565,6 +566,7 @@ class CheckBoxQuestion(Question):
         while i < length:
             element1 = lsStoredOptions[i]
             qChkBox = qt.QCheckBox(element1)
+            qChkBox.setStyleSheet("QCheckBox { font-size:12px }");
             self.qGrpBoxLayout.addWidget(qChkBox)
             i = i + 1
 
@@ -684,6 +686,9 @@ class TextQuestion(Question):
             qLineEdit = qt.QLineEdit()
             qLabel = qt.QLabel(element1)
             qLabel.setWordWrap(True)
+
+            qLineEdit.setStyleSheet("QLineEdit { font-size:12px }");
+            qLabel.setStyleSheet("QLabel { font-size:12px }");
             newLayout.addWidget(qLabel, i, 0)
             newLayout.addWidget(qLineEdit, i, 1)
             i = i + 1
@@ -819,6 +824,9 @@ class IntegerValueQuestion(Question):
             
             qLabel = qt.QLabel(element1)
             qLabel.setWordWrap(True)
+
+            qLineEdit.setStyleSheet("QLineEdit { font-size:12px }");
+            qLabel.setStyleSheet("QLabel { font-size:12px }");
             newLayout.addWidget(qLabel, i, 0)
             newLayout.addWidget(qLineEdit, i, 1)
             i = i + 1
@@ -991,6 +999,9 @@ class FloatValueQuestion(Question):
             
             qLabel = qt.QLabel(element1)
             qLabel.setWordWrap(True)
+
+            qLineEdit.setStyleSheet("QLineEdit { font-size:12px }");
+            qLabel.setStyleSheet("QLabel { font-size:12px }");
             newLayout.addWidget(qLabel, i, 0)
             newLayout.addWidget(qLineEdit, i, 1)
             i = i + 1
@@ -1151,6 +1162,7 @@ class InfoBox(Question):
             element1 = lsStoredOptions[i]
             qLabel = qt.QLabel(element1)
             qLabel.setWordWrap(True)
+            qLabel.setStyleSheet("QLabel { font-size:12px }");
             newLayout.addWidget(qLabel, i, 0)
             i = i + 1
 
@@ -1281,7 +1293,7 @@ class Button(Question):
             head, tail = os.path.split(element1)
             tupFname_Ext = os.path.splitext(tail)
             qButton = qt.QPushButton(tupFname_Ext[0])
-            qButton.setStyleSheet("QPushButton{ background-color: %s; color: black }" % self.qColorOn.name())
+            qButton.setStyleSheet("QPushButton{ background-color: %s; color: black; font-size:12px }" % self.qColorOn.name())
 
             newLayout.addWidget(qButton, i, 0)
             self.dictQButtons[element1]=qButton

@@ -149,7 +149,7 @@ class ImageView:
         
         bLoadSuccess = False
         
-        # for each image
+        # for each xml image element
         for indImage in range(len(self.lxImageNodes)):
             
             # Extract the type of volume to be displayed 
